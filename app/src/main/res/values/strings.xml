@@ -65,6 +65,22 @@
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquidity Pool</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">Available Balance</string>
+    <string name="tron_defi_staking">Staking</string>
+    <string name="tron_defi_bandwidth">Bandwidth</string>
+    <string name="tron_defi_energy">Energy</string>
+    <string name="tron_defi_freeze">Freeze</string>
+    <string name="tron_defi_unfreeze">Unfreeze</string>
+    <string name="tron_defi_tron_freeze">TRON Freeze</string>
+    <string name="tron_defi_frozen">Frozen</string>
+    <string name="tron_defi_unfreezing">Unfreezing</string>
+    <string name="tron_defi_resources">Resources</string>
+    <string name="tron_defi_pending_withdrawals">Pending Withdrawals</string>
+    <string name="tron_defi_ready_to_claim">Ready to claim</string>
+    <string name="tron_defi_countdown_days">%1$d days, %2$d hrs</string>
+    <string name="tron_defi_countdown_hours">%1$d hrs, %2$d min</string>
+    <string name="tron_defi_error_trx_not_in_vault">TRX coin not found in vault</string>
     <string name="circle_defi_description">Deposit your USDC into a Circle account and earn yield. Securely within your Vultisig vault.</string>
     <string name="circle_defi_control_info">Funds remain fully under your vault\'s control. Circle accounts are self-custodial and yield is generated through secure off-chain treasuries.</string>
     <string name="usdc_deposit_title">USDC Deposit</string>
@@ -190,6 +206,7 @@
     <string name="verify_transaction_consent_amount">The amount is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
     <string name="camera_permission_denied">Camera permission not granted. Please, enable it in the settings.</string>
+    <string name="camera_permission_open_settings">Open Settings</string>
     <string name="join_keysign_discovering_session_id">Discovering Session ID</string>
     <string name="transaction_done_title">Done</string>
     <string name="transaction_done_overview">Overview</string>
@@ -227,7 +244,6 @@
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s Assets</string>
     <string name="s_of_s_vault">%1$s-of-%2$s Vault Setup</string>
-    <string name="scan_qr_screen_return_vault">Return to Vault</string>
     <string name="rename_vault_screen_vault_name">Vault Name</string>
     <string name="faq_settings_q1">What is Vultisig?</string>
     <string name="faq_settings_q2">What are the benefits of using Vultisig?</string>
@@ -323,6 +339,8 @@
     <string name="add_address_address_title">Address</string>
     <string name="add_address_type_hint">Type here</string>
     <string name="join_keysign_invalid_qr">Invalid QR code content</string>
+    <string name="settings_screen_privacy">Privacy</string>
+    <string name="settings_screen_prevent_screenshots">Prevent Screenshots</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
@@ -376,7 +394,9 @@
     <string name="share_vault_qr_uid" translatable="false">UID: %1$s</string>
     <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
     <string name="import_file_password_hint_text">Hint: %s</string>
-    <string name="scan_qr_upload_from_gallery">Upload QR</string>
+    <string name="scan_qr_upload_qr_code">Upload QR Code</string>
+    <string name="scan_qr_hint_title">Having trouble scanning?</string>
+    <string name="scan_qr_hint_message">If the QR code isn\'t scanning right away:\n• Move the phone slightly closer or farther from the screen\n• Make sure the screen is well lit and free of glare\n• Keep both devices steady for a moment</string>
     <string name="no_barcodes_found">No barcodes found</string>
     <string name="reshare_start_join_reshare_button">Join Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP units are invalid</string>
@@ -673,6 +693,11 @@
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Token value</string>
     <string name="token_fiat_toggle_fiat_label">Fiat value</string>
+    <string name="remove_pool_title">Remove Pool</string>
+    <string name="remove_pool_amount_label">Amount</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_cacao_amount_format" translatable="false">%1$s CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>
     <string name="referral_create_info_content">The referral program is applied for THORChain swaps and is on a best effort basis. You need to register a THORName to use the Vultisig referral. The registration fee is 10 RUNE and 1 RUNE for each year, which is paid to the THORChain network.</string>
     <string name="referral_create_info_title">Referral Program</string>
@@ -848,6 +873,7 @@
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Supported file types: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Vault with duplicate name exists</string>
     <string name="join_key_gen_unknown_tssaction">Unknown TssAction</string>
+    <string name="join_key_gen_mediator_discovery_timeout">Could not find the other device on your network</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Waiting for other devices to join</string>
     <string name="join_key_gen_your_vault_will_start_generating">Your vault will start generating from the moment you finalize setting up your vault on your main device</string>
     <string name="join_key_sign_wrong_signing_library_type">Wrong signing library type</string>
@@ -1078,21 +1104,7 @@
     <string name="review_vault_devices_something_wrong">Something\'s wrong</string>
     <string name="review_vault_devices_this_device_label">%1$s (This Device)</string>
     <string name="review_vault_devices_device_index">Device %1$d</string>
-    <string name="welcome_preference_devices_title">How many devices\n do you have?</string>
-    <string name="welcome_fast_and_easy">Fast &amp; easy</string>
-    <string name="welcome_fast_and_easy_desc">Sign with only 1 device. Our secure server signs with you for multisig security. Plugin compatible.</string>
-    <string name="welcome_fast_and_easy_highlight">only 1 device.</string>
-    <string name="welcome_plugin_compatible">Plugin Store compatible</string>
     <string name="welcome_tip">Tip: You can use a browser as a device</string>
-    <string name="welcome_only_your_devices">Only your devices</string>
-    <string name="welcome_only_your_devices_desc">Only your devices are authorized signers. Signing transactions takes 2 devices. Full self-custody at your fingertips.</string>
-    <string name="welcome_only_your_devices_highlight">takes 2 devices.</string>
-    <string name="welcome_best_balance">Best balance</string>
-    <string name="welcome_best_balance_desc">The perfect mix between convenience and security. Signing transactions takes at least 2 devices. One backup device.</string>
-    <string name="welcome_best_balance_highlight">at least 2 devices.</string>
-    <string name="welcome_maximum_security">Maximum security</string>
-    <string name="welcome_maximum_security_desc">Highest security and perfect for treasuries or DAOs. Signing transactions takes at least 3 devices.</string>
-    <string name="welcome_maximum_security_highlight">at least 3 devices.</string>
     <string name="vault_setup_your_vault_setup">Your vault setup</string>
     <string name="vault_setup_fast_vault">Fast Vault</string>
     <string name="vault_setup_secure_vault">Secure Vault</string>

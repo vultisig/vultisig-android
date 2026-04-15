@@ -15,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -41,7 +41,7 @@ private fun Modifier.bannerBackground(
     imagePainter: Painter,
     gradientStart: Color,
     gradientEnd: Color,
-): Modifier = drawBehind {
+): Modifier = drawWithCache {
     // Layer 2 (bottom): linear-gradient(46deg, #0439C7 20.77%, #4879FD 109.97%)
     val angleRad = Math.toRadians(46.0)
     val sinA = sin(angleRad).toFloat()
@@ -49,20 +49,20 @@ private fun Modifier.bannerBackground(
     val halfLen = (abs(size.width * sinA) + abs(size.height * cosA)) / 2f
     val cx = size.width / 2f
     val cy = size.height / 2f
-    drawRect(
-        brush =
-            Brush.linearGradient(
-                colorStops = arrayOf(0.2077f to gradientStart, 1.0997f to gradientEnd),
-                start = Offset(cx - sinA * halfLen, cy + cosA * halfLen),
-                end = Offset(cx + sinA * halfLen, cy - cosA * halfLen),
-            )
-    )
-
+    val brush =
+        Brush.linearGradient(
+            colorStops = arrayOf(0.2077f to gradientStart, 1.0997f to gradientEnd),
+            start = Offset(cx - sinA * halfLen, cy + cosA * halfLen),
+            end = Offset(cx + sinA * halfLen, cy - cosA * halfLen),
+        )
     // Layer 1 (top): url(<image>) -122.071px -89.692px / 162.123% 190.598% no-repeat
     val imgWidth = size.width * 1.62123f
     val imgHeight = size.height * 1.90598f
-    translate(left = -122.071f * density, top = -89.692f * density) {
-        with(imagePainter) { draw(Size(imgWidth, imgHeight)) }
+    onDrawBehind {
+        drawRect(brush = brush)
+        translate(left = -122.071f * density, top = -89.692f * density) {
+            with(imagePainter) { draw(Size(imgWidth, imgHeight)) }
+        }
     }
 }
 

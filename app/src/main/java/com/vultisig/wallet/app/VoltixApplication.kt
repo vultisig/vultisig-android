@@ -11,7 +11,7 @@ internal open class VsBaseApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         WalletCoreLoader
-        SharedPrefsMasterKeyInitializer
+        SharedPrefsMasterKeyInitializer.prewarm(this)
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())

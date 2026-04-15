@@ -163,7 +163,6 @@
     <string name="import_file_screen_success_import">Trezor je uspješno uvezen</string>
     <string name="verify_swap_consent_amount">Iznos zamjene je točan</string>
     <string name="successfully_scanned_barcode">Uspješno skeniran crtični kod: %1$s</string>
-    <string name="scan_qr_screen_return_vault">Povratak u Trezor</string>
     <string name="verify_transaction_error_not_enough_consent">Provjerite sve suglasnosti</string>
     <string name="send_error_no_token">Nije odabran token</string>
     <string name="send_error_no_gas_fee">Nema naknade za plin</string>
@@ -196,6 +195,7 @@
     <string name="chain_token_screen_address_copied">%1$s kopirano u međuspremnik</string>
     <string name="s_of_s_vault">%1$s od %2$s trezora</string>
     <string name="camera_permission_denied">Dopuštenje za kameru nije odobreno. Omogućite ga u postavkama.</string>
+    <string name="camera_permission_open_settings">Otvori postavke</string>
     <string name="verify_transaction_value">Vrijednost</string>
     <string name="send_error_no_address">Adresa je nevažeća</string>
     <string name="vault_settings_error_backup_file">dogodila se pogreška</string>
@@ -249,6 +249,8 @@
     <string name="add_address_address_title">Adresa</string>
     <string name="add_address_type_hint">Upišite ovdje</string>
     <string name="join_keysign_invalid_qr">Nevažeći sadržaj QR koda</string>
+    <string name="settings_screen_privacy">Privatnost</string>
+    <string name="settings_screen_prevent_screenshots">Spriječi snimke zaslona</string>
     <string name="settings_screen_legal">Pravno</string>
     <string name="settings_screen_privacy_policy">Politika privatnosti</string>
     <string name="settings_screen_tos">Uvjeti usluge</string>
@@ -294,7 +296,9 @@
     <string name="qr_title_join_keysign_swap_description">Trezor: %1$s\nOd: %2$s\n Do: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Za mapu je potreban barem jedan odabrani trezor</string>
     <string name="import_file_password_hint_text">Savjet: %s</string>
-    <string name="scan_qr_upload_from_gallery">Prijenos iz\nGalerija</string>
+    <string name="scan_qr_upload_qr_code">Učitaj QR kod</string>
+    <string name="scan_qr_hint_title">Problemi sa skeniranjem?</string>
+    <string name="scan_qr_hint_message">Ako se QR kod ne skenira odmah:\n• Pomaknite telefon malo bliže ili dalje od zaslona\n• Provjerite je li zaslon dobro osvijetljen i bez odsjaja\n• Držite oba uređaja mirno na trenutak</string>
     <string name="no_barcodes_found">Nisu pronađeni barkodovi</string>
     <string name="reshare_start_join_reshare_button">Pridružite se ponovnom dijeljenju</string>
     <string name="deposit_error_invalid_lpunits">LP jedinice nisu važeće</string>
@@ -441,6 +445,22 @@
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Pool likvidnosti</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">Dostupan Saldo</string>
+    <string name="tron_defi_staking">Ulaganje</string>
+    <string name="tron_defi_bandwidth">Propusnost</string>
+    <string name="tron_defi_energy">Energija</string>
+    <string name="tron_defi_freeze">Zamrzni</string>
+    <string name="tron_defi_unfreeze">Odmrzni</string>
+    <string name="tron_defi_tron_freeze">TRON Zamrzni</string>
+    <string name="tron_defi_frozen">Zamrznuto</string>
+    <string name="tron_defi_unfreezing">Odmrzavanje</string>
+    <string name="tron_defi_resources">Resursi</string>
+    <string name="tron_defi_pending_withdrawals">Čekanje isplate</string>
+    <string name="tron_defi_ready_to_claim">Spreman za preuzimanje</string>
+    <string name="tron_defi_countdown_days">%1$d dana, %2$d h</string>
+    <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
+    <string name="tron_defi_error_trx_not_in_vault">TRX token nije pronađen u vaultu</string>
     <string name="deposit_form_operator_slippage_title">Proklizavanje</string>
     <string name="slippage_required_error">Proklizavanje je obavezno</string>
     <string name="slippage_invalid_error">Proklizavanje mora biti između 1 i 100</string>
@@ -484,6 +504,10 @@
     <string name="max">Maks</string>
     <string name="token_fiat_toggle_token_label">Vrijednost tokena</string>
     <string name="token_fiat_toggle_fiat_label">Fiat vrijednost</string>
+    <string name="remove_pool_title">Ukloni Pool</string>
+    <string name="remove_pool_amount_label">Iznos</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>
     <string name="referral_create_info_title">Program preporuka</string>
     <string name="referral_create_info_content">Program preporuka primjenjuje se na THORChain razmjene i provodi se po najboljoj mogućnosti. Morate registrirati THORName za korištenje Vultisig preporuke. Naknada za registraciju je 10 RUNE i 1 RUNE za svaku godinu, koja se plaća THORChain mreži.</string>
@@ -676,6 +700,7 @@
     <string name="migration_password_enter_your_password_to_unlock">Unesite svoju lozinku za otključavanje dijeljenog poslužitelja i početak nadogradnje</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Trezor s dupliciranim nazivom postoji</string>
     <string name="join_key_gen_unknown_tssaction">Nepoznata TssAction</string>
+    <string name="join_key_gen_mediator_discovery_timeout">Drugi uređaj nije pronađen na mreži</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Čekanje da se drugi uređaji pridruže</string>
     <string name="join_key_gen_your_vault_will_start_generating">Vaš trezor će početi generirati od trenutka kada završite s postavljanjem trezora na glavnom uređaju</string>
     <string name="join_key_sign_wrong_signing_library_type">Pogrešna vrsta biblioteke za potpisivanje</string>
@@ -1009,21 +1034,7 @@
     <string name="key_import_device_count_get_started">Započni</string>
     <string name="vault_count_recommended">Preporučeno</string>
 
-    <string name="welcome_preference_devices_title">Koliko uređaja imate?</string>
-    <string name="welcome_fast_and_easy">Brzo &amp; jednostavno</string>
-    <string name="welcome_fast_and_easy_desc">Potpisujte s samo 1 uređajem. Naš sigurni poslužitelj potpisuje s vama za multisig sigurnost. Kompatibilno s dodacima.</string>
-    <string name="welcome_fast_and_easy_highlight">samo 1 uređajem.</string>
-    <string name="welcome_plugin_compatible">Kompatibilno s Plugin Store</string>
     <string name="welcome_tip">Savjet: Možete koristiti preglednik kao uređaj</string>
-    <string name="welcome_only_your_devices">Samo vaši uređaji</string>
-    <string name="welcome_only_your_devices_desc">Samo vaši uređaji su ovlašteni potpisnici. Potpisivanje transakcija zahtijeva 2 uređaja. Potpuna samopohrana na dohvat ruke.</string>
-    <string name="welcome_only_your_devices_highlight">zahtijeva 2 uređaja.</string>
-    <string name="welcome_best_balance">Najbolja ravnoteža</string>
-    <string name="welcome_best_balance_desc">Savršena mješavina praktičnosti i sigurnosti. Potpisivanje transakcija zahtijeva najmanje 2 uređaja. Jedan rezervni uređaj.</string>
-    <string name="welcome_best_balance_highlight">najmanje 2 uređaja.</string>
-    <string name="welcome_maximum_security">Maksimalna sigurnost</string>
-    <string name="welcome_maximum_security_desc">Najviša sigurnost, idealna za riznice ili DAO-ove. Potpisivanje transakcija zahtijeva najmanje 3 uređaja.</string>
-    <string name="welcome_maximum_security_highlight">najmanje 3 uređaja.</string>
     <string name="vault_setup_your_vault_setup">Postavljanje vašeg trezora</string>
     <string name="vault_setup_fast_vault">Brzi trezor</string>
     <string name="vault_setup_secure_vault">Sigurni trezor</string>

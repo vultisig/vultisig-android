@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class ScanQrUiModel(val error: String? = null)
+data class ScanQrUiModel(val error: String? = null, val isTipVisible: Boolean = false)
 
 @HiltViewModel
 internal class ScanQrViewModel
@@ -61,6 +61,10 @@ constructor(
                 }
             }
         }
+    }
+
+    fun toggleShowTip() {
+        uiState.update { it.copy(isTipVisible = !it.isTipVisible) }
     }
 
     fun back() {

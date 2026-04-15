@@ -6,8 +6,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.vultisig.wallet.data.models.TransactionHistoryData
-import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
-import java.util.UUID
 
 enum class TransactionType {
     SEND,
@@ -21,14 +19,6 @@ enum class TransactionStatus {
     FAILED,
     NotFound,
 }
-
-fun TransactionResult.toDbModel() =
-    when (this) {
-        TransactionResult.Confirmed -> TransactionStatus.CONFIRMED
-        is TransactionResult.Failed -> TransactionStatus.FAILED
-        TransactionResult.NotFound -> TransactionStatus.NotFound
-        TransactionResult.Pending -> TransactionStatus.PENDING
-    }
 
 @Entity(
     tableName = "transaction_history",
@@ -52,9 +42,8 @@ fun TransactionResult.toDbModel() =
         ],
 )
 data class TransactionHistoryEntity(
-    @PrimaryKey @ColumnInfo("id") val id: String = UUID.randomUUID().toString(),
-
-    // Common fields
+    /** Deterministic id `"$chain:$txHash"` so the same on-chain tx produces the same row. */
+    @PrimaryKey @ColumnInfo("id") val id: String,
     @ColumnInfo("vaultId") val vaultId: String,
     @ColumnInfo("type") val type: TransactionType,
     @ColumnInfo("status") val status: TransactionStatus,
@@ -62,13 +51,14 @@ data class TransactionHistoryEntity(
     @ColumnInfo("timestamp") val timestamp: Long,
     @ColumnInfo("txHash") val txHash: String,
     @ColumnInfo("explorerUrl") val explorerUrl: String,
-
-    // Type-specific fields stored as JSON; decoded by TransactionHistoryDataConverter.
-    // Adding a new transaction type only requires a new @Serializable subclass — no schema change.
+    /** Type-specific JSON payload, decoded by [TransactionHistoryDataConverter]. */
     @ColumnInfo("payload") val payload: TransactionHistoryData,
-
-    // Status metadata
     @ColumnInfo("confirmedAt") val confirmedAt: Long?,
     @ColumnInfo("failureReason") val failureReason: String?,
     @ColumnInfo("lastCheckedAt") val lastCheckedAt: Long?,
+    /**
+     * Consecutive poll failures — drives exponential backoff in
+     * [RefreshPendingTransactionsUseCase].
+     */
+    @ColumnInfo("retryCount", defaultValue = "0") val retryCount: Int = 0,
 )

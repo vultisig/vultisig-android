@@ -130,6 +130,7 @@
     <string name="verify_transaction_consent_amount">Сумма верна</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
     <string name="camera_permission_denied">Разрешение на камеру не предоставлено. Пожалуйста, включите его в настройках.</string>
+    <string name="camera_permission_open_settings">Открыть настройки</string>
     <string name="join_keysign_discovering_session_id">Обнаружение ID сессии</string>
     <string name="transaction_done_title">Готово</string>
     <string name="transaction_done_overview">Обзор</string>
@@ -166,7 +167,6 @@
     <string name="confirm_delete_delete_vault">Удалить хранилище</string>
     <string name="vault_accounts_account_assets">%1$s активы</string>
     <string name="s_of_s_vault">%1$s из %2$s хранилища</string>
-    <string name="scan_qr_screen_return_vault">Вернуться в Хранилище</string>
     <string name="rename_vault_screen_vault_name">Имя хранилища</string>
     <string name="faq_settings_q1">Что такое Вультисиг?</string>
     <string name="faq_settings_q2">Каковы преимущества использования Vultisig?</string>
@@ -247,6 +247,8 @@
     <string name="add_address_address_title">Адрес</string>
     <string name="add_address_type_hint">Введите здесь</string>
     <string name="join_keysign_invalid_qr">Недействительное содержимое QR-кода</string>
+    <string name="settings_screen_privacy">Конфиденциальность</string>
+    <string name="settings_screen_prevent_screenshots">Запретить снимки экрана</string>
     <string name="settings_screen_legal">Юридический</string>
     <string name="settings_screen_privacy_policy">политика конфиденциальности</string>
     <string name="settings_screen_tos">Условия обслуживания</string>
@@ -293,7 +295,9 @@
     <string name="qr_title_join_keysign_swap_description">Хранилище: %1$s\nОт: %2$s\nКуда: %3$s</string>
     <string name="error_folder_must_have_at_least_one_vault">Папке необходимо выбрать хотя бы одно хранилище</string>
     <string name="import_file_password_hint_text">Подсказка: %s</string>
-    <string name="scan_qr_upload_from_gallery">Загрузить из\n галереи</string>
+    <string name="scan_qr_upload_qr_code">Загрузить QR-код</string>
+    <string name="scan_qr_hint_title">Проблемы со сканированием?</string>
+    <string name="scan_qr_hint_message">Если QR-код не сканируется сразу:\n• Переместите телефон немного ближе или дальше от экрана\n• Убедитесь, что экран хорошо освещён и без бликов\n• Держите оба устройства неподвижно на мгновение</string>
     <string name="no_barcodes_found">Штрих-коды не найдены.</string>
     <string name="reshare_start_join_reshare_button">Присоединиться к перераспределению</string>
     <string name="deposit_error_invalid_lpunits">Единицы LP недействительны</string>
@@ -439,6 +443,22 @@
     <string name="defi_bond">Бонд</string>
     <string name="defi_stake">Стейк</string>
     <string name="liquidity_pool">Пул ликвидности</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">Доступный баланс</string>
+    <string name="tron_defi_staking">Стейкинг</string>
+    <string name="tron_defi_bandwidth">Пропускная способность</string>
+    <string name="tron_defi_energy">Энергия</string>
+    <string name="tron_defi_freeze">Заморозить</string>
+    <string name="tron_defi_unfreeze">Разморозить</string>
+    <string name="tron_defi_tron_freeze">TRON Заморозить</string>
+    <string name="tron_defi_frozen">Заморожено</string>
+    <string name="tron_defi_unfreezing">Размораживается</string>
+    <string name="tron_defi_resources">Ресурсы</string>
+    <string name="tron_defi_pending_withdrawals">Ожидающие выводы</string>
+    <string name="tron_defi_ready_to_claim">Готово к получению</string>
+    <string name="tron_defi_countdown_days">%1$d дн., %2$d ч</string>
+    <string name="tron_defi_countdown_hours">%1$d ч, %2$d мин</string>
+    <string name="tron_defi_error_trx_not_in_vault">Монета TRX не найдена в хранилище</string>
     <string name="deposit_form_operator_slippage_title">Проскальзывание</string>
     <string name="slippage_required_error">Проскальзывание обязательно</string>
     <string name="slippage_invalid_error">Проскальзывание должно быть от 1 до 100</string>
@@ -482,6 +502,10 @@
     <string name="max">Макс</string>
     <string name="token_fiat_toggle_token_label">Стоимость токена</string>
     <string name="token_fiat_toggle_fiat_label">Фиатная стоимость</string>
+    <string name="remove_pool_title">Удалить пул</string>
+    <string name="remove_pool_amount_label">Сумма</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">Для операций пула поддерживается только токен CACAO.</string>
     <string name="referral_create_info_title">Реферальная программа</string>
     <string name="referral_create_info_content">Реферальная программа применяется к обменам THORChain и работает на основе максимальных усилий. Вам необходимо зарегистрировать THORName для использования реферальной программы Vultisig. Плата за регистрацию составляет 10 RUNE и 1 RUNE за каждый год, которая выплачивается сети THORChain.</string>
@@ -675,6 +699,7 @@
     <string name="migration_password_enter_your_password_to_unlock">Введите пароль, чтобы разблокировать общий сервер и начать обновление.</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Существует хранилище с дублирующимся именем</string>
     <string name="join_key_gen_unknown_tssaction">Неизвестное действие TssAction</string>
+    <string name="join_key_gen_mediator_discovery_timeout">Не удалось найти другое устройство в сети</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Ожидание подключения других устройств</string>
     <string name="join_key_gen_your_vault_will_start_generating">Генерация вашего хранилища начнётся с момента завершения настройки хранилища на основном устройстве</string>
     <string name="join_key_sign_wrong_signing_library_type">Неверный тип библиотеки подписи</string>
@@ -1014,21 +1039,7 @@
     <string name="key_import_device_count_get_started">Начать</string>
     <string name="vault_count_recommended">Рекомендуется</string>
 
-    <string name="welcome_preference_devices_title">Сколько устройств у вас есть?</string>
-    <string name="welcome_fast_and_easy">Быстро &amp; просто</string>
-    <string name="welcome_fast_and_easy_desc">Подписывайте всего с 1 устройством. Наш защищённый сервер подписывает вместе с вами для мультисиг-безопасности. Совместим с плагинами.</string>
-    <string name="welcome_fast_and_easy_highlight">всего с 1 устройством.</string>
-    <string name="welcome_plugin_compatible">Совместимо с Plugin Store</string>
     <string name="welcome_tip">Совет: Вы можете использовать браузер как устройство</string>
-    <string name="welcome_only_your_devices">Только ваши устройства</string>
-    <string name="welcome_only_your_devices_desc">Только ваши устройства являются авторизованными подписантами. Для подписания транзакций требуется 2 устройства. Полное самостоятельное хранение в ваших руках.</string>
-    <string name="welcome_only_your_devices_highlight">требуется 2 устройства.</string>
-    <string name="welcome_best_balance">Лучший баланс</string>
-    <string name="welcome_best_balance_desc">Идеальное сочетание удобства и безопасности. Для подписания транзакций требуется не менее 2 устройств. Одно резервное устройство.</string>
-    <string name="welcome_best_balance_highlight">не менее 2 устройств.</string>
-    <string name="welcome_maximum_security">Максимальная безопасность</string>
-    <string name="welcome_maximum_security_desc">Наивысшая безопасность, идеально для казначейств или DAO. Для подписания транзакций требуется не менее 3 устройств.</string>
-    <string name="welcome_maximum_security_highlight">не менее 3 устройств.</string>
     <string name="vault_setup_your_vault_setup">Настройка вашего хранилища</string>
     <string name="vault_setup_fast_vault">Быстрое хранилище</string>
     <string name="vault_setup_secure_vault">Безопасное хранилище</string>

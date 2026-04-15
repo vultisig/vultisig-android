@@ -60,6 +60,22 @@
     <string name="defi_bond">绑定</string>
     <string name="defi_stake">质押</string>
     <string name="liquidity_pool">流动性池</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">可用余额</string>
+    <string name="tron_defi_staking">质押</string>
+    <string name="tron_defi_bandwidth">带宽</string>
+    <string name="tron_defi_energy">能量</string>
+    <string name="tron_defi_freeze">冻结</string>
+    <string name="tron_defi_unfreeze">解冻</string>
+    <string name="tron_defi_tron_freeze">TRON 冻结</string>
+    <string name="tron_defi_frozen">已冻结</string>
+    <string name="tron_defi_unfreezing">解冻中</string>
+    <string name="tron_defi_resources">资源</string>
+    <string name="tron_defi_pending_withdrawals">待提取</string>
+    <string name="tron_defi_ready_to_claim">可提取</string>
+    <string name="tron_defi_countdown_days">%1$d天 %2$d小时</string>
+    <string name="tron_defi_countdown_hours">%1$d小时 %2$d分钟</string>
+    <string name="tron_defi_error_trx_not_in_vault">在金库中未找到TRX代币</string>
     <string name="deposit_option_add_cacao_pool">添加到 CACAO 池</string>
 
     <!-- Basic UI -->
@@ -217,6 +233,7 @@
 
     <!-- Camera & QR -->
     <string name="camera_permission_denied">相机权限未授予。请在设置中启用。</string>
+    <string name="camera_permission_open_settings">打开设置</string>
     <string name="join_keysign_discovering_session_id">发现会话 ID</string>
 
     <!-- Transaction Done -->
@@ -279,7 +296,6 @@
     <!-- Vault Accounts -->
     <string name="vault_accounts_account_assets">%1$s 资产</string>
     <string name="s_of_s_vault">%1$s/%2$s 保险库设置</string>
-    <string name="scan_qr_screen_return_vault">返回保险库</string>
 
     <!-- Rename Vault -->
     <string name="rename_vault_screen_vault_name">保险库名称</string>
@@ -437,6 +453,8 @@
     <string name="join_keysign_invalid_qr">无效的二维码内容</string>
 
     <!-- Settings Screen -->
+    <string name="settings_screen_privacy">隐私</string>
+    <string name="settings_screen_prevent_screenshots">防止截图</string>
     <string name="settings_screen_legal">法律</string>
     <string name="settings_screen_privacy_policy">隐私政策</string>
     <string name="settings_screen_tos">服务条款</string>
@@ -533,7 +551,9 @@
     <string name="import_file_password_hint_text">提示：%s</string>
 
     <!-- Scan QR -->
-    <string name="scan_qr_upload_from_gallery">上传二维码</string>
+    <string name="scan_qr_upload_qr_code">上传二维码</string>
+    <string name="scan_qr_hint_title">扫描遇到问题？</string>
+    <string name="scan_qr_hint_message">如果二维码没有立即扫描成功：\n• 将手机稍微靠近或远离屏幕\n• 确保屏幕光线充足且无眩光\n• 将两台设备保持稳定片刻</string>
 
     <!-- Reshare Start -->
     <string name="no_barcodes_found">未找到条形码</string>
@@ -727,6 +747,10 @@
     <string name="max">最大</string>
     <string name="token_fiat_toggle_token_label">代币价值</string>
     <string name="token_fiat_toggle_fiat_label">法币价值</string>
+    <string name="remove_pool_title">移除流动池</string>
+    <string name="remove_pool_amount_label">金额</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="cacaopool_only_cacao_supported">池操作仅支持 CACAO 代币</string>
     <string name="referral_create_info_content">推荐计划适用于 THORChain 交换，并尽力而为。您需要注册 THORName 才能使用 Vultisig 推荐。注册费为 10 RUNE，每年 1 RUNE，支付给 THORChain 网络。</string>
     <string name="referral_create_info_title">推荐计划</string>
@@ -839,6 +863,7 @@
     <!-- Keygen & Keysign -->
     <string name="join_key_gen_vault_with_duplicate_name_exists">存在重复名称的保险库</string>
     <string name="join_key_gen_unknown_tssaction">未知的 TSS 操作</string>
+    <string name="join_key_gen_mediator_discovery_timeout">无法在您的网络中找到其他设备</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">等待其他设备加入</string>
     <string name="join_key_gen_your_vault_will_start_generating">您的保险库将在您在主设备上完成设置后开始生成</string>
     <string name="join_key_sign_wrong_signing_library_type">错误的签名库类型</string>
@@ -1327,21 +1352,7 @@
     <string name="key_import_device_count_get_started">开始</string>
     <string name="vault_count_recommended">推荐</string>
 
-    <string name="welcome_preference_devices_title">您有多少台设备？</string>
-    <string name="welcome_fast_and_easy">快速 &amp; 简便</string>
-    <string name="welcome_fast_and_easy_desc">仅用1台设备签署。我们的安全服务器与您共同签署以实现多签安全。兼容插件。</string>
-    <string name="welcome_fast_and_easy_highlight">仅用1台设备签署。</string>
-    <string name="welcome_plugin_compatible">兼容 Plugin Store</string>
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>
-    <string name="welcome_only_your_devices">仅您的设备</string>
-    <string name="welcome_only_your_devices_desc">只有您的设备是授权签署方。签署交易需要2台设备。完全自我托管触手可及。</string>
-    <string name="welcome_only_your_devices_highlight">需要2台设备。</string>
-    <string name="welcome_best_balance">最佳平衡</string>
-    <string name="welcome_best_balance_desc">便利性与安全性的完美结合。签署交易至少需要2台设备。一台备份设备。</string>
-    <string name="welcome_best_balance_highlight">至少需要2台设备。</string>
-    <string name="welcome_maximum_security">最高安全性</string>
-    <string name="welcome_maximum_security_desc">最高安全级别，非常适合国库或DAO。签署交易至少需要3台设备。</string>
-    <string name="welcome_maximum_security_highlight">至少需要3台设备。</string>
     <string name="vault_setup_your_vault_setup">您的保险库设置</string>
     <string name="vault_setup_fast_vault">快速保险库</string>
     <string name="vault_setup_secure_vault">安全保险库</string>
