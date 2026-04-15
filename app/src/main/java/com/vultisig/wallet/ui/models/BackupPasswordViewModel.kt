@@ -276,12 +276,13 @@ constructor(
     }
 
     private suspend fun backupAllVaults(password: String, uri: Uri): Boolean {
-        val content = vaults.map { vault ->
-            val vaultBackupData =
-                createVaultBackup(mapVaultToProto(vault), password) ?: return false
-            val fileName = createVaultBackupFileName(vault)
-            AppZipEntry(fileName, vaultBackupData)
-        }
+        val content =
+            vaults.map { vault ->
+                val vaultBackupData =
+                    createVaultBackup(mapVaultToProto(vault), password) ?: return false
+                val fileName = createVaultBackupFileName(vault)
+                AppZipEntry(fileName, vaultBackupData)
+            }
 
         return context.saveContentToUri(uri, content)
     }
