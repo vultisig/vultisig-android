@@ -128,22 +128,14 @@ private fun UnstakeCacaoContent(
                     val displayPercent = percentText.toIntOrNull() ?: 0
 
                     Text(
-                        text =
-                            stringResource(
-                                R.string.remove_pool_percent_format,
-                                displayPercent,
-                            ),
+                        text = stringResource(R.string.remove_pool_percent_format, displayPercent),
                         style = Theme.brockmann.headings.largeTitle,
                         color = Theme.v2.colors.text.primary,
                     )
 
                     val unstakable = state.unstakableAmount ?: "0"
                     Text(
-                        text =
-                            stringResource(
-                                R.string.unstake_cacao_available_format,
-                                unstakable,
-                            ),
+                        text = stringResource(R.string.unstake_cacao_available_format, unstakable),
                         style = Theme.brockmann.body.m.medium,
                         color = Theme.v2.colors.text.tertiary,
                     )
