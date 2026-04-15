@@ -65,7 +65,7 @@ internal fun ErrorView(
             }
 
             secondaryButtonUiModel?.let {
-                UiSpacer(12.dp)
+                UiSpacer(if (buttonUiModel != null) 12.dp else 30.dp)
                 VsButton(
                     variant = VsButtonVariant.CTA,
                     label = it.text,
