@@ -24,12 +24,17 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
+import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -90,10 +95,9 @@ internal class CircleDeFiPositionsViewModelTest {
         coEvery { circleApi.createScAccount(OWNER_ADDRESS) } throws
             NetworkException(500, "Entity needs to setup paymaster policy")
 
-        vm.onCreateAccount()
+        val type = awaitSnackbarAfter { vm.onCreateAccount() }
 
-        coVerify(exactly = 1) { snackbarFlow.showMessage(any(), SnackbarType.Error) }
-        coVerify(exactly = 0) { snackbarFlow.showMessage(any(), SnackbarType.Success) }
+        assertEquals(SnackbarType.Error, type)
         coVerify(exactly = 0) { scaCircleAccountRepository.saveAccount(any(), any()) }
     }
 
@@ -112,10 +116,9 @@ internal class CircleDeFiPositionsViewModelTest {
             coEvery { scaCircleAccountRepository.saveAccount(VAULT_ID, MSCA_ADDRESS) } just Runs
             coEvery { circleApi.createScAccount(OWNER_ADDRESS) } returns MSCA_ADDRESS
 
-            vm.onCreateAccount()
+            val type = awaitSnackbarAfter { vm.onCreateAccount() }
 
-            coVerify(exactly = 1) { snackbarFlow.showMessage(any(), SnackbarType.Success) }
-            coVerify(exactly = 0) { snackbarFlow.showMessage(any(), SnackbarType.Error) }
+            assertEquals(SnackbarType.Success, type)
             coVerify(exactly = 1) { scaCircleAccountRepository.saveAccount(VAULT_ID, MSCA_ADDRESS) }
         }
 
@@ -126,11 +129,32 @@ internal class CircleDeFiPositionsViewModelTest {
         clearMocks(snackbarFlow, scaCircleAccountRepository, answers = false, childMocks = false)
         coEvery { vaultRepository.get(VAULT_ID) } returns null
 
-        vm.onCreateAccount()
+        val type = awaitSnackbarAfter { vm.onCreateAccount() }
 
-        coVerify(exactly = 1) { snackbarFlow.showMessage(any(), SnackbarType.Error) }
+        assertEquals(SnackbarType.Error, type)
         coVerify(exactly = 0) { circleApi.createScAccount(any()) }
         coVerify(exactly = 0) { scaCircleAccountRepository.saveAccount(any(), any()) }
+    }
+
+    /**
+     * Captures the first `snackbarFlow.showMessage(...)` call that follows [action]. Because the
+     * production code hops to `Dispatchers.IO` for the network call, the assertions would otherwise
+     * race the real IO thread. Awaiting the snackbar invocation — which every path of
+     * `onCreateAccount` reaches before updating state — synchronises the test deterministically.
+     */
+    private suspend fun awaitSnackbarAfter(action: () -> Unit): SnackbarType {
+        val captured = CompletableDeferred<SnackbarType>()
+        coEvery { snackbarFlow.showMessage(any(), any()) } coAnswers
+            {
+                captured.complete(secondArg())
+            }
+        action()
+        // onCreateAccount hops to the real Dispatchers.IO for the network call. The test
+        // scheduler's virtual clock doesn't advance for real-thread work, so the timeout
+        // must use a real dispatcher.
+        return withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(5.seconds) { captured.await() }
+        }
     }
 
     private fun createViewModel(): CircleDeFiPositionsViewModel =
