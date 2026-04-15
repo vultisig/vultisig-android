@@ -283,9 +283,10 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
         // rendered upstream OR when the decoded call already provided its own display
         // (e.g. "Unlimited USDC" for an approve MAX) — otherwise the screen shows the
         // same amount twice, with the native row being the misleading one.
-        if (transaction.functionName == null &&
-            transaction.resolvedToken == null &&
-            transaction.tokenDisplay == null
+        if (
+            transaction.functionName == null &&
+                transaction.resolvedToken == null &&
+                transaction.tokenDisplay == null
         ) {
             OtherField(
                 title = stringResource(R.string.verify_transaction_amount_title),
