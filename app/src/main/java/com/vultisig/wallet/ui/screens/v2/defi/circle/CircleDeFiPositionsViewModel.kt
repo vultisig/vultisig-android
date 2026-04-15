@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.v2.defi.circle
 
 import android.content.Context
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -21,6 +22,7 @@ import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.toValue
+import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -209,36 +211,37 @@ constructor(
 
     fun onCreateAccount() {
         viewModelScope.launch {
-            val mscAddress =
+            val createdAddress =
                 withContext(Dispatchers.IO) {
-                    try {
+                    runCatching {
                         val ethereumVaultAddress = getEvmVaultAddress()
-                        val mscaAddress = circleApi.createScAccount(ethereumVaultAddress)
-                        scaCircleAccountRepository.saveAccount(vaultId, mscaAddress)
-                        this@CircleDeFiPositionsViewModel.mscaAddress = mscaAddress
-                        mscaAddress
-                    } catch (t: Throwable) {
-                        Timber.e(t)
-                        null
+                        circleApi.createScAccount(ethereumVaultAddress).also { newAddress ->
+                            scaCircleAccountRepository.saveAccount(vaultId, newAddress)
+                        }
                     }
                 }
 
-            if (mscAddress == null) {
-                snackbarFlow.showMessage(
-                    StringResource(R.string.circle_msca_account_created_failed).asString(context)
-                )
-            } else {
-                snackbarFlow.showMessage(
-                    StringResource(R.string.circle_msca_account_created_success).asString(context)
-                )
-            }
+            createdAddress
+                .onSuccess { newAddress ->
+                    mscaAddress = newAddress
+                    showSnackbar(R.string.circle_msca_account_created_success, SnackbarType.Success)
+                }
+                .onFailure { t ->
+                    Timber.e(t)
+                    showSnackbar(R.string.circle_msca_account_created_failed, SnackbarType.Error)
+                }
 
             _state.update { currentState ->
                 currentState.copy(
-                    circleDefi = currentState.circleDefi.copy(isAccountOpen = mscAddress != null)
+                    circleDefi =
+                        currentState.circleDefi.copy(isAccountOpen = createdAddress.isSuccess)
                 )
             }
         }
+    }
+
+    private suspend fun showSnackbar(@StringRes messageRes: Int, type: SnackbarType) {
+        snackbarFlow.showMessage(StringResource(messageRes).asString(context), type)
     }
 
     fun onDepositAccount() {
