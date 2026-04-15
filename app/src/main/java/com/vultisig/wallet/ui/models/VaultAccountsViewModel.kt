@@ -397,7 +397,6 @@ constructor(
     }
 
     private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
-
         loadDeFiBalancesJob?.cancel()
         loadDeFiBalancesJob =
             viewModelScope.launch {
