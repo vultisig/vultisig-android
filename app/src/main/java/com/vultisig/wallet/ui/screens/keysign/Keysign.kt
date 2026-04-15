@@ -9,12 +9,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import app.rive.Fit
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.KeepScreenOn
+import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
@@ -112,7 +114,11 @@ internal fun KeysignView(
 
 @Composable
 private fun KeysignRiveProgress(progress: Float) {
-    val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keysign).value ?: return
+    val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keysign).value
+    if (riveFile == null) {
+        VsSigningProgressIndicator(text = stringResource(R.string.keysign_screen_preparing_vault))
+        return
+    }
     val vmi =
         rememberViewModelInstance(
             file = riveFile,
@@ -126,6 +132,7 @@ private fun KeysignRiveProgress(progress: Float) {
             label = "riv_progress_animation",
         )
 
+    // NOTE: intentional typo — must match the Rive ViewModel property name in riv_keysign.riv
     LaunchedEffect(animatedValue) { vmi.setNumber("progessPercentage", animatedValue) }
 
     RiveAnimation(
