@@ -299,14 +299,10 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         val keyPrefix =
             messageID?.let { "${sessionID.trim()}-${participantKey.trim()}-$it-" }
                 ?: run { "${sessionID.trim()}-${participantKey.trim()}-" }
-        cache
-            .filterKeys { it.startsWith(keyPrefix) }
-            .let {
-                val messages = it.values.toList().map { it as Message }
-                response.status(HttpStatusCode.OK.value)
-                response.type("application/json")
-                return Json.encodeToString(messages)
-            }
+        val messages = filterMessagesByPrefix(cache, keyPrefix)
+        response.status(HttpStatusCode.OK.value)
+        response.type("application/json")
+        return Json.encodeToString(messages)
     }
 
     private fun postMessage(request: Request, response: Response): String {
@@ -443,3 +439,9 @@ class Server(private val nsdManager: NsdManager) : NsdManager.RegistrationListen
         Timber.tag("Server").d("Service unregistered: %s", serviceInfo?.serviceName)
     }
 }
+
+/**
+ * Type-safe prefix filter — the cache stores [Message], [Session] and raw-body entries together.
+ */
+internal fun filterMessagesByPrefix(cache: Map<String, Any>, prefix: String): List<Message> =
+    cache.filterKeys { it.startsWith(prefix) }.values.filterIsInstance<Message>()
