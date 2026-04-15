@@ -182,7 +182,17 @@ private fun TronDeFiPositionsScreenContent(
                         )
                     }
 
-                    if (!tronData.hasPositions) {
+                    if (state.selectedPositions.isNotEmpty() && tronData.hasPositions) {
+                        item {
+                            TronFreezePositionCard(
+                                frozenTotalPrice = tronData.frozenTotalPrice,
+                                frozenTotalTrx = tronData.frozenTotalTrx,
+                                isBalanceVisible = state.isBalanceVisible,
+                                onClickFreeze = onClickFreeze,
+                                onClickUnfreeze = onClickUnfreeze,
+                            )
+                        }
+                    } else {
                         item { NoPositionsContainer() }
                     }
 
@@ -355,6 +365,9 @@ private fun TronDeFiPositionsScreenPreview() {
                 tronData =
                     TronStakingUiModel(
                         totalAmountPrice = "$1240.05",
+                        frozenTotalPrice = "$4,800",
+                        frozenTotalTrx = "800",
+                        hasPositions = true,
                         availableBandwidth = 15000L,
                         totalBandwidth = 20000L,
                         availableEnergy = 50000L,
