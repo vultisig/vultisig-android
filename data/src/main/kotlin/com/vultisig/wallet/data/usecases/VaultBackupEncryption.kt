@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
+import java.security.GeneralSecurityException
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.SecretKeyFactory
@@ -47,8 +48,11 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
         }
         return try {
             decryptPbkdf2(data, password)
-        } catch (e: Exception) {
+        } catch (e: GeneralSecurityException) {
             Timber.e(e, "PBKDF2 decryption failed")
+            null
+        } catch (e: IllegalArgumentException) {
+            Timber.e(e, "Invalid PBKDF2 vault backup payload")
             null
         }
     }
