@@ -135,3 +135,6 @@ data class Shadow(val low: Color = Color(0x1F000000))
 data class FillsColors(val primary: Color = Color(0x1F787880))
 
 data class Vibrant(val primary: Color = Color(0xFF333333))
+
+// Chain brand colors — fixed values not tied to theme switching
+val TronRed = Color(0xFFFF060A)

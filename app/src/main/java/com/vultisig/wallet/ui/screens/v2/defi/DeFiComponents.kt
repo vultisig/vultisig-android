@@ -52,7 +52,6 @@ import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.tokenitem.GridTokenUiModel
 import com.vultisig.wallet.ui.components.v2.tokenitem.NoFoundContent
@@ -435,18 +434,6 @@ internal fun NoPositionsContainer(onManagePositionsClick: () -> Unit = {}) {
     NotEnabledContainer(
         title = stringResource(R.string.defi_no_positions_selected),
         content = stringResource(R.string.defi_no_positions_selected_desc),
-        action = {
-            Text(
-                text = stringResource(R.string.manage_positions),
-                style = Theme.brockmann.button.medium.medium,
-                color = Theme.v2.colors.text.primary,
-                modifier =
-                    Modifier.clip(shape = CircleShape)
-                        .clickOnce(onClick = onManagePositionsClick)
-                        .background(color = Theme.v2.colors.border.primaryAccent4)
-                        .padding(vertical = 8.dp, horizontal = 16.dp),
-            )
-        },
     )
 }
 

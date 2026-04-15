@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
+import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.chains.helpers.RippleHelper
@@ -898,7 +899,9 @@ constructor(
                 defiType != DeFiNavActions.UNSTAKE_STCY &&
                 defiType != DeFiNavActions.REDEEM_YRUNE &&
                 defiType != DeFiNavActions.MINT_YTCY &&
-                defiType != DeFiNavActions.REDEEM_YTCY
+                defiType != DeFiNavActions.REDEEM_YTCY &&
+                defiType != DeFiNavActions.FREEZE_TRX &&
+                defiType != DeFiNavActions.UNFREEZE_TRX
         ) {
             return amount
         }
@@ -958,7 +961,9 @@ constructor(
                     defiType == DeFiNavActions.MINT_YRUNE ||
                     defiType == DeFiNavActions.REDEEM_YRUNE ||
                     defiType == DeFiNavActions.MINT_YTCY ||
-                    defiType == DeFiNavActions.REDEEM_YTCY
+                    defiType == DeFiNavActions.REDEEM_YTCY ||
+                    defiType == DeFiNavActions.FREEZE_TRX ||
+                    defiType == DeFiNavActions.UNFREEZE_TRX
             ) {
                 getAvailableTokenBalance(selectedAccount, currentGasFee.value)
             } else {
@@ -1218,7 +1223,11 @@ constructor(
                 val isMaxAmount = tokenAmount == maxAmount
 
                 if (chain == Chain.Tron) {
-                    if (srcAddress == dstAddress) {
+                    val isTronStakingOp =
+                        memo != null &&
+                            selectedToken.isNativeToken &&
+                            TRON_STAKING_MEMO_REGEX.matches(memo)
+                    if (!isTronStakingOp && srcAddress == dstAddress) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_same_address)
                         )
@@ -2482,6 +2491,8 @@ constructor(
                 DeFiNavActions.UNSTAKE_CACAO,
                 DeFiNavActions.ADD_LP,
                 DeFiNavActions.REMOVE_LP -> Coins.MayaChain.CACAO
+                DeFiNavActions.FREEZE_TRX,
+                DeFiNavActions.UNFREEZE_TRX -> Coins.Tron.TRX
                 null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
             }
 
