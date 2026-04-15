@@ -507,8 +507,8 @@
     <string name="remove_pool_amount_label">Quantità</string>
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
-    <string name="stake_cacao_title">Stake CACAO</string>
-    <string name="unstake_cacao_title">Unstake CACAO</string>
+    <string name="stake_cacao_title">Puntare CACAO</string>
+    <string name="unstake_cacao_title">Rimuovi puntata CACAO</string>
     <string name="unstake_cacao_available_format">Disponibile: %1$s</string>
     <string name="cacaopool_only_cacao_supported">Per le operazioni del pool è supportato solo il token CACAO</string>
     <string name="referral_create_info_title">Programma referral</string>
