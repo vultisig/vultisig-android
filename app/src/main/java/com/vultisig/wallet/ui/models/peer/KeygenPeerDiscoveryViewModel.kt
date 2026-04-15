@@ -178,9 +178,9 @@ constructor(
     init {
         if (args == null) {
             viewModelScope.launch { navigator.navigate(Destination.Back) }
-            return
+        } else {
+            loadData()
         }
-        loadData()
     }
 
     private fun showNetworkWarning() {
