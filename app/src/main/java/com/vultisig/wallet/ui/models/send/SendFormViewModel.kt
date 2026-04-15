@@ -93,6 +93,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.YTCY_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asAddressInput
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -364,7 +365,7 @@ constructor(
                 .textAsFlow()
                 .debounce(300)
                 .combine(selectedToken.filterNotNull()) { address, token ->
-                    address.toString() to token
+                    address.asAddressInput() to token
                 }
                 .mapLatest { (addressStr, token) ->
                     if (chainAccountAddressRepository.isValid(token.chain, addressStr)) {
@@ -383,7 +384,8 @@ constructor(
                             val resolved =
                                 addressParserRepository.resolveName(addressStr, token.chain)
                             // Ignore stale result if user changed input while resolving
-                            if (addressFieldState.text.toString() != addressStr) return@mapLatest
+                            if (addressFieldState.text.asAddressInput() != addressStr)
+                                return@mapLatest
                             if (chainAccountAddressRepository.isValid(token.chain, resolved)) {
                                 dstAddressLabel.value = addressStr
                                 resolvedDstAddress.value = resolved
@@ -923,7 +925,7 @@ constructor(
                             vaultHexPublicKey = vault.getPubKeyByChain(chain),
                         ),
                     amount = tokenAmountInt,
-                    to = addressFieldState.text.toString(),
+                    to = addressFieldState.text.asAddressInput(),
                     memo = memoFieldState.text.toString(),
                     isMax = isMax,
                 )
@@ -1156,7 +1158,10 @@ constructor(
                 val chain = selectedAccount.token.chain
 
                 if (
-                    !chainAccountAddressRepository.isValid(chain, addressFieldState.text.toString())
+                    !chainAccountAddressRepository.isValid(
+                        chain,
+                        addressFieldState.text.asAddressInput(),
+                    )
                 ) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_address)
@@ -1178,7 +1183,7 @@ constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
-                val rawInput = addressFieldState.text.toString()
+                val rawInput = addressFieldState.text.asAddressInput()
                 val dstAddress =
                     try {
                         addressParserRepository.resolveName(rawInput, chain)
@@ -3064,7 +3069,7 @@ constructor(
 
         val dstAddress =
             try {
-                addressParserRepository.resolveName(addressFieldState.text.toString(), chain)
+                addressParserRepository.resolveName(addressFieldState.text.asAddressInput(), chain)
             } catch (e: Exception) {
                 Timber.e(e)
                 throw InvalidTransactionDataException(
