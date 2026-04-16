@@ -693,6 +693,7 @@
     <string name="migration_password_enter_your_password_to_unlock">Voer uw wachtwoord in om uw servershare te ontgrendelen en de upgrade te starten</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Er bestaat een kluis met een dubbele naam</string>
     <string name="join_key_gen_unknown_tssaction">Onbekende TssAction</string>
+    <string name="join_key_gen_mediator_discovery_timeout">Kan het andere apparaat niet vinden op het netwerk</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Wachten op andere apparaten om toe te treden</string>
     <string name="join_key_gen_your_vault_will_start_generating">Je kluis wordt gegenereerd vanaf het moment dat je de kluis op je hoofdapparaat hebt ingesteld</string>
     <string name="join_key_sign_wrong_signing_library_type">Verkeerd type ondertekeningsbibliotheek</string>

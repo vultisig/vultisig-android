@@ -854,6 +854,7 @@
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[지원 파일 형식: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">동일한 이름의 볼트가 존재합니다</string>
     <string name="join_key_gen_unknown_tssaction">알 수 없는 TssAction</string>
+    <string name="join_key_gen_mediator_discovery_timeout">네트워크에서 다른 기기를 찾을 수 없습니다</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">다른 기기의 참여를 기다리는 중</string>
     <string name="join_key_gen_your_vault_will_start_generating">메인 기기에서 볼트 설정을 완료하는 즉시 볼트 생성이 시작됩니다</string>
     <string name="join_key_sign_wrong_signing_library_type">잘못된 서명 라이브러리 유형</string>

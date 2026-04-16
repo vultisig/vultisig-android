@@ -863,6 +863,7 @@
     <!-- Keygen & Keysign -->
     <string name="join_key_gen_vault_with_duplicate_name_exists">存在重复名称的保险库</string>
     <string name="join_key_gen_unknown_tssaction">未知的 TSS 操作</string>
+    <string name="join_key_gen_mediator_discovery_timeout">无法在您的网络中找到其他设备</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">等待其他设备加入</string>
     <string name="join_key_gen_your_vault_will_start_generating">您的保险库将在您在主设备上完成设置后开始生成</string>
     <string name="join_key_sign_wrong_signing_library_type">错误的签名库类型</string>
