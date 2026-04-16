@@ -255,6 +255,7 @@ constructor(
     }
 
     fun tryAgain() {
+        if (args == null) return
         loadData()
     }
 
