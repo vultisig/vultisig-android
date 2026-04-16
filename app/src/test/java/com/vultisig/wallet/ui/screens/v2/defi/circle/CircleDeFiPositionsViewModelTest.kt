@@ -25,6 +25,8 @@ import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -97,6 +99,7 @@ internal class CircleDeFiPositionsViewModelTest {
 
         assertEquals(SnackbarType.Error, type)
         coVerify(exactly = 0) { scaCircleAccountRepository.saveAccount(any(), any()) }
+        assertFalse(vm.state.value.circleDefi.isAccountOpen)
     }
 
     @Test
@@ -111,6 +114,7 @@ internal class CircleDeFiPositionsViewModelTest {
 
             assertEquals(SnackbarType.Success, type)
             coVerify(exactly = 1) { scaCircleAccountRepository.saveAccount(VAULT_ID, MSCA_ADDRESS) }
+            assertTrue(vm.state.value.circleDefi.isAccountOpen)
         }
 
     @Test
