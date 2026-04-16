@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
@@ -50,7 +51,7 @@ internal fun UiConfirmDialog(
     dismissTitle: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
-    confirmColor: androidx.compose.ui.graphics.Color = Theme.v2.colors.neutrals.n100,
+    confirmColor: Color = Theme.v2.colors.neutrals.n100,
 ) {
     AlertDialog(
         containerColor = Theme.v2.colors.backgrounds.secondary,
