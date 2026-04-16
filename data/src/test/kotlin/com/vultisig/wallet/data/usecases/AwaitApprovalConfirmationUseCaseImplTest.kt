@@ -58,12 +58,12 @@ internal class AwaitApprovalConfirmationUseCaseImplTest {
     }
 
     @Test
-    fun `returns Reverted when receipt status is failure`() = runTest {
+    fun `returns Failed when receipt status is failure`() = runTest {
         coEvery { evmApi.getTxStatus(TX_HASH) } returns revertedReceipt()
 
         val result = useCase(CHAIN, TX_HASH)
 
-        assertEquals(ApprovalConfirmationResult.Reverted, result)
+        assertEquals(ApprovalConfirmationResult.Failed, result)
     }
 
     @Test
@@ -76,12 +76,12 @@ internal class AwaitApprovalConfirmationUseCaseImplTest {
     }
 
     @Test
-    fun `returns Reverted immediately even after pending polls`() = runTest {
+    fun `returns Failed immediately even after pending polls`() = runTest {
         coEvery { evmApi.getTxStatus(TX_HASH) } returnsMany listOf(null, revertedReceipt())
 
         val result = useCase(CHAIN, TX_HASH)
 
-        assertEquals(ApprovalConfirmationResult.Reverted, result)
+        assertEquals(ApprovalConfirmationResult.Failed, result)
         coVerify(exactly = 2) { evmApi.getTxStatus(TX_HASH) }
     }
 

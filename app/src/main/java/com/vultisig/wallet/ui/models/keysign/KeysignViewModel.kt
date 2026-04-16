@@ -569,7 +569,7 @@ constructor(
                         KeysignState.Error(R.string.keysign_error_approval_timeout.asUiText())
                     return
                 }
-                ApprovalConfirmationResult.Reverted -> {
+                ApprovalConfirmationResult.Failed -> {
                     currentState.value =
                         KeysignState.Error(R.string.keysign_error_approval_reverted.asUiText())
                     return

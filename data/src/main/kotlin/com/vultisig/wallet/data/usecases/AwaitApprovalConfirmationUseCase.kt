@@ -12,7 +12,7 @@ sealed interface ApprovalConfirmationResult {
 
     data object TimedOut : ApprovalConfirmationResult
 
-    data object Reverted : ApprovalConfirmationResult
+    data object Failed : ApprovalConfirmationResult
 }
 
 fun interface AwaitApprovalConfirmationUseCase {
@@ -28,7 +28,7 @@ constructor(private val evmApiFactory: EvmApiFactory) : AwaitApprovalConfirmatio
         repeat(MAX_BLOCKS) { attempt ->
             when (evmApi.getTxStatus(txHash)?.result?.status) {
                 RECEIPT_SUCCESS -> return ApprovalConfirmationResult.Confirmed
-                RECEIPT_FAILURE -> return ApprovalConfirmationResult.Reverted
+                RECEIPT_FAILURE -> return ApprovalConfirmationResult.Failed
                 else -> {
                     Timber.d(
                         "Approval %s not yet confirmed, attempt %d/%d",
