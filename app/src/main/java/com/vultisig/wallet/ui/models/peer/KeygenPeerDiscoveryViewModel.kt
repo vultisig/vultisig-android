@@ -142,7 +142,7 @@ constructor(
         MutableStateFlow(
             PeerDiscoveryUiModel(
                 minimumDevices = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
-                minimumDevicesDisplayed = (args?.deviceCount ?: (MIN_KEYGEN_DEVICES + 1)),
+                minimumDevicesDisplayed = (args?.deviceCount?.plus(1)) ?: (MIN_KEYGEN_DEVICES + 1),
                 enableNotification = false,
             )
         )
@@ -228,6 +228,7 @@ constructor(
     }
 
     fun switchMode() {
+        if (args == null) return
         state.update {
             it.copy(
                 network =
