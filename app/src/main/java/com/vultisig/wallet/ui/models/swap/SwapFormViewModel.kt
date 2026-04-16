@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
@@ -953,11 +954,8 @@ constructor(
 
         val srcToken = selectedSrcAccount.token
 
-        val swapFee = quote?.fees?.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
-
         val maxUsableTokenAmount =
             srcTokenValue.value -
-                swapFee -
                 (estimatedNetworkFeeTokenValue.value?.value?.takeIf { srcToken.isNativeToken }
                     ?: BigInteger.ZERO)
 
@@ -1593,32 +1591,48 @@ constructor(
                                             )
 
                                         val (feeAmount, feeCoin) =
-                                            try {
-                                                if (apiQuote.tx.swapFeeTokenContract.isNotEmpty()) {
-                                                    val tokenContract =
-                                                        apiQuote.tx.swapFeeTokenContract
-                                                    val chainId = srcNativeToken.chain.id
-                                                    val amount = apiQuote.tx.swapFee.toBigInteger()
-                                                    val coinAndFiatValue =
-                                                        searchToken(chainId, tokenContract)
-                                                            ?: error("Can't find token or price")
-                                                    val newNativeAmount =
-                                                        convertTokenToTokenUseCase
-                                                            .convertTokenToToken(
-                                                                amount,
-                                                                coinAndFiatValue,
-                                                                srcNativeToken,
-                                                            )
-                                                    Pair(newNativeAmount, srcNativeToken)
-                                                } else {
-                                                    Pair(
-                                                        apiQuote.tx.swapFee.toBigInteger(),
-                                                        srcNativeToken,
+                                            if (provider == SwapProvider.LIFI) {
+                                                val feeWei =
+                                                    LiFiChainApi.integratorFeeAmount(
+                                                        dstAmount =
+                                                            apiQuote.dstAmount.toBigInteger(),
+                                                        bpsDiscount = vultBPSDiscount ?: 0,
                                                     )
+                                                Pair(feeWei, dstToken)
+                                            } else {
+                                                try {
+                                                    if (
+                                                        apiQuote.tx.swapFeeTokenContract
+                                                            .isNotEmpty()
+                                                    ) {
+                                                        val tokenContract =
+                                                            apiQuote.tx.swapFeeTokenContract
+                                                        val chainId = srcNativeToken.chain.id
+                                                        val amount =
+                                                            apiQuote.tx.swapFee.toBigInteger()
+                                                        val coinAndFiatValue =
+                                                            searchToken(chainId, tokenContract)
+                                                                ?: error(
+                                                                    "Can't find token or price"
+                                                                )
+                                                        val newNativeAmount =
+                                                            convertTokenToTokenUseCase
+                                                                .convertTokenToToken(
+                                                                    amount,
+                                                                    coinAndFiatValue,
+                                                                    srcNativeToken,
+                                                                )
+                                                        Pair(newNativeAmount, srcNativeToken)
+                                                    } else {
+                                                        Pair(
+                                                            apiQuote.tx.swapFee.toBigInteger(),
+                                                            srcNativeToken,
+                                                        )
+                                                    }
+                                                } catch (t: Throwable) {
+                                                    Timber.e(t)
+                                                    Pair(BigInteger.ZERO, srcNativeToken)
                                                 }
-                                            } catch (t: Throwable) {
-                                                Timber.e(t)
-                                                Pair(BigInteger.ZERO, srcNativeToken)
                                             }
 
                                         val updatedTx =
@@ -1638,7 +1652,8 @@ constructor(
 
                                 val fiatFees =
                                     convertTokenValueToFiat(
-                                        srcNativeToken,
+                                        if (provider == SwapProvider.LIFI) dstToken
+                                        else srcNativeToken,
                                         swapQuote.fees,
                                         currency,
                                     )
