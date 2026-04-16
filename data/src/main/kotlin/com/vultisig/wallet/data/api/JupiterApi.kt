@@ -40,6 +40,9 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
                 parameter("outputMint", toToken)
                 parameter("amount", fromAmount)
             }
+        if (quoteResponse.status.value == 429) {
+            throw Exception("[Jupiter] Too many requests")
+        }
         val body = quoteResponse.body<SwapRouteResponseJson>()
         val outAmount = body.outAmount
         val routePlan = body.routePlan
