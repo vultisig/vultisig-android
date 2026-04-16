@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -63,91 +64,131 @@ internal class AddressBookViewModelTest {
     }
 
     @Test
-    fun `requestDeleteAddress stages the entry without deleting`() = runTest {
-        val vm = createViewModel()
-        val entry = entry("Alice")
+    fun `requestDeleteAddress stages the entry without deleting`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            val entry = entry("Alice")
 
-        vm.requestDeleteAddress(entry)
+            vm.requestDeleteAddress(entry)
 
-        assertSame(entry, vm.state.value.pendingDeletion)
-        coVerify(exactly = 0) { addressBookRepository.delete(any(), any()) }
-        coVerify(exactly = 0) { orderRepository.delete(any(), any()) }
-    }
-
-    @Test
-    fun `cancelDeleteAddress clears the pending entry and never deletes`() = runTest {
-        val vm = createViewModel()
-        vm.requestDeleteAddress(entry("Alice"))
-
-        vm.cancelDeleteAddress()
-
-        assertNull(vm.state.value.pendingDeletion)
-        coVerify(exactly = 0) { addressBookRepository.delete(any(), any()) }
-        coVerify(exactly = 0) { orderRepository.delete(any(), any()) }
-    }
-
-    @Test
-    fun `confirmDeleteAddress deletes the pending entry and clears the state`() = runTest {
-        val vm = createViewModel()
-        val entry = entry("Alice", address = ALICE_ADDRESS, chain = Chain.Ethereum)
-        vm.requestDeleteAddress(entry)
-
-        vm.confirmDeleteAddress()
-
-        assertNull(vm.state.value.pendingDeletion)
-        coVerify(exactly = 1) {
-            addressBookRepository.delete(chainId = Chain.Ethereum.id, address = ALICE_ADDRESS)
+            assertSame(entry, vm.state.value.pendingDeletion)
+            coVerify(exactly = 0) { addressBookRepository.delete(any(), any()) }
+            coVerify(exactly = 0) { orderRepository.delete(any(), any()) }
         }
-        coVerify(exactly = 1) { orderRepository.delete(null, entry.model.id) }
-    }
 
     @Test
-    fun `confirmDeleteAddress without a pending entry is a no-op`() = runTest {
-        val vm = createViewModel()
+    fun `cancelDeleteAddress clears the pending entry and never deletes`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.requestDeleteAddress(entry("Alice"))
 
-        vm.confirmDeleteAddress()
+            vm.cancelDeleteAddress()
 
-        assertNull(vm.state.value.pendingDeletion)
-        coVerify(exactly = 0) { addressBookRepository.delete(any(), any()) }
-        coVerify(exactly = 0) { orderRepository.delete(any(), any()) }
-    }
-
-    @Test
-    fun `confirm after cancel does not delete the previously staged entry`() = runTest {
-        val vm = createViewModel()
-        vm.requestDeleteAddress(entry("Alice"))
-        vm.cancelDeleteAddress()
-
-        vm.confirmDeleteAddress()
-
-        coVerify(exactly = 0) { addressBookRepository.delete(any(), any()) }
-    }
-
-    @Test
-    fun `consecutive requests overwrite pending and confirm deletes only the latest`() = runTest {
-        val vm = createViewModel()
-        vm.requestDeleteAddress(entry("Alice", address = ALICE_ADDRESS))
-        val bob = entry("Bob", address = BOB_ADDRESS)
-        vm.requestDeleteAddress(bob)
-        clearMocks(addressBookRepository, orderRepository, answers = false)
-
-        vm.confirmDeleteAddress()
-
-        coVerify(exactly = 1) {
-            addressBookRepository.delete(chainId = Chain.Ethereum.id, address = BOB_ADDRESS)
+            assertNull(vm.state.value.pendingDeletion)
+            coVerify(exactly = 0) { addressBookRepository.delete(any(), any()) }
+            coVerify(exactly = 0) { orderRepository.delete(any(), any()) }
         }
-        coVerify(exactly = 0) {
-            addressBookRepository.delete(chainId = any(), address = ALICE_ADDRESS)
-        }
-        coVerify(exactly = 1) { orderRepository.delete(null, bob.model.id) }
-    }
 
     @Test
-    fun `initial pending deletion is null`() = runTest {
-        val vm = createViewModel()
+    fun `confirmDeleteAddress deletes the pending entry and clears the state`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            val entry = entry("Alice", address = ALICE_ADDRESS, chain = Chain.Ethereum)
+            vm.requestDeleteAddress(entry)
 
-        assertEquals(null, vm.state.value.pendingDeletion)
-    }
+            vm.confirmDeleteAddress()
+            advanceUntilIdle()
+
+            assertNull(vm.state.value.pendingDeletion)
+            coVerify(exactly = 1) {
+                addressBookRepository.delete(chainId = Chain.Ethereum.id, address = ALICE_ADDRESS)
+            }
+            coVerify(exactly = 1) { orderRepository.delete(null, entry.model.id) }
+        }
+
+    @Test
+    fun `confirmDeleteAddress without a pending entry is a no-op`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+
+            vm.confirmDeleteAddress()
+            advanceUntilIdle()
+
+            assertNull(vm.state.value.pendingDeletion)
+            coVerify(exactly = 0) { addressBookRepository.delete(any(), any()) }
+            coVerify(exactly = 0) { orderRepository.delete(any(), any()) }
+        }
+
+    @Test
+    fun `confirm after cancel does not delete the previously staged entry`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.requestDeleteAddress(entry("Alice"))
+            vm.cancelDeleteAddress()
+
+            vm.confirmDeleteAddress()
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { addressBookRepository.delete(any(), any()) }
+        }
+
+    @Test
+    fun `consecutive requests overwrite pending and confirm deletes only the latest`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.requestDeleteAddress(entry("Alice", address = ALICE_ADDRESS))
+            val bob = entry("Bob", address = BOB_ADDRESS)
+            vm.requestDeleteAddress(bob)
+            clearMocks(addressBookRepository, orderRepository, answers = false)
+
+            vm.confirmDeleteAddress()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) {
+                addressBookRepository.delete(chainId = Chain.Ethereum.id, address = BOB_ADDRESS)
+            }
+            coVerify(exactly = 0) {
+                addressBookRepository.delete(chainId = any(), address = ALICE_ADDRESS)
+            }
+            coVerify(exactly = 1) { orderRepository.delete(null, bob.model.id) }
+        }
+
+    @Test
+    fun `confirmDeleteAddress calls loadData to refresh the list after successful delete`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.requestDeleteAddress(entry("Alice", address = ALICE_ADDRESS))
+            clearMocks(orderRepository, answers = false)
+
+            vm.confirmDeleteAddress()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) { addressBookRepository.delete(any(), any()) }
+            // loadData() subscribes to orderRepository.loadOrders to refresh the list
+            coVerify(atLeast = 1) { orderRepository.loadOrders(null) }
+        }
+
+    @Test
+    fun `confirmDeleteAddress clears pending state even when repository throws`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            coEvery { addressBookRepository.delete(any(), any()) } throws
+                RuntimeException("DB error")
+            vm.requestDeleteAddress(entry("Alice", address = ALICE_ADDRESS))
+
+            vm.confirmDeleteAddress()
+            advanceUntilIdle()
+
+            assertNull(vm.state.value.pendingDeletion)
+        }
+
+    @Test
+    fun `initial pending deletion is null`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+
+            assertEquals(null, vm.state.value.pendingDeletion)
+        }
 
     private fun createViewModel(): AddressBookViewModel =
         AddressBookViewModel(

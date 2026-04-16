@@ -42,8 +42,63 @@ internal fun UiAlertDialog(
     )
 }
 
+@Composable
+internal fun UiConfirmDialog(
+    title: String,
+    text: String,
+    confirmTitle: String,
+    dismissTitle: String,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    confirmColor: androidx.compose.ui.graphics.Color = Theme.v2.colors.neutrals.n100,
+) {
+    AlertDialog(
+        containerColor = Theme.v2.colors.backgrounds.secondary,
+        title = {
+            Text(
+                text = title,
+                color = Theme.v2.colors.neutrals.n100,
+                style = Theme.montserrat.heading5,
+            )
+        },
+        text = {
+            Text(text = text, color = Theme.v2.colors.neutrals.n100, style = Theme.montserrat.body2)
+        },
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(text = confirmTitle, color = confirmColor, style = Theme.montserrat.body3)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = dismissTitle,
+                    color = Theme.v2.colors.neutrals.n100,
+                    style = Theme.montserrat.body3,
+                )
+            }
+        },
+    )
+}
+
 @Preview
 @Composable
 private fun UiAlertDialogPreview() {
     MaterialTheme { UiAlertDialog(title = "Error", text = "Something went wrong", onDismiss = {}) }
+}
+
+@Preview
+@Composable
+private fun UiConfirmDialogPreview() {
+    MaterialTheme {
+        UiConfirmDialog(
+            title = "Delete?",
+            text = "This action cannot be undone.",
+            confirmTitle = "Delete",
+            dismissTitle = "Cancel",
+            onConfirm = {},
+            onDismiss = {},
+        )
+    }
 }

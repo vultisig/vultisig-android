@@ -585,7 +585,7 @@
     <string name="add_address_title_label">Oznaka</string>
     <string name="address_book_title_edit">Uredi adresar</string>
     <string name="address_book_delete_entry_title">Izbrisati adresu?</string>
-    <string name="address_book_delete_entry_message">%1$s će biti uklonjen iz vašeg adresara</string>
+    <string name="address_book_delete_entry_message">%1$s će biti uklonjena iz vašeg adresara</string>
     <string name="address_book_delete_entry_confirm">Izbriši</string>
     <string name="address_book_delete_entry_cancel">Odustani</string>
     <string name="backup_password_request_title">Želite li šifrirati sigurnosnu kopiju lozinkom?</string>

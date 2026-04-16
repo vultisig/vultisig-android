@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal data class AddressBookUiModel(
     val isEditModeEnabled: Boolean = false,
@@ -146,10 +148,15 @@ constructor(
 
     fun confirmDeleteAddress() {
         val target = state.value.pendingDeletion ?: return
-        state.update { it.copy(pendingDeletion = null) }
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "Failed to delete address book entry")
+                state.update { it.copy(pendingDeletion = null) }
+            }
+        ) {
             addressBookRepository.delete(target.model.chain.id, target.model.address)
             orderRepository.delete(null, target.model.id)
+            state.update { it.copy(pendingDeletion = null) }
             loadData()
         }
     }

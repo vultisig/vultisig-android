@@ -14,14 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -38,6 +38,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.UiConfirmDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -168,41 +169,20 @@ private fun DeleteAddressDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
-        containerColor = Theme.v2.colors.backgrounds.secondary,
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.address_book_delete_entry_title),
-                color = Theme.v2.colors.neutrals.n100,
-                style = Theme.montserrat.heading5,
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(R.string.address_book_delete_entry_message, entry.name),
-                color = Theme.v2.colors.neutrals.n100,
-                style = Theme.montserrat.body2,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = stringResource(R.string.address_book_delete_entry_confirm),
-                    color = Theme.v2.colors.alerts.error,
-                    style = Theme.montserrat.body3,
-                )
+    val confirmedOnce = remember { mutableStateOf(false) }
+    UiConfirmDialog(
+        title = stringResource(R.string.address_book_delete_entry_title),
+        text = stringResource(R.string.address_book_delete_entry_message, entry.name),
+        confirmTitle = stringResource(R.string.address_book_delete_entry_confirm),
+        dismissTitle = stringResource(R.string.address_book_delete_entry_cancel),
+        confirmColor = Theme.v2.colors.alerts.error,
+        onConfirm = {
+            if (!confirmedOnce.value) {
+                confirmedOnce.value = true
+                onConfirm()
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    text = stringResource(R.string.address_book_delete_entry_cancel),
-                    color = Theme.v2.colors.neutrals.n100,
-                    style = Theme.montserrat.body3,
-                )
-            }
-        },
+        onDismiss = onDismiss,
     )
 }
 
@@ -338,6 +318,28 @@ private fun AddressItemPreview2() {
         isEditModeEnabled = false,
         onClick = {},
         onDeleteClick = {},
+    )
+}
+
+@Preview
+@Composable
+private fun DeleteAddressDialogPreview() {
+    DeleteAddressDialog(
+        entry =
+            AddressBookEntryUiModel(
+                model =
+                    AddressBookEntry(
+                        chain = Chain.Ethereum,
+                        address = "0xF43jf9840fkfjn38fk0dk9Ac5",
+                        title = "Online Wallet",
+                    ),
+                image = "",
+                name = "Online Wallet",
+                network = "Ethereum",
+                address = "0xF43jf9840fkfjn38fk0dk9Ac5",
+            ),
+        onConfirm = {},
+        onDismiss = {},
     )
 }
 
