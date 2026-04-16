@@ -40,6 +40,7 @@ import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
+import com.vultisig.wallet.data.usecases.AwaitApprovalConfirmationUseCase
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
@@ -136,6 +137,7 @@ constructor(
     private val thorChainApi: ThorChainApi,
     private val evmApiFactory: EvmApiFactory,
     private val broadcastTx: BroadcastTxUseCase,
+    private val awaitApprovalConfirmation: AwaitApprovalConfirmationUseCase,
     private val explorerLinkRepository: ExplorerLinkRepository,
     private val navigator: Navigator<Destination>,
     private val sessionApi: SessionApi,
@@ -554,6 +556,13 @@ constructor(
 
             val evmApi = evmApiFactory.createEvmApi(chain)
             approveTxHash.value = evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
+
+            Timber.d(
+                "Approval tx broadcast: %s. Awaiting on-chain confirmation",
+                approveTxHash.value,
+            )
+            awaitApprovalConfirmation(chain, approveTxHash.value)
+            Timber.d("Approval tx confirmed: %s", approveTxHash.value)
 
             nonceAcc++
         }
