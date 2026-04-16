@@ -109,7 +109,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
 
     override fun isValid(chain: Chain, address: String): Boolean =
         when (chain) {
-            Chain.MayaChain -> AnyAddress.isValidBech32(address, chain.coinType, "maya")
+            Chain.MayaChain -> AnyAddress.isValidBech32(address, chain.coinType, "smaya")
 
             Chain.Qbtc -> AnyAddress.isValidBech32(address, CoinType.COSMOS, "qbtc")
 
