@@ -335,6 +335,7 @@
     <string name="swap_error_time_out">Zahtjev za zamjenu je istekao. Molimo pokušajte ponovno</string>
     <string name="swap_error_high_price_impact">Utjecaj na cijenu je prevelik. Pokušajte s manjim iznosom ili drugim parom tokena.</string>
     <string name="swap_error_quote_failed">Ponuda za zamjenu nije uspjela. Pokušajte ponovno ili prilagodite iznos.</string>
+    <string name="swap_error_rate_limit">Previše zahtjeva. Pokušajte ponovno kasnije.</string>
     <string name="swap_screen_invalid_no_vault">Trezor nije odabran</string>
     <string name="swap_screen_invalid_no_src_error">Nije odabran izvorni token</string>
     <string name="swap_screen_invalid_selected_no_dst">Nije odabran odredišni token</string>

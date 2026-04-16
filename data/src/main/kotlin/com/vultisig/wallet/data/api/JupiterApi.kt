@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTotalDataJson
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTransactionJson
 import com.vultisig.wallet.data.api.models.quotes.SwapRouteResponseJson
@@ -9,6 +10,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.HttpStatusCode
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -40,8 +42,8 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
                 parameter("outputMint", toToken)
                 parameter("amount", fromAmount)
             }
-        if (quoteResponse.status.value == 429) {
-            throw Exception("[Jupiter] Too many requests")
+        if (quoteResponse.status == HttpStatusCode.TooManyRequests) {
+            throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
         }
         val body = quoteResponse.body<SwapRouteResponseJson>()
         val outAmount = body.outAmount
@@ -64,10 +66,12 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
                 },
             )
         }
-        val quoteSwapData =
-            httpClient
-                .post("$JUPITER_URL/swap/v1/swap") { setBody(quoteSwapRequestBody) }
-                .body<QuoteSwapTransactionJson>()
+        val swapResponse =
+            httpClient.post("$JUPITER_URL/swap/v1/swap") { setBody(quoteSwapRequestBody) }
+        if (swapResponse.status == HttpStatusCode.TooManyRequests) {
+            throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
+        }
+        val quoteSwapData = swapResponse.body<QuoteSwapTransactionJson>()
 
         val feePrice =
             (SolanaTransaction.getComputeUnitPrice(quoteSwapData.data) ?: "0").toBigInteger()

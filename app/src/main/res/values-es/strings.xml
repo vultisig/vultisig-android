@@ -335,6 +335,7 @@
     <string name="swap_error_time_out">Se agotó el tiempo de espera de la solicitud de intercambio. Inténtalo de nuevo</string>
     <string name="swap_error_high_price_impact">El impacto en el precio es demasiado alto. Prueba con un monto menor o un par de tokens diferente.</string>
     <string name="swap_error_quote_failed">La cotización del swap falló. Inténtalo de nuevo o ajusta el monto.</string>
+    <string name="swap_error_rate_limit">Demasiadas solicitudes. Inténtelo de nuevo más tarde.</string>
     <string name="swap_screen_invalid_no_vault">No se ha seleccionado ninguna bóveda</string>
     <string name="swap_screen_invalid_no_src_error">No se ha seleccionado ningún token de origen</string>
     <string name="swap_screen_invalid_selected_no_dst">No se ha seleccionado ningún token de destino</string>

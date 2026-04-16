@@ -623,6 +623,7 @@
     <string name="swap_error_time_out">交换请求超时。请重试</string>
     <string name="swap_error_high_price_impact">价格影响过高。请尝试较小的金额或不同的代币对。</string>
     <string name="swap_error_quote_failed">兑换报价失败。请重试或调整金额。</string>
+    <string name="swap_error_rate_limit">请求次数过多。请稍后重试。</string>
 
     <!-- Swap Screen Invalid -->
     <string name="swap_screen_invalid_no_vault">未选择保险库</string>
