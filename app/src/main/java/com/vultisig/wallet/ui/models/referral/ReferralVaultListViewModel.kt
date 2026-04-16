@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 internal data class ReferralVaultListUiState(
     val vaults: List<VaultItem> = emptyList(),
@@ -82,7 +83,8 @@ constructor(
 
                 _state.update { it.copy(vaults = vaultItems, error = null) }
             } catch (e: Exception) {
-                _state.update { it.copy(error = e.message ?: "Failed to load vaults") }
+                Timber.e(e, "Failed to load referral vaults")
+                _state.update { it.copy(error = "Something went wrong") }
             }
         }
     }

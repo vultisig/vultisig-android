@@ -77,7 +77,7 @@ constructor(
                 _state.update {
                     VerifyExistingVaultPasswordUiState.Ready(
                         isPasswordVisible = isPasswordVisible,
-                        error = UiText.DynamicString(e.message.orEmpty()),
+                        error = UiText.StringResource(R.string.dialog_default_error_body),
                     )
                 }
             }
@@ -125,7 +125,7 @@ constructor(
                     _state.update {
                         VerifyExistingVaultPasswordUiState.Ready(
                             isPasswordVisible = isPasswordVisible,
-                            error = UiText.DynamicString(result.message),
+                            error = UiText.StringResource(R.string.dialog_default_error_body),
                         )
                     }
                 }

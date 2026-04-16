@@ -281,7 +281,8 @@ constructor(
                 }
                 is PasswordCheckResult.Error -> {
                     passwordInnerState.value = VsTextInputFieldInnerState.Error
-                    passwordErrorMessage.value = UiText.DynamicString(result.message)
+                    passwordErrorMessage.value =
+                        UiText.StringResource(R.string.dialog_default_error_body)
                 }
             }
             _uiState.update { it.copy(isLoading = false) }

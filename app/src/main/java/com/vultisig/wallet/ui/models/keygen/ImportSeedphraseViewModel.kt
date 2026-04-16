@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal data class ImportSeedphraseUiModel(
     val wordCount: Int = 0,
@@ -161,13 +162,13 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                Timber.e(e, "Failed to import seed phrase")
                 keyImportRepository.clear()
                 _state.update {
                     it.copy(
                         isImporting = false,
                         errorMessage =
-                            if (e.message != null) UiText.DynamicString(e.message!!)
-                            else UiText.StringResource(R.string.error_view_default_description),
+                            UiText.StringResource(R.string.error_view_default_description),
                         innerState = VsTextInputFieldInnerState.Error,
                     )
                 }
