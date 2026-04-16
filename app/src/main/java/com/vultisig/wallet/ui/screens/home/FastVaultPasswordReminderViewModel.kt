@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.repositories.PasswordCheckResult
+import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
@@ -18,6 +19,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -25,7 +27,9 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
 internal data class FastVaultPasswordReminderUiModel(
+    val vaultName: String = "",
     val isPasswordVisible: Boolean = false,
+    val passwordHint: UiText? = null,
     val error: UiText? = null,
 )
 
@@ -38,6 +42,7 @@ constructor(
     private val vultiSignerRepository: VultiSignerRepository,
     private val vaultMetadataRepo: VaultMetadataRepo,
     private val vaultRepository: VaultRepository,
+    private val vaultDataStoreRepository: VaultDataStoreRepository,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.FastVaultPasswordReminder>()
@@ -47,6 +52,18 @@ constructor(
     val passwordFieldState = TextFieldState()
 
     val state = MutableStateFlow(FastVaultPasswordReminderUiModel())
+
+    init {
+        viewModelScope.launch {
+            val vault = vaultRepository.get(vaultId) ?: return@launch
+            val hint = vaultDataStoreRepository.readFastSignHint(vaultId).first()
+            val passwordHint =
+                if (hint.isNotEmpty())
+                    UiText.FormattedText(R.string.import_file_password_hint_text, listOf(hint))
+                else null
+            state.update { it.copy(vaultName = vault.name, passwordHint = passwordHint) }
+        }
+    }
 
     fun back() {
         viewModelScope.launch {
@@ -65,9 +82,7 @@ constructor(
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId) ?: return@launch
 
-            val result = vultiSignerRepository.checkPassword(vault.pubKeyECDSA, password)
-
-            when (result) {
+            when (val result = vultiSignerRepository.checkPassword(vault.pubKeyECDSA, password)) {
                 is PasswordCheckResult.Valid -> {
                     back()
                 }
