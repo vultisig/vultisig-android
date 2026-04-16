@@ -1152,6 +1152,6 @@
     <string name="key_import_error_title">Importazione Chiave Fallita</string>
     <string name="key_import_error_description">Impossibile importare il vault dalla frase seme. Per favore controlla la tua frase seme e riprova.</string>
     <string name="key_import_error_no_mnemonic_description">Nessuna frase seme trovata. Per favore reinserisci la tua frase seme e riprova.</string>
-    <string name="keysign_error_approval_timeout">L\'approvazione del token è scaduta. Riprova</string>
-    <string name="keysign_error_approval_reverted">L\'approvazione del token è stata rifiutata. Riprova</string>
+    <string name="swap_error_approval_timeout">L\'approvazione del token è scaduta. Riprova</string>
+    <string name="swap_error_approval_failed">L\'approvazione del token è stata rifiutata. Riprova</string>
 </resources>

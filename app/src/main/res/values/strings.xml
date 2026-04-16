@@ -1198,7 +1198,6 @@
     <string name="staked_yrune_header">Staked yRUNE</string>
     <string name="compounded_tcy_header">Compounded TCY</string>
     <string name="unknown_error">Unknown error</string>
-
-    <string name="keysign_error_approval_timeout">Token approval timed out. Please try again</string>
-    <string name="keysign_error_approval_reverted">Token approval was rejected. Please try again</string>
+    <string name="swap_error_approval_timeout">Token approval timed out. Please try again</string>
+    <string name="swap_error_approval_failed">Token approval was rejected. Please try again</string>
 </resources>

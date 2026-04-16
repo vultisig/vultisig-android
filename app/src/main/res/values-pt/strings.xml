@@ -1147,6 +1147,6 @@
     <string name="key_import_error_title">Importação de Chave Falhou</string>
     <string name="key_import_error_description">Não é possível importar o cofre a partir da frase-semente. Verifique sua frase-semente e tente novamente.</string>
     <string name="key_import_error_no_mnemonic_description">Nenhuma frase-semente encontrada. Por favor, insira novamente sua frase-semente e tente novamente.</string>
-    <string name="keysign_error_approval_timeout">A aprovação do token expirou. Por favor tente novamente</string>
-    <string name="keysign_error_approval_reverted">A aprovação do token foi rejeitada. Por favor tente novamente</string>
+    <string name="swap_error_approval_timeout">A aprovação do token expirou. Por favor tente novamente</string>
+    <string name="swap_error_approval_failed">A aprovação do token foi rejeitada. Por favor tente novamente</string>
 </resources>

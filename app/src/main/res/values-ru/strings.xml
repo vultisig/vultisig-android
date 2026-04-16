@@ -1163,6 +1163,6 @@
     <string name="key_import_error_title">Ошибка импорта ключа</string>
     <string name="key_import_error_description">Не удалось импортировать хранилище из seed-фразы. Пожалуйста, проверьте вашу seed-фразу и попробуйте снова.</string>
     <string name="key_import_error_no_mnemonic_description">Seed-фраза не найдена. Пожалуйста, введите заново вашу seed-фразу и попробуйте снова.</string>
-    <string name="keysign_error_approval_timeout">Время ожидания одобрения токена истекло. Пожалуйста, попробуйте снова</string>
-    <string name="keysign_error_approval_reverted">Одобрение токена было отклонено. Пожалуйста, попробуйте снова</string>
+    <string name="swap_error_approval_timeout">Время ожидания одобрения токена истекло. Пожалуйста, попробуйте снова</string>
+    <string name="swap_error_approval_failed">Одобрение токена было отклонено. Пожалуйста, попробуйте снова</string>
 </resources>

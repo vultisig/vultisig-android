@@ -566,12 +566,12 @@ constructor(
                 }
                 ApprovalConfirmationResult.TimedOut -> {
                     currentState.value =
-                        KeysignState.Error(R.string.keysign_error_approval_timeout.asUiText())
+                        KeysignState.Error(R.string.swap_error_approval_timeout.asUiText())
                     return
                 }
                 ApprovalConfirmationResult.Failed -> {
                     currentState.value =
-                        KeysignState.Error(R.string.keysign_error_approval_reverted.asUiText())
+                        KeysignState.Error(R.string.swap_error_approval_failed.asUiText())
                     return
                 }
             }

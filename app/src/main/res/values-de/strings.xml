@@ -1151,6 +1151,6 @@
     <string name="key_import_error_title">Schlüsselimport fehlgeschlagen</string>
     <string name="key_import_error_description">Der Tresor konnte nicht aus der Seed-Phrase importiert werden. Bitte überprüfen Sie Ihre Seed-Phrase und versuchen Sie es erneut.</string>
     <string name="key_import_error_no_mnemonic_description">Keine Seed-Phrase gefunden. Bitte geben Sie Ihre Seed-Phrase erneut ein und versuchen Sie es noch einmal.</string>
-    <string name="keysign_error_approval_timeout">Token-Genehmigung ist abgelaufen. Bitte versuchen Sie es erneut</string>
-    <string name="keysign_error_approval_reverted">Token-Genehmigung wurde abgelehnt. Bitte versuchen Sie es erneut</string>
+    <string name="swap_error_approval_timeout">Token-Genehmigung ist abgelaufen. Bitte versuchen Sie es erneut</string>
+    <string name="swap_error_approval_failed">Token-Genehmigung wurde abgelehnt. Bitte versuchen Sie es erneut</string>
 </resources>
