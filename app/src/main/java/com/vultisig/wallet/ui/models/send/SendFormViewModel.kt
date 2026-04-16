@@ -2545,7 +2545,13 @@ constructor(
                             tokenAmountFieldState.textAsFlow(),
                             recalculateGasFee,
                         ) { token, dst, memo, tokenAmount, nonce ->
-                            GasFeeInput(token, dst.toString(), memo.toString(), tokenAmount, nonce)
+                            GasFeeInput(
+                                token,
+                                dst.asAddressInput(),
+                                memo.toString(),
+                                tokenAmount,
+                                nonce,
+                            )
                         }
                         .debounce(350)
                         .distinctUntilChanged()
@@ -2621,7 +2627,7 @@ constructor(
                                 )
 
                         val resolvedDstAddress =
-                            addressParserRepository.resolveName(dstAddress.toString(), chain)
+                            addressParserRepository.resolveName(dstAddress.asAddressInput(), chain)
                         val tokenAmountInt =
                             tokenAmount
                                 .toString()
