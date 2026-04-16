@@ -163,6 +163,11 @@ internal interface DatabaseModule {
                     MIGRATION_31_30,
                     MIGRATION_32_31,
                 )
+                // Last-resort safety net: if any single step in a chained downgrade fails
+                // (e.g. 32→31→30→29 — a failure at 31→30 still triggers a full wipe),
+                // Room destroys the entire database, including all vaults and coins.
+                // This is acceptable here because the Play Store prevents downgrades for
+                // real users; only dev/QA sideloads can reach this path.
                 .fallbackToDestructiveMigrationOnDowngrade()
                 .build()
 
