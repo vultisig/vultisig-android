@@ -4,12 +4,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +25,7 @@ import timber.log.Timber
 
 internal data class ReferralVaultListUiState(
     val vaults: List<VaultItem> = emptyList(),
-    val error: String? = null,
+    val error: UiText? = null,
 )
 
 internal data class VaultItem(
@@ -84,7 +86,9 @@ constructor(
                 _state.update { it.copy(vaults = vaultItems, error = null) }
             } catch (e: Exception) {
                 Timber.e(e, "Failed to load referral vaults")
-                _state.update { it.copy(error = "Something went wrong") }
+                _state.update {
+                    it.copy(error = UiText.StringResource(R.string.dialog_default_error_body))
+                }
             }
         }
     }

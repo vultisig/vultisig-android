@@ -245,7 +245,7 @@ constructor(
             onError = { e ->
                 Timber.e(e, "Failed to verify vault password")
                 passwordInnerState.value = VsTextInputFieldInnerState.Error
-                passwordErrorMessage.value = StringResource(R.string.fast_vault_invalid_password)
+                passwordErrorMessage.value = StringResource(R.string.dialog_default_error_body)
                 _uiState.update { it.copy(isLoading = false) }
             }
         ) {
