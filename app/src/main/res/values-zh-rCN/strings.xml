@@ -1473,4 +1473,6 @@
     <string name="key_import_error_title">密钥导入失败</string>
     <string name="key_import_error_description">无法从助记词导入钱包。请检查您的助记词并重试。</string>
     <string name="key_import_error_no_mnemonic_description">未找到助记词。请重新输入您的助记词并重试。</string>
+    <string name="keysign_error_approval_timeout">代币批准超时。请重试</string>
+    <string name="keysign_error_approval_reverted">代币批准被拒绝。请重试</string>
 </resources>

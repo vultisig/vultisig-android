@@ -11,11 +11,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.assertThrows
 
 internal class AwaitApprovalConfirmationUseCaseImplTest {
 
@@ -31,11 +29,12 @@ internal class AwaitApprovalConfirmationUseCaseImplTest {
     }
 
     @Test
-    fun `returns immediately when already confirmed`() = runTest {
+    fun `returns Confirmed when receipt is success`() = runTest {
         coEvery { evmApi.getTxStatus(TX_HASH) } returns confirmedReceipt()
 
-        assertDoesNotThrow { useCase(CHAIN, TX_HASH) }
+        val result = useCase(CHAIN, TX_HASH)
 
+        assertEquals(ApprovalConfirmationResult.Confirmed, result)
         coVerify(exactly = 1) { evmApi.getTxStatus(TX_HASH) }
     }
 
@@ -52,33 +51,37 @@ internal class AwaitApprovalConfirmationUseCaseImplTest {
     fun `polls until confirmation after pending results`() = runTest {
         coEvery { evmApi.getTxStatus(TX_HASH) } returnsMany listOf(null, null, confirmedReceipt())
 
-        useCase(CHAIN, TX_HASH)
+        val result = useCase(CHAIN, TX_HASH)
 
+        assertEquals(ApprovalConfirmationResult.Confirmed, result)
         coVerify(exactly = 3) { evmApi.getTxStatus(TX_HASH) }
     }
 
     @Test
-    fun `throws when approval reverts`() = runTest {
+    fun `returns Reverted when receipt status is failure`() = runTest {
         coEvery { evmApi.getTxStatus(TX_HASH) } returns revertedReceipt()
 
-        val exception = assertThrows<IllegalStateException> { useCase(CHAIN, TX_HASH) }
-        assertTrue(exception.message?.contains("approval step failed") == true)
+        val result = useCase(CHAIN, TX_HASH)
+
+        assertEquals(ApprovalConfirmationResult.Reverted, result)
     }
 
     @Test
-    fun `throws on timeout when never confirmed`() = runTest {
+    fun `returns TimedOut when never confirmed`() = runTest {
         coEvery { evmApi.getTxStatus(TX_HASH) } answers { null }
 
-        val exception = assertThrows<IllegalStateException> { useCase(CHAIN, TX_HASH) }
-        assertTrue(exception.message?.contains("taking longer than expected") == true)
+        val result = useCase(CHAIN, TX_HASH)
+
+        assertEquals(ApprovalConfirmationResult.TimedOut, result)
     }
 
     @Test
-    fun `throws immediately on revert after pending polls`() = runTest {
+    fun `returns Reverted immediately even after pending polls`() = runTest {
         coEvery { evmApi.getTxStatus(TX_HASH) } returnsMany listOf(null, revertedReceipt())
 
-        val exception = assertThrows<IllegalStateException> { useCase(CHAIN, TX_HASH) }
-        assertTrue(exception.message?.contains("approval step failed") == true)
+        val result = useCase(CHAIN, TX_HASH)
+
+        assertEquals(ApprovalConfirmationResult.Reverted, result)
         coVerify(exactly = 2) { evmApi.getTxStatus(TX_HASH) }
     }
 

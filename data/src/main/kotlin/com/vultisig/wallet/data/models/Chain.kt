@@ -427,6 +427,25 @@ val Chain.getDustThreshold: BigInteger
             else -> throw UnsupportedOperationException("Chain ${this.name} does not support Dust")
         }
 
+val Chain.blockTimeMs: Long
+    get() =
+        when (this) {
+            Chain.Ethereum -> 12_000L
+            Chain.BscChain,
+            Chain.CronosChain -> 3_000L
+            Chain.Polygon,
+            Chain.Avalanche,
+            Chain.Optimism,
+            Chain.Base,
+            Chain.Blast,
+            Chain.Mantle -> 2_000L
+            Chain.Arbitrum,
+            Chain.ZkSync,
+            Chain.Sei,
+            Chain.Hyperliquid -> 1_000L
+            else -> 4_000L
+        }
+
 fun Chain.toValue(value: BigInteger): BigDecimal = coinType.toValue(value)
 
 fun Chain.toValue(value: BigDecimal): BigDecimal = coinType.toValue(value)

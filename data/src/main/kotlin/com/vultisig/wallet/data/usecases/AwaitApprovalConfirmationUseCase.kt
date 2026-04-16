@@ -1,57 +1,52 @@
 package com.vultisig.wallet.data.usecases
 
-import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.blockTimeMs
 import javax.inject.Inject
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
+sealed interface ApprovalConfirmationResult {
+    data object Confirmed : ApprovalConfirmationResult
+
+    data object TimedOut : ApprovalConfirmationResult
+
+    data object Reverted : ApprovalConfirmationResult
+}
+
 fun interface AwaitApprovalConfirmationUseCase {
-    suspend operator fun invoke(chain: Chain, txHash: String)
+    suspend operator fun invoke(chain: Chain, txHash: String): ApprovalConfirmationResult
 }
 
 internal class AwaitApprovalConfirmationUseCaseImpl
 @Inject
 constructor(private val evmApiFactory: EvmApiFactory) : AwaitApprovalConfirmationUseCase {
 
-    override suspend fun invoke(chain: Chain, txHash: String) {
+    override suspend fun invoke(chain: Chain, txHash: String): ApprovalConfirmationResult {
         val evmApi = evmApiFactory.createEvmApi(chain)
-
-        val confirmed = withTimeoutOrNull(MAX_WAIT_MS) { pollUntilConfirmed(evmApi, txHash) }
-
-        if (confirmed != true) {
-            error(
-                "Swap is taking longer than expected. Please check your transaction history before retrying"
-            )
-        }
-    }
-
-    private suspend fun pollUntilConfirmed(evmApi: EvmApi, txHash: String): Boolean {
-        while (true) {
-            val status = evmApi.getTxStatus(txHash)?.result?.status
-            when (status) {
-                RECEIPT_SUCCESS -> return true
-                RECEIPT_FAILURE ->
-                    error("Swap could not be completed because the token approval step failed")
+        repeat(MAX_BLOCKS) { attempt ->
+            when (evmApi.getTxStatus(txHash)?.result?.status) {
+                RECEIPT_SUCCESS -> return ApprovalConfirmationResult.Confirmed
+                RECEIPT_FAILURE -> return ApprovalConfirmationResult.Reverted
                 else -> {
                     Timber.d(
-                        "Approval %s not yet confirmed (status=%s), retrying in %ds",
+                        "Approval %s not yet confirmed, attempt %d/%d",
                         txHash,
-                        status,
-                        POLL_INTERVAL_MS / 1000,
+                        attempt + 1,
+                        MAX_BLOCKS,
                     )
-                    delay(POLL_INTERVAL_MS)
+                    delay(chain.blockTimeMs)
                 }
             }
         }
+
+        return ApprovalConfirmationResult.TimedOut
     }
 
     private companion object {
         const val RECEIPT_SUCCESS = "0x1"
         const val RECEIPT_FAILURE = "0x0"
-        const val POLL_INTERVAL_MS = 4_000L
-        const val MAX_WAIT_MS = 120_000L
+        const val MAX_BLOCKS = 5
     }
 }

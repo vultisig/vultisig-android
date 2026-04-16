@@ -40,6 +40,7 @@ import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
+import com.vultisig.wallet.data.usecases.ApprovalConfirmationResult
 import com.vultisig.wallet.data.usecases.AwaitApprovalConfirmationUseCase
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
@@ -557,12 +558,23 @@ constructor(
             val evmApi = evmApiFactory.createEvmApi(chain)
             approveTxHash.value = evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
 
-            Timber.d(
-                "Approval tx broadcast: %s. Awaiting on-chain confirmation",
-                approveTxHash.value,
-            )
-            awaitApprovalConfirmation(chain, approveTxHash.value)
-            Timber.d("Approval tx confirmed: %s", approveTxHash.value)
+            Timber.d("Approval tx broadcast: %s, awaiting confirmation", approveTxHash.value)
+
+            when (awaitApprovalConfirmation(chain, approveTxHash.value)) {
+                ApprovalConfirmationResult.Confirmed -> {
+                    Timber.d("Approval tx confirmed: %s", approveTxHash.value)
+                }
+                ApprovalConfirmationResult.TimedOut -> {
+                    currentState.value =
+                        KeysignState.Error(R.string.keysign_error_approval_timeout.asUiText())
+                    return
+                }
+                ApprovalConfirmationResult.Reverted -> {
+                    currentState.value =
+                        KeysignState.Error(R.string.keysign_error_approval_reverted.asUiText())
+                    return
+                }
+            }
 
             nonceAcc++
         }
