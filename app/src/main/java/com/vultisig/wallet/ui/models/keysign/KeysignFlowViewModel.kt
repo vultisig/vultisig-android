@@ -322,9 +322,7 @@ constructor(
             updateTransactionUiModel(keysignPayload, customMessagePayload, txType)
         } catch (e: Exception) {
             Timber.e(e)
-            moveToState(
-                Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
-            )
+            moveToState(Error(UiText.StringResource(R.string.unknown_error)))
         }
     }
 
@@ -690,10 +688,9 @@ constructor(
             }
             currentState.update { nextState }
         } catch (e: Exception) {
+            Timber.e(e, "Failed to transition keysign state")
             isLoading.value = false
-            moveToState(
-                Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
-            )
+            moveToState(Error(UiText.StringResource(R.string.unknown_error)))
         }
     }
 
@@ -731,11 +728,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to update keysign payload")
-                moveToState(
-                    KeysignFlowState.Error(
-                        (e.message ?: "Failed to update keysign payload").asUiText()
-                    )
-                )
+                moveToState(KeysignFlowState.Error(UiText.StringResource(R.string.unknown_error)))
             }
         ) {
             withContext(Dispatchers.IO) { updateKeysignPayload(context) }

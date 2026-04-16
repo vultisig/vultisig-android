@@ -1745,10 +1745,7 @@ constructor(
                                             ),
                                         )
                                     } else {
-                                        e.message?.let { UiText.DynamicString(it) }
-                                            ?: UiText.StringResource(
-                                                R.string.swap_error_amount_too_low
-                                            )
+                                        UiText.StringResource(R.string.swap_error_amount_too_low)
                                     }
                                 }
 

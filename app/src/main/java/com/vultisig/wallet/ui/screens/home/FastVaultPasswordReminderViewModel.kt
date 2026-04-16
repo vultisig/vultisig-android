@@ -82,7 +82,9 @@ constructor(
                     }
                 }
                 is PasswordCheckResult.Error -> {
-                    state.update { it.copy(error = UiText.DynamicString(result.message)) }
+                    state.update {
+                        it.copy(error = UiText.StringResource(R.string.dialog_default_error_body))
+                    }
                 }
             }
         }

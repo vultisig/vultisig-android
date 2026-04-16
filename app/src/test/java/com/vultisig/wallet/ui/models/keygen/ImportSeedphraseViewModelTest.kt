@@ -539,7 +539,10 @@ internal class ImportSeedphraseViewModelTest {
             advanceUntilIdle()
 
             assertFalse(vm.state.value.isImporting)
-            assertEquals(UiText.DynamicString("Network error"), vm.state.value.errorMessage)
+            assertEquals(
+                UiText.StringResource(R.string.error_view_default_description),
+                vm.state.value.errorMessage,
+            )
             assertEquals(VsTextInputFieldInnerState.Error, vm.state.value.innerState)
         }
 
@@ -731,7 +734,10 @@ internal class ImportSeedphraseViewModelTest {
             vm.importSeedphrase()
             advanceUntilIdle()
 
-            assertEquals(UiText.DynamicString("Network error"), vm.state.value.errorMessage)
+            assertEquals(
+                UiText.StringResource(R.string.error_view_default_description),
+                vm.state.value.errorMessage,
+            )
 
             // Type same phrase again, let debounce complete
             shouldThrow = false

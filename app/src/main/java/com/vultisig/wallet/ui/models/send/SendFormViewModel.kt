@@ -1119,7 +1119,8 @@ constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
+                Timber.e(e, "Transaction failed")
+                showError(UiText.StringResource(R.string.dialog_default_error_body))
             } finally {
                 hideLoading()
             }
@@ -1407,7 +1408,8 @@ constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
+                Timber.e(e, "Transaction failed")
+                showError(UiText.StringResource(R.string.dialog_default_error_body))
             } finally {
                 hideLoading()
             }
@@ -1532,7 +1534,8 @@ constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
+                Timber.e(e, "Transaction failed")
+                showError(UiText.StringResource(R.string.dialog_default_error_body))
             } finally {
                 hideLoading()
             }
@@ -1650,7 +1653,8 @@ constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
+                Timber.e(e, "Transaction failed")
+                showError(UiText.StringResource(R.string.dialog_default_error_body))
             } finally {
                 hideLoading()
             }
@@ -1751,7 +1755,8 @@ constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
+                Timber.e(e, "Transaction failed")
+                showError(UiText.StringResource(R.string.dialog_default_error_body))
             } finally {
                 hideLoading()
             }
@@ -1873,7 +1878,8 @@ constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
+                Timber.e(e, "Transaction failed")
+                showError(UiText.StringResource(R.string.dialog_default_error_body))
             } finally {
                 hideLoading()
             }
@@ -2000,7 +2006,8 @@ constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
+                Timber.e(e, "Transaction failed")
+                showError(UiText.StringResource(R.string.dialog_default_error_body))
             } finally {
                 hideLoading()
             }
@@ -2133,7 +2140,8 @@ constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
+                Timber.e(e, "Transaction failed")
+                showError(UiText.StringResource(R.string.dialog_default_error_body))
             } finally {
                 hideLoading()
             }
