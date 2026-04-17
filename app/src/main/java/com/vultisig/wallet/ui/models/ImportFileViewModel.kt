@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.core.net.toUri
 import androidx.lifecycle.SavedStateHandle
@@ -23,8 +24,10 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
+import com.vultisig.wallet.data.usecases.MalformedVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
+import com.vultisig.wallet.data.usecases.WrongPasswordException
 import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.navigation.Destination
@@ -38,6 +41,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -49,7 +53,6 @@ internal data class ImportFileState(
     val fileContent: String? = null,
     val error: UiText? = null,
     val showPasswordPrompt: Boolean = false,
-    val password: String? = null,
     val isPasswordObfuscated: Boolean = true,
     val passwordErrorHint: UiText? = null,
     val isZip: Boolean? = null,
@@ -104,7 +107,15 @@ constructor(
                         hidePasswordPromptDialog()
                         showDuplicateError()
                     }
-                    SaveResult.Failed -> showErrorHint()
+                    SaveResult.WrongPassword -> showErrorHint()
+                    SaveResult.Malformed -> {
+                        hidePasswordPromptDialog()
+                        showMalformedError()
+                    }
+                    SaveResult.Failed -> {
+                        hidePasswordPromptDialog()
+                        showGenericError()
+                    }
                 }
             }
         }
@@ -115,8 +126,10 @@ constructor(
         when (saveToDb(fileContent, null)) {
             SaveResult.Success -> showSuccessImport()
             SaveResult.Duplicate -> showDuplicateError()
-            SaveResult.Failed ->
+            SaveResult.WrongPassword ->
                 uiModel.update { it.copy(showPasswordPrompt = true, passwordErrorHint = null) }
+            SaveResult.Malformed -> showMalformedError()
+            SaveResult.Failed -> showGenericError()
         }
     }
 
@@ -124,89 +137,118 @@ constructor(
         try {
             insertVaultToDb(parseVaultFromString(fileContent, password))
             SaveResult.Success
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: DuplicateVaultException) {
-            Timber.e(e)
+            Timber.d(e, "Vault already exists")
             SaveResult.Duplicate
         } catch (e: SQLiteConstraintException) {
-            Timber.e(e)
+            Timber.w(e, "Vault already exists (SQLite)")
             SaveResult.Duplicate
+        } catch (e: WrongPasswordException) {
+            Timber.d(e, "Wrong or missing vault password")
+            SaveResult.WrongPassword
+        } catch (e: MalformedVaultException) {
+            Timber.w(e, "Vault file is malformed")
+            SaveResult.Malformed
         } catch (e: Exception) {
-            Timber.e(e)
+            Timber.e(e, "Vault import failed unexpectedly")
             SaveResult.Failed
         }
 
-    private fun showSuccessImport() {
+    private fun showSuccessImport() =
         showSnackBarMessage(
             message = context.getString(R.string.import_file_screen_success_import),
             type = SnackbarType.Success,
         )
-    }
 
     private fun showSnackBarMessage(message: String, type: SnackbarType) {
         viewModelScope.launch { snackBarFlow.showMessage(message = message, type = type) }
     }
 
-    private fun showDuplicateError() {
-        val isZip = uiModel.value.isZip
-        if (isZip == true) {
-            showSnackBarMessage(
-                message = context.getString(R.string.import_file_screen_duplicate_vault),
-                type = SnackbarType.Error,
-            )
-        } else {
-            uiModel.update {
-                it.copy(
-                    error = UiText.StringResource(R.string.import_file_screen_duplicate_vault),
-                    fileName = null,
-                    fileContent = null,
-                )
+    private fun showDuplicateError() =
+        showError(R.string.import_file_screen_duplicate_vault, FailurePolicy.DropFile)
+
+    // Unusable file — drop it so the user picks another. For zips, also remove the bad entry
+    // from zipOutputs so re-tapping doesn't re-enter the same doomed file.
+    private fun showMalformedError() =
+        showError(R.string.import_file_not_supported, FailurePolicy.DropFile)
+
+    // The file looks valid; a post-decrypt step failed. Keep the file so the user can retry.
+    private fun showGenericError() =
+        showError(R.string.dialog_default_error_body, FailurePolicy.KeepFile)
+
+    private fun showError(@StringRes resId: Int, policy: FailurePolicy) {
+        val state = uiModel.value
+        if (state.isZip == true) {
+            showSnackBarMessage(context.getString(resId), SnackbarType.Error)
+            if (policy == FailurePolicy.DropFile) {
+                val badContent = state.fileContent
+                uiModel.update {
+                    it.copy(
+                        zipOutputs = it.zipOutputs.filter { entry -> entry.content != badContent },
+                        fileContent = null,
+                    )
+                }
             }
+            return
         }
+        uiModel.update {
+            it.copy(
+                error = UiText.StringResource(resId),
+                fileName = if (policy == FailurePolicy.DropFile) null else it.fileName,
+                fileContent = if (policy == FailurePolicy.DropFile) null else it.fileContent,
+            )
+        }
+    }
+
+    private enum class FailurePolicy {
+        DropFile,
+        KeepFile,
     }
 
     private enum class SaveResult {
         Success,
         Duplicate,
+        WrongPassword,
+        Malformed,
         Failed,
     }
 
     private suspend fun insertVaultToDb(vault: Vault) {
-        // if the backup didn't set libtype correctly , then we need a way to override it manually
-        // when the backup file has share\d+of\d+ in the filename, then it's a DKLS vault
-        // Only apply this heuristic when libType is the default GG20 (old backups).
-        // KeyImport vaults also use "share" filenames but must keep their libType.
-        val regex = "share\\d+of\\d+".toRegex()
-        val adjustedVault =
-            if (
-                vault.libType == SigningLibType.GG20 &&
-                    uiModel.value.fileName?.contains(regex) == true
-            ) {
-                vault.copy(libType = SigningLibType.DKLS)
-            } else {
-                vault
-            }
-        saveVault(adjustedVault, false)
-        vaultDataStoreRepository.setBackupStatus(adjustedVault.id, true)
-        discoverToken(adjustedVault.id, null)
+        val adjustedVault = vault.withInferredLibType(uiModel.value.fileName)
 
-        if (adjustedVault.pubKeyMLDSA.isNotBlank()) {
-            val qbtcToken = Coins.Qbtc.QBTC
-            val (address, pubKey) =
-                chainAccountAddressRepository.getAddress(qbtcToken, adjustedVault)
-            vaultRepository.addTokenToVault(
-                adjustedVault.id,
-                qbtcToken.copy(address = address, hexPublicKey = pubKey),
-            )
+        // saveVault is the point of no return — failure here means the vault isn't saved, so
+        // the caller should surface a user-visible error. Everything after runs best-effort;
+        // a partial post-save failure must not leave the user stranded.
+        saveVault(adjustedVault, false)
+        runBestEffort("Failed to set backup status for imported vault") {
+            vaultDataStoreRepository.setBackupStatus(adjustedVault.id, true)
         }
+        runBestEffort("Token discovery failed for imported vault") {
+            discoverToken(adjustedVault.id, null)
+        }
+        if (adjustedVault.pubKeyMLDSA.isNotBlank()) {
+            runBestEffort("Failed to add QBTC token to imported vault") {
+                val qbtc = Coins.Qbtc.QBTC
+                val (address, pubKey) =
+                    chainAccountAddressRepository.getAddress(qbtc, adjustedVault)
+                vaultRepository.addTokenToVault(
+                    adjustedVault.id,
+                    qbtc.copy(address = address, hexPublicKey = pubKey),
+                )
+            }
+        }
+
         if (uiModel.value.isZip == true) {
-            val updatedZipOutput =
+            val remaining =
                 uiModel.value.zipOutputs.filter { it.content != uiModel.value.fileContent }
-            if (updatedZipOutput.isEmpty()) {
-                navigateToHome(vault = adjustedVault)
+            if (remaining.isEmpty()) {
+                navigateToHome(adjustedVault)
             } else {
                 uiModel.update {
                     it.copy(
-                        zipOutputs = updatedZipOutput,
+                        zipOutputs = remaining,
                         canNavigateToHome = true,
                         activeVault = adjustedVault,
                     )
@@ -218,12 +260,35 @@ constructor(
         navigateToHome(adjustedVault)
     }
 
+    // The vault is already saved; navigator glitches mustn't surface as an import failure.
     private suspend fun navigateToHome(vault: Vault) {
-        navigator.route(
-            Route.Home(openVaultId = vault.id),
-            opts = NavigationOptions(clearBackStack = true),
-        )
+        runBestEffort("Failed to navigate home after import; vault is saved") {
+            navigator.route(
+                Route.Home(openVaultId = vault.id),
+                opts = NavigationOptions(clearBackStack = true),
+            )
+        }
     }
+
+    private suspend inline fun runBestEffort(message: String, block: () -> Unit) {
+        try {
+            block()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, message)
+        }
+    }
+
+    // Older DKLS backups were sometimes persisted with libType=GG20. Recover the real type
+    // from the share-NofM filename convention, but leave KeyImport vaults alone — they also
+    // use that naming and must keep their declared libType.
+    private fun Vault.withInferredLibType(fileName: String?): Vault =
+        if (libType == SigningLibType.GG20 && fileName?.contains(SHARE_FILENAME_REGEX) == true) {
+            copy(libType = SigningLibType.DKLS)
+        } else {
+            this
+        }
 
     fun saveFileToAppDir() {
         val uri = uiModel.value.fileUri ?: return
@@ -315,5 +380,9 @@ constructor(
                 activeVault?.run { navigateToHome(this) } ?: navigator.back()
             } else navigator.back()
         }
+    }
+
+    private companion object {
+        private val SHARE_FILENAME_REGEX = "share\\d+of\\d+".toRegex()
     }
 }

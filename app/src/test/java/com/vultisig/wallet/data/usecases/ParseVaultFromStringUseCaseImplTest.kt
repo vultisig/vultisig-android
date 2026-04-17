@@ -11,9 +11,11 @@ import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.json.Json
@@ -46,6 +48,13 @@ internal class ParseVaultFromStringUseCaseImplTest {
         val vaultBytes = protoBuf.encodeToByteArray(vaultProto)
         val vaultBase64 = Base64.encode(vaultBytes)
         val container = VaultContainerProto(vault = vaultBase64, isEncrypted = isEncrypted)
+        val containerBytes = protoBuf.encodeToByteArray(container)
+        return Base64.encode(containerBytes)
+    }
+
+    private fun encodeEncryptedContainer(vaultBytes: ByteArray): String {
+        val vaultBase64 = Base64.encode(vaultBytes)
+        val container = VaultContainerProto(vault = vaultBase64, isEncrypted = true)
         val containerBytes = protoBuf.encodeToByteArray(container)
         return Base64.encode(containerBytes)
     }
@@ -212,5 +221,250 @@ internal class ParseVaultFromStringUseCaseImplTest {
         assertEquals(expectedVault, result)
         assertEquals("OldVault", capturedOldVault.captured.name)
         assertEquals("eddsa", capturedOldVault.captured.pubKeyEdDSA)
+    }
+
+    @Test
+    fun `decrypts encrypted new-format container with correct password`() {
+        val encryption = mockk<Encryption>()
+        val innerVault = testVaultProto(name = "DecryptedVault")
+        val innerVaultBytes = protoBuf.encodeToByteArray(innerVault)
+        // Inside the container `vault` is base64-encoded ciphertext; for this test we use
+        // raw bytes and mock decrypt to return the plaintext protobuf.
+        val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
+        val input = encodeEncryptedContainer(ciphertext)
+        every { encryption.decrypt(any(), any()) } returns innerVaultBytes
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = mockk(),
+            )
+
+        val vault = parser(input, "correct-password")
+
+        assertEquals("DecryptedVault", vault.name)
+    }
+
+    @Test
+    fun `throws WrongPasswordException when encrypted new-format container decrypt returns null`() {
+        val encryption = mockk<Encryption>()
+        val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
+        val input = encodeEncryptedContainer(ciphertext)
+        every { encryption.decrypt(any(), any()) } returns null
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = mockk(),
+            )
+
+        assertFailsWith<WrongPasswordException> { parser(input, "wrong-password") }
+    }
+
+    @Test
+    fun `throws WrongPasswordException when encrypted new-format container has no password`() {
+        val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
+        val input = encodeEncryptedContainer(ciphertext)
+
+        // No decryption attempt is made when password is null/blank, so the mocked Encryption
+        // never gets called — any() answer would be fine.
+        assertFailsWith<WrongPasswordException> { useCase(input, null) }
+        assertFailsWith<WrongPasswordException> { useCase(input, "") }
+        assertFailsWith<WrongPasswordException> { useCase(input, "   ") }
+    }
+
+    @Test
+    fun `throws MalformedVaultException when decrypted bytes are not a valid VaultProto`() {
+        val encryption = mockk<Encryption>()
+        val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
+        val input = encodeEncryptedContainer(ciphertext)
+        // Decrypt "succeeds" but returns garbage bytes that won't parse as a VaultProto.
+        every { encryption.decrypt(any(), any()) } returns byteArrayOf(0x5A, 0x5B, 0x5C)
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = mockk(),
+            )
+
+        assertFailsWith<MalformedVaultException> { parser(input, "password") }
+    }
+
+    @Test
+    fun `throws MalformedVaultException for garbage input with no password`() {
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = mockk(),
+                protoBuf = protoBuf,
+                json = Json,
+            )
+
+        // Not a valid container, not plain JSON, base64-decodes to an odd-length blob that
+        // can't be CBC ciphertext. No password → we're confident this isn't an encrypted
+        // vault and must NOT pop a password prompt.
+        assertFailsWith<MalformedVaultException> { parser("not a vault at all {}", null) }
+    }
+
+    @Test
+    fun `throws WrongPasswordException when no-password input looks like an encrypted blob`() {
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = mockk(),
+                protoBuf = protoBuf,
+                json = Json,
+            )
+
+        // 32 bytes of base64 decodes to 24 non-zero bytes — not a multiple of 16. Produce
+        // something that IS a multiple of 16 (32 bytes) so the heuristic pops the prompt.
+        // "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" is 32 bytes of zeros.
+        val blob = Base64.encode(ByteArray(32))
+
+        assertFailsWith<WrongPasswordException> { parser(blob, null) }
+    }
+
+    @Test
+    fun `throws WrongPasswordException when old-format encrypted wrapper decrypt returns null`() {
+        val encryption = mockk<Encryption>()
+        every { encryption.decrypt(any(), any()) } returns null
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = Json,
+            )
+
+        // Input isn't a valid container and isn't plain JSON, so we hit the encrypted
+        // old-format branch; decrypt returns null → WrongPasswordException.
+        assertFailsWith<WrongPasswordException> { parser("VGhpcyBpcyBiYXNlNjQ=", "wrong-pw") }
+    }
+
+    @Test
+    fun `throws MalformedVaultException when old-format decrypt succeeds but output is not hex`() {
+        val encryption = mockk<Encryption>()
+        val hexMapper = mockk<MapHexToPlainString>()
+        // Decrypt returns plaintext bytes, but they aren't valid hex — hexMapper throws.
+        every { encryption.decrypt(any(), any()) } returns byteArrayOf(0x7A, 0x7B, 0x7C)
+        every { hexMapper(any()) } throws IllegalArgumentException("not hex")
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = hexMapper,
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = Json,
+            )
+
+        assertFailsWith<MalformedVaultException> { parser("VGhpcyBpcyBiYXNlNjQ=", "password") }
+    }
+
+    @Test
+    fun `throws MalformedVaultException when old-format decrypt succeeds but output is not JSON`() {
+        val encryption = mockk<Encryption>()
+        val hexMapper = mockk<MapHexToPlainString>()
+        every { encryption.decrypt(any(), any()) } returns byteArrayOf(0x7A, 0x7B, 0x7C)
+        every { hexMapper(any()) } returns "plain text, not json"
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = hexMapper,
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = Json,
+            )
+
+        assertFailsWith<MalformedVaultException> { parser("VGhpcyBpcyBiYXNlNjQ=", "password") }
+    }
+
+    @Test
+    fun `propagates CancellationException from encryption layer`() {
+        val encryption = mockk<Encryption>()
+        val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
+        val input = encodeEncryptedContainer(ciphertext)
+        every { encryption.decrypt(any(), any()) } throws CancellationException("cancelled")
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = mockk(),
+            )
+
+        // CancellationException must not be reclassified as WrongPassword or Malformed —
+        // structured concurrency requires it to propagate unchanged.
+        assertFailsWith<CancellationException> { parser(input, "password") }
+    }
+
+    @Test
+    fun `propagates CancellationException from old-format path`() {
+        val encryption = mockk<Encryption>()
+        every { encryption.decrypt(any(), any()) } throws CancellationException("cancelled")
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = Json,
+            )
+
+        assertFailsWith<CancellationException> { parser("VGhpcyBpcyBiYXNlNjQ=", "password") }
+    }
+
+    @Test
+    fun `plain JSON old vault is parsed even when password is provided`() {
+        val mapper = mockk<VaultFromOldJsonMapper>()
+        val hexMapper = mockk<MapHexToPlainString>()
+        val expectedVault = Vault(id = "id", name = "Ignored Password Vault")
+        every { hexMapper(any()) } answers { firstArg() }
+        every { mapper(any()) } returns expectedVault
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mapper,
+                mapHexToPlainString = hexMapper,
+                encryption = mockk(),
+                protoBuf = protoBuf,
+                json = Json,
+            )
+
+        val oldJson =
+            """
+            {
+              "id": "old-id",
+              "localPartyID": "party-1",
+              "pubKeyECDSA": "ecdsa",
+              "hexChainCode": "chaincode",
+              "pubKeyEDDSA": "eddsa",
+              "name": "OldVault",
+              "signers": ["party-1"],
+              "keyshares": [{"pubkey": "pub1", "keyshare": "share1"}]
+            }
+        """
+                .trimIndent()
+
+        val result = parser(oldJson, "whatever-password")
+
+        assertEquals(expectedVault, result)
     }
 }
