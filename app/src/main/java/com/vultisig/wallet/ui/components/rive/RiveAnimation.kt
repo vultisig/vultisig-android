@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -83,7 +84,7 @@ fun RiveAnimation(
 @Composable
 fun rememberRiveResourceFile(@RawRes resId: Int): State<RiveFile?> {
     if (!isRiveInitialized) {
-        return remember { derivedStateOf { null } }
+        return remember { mutableStateOf(null) }
     }
 
     val riveWorker = rememberRiveWorkerOrNull()

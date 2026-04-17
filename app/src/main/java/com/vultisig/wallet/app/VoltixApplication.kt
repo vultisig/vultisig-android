@@ -23,7 +23,7 @@ internal open class VsBaseApplication : Application() {
         try {
             Rive.init(this)
             isRiveInitialized = true
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Timber.e(e, "Failed to initialize Rive SDK, animations will be disabled")
         }
     }
