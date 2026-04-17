@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
+import timber.log.Timber
 
 internal data class FastVaultPasswordReminderUiModel(
     val vaultName: String = "",
@@ -55,7 +56,12 @@ constructor(
 
     init {
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
+            val vault =
+                vaultRepository.get(vaultId)
+                    ?: run {
+                        Timber.e("Vault not found for id: %s", vaultId)
+                        return@launch
+                    }
             val hint = vaultDataStoreRepository.readFastSignHint(vaultId).first()
             val passwordHint =
                 if (hint.isNotEmpty())
@@ -80,7 +86,12 @@ constructor(
         val password = passwordFieldState.text.toString()
 
         viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
+            val vault =
+                vaultRepository.get(vaultId)
+                    ?: run {
+                        Timber.e("Vault not found for id: %s", vaultId)
+                        return@launch
+                    }
 
             when (val result = vultiSignerRepository.checkPassword(vault.pubKeyECDSA, password)) {
                 is PasswordCheckResult.Valid -> {
