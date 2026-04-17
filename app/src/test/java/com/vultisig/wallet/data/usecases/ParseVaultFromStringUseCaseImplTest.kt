@@ -224,6 +224,63 @@ internal class ParseVaultFromStringUseCaseImplTest {
     }
 
     @Test
+    fun `ignores password on unencrypted new-format container`() {
+        // Defensive: isEncrypted=false must ignore any password and parse normally.
+        val proto = testVaultProto(name = "UnencryptedVault")
+        val input = encodeVaultContainer(proto, isEncrypted = false)
+
+        val vault = useCase(input, "any-password-should-be-ignored")
+
+        assertEquals("UnencryptedVault", vault.name)
+    }
+
+    @Test
+    fun `decrypts encrypted old-format wrapper end-to-end with correct password`() {
+        // End-to-end legacy path: base64 → AES-CBC decrypt → hex-to-plain → OldJsonVaultRoot.
+        val encryption = mockk<Encryption>()
+        val mapper = mockk<VaultFromOldJsonMapper>()
+        val hexMapper = mockk<MapHexToPlainString>()
+        val expectedVault = Vault(id = "id", name = "LegacyVault")
+
+        // 32 bytes of zeros passes the legacy-ciphertext shape check.
+        val ciphertextShaped = Base64.encode(ByteArray(32))
+        // Mock decrypt → plaintext hex. mapHexToPlainString → JSON string wrapping
+        // OldJsonVaultRoot.
+        every { encryption.decrypt(any(), any()) } returns "deadbeef".toByteArray(Charsets.UTF_8)
+        every { hexMapper(any()) } returns
+            """
+            {
+              "version": "v1",
+              "vault": {
+                "id": "old-id",
+                "localPartyID": "party-1",
+                "pubKeyECDSA": "ecdsa",
+                "hexChainCode": "chaincode",
+                "pubKeyEDDSA": "eddsa",
+                "name": "LegacyVault",
+                "signers": ["party-1"],
+                "keyshares": [{"pubkey": "pub1", "keyshare": "share1"}]
+              }
+            }
+            """
+                .trimIndent()
+        every { mapper(any()) } returns expectedVault
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mapper,
+                mapHexToPlainString = hexMapper,
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = Json,
+            )
+
+        val result = parser(ciphertextShaped, "correct-pw")
+
+        assertEquals(expectedVault, result)
+    }
+
+    @Test
     fun `decrypts encrypted new-format container with correct password`() {
         val encryption = mockk<Encryption>()
         val innerVault = testVaultProto(name = "DecryptedVault")
