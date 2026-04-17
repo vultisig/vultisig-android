@@ -24,6 +24,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
+import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
@@ -61,7 +62,7 @@ internal class ChainValidationService @Inject constructor() {
         val divider = "100".toBigDecimal()
         return try {
             slippage.toBigDecimal().setScale(2, RoundingMode.DOWN).divide(divider).toPlainString()
-        } catch (t: Throwable) {
+        } catch (_: NumberFormatException) {
             "0.01"
         }
     }
@@ -140,6 +141,7 @@ internal class ChainValidationService @Inject constructor() {
         }
 
         if (plan?.error != SigningError.OK) {
+            Timber.e("BTC-like transaction plan error: %s", plan?.error)
             throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
         }
     }

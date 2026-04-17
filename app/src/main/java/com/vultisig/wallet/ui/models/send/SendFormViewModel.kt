@@ -1294,11 +1294,13 @@ constructor(
                                             planFee.value = plan.fee
                                         }
 
-                                chainValidationService.selectUtxosIfNeeded(
-                                    chain,
-                                    specific,
-                                    planBtc.value,
-                                )
+                                val selectedSpecific =
+                                    chainValidationService.selectUtxosIfNeeded(
+                                        chain = chain,
+                                        specific = specific,
+                                        plan = planBtc.value,
+                                    )
+                                selectedSpecific
                             } else {
                                 specific
                             }
