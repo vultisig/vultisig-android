@@ -31,6 +31,10 @@ import wallet.core.jni.proto.Common.SigningError
 /** Validates chain-specific transaction constraints for the send form. */
 internal class ChainValidationService @Inject constructor() {
 
+    // 1 ADA = 1,000,000 lovelace; kept as a local constant to avoid a WalletCore JNI call
+    // (CoinTypeConfiguration.getDecimals) which is unavailable in unit tests.
+    private val cardanoLovelaceDecimals = 6
+
     /**
      * Validates a slippage percentage string.
      *
@@ -82,7 +86,7 @@ internal class ChainValidationService @Inject constructor() {
 
         // 1. Check send amount meets minimum
         if (sendAmount < minUTXOValue) {
-            val minAmountADA = Chain.Cardano.toValue(minUTXOValue)
+            val minAmountADA = cardanoLovelaceToAda(minUTXOValue)
             throw InvalidTransactionDataException(
                 UiText.FormattedText(R.string.minimum_send_amount_is_ada, listOf(minAmountADA))
             )
@@ -91,7 +95,7 @@ internal class ChainValidationService @Inject constructor() {
         // 2. Check sufficient balance
         val totalNeeded = sendAmount + estimatedFee
         if (totalBalance < totalNeeded) {
-            val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
+            val totalBalanceADA = cardanoLovelaceToAda(totalBalance)
             val errorMessage =
                 if (totalBalance > estimatedFee && totalBalance > BigInteger.ZERO) {
                     UiText.FormattedText(
@@ -107,7 +111,7 @@ internal class ChainValidationService @Inject constructor() {
         // 3. Check remaining balance (change) meets minimum UTXO requirement
         val remainingBalance = totalBalance - sendAmount - estimatedFee
         if (remainingBalance > BigInteger.ZERO && remainingBalance < minUTXOValue) {
-            val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
+            val totalBalanceADA = cardanoLovelaceToAda(totalBalance)
             throw InvalidTransactionDataException(
                 UiText.FormattedText(
                     R.string.this_amount_would_leave_too_little_change,
@@ -116,6 +120,9 @@ internal class ChainValidationService @Inject constructor() {
             )
         }
     }
+
+    private fun cardanoLovelaceToAda(lovelace: BigInteger): BigDecimal =
+        lovelace.toBigDecimal().divide(BigDecimal.TEN.pow(cardanoLovelaceDecimals))
 
     /**
      * Validates a BTC-like UTXO send amount against the dust threshold and transaction plan.
