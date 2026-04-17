@@ -256,12 +256,14 @@ constructor(
         discoverParticipantsJob?.cancel()
         viewModelScope.safeLaunch(
             onError = { e ->
+                Timber.e(e, "Failed to start keygen session")
                 state.update {
                     it.copy(
                         warning =
                             ErrorUiModel(
                                 title = UiText.StringResource(R.string.error_view_default_title),
-                                description = UiText.DynamicString(e.message ?: e.toString()),
+                                description =
+                                    UiText.StringResource(R.string.error_view_default_description),
                             )
                     )
                 }
