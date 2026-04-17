@@ -14,8 +14,6 @@ internal class ChainValidationServiceTest {
 
     private val service = ChainValidationService()
 
-    // region validateSlippage
-
     @Test
     fun `validateSlippage - null returns required error`() {
         assertTrue(service.validateSlippage(null) is UiText.StringResource)
@@ -46,10 +44,6 @@ internal class ChainValidationServiceTest {
         assertTrue(service.validateSlippage("abc") is UiText.StringResource)
     }
 
-    // endregion
-
-    // region formatSlippage
-
     @Test
     fun `formatSlippage - converts 1 percent to decimal`() {
         assertEquals("0.01", service.formatSlippage("1.0"))
@@ -59,10 +53,6 @@ internal class ChainValidationServiceTest {
     fun `formatSlippage - invalid input returns default`() {
         assertEquals("0.01", service.formatSlippage("invalid"))
     }
-
-    // endregion
-
-    // region checkIsReapable
 
     private val dotCoin =
         Coin(
@@ -109,6 +99,4 @@ internal class ChainValidationServiceTest {
         val gasFee = TokenValue(BigInteger.ONE, "ETH", 18)
         assertNull(service.checkIsReapable(account, ethCoin, "0.001", gasFee))
     }
-
-    // endregion
 }
