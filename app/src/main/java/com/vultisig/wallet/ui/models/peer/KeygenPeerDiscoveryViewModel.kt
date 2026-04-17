@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -263,7 +264,21 @@ constructor(
     fun next() {
         val args = args ?: return
         discoverParticipantsJob?.cancel()
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "Failed to start keygen session")
+                state.update {
+                    it.copy(
+                        warning =
+                            ErrorUiModel(
+                                title = UiText.StringResource(R.string.error_view_default_title),
+                                description =
+                                    UiText.StringResource(R.string.error_view_default_description),
+                            )
+                    )
+                }
+            }
+        ) {
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
             val keygenCommittee = listOf(localPartyId) + state.value.selectedDevices
             sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
