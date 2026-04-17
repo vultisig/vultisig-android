@@ -17,6 +17,7 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import timber.log.Timber
 
 class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory) :
     FeeService {
@@ -172,14 +173,23 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
                     rewardsFeeHistory.maxOrNull() ?: DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2
 
                 // polygon has min of 30 gwei, but some blocks comes with less rewards
-                Chain.Polygon ->
+                Chain.Polygon -> {
+                    if (rewardsFeeHistory.isEmpty()) {
+                        Timber.w("Fee history is empty for %s, using fallback", chain)
+                    }
                     maxOf(
-                        rewardsFeeHistory[rewardsFeeHistory.size / 2],
+                        rewardsFeeHistory.median() ?: BigInteger.ZERO,
                         GWEI * DEFAULT_MAX_PRIORITY_FEE_POLYGON,
                     )
+                }
 
                 // picked medium with min of 1 GWEI (ETH etc..)
-                else -> maxOf(a = rewardsFeeHistory[rewardsFeeHistory.size / 2], b = GWEI)
+                else -> {
+                    if (rewardsFeeHistory.isEmpty()) {
+                        Timber.w("Fee history is empty for %s, using fallback", chain)
+                    }
+                    maxOf(rewardsFeeHistory.median() ?: BigInteger.ZERO, GWEI)
+                }
             }
         }
     }
@@ -221,3 +231,8 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         val DEFAULT_MANTLE_SWAP_LIMIT = "3000000000".toBigInteger()
     }
 }
+
+// Returns the mid-index element, or null for an empty list. Callers pair it with
+// a chain-specific floor via `maxOf(..., minFee)` so a missing sample degrades to
+// that floor instead of throwing.
+private fun List<BigInteger>.median(): BigInteger? = getOrNull(size / 2)
