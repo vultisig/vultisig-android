@@ -868,6 +868,13 @@ constructor(
                                     )
                                 }
                             }
+                        } else {
+                            uiState.update {
+                                it.copy(
+                                    referralBpsDiscount = null,
+                                    referralBpsDiscountFiatValue = null,
+                                )
+                            }
                         }
 
                         val vultResult =
