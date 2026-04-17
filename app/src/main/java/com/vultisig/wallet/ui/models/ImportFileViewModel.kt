@@ -94,44 +94,34 @@ constructor(
     }
 
     fun decryptVaultData() {
-        val key: String = passwordTextFieldState.text.toString()
-        val vaultFileContent = uiModel.value.fileContent
-        if (!vaultFileContent.isNullOrBlank()) {
-            viewModelScope.launch {
-                when (saveToDb(vaultFileContent, key)) {
-                    SaveResult.Success -> {
-                        hidePasswordPromptDialog()
-                        showSuccessImport()
-                    }
-                    SaveResult.Duplicate -> {
-                        hidePasswordPromptDialog()
-                        showDuplicateError()
-                    }
-                    SaveResult.WrongPassword -> showErrorHint()
-                    SaveResult.Malformed -> {
-                        hidePasswordPromptDialog()
-                        showMalformedError()
-                    }
-                    SaveResult.Failed -> {
-                        hidePasswordPromptDialog()
-                        showGenericError()
-                    }
-                }
-            }
+        val password = passwordTextFieldState.text.toString()
+        val content = uiModel.value.fileContent?.takeUnless { it.isBlank() } ?: return
+        viewModelScope.launch {
+            val result = saveToDb(content, password)
+            if (result != SaveResult.WrongPassword) hidePasswordPromptDialog()
+            renderResult(result)
         }
     }
 
     private suspend fun parseFileContent() {
-        val fileContent = uiModel.value.fileContent ?: return
-        when (saveToDb(fileContent, null)) {
+        val content = uiModel.value.fileContent ?: return
+        val result = saveToDb(content, null)
+        if (result == SaveResult.WrongPassword) {
+            // First pass with no password means the file needs one — pop the prompt.
+            uiModel.update { it.copy(showPasswordPrompt = true, passwordErrorHint = null) }
+        } else {
+            renderResult(result)
+        }
+    }
+
+    private fun renderResult(result: SaveResult) =
+        when (result) {
             SaveResult.Success -> showSuccessImport()
             SaveResult.Duplicate -> showDuplicateError()
-            SaveResult.WrongPassword ->
-                uiModel.update { it.copy(showPasswordPrompt = true, passwordErrorHint = null) }
+            SaveResult.WrongPassword -> showErrorHint()
             SaveResult.Malformed -> showMalformedError()
             SaveResult.Failed -> showGenericError()
         }
-    }
 
     private suspend fun saveToDb(fileContent: String, password: String?): SaveResult =
         try {
@@ -218,49 +208,45 @@ constructor(
         Failed,
     }
 
+    // saveVault is the point of no return — failure there surfaces as SaveResult.Failed. Every
+    // step after runs best-effort so a datastore / network / derivation glitch can't orphan a
+    // saved vault or surface as a misleading top-level error.
     private suspend fun insertVaultToDb(vault: Vault) {
-        val adjustedVault = vault.withInferredLibType(uiModel.value.fileName)
+        val adjusted = vault.withInferredLibType(uiModel.value.fileName)
 
-        // saveVault is the point of no return — failure here means the vault isn't saved, so
-        // the caller should surface a user-visible error. Everything after runs best-effort;
-        // a partial post-save failure must not leave the user stranded.
-        saveVault(adjustedVault, false)
-        runBestEffort("Failed to set backup status for imported vault") {
-            vaultDataStoreRepository.setBackupStatus(adjustedVault.id, true)
+        saveVault(adjusted, false)
+        runBestEffort("Failed to set backup status") {
+            vaultDataStoreRepository.setBackupStatus(adjusted.id, true)
         }
-        runBestEffort("Token discovery failed for imported vault") {
-            discoverToken(adjustedVault.id, null)
-        }
-        if (adjustedVault.pubKeyMLDSA.isNotBlank()) {
-            runBestEffort("Failed to add QBTC token to imported vault") {
-                val qbtc = Coins.Qbtc.QBTC
-                val (address, pubKey) =
-                    chainAccountAddressRepository.getAddress(qbtc, adjustedVault)
-                vaultRepository.addTokenToVault(
-                    adjustedVault.id,
-                    qbtc.copy(address = address, hexPublicKey = pubKey),
-                )
-            }
+        runBestEffort("Token discovery failed") { discoverToken(adjusted.id, null) }
+        if (adjusted.pubKeyMLDSA.isNotBlank()) attachQbtcToken(adjusted)
+
+        finishImport(adjusted)
+    }
+
+    private suspend fun attachQbtcToken(vault: Vault) =
+        runBestEffort("Failed to add QBTC token") {
+            val qbtc = Coins.Qbtc.QBTC
+            val (address, pubKey) = chainAccountAddressRepository.getAddress(qbtc, vault)
+            vaultRepository.addTokenToVault(
+                vault.id,
+                qbtc.copy(address = address, hexPublicKey = pubKey),
+            )
         }
 
-        if (uiModel.value.isZip == true) {
-            val remaining =
-                uiModel.value.zipOutputs.filter { it.content != uiModel.value.fileContent }
-            if (remaining.isEmpty()) {
-                navigateToHome(adjustedVault)
-            } else {
-                uiModel.update {
-                    it.copy(
-                        zipOutputs = remaining,
-                        canNavigateToHome = true,
-                        activeVault = adjustedVault,
-                    )
-                }
-            }
+    private suspend fun finishImport(vault: Vault) {
+        if (uiModel.value.isZip != true) {
+            navigateToHome(vault)
             return
         }
-
-        navigateToHome(adjustedVault)
+        val remaining = uiModel.value.zipOutputs.filter { it.content != uiModel.value.fileContent }
+        if (remaining.isEmpty()) {
+            navigateToHome(vault)
+        } else {
+            uiModel.update {
+                it.copy(zipOutputs = remaining, canNavigateToHome = true, activeVault = vault)
+            }
+        }
     }
 
     // The vault is already saved; navigator glitches mustn't surface as an import failure.
@@ -303,55 +289,53 @@ constructor(
     }
 
     fun fetchFileName(uri: Uri?) {
+        uri ?: return
         viewModelScope.launch {
-            if (uri == null) return@launch
-            val fileName = uri.fileName(context = context)
-            if (fileName.isNullOrBlank()) {
-                uiModel.update {
-                    it.copy(
-                        fileUri = null,
-                        fileName = null,
-                        fileContent = null,
-                        isZip = null,
-                        error = UiText.StringResource(R.string.import_file_not_supported),
-                    )
-                }
+            val fileName = uri.fileName(context)?.takeUnless { it.isBlank() }
+            if (fileName == null) {
+                resetPickerWithError()
                 return@launch
             }
-            val file = File(fileName)
-            val ext = file.extension
-            val isZipFile = uri.isValidZipFile(context = context)
-            if (!FILE_ALLOWED_EXTENSIONS.contains(ext) && !isZipFile) {
-                uiModel.update {
-                    it.copy(
-                        fileUri = null,
-                        fileName = null,
-                        fileContent = null,
-                        isZip = null,
-                        error = UiText.StringResource(R.string.import_file_not_supported),
-                    )
-                }
-            } else if (isZipFile) {
-                val zipOutput = uri.processZip(context = context)
-                val error =
-                    UiText.StringResource(R.string.import_file_not_supported).takeIf {
-                        zipOutput.isEmpty()
-                    }
-                uiModel.update {
-                    it.copy(
-                        fileUri = uri,
-                        fileName = fileName,
-                        isZip = true,
-                        zipOutputs = zipOutput,
-                        error = error,
-                    )
-                }
-            } else {
-                uiModel.update {
-                    it.copy(fileUri = uri, fileName = fileName, error = null, isZip = false)
-                }
+            val isZip = uri.isValidZipFile(context)
+            val hasAllowedExtension = File(fileName).extension in FILE_ALLOWED_EXTENSIONS
+            when {
+                !isZip && !hasAllowedExtension -> resetPickerWithError()
+                isZip -> acceptZip(uri, fileName)
+                else -> acceptSingleFile(uri, fileName)
             }
         }
+    }
+
+    private fun resetPickerWithError() {
+        uiModel.update {
+            it.copy(
+                fileUri = null,
+                fileName = null,
+                fileContent = null,
+                isZip = null,
+                error = UiText.StringResource(R.string.import_file_not_supported),
+            )
+        }
+    }
+
+    private suspend fun acceptZip(uri: Uri, fileName: String) {
+        val entries = uri.processZip(context)
+        uiModel.update {
+            it.copy(
+                fileUri = uri,
+                fileName = fileName,
+                isZip = true,
+                zipOutputs = entries,
+                error =
+                    UiText.StringResource(R.string.import_file_not_supported).takeIf {
+                        entries.isEmpty()
+                    },
+            )
+        }
+    }
+
+    private fun acceptSingleFile(uri: Uri, fileName: String) {
+        uiModel.update { it.copy(fileUri = uri, fileName = fileName, error = null, isZip = false) }
     }
 
     private fun showErrorHint() {
@@ -364,8 +348,7 @@ constructor(
     }
 
     fun togglePasswordVisibility() {
-        val passwordVisibility = uiModel.value.isPasswordObfuscated
-        uiModel.update { it.copy(isPasswordObfuscated = !passwordVisibility) }
+        uiModel.update { it.copy(isPasswordObfuscated = !it.isPasswordObfuscated) }
     }
 
     fun importVult(zipOutput: AppZipEntry) {
@@ -378,10 +361,8 @@ constructor(
     fun back() {
         viewModelScope.launch {
             val state = uiModel.value
-            if (state.canNavigateToHome) {
-                val activeVault = state.activeVault
-                activeVault?.run { navigateToHome(this) } ?: navigator.back()
-            } else navigator.back()
+            val target = state.activeVault?.takeIf { state.canNavigateToHome }
+            if (target != null) navigateToHome(target) else navigator.back()
         }
     }
 
