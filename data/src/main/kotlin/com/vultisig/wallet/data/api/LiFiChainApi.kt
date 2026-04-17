@@ -29,7 +29,10 @@ interface LiFiChainApi {
 
     companion object {
         const val INTEGRATOR_FEE_BPS = 50
-        private val BPS_DENOMINATOR = BigInteger.valueOf(10_000)
+        const val BPS_DENOMINATOR_INT = 10_000
+        private val BPS_DENOMINATOR = BigInteger.valueOf(BPS_DENOMINATOR_INT.toLong())
+        const val INTEGRATOR_FEE_RATE = INTEGRATOR_FEE_BPS / BPS_DENOMINATOR_INT.toDouble()
+        const val INTEGRATOR_ACCOUNT = "vultisig-android"
 
         /**
          * Computes the LI.FI integrator fee that will be deducted from a swap's destination amount,
@@ -67,9 +70,13 @@ constructor(
             fromChain.toLong() == Chain.Solana.oneInchChainId() ||
                 toChain.toLong() == Chain.Solana.oneInchChainId()
 
-        val bpsDiscountFee = round(bpsDiscount.toDouble()) / 10000.0
+        val bpsDiscountFee = round(bpsDiscount.toDouble()) / LiFiChainApi.BPS_DENOMINATOR_INT
         val updatedFeeIntegrator =
-            (round(maxOf(INTEGRATOR_FEE_RATE - bpsDiscountFee, 0.0) * 10000) / 10000.0).toString()
+            (round(
+                    maxOf(LiFiChainApi.INTEGRATOR_FEE_RATE - bpsDiscountFee, 0.0) *
+                        LiFiChainApi.BPS_DENOMINATOR_INT
+                ) / LiFiChainApi.BPS_DENOMINATOR_INT)
+                .toString()
 
         val response =
             httpClient.get("https://li.quest/v1/quote") {
@@ -81,7 +88,7 @@ constructor(
                 parameter("fromAddress", fromAddress)
                 parameter("toAddress", toAddress)
                 if (!isSolanaChainInvolved) {
-                    parameter("integrator", INTEGRATOR_ACCOUNT)
+                    parameter("integrator", LiFiChainApi.INTEGRATOR_ACCOUNT)
                     parameter("fee", updatedFeeIntegrator)
                 }
             }
@@ -92,10 +99,5 @@ constructor(
                 LiFiSwapQuoteError(HttpStatusCode.fromValue(response.status.value).description)
             )
         }
-    }
-
-    companion object {
-        private const val INTEGRATOR_ACCOUNT = "vultisig-android"
-        private const val INTEGRATOR_FEE_RATE = LiFiChainApi.INTEGRATOR_FEE_BPS / 10_000.0
     }
 }
