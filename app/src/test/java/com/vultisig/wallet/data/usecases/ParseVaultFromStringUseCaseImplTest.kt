@@ -268,6 +268,29 @@ internal class ParseVaultFromStringUseCaseImplTest {
     }
 
     @Test
+    fun `throws WrongPasswordException when encrypted new-format container decrypt throws`() {
+        // Regression: on a real device with a wrong password, AesEncryption's GCM->CBC fallback
+        // can throw IllegalBlockSizeException instead of returning null. That must map to
+        // WrongPassword, not bubble up as a generic Failed ("Something went wrong").
+        val encryption = mockk<Encryption>()
+        val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
+        val input = encodeEncryptedContainer(ciphertext)
+        every { encryption.decrypt(any(), any()) } throws
+            javax.crypto.IllegalBlockSizeException("WRONG_FINAL_BLOCK_LENGTH")
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = mockk(),
+            )
+
+        assertFailsWith<WrongPasswordException> { parser(input, "wrong-password") }
+    }
+
+    @Test
     fun `throws WrongPasswordException when encrypted new-format container has no password`() {
         val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
         val input = encodeEncryptedContainer(ciphertext)
@@ -349,9 +372,50 @@ internal class ParseVaultFromStringUseCaseImplTest {
                 json = Json,
             )
 
-        // Input isn't a valid container and isn't plain JSON, so we hit the encrypted
-        // old-format branch; decrypt returns null → WrongPasswordException.
-        assertFailsWith<WrongPasswordException> { parser("VGhpcyBpcyBiYXNlNjQ=", "wrong-pw") }
+        // 32-byte blob passes the legacy-ciphertext shape heuristic; mocked decrypt returns
+        // null → WrongPasswordException.
+        val ciphertextShaped = Base64.encode(ByteArray(32))
+
+        assertFailsWith<WrongPasswordException> { parser(ciphertextShaped, "wrong-pw") }
+    }
+
+    @Test
+    fun `throws WrongPasswordException when old-format encrypted wrapper decrypt throws`() {
+        // Regression mirror of the new-format case: IllegalBlockSizeException from the
+        // GCM→CBC fallback must not bubble up as a generic Failed.
+        val encryption = mockk<Encryption>()
+        every { encryption.decrypt(any(), any()) } throws
+            javax.crypto.IllegalBlockSizeException("WRONG_FINAL_BLOCK_LENGTH")
+
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = encryption,
+                protoBuf = protoBuf,
+                json = Json,
+            )
+
+        val ciphertextShaped = Base64.encode(ByteArray(32))
+
+        assertFailsWith<WrongPasswordException> { parser(ciphertextShaped, "wrong-pw") }
+    }
+
+    @Test
+    fun `throws MalformedVaultException in old-format path when input is not ciphertext shaped`() {
+        // With password provided but input isn't plain JSON and isn't ciphertext-shaped
+        // (base64-decoded size not a multiple of the AES block), the file is garbage —
+        // must not prompt the user again or claim wrong password.
+        val parser =
+            ParseVaultFromStringUseCaseImpl(
+                vaultFromOldJsonMapper = mockk(),
+                mapHexToPlainString = mockk(),
+                encryption = mockk(),
+                protoBuf = protoBuf,
+                json = Json,
+            )
+
+        assertFailsWith<MalformedVaultException> { parser("VGhpcyBpcyBiYXNlNjQ=", "pw") }
     }
 
     @Test
@@ -428,7 +492,11 @@ internal class ParseVaultFromStringUseCaseImplTest {
                 json = Json,
             )
 
-        assertFailsWith<CancellationException> { parser("VGhpcyBpcyBiYXNlNjQ=", "password") }
+        // 32-byte blob passes the legacy-ciphertext shape check so decrypt actually runs
+        // and we can observe CancellationException propagating through tryDecrypt.
+        val ciphertextShaped = Base64.encode(ByteArray(32))
+
+        assertFailsWith<CancellationException> { parser(ciphertextShaped, "password") }
     }
 
     @Test

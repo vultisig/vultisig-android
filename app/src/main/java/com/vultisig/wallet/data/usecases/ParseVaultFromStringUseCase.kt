@@ -74,15 +74,14 @@ constructor(
             return vaultFromOldJsonMapper(it)
         }
 
-        if (password.isNullOrBlank()) {
-            // Legacy vaults are AES-CBC ciphertext, so their base64-decoded length is a
-            // non-zero multiple of the block size. Anything else is garbage, not a
-            // password-protected vault, and must not prompt for a password.
-            throw if (looksLikeLegacyCiphertext(input)) WrongPasswordException()
-            else MalformedVaultException()
-        }
+        // Not plain JSON. Legacy vaults are AES-CBC ciphertext, so their base64-decoded length
+        // is a non-zero multiple of the block size. Anything else is garbage, not a
+        // password-protected vault, and must not prompt for a password.
+        if (!looksLikeLegacyCiphertext(input)) throw MalformedVaultException()
+        if (password.isNullOrBlank()) throw WrongPasswordException()
 
-        val decryptedBytes = decryptLegacyVault(input, password)
+        val decryptedBytes =
+            tryDecrypt(input.decodeBase64Bytes(), password) ?: throw WrongPasswordException()
         val decodedJson = decodeLegacyVaultJson(decryptedBytes)
         val oldVault = decodeOldVaultRoot(decodedJson)
         return vaultFromOldJsonMapper(oldVault)
@@ -107,9 +106,7 @@ constructor(
         when {
             !isEncrypted -> payload
             password.isNullOrBlank() -> throw WrongPasswordException()
-            else ->
-                encryption.decrypt(payload, password.toByteArray())
-                    ?: throw WrongPasswordException()
+            else -> tryDecrypt(payload, password) ?: throw WrongPasswordException()
         }
 
     private fun decodeVaultProto(bytes: ByteArray): VaultProto = orMalformed {
@@ -119,9 +116,12 @@ constructor(
     private fun parsePlainOldJsonOrNull(input: String): OldJsonVault? =
         runCatchingCancellable { json.decodeFromString<OldJsonVault>(input) }.getOrNull()
 
-    private fun decryptLegacyVault(input: String, password: String): ByteArray =
-        orMalformed { encryption.decrypt(input.decodeBase64Bytes(), password.toByteArray()) }
-            ?: throw WrongPasswordException()
+    // [Encryption.decrypt] can both return null AND throw on wrong-password input (the GCM path
+    // throws AEADBadTagException, the CBC fallback throws IllegalBlockSizeException on oddly
+    // sized data). Collapse both into "couldn't decrypt" so callers can map to
+    // [WrongPasswordException].
+    private fun tryDecrypt(data: ByteArray, password: String): ByteArray? =
+        runCatchingCancellable { encryption.decrypt(data, password.toByteArray()) }.getOrNull()
 
     private fun decodeLegacyVaultJson(bytes: ByteArray): String = orMalformed {
         mapHexToPlainString(bytes.decodeToString())
