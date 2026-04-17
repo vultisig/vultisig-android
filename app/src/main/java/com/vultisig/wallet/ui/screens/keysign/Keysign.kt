@@ -5,7 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +29,8 @@ import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.utils.VsUriHandler
+
+private const val RIVE_PROGRESS_PROPERTY = "progessPercentage" // typo in riv_keysign.riv
 
 @Composable
 internal fun KeysignView(
@@ -132,8 +134,7 @@ private fun KeysignRiveProgress(progress: Float) {
             label = "riv_progress_animation",
         )
 
-    // NOTE: intentional typo — must match the Rive ViewModel property name in riv_keysign.riv
-    LaunchedEffect(animatedValue) { vmi.setNumber("progessPercentage", animatedValue) }
+    SideEffect { vmi.setNumber(RIVE_PROGRESS_PROPERTY, animatedValue) }
 
     RiveAnimation(
         file = riveFile,
