@@ -847,26 +847,26 @@ constructor(
 
                         val referral =
                             referralCode.value
-                                ?: vaultId
-                                    ?.takeIf { srcToken.chain.id == Chain.ThorChain.id }
-                                    ?.let { referralRepository.getExternalReferralBy(it) }
+                                ?: vaultId?.let { referralRepository.getExternalReferralBy(it) }
 
-                        referral?.let { code ->
-                            val tierType = vultBPSDiscount?.getTierType()
-                            val result =
-                                swapDiscountChecker.checkReferralBpsDiscount(
-                                    tierType,
-                                    srcToken,
-                                    tokenValue,
-                                    code,
-                                )
-                            result.referralCode?.let { rc -> referralCode.update { rc } }
-                            uiState.update {
-                                it.copy(
-                                    referralBpsDiscount = result.referralBpsDiscount,
-                                    referralBpsDiscountFiatValue =
-                                        result.referralBpsDiscountFiatValue,
-                                )
+                        if (provider == SwapProvider.THORCHAIN) {
+                            referral?.let { code ->
+                                val tierType = vultBPSDiscount?.getTierType()
+                                val result =
+                                    swapDiscountChecker.checkReferralBpsDiscount(
+                                        tierType,
+                                        srcToken,
+                                        tokenValue,
+                                        code,
+                                    )
+                                result.referralCode?.let { rc -> referralCode.update { rc } }
+                                uiState.update {
+                                    it.copy(
+                                        referralBpsDiscount = result.referralBpsDiscount,
+                                        referralBpsDiscountFiatValue =
+                                            result.referralBpsDiscountFiatValue,
+                                    )
+                                }
                             }
                         }
 
