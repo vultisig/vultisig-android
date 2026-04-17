@@ -53,15 +53,8 @@ internal class SwapValidator @Inject constructor() {
                 )
             } else {
                 val nativeTokenAccount =
-                    src.address.accounts.find { it.token.isNativeToken }
-                        ?: return SwapBalanceValidation(
-                            formError = UiText.StringResource(R.string.send_error_no_token)
-                        )
-                val nativeTokenValue =
-                    nativeTokenAccount.tokenValue?.value
-                        ?: return SwapBalanceValidation(
-                            formError = UiText.StringResource(R.string.send_error_no_token)
-                        )
+                    src.address.accounts.find { it.token.isNativeToken } ?: return null
+                val nativeTokenValue = nativeTokenAccount.tokenValue?.value ?: return null
                 if (nativeTokenValue < (estimatedNetworkFeeTokenValue?.value ?: BigInteger.ZERO)) {
                     return SwapBalanceValidation(
                         formError =

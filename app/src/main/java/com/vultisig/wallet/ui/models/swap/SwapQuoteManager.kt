@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.datetime.Clock
 import timber.log.Timber
 
@@ -384,6 +385,7 @@ constructor(
                 Pair(fallbackFee, srcNativeToken)
             }
         } catch (t: Throwable) {
+            if (t is CancellationException) throw t
             Timber.e(t)
             Pair(fallbackFee, srcNativeToken)
         }
