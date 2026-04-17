@@ -1018,21 +1018,26 @@ internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain:
         when {
             !selectedTokenId.isNullOrBlank() ->
                 firstOrNull { it -> it.accounts.any { it.token.id == selectedTokenId } }
-                    ?: this.first()
+                    ?: run {
+                        Timber.w("selectedTokenId %s not found", selectedTokenId)
+                        this.firstOrNull() // fallback: best-effort, token not found in any address
+                    }
+                    ?: return null
 
             filterByChain != null -> firstOrNull { it.chain == filterByChain } ?: return null
-            else -> first()
+            else -> firstOrNull() ?: return null
         }
     val account =
         when {
             !selectedTokenId.isNullOrBlank() ->
                 address.accounts.firstOrNull { it.token.id == selectedTokenId }
-                    ?: address.accounts.first()
+                    ?: address.accounts.firstOrNull()
+                    ?: return null
 
             filterByChain != null ->
                 address.accounts.firstOrNull { it.token.isNativeToken } ?: return null
 
-            else -> address.accounts.first()
+            else -> address.accounts.firstOrNull() ?: return null
         }
 
     return SendSrc(address, account)
