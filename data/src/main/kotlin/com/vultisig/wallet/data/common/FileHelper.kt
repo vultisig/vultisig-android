@@ -214,8 +214,13 @@ suspend fun Uri.isValidZipFile(context: Context) = doFileOperation {
     }
 }
 
-suspend fun Context.deleteDocument(uri: Uri) = doFileOperation {
-    DocumentsContract.deleteDocument(contentResolver, uri)
+suspend fun Context.deleteDocument(uri: Uri): Boolean = doFileOperation {
+    try {
+        DocumentsContract.deleteDocument(contentResolver, uri)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to delete document: %s", uri)
+        false
+    }
 }
 
 private suspend fun <T> doFileOperation(block: suspend CoroutineScope.() -> T) =
