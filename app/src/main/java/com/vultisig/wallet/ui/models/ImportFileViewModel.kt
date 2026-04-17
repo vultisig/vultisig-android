@@ -181,6 +181,9 @@ constructor(
     private fun showError(@StringRes resId: Int, policy: FailurePolicy) {
         val state = uiModel.value
         if (state.isZip == true) {
+            // The archive itself stays usable (fileName/fileUri preserved); only the bad
+            // entry is pruned from zipOutputs and its content cleared, so the user can pick
+            // another share from the same zip.
             showSnackBarMessage(context.getString(resId), SnackbarType.Error)
             if (policy == FailurePolicy.DropFile) {
                 val badContent = state.fileContent
