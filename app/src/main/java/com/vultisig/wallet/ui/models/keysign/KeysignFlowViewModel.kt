@@ -679,8 +679,16 @@ constructor(
         selection.value = currentList + participant
     }
 
-    fun removeParticipant(participant: String) {
-        selection.value = selection.value - participant
+    private fun removeParticipant(participant: String) {
+        selection.value -= participant
+    }
+
+    fun handleParticipant(participant: String) {
+        if (participant in selection.value) {
+            removeParticipant(participant)
+        } else {
+            addParticipant(participant)
+        }
     }
 
     fun moveToState(nextState: KeysignFlowState) {
