@@ -60,8 +60,7 @@ object SuiHelper {
         val gascoin =
             coins
                 .filter {
-                    it.coinType == suiContractAddress &&
-                        it.balance.toBigInteger() > referenceGasPrice
+                    it.coinType == suiContractAddress && it.balance.toBigInteger() >= gasBudget
                 }
                 .minByOrNull { it.balance.toBigInteger() }
 
