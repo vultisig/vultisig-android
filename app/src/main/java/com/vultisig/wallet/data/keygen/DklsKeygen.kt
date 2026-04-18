@@ -37,6 +37,7 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -72,6 +73,7 @@ class DKLSKeygen(
     val cache = mutableMapOf<String, Any>()
     var setupMessage: ByteArray = byteArrayOf()
     var keyshare: DKLSKeyshare? = null
+    private var activeMessageId: String? = null
 
     @Throws(Exception::class)
     private fun getDklsSetupMessage(): ByteArray {
@@ -212,7 +214,13 @@ class DKLSKeygen(
         val start = System.nanoTime()
         while (true) {
             try {
-                val msgs = sessionApi.getTssMessages(mediatorURL, sessionID, this.localPartyId)
+                val msgs =
+                    sessionApi.getTssMessages(
+                        mediatorURL,
+                        sessionID,
+                        this.localPartyId,
+                        activeMessageId,
+                    )
 
                 if (msgs.isNotEmpty()) {
                     if (processInboundMessage(handle, msgs)) {
@@ -221,6 +229,8 @@ class DKLSKeygen(
                 } else {
                     delay(100)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to get messages")
                 delay(1000) // backoff delay
@@ -285,12 +295,31 @@ class DKLSKeygen(
 
     @Throws(Exception::class)
     private suspend fun deleteMessageFromServer(hash: String) {
-        sessionApi.deleteTssMessage(mediatorURL, sessionID, this.localPartyId, hash, null)
+        sessionApi.deleteTssMessage(
+            mediatorURL,
+            sessionID,
+            this.localPartyId,
+            hash,
+            activeMessageId,
+        )
     }
 
     @Throws(Exception::class)
-    suspend fun dklsKeygenWithRetry(attempt: Int, additionalHeader: String = "") {
-        try {
+    internal suspend fun dklsKeygenWithRetry(
+        attempt: Int,
+        routing: KeygenRouting = KeygenRouting.from(),
+    ) {
+        activeMessageId = routing.exchangeMessageId
+        messenger.setMessageID(activeMessageId)
+        cache.clear()
+        runKeygenWithRetry(
+            attempt = attempt,
+            retry = { nextAttempt, cause ->
+                Timber.d("Failed to generate key, error: ${cause.localizedMessage}")
+                Timber.d("keygen/reshare retry, attempt: %d", nextAttempt)
+                dklsKeygenWithRetry(nextAttempt, routing)
+            },
+        ) {
             var handler = Handle()
             val keygenSetupMsg: ByteArray
             if (isInitiateDevice && attempt == 0) {
@@ -319,16 +348,12 @@ class DKLSKeygen(
                                 Numeric.hexStringToByteArray(encryptionKeyHex),
                             )
                         ),
-                    messageId = additionalHeader.ifEmpty { null },
+                    messageId = routing.setupMessageId,
                 )
             } else {
                 keygenSetupMsg =
                     sessionApi
-                        .getSetupMessage(
-                            mediatorURL,
-                            sessionID,
-                            messageId = additionalHeader.ifEmpty { null },
-                        )
+                        .getSetupMessage(mediatorURL, sessionID, messageId = routing.setupMessageId)
                         .let {
                             encryption.decrypt(
                                 Base64.decode(it),
@@ -418,14 +443,6 @@ class DKLSKeygen(
                 Timber.d("publicKeyECDSA: ${publicKeyECDSA.toHexString()}")
                 Timber.d("chaincode: ${chainCodeBytes.toHexString()}")
                 delay(500) // wait for the last message to be sent
-            }
-        } catch (e: Exception) {
-            Timber.d("Failed to generate key, error: ${e.localizedMessage}")
-            if (attempt < 3) {
-                Timber.d("keygen/reshare retry, attempt: $attempt")
-                dklsKeygenWithRetry(attempt + 1, additionalHeader)
-            } else {
-                throw e
             }
         }
     }

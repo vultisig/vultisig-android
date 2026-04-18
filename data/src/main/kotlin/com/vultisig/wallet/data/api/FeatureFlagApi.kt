@@ -8,13 +8,13 @@ import io.ktor.client.request.get
 import javax.inject.Inject
 
 interface FeatureFlagApi {
-    suspend fun getFeatureFlag(): FeatureFlagJson
+    suspend fun getFeatureFlags(): FeatureFlagJson
 }
 
 internal class FeatureFlagApiImpl @Inject constructor(private val http: HttpClient) :
     FeatureFlagApi {
 
-    override suspend fun getFeatureFlag(): FeatureFlagJson =
+    override suspend fun getFeatureFlags(): FeatureFlagJson =
         http
             .get("https://api.vultisig.com/feature/release.json")
             .throwIfUnsuccessful()

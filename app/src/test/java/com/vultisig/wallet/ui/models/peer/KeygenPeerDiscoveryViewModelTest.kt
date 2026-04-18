@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
@@ -62,6 +63,7 @@ internal class KeygenPeerDiscoveryViewModelTest {
     private lateinit var generateServerPartyId: GenerateServerPartyId
     private lateinit var secretSettingsRepository: SecretSettingsRepository
     private lateinit var vultiSignerRepository: VultiSignerRepository
+    private lateinit var featureFlagRepository: FeatureFlagRepository
     private lateinit var qrHelperModalRepository: QrHelperModalRepository
     private lateinit var vaultRepository: VaultRepository
     private lateinit var keyImportRepository: KeyImportRepository
@@ -85,6 +87,7 @@ internal class KeygenPeerDiscoveryViewModelTest {
         generateServerPartyId = mockk(relaxed = true)
         secretSettingsRepository = mockk(relaxed = true)
         vultiSignerRepository = mockk(relaxed = true)
+        featureFlagRepository = mockk(relaxed = true)
         qrHelperModalRepository = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
         keyImportRepository = mockk(relaxed = true)
@@ -132,6 +135,7 @@ internal class KeygenPeerDiscoveryViewModelTest {
             generateServerPartyId = generateServerPartyId,
             secretSettingsRepository = secretSettingsRepository,
             vultiSignerRepository = vultiSignerRepository,
+            featureFlagRepository = featureFlagRepository,
             qrHelperModalRepository = qrHelperModalRepository,
             vaultRepository = vaultRepository,
             keyImportRepository = keyImportRepository,

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.VultiSignerApi
+import com.vultisig.wallet.data.api.models.signer.BatchKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
@@ -38,6 +39,8 @@ interface VultiSignerRepository {
 
     suspend fun joinKeygen(request: JoinKeygenRequestJson)
 
+    suspend fun joinBatchKeygen(request: BatchKeygenRequestJson)
+
     suspend fun createMldsa(request: CreateMldsaVaultRequestJson)
 
     suspend fun joinKeyImport(request: JoinKeyImportRequest)
@@ -73,6 +76,10 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
 
     override suspend fun joinKeygen(request: JoinKeygenRequestJson) {
         api.joinKeygen(request)
+    }
+
+    override suspend fun joinBatchKeygen(request: BatchKeygenRequestJson) {
+        api.joinBatchKeygen(request)
     }
 
     override suspend fun createMldsa(request: CreateMldsaVaultRequestJson) {

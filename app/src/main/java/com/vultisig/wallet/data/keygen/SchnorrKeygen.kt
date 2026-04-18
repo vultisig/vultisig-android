@@ -70,6 +70,7 @@ class SchnorrKeygen(
 
     val cache = mutableMapOf<String, Any>()
     var keyshare: DKLSKeyshare? = null
+    private var activeMessageId: String? = null
 
     private fun getSchnorrOutboundMessage(handle: Handle): Pair<schnorr_lib_error, ByteArray> {
         val buf = tss_buffer()
@@ -152,7 +153,8 @@ class SchnorrKeygen(
         val start = System.nanoTime()
         while (true) {
             try {
-                val msgs = sessionApi.getTssMessages(mediatorURL, sessionID, localPartyId)
+                val msgs =
+                    sessionApi.getTssMessages(mediatorURL, sessionID, localPartyId, activeMessageId)
 
                 if (msgs.isNotEmpty()) {
                     if (processInboundMessage(handle, msgs)) {
@@ -223,8 +225,28 @@ class SchnorrKeygen(
     }
 
     private suspend fun deleteMessageFromServer(hash: String) {
-        sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyId, hash, null)
+        sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyId, hash, activeMessageId)
     }
+
+    /**
+     * Standard Schnorr keygen/migrate reuses the shared DKLS setup message. When those ceremonies
+     * run in parallel, DKLS uploads the shared setup to the relay first and Schnorr downloads it on
+     * demand instead of waiting for local in-memory setup state.
+     */
+    private suspend fun getSharedSetupMessage(): ByteArray =
+        if (setupMessage.isNotEmpty()) {
+            setupMessage
+        } else {
+            sessionApi
+                .getSetupMessage(mediatorURL, sessionID, null)
+                .let {
+                    encryption.decrypt(
+                        Base64.decode(it),
+                        Numeric.hexStringToByteArray(encryptionKeyHex),
+                    ) ?: error("fail to decrypt EdDSA keygen setup message")
+                }
+                .let { Base64.decode(it) }
+        }
 
     @Throws(Exception::class)
     private fun getDklsKeyImportSetupMessage(
@@ -261,15 +283,28 @@ class SchnorrKeygen(
         }
     }
 
-    suspend fun schnorrKeygenWithRetry(attempt: Int, additionalHeader: String = "") {
-        try {
-            val decodedSetupMsg = setupMessage.toGoSlice()
+    internal suspend fun schnorrKeygenWithRetry(
+        attempt: Int,
+        routing: KeygenRouting = KeygenRouting.from(),
+    ) {
+        activeMessageId = routing.exchangeMessageId
+        messenger.setMessageID(activeMessageId)
+        cache.clear()
+        runKeygenWithRetry(
+            attempt = attempt,
+            retry = { nextAttempt, cause ->
+                Timber.d("Failed to generate key, error: ${cause.localizedMessage}")
+                Timber.d("Retry $action, attempt: $attempt")
+                schnorrKeygenWithRetry(nextAttempt, routing)
+            },
+        ) {
             var handler = Handle()
             val localPartyIDArr = localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
 
             when (action) {
                 TssAction.KEYGEN -> {
+                    val decodedSetupMsg = getSharedSetupMessage().toGoSlice()
                     val result =
                         schnorr_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)
                     if (result != LIB_OK) {
@@ -278,6 +313,7 @@ class SchnorrKeygen(
                 }
 
                 TssAction.Migrate -> {
+                    val decodedSetupMsg = getSharedSetupMessage().toGoSlice()
                     if (this.localUi.isEmpty()) {
                         throw RuntimeException("can't migrate, local UI is empty")
                     }
@@ -307,9 +343,9 @@ class SchnorrKeygen(
                 }
 
                 TssAction.KeyImport -> {
-                    // additionalHeader namespaces the setup message on the relay server so
+                    // setupMessageId namespaces the setup message on the relay server so
                     // per-chain sessions (e.g. "Solana") don't collide with the root EdDSA one.
-                    val eddsaHeader = additionalHeader.ifEmpty { "eddsa_key_import" }
+                    val eddsaHeader = routing.setupMessageId ?: "eddsa_key_import"
                     if (this.isInitiatingDevice) {
                         val (keyImportSetupMsg, keyImportHandler) =
                             getDklsKeyImportSetupMessage(this.localUi, this.hexChainCode)
@@ -374,14 +410,6 @@ class SchnorrKeygen(
                 Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
                 // slightly delay to give local party time to process outbound messages
                 delay(500)
-            }
-        } catch (e: Exception) {
-            Timber.d("Failed to generate key, error: ${e.localizedMessage}")
-            if (attempt < 3) {
-                Timber.d("Retry $action, attempt: $attempt")
-                schnorrKeygenWithRetry(attempt + 1, additionalHeader)
-            } else {
-                throw e
             }
         }
     }
