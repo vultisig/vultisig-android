@@ -1,9 +1,14 @@
 package com.vultisig.wallet.ui.screens.keygen
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -12,8 +17,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -21,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -88,6 +97,12 @@ internal fun ImportSeedphraseContent(
         },
     ) {
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                ImportSeedphraseStepIcon()
+            }
+
+            UiSpacer(24.dp)
+
             Text(
                 text = stringResource(R.string.import_seedphrase_subtitle),
                 style = Theme.brockmann.body.s.medium,
@@ -121,6 +136,29 @@ internal fun ImportSeedphraseContent(
                 color = Theme.v2.colors.text.primary,
             )
         }
+    }
+}
+
+@Composable
+private fun ImportSeedphraseStepIcon() {
+    Box(
+        modifier =
+            Modifier.size(44.dp)
+                .clip(CircleShape)
+                .background(color = Color.Transparent)
+                .border(
+                    width = 1.5.dp,
+                    color = Theme.v2.colors.neutrals.n50.copy(alpha = 0.2f),
+                    shape = CircleShape,
+                ),
+        contentAlignment = Alignment.Center,
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.ic_seedphrase,
+            tint = Theme.v2.colors.buttons.ctaPrimary,
+            contentDescription = null,
+            size = 18.dp,
+        )
     }
 }
 

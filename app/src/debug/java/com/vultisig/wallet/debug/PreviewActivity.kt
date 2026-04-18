@@ -30,6 +30,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
+import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
 import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
@@ -74,6 +75,7 @@ class PreviewActivity : ComponentActivity() {
                     "solana_display" -> SolanaDisplayPreview()
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
+                    "import_seedphrase" -> ImportSeedphrasePreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -372,5 +374,19 @@ private fun SwapErrorPreview() {
         state =
             SwapFormUiModel(formError = UiText.DynamicString(errorMessage), isSwapDisabled = true),
         srcAmountTextFieldState = TextFieldState("1000"),
+    )
+}
+
+@Composable
+private fun ImportSeedphrasePreview() {
+    ImportSeedphraseContent(
+        state =
+            com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel(
+                wordCount = 0,
+                expectedWordCount = 12,
+            ),
+        mnemonicFieldState = TextFieldState(),
+        onBackClick = {},
+        onImportClick = {},
     )
 }
