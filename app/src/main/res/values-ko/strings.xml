@@ -604,8 +604,9 @@
     <string name="keygen_email_error">이메일이 올바르지 않습니다. 확인해 주세요</string>
     <string name="scan_qr_screen_title">QR 코드 스캔</string>
     <string name="verify_transaction_function_inputs_title">함수 입력값</string>
-    <string name="verify_your_server_share_password">서버 공유 비밀번호 확인</string>
-    <string name="periodically_ask_verify_password">비밀번호를 항상 기억할 수 있도록 주기적으로 빠른 서명 비밀번호 확인을 요청합니다</string>
+    <string name="fast_vault_password_reminder_title">비밀번호를 확인하세요:</string>
+    <string name="fast_vault_password_reminder_done_button">완료</string>
+    <string name="periodically_ask_verify_password">비밀번호를 잊지 않도록 주기적으로 확인을 요청합니다.</string>
 
     <string name="security_scanner_medium_risk_title">중간 보안 위험</string>
     <string name="security_scanner_high_risk_title">높은 보안 위험</string>
