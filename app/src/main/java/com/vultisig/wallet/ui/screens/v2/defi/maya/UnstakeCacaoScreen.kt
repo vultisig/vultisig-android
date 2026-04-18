@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -34,6 +36,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
@@ -62,7 +65,12 @@ internal fun UnstakeCacaoScreen(
     UnstakeCacaoContent(
         state = state,
         tokenAmountFieldState = viewModel.tokenAmountFieldState,
-        onDeposit = viewModel::deposit,
+        onDeposit = {
+            viewModel.validateTokenAmount()
+            if (viewModel.state.value.tokenAmountError == null) {
+                viewModel.deposit()
+            }
+        },
     )
 }
 
@@ -133,12 +141,19 @@ private fun UnstakeCacaoContent(
                         color = Theme.v2.colors.text.primary,
                     )
 
-                    val unstakable = state.unstakableAmount ?: "0"
-                    Text(
-                        text = stringResource(R.string.unstake_cacao_available_format, unstakable),
-                        style = Theme.brockmann.body.m.medium,
-                        color = Theme.v2.colors.text.tertiary,
-                    )
+                    if (state.unstakableAmount != null) {
+                        Text(
+                            text =
+                                stringResource(
+                                    R.string.unstake_cacao_available_format,
+                                    state.unstakableAmount,
+                                ),
+                            style = Theme.brockmann.body.m.medium,
+                            color = Theme.v2.colors.text.tertiary,
+                        )
+                    } else {
+                        UiPlaceholderLoader(modifier = Modifier.height(20.dp).width(120.dp))
+                    }
                 }
             }
 
