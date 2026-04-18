@@ -20,8 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -169,19 +167,13 @@ private fun DeleteAddressDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val confirmedOnce = remember { mutableStateOf(false) }
     UiConfirmDialog(
         title = stringResource(R.string.address_book_delete_entry_title),
         text = stringResource(R.string.address_book_delete_entry_message, entry.name),
         confirmTitle = stringResource(R.string.address_book_delete_entry_confirm),
         dismissTitle = stringResource(R.string.address_book_delete_entry_cancel),
         confirmColor = Theme.v2.colors.alerts.error,
-        onConfirm = {
-            if (!confirmedOnce.value) {
-                confirmedOnce.value = true
-                onConfirm()
-            }
-        },
+        onConfirm = onConfirm,
         onDismiss = onDismiss,
     )
 }

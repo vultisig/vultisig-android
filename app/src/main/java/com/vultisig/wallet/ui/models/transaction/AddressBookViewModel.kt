@@ -148,15 +148,12 @@ constructor(
 
     fun confirmDeleteAddress() {
         val target = state.value.pendingDeletion ?: return
+        state.update { it.copy(pendingDeletion = null) }
         viewModelScope.safeLaunch(
-            onError = { e ->
-                Timber.e(e, "Failed to delete address book entry")
-                state.update { it.copy(pendingDeletion = null) }
-            }
+            onError = { e -> Timber.e(e, "Failed to delete address book entry") }
         ) {
             addressBookRepository.delete(target.model.chain.id, target.model.address)
             orderRepository.delete(null, target.model.id)
-            state.update { it.copy(pendingDeletion = null) }
             loadData()
         }
     }
