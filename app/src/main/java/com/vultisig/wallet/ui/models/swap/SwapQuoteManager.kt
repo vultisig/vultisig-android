@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
@@ -129,7 +130,8 @@ constructor(
         val feeCoin =
             when (provider) {
                 SwapProvider.MAYA,
-                SwapProvider.THORCHAIN -> dstToken
+                SwapProvider.THORCHAIN,
+                SwapProvider.LIFI -> dstToken
                 else -> srcNativeToken
             }
 
@@ -337,12 +339,21 @@ constructor(
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val (feeAmount, feeCoin) =
-                    resolveSwapFee(
-                        apiQuote.tx.swapFeeTokenContract,
-                        apiQuote.tx.swapFee,
-                        srcNativeToken,
-                        apiQuote.tx.swapFee.toBigInteger(),
-                    )
+                    if (provider == SwapProvider.LIFI) {
+                        val feeWei =
+                            LiFiChainApi.integratorFeeAmount(
+                                dstAmount = apiQuote.dstAmount.toBigInteger(),
+                                bpsDiscount = vultBPSDiscount ?: 0,
+                            )
+                        Pair(feeWei, dstToken)
+                    } else {
+                        resolveSwapFee(
+                            apiQuote.tx.swapFeeTokenContract,
+                            apiQuote.tx.swapFee,
+                            srcNativeToken,
+                            apiQuote.tx.swapFee.toBigInteger(),
+                        )
+                    }
                 val updatedTx = apiQuote.tx.copy(swapFee = feeAmount.toString())
                 val tokenFees = TokenValue(value = feeAmount, token = feeCoin)
                 SwapQuote.OneInch(
