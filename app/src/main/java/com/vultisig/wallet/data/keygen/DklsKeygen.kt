@@ -333,7 +333,7 @@ class DKLSKeygen(
                             encryption.decrypt(
                                 Base64.decode(it),
                                 Numeric.hexStringToByteArray(encryptionKeyHex),
-                            )!!
+                            ) ?: error("fail to decrypt keygen setup message")
                         }
                         .let { Base64.decode(it) }
             }
@@ -536,7 +536,7 @@ class DKLSKeygen(
                             encryption.decrypt(
                                 Base64.decode(it),
                                 Numeric.hexStringToByteArray(encryptionKeyHex),
-                            )!!
+                            ) ?: error("fail to decrypt reshare setup message")
                         }
                         .let { Base64.decode(it) }
             }

@@ -216,15 +216,18 @@ private fun ScanQrScreen(
 
     val isCameraGranted = cameraPermissionState.status.isGranted
 
+    val onUploadQr: () -> Unit = {
+        if (!isPickerLaunched) {
+            isPickerLaunched = true
+            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+        }
+    }
+
     ScanQrLayout(
         uiModel = uiModel,
         onDismiss = onDismiss,
-        onUploadQr = {
-            if (!isPickerLaunched) {
-                isPickerLaunched = true
-                pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
-            }
-        },
+        onUploadQr = onUploadQr,
+        showBottomBar = isCameraGranted,
         toggleMoreInfo = onMoreInfo,
     ) {
         if (isCameraGranted) {
@@ -263,6 +266,11 @@ private fun ScanQrScreen(
                                 )
                             },
                         ),
+                    secondaryButtonUiModel =
+                        ErrorViewButtonUiModel(
+                            text = stringResource(R.string.scan_qr_upload_qr_code),
+                            onClick = onUploadQr,
+                        ),
                 )
             }
         }
@@ -274,6 +282,7 @@ private fun ScanQrLayout(
     uiModel: ScanQrUiModel,
     onDismiss: () -> Unit,
     onUploadQr: () -> Unit,
+    showBottomBar: Boolean,
     toggleMoreInfo: () -> Unit,
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -292,7 +301,7 @@ private fun ScanQrLayout(
             }
     ) {
         Scaffold(
-            bottomBar = { ScanQrBottomBar(onUploadQr = onUploadQr) },
+            bottomBar = { if (showBottomBar) ScanQrBottomBar(onUploadQr = onUploadQr) },
             topBar = {
                 ScanQrTopBar(
                     onBackClick = onDismiss,
@@ -575,6 +584,7 @@ private fun ScanQrScreenPreview() {
         uiModel = ScanQrUiModel(isTipVisible = false),
         onDismiss = {},
         onUploadQr = {},
+        showBottomBar = true,
         toggleMoreInfo = {},
     ) {
         ScanViewport(isFrameHighlighted = false)
