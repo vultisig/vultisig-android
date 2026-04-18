@@ -586,6 +586,10 @@
     <string name="share_vault_qr_info">Este código QR le permite compartir una versión de solo lectura de su bóveda</string>
     <string name="add_address_title_label">Etiqueta</string>
     <string name="address_book_title_edit">Editar libreta de direcciones</string>
+    <string name="address_book_delete_entry_title">¿Eliminar dirección?</string>
+    <string name="address_book_delete_entry_message">%1$s se eliminará de tu libreta de direcciones</string>
+    <string name="address_book_delete_entry_confirm">Eliminar</string>
+    <string name="address_book_delete_entry_cancel">Cancelar</string>
     <string name="backup_password_request_title">¿Quieres cifrar tu copia de seguridad con una contraseña?</string>
     <string name="backup_password_request_caution_encrypt_desc">Si elige agregar una contraseña, esta se usará para cifrar el archivo de copia de seguridad.</string>
     <string name="backup_password_request_highlight_encrypt">Cifrar</string>

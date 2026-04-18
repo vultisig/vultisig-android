@@ -783,6 +783,10 @@
     <string name="share_vault_qr_info">This QR Code lets you share a view-only version of your Vault</string>
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Edit Address Book</string>
+    <string name="address_book_delete_entry_title">Delete address?</string>
+    <string name="address_book_delete_entry_message">%1$s will be removed from your address book</string>
+    <string name="address_book_delete_entry_confirm">Delete</string>
+    <string name="address_book_delete_entry_cancel">Cancel</string>
     <string name="backup_password_request_title">Do you want to encrypt your backup with a password?</string>
     <string name="backup_password_request_caution_encrypt_desc">If you choose to add a password, it will be used to encrypt the backup file.</string>
     <string name="backup_password_request_highlight_encrypt">encrypt</string>
