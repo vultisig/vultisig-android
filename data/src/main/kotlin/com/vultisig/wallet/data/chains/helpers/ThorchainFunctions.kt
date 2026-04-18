@@ -153,6 +153,22 @@ object ThorchainFunctions {
             coins = listOf(CosmosCoin(denom = "x/staking-tcy", amount = units.toString())),
         )
     }
+
+    /**
+     * Builds the THORChain memo for claiming RUJI staking rewards.
+     *
+     * @param contractAddress the RUJI staking contract address
+     * @param tokenAmountInt the amount of tokens to claim
+     */
+    fun rujiRewardsMemo(contractAddress: String, tokenAmountInt: BigInteger): String =
+        "claim:$contractAddress:$tokenAmountInt"
+
+    /**
+     * Builds the THORChain memo for unstaking TCY tokens.
+     *
+     * @param basisPoints percentage of the position to unstake, in basis points (0–10000)
+     */
+    fun tcyUnstakeMemo(basisPoints: Int): String = "TCY-:$basisPoints"
 }
 
 private const val VULTISIG_AFFILIATE_ADDRESS = "thor1svfwxevnxtm4ltnw92hrqpqk4vzuzw9a4jzy04"

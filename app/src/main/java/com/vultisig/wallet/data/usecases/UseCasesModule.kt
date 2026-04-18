@@ -82,6 +82,12 @@ internal interface UseCasesModule {
 
     @Binds
     @Singleton
+    fun bindRequestAddressBookEntryUseCase(
+        impl: RequestAddressBookEntryUseCaseImpl
+    ): RequestAddressBookEntryUseCase
+
+    @Binds
+    @Singleton
     fun bindResolveProviderUseCase(impl: ResolveProviderUseCaseImpl): ResolveProviderUseCase
 
     @Binds

@@ -65,6 +65,7 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
+import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -249,6 +250,7 @@ constructor(
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val chainValidationService: ChainValidationService,
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
 ) : ViewModel() {
 
     private var vault: Vault? = null
@@ -769,22 +771,9 @@ constructor(
             val vaultId = vaultId ?: return@launch
             val selectedChain = selectedTokenValue?.chain ?: return@launch
 
-            val requestId =
-                when (addressType) {
-                    AddressBookType.OUTPUT -> REQUEST_ADDRESS_ID
-                    AddressBookType.PROVIDER -> REQUEST_PROVIDER_ADDRESS_ID
-                }
-
-            navigator.route(
-                Route.AddressBook(
-                    requestId = requestId,
-                    chainId = selectedChain.id,
-                    excludeVaultId = vaultId,
-                )
-            )
-
             val address: AddressBookEntry =
-                requestResultRepository.request(requestId) ?: return@launch
+                requestAddressBookEntry(chainId = selectedChain.id, excludeVaultId = vaultId)
+                    ?: return@launch
 
             when (addressType) {
                 AddressBookType.OUTPUT -> {
@@ -2999,7 +2988,7 @@ constructor(
         gasFee: TokenValue,
         chain: Chain,
     ): DepositTransaction {
-        val memo = "claim:${selectedToken.contractAddress}:$tokenAmountInt"
+        val memo = ThorchainFunctions.rujiRewardsMemo(selectedToken.contractAddress, tokenAmountInt)
 
         val specific =
             blockChainSpecificRepository.getSpecific(
@@ -3055,7 +3044,7 @@ constructor(
                 ""
             } else {
                 val basisPoints = (percentage * 100).toInt().coerceIn(0, 10000)
-                "TCY-:$basisPoints"
+                ThorchainFunctions.tcyUnstakeMemo(basisPoints)
             }
 
         val specific =
@@ -3212,45 +3201,6 @@ constructor(
 
     companion object {
         private const val GAS_FEE_TIMEOUT_MS = 5_000L
-        private const val REQUEST_ADDRESS_ID = "request_address_id"
-        private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
-    }
-}
-
-internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain: Chain?): SendSrc {
-    val address =
-        when {
-            !selectedTokenId.isNullOrBlank() ->
-                first { it -> it.accounts.any { it.token.id == selectedTokenId } }
-
-            filterByChain != null -> first { it.chain == filterByChain }
-            else -> first()
-        }
-
-    val account =
-        when {
-            !selectedTokenId.isNullOrBlank() ->
-                address.accounts.first { it.token.id == selectedTokenId }
-            filterByChain != null -> address.accounts.first { it.token.isNativeToken }
-            else -> address.accounts.first()
-        }
-
-    return SendSrc(address, account)
-}
-
-internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: SendSrc): SendSrc {
-    if (selectedTokenId == null) {
-        val selectedAddress = currentSrc.address
-        val selectedAccount = currentSrc.account
-        val address = first {
-            it.chain == selectedAddress.chain && it.address == selectedAddress.address
-        }
-        return SendSrc(
-            address,
-            address.accounts.first { it.token.ticker == selectedAccount.token.ticker },
-        )
-    } else {
-        return firstSendSrc(selectedTokenId, null)
     }
 }
 
