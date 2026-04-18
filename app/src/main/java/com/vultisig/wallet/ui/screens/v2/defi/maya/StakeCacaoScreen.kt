@@ -72,12 +72,7 @@ internal fun StakeCacaoScreen(
         rawBalance = state.balanceDecimal,
         isLoading = state.isLoading,
         tokenAmountError = state.tokenAmountError?.asString(),
-        onDeposit = {
-            viewModel.validateTokenAmount()
-            if (viewModel.state.value.tokenAmountError == null) {
-                viewModel.deposit()
-            }
-        },
+        onDeposit = viewModel::validateAndDeposit,
     )
 }
 

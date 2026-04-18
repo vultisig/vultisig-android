@@ -65,12 +65,7 @@ internal fun UnstakeCacaoScreen(
     UnstakeCacaoContent(
         state = state,
         tokenAmountFieldState = viewModel.tokenAmountFieldState,
-        onDeposit = {
-            viewModel.validateTokenAmount()
-            if (viewModel.state.value.tokenAmountError == null) {
-                viewModel.deposit()
-            }
-        },
+        onDeposit = viewModel::validateAndDeposit,
     )
 }
 
