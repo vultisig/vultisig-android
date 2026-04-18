@@ -75,18 +75,14 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
     }
 
     private fun deriveKey(password: ByteArray, salt: ByteArray): ByteArray {
-        val keySpec =
-            PBEKeySpec(
-                String(password, Charsets.UTF_8).toCharArray(),
-                salt,
-                PBKDF2_ITERATIONS,
-                KEY_LENGTH_BITS,
-            )
+        val passwordChars = String(password, Charsets.UTF_8).toCharArray()
+        val keySpec = PBEKeySpec(passwordChars, salt, PBKDF2_ITERATIONS, KEY_LENGTH_BITS)
         return try {
             val factory = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
             factory.generateSecret(keySpec).encoded
         } finally {
             keySpec.clearPassword()
+            passwordChars.fill('\u0000')
         }
     }
 
