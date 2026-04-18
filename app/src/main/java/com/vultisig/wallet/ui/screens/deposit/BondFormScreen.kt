@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens.deposit
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +57,7 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.library.form.BasicFormTextField
 import com.vultisig.wallet.ui.components.library.form.TextFieldValidator
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
+import com.vultisig.wallet.ui.components.vsStyledBackground
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormViewModel
 import com.vultisig.wallet.ui.models.deposit.DepositOption
@@ -240,17 +240,6 @@ internal fun BondFormContent(
 private val cardShape = RoundedCornerShape(12.dp)
 private val inputShape = RoundedCornerShape(12.dp)
 
-@Composable
-private fun Modifier.vsClickableBackground() =
-    border(
-            border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
-            shape = RoundedCornerShape(12.dp),
-        )
-        .background(
-            color = Theme.v2.colors.backgrounds.secondary,
-            shape = RoundedCornerShape(12.dp),
-        )
-
 private fun String.toDisplayAsset(): String =
     substringBefore("-").substringAfterLast("/").substringAfterLast(".")
 
@@ -345,19 +334,19 @@ private fun MayaBondFormContent(
                 UiSpacer(16.dp)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PasteIcon(
-                        modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                        modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                         onPaste = onSetNodeAddress,
                     )
                     UiIcon(
                         drawableResId = R.drawable.camera,
                         size = 20.dp,
-                        modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                        modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                         onClick = onScan,
                     )
                     UiIcon(
                         drawableResId = R.drawable.ic_bookmark,
                         size = 20.dp,
-                        modifier = Modifier.vsClickableBackground().padding(all = 12.dp).weight(1f),
+                        modifier = Modifier.vsStyledBackground().padding(all = 12.dp).weight(1f),
                         onClick = onAddressBookClick,
                     )
                 }

@@ -12,7 +12,7 @@ interface CryptoConnectionTypeRepository {
 
     fun setActiveCryptoConnection(cryptoConnectionType: CryptoConnectionType)
 
-    fun isDefi(chain: Chain): Boolean
+    fun hasDeFiPositionsScreen(chain: Chain): Boolean
 }
 
 internal class CryptoConnectionTypeRepositoryImpl @Inject constructor() :
@@ -26,10 +26,11 @@ internal class CryptoConnectionTypeRepositoryImpl @Inject constructor() :
         connection.value = cryptoConnectionType
     }
 
-    override fun isDefi(chain: Chain) =
+    override fun hasDeFiPositionsScreen(chain: Chain) =
         when (chain) {
             Chain.ThorChain,
-            Chain.MayaChain -> true
+            Chain.MayaChain,
+            Chain.Tron -> true
             else -> false
         }
 }

@@ -15,6 +15,7 @@ data class Colors(
     val variables: Variables = Variables(),
     val fills: FillsColors = FillsColors(),
     val vibrant: Vibrant = Vibrant(),
+    val shadow: Shadow = Shadow(),
 )
 
 data class Gradients(
@@ -24,6 +25,31 @@ data class Gradients(
         Brush.linearGradient(colors = listOf(Color(0xFF0439C7), Color(0xFF33E6BF))),
     val ultimateTierTitle: Brush =
         Brush.linearGradient(colors = listOf(Color(0xFFD8BA7B), Color(0xFF794D76))),
+    val scanQrBackground: Brush =
+        Brush.verticalGradient(
+            colorStops =
+                arrayOf(
+                    0.0000f to Color(0xFF02122B),
+                    0.0043f to Color(0xFD02122B),
+                    0.0178f to Color(0xF602122B),
+                    0.0409f to Color(0xEB02122B),
+                    0.0737f to Color(0xDA02122B),
+                    0.1159f to Color(0xC402122B),
+                    0.1660f to Color(0xAB02122B),
+                    0.2214f to Color(0x8E02122B),
+                    0.2786f to Color(0x7102122B),
+                    0.3340f to Color(0x5502122B),
+                    0.3841f to Color(0x3B02122B),
+                    0.4263f to Color(0x2502122B),
+                    0.4591f to Color(0x1502122B),
+                    0.4822f to Color(0x0902122B),
+                    0.4957f to Color(0x0202122B),
+                    0.5000f to Color(0x0002122B),
+                    1.0000f to Color(0x0002122B),
+                )
+        ),
+    val scanQrViewportBorder: Brush =
+        Brush.verticalGradient(colors = listOf(Color(0xFF4879FD), Color(0xFF2B4897))),
 )
 
 data class Buttons(
@@ -81,6 +107,7 @@ data class Text(
     val secondary: Color = Color(0xFFC9D6E8),
     val tertiary: Color = Color(0xFF8295AE),
     val inverse: Color = Color(0xFF02122B),
+    val periwinkle: Color = Color(0xFF95AEE0),
     val button: TextButton = TextButton(),
 )
 
@@ -129,6 +156,11 @@ data class Variables(
     val textButtonSecondaryLightDark: Color = Color(0xFFF0F4FC),
 )
 
+data class Shadow(val low: Color = Color(0x1F000000))
+
 data class FillsColors(val primary: Color = Color(0x1F787880))
 
 data class Vibrant(val primary: Color = Color(0xFF333333))
+
+// Chain brand colors — fixed values not tied to theme switching
+val TronRed = Color(0xFFFF060A)

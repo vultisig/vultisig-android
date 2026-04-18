@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -133,13 +134,16 @@ constructor(
     private val networkUtils: NetworkUtils,
 ) : ViewModel() {
 
-    private val args = savedStateHandle.toRoute<Route.Keygen.PeerDiscovery>()
+    private val args: Route.Keygen.PeerDiscovery? =
+        runCatching { savedStateHandle.toRoute<Route.Keygen.PeerDiscovery>() }
+            .onFailure { Timber.e(it, "Failed to deserialize PeerDiscovery args") }
+            .getOrNull()
 
     val state =
         MutableStateFlow(
             PeerDiscoveryUiModel(
-                minimumDevices = args.deviceCount ?: MIN_KEYGEN_DEVICES,
-                minimumDevicesDisplayed = (args.deviceCount ?: (MIN_KEYGEN_DEVICES + 1)),
+                minimumDevices = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
+                minimumDevicesDisplayed = (args?.deviceCount?.plus(1)) ?: (MIN_KEYGEN_DEVICES + 1),
                 enableNotification = false,
             )
         )
@@ -154,17 +158,17 @@ constructor(
     // so failures surface as a UI error state rather than crashing ViewModel construction.
     // For other actions, use a random hex immediately.
     private var hexChainCode: String =
-        if (args.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
+        if (args?.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
     private var localPartyId = Utils.deviceName(context)
-    private val vaultName: String = args.vaultName
+    private val vaultName: String = args?.vaultName ?: ""
     private var libType = SigningLibType.GG20
     private var pubKeyEcdsa = ""
     private var signers: List<String> = emptyList()
     private var resharePrefix: String = ""
 
     // fast vault data
-    private val email = args.email
-    private val password = args.password
+    private val email = args?.email
+    private val password = args?.password
 
     private val qrBitmap = MutableStateFlow<Bitmap?>(null)
 
@@ -173,7 +177,11 @@ constructor(
     private var serverUrl: String = VULTISIG_RELAY_URL
 
     init {
-        loadData()
+        if (args == null) {
+            viewModelScope.launch { navigator.navigate(Destination.Back) }
+        } else {
+            loadData()
+        }
     }
 
     private fun showNetworkWarning() {
@@ -221,6 +229,7 @@ constructor(
     }
 
     fun switchMode() {
+        if (args == null) return
         state.update {
             it.copy(
                 network =
@@ -248,12 +257,28 @@ constructor(
     }
 
     fun tryAgain() {
+        if (args == null) return
         loadData()
     }
 
     fun next() {
+        val args = args ?: return
         discoverParticipantsJob?.cancel()
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "Failed to start keygen session")
+                state.update {
+                    it.copy(
+                        warning =
+                            ErrorUiModel(
+                                title = UiText.StringResource(R.string.error_view_default_title),
+                                description =
+                                    UiText.StringResource(R.string.error_view_default_description),
+                            )
+                    )
+                }
+            }
+        ) {
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
             val keygenCommittee = listOf(localPartyId) + state.value.selectedDevices
             sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
@@ -301,6 +326,7 @@ constructor(
             return
         }
         viewModelScope.launch {
+            val args = args ?: return@launch
             if (args.action == TssAction.KeyImport && hexChainCode.isEmpty()) {
                 val mnemonic = keyImportRepository.get()?.mnemonic
                 if (mnemonic == null) {
@@ -512,8 +538,9 @@ constructor(
             }
     }
 
-    private fun createKeygenPayload(isRelayEnabled: Boolean) =
-        when (args.action) {
+    private fun createKeygenPayload(isRelayEnabled: Boolean): String {
+        val args = args ?: return ""
+        return when (args.action) {
             TssAction.KEYGEN ->
                 "https://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
                     compressQr(
@@ -588,6 +615,7 @@ constructor(
                         )
                         .encodeBase64()
         }
+    }
 
     private fun TssAction.toLinkTssType(): String =
         when (this) {
@@ -599,6 +627,7 @@ constructor(
         }
 
     private suspend fun requestVultiServerConnection() {
+        val args = args ?: return
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
             when (args.action) {
                 TssAction.ReShare -> {

@@ -326,6 +326,12 @@ constructor(
                                     route = ChainDashboardRoute.PositionMaya(vaultId = vaultId)
                                 )
                             )
+                        account.chainName.equals(Chain.Tron.raw, true) ->
+                            navigator.route(
+                                Route.ChainDashboard(
+                                    route = ChainDashboardRoute.PositionTron(vaultId = vaultId)
+                                )
+                            )
                         else ->
                             navigator.route(
                                 Route.ChainDashboard(
@@ -379,7 +385,9 @@ constructor(
                                 when (cryptoConnectionType) {
                                     CryptoConnectionType.Wallet -> true
                                     CryptoConnectionType.Defi ->
-                                        cryptoConnectionTypeRepository.isDefi(it.chain)
+                                        cryptoConnectionTypeRepository.hasDeFiPositionsScreen(
+                                            it.chain
+                                        )
                                 }
                             }
                             .updateUiStateFromList(searchQuery = searchQuery.toString())

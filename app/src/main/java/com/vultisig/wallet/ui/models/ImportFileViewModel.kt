@@ -97,11 +97,15 @@ constructor(
         val vaultFileContent = uiModel.value.fileContent
         if (!vaultFileContent.isNullOrBlank()) {
             viewModelScope.launch {
-                val result = saveToDb(vaultFileContent, key)
-                hidePasswordPromptDialog()
-                when (result) {
-                    SaveResult.Success -> showSuccessImport()
-                    SaveResult.Duplicate -> showDuplicateError()
+                when (saveToDb(vaultFileContent, key)) {
+                    SaveResult.Success -> {
+                        hidePasswordPromptDialog()
+                        showSuccessImport()
+                    }
+                    SaveResult.Duplicate -> {
+                        hidePasswordPromptDialog()
+                        showDuplicateError()
+                    }
                     SaveResult.Failed -> showErrorHint()
                 }
             }

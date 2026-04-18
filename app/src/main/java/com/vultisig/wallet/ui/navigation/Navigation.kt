@@ -544,6 +544,8 @@ sealed interface ChainDashboardRoute {
     @Serializable data class PositionCircle(val vaultId: String) : ChainDashboardRoute
 
     @Serializable data class PositionMaya(val vaultId: String) : ChainDashboardRoute
+
+    @Serializable data class PositionTron(val vaultId: String) : ChainDashboardRoute
 }
 
 internal val BackupTypeNavType = createNavType<BackupType>()

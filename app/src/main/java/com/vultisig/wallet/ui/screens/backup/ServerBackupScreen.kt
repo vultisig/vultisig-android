@@ -33,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
@@ -165,13 +166,13 @@ private fun ServerBackupScreen(
 
 private val SectionShape = RoundedCornerShape(12.dp)
 
-@Composable
-private fun Modifier.sectionCard(): Modifier =
+private fun Modifier.sectionCard(): Modifier = composed {
     this.fillMaxWidth()
         .border(1.dp, Theme.v2.colors.border.light, SectionShape)
         .clip(SectionShape)
         .background(Theme.v2.colors.backgrounds.secondary)
         .padding(16.dp)
+}
 
 @Composable
 private fun ConfirmedRow(label: String, value: String, onEditClick: (() -> Unit)? = null) {
