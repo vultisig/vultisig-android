@@ -3,6 +3,10 @@ package com.vultisig.wallet.ui.models.send
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 
+/**
+ * Returns the first [SendSrc] matching [selectedTokenId] or [filterByChain], falling back to the
+ * first address.
+ */
 internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain: Chain?): SendSrc {
     val address =
         when {
@@ -24,6 +28,10 @@ internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain:
     return SendSrc(address, account)
 }
 
+/**
+ * Re-resolves [currentSrc] from this updated list, or delegates to [firstSendSrc] when
+ * [selectedTokenId] is set.
+ */
 internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: SendSrc): SendSrc {
     if (selectedTokenId == null) {
         val selectedAddress = currentSrc.address
