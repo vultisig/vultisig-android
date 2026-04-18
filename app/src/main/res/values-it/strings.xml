@@ -335,6 +335,7 @@
     <string name="swap_error_time_out">La richiesta di scambio è scaduta. Riprova.</string>
     <string name="swap_error_high_price_impact">L\'impatto sul prezzo è troppo alto. Prova con un importo inferiore o una coppia di token diversa.</string>
     <string name="swap_error_quote_failed">Preventivo di swap fallito. Riprova o modifica l\'importo.</string>
+    <string name="swap_error_rate_limit">Troppe richieste. Riprova più tardi.</string>
     <string name="swap_screen_invalid_no_vault">Nessun caveau selezionato</string>
     <string name="swap_screen_invalid_no_src_error">Nessun token sorgente selezionato</string>
     <string name="swap_screen_invalid_selected_no_dst">Nessun token di destinazione selezionato</string>

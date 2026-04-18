@@ -335,6 +335,7 @@
     <string name="swap_error_time_out">A solicitação de troca expirou. Por favor tente novamente</string>
     <string name="swap_error_high_price_impact">O impacto no preço é muito alto. Tente um valor menor ou um par de tokens diferente.</string>
     <string name="swap_error_quote_failed">Cotação do swap falhou. Tente novamente ou ajuste o valor.</string>
+    <string name="swap_error_rate_limit">Demasiados pedidos. Tente novamente mais tarde.</string>
     <string name="swap_screen_invalid_no_vault">Nenhum cofre selecionado</string>
     <string name="swap_screen_invalid_no_src_error">Nenhum token de origem selecionado</string>
     <string name="swap_screen_invalid_selected_no_dst">Nenhum token de destino selecionado</string>
