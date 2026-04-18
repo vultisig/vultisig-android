@@ -385,7 +385,9 @@ constructor(
                                 when (cryptoConnectionType) {
                                     CryptoConnectionType.Wallet -> true
                                     CryptoConnectionType.Defi ->
-                                        cryptoConnectionTypeRepository.isDefi(it.chain)
+                                        cryptoConnectionTypeRepository.hasDeFiPositionsScreen(
+                                            it.chain
+                                        )
                                 }
                             }
                             .updateUiStateFromList(searchQuery = searchQuery.toString())
