@@ -97,4 +97,16 @@ class HandleSwapExceptionTest {
         val result = SwapException.handleSwapException("Amount cannot be zero")
         assertInstanceOf(SwapException.AmountCannotBeZero::class.java, result)
     }
+
+    @Test
+    fun `too many requests maps to RateLimitExceeded`() {
+        val result = SwapException.handleSwapException("[Jupiter] Too many requests")
+        assertInstanceOf(SwapException.RateLimitExceeded::class.java, result)
+    }
+
+    @Test
+    fun `gateway too many requests maps to RateLimitExceeded`() {
+        val result = SwapException.handleSwapException("[API Gateway] Too many requests")
+        assertInstanceOf(SwapException.RateLimitExceeded::class.java, result)
+    }
 }

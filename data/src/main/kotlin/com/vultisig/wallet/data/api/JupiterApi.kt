@@ -1,14 +1,16 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTotalDataJson
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTransactionJson
 import com.vultisig.wallet.data.api.models.quotes.SwapRouteResponseJson
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.HttpStatusCode
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -40,7 +42,10 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
                 parameter("outputMint", toToken)
                 parameter("amount", fromAmount)
             }
-        val body = quoteResponse.body<SwapRouteResponseJson>()
+        if (quoteResponse.status == HttpStatusCode.TooManyRequests) {
+            throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
+        }
+        val body = quoteResponse.bodyOrThrow<SwapRouteResponseJson>()
         val outAmount = body.outAmount
         val routePlan = body.routePlan
 
@@ -61,10 +66,12 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
                 },
             )
         }
-        val quoteSwapData =
-            httpClient
-                .post("$JUPITER_URL/swap/v1/swap") { setBody(quoteSwapRequestBody) }
-                .body<QuoteSwapTransactionJson>()
+        val swapResponse =
+            httpClient.post("$JUPITER_URL/swap/v1/swap") { setBody(quoteSwapRequestBody) }
+        if (swapResponse.status == HttpStatusCode.TooManyRequests) {
+            throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
+        }
+        val quoteSwapData = swapResponse.bodyOrThrow<QuoteSwapTransactionJson>()
 
         val feePrice =
             (SolanaTransaction.getComputeUnitPrice(quoteSwapData.data) ?: "0").toBigInteger()
