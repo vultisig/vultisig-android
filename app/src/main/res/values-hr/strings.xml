@@ -1166,4 +1166,6 @@
     <string name="key_import_error_title">Uvoz Ključa Nije Uspio</string>
     <string name="key_import_error_description">Nije moguće uvesti trezor iz seed fraze. Provjerite svoju seed frazu i pokušajte ponovo.</string>
     <string name="key_import_error_no_mnemonic_description">Nije pronađena seed fraza. Molimo unesite ponovo svoju seed frazu i pokušajte ponovo.</string>
+    <string name="swap_error_approval_timeout">Odobrenje tokena je isteklo. Molimo pokušajte ponovno</string>
+    <string name="swap_error_approval_failed">Odobrenje tokena je odbijeno. Molimo pokušajte ponovno</string>
 </resources>
