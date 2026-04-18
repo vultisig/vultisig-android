@@ -71,7 +71,9 @@ object SuiHelper {
                         .setPay(
                             Sui.Pay.newBuilder()
                                 .setGas(
-                                    suiObjectRefs.first { it.objectId == gascoin?.coinObjectId }
+                                    suiObjectRefs.firstOrNull {
+                                        it.objectId == gascoin?.coinObjectId
+                                    } ?: error("No suitable SUI gas coin available for transaction")
                                 )
                                 .addAllInputCoins(nonSuiObjectRef)
                                 .addAllRecipients(listOf(toAddress.description()))
