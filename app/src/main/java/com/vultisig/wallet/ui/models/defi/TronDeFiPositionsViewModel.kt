@@ -63,7 +63,7 @@ internal data class TronStakingUiModel(
     val availableEnergy: Long = 0L,
     val totalEnergy: Long = 0L,
     val pendingWithdrawals: List<TronPendingWithdrawalUiModel> = emptyList(),
-    val hasPositions: Boolean = false,
+    val hasFrozenBalance: Boolean = false,
 )
 
 @Immutable
@@ -194,7 +194,7 @@ constructor(
             availableEnergy = stats.availableEnergy,
             totalEnergy = stats.totalEnergy,
             pendingWithdrawals = pendingWithdrawals,
-            hasPositions = frozenTotal > BigDecimal.ZERO || pendingWithdrawals.isNotEmpty(),
+            hasFrozenBalance = frozenTotal > BigDecimal.ZERO,
         )
     }
 

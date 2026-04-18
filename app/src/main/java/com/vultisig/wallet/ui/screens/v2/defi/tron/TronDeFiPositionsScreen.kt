@@ -183,7 +183,8 @@ private fun TronDeFiPositionsScreenContent(
                     }
 
                     val isTronSelected = state.selectedPositions.contains("TRON")
-                    if (isTronSelected && tronData.hasPositions) {
+                    val pendingWithdrawals = tronData.pendingWithdrawals
+                    if (isTronSelected && tronData.hasFrozenBalance) {
                         item {
                             TronFreezePositionCard(
                                 frozenTotalPrice = tronData.frozenTotalPrice,
@@ -193,11 +194,10 @@ private fun TronDeFiPositionsScreenContent(
                                 onClickUnfreeze = onClickUnfreeze,
                             )
                         }
-                    } else {
+                    } else if (isTronSelected && pendingWithdrawals.isEmpty()) {
                         item { NoPositionsContainer() }
                     }
 
-                    val pendingWithdrawals = tronData.pendingWithdrawals
                     if (pendingWithdrawals.isNotEmpty()) {
                         item {
                             TronPendingWithdrawalsCard(
@@ -368,7 +368,7 @@ private fun TronDeFiPositionsScreenPreview() {
                         totalAmountPrice = "$1240.05",
                         frozenTotalPrice = "$4,800",
                         frozenTotalTrx = "800",
-                        hasPositions = true,
+                        hasFrozenBalance = true,
                         availableBandwidth = 15000L,
                         totalBandwidth = 20000L,
                         availableEnergy = 50000L,
