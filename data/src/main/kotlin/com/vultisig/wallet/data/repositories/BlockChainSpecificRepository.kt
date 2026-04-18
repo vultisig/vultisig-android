@@ -25,7 +25,6 @@ import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
-import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
@@ -470,11 +469,30 @@ constructor(
                 coroutineScope {
                     val gasPriceDeferred = async { suiApi.getReferenceGasPrice() }
                     val coinsDeferred = async { suiApi.getAllCoins(address) }
+                    val feesDeferred = async {
+                        feeServiceComposite.calculateFees(
+                            Transfer(
+                                coin = token,
+                                vault = VaultData("", ""),
+                                amount = tokenAmountValue ?: BigInteger.ZERO,
+                                to = dstAddress ?: address,
+                            )
+                        )
+                    }
+
+                    val safeGasBudget =
+                        when (val fees = feesDeferred.await()) {
+                            is GasFees -> fees.limit
+                            else ->
+                                error(
+                                    "Unsupported fee type ${fees::class.simpleName} for chain=$chain"
+                                )
+                        }
 
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Sui(
                             referenceGasPrice = gasPriceDeferred.await(),
-                            gasBudget = SUI_DEFAULT_GAS_BUDGET,
+                            gasBudget = safeGasBudget,
                             coins = coinsDeferred.await(),
                         ),
                         utxos = emptyList(),
