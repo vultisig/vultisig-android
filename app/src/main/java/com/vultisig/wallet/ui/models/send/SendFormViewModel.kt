@@ -21,8 +21,6 @@ import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
-import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
-import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Account
@@ -48,13 +46,9 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.coinType
-import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.getPubKeyByChain
-import com.vultisig.wallet.data.models.hasReaping
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.models.payload.UtxoInfo
-import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
@@ -73,7 +67,6 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
-import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.AmountFraction.F100
@@ -135,7 +128,6 @@ import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.proto.Bitcoin
-import wallet.core.jni.proto.Common.SigningError
 
 @Immutable
 internal data class TokenBalanceUiModel(
@@ -256,6 +248,7 @@ constructor(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val feeServiceComposite: FeeServiceComposite,
+    private val chainValidationService: ChainValidationService,
 ) : ViewModel() {
 
     private var vault: Vault? = null
@@ -1301,7 +1294,13 @@ constructor(
                                             planFee.value = plan.fee
                                         }
 
-                                selectUtxosIfNeeded(chain, specific)
+                                val selectedSpecific =
+                                    chainValidationService.selectUtxosIfNeeded(
+                                        chain = chain,
+                                        specific = specific,
+                                        plan = planBtc.value,
+                                    )
+                                selectedSpecific
                             } else {
                                 specific
                             }
@@ -1322,7 +1321,7 @@ constructor(
                     }
 
                     if (chain == Chain.Cardano) {
-                        validateCardanoUTXORequirements(
+                        chainValidationService.validateCardanoUTXORequirements(
                             sendAmount = tokenAmountInt,
                             totalBalance = selectedTokenValue.value,
                             estimatedFee = gasFee.value,
@@ -1330,7 +1329,11 @@ constructor(
                     }
 
                     if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                        validateBtcLikeAmount(tokenAmountInt, chain)
+                        chainValidationService.validateBtcLikeAmount(
+                            tokenAmountInt,
+                            chain,
+                            planBtc.value,
+                        )
                     }
                 } else {
                     val nativeTokenAccount =
@@ -2102,7 +2105,7 @@ constructor(
                     }
 
                 val slippage = slippageFieldState.text.toString()
-                val slippageValidation = validateSlippage(slippage)
+                val slippageValidation = chainValidationService.validateSlippage(slippage)
                 if (slippageValidation != null) {
                     throw InvalidTransactionDataException(slippageValidation)
                 }
@@ -2124,7 +2127,7 @@ constructor(
                             ThorchainFunctions.redeemYToken(
                                 fromAddress = srcAddress,
                                 tokenContract = tokenContract,
-                                slippage = slippage.formatSlippage(),
+                                slippage = chainValidationService.formatSlippage(slippage),
                                 denom = selectedToken.contractAddress,
                                 amount = tokenAmountInt,
                             ),
@@ -2145,74 +2148,10 @@ constructor(
         }
     }
 
-    private fun String.formatSlippage(): String {
-        val divider = "100".toBigDecimal()
-        return try {
-            this.toBigDecimal().setScale(2, RoundingMode.DOWN).divide(divider).toPlainString()
-        } catch (t: Throwable) {
-            "0.01" // Default slippage for safety
-        }
-    }
-
-    private fun validateSlippage(slippage: String?): UiText? {
-        if (slippage.isNullOrBlank()) {
-            return UiText.StringResource(R.string.slippage_required_error)
-        }
-
-        return try {
-            val value = slippage.toBigDecimal()
-            if (value < BigDecimal.ZERO || value > BigDecimal("100")) {
-                UiText.StringResource(R.string.slippage_invalid_error)
-            } else {
-                null
-            }
-        } catch (e: NumberFormatException) {
-            UiText.StringResource(R.string.slippage_format_error)
-        }
-    }
-
     private suspend fun getFeesFiatValue(gasFee: TokenValue, selectedToken: Coin): EstimatedGasFee {
         return gasFeeToEstimatedFee(
             GasFeeParams(BigInteger.valueOf(1), gasFee = gasFee, selectedToken = selectedToken)
         )
-    }
-
-    @kotlin.ExperimentalStdlibApi
-    private fun selectUtxosIfNeeded(
-        chain: Chain,
-        specific: BlockChainSpecificAndUtxo,
-    ): BlockChainSpecificAndUtxo {
-        specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
-
-        val updatedUtxo =
-            planBtc.value?.utxosOrBuilderList?.map { planUtxo ->
-                UtxoInfo(
-                    hash = planUtxo.outPoint.hash.toByteArray().reversedArray().toHexString(),
-                    index = planUtxo.outPoint.index.toUInt(),
-                    amount = planUtxo.amount,
-                )
-            } ?: return specific
-
-        return specific.copy(utxos = updatedUtxo)
-    }
-
-    private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
-        val minAmount = chain.getDustThreshold
-        if (tokenAmountInt < minAmount) {
-            val symbol = chain.coinType.symbol
-            val name = chain.raw
-            val formattedMinAmount = chain.toValue(minAmount).toString()
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.send_form_minimum_send_amount_is_requires_this,
-                    listOf(formattedMinAmount, symbol, name),
-                )
-            )
-        }
-
-        if (planBtc.value?.error != SigningError.OK) {
-            throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
-        }
     }
 
     private suspend fun getBitcoinTransactionPlan(
@@ -2868,57 +2807,16 @@ constructor(
                     tokenAmountFieldState.textAsFlow(),
                     gasFee.filterNotNull(),
                 ) { selectedToken, tokenAmount, gasFee ->
-                    checkIsReapable(selectedToken, tokenAmount.toString(), gasFee)
+                    val reapingError =
+                        chainValidationService.checkIsReapable(
+                            selectedAccount,
+                            selectedToken,
+                            tokenAmount.toString(),
+                            gasFee,
+                        )
+                    uiState.update { it.copy(reapingError = reapingError) }
                 }
                 .collect()
-        }
-    }
-
-    private fun checkIsReapable(selectedToken: Coin, tokenAmount: String, gasFee: TokenValue) {
-        val selectedAccount = selectedAccount
-        if (selectedAccount != null) {
-            val selectedChain = selectedToken.chain
-
-            if (selectedChain.hasReaping) {
-                val balance = selectedAccount.tokenValue?.value ?: BigInteger.ZERO
-                val tokenAmountInt =
-                    tokenAmount
-                        .toBigDecimalOrNull()
-                        ?.movePointRight(selectedToken.decimal)
-                        ?.toBigInteger() ?: BigInteger.ZERO
-
-                val existentialDeposit =
-                    when {
-                        selectedChain == Chain.Polkadot &&
-                            selectedToken.ticker == Coins.Polkadot.DOT.ticker -> {
-                            PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-                        }
-
-                        selectedChain == Chain.Ripple &&
-                            selectedToken.ticker == Coins.Ripple.XRP.ticker -> {
-                            RippleHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-                        }
-
-                        else -> return
-                    }
-
-                if (balance - (gasFee.value + tokenAmountInt) < existentialDeposit) {
-                    uiState.update {
-                        it.copy(
-                            reapingError =
-                                UiText.StringResource(
-                                    when (selectedChain) {
-                                        Chain.Polkadot -> R.string.send_form_polka_reaping_warning
-                                        Chain.Ripple -> R.string.send_form_ripple_reaping_warning
-                                        else -> return
-                                    }
-                                )
-                        )
-                    }
-                } else {
-                    uiState.update { it.copy(reapingError = null) }
-                }
-            }
         }
     }
 
@@ -2995,51 +2893,6 @@ constructor(
             // this line prevent missing true value in these cases.
             delay(100)
             uiState.update { it.copy(isRefreshing = false) }
-        }
-    }
-
-    private fun validateCardanoUTXORequirements(
-        sendAmount: BigInteger,
-        totalBalance: BigInteger,
-        estimatedFee: BigInteger,
-    ) {
-        val minUTXOValue: BigInteger = Chain.Cardano.getDustThreshold
-
-        // 1. Check send amount meets minimum
-        if (sendAmount < minUTXOValue) {
-            val minAmountADA = Chain.Cardano.toValue(minUTXOValue)
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(R.string.minimum_send_amount_is_ada, listOf(minAmountADA))
-            )
-        }
-
-        // 2. Check sufficient balance
-        val totalNeeded = sendAmount + estimatedFee
-        if (totalBalance < totalNeeded) {
-            val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
-            val errorMessage =
-                if (totalBalance > estimatedFee && totalBalance > BigInteger.ZERO) {
-                    UiText.FormattedText(
-                        R.string.insufficient_balance_try_send,
-                        listOf(totalBalanceADA),
-                    )
-                } else {
-                    UiText.FormattedText(R.string.insufficient_balance_ada, listOf(totalBalanceADA))
-                }
-            throw InvalidTransactionDataException(errorMessage)
-        }
-
-        // 3. Check remaining balance (change) meets minimum UTXO requirement
-        val remainingBalance = totalBalance - sendAmount - estimatedFee
-        if (remainingBalance > BigInteger.ZERO && remainingBalance < minUTXOValue) {
-            val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
-
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.this_amount_would_leave_too_little_change,
-                    listOf(totalBalanceADA),
-                )
-            )
         }
     }
 
