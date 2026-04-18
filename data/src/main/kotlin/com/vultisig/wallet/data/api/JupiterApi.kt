@@ -4,8 +4,8 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTotalDataJson
 import com.vultisig.wallet.data.api.models.quotes.QuoteSwapTransactionJson
 import com.vultisig.wallet.data.api.models.quotes.SwapRouteResponseJson
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -45,7 +45,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
         if (quoteResponse.status == HttpStatusCode.TooManyRequests) {
             throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
         }
-        val body = quoteResponse.body<SwapRouteResponseJson>()
+        val body = quoteResponse.bodyOrThrow<SwapRouteResponseJson>()
         val outAmount = body.outAmount
         val routePlan = body.routePlan
 
@@ -71,7 +71,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : Jupite
         if (swapResponse.status == HttpStatusCode.TooManyRequests) {
             throw SwapException.RateLimitExceeded("[Jupiter] Too many requests")
         }
-        val quoteSwapData = swapResponse.body<QuoteSwapTransactionJson>()
+        val quoteSwapData = swapResponse.bodyOrThrow<QuoteSwapTransactionJson>()
 
         val feePrice =
             (SolanaTransaction.getComputeUnitPrice(quoteSwapData.data) ?: "0").toBigInteger()
