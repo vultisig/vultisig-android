@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.models.proto.v1.SingleKeygenMessageProto
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
+import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.DiscoveryTimeout
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.DuplicateVaultName
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.InvalidQr
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenError.UnknownError
@@ -42,7 +43,6 @@ import io.ktor.util.decodeBase64Bytes
 import java.net.Inet4Address
 import javax.inject.Inject
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.seconds
@@ -52,7 +52,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -69,6 +71,9 @@ internal sealed class JoinKeygenError(val message: UiText) {
     data object WrongResharePrefix :
         JoinKeygenError(R.string.join_keysign_wrong_reshare.asUiText())
 
+    data object DiscoveryTimeout :
+        JoinKeygenError(R.string.join_key_gen_mediator_discovery_timeout.asUiText())
+
     data class UnknownError(val error: String) : JoinKeygenError(error.asUiText())
 }
 
@@ -78,6 +83,8 @@ internal data class JoinKeygenUiModel(
 )
 
 private class JoinKeygenException(val error: JoinKeygenError) : Exception()
+
+private val DISCOVERY_TIMEOUT = 30.seconds
 
 @HiltViewModel
 internal class JoinKeygenViewModel
@@ -282,19 +289,28 @@ constructor(
         }
     }
 
-    private suspend fun discoverMediator(serviceName: String): String = suspendCoroutine { cont ->
-        discoveryListener =
-            MediatorServiceDiscoveryListener(
-                nsdManager = nsdManager,
-                serviceName = serviceName,
-                onServerAddressDiscovered = { serverUrl ->
-                    nsdManager.stopServiceDiscovery(discoveryListener)
+    private suspend fun discoverMediator(serviceName: String): String =
+        withTimeoutOrNull(DISCOVERY_TIMEOUT) {
+            suspendCancellableCoroutine { cont ->
+                val listener =
+                    MediatorServiceDiscoveryListener(
+                        nsdManager = nsdManager,
+                        serviceName = serviceName,
+                        onServerAddressDiscovered = { serverUrl ->
+                            stopDiscoveryQuietly()
+                            if (cont.isActive) cont.resume(serverUrl)
+                        },
+                    )
+                discoveryListener = listener
+                cont.invokeOnCancellation { stopDiscoveryQuietly() }
+                nsdManager.discoverServices("_http._tcp.", NsdManager.PROTOCOL_DNS_SD, listener)
+            }
+        } ?: error(DiscoveryTimeout)
 
-                    cont.resume(serverUrl)
-                },
-            )
-
-        nsdManager.discoverServices("_http._tcp.", NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+    private fun stopDiscoveryQuietly() {
+        val listener = discoveryListener ?: return
+        discoveryListener = null
+        runCatching { nsdManager.stopServiceDiscovery(listener) }
     }
 
     private suspend fun waitForKeygenToStart(session: Session) {
