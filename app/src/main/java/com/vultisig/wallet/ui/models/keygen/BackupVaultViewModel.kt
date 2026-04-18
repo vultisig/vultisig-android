@@ -159,7 +159,8 @@ constructor(
             return false
         }
 
-        val backup = createVaultBackup(mapVaultToProto(vault), password)
+        val backup =
+            withContext(Dispatchers.Default) { createVaultBackup(mapVaultToProto(vault), password) }
 
         if (backup == null) {
             viewModelScope.launch {

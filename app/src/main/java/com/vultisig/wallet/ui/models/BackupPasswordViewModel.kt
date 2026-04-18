@@ -266,7 +266,8 @@ constructor(
             return false
         }
 
-        val backup = createVaultBackup(mapVaultToProto(vault), password)
+        val backup =
+            withContext(Dispatchers.Default) { createVaultBackup(mapVaultToProto(vault), password) }
         if (backup == null) {
             viewModelScope.launch { showError() }
             return false
@@ -277,12 +278,15 @@ constructor(
 
     private suspend fun backupAllVaults(password: String, uri: Uri): Boolean {
         val content =
-            vaults.map { vault ->
-                val vaultBackupData =
-                    createVaultBackup(mapVaultToProto(vault), password) ?: return false
-                val fileName = createVaultBackupFileName(vault)
-                AppZipEntry(fileName, vaultBackupData)
-            }
+            withContext(Dispatchers.Default) {
+                vaults.map { vault ->
+                    val vaultBackupData =
+                        createVaultBackup(mapVaultToProto(vault), password)
+                            ?: return@withContext null
+                    val fileName = createVaultBackupFileName(vault)
+                    AppZipEntry(fileName, vaultBackupData)
+                }
+            } ?: return false
 
         return context.saveContentToUri(uri, content)
     }
