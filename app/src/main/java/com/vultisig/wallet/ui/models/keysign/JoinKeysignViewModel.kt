@@ -11,6 +11,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
@@ -134,6 +135,10 @@ sealed class JoinKeysignError(val message: UiText) {
 
     data object WrongLibType :
         JoinKeysignError(UiText.StringResource(R.string.join_key_sign_wrong_signing_library_type))
+
+    /** Relay server is unavailable after exhausting all retry attempts. */
+    data object RelayUnavailable :
+        JoinKeysignError(R.string.join_keysign_relay_unavailable.asUiText())
 }
 
 sealed interface JoinKeysignState {
@@ -1202,6 +1207,20 @@ constructor(
                     sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
+                } catch (e: HttpException) {
+                    Timber.tag("JoinKeysignViewModel")
+                        .e(
+                            "Failed to join keysign (HTTP ${e.statusCode}): %s",
+                            e.stackTraceToString(),
+                        )
+                    currentState.value =
+                        if (e.statusCode >= 500) {
+                            JoinKeysignState.Error(JoinKeysignError.RelayUnavailable)
+                        } else {
+                            JoinKeysignState.Error(
+                                JoinKeysignError.FailedToStart(e.message.toString())
+                            )
+                        }
                 } catch (e: Exception) {
                     Timber.tag("JoinKeysignViewModel")
                         .e("Failed to join keysign: %s", e.stackTraceToString())
@@ -1223,6 +1242,11 @@ constructor(
                         Route.Home(showVaultList = true),
                         opts = NavigationOptions(clearBackStack = true),
                     )
+
+                JoinKeysignError.RelayUnavailable -> {
+                    currentState.value = JoinKeysignState.JoinKeysign
+                    joinKeysign()
+                }
 
                 else -> navigator.navigate(Destination.Back)
             }
