@@ -160,15 +160,21 @@ object ThorchainFunctions {
      * @param contractAddress the RUJI staking contract address
      * @param tokenAmountInt the amount of tokens to claim
      */
-    fun rujiRewardsMemo(contractAddress: String, tokenAmountInt: BigInteger): String =
-        "claim:$contractAddress:$tokenAmountInt"
+    fun rujiRewardsMemo(contractAddress: String, tokenAmountInt: BigInteger): String {
+        require(contractAddress.isNotBlank()) { "contractAddress cannot be blank" }
+        require(tokenAmountInt >= BigInteger.ZERO) { "tokenAmountInt cannot be negative" }
+        return "claim:$contractAddress:$tokenAmountInt"
+    }
 
     /**
      * Builds the THORChain memo for unstaking TCY tokens.
      *
      * @param basisPoints percentage of the position to unstake, in basis points (0–10000)
      */
-    fun tcyUnstakeMemo(basisPoints: Int): String = "TCY-:$basisPoints"
+    fun tcyUnstakeMemo(basisPoints: Int): String {
+        require(basisPoints in 0..10_000) { "basisPoints must be between 0 and 10000" }
+        return "TCY-:$basisPoints"
+    }
 }
 
 private const val VULTISIG_AFFILIATE_ADDRESS = "thor1svfwxevnxtm4ltnw92hrqpqk4vzuzw9a4jzy04"
