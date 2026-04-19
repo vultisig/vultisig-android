@@ -123,15 +123,27 @@ internal fun ImportSeedphraseContent(
 
             UiSpacer(24.dp)
 
-            VsTextInputField(
-                textFieldState = mnemonicFieldState,
-                hint = stringResource(R.string.import_seedphrase_hint),
-                type = VsTextInputFieldType.MultiLine(minLines = 5),
-                innerState = state.innerState,
-                focusRequester = focusRequester,
-                autoCorrectEnabled = false,
-                footNote = state.errorMessage?.asString(),
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                VsTextInputField(
+                    textFieldState = mnemonicFieldState,
+                    hint = stringResource(R.string.import_seedphrase_hint),
+                    type = VsTextInputFieldType.MultiLine(minLines = 5),
+                    innerState = state.innerState,
+                    focusRequester = focusRequester,
+                    autoCorrectEnabled = false,
+                    footNote = state.errorMessage?.asString(),
+                )
+
+                if (state.wordCount > 0 && state.errorMessage == null) {
+                    Text(
+                        text = "${state.wordCount}/${state.expectedWordCount}",
+                        style = Theme.brockmann.supplementary.footnote,
+                        color = Theme.v2.colors.text.tertiary,
+                        modifier =
+                            Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 16.dp),
+                    )
+                }
+            }
         }
     }
 }
@@ -140,12 +152,9 @@ internal fun ImportSeedphraseContent(
 private fun importSeedphraseSubtitle() = buildAnnotatedString {
     val highlight = stringResource(R.string.import_seedphrase_subtitle_highlight)
     val template = stringResource(R.string.import_seedphrase_subtitle, highlight)
+    append(template)
     val highlightStart = template.indexOf(highlight)
-
-    if (highlightStart < 0) {
-        append(template)
-    } else {
-        append(template)
+    if (highlightStart >= 0) {
         addStyle(
             style = SpanStyle(color = Theme.v2.colors.text.primary),
             start = highlightStart,

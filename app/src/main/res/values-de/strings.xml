@@ -992,12 +992,7 @@
     <string name="import_seedphrase_title">Seed-Phrase eingeben</string>
     <string name="import_seedphrase_subtitle">Lassen Sie zwischen jedem Wort ein Leerzeichen. Seed-Phrasen mit %1$s werden unterstützt.</string>
     <string name="import_seedphrase_subtitle_highlight">12 oder 24 Wörtern</string>
-    <string name="import_seedphrase_label">Seed-Phrase</string>
     <string name="import_seedphrase_hint">Geben Sie die 12 oder 24 Wörter Ihrer Seed-Phrase ein</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d Wörter</item>
-        <item quantity="other">%1$d / %2$d Wörter</item>
-    </plurals>
     <string name="import_seedphrase_invalid_word_count">Sie haben %1$s Wörter eingegeben. Die Seed-Phrase muss 12 oder 24 Wörter haben</string>
     <string name="import_seedphrase_invalid_phrase">Ungültige Seed-Phrase</string>
     <string name="import_seedphrase_already_imported">Diese Seed-Phrase wurde bereits importiert</string>
