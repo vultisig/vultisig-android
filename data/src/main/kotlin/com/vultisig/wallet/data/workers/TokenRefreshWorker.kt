@@ -7,8 +7,8 @@ import androidx.work.WorkerParameters
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.DEFI_ONLY_THORCHAIN_DENOMS
 import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.repositories.TokenRepositoryImpl.Companion.DEFI_ONLY_THORCHAIN_DENOMS
 import com.vultisig.wallet.data.repositories.VaultRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -59,7 +59,11 @@ constructor(
             for (chain in chains) {
                 try {
                     cleanupDeFiOnlyTokens(vault, chain)
+                } catch (e: Exception) {
+                    Timber.e(e)
+                }
 
+                try {
                     tokenRepository
                         .getRefreshTokens(chain, vault)
                         .filter { disabledCoinIds.none { disabledId -> disabledId == it.id } }
