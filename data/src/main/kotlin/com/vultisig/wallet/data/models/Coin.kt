@@ -84,6 +84,7 @@ fun Coin.securedAssetSymbol(): String {
     return contractAddress.substringAfter("-").uppercase()
 }
 
+/** Returns the THORSwap-formatted asset name (e.g. "ETH.USDC-0xA0b..." or "THOR.RUNE"). */
 fun Coin.swapAssetName(): String =
     if (isNativeToken) {
         if (chain == Chain.GaiaChain) {
