@@ -103,3 +103,12 @@ fun Coin.swapAssetName(): String =
             else "${chain.swapAssetName()}.${ticker}"
         else "${chain.swapAssetName()}.${ticker}-${contractAddress}"
     }
+
+/**
+ * Normalizes [swapAssetName] for same-asset identity comparisons. EVM contract addresses are
+ * lowercased to handle checksum-casing differences from QR payloads.
+ */
+fun Coin.swapAssetComparisonName(): String {
+    val name = swapAssetName()
+    return if (chain.standard == TokenStandard.EVM) name.lowercase() else name
+}

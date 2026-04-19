@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
+import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.data.utils.thorswapMultiplier
 import java.math.BigDecimal
@@ -257,7 +258,7 @@ constructor(
         referralCode: String,
         bpsDiscount: Int,
     ): SwapQuote {
-        if (srcToken.swapAssetName() == dstToken.swapAssetName()) {
+        if (srcToken.swapAssetComparisonName() == dstToken.swapAssetComparisonName()) {
             throw SwapException.SameAssets("Source and Target cannot be the same")
         }
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()

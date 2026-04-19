@@ -42,7 +42,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
-import com.vultisig.wallet.data.models.swapAssetName
+import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -650,7 +650,9 @@ constructor(
                     }
 
                     is SwapPayload.ThorChain -> {
-                        if (srcToken.swapAssetName() == dstToken.swapAssetName()) {
+                        if (
+                            srcToken.swapAssetComparisonName() == dstToken.swapAssetComparisonName()
+                        ) {
                             val zeroProviderFee =
                                 TokenValue(value = BigInteger.ZERO, token = srcToken)
                             val estimatedFee =
