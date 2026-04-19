@@ -257,6 +257,9 @@ constructor(
         referralCode: String,
         bpsDiscount: Int,
     ): SwapQuote {
+        if (srcToken.swapAssetName() == dstToken.swapAssetName()) {
+            throw SwapException.SameAssets("Source and Target cannot be the same")
+        }
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
         val thorQuote =

@@ -649,6 +649,13 @@ constructor(
                     }
 
                     is SwapPayload.ThorChain -> {
+                        if (
+                            srcToken.chain == dstToken.chain &&
+                                srcToken.ticker == dstToken.ticker &&
+                                srcToken.contractAddress == dstToken.contractAddress
+                        ) {
+                            return
+                        }
                         val quote =
                             swapQuoteRepository.getSwapQuote(
                                 srcToken = srcToken,
