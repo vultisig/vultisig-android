@@ -691,6 +691,9 @@
     <string name="remove_pool_amount_label">금액</string>
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">CACAO 스테이킹</string>
+    <string name="unstake_cacao_title">CACAO 언스테이킹</string>
+    <string name="unstake_cacao_available_format">사용 가능: %1$s</string>
     <string name="cacaopool_only_cacao_supported">풀 작업에는 CACAO 토큰만 지원됩니다</string>
     <string name="referral_create_info_content">추천 프로그램은 THORChain 스왑에 적용되며 최선의 노력으로 제공됩니다. Vultisig 추천을 사용하려면 THORName을 등록해야 합니다. 등록비는 10 RUNE이며 매년 1 RUNE이 THORChain 네트워크에 지불됩니다.</string>
     <string name="referral_create_info_title">추천 프로그램</string>

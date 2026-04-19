@@ -323,6 +323,7 @@ internal fun VaultAccountsScreen(
                                         snackbarState = snackbarState,
                                         isBalanceVisible = state.isBalanceValueVisible,
                                         accounts = state.getAccounts,
+                                        showAddress = isWallet,
                                     )
                                 }
                             }
