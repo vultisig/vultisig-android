@@ -136,6 +136,7 @@ sealed class JoinKeysignError(val message: UiText) {
     data object WrongLibType :
         JoinKeysignError(UiText.StringResource(R.string.join_key_sign_wrong_signing_library_type))
 
+    /** Relay server is unavailable after exhausting all retry attempts. */
     data object RelayUnavailable :
         JoinKeysignError(R.string.join_keysign_relay_unavailable.asUiText())
 }
