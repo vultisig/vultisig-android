@@ -334,6 +334,7 @@
     <string name="swap_error_time_out">Swap-aanvraag is verlopen. Probeer het opnieuw.</string>
     <string name="swap_error_high_price_impact">De prijsimpact is te hoog. Probeer een kleiner bedrag of een ander tokenpaar.</string>
     <string name="swap_error_quote_failed">Swap-offerte mislukt. Probeer het opnieuw of pas het bedrag aan.</string>
+    <string name="swap_error_rate_limit">Te veel verzoeken. Probeer het later opnieuw.</string>
     <string name="swap_screen_invalid_no_vault">Geen kluis geselecteerd</string>
     <string name="swap_screen_invalid_no_src_error">Geen brontoken geselecteerd</string>
     <string name="swap_screen_invalid_selected_no_dst">Geen bestemmingstoken geselecteerd</string>
@@ -584,6 +585,10 @@
     <string name="share_vault_qr_info">Met deze QR-code kunt u een alleen-lezenversie van uw kluis delen</string>
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Adresboek bewerken</string>
+    <string name="address_book_delete_entry_title">Adres verwijderen?</string>
+    <string name="address_book_delete_entry_message">%1$s wordt uit je adresboek verwijderd</string>
+    <string name="address_book_delete_entry_confirm">Verwijderen</string>
+    <string name="address_book_delete_entry_cancel">Annuleren</string>
     <string name="backup_password_request_title">Wilt u uw backup versleutelen met een wachtwoord?</string>
     <string name="backup_password_request_caution_encrypt_desc">Als u ervoor kiest een wachtwoord toe te voegen, wordt dit gebruikt om het back-upbestand te versleutelen.</string>
     <string name="backup_password_request_highlight_encrypt">versleutelen</string>

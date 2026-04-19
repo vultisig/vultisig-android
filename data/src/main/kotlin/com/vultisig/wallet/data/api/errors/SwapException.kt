@@ -54,6 +54,7 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("exceeds desired slippage") -> HighPriceImpact(error)
                     contains("route not profitable") -> HighPriceImpact(error)
                     contains("slippage tolerance exceeded") -> HighPriceImpact(error)
+                    contains("too many requests") -> RateLimitExceeded(error)
                     else -> UnkownSwapError(error)
                 }
             }

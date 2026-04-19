@@ -623,6 +623,7 @@
     <string name="swap_error_time_out">交换请求超时。请重试</string>
     <string name="swap_error_high_price_impact">价格影响过高。请尝试较小的金额或不同的代币对。</string>
     <string name="swap_error_quote_failed">兑换报价失败。请重试或调整金额。</string>
+    <string name="swap_error_rate_limit">请求次数过多。请稍后重试。</string>
 
     <!-- Swap Screen Invalid -->
     <string name="swap_screen_invalid_no_vault">未选择保险库</string>
@@ -944,6 +945,10 @@
 
     <!-- Address Book -->
     <string name="address_book_title_edit">编辑地址簿</string>
+    <string name="address_book_delete_entry_title">删除此地址吗？</string>
+    <string name="address_book_delete_entry_message">%1$s 将从您的地址簿中移除</string>
+    <string name="address_book_delete_entry_confirm">删除</string>
+    <string name="address_book_delete_entry_cancel">取消</string>
 
     <!-- Backup Password Request -->
     <string name="backup_password_request_title">您想用密码加密您的备份吗？</string>

@@ -334,6 +334,7 @@
     <string name="swap_error_time_out">Запрос на обмен истек. Попробуйте еще раз</string>
     <string name="swap_error_high_price_impact">Влияние на цену слишком высокое. Попробуйте меньшую сумму или другую пару токенов.</string>
     <string name="swap_error_quote_failed">Не удалось получить котировку. Попробуйте снова или измените сумму.</string>
+    <string name="swap_error_rate_limit">Слишком много запросов. Попробуйте позже.</string>
     <string name="swap_screen_invalid_no_vault">Хранилище не выбрано</string>
     <string name="swap_screen_invalid_no_src_error">Исходный токен не выбран</string>
     <string name="swap_screen_invalid_selected_no_dst">Токен назначения не выбран</string>
@@ -588,6 +589,10 @@
     <string name="share_vault_qr_info">Этот QR-код позволяет вам поделиться версией вашего хранилища, доступной только для просмотра</string>
     <string name="add_address_title_label">Метка</string>
     <string name="address_book_title_edit">Редактировать адресную книгу</string>
+    <string name="address_book_delete_entry_title">Удалить адрес?</string>
+    <string name="address_book_delete_entry_message">%1$s будет удалён из адресной книги</string>
+    <string name="address_book_delete_entry_confirm">Удалить</string>
+    <string name="address_book_delete_entry_cancel">Отмена</string>
     <string name="backup_password_request_title">Хотите ли вы зашифровать свою резервную копию паролем?</string>
     <string name="backup_password_request_caution_encrypt_desc">Если вы решите добавить пароль, он будет использоваться для шифрования файла резервной копии.</string>
     <string name="backup_password_request_highlight_encrypt">Зашифровать</string>

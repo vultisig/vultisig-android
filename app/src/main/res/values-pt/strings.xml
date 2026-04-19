@@ -335,6 +335,7 @@
     <string name="swap_error_time_out">A solicitação de troca expirou. Por favor tente novamente</string>
     <string name="swap_error_high_price_impact">O impacto no preço é muito alto. Tente um valor menor ou um par de tokens diferente.</string>
     <string name="swap_error_quote_failed">Cotação do swap falhou. Tente novamente ou ajuste o valor.</string>
+    <string name="swap_error_rate_limit">Demasiados pedidos. Tente novamente mais tarde.</string>
     <string name="swap_screen_invalid_no_vault">Nenhum cofre selecionado</string>
     <string name="swap_screen_invalid_no_src_error">Nenhum token de origem selecionado</string>
     <string name="swap_screen_invalid_selected_no_dst">Nenhum token de destino selecionado</string>
@@ -585,6 +586,10 @@
     <string name="share_vault_qr_info">Este código QR permite-lhe partilhar uma versão apenas de leitura do seu cofre</string>
     <string name="add_address_title_label">Etiqueta</string>
     <string name="address_book_title_edit">Editar Catálogo de Endereços</string>
+    <string name="address_book_delete_entry_title">Deletar endereço?</string>
+    <string name="address_book_delete_entry_message">%1$s será removido do seu catálogo de endereços</string>
+    <string name="address_book_delete_entry_confirm">Deletar</string>
+    <string name="address_book_delete_entry_cancel">Cancelar</string>
     <string name="backup_password_request_title">Quer encriptar o seu backup com uma palavra‑passe?</string>
     <string name="backup_password_request_caution_encrypt_desc">Se optar por adicionar uma palavra-passe, esta será utilizada para encriptar o ficheiro de backup.</string>
     <string name="backup_password_request_highlight_encrypt">encriptar</string>

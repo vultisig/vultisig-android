@@ -335,6 +335,7 @@
     <string name="swap_error_time_out">Die Swap-Anfrage ist abgelaufen. Bitte versuchen Sie es erneut.</string>
     <string name="swap_error_high_price_impact">Die Preisauswirkung ist zu hoch. Versuchen Sie einen kleineren Betrag oder ein anderes Token-Paar.</string>
     <string name="swap_error_quote_failed">Swap-Angebot fehlgeschlagen. Bitte versuchen Sie es erneut oder passen Sie den Betrag an.</string>
+    <string name="swap_error_rate_limit">Zu viele Anfragen. Bitte versuchen Sie es später erneut.</string>
     <string name="swap_screen_invalid_no_vault">Kein Tresor ausgewählt</string>
     <string name="swap_screen_invalid_no_src_error">Kein Quelltoken ausgewählt</string>
     <string name="swap_screen_invalid_selected_no_dst">Kein Ziel-Token ausgewählt</string>
@@ -587,6 +588,10 @@
     <string name="share_vault_qr_info">Mit diesem QR-Code können Sie eine schreibgeschützte Version Ihres Tresors teilen</string>
     <string name="add_address_title_label">Beschriftung</string>
     <string name="address_book_title_edit">Adressbuch bearbeiten</string>
+    <string name="address_book_delete_entry_title">Adresse löschen?</string>
+    <string name="address_book_delete_entry_message">%1$s wird aus Ihrem Adressbuch entfernt</string>
+    <string name="address_book_delete_entry_confirm">Löschen</string>
+    <string name="address_book_delete_entry_cancel">Abbrechen</string>
     <string name="backup_password_request_title">Möchten Sie Ihr Backup mit einem Passwort verschlüsseln?</string>
     <string name="backup_password_request_caution_encrypt_desc">Wenn Sie ein Passwort hinzufügen, wird dieses zum Verschlüsseln der Sicherungsdatei verwendet.</string>
     <string name="backup_password_request_highlight_encrypt">Verschlüsseln</string>

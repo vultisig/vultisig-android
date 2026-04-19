@@ -335,6 +335,7 @@
     <string name="swap_error_time_out">Zahtjev za zamjenu je istekao. Molimo pokušajte ponovno</string>
     <string name="swap_error_high_price_impact">Utjecaj na cijenu je prevelik. Pokušajte s manjim iznosom ili drugim parom tokena.</string>
     <string name="swap_error_quote_failed">Ponuda za zamjenu nije uspjela. Pokušajte ponovno ili prilagodite iznos.</string>
+    <string name="swap_error_rate_limit">Previše zahtjeva. Pokušajte ponovno kasnije.</string>
     <string name="swap_screen_invalid_no_vault">Trezor nije odabran</string>
     <string name="swap_screen_invalid_no_src_error">Nije odabran izvorni token</string>
     <string name="swap_screen_invalid_selected_no_dst">Nije odabran odredišni token</string>
@@ -588,6 +589,10 @@
     <string name="share_vault_qr_info">Ovaj QR kod vam omogućuje dijeljenje verzije vašeg trezora samo za pregled</string>
     <string name="add_address_title_label">Oznaka</string>
     <string name="address_book_title_edit">Uredi adresar</string>
+    <string name="address_book_delete_entry_title">Izbrisati adresu?</string>
+    <string name="address_book_delete_entry_message">%1$s će biti uklonjena iz vašeg adresara</string>
+    <string name="address_book_delete_entry_confirm">Izbriši</string>
+    <string name="address_book_delete_entry_cancel">Odustani</string>
     <string name="backup_password_request_title">Želite li šifrirati sigurnosnu kopiju lozinkom?</string>
     <string name="backup_password_request_caution_encrypt_desc">Ako odaberete dodati lozinku, ona će se koristiti za šifriranje sigurnosne kopije datoteke.</string>
     <string name="backup_password_request_highlight_encrypt">ifriraj</string>

@@ -335,6 +335,7 @@
     <string name="swap_error_time_out">Se agotó el tiempo de espera de la solicitud de intercambio. Inténtalo de nuevo</string>
     <string name="swap_error_high_price_impact">El impacto en el precio es demasiado alto. Prueba con un monto menor o un par de tokens diferente.</string>
     <string name="swap_error_quote_failed">La cotización del swap falló. Inténtalo de nuevo o ajusta el monto.</string>
+    <string name="swap_error_rate_limit">Demasiadas solicitudes. Inténtelo de nuevo más tarde.</string>
     <string name="swap_screen_invalid_no_vault">No se ha seleccionado ninguna bóveda</string>
     <string name="swap_screen_invalid_no_src_error">No se ha seleccionado ningún token de origen</string>
     <string name="swap_screen_invalid_selected_no_dst">No se ha seleccionado ningún token de destino</string>
@@ -589,6 +590,10 @@
     <string name="share_vault_qr_info">Este código QR le permite compartir una versión de solo lectura de su bóveda</string>
     <string name="add_address_title_label">Etiqueta</string>
     <string name="address_book_title_edit">Editar libreta de direcciones</string>
+    <string name="address_book_delete_entry_title">¿Eliminar dirección?</string>
+    <string name="address_book_delete_entry_message">%1$s se eliminará de tu libreta de direcciones</string>
+    <string name="address_book_delete_entry_confirm">Eliminar</string>
+    <string name="address_book_delete_entry_cancel">Cancelar</string>
     <string name="backup_password_request_title">¿Quieres cifrar tu copia de seguridad con una contraseña?</string>
     <string name="backup_password_request_caution_encrypt_desc">Si elige agregar una contraseña, esta se usará para cifrar el archivo de copia de seguridad.</string>
     <string name="backup_password_request_highlight_encrypt">Cifrar</string>

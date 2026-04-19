@@ -2,12 +2,12 @@ package com.vultisig.wallet.ui.models.keygen
 
 import android.content.Context
 import android.net.Uri
-import android.provider.DocumentsContract
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.common.deleteDocument
 import com.vultisig.wallet.data.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.models.TssAction
@@ -139,7 +139,7 @@ constructor(
                 val isSuccess = backupCurrentVault(password, uri)
                 completeBackupVault(isSuccess)
             } else {
-                DocumentsContract.deleteDocument(context.contentResolver, uri)
+                context.deleteDocument(uri)
                 showError(
                     UiText.FormattedText(
                         R.string.vault_settings_error_extension_backup_file,

@@ -36,6 +36,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.TokenLogo
+import com.vultisig.wallet.ui.components.UiConfirmDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -64,7 +65,9 @@ internal fun AddressBookScreen(model: AddressBookViewModel = hiltViewModel()) {
         state = state,
         onBackClick = model::back,
         onAddressClick = model::clickAddress,
-        onDeleteAddressClick = model::deleteAddress,
+        onDeleteAddressClick = model::requestDeleteAddress,
+        onConfirmDeleteAddress = model::confirmDeleteAddress,
+        onCancelDeleteAddress = model::cancelDeleteAddress,
         onToggleEditMode = model::toggleEditMode,
         onAddAddressClick = model::addAddress,
         onMove = model::move,
@@ -77,11 +80,21 @@ internal fun AddressBookScreen(
     onBackClick: () -> Unit,
     onAddressClick: (AddressBookEntryUiModel) -> Unit = {},
     onDeleteAddressClick: (AddressBookEntryUiModel) -> Unit = {},
+    onConfirmDeleteAddress: () -> Unit = {},
+    onCancelDeleteAddress: () -> Unit = {},
     onToggleEditMode: () -> Unit = {},
     onAddAddressClick: () -> Unit = {},
     onMove: (from: Int, to: Int) -> Unit,
 ) {
     val isEditModeEnabled = state.isEditModeEnabled
+
+    state.pendingDeletion?.let { pending ->
+        DeleteAddressDialog(
+            entry = pending,
+            onConfirm = onConfirmDeleteAddress,
+            onDismiss = onCancelDeleteAddress,
+        )
+    }
 
     V2Scaffold(
         actions = {
@@ -146,6 +159,23 @@ internal fun AddressBookScreen(
             NoAddressView(onAddAddressClick = onAddAddressClick)
         }
     }
+}
+
+@Composable
+private fun DeleteAddressDialog(
+    entry: AddressBookEntryUiModel,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    UiConfirmDialog(
+        title = stringResource(R.string.address_book_delete_entry_title),
+        text = stringResource(R.string.address_book_delete_entry_message, entry.name),
+        confirmTitle = stringResource(R.string.address_book_delete_entry_confirm),
+        dismissTitle = stringResource(R.string.address_book_delete_entry_cancel),
+        confirmColor = Theme.v2.colors.alerts.error,
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+    )
 }
 
 @Composable
@@ -280,6 +310,28 @@ private fun AddressItemPreview2() {
         isEditModeEnabled = false,
         onClick = {},
         onDeleteClick = {},
+    )
+}
+
+@Preview
+@Composable
+private fun DeleteAddressDialogPreview() {
+    DeleteAddressDialog(
+        entry =
+            AddressBookEntryUiModel(
+                model =
+                    AddressBookEntry(
+                        chain = Chain.Ethereum,
+                        address = "0xF43jf9840fkfjn38fk0dk9Ac5",
+                        title = "Online Wallet",
+                    ),
+                image = "",
+                name = "Online Wallet",
+                network = "Ethereum",
+                address = "0xF43jf9840fkfjn38fk0dk9Ac5",
+            ),
+        onConfirm = {},
+        onDismiss = {},
     )
 }
 
