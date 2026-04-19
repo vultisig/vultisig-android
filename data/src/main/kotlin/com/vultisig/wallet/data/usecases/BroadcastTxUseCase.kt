@@ -48,6 +48,8 @@ import com.vultisig.wallet.data.models.Chain.Ton
 import com.vultisig.wallet.data.models.Chain.ZkSync
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
+import timber.log.Timber
 
 fun interface BroadcastTxUseCase {
     suspend operator fun invoke(chain: Chain, tx: SignedTransactionResult): String?
@@ -103,9 +105,14 @@ constructor(
                 evmApi.sendTransaction(tx.rawTransaction)
             }
 
-            Solana -> {
-                solanaApi.broadcastTransaction(tx.rawTransaction)
-            }
+            Solana ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = { solanaApi.broadcastTransaction(tx.rawTransaction) },
+                    verify = { hash ->
+                        solanaApi.checkStatus(hash)?.result?.value?.any { it != null } == true
+                    },
+                )
 
             GaiaChain,
             Kujira,
@@ -124,31 +131,88 @@ constructor(
                 mayaChainApi.broadcastTransaction(tx.rawTransaction)
             }
 
-            Polkadot -> {
-                polkadotApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
-            }
+            Polkadot ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        polkadotApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
+                    },
+                    verify = { hash ->
+                        polkadotApi.getTxStatus(hash)?.data?.extrinsicHash?.isNotBlank() == true
+                    },
+                )
 
             Chain.Bittensor -> {
                 bittensorApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
             }
 
-            Sui -> {
-                suiApi.executeTransactionBlock(tx.rawTransaction, tx.signature ?: "")
-            }
+            Sui ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        suiApi.executeTransactionBlock(tx.rawTransaction, tx.signature ?: "")
+                    },
+                    verify = { hash -> suiApi.checkStatus(hash)?.digest?.isNotBlank() == true },
+                )
 
-            Ton -> {
-                tonApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
-            }
+            Ton ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        tonApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
+                    },
+                    verify = { hash -> tonApi.getTsStatus(hash).transactions.isNotEmpty() },
+                )
 
-            Ripple -> {
-                rippleApi.broadcastTransaction(tx.rawTransaction)
-            }
+            Ripple ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = { rippleApi.broadcastTransaction(tx.rawTransaction) },
+                    verify = { hash ->
+                        rippleApi.getTsStatus(hash)?.result?.hash?.isNotBlank() == true
+                    },
+                )
 
-            Chain.Tron -> {
-                tronApi.broadcastTransaction(tx.rawTransaction)
-            }
-            Chain.Cardano -> {
-                cardanoApi.broadcastTransaction(chain.name, tx.rawTransaction) ?: tx.transactionHash
+            Chain.Tron ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = { tronApi.broadcastTransaction(tx.rawTransaction) },
+                    verify = { hash ->
+                        tronApi.getTsStatus(chain, hash)?.txId?.isNotBlank() == true
+                    },
+                )
+            Chain.Cardano ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = {
+                        cardanoApi.broadcastTransaction(chain.name, tx.rawTransaction)
+                            ?: tx.transactionHash
+                    },
+                    verify = { hash -> cardanoApi.getTxStatus(hash)?.txHash?.isNotBlank() == true },
+                )
+        }
+
+    private suspend fun recoverIfAlreadyBroadcast(
+        tx: SignedTransactionResult,
+        broadcast: suspend () -> String?,
+        verify: suspend (String) -> Boolean,
+    ): String? =
+        try {
+            broadcast()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            val hash = tx.transactionHash
+            val alreadyOnChain =
+                hash.isNotBlank() && runCatching { verify(hash) }.getOrDefault(false)
+            if (alreadyOnChain) {
+                Timber.d(
+                    "broadcast failed but tx %s is already on-chain; treating as success",
+                    hash,
+                )
+                hash
+            } else {
+                throw e
             }
         }
 }
