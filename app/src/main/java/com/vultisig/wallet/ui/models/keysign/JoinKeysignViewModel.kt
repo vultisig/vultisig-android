@@ -714,16 +714,11 @@ constructor(
                                         ),
                                     provider = provider,
                                 )
-                            transactionTypeUiModel =
-                                TransactionTypeUiModel.Swap(lpAddUiModel)
-                            transactionHistoryData =
-                                mapSwapTransactionToHistoryData(lpAddUiModel)
+                            transactionTypeUiModel = TransactionTypeUiModel.Swap(lpAddUiModel)
+                            transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel)
                             verifyUiModel.value =
                                 VerifyUiModel.Swap(
-                                    VerifySwapUiModel(
-                                        tx = lpAddUiModel,
-                                        vaultName = vaultName,
-                                    )
+                                    VerifySwapUiModel(tx = lpAddUiModel, vaultName = vaultName)
                                 )
                             return
                         }
