@@ -343,6 +343,7 @@
     <string name="swap_screen_invalid_gas_fee_calculation">Error en el cálculo de la tarifa del gas</string>
     <string name="swap_screen_invalid_quote_calculation">Error en el cálculo de cotización</string>
     <string name="join_keysign_failed_connect_to_server">Error al conectar con el servidor</string>
+    <string name="join_keysign_relay_unavailable">Servidor de retransmisión no disponible, inténtalo de nuevo</string>
     <string name="network_connection_lost">Se perdió la conexión a la red. Verifique su conexión a Internet.</string>
     <string name="send_form_polka_reaping_warning">Asegúrese de dejar fondos suficientes para cubrir las tarifas. Si el saldo de una cuenta cae por debajo de 1 DOT (depósito existencial), la cuenta se desactivará (se recuperará) y se perderán los fondos restantes. Puede reactivar la dirección con un nuevo depósito mayor que el depósito existencial en cualquier momento. Sin embargo, esto no recuperará los fondos perdidos.</string>
     <string name="edit_address_title">Editar dirección</string>

@@ -343,6 +343,7 @@
     <string name="swap_screen_invalid_gas_fee_calculation">Izračun naknade za plin nije uspio</string>
     <string name="swap_screen_invalid_quote_calculation">Izračun ponude nije uspio</string>
     <string name="join_keysign_failed_connect_to_server">Povezivanje s poslužiteljem nije uspjelo</string>
+    <string name="join_keysign_relay_unavailable">Relay poslužitelj nije dostupan, pokušajte ponovo</string>
     <string name="network_connection_lost">Mrežna veza izgubljena. Provjerite svoju internetsku vezu</string>
     <string name="send_form_polka_reaping_warning">Ostavite dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 DOT (egzistencijalni depozit), račun će biti deaktiviran (požnjet) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati s novim pologom većim od egzistencijalnog pologa u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="edit_address_title">Uredi adresu</string>
