@@ -96,6 +96,7 @@ constructor(
                 val balances = thorApi.getBalance(address)
                 val metaCache = mutableMapOf<String, DenomMetadata?>()
                 balances.mapNotNull {
+                    if (it.denom in DEFI_ONLY_THORCHAIN_DENOMS) return@mapNotNull null
                     val metadata =
                         metaCache.getOrPut(it.denom) { thorApi.getDenomMetaFromLCD(it.denom) }
 
@@ -336,5 +337,8 @@ constructor(
             "thor1mlphkryw5g54yfkrp6xpqzlpv4f8wh6hyw27yyg4z2els8a9gxpqhfhekt"
         private const val YTCY_CONTRACT =
             "thor1h0hr0rm3dawkedh44hlrmgvya6plsryehcr46yda2vj0wfwgq5xqrs86px"
+
+        // Denoms surfaced under the DeFi tab — must not be auto-discovered as wallet tokens.
+        internal val DEFI_ONLY_THORCHAIN_DENOMS = setOf("x/staking-ruji")
     }
 }

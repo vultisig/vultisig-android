@@ -4,9 +4,11 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.TokenRepositoryImpl.Companion.DEFI_ONLY_THORCHAIN_DENOMS
 import com.vultisig.wallet.data.repositories.VaultRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -56,6 +58,8 @@ constructor(
 
             for (chain in chains) {
                 try {
+                    cleanupDeFiOnlyTokens(vault, chain)
+
                     tokenRepository
                         .getRefreshTokens(chain, vault)
                         .filter { disabledCoinIds.none { disabledId -> disabledId == it.id } }
@@ -71,6 +75,13 @@ constructor(
             }
         }
         return Result.success()
+    }
+
+    private suspend fun cleanupDeFiOnlyTokens(vault: Vault, chain: Chain) {
+        if (chain != Chain.ThorChain) return
+        vault.coins
+            .filter { it.chain == chain && it.contractAddress in DEFI_ONLY_THORCHAIN_DENOMS }
+            .forEach { vaultRepository.deleteTokenFromVault(vault.id, it) }
     }
 
     private suspend fun addRefreshTokenToVault(
