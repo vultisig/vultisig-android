@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.di
 
-import android.util.Log
 import com.vultisig.wallet.BuildConfig
 import com.vultisig.wallet.data.networkutils.HttpClientConfigurator
 import dagger.Module
@@ -15,6 +14,7 @@ import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import timber.log.Timber
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -33,12 +33,10 @@ internal interface NetworkModule {
                         logger =
                             object : Logger {
                                 override fun log(message: String) {
-                                    if (
-                                        message.contains("failed with exception", ignoreCase = true)
-                                    ) {
-                                        Log.e("Ktor Client", message)
+                                    if (message.contains("exception", ignoreCase = true)) {
+                                        Timber.tag("Ktor Client").e(message)
                                     } else {
-                                        Log.i("Ktor Client", message)
+                                        Timber.tag("Ktor Client").i(message)
                                     }
                                 }
                             }
