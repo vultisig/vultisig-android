@@ -83,3 +83,22 @@ fun Coin.securedAssetChain(): String {
 fun Coin.securedAssetSymbol(): String {
     return contractAddress.substringAfter("-").uppercase()
 }
+
+fun Coin.swapAssetName(): String =
+    if (isNativeToken) {
+        if (chain == Chain.GaiaChain) {
+            "${chain.swapAssetName()}.ATOM"
+        } else {
+            "${chain.swapAssetName()}.${ticker}"
+        }
+    } else {
+        if (
+            chain == Chain.Kujira &&
+                (contractAddress.contains("factory/") || contractAddress.contains("ibc/"))
+        ) {
+            "${chain.swapAssetName()}.${ticker}"
+        } else if (chain == Chain.ThorChain)
+            if (contractAddress.contains(Regex("""\w+-\w+"""))) contractAddress
+            else "${chain.swapAssetName()}.${ticker}"
+        else "${chain.swapAssetName()}.${ticker}-${contractAddress}"
+    }
