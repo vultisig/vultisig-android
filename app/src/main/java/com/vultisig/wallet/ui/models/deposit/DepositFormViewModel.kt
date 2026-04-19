@@ -58,6 +58,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
@@ -202,6 +203,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -1115,16 +1117,9 @@ constructor(
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             val chainId = chain?.id ?: return@launch
-            val requestId = java.util.UUID.randomUUID().toString()
-            navigator.route(
-                Route.AddressBook(
-                    requestId = requestId,
-                    chainId = chainId,
-                    excludeVaultId = vaultId,
-                )
-            )
             val address: AddressBookEntry =
-                requestResultRepository.request(requestId) ?: return@launch
+                requestAddressBookEntry(chainId = chainId, excludeVaultId = vaultId)
+                    ?: return@launch
             setNodeAddress(address.address)
         }
     }
