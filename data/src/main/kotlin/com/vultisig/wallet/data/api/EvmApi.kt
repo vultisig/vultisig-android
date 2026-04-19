@@ -412,7 +412,11 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
                         add(false)
                     },
             )
-        return response.result.baseFeePerGas.convertToBigIntegerOrZero()
+        if (response.error != null) {
+            Timber.d("get base fee error: ${response.error.message}")
+            return BigInteger.ZERO
+        }
+        return response.result?.baseFeePerGas.convertToBigIntegerOrZero()
     }
 
     override suspend fun getFeeHistory(): List<BigInteger> {
