@@ -31,6 +31,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -114,6 +115,9 @@ internal class CircleDeFiPositionsViewModelTest {
 
             assertEquals(SnackbarType.Success, type)
             coVerify(exactly = 1) { scaCircleAccountRepository.saveAccount(VAULT_ID, MSCA_ADDRESS) }
+            // onCreateAccount updates state after showing the snackbar on a non-test
+            // dispatcher, so wait for it to propagate instead of racing the ViewModel.
+            awaitAccountOpen(vm)
             assertTrue(vm.state.value.circleDefi.isAccountOpen)
         }
 
@@ -161,6 +165,12 @@ internal class CircleDeFiPositionsViewModelTest {
         // must use a real dispatcher.
         return withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(5.seconds) { captured.await() }
+        }
+    }
+
+    private suspend fun awaitAccountOpen(vm: CircleDeFiPositionsViewModel) {
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(5.seconds) { vm.state.first { it.circleDefi.isAccountOpen } }
         }
     }
 
