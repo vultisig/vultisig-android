@@ -1033,6 +1033,13 @@ constructor(
         state.update { it.copy(tokenAmountError = errorText) }
     }
 
+    fun validateAndDeposit() {
+        validateTokenAmount()
+        if (state.value.tokenAmountError == null) {
+            deposit()
+        }
+    }
+
     fun validateProvider() {
         val errorText = validateDstAddress(providerFieldState.text.toString())
         state.update { it.copy(providerError = errorText) }
