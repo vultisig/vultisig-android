@@ -27,11 +27,11 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
+import com.vultisig.wallet.ui.models.findCurrentSrc
+import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
-import com.vultisig.wallet.ui.models.send.findCurrentSrc
-import com.vultisig.wallet.ui.models.send.firstSendSrc
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route

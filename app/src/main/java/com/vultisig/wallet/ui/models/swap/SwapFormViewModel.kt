@@ -31,12 +31,12 @@ import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
+import com.vultisig.wallet.ui.models.findCurrentSrc
+import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
-import com.vultisig.wallet.ui.models.send.findCurrentSrc
-import com.vultisig.wallet.ui.models.send.firstSendSrc
 import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_DST_TOKEN_ID
 import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_SRC_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination

@@ -1,7 +1,8 @@
-package com.vultisig.wallet.ui.models.send
+package com.vultisig.wallet.ui.models
 
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.ui.models.send.SendSrc
 import timber.log.Timber
 
 /**
