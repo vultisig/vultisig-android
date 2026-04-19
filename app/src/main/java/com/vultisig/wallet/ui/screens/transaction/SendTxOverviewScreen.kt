@@ -73,18 +73,28 @@ internal fun SendTxOverviewScreen(
             )
         },
         tokenContent = {
-            val tokenTitle =
-                if (tx.type == UiTransactionInfoType.Send) {
-                    stringResource(R.string.tx_overview_screen_tx_send)
-                } else {
-                    stringResource(R.string.tx_overview_screen_tx_deposit)
-                }
-            VsOverviewToken(
-                header = tokenTitle,
-                valuedToken = tx.token,
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth(),
-            )
+            // Title-only hero until Blockaid simulation is wired into mobile.
+            if (tx.functionName != null) {
+                Text(
+                    text = tx.functionName,
+                    style = Theme.brockmann.headings.title2,
+                    color = Theme.v2.colors.text.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                VsOverviewToken(
+                    header =
+                        if (tx.type == UiTransactionInfoType.Send) {
+                            stringResource(R.string.tx_overview_screen_tx_send)
+                        } else {
+                            stringResource(R.string.tx_overview_screen_tx_deposit)
+                        },
+                    valuedToken = tx.token,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         },
         detailContent = {
             Column {
@@ -130,8 +140,23 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
+                if (tx.tokenDisplay != null) {
+                    VerifyCardDivider(size = 1.dp)
+
+                    TextDetails(
+                        title = stringResource(R.string.deposit_screen_amount_title),
+                        subtitle = tx.tokenDisplay,
+                    )
+                }
+
+                // Skip the native "Amount" row when a decoded function/token/display
+                // already represents the intent — otherwise a misleading "0 ETH" surfaces
+                // for contract calls that send no native value.
                 if (
-                    tx.token.value.isNotEmpty() &&
+                    tx.functionName == null &&
+                        tx.resolvedToken == null &&
+                        tx.tokenDisplay == null &&
+                        tx.token.value.isNotEmpty() &&
                         try {
                             tx.token.value.toBigInteger() > BigInteger.ZERO
                         } catch (_: Exception) {
@@ -293,6 +318,11 @@ internal data class UiTransactionInfo(
     val networkFeeTokenValue: String,
     val networkFeeFiatValue: String,
     val signMethod: String = "",
+    val functionName: String? = null,
+    val resolvedToken: ValuedToken? = null,
+    val tokenDisplay: String? = null,
+    val functionSignature: String? = null,
+    val functionInputs: String? = null,
 )
 
 internal enum class UiTransactionInfoType {
