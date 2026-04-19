@@ -1243,7 +1243,10 @@ constructor(
                         opts = NavigationOptions(clearBackStack = true),
                     )
 
-                JoinKeysignError.RelayUnavailable -> joinKeysign()
+                JoinKeysignError.RelayUnavailable -> {
+                    currentState.value = JoinKeysignState.JoinKeysign
+                    joinKeysign()
+                }
 
                 else -> navigator.navigate(Destination.Back)
             }

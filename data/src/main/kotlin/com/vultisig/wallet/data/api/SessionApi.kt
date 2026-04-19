@@ -262,7 +262,10 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
                 delay(RELAY_BACKOFF_MS * (1L shl attempt))
             }
         }
-        throw lastException ?: Exception("Relay request failed after $RELAY_MAX_RETRIES retries")
+        throw IllegalStateException(
+            "Relay request failed after $RELAY_MAX_RETRIES retries",
+            lastException,
+        )
     }
 
     companion object {
