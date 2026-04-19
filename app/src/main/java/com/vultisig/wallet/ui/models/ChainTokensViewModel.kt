@@ -116,7 +116,7 @@ constructor(
 
     private fun updateBalanceVisibility() {
         viewModelScope.safeLaunch {
-            val vaultId = vaultId ?: return@launch
+            val vaultId = vaultId ?: return@safeLaunch
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
             uiState.update { it.copy(isBalanceVisible = isBalanceVisible) }
         }
@@ -307,7 +307,7 @@ constructor(
 
                 if (address == null) {
                     Timber.w("No TRON address for chain %s in vault %s", chainRaw, vaultId)
-                    return@launch
+                    return@safeLaunch
                 }
                 balanceRepository
                     .getTronResourceDataSource(address)

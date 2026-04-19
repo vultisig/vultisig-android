@@ -250,7 +250,7 @@ constructor(
 
     private fun showVerifyFastVaultPasswordReminderIfRequired(vaultId: VaultId) {
         viewModelScope.safeLaunch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
+            val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
             if (
                 vault.isFastVault() &&
                     vaultMetadataRepo.isFastVaultPasswordReminderRequired(vaultId)
@@ -348,7 +348,7 @@ constructor(
         loadVaultNameJob?.cancel()
         loadVaultNameJob =
             viewModelScope.safeLaunch {
-                val vault = vaultRepository.get(vaultId) ?: return@launch
+                val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
                 uiState.update {
                     it.copy(
                         vaultName = vault.name,
@@ -581,13 +581,13 @@ constructor(
 
     private fun checkNotificationPrompt(vaultId: String) {
         viewModelScope.safeLaunch {
-            val currentVault = vaultRepository.get(vaultId) ?: return@launch
-            if (!currentVault.isSecureVault()) return@launch
+            val currentVault = vaultRepository.get(vaultId) ?: return@safeLaunch
+            if (!currentVault.isSecureVault()) return@safeLaunch
             if (
                 pushNotificationManager.isVaultOptedIn(vaultId) ||
                     pushNotificationManager.hasPromptedVault(vaultId)
             )
-                return@launch
+                return@safeLaunch
 
             val eligibleVaults = vaultRepository.getAll().filter { it.isSecureVault() }
             val introVaults =
