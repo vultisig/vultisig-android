@@ -70,11 +70,7 @@ object SuiHelper {
                     Sui.SigningInput.newBuilder()
                         .setPay(
                             Sui.Pay.newBuilder()
-                                .setGas(
-                                    suiObjectRefs.firstOrNull {
-                                        it.objectId == gascoin?.coinObjectId
-                                    } ?: error("No suitable SUI gas coin available for transaction")
-                                )
+                                .setGas(selectSuiGasObjectRef(suiObjectRefs, gascoin?.coinObjectId))
                                 .addAllInputCoins(nonSuiObjectRef)
                                 .addAllRecipients(listOf(toAddress.description()))
                                 .addAllAmounts(listOf(keysignPayload.toAmount.toLong()))
@@ -128,6 +124,13 @@ object SuiHelper {
 
         return Base64.encode(tx)
     }
+
+    internal fun selectSuiGasObjectRef(
+        suiObjectRefs: List<Sui.ObjectRef>,
+        gasCoinObjectId: String?,
+    ): Sui.ObjectRef =
+        suiObjectRefs.firstOrNull { it.objectId == gasCoinObjectId }
+            ?: error("No suitable SUI gas coin available for transaction")
 
     fun getSignedTransaction(
         vaultHexPubKey: String,
