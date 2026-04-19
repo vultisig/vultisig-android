@@ -191,7 +191,15 @@ private fun UnstakeCacaoContent(
             }
         }
 
-        UiSpacer(size = 43.dp)
+        val tokenAmountError = state.tokenAmountError?.asString()
+        if (tokenAmountError != null) {
+            Text(
+                text = tokenAmountError,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.alerts.error,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+        }
 
         VsButton(
             label = stringResource(R.string.send_continue_button),

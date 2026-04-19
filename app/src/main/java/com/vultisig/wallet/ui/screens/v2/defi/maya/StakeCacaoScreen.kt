@@ -43,6 +43,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Composable
 internal fun StakeCacaoScreen(
@@ -170,7 +171,11 @@ private fun StakeCacaoContent(
                                     val amount =
                                         rawBalance
                                             .multiply(percent.toBigDecimal())
-                                            .divide(100.toBigDecimal())
+                                            .divide(
+                                                BigDecimal.valueOf(100),
+                                                8,
+                                                RoundingMode.HALF_UP,
+                                            )
                                             .stripTrailingZeros()
                                             .toPlainString()
                                     tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount)
