@@ -22,7 +22,7 @@ object ThorchainFunctions {
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = stakingContract,
-            executeMsg = """{ "account": { "bond": {} } }""",
+            executeMsg = ExecMsg.accountBond(),
             coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
         )
     }
@@ -38,7 +38,7 @@ object ThorchainFunctions {
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = stakingContract,
-            executeMsg = """{ "account": { "withdraw": { "amount": "$amount" } } }""",
+            executeMsg = ExecMsg.accountWithdraw(amount),
             coins = listOf(),
         )
     }
@@ -50,7 +50,7 @@ object ThorchainFunctions {
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = stakingContract,
-            executeMsg = """{ "account": { "claim": {} } }""",
+            executeMsg = ExecMsg.accountClaim(),
             coins = listOf(),
         )
     }
@@ -67,18 +67,18 @@ object ThorchainFunctions {
         require(tokenContract.isNotEmpty()) { "tokenContract cannot be empty" }
         require(denom.isNotEmpty()) { "Denom cannot be empty" }
 
-        val depositMsg = JSONObject().apply { put("deposit", JSONObject()) }
+        val depositMsg = JSONObject().apply { put(KEY_DEPOSIT, JSONObject()) }
         val base64Msg = Base64.encode(depositMsg.toString().toByteArray(Charsets.UTF_8))
 
         val fullPayload =
             JSONObject().apply {
                 put(
-                    "execute",
+                    KEY_EXECUTE,
                     JSONObject().apply {
-                        put("contract_addr", tokenContract)
-                        put("msg", base64Msg)
+                        put(KEY_CONTRACT_ADDR, tokenContract)
+                        put(KEY_MSG, base64Msg)
                         put(
-                            "affiliate",
+                            KEY_AFFILIATE,
                             JSONArray().apply {
                                 put(VULTISIG_AFFILIATE_ADDRESS)
                                 put(10)
@@ -109,7 +109,9 @@ object ThorchainFunctions {
         require(denom.isNotEmpty()) { "denom cannot be empty" }
 
         val executePayload =
-            JSONObject().apply { put("withdraw", JSONObject().apply { put("slippage", slippage) }) }
+            JSONObject().apply {
+                put(KEY_WITHDRAW, JSONObject().apply { put(KEY_SLIPPAGE, slippage) })
+            }
 
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
@@ -132,7 +134,7 @@ object ThorchainFunctions {
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = stakingContract,
-            executeMsg = """{ "liquid": { "bond": {} } }""",
+            executeMsg = ExecMsg.liquidBond(),
             coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
         )
     }
@@ -149,8 +151,8 @@ object ThorchainFunctions {
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = stakingContract,
-            executeMsg = """{ "liquid": { "unbond": {} } }""",
-            coins = listOf(CosmosCoin(denom = "x/staking-tcy", amount = units.toString())),
+            executeMsg = ExecMsg.liquidUnbond(),
+            coins = listOf(CosmosCoin(denom = Memo.DENOM_STAKING_TCY, amount = units.toString())),
         )
     }
 
@@ -163,7 +165,7 @@ object ThorchainFunctions {
     fun rujiRewardsMemo(contractAddress: String, tokenAmountInt: BigInteger): String {
         require(contractAddress.isNotBlank()) { "contractAddress cannot be blank" }
         require(tokenAmountInt >= BigInteger.ZERO) { "tokenAmountInt cannot be negative" }
-        return "claim:$contractAddress:$tokenAmountInt"
+        return "${Memo.CLAIM_PREFIX}$contractAddress:$tokenAmountInt"
     }
 
     /**
@@ -173,8 +175,35 @@ object ThorchainFunctions {
      */
     fun tcyUnstakeMemo(basisPoints: Int): String {
         require(basisPoints in 0..10_000) { "basisPoints must be between 0 and 10000" }
-        return "TCY-:$basisPoints"
+        return "${Memo.TCY_UNSTAKE_PREFIX}$basisPoints"
     }
 }
+
+private object Memo {
+    const val CLAIM_PREFIX = "claim:"
+    const val TCY_UNSTAKE_PREFIX = "TCY-:"
+    const val DENOM_STAKING_TCY = "x/staking-tcy"
+}
+
+private object ExecMsg {
+    fun accountBond() = """{ "account": { "bond": {} } }"""
+
+    fun accountWithdraw(amount: String) =
+        """{ "account": { "withdraw": { "amount": "$amount" } } }"""
+
+    fun accountClaim() = """{ "account": { "claim": {} } }"""
+
+    fun liquidBond() = """{ "liquid": { "bond": {} } }"""
+
+    fun liquidUnbond() = """{ "liquid": { "unbond": {} } }"""
+}
+
+private const val KEY_EXECUTE = "execute"
+private const val KEY_CONTRACT_ADDR = "contract_addr"
+private const val KEY_MSG = "msg"
+private const val KEY_AFFILIATE = "affiliate"
+private const val KEY_DEPOSIT = "deposit"
+private const val KEY_WITHDRAW = "withdraw"
+private const val KEY_SLIPPAGE = "slippage"
 
 private const val VULTISIG_AFFILIATE_ADDRESS = "thor1svfwxevnxtm4ltnw92hrqpqk4vzuzw9a4jzy04"
