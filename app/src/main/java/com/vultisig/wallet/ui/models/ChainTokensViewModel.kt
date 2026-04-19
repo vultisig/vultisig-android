@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REFRESH_TOKEN_DATA
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -114,7 +115,7 @@ constructor(
     private var loadDataJob: Job? = null
 
     private fun updateBalanceVisibility() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val vaultId = vaultId ?: return@launch
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
             uiState.update { it.copy(isBalanceVisible = isBalanceVisible) }
@@ -207,7 +208,7 @@ constructor(
 
         loadDataJob?.cancel()
         loadDataJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 if (isRefresh) {
                     updateRefreshing(true)
                 }
@@ -300,7 +301,7 @@ constructor(
     }
 
     private fun collectTronResourceStats(chain: Chain) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             if (chain == Chain.Tron) {
                 val address = currentVault?.coins?.firstOrNull { it.chain == chain }?.address
 

@@ -176,7 +176,7 @@ constructor(
     }
 
     private fun collectLastOpenedVault() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             updateLastOpenedVault()
             lastOpenedVaultRepository.lastOpenedVaultId
                 .map { lastOpenedVaultId ->
@@ -242,14 +242,14 @@ constructor(
     }
 
     private fun showGlobalBackupReminder() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val showReminder = isGlobalBackupReminderRequired()
             uiState.update { it.copy(showMonthlyBackupReminder = showReminder) }
         }
     }
 
     private fun showVerifyFastVaultPasswordReminderIfRequired(vaultId: VaultId) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val vault = vaultRepository.get(vaultId) ?: return@launch
             if (
                 vault.isFastVault() &&
@@ -261,7 +261,7 @@ constructor(
     }
 
     private fun loadBalanceVisibility(vaultId: String) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
             uiState.update { it.copy(isBalanceValueVisible = isBalanceVisible) }
         }
@@ -347,7 +347,7 @@ constructor(
     private fun loadVaultNameAndShowBackup(vaultId: String) {
         loadVaultNameJob?.cancel()
         loadVaultNameJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 val vault = vaultRepository.get(vaultId) ?: return@launch
                 uiState.update {
                     it.copy(
@@ -368,7 +368,7 @@ constructor(
     private fun loadAccounts(vaultId: String, isRefresh: Boolean = false) {
         loadAccountsJob?.cancel()
         loadAccountsJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 combine(
                         accountsRepository
                             .loadAddresses(vaultId, isRefresh)
@@ -399,7 +399,7 @@ constructor(
     private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
         loadDeFiBalancesJob?.cancel()
         loadDeFiBalancesJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 combine(
                         accountsRepository
                             .loadDeFiAddresses(vaultId, isRefresh)
@@ -492,7 +492,7 @@ constructor(
                     return
                 }
         val isBalanceValueVisible = !uiState.value.isBalanceValueVisible
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             uiState.update { it.copy(isBalanceValueVisible = isBalanceValueVisible) }
             balanceVisibilityRepository.setVisibility(vaultId, isBalanceValueVisible)
         }
@@ -521,7 +521,7 @@ constructor(
     }
 
     fun doNotRemindBackup() =
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             setNeverShowGlobalBackupReminder()
             dismissBackupReminder()
         }
@@ -580,7 +580,7 @@ constructor(
     }
 
     private fun checkNotificationPrompt(vaultId: String) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val currentVault = vaultRepository.get(vaultId) ?: return@launch
             if (!currentVault.isSecureVault()) return@launch
             if (
@@ -606,7 +606,7 @@ constructor(
     }
 
     fun onNotificationEnable() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             // Mark as prompted now so we don't re-prompt even if permission is denied
             uiState.value.notificationIntroVaults.forEach { vault ->
                 pushNotificationManager.markVaultPrompted(vault.vaultId)
@@ -623,7 +623,7 @@ constructor(
     }
 
     fun onNotificationNotNow() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             uiState.value.notificationIntroVaults.forEach { vault ->
                 pushNotificationManager.markVaultPrompted(vault.vaultId)
             }
