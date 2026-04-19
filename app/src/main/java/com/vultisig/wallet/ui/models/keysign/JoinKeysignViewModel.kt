@@ -654,6 +654,77 @@ constructor(
                                 srcToken.ticker == dstToken.ticker &&
                                 srcToken.contractAddress == dstToken.contractAddress
                         ) {
+                            val zeroProviderFee =
+                                TokenValue(value = BigInteger.ZERO, token = srcToken)
+                            val estimatedFee =
+                                convertTokenValueToFiat(srcToken, zeroProviderFee, currency)
+                            val lpAddUiModel =
+                                SwapTransactionUiModel(
+                                    src =
+                                        ValuedToken(
+                                            value = mapTokenValueToDecimalUiString(srcTokenValue),
+                                            token = srcToken,
+                                            fiatValue =
+                                                fiatValueToStringMapper(
+                                                    convertTokenValueToFiat(
+                                                        srcToken,
+                                                        srcTokenValue,
+                                                        currency,
+                                                    )
+                                                ),
+                                        ),
+                                    dst =
+                                        ValuedToken(
+                                            value = mapTokenValueToDecimalUiString(dstTokenValue),
+                                            token = dstToken,
+                                            fiatValue =
+                                                fiatValueToStringMapper(
+                                                    convertTokenValueToFiat(
+                                                        dstToken,
+                                                        dstTokenValue,
+                                                        currency,
+                                                    )
+                                                ),
+                                        ),
+                                    networkFee =
+                                        ValuedToken(
+                                            token = srcToken,
+                                            value =
+                                                mapTokenValueToDecimalUiString(
+                                                    estimatedNetworkGasFee.tokenValue
+                                                ),
+                                            fiatValue =
+                                                fiatValueToStringMapper(
+                                                    estimatedNetworkGasFee.fiatValue
+                                                ),
+                                        ),
+                                    providerFee =
+                                        ValuedToken(
+                                            token = srcToken,
+                                            value = zeroProviderFee.value.toString(),
+                                            fiatValue = fiatValueToStringMapper(estimatedFee),
+                                        ),
+                                    networkFeeFormatted =
+                                        mapTokenValueToDecimalUiString(
+                                            estimatedNetworkGasFee.tokenValue
+                                        ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
+                                    totalFee =
+                                        fiatValueToStringMapper(
+                                            estimatedFee + networkGasFeeFiatValue
+                                        ),
+                                    provider = provider,
+                                )
+                            transactionTypeUiModel =
+                                TransactionTypeUiModel.Swap(lpAddUiModel)
+                            transactionHistoryData =
+                                mapSwapTransactionToHistoryData(lpAddUiModel)
+                            verifyUiModel.value =
+                                VerifyUiModel.Swap(
+                                    VerifySwapUiModel(
+                                        tx = lpAddUiModel,
+                                        vaultName = vaultName,
+                                    )
+                                )
                             return
                         }
                         val quote =
