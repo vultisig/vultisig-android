@@ -1023,12 +1023,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">시드 구문 입력</string>
-    <string name="import_seedphrase_subtitle">12자 또는 24자 복구 구문을 입력하세요</string>
-    <string name="import_seedphrase_label">시드 구문</string>
-    <string name="import_seedphrase_hint">복구 구문을 입력하세요…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="other">%1$d / %2$d 단어</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">각 단어 사이에 공백을 두세요. %1$s의 시드 구문이 지원됩니다.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 또는 24 단어</string>
+    <string name="import_seedphrase_hint">시드 구문의 12 또는 24 단어를 입력하세요</string>
     <string name="import_seedphrase_invalid_word_count">%1$s 단어를 입력하셨습니다. 시드 구문은 12 또는 24 단어여야 합니다</string>
     <string name="import_seedphrase_invalid_phrase">유효하지 않은 시드 구문</string>
     <string name="import_seedphrase_already_imported">이 시드 구문은 이미 가져온 상태입니다</string>

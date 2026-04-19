@@ -997,14 +997,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Unesite svoju frazu za oporavak</string>
-    <string name="import_seedphrase_subtitle">Unesite svoju frazu za oporavak od 12 ili 24 riječi</string>
-    <string name="import_seedphrase_label">Fraza za oporavak</string>
-    <string name="import_seedphrase_hint">Unesite svoju frazu za oporavak…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d riječi</item>
-        <item quantity="few">%1$d / %2$d riječi</item>
-        <item quantity="other">%1$d / %2$d riječi</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Ostavite razmak između svake riječi. Podržane su fraze za oporavak od %1$s.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 ili 24 riječi</string>
+    <string name="import_seedphrase_hint">Unesite 12 ili 24 riječi vaše fraze za oporavak</string>
     <string name="import_seedphrase_invalid_word_count">Unijeli ste %1$s riječi. Fraza za oporavak mora imati 12 ili 24 riječi.</string>
     <string name="import_seedphrase_invalid_phrase">Nevažeća fraza za oporavak</string>
     <string name="import_seedphrase_already_imported">Ova fraza za oporavak je već uvezena</string>

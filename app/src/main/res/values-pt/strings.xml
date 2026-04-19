@@ -992,13 +992,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Digite sua frase semente</string>
-    <string name="import_seedphrase_subtitle">Digite sua frase de recuperação de 12 ou 24 palavras</string>
-    <string name="import_seedphrase_label">Frase semente</string>
-    <string name="import_seedphrase_hint">Digite sua frase de recuperação…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d palavra</item>
-        <item quantity="other">%1$d / %2$d palavras</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Deixe um espaço entre cada palavra. Frases semente de %1$s são suportadas.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 ou 24 palavras</string>
+    <string name="import_seedphrase_hint">Digite as 12 ou 24 palavras da sua frase semente</string>
     <string name="import_seedphrase_invalid_word_count">Você inseriu %1$s palavras. A frase semente deve ter 12 ou 24 palavras</string>
     <string name="import_seedphrase_invalid_phrase">Frase semente inválida</string>
     <string name="import_seedphrase_already_imported">Esta frase semente já foi importada</string>
