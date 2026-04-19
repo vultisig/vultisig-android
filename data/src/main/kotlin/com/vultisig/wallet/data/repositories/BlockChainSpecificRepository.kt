@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
@@ -41,6 +42,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
@@ -469,30 +471,39 @@ constructor(
                 coroutineScope {
                     val gasPriceDeferred = async { suiApi.getReferenceGasPrice() }
                     val coinsDeferred = async { suiApi.getAllCoins(address) }
-                    val feesDeferred = async {
-                        feeServiceComposite.calculateFees(
-                            Transfer(
-                                coin = token,
-                                vault = VaultData("", ""),
-                                amount = tokenAmountValue ?: BigInteger.ZERO,
-                                to = dstAddress ?: address,
-                            )
-                        )
-                    }
-
-                    val safeGasBudget =
-                        when (val fees = feesDeferred.await()) {
-                            is GasFees -> fees.limit
-                            else ->
-                                error(
-                                    "Unsupported fee type ${fees::class.simpleName} for chain=$chain"
+                    val safeGasBudgetDeferred = async {
+                        try {
+                            val fees =
+                                feeServiceComposite.calculateFees(
+                                    Transfer(
+                                        coin = token,
+                                        vault = VaultData("", ""),
+                                        amount = tokenAmountValue ?: BigInteger.ZERO,
+                                        to = dstAddress ?: address,
+                                    )
                                 )
+                            when (fees) {
+                                is GasFees -> fees.limit
+                                else -> {
+                                    Timber.w(
+                                        "Unexpected fee type %s for SUI; using default gas budget",
+                                        fees::class.simpleName,
+                                    )
+                                    SUI_DEFAULT_GAS_BUDGET
+                                }
+                            }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Timber.w(e, "SUI fee estimation failed; using default gas budget")
+                            SUI_DEFAULT_GAS_BUDGET
                         }
+                    }
 
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Sui(
                             referenceGasPrice = gasPriceDeferred.await(),
-                            gasBudget = safeGasBudget,
+                            gasBudget = safeGasBudgetDeferred.await(),
                             coins = coinsDeferred.await(),
                         ),
                         utxos = emptyList(),
