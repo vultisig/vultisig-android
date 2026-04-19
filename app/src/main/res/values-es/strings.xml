@@ -988,9 +988,10 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Ingrese su frase semilla</string>
-    <string name="import_seedphrase_subtitle">Ingrese su frase de recuperación de 12 o 24 palabras</string>
+    <string name="import_seedphrase_subtitle">Deje un espacio entre cada palabra. Se admiten frases semilla de %1$s.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 o 24 palabras</string>
     <string name="import_seedphrase_label">Frase semilla</string>
-    <string name="import_seedphrase_hint">Ingrese su frase de recuperación…</string>
+    <string name="import_seedphrase_hint">Ingrese las 12 o 24 palabras de su frase semilla</string>
     <plurals name="import_seedphrase_word_count">
         <item quantity="one">%1$d / %2$d palabra</item>
         <item quantity="other">%1$d / %2$d palabras</item>

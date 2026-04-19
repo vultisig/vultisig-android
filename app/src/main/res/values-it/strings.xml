@@ -990,9 +990,10 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Inserisci la tua frase seed</string>
-    <string name="import_seedphrase_subtitle">Inserisci la tua frase di recupero di 12 o 24 parole</string>
+    <string name="import_seedphrase_subtitle">Lascia uno spazio tra ogni parola. Sono supportate frasi seed di %1$s.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 o 24 parole</string>
     <string name="import_seedphrase_label">Frase seed</string>
-    <string name="import_seedphrase_hint">Inserisci la tua frase di recupero…</string>
+    <string name="import_seedphrase_hint">Inserisci le 12 o 24 parole della tua frase seed</string>
     <plurals name="import_seedphrase_word_count">
         <item quantity="one">%1$d / %2$d parole</item>
         <item quantity="other">%1$d / %2$d parole</item>

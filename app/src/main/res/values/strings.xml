@@ -1066,9 +1066,10 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Enter your seed phrase</string>
-    <string name="import_seedphrase_subtitle">Enter your 12 or 24 word recovery phrase</string>
+    <string name="import_seedphrase_subtitle">Leave a space between each word. Seed phrases of %1$s are supported.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 or 24 words</string>
     <string name="import_seedphrase_label">Seed Phrase</string>
-    <string name="import_seedphrase_hint">Enter your recovery phrase…</string>
+    <string name="import_seedphrase_hint">Enter the 12 or 24 words of your seedphrase</string>
     <plurals name="import_seedphrase_word_count">
         <item quantity="one">%1$d / %2$d words</item>
         <item quantity="other">%1$d / %2$d words</item>

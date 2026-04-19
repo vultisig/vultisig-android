@@ -995,9 +995,10 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Введите вашу сид-фразу</string>
-    <string name="import_seedphrase_subtitle">Введите вашу фразу восстановления из 12 или 24 слов</string>
+    <string name="import_seedphrase_subtitle">Оставляйте пробел между словами. Поддерживаются сид-фразы из %1$s.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 или 24 слов</string>
     <string name="import_seedphrase_label">Сид-фраза</string>
-    <string name="import_seedphrase_hint">Введите вашу фразу восстановления…</string>
+    <string name="import_seedphrase_hint">Введите 12 или 24 слова вашей сид-фразы</string>
     <plurals name="import_seedphrase_word_count">
         <item quantity="one">%1$d / %2$d слов</item>
         <item quantity="few">%1$d / %2$d слов</item>

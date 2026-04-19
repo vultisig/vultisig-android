@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.keygen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,8 +22,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -36,6 +37,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
+import com.vultisig.wallet.ui.components.v2.modifiers.shinedCenter
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel
 import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseViewModel
@@ -77,7 +79,6 @@ internal fun ImportSeedphraseContent(
 
     V3Scaffold(
         onBackClick = onBackClick,
-        title = stringResource(R.string.import_seedphrase_title),
         bottomBar = {
             VsButton(
                 label =
@@ -96,24 +97,34 @@ internal fun ImportSeedphraseContent(
             )
         },
     ) {
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                ImportSeedphraseStepIcon()
-            }
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState()).fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            ImportSeedphraseStepIcon()
 
             UiSpacer(24.dp)
 
             Text(
-                text = stringResource(R.string.import_seedphrase_subtitle),
+                text = stringResource(R.string.import_seedphrase_title),
+                style = Theme.brockmann.headings.title2,
+                color = Theme.v2.colors.text.primary,
+                textAlign = TextAlign.Center,
+            )
+
+            UiSpacer(8.dp)
+
+            Text(
+                text = importSeedphraseSubtitle(),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.tertiary,
+                textAlign = TextAlign.Center,
             )
 
             UiSpacer(24.dp)
 
             VsTextInputField(
                 textFieldState = mnemonicFieldState,
-                label = stringResource(R.string.import_seedphrase_label),
                 hint = stringResource(R.string.import_seedphrase_hint),
                 type = VsTextInputFieldType.MultiLine(minLines = 5),
                 innerState = state.innerState,
@@ -121,21 +132,25 @@ internal fun ImportSeedphraseContent(
                 autoCorrectEnabled = false,
                 footNote = state.errorMessage?.asString(),
             )
-
-            UiSpacer(8.dp)
-
-            Text(
-                text =
-                    pluralStringResource(
-                        R.plurals.import_seedphrase_word_count,
-                        state.wordCount,
-                        state.wordCount,
-                        state.expectedWordCount,
-                    ),
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.primary,
-            )
         }
+    }
+}
+
+@Composable
+private fun importSeedphraseSubtitle() = buildAnnotatedString {
+    val highlight = stringResource(R.string.import_seedphrase_subtitle_highlight)
+    val template = stringResource(R.string.import_seedphrase_subtitle, highlight)
+    val highlightStart = template.indexOf(highlight)
+
+    if (highlightStart < 0) {
+        append(template)
+    } else {
+        append(template)
+        addStyle(
+            style = SpanStyle(color = Theme.v2.colors.text.primary),
+            start = highlightStart,
+            end = highlightStart + highlight.length,
+        )
     }
 }
 
@@ -145,7 +160,7 @@ private fun ImportSeedphraseStepIcon() {
         modifier =
             Modifier.size(44.dp)
                 .clip(CircleShape)
-                .background(color = Color.Transparent)
+                .shinedCenter(color = Theme.v2.colors.alerts.success, shineAlpha = 0.15f)
                 .border(
                     width = 1.5.dp,
                     color = Theme.v2.colors.neutrals.n50.copy(alpha = 0.2f),
@@ -154,8 +169,8 @@ private fun ImportSeedphraseStepIcon() {
         contentAlignment = Alignment.Center,
     ) {
         UiIcon(
-            drawableResId = R.drawable.ic_seedphrase,
-            tint = Theme.v2.colors.buttons.ctaPrimary,
+            drawableResId = R.drawable.import_seed,
+            tint = Color(0xFF28BBC1),
             contentDescription = null,
             size = 18.dp,
         )
