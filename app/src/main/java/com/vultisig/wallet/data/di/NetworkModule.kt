@@ -33,14 +33,10 @@ internal interface NetworkModule {
                         logger =
                             object : Logger {
                                 override fun log(message: String) {
-                                    if (message.contains("exception", ignoreCase = true)) {
-                                        Timber.tag("Ktor Client").e(message)
-                                    } else {
-                                        Timber.tag("Ktor Client").i(message)
-                                    }
+                                    Timber.tag("Ktor Client").d(message)
                                 }
                             }
-                        level = LogLevel.ALL
+                        level = LogLevel.INFO
                     }
                 }
 

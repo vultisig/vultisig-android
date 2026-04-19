@@ -16,6 +16,7 @@ import io.ktor.util.appendIfNameAbsent
 import java.io.IOException
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 
 /**
  * Configures the shared [io.ktor.client.HttpClient] with content negotiation, error handling, and
@@ -47,6 +48,7 @@ class HttpClientConfigurator @Inject constructor(private val json: Json) {
 
             install(HttpCallValidator) {
                 handleResponseExceptionWithRequest { cause, _ ->
+                    Timber.tag("Ktor Client").e(cause, "Network request failed")
                     if (cause is IOException) {
                         throw NetworkException(
                             httpStatusCode = 0,
