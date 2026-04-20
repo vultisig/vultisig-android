@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
+import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.share
@@ -213,18 +214,12 @@ constructor(
         activity.share(qrBitmap, shareFileName(requireNotNull(vault), ShareType.SEND))
     }
 
-    internal fun saveShareQrBitmap(
-        context: Context,
-        color: Int,
-        title: String,
-        description: String,
-        logo: Bitmap,
-    ) =
+    internal fun saveShareQrBitmap(context: Context, color: Int, info: QrShareInfo, logo: Bitmap) =
         viewModelScope.launch {
             val bitmap = qrBitmap ?: return@launch
             val qrBitmap =
                 withContext(Dispatchers.IO) {
-                    makeQrCodeBitmapShareFormat(context, bitmap, color, logo, title, description)
+                    makeQrCodeBitmapShareFormat(context, bitmap, color, logo, info)
                 }
             shareQrBitmap.value = qrBitmap
         }

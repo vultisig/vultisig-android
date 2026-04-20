@@ -390,6 +390,13 @@
     <string name="qr_title_join_keygen_description">Scan with devices to join the\nvault generation</string>
     <string name="qr_title_join_keysign_description">Vault: %1$s\nAmount: %2$s\n To: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Vault: %1$s\nFrom: %2$s\n To: %3$s</string>
+    <string name="qr_share_label_vault">Vault</string>
+    <string name="qr_share_label_amount">Amount</string>
+    <string name="qr_share_label_to">To</string>
+    <string name="qr_share_label_from">From</string>
+    <string name="qr_share_label_type">Type</string>
+    <string name="qr_share_type_fast_vault">Fast Vault</string>
+    <string name="qr_share_type_secure_vault">Secure Vault</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
     <string name="share_vault_qr_uid" translatable="false">UID: %1$s</string>
     <string name="share_vault_qr_address" translatable="false">vultisig.com</string>

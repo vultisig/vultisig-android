@@ -383,6 +383,13 @@
     <string name="qr_title_join_keygen_description">기기로 스캔하여\n볼트 생성에 참여하세요</string>
     <string name="qr_title_join_keysign_description">볼트: %1$s\n금액: %2$s\n 수신: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">볼트: %1$s\n보내기: %2$s\n 받기: %3$s</string>
+    <string name="qr_share_label_vault">볼트</string>
+    <string name="qr_share_label_amount">금액</string>
+    <string name="qr_share_label_to">수신</string>
+    <string name="qr_share_label_from">보내기</string>
+    <string name="qr_share_label_type">유형</string>
+    <string name="qr_share_type_fast_vault">빠른 볼트</string>
+    <string name="qr_share_type_secure_vault">보안 볼트</string>
     <string name="error_folder_must_have_at_least_one_vault">폴더에는 최소 하나의 볼트가 선택되어야 합니다</string>
     <string name="import_file_password_hint_text">힌트: %s</string>
     <string name="scan_qr_upload_qr_code">QR 코드 업로드</string>

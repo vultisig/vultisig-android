@@ -48,6 +48,8 @@ import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
+import com.vultisig.wallet.data.usecases.QrShareField
+import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -61,6 +63,7 @@ import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.forCanvasMinify
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -214,12 +217,26 @@ constructor(
                 filter = false,
             )
 
-        val shareBitmap =
-            createQrCodeSharingBitmap(
-                scaledQr,
-                R.string.qr_title_join_keygen,
-                R.string.qr_title_join_keygen_description,
+        val typeRes =
+            if (email != null) R.string.qr_share_type_fast_vault
+            else R.string.qr_share_type_secure_vault
+        val info =
+            QrShareInfo(
+                title = context.getString(R.string.qr_title_join_keygen),
+                fields =
+                    listOf(
+                        QrShareField(
+                            context.getString(R.string.qr_share_label_vault),
+                            vaultName.forCanvasMinify(),
+                        ),
+                        QrShareField(
+                            context.getString(R.string.qr_share_label_type),
+                            context.getString(typeRes),
+                        ),
+                    ),
             )
+
+        val shareBitmap = createQrCodeSharingBitmap(scaledQr, info)
 
         activity.share(shareBitmap, shareFileName(vaultName, vaultName.sha256(), ShareType.KEYGEN))
     }

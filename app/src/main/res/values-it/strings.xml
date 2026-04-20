@@ -294,6 +294,13 @@
     <string name="qr_title_join_keygen_description">Esegui la scansione con i dispositivi per partecipare alla\n generazione del vault</string>
     <string name="qr_title_join_keysign_description">Cassaforte: %1$s\n Importo: %2$s\n A: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Cassaforte: %1$s\n Da: %2$s\n A: %3$s</string>
+    <string name="qr_share_label_vault">Cassaforte</string>
+    <string name="qr_share_label_amount">Importo</string>
+    <string name="qr_share_label_to">A</string>
+    <string name="qr_share_label_from">Da</string>
+    <string name="qr_share_label_type">Tipo</string>
+    <string name="qr_share_type_fast_vault">Cassaforte rapida</string>
+    <string name="qr_share_type_secure_vault">Cassaforte sicura</string>
     <string name="error_folder_must_have_at_least_one_vault">La cartella necessita di almeno un vault selezionato</string>
     <string name="import_file_password_hint_text">Suggerimento: %s</string>
     <string name="scan_qr_upload_qr_code">Carica codice QR</string>

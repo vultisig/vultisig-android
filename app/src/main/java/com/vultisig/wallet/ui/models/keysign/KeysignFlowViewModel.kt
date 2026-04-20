@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.SavedStateHandle
@@ -32,7 +33,9 @@ import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isSecureVault
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
@@ -118,6 +121,8 @@ data class KeysignFlowUiState(
     val isLoading: Boolean = false,
     val enableNotification: Boolean = false,
     val resendCooldownSeconds: Int = 0,
+    @param:DrawableRes val srcTokenLogoRes: Int? = null,
+    @param:DrawableRes val dstTokenLogoRes: Int? = null,
 )
 
 @HiltViewModel
@@ -307,12 +312,20 @@ constructor(
                     }
                 }
 
+            val srcLogoModel =
+                keysignPayload?.coin?.let { (getCoinLogo(it.logo) as? Int) ?: it.chain.logo }
+            val dstLogoModel =
+                keysignPayload?.swapPayload?.dstToken?.let {
+                    (getCoinLogo(it.logo) as? Int) ?: it.chain.logo
+                }
             uiState.update {
                 it.copy(
                     vault = vault,
                     isSwap = shareViewModel.keysignPayload?.swapPayload != null,
                     toAddress = keysignPayload?.toAddress ?: "",
                     enableNotification = vault.isSecureVault(),
+                    srcTokenLogoRes = srcLogoModel,
+                    dstTokenLogoRes = dstLogoModel,
                 )
             }
 
