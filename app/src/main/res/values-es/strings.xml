@@ -335,6 +335,7 @@
     <string name="swap_error_time_out">Se agotó el tiempo de espera de la solicitud de intercambio. Inténtalo de nuevo</string>
     <string name="swap_error_high_price_impact">El impacto en el precio es demasiado alto. Prueba con un monto menor o un par de tokens diferente.</string>
     <string name="swap_error_quote_failed">La cotización del swap falló. Inténtalo de nuevo o ajusta el monto.</string>
+    <string name="swap_error_rate_limit">Demasiadas solicitudes. Inténtelo de nuevo más tarde.</string>
     <string name="swap_screen_invalid_no_vault">No se ha seleccionado ninguna bóveda</string>
     <string name="swap_screen_invalid_no_src_error">No se ha seleccionado ningún token de origen</string>
     <string name="swap_screen_invalid_selected_no_dst">No se ha seleccionado ningún token de destino</string>
@@ -342,6 +343,7 @@
     <string name="swap_screen_invalid_gas_fee_calculation">Error en el cálculo de la tarifa del gas</string>
     <string name="swap_screen_invalid_quote_calculation">Error en el cálculo de cotización</string>
     <string name="join_keysign_failed_connect_to_server">Error al conectar con el servidor</string>
+    <string name="join_keysign_relay_unavailable">Servidor de retransmisión no disponible, inténtalo de nuevo</string>
     <string name="network_connection_lost">Se perdió la conexión a la red. Verifique su conexión a Internet.</string>
     <string name="send_form_polka_reaping_warning">Asegúrese de dejar fondos suficientes para cubrir las tarifas. Si el saldo de una cuenta cae por debajo de 1 DOT (depósito existencial), la cuenta se desactivará (se recuperará) y se perderán los fondos restantes. Puede reactivar la dirección con un nuevo depósito mayor que el depósito existencial en cualquier momento. Sin embargo, esto no recuperará los fondos perdidos.</string>
     <string name="edit_address_title">Editar dirección</string>
@@ -508,6 +510,9 @@
     <string name="remove_pool_amount_label">Cantidad</string>
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">Apostar CACAO</string>
+    <string name="unstake_cacao_title">Desapostar CACAO</string>
+    <string name="unstake_cacao_available_format">Disponible: %1$s</string>
     <string name="cacaopool_only_cacao_supported">Solo se admite el token CACAO para las operaciones del pool</string>
     <string name="referral_create_info_title">Programa de referidos</string>
     <string name="referral_create_info_content">El programa de referidos se aplica a los intercambios de THORChain y se realiza con el mejor esfuerzo posible. Necesitas registrar un THORName para usar el referido de Vultisig. La tarifa de registro es de 10 RUNE y 1 RUNE por cada año, que se paga a la red THORChain.</string>
@@ -987,13 +992,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Ingrese su frase semilla</string>
-    <string name="import_seedphrase_subtitle">Ingrese su frase de recuperación de 12 o 24 palabras</string>
-    <string name="import_seedphrase_label">Frase semilla</string>
-    <string name="import_seedphrase_hint">Ingrese su frase de recuperación…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d palabra</item>
-        <item quantity="other">%1$d / %2$d palabras</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Deje un espacio entre cada palabra. Se admiten frases semilla de %1$s.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 o 24 palabras</string>
+    <string name="import_seedphrase_hint">Ingrese las 12 o 24 palabras de su frase semilla</string>
     <string name="import_seedphrase_invalid_word_count">Ingresaste %1$s palabras. La frase semilla debe tener 12 o 24 palabras</string>
     <string name="import_seedphrase_invalid_phrase">Frase semilla no válida</string>
     <string name="import_seedphrase_already_imported">Esta frase semilla ya ha sido importada</string>

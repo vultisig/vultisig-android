@@ -56,12 +56,14 @@ private val TRON_DEFAULT_SELECTED_POSITIONS = listOf(TRON_KEY)
 @Immutable
 internal data class TronStakingUiModel(
     val totalAmountPrice: String = "",
+    val frozenTotalPrice: String = "",
+    val frozenTotalTrx: String = "",
     val availableBandwidth: Long = 0L,
     val totalBandwidth: Long = 0L,
     val availableEnergy: Long = 0L,
     val totalEnergy: Long = 0L,
     val pendingWithdrawals: List<TronPendingWithdrawalUiModel> = emptyList(),
-    val hasPositions: Boolean = false,
+    val hasFrozenBalance: Boolean = false,
 )
 
 @Immutable
@@ -77,7 +79,6 @@ internal sealed interface TronDeFiUiState {
         val selectedTab: DeFiTab = DeFiTab.STAKED,
         val showPositionSelectionDialog: Boolean = false,
         val stakePositionsDialog: List<PositionUiModelDialog> = TRON_STAKE_POSITIONS_DIALOG,
-        // TODO(#4014): gate rendered cards by selectedPositions
         val selectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
         val tempSelectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
     ) : TronDeFiUiState
@@ -186,12 +187,14 @@ constructor(
 
         return TronStakingUiModel(
             totalAmountPrice = currencyFormat.format(availableBalanceTrx.multiply(trxPrice)),
+            frozenTotalPrice = currencyFormat.format(frozenTotal.multiply(trxPrice)),
+            frozenTotalTrx = frozenTotal.stripTrailingZeros().toPlainString(),
             availableBandwidth = stats.availableBandwidth,
             totalBandwidth = stats.totalBandwidth,
             availableEnergy = stats.availableEnergy,
             totalEnergy = stats.totalEnergy,
             pendingWithdrawals = pendingWithdrawals,
-            hasPositions = frozenTotal > BigDecimal.ZERO || pendingWithdrawals.isNotEmpty(),
+            hasFrozenBalance = frozenTotal > BigDecimal.ZERO,
         )
     }
 

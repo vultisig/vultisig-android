@@ -36,8 +36,8 @@ data class EvmFeeHistoryResponseJson(
 @Serializable
 data class EvmRpcResponseJson<T>(
     @SerialName("id") val id: Int,
-    @SerialName("result") val result: T,
-    @SerialName("error") val error: RpcError?,
+    @SerialName("result") val result: T? = null,
+    @SerialName("error") val error: RpcError? = null,
 )
 
 @Serializable

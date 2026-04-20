@@ -623,6 +623,7 @@
     <string name="swap_error_time_out">交换请求超时。请重试</string>
     <string name="swap_error_high_price_impact">价格影响过高。请尝试较小的金额或不同的代币对。</string>
     <string name="swap_error_quote_failed">兑换报价失败。请重试或调整金额。</string>
+    <string name="swap_error_rate_limit">请求次数过多。请稍后重试。</string>
 
     <!-- Swap Screen Invalid -->
     <string name="swap_screen_invalid_no_vault">未选择保险库</string>
@@ -638,6 +639,7 @@
 
     <!-- Join Keysign Failed -->
     <string name="join_keysign_failed_connect_to_server">连接服务器失败</string>
+    <string name="join_keysign_relay_unavailable">中继服务器不可用，请重试</string>
 
     <!-- Network Connection -->
     <string name="network_connection_lost">网络连接丢失。请检查您的互联网连接</string>
@@ -752,6 +754,9 @@
     <string name="remove_pool_amount_label">金额</string>
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">质押 CACAO</string>
+    <string name="unstake_cacao_title">解除质押 CACAO</string>
+    <string name="unstake_cacao_available_format">可用: %1$s</string>
     <string name="cacaopool_only_cacao_supported">池操作仅支持 CACAO 代币</string>
     <string name="referral_create_info_content">推荐计划适用于 THORChain 交换，并尽力而为。您需要注册 THORName 才能使用 Vultisig 推荐。注册费为 10 RUNE，每年 1 RUNE，支付给 THORChain 网络。</string>
     <string name="referral_create_info_title">推荐计划</string>
@@ -1319,12 +1324,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">输入您的助记词</string>
-    <string name="import_seedphrase_subtitle">输入您的12或24个单词的恢复短语</string>
-    <string name="import_seedphrase_label">助记词</string>
-    <string name="import_seedphrase_hint">输入您的恢复短语…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="other">%1$d / %2$d 个单词</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">请在每个单词之间留一个空格。支持%1$s的助记词。</string>
+    <string name="import_seedphrase_subtitle_highlight">12 或 24 个单词</string>
+    <string name="import_seedphrase_hint">输入您助记词的 12 或 24 个单词</string>
     <string name="import_seedphrase_invalid_word_count">您输入了 %1$s 个单词。助记词必须是 12 或 24 个单词</string>
     <string name="import_seedphrase_invalid_phrase">无效的助记词</string>
     <string name="import_seedphrase_already_imported">该助记词已被导入</string>

@@ -433,6 +433,7 @@
     <string name="swap_error_time_out">Swap request timed out. Please try again</string>
     <string name="swap_error_high_price_impact">Price impact is too high. Try a smaller amount or a different token pair.</string>
     <string name="swap_error_quote_failed">Swap quote failed. Please try again or adjust the amount.</string>
+    <string name="swap_error_rate_limit">Too many requests. Please try again later.</string>
     <string name="swap_screen_invalid_no_vault">No vault selected</string>
     <string name="swap_screen_invalid_no_src_error">No source token selected</string>
     <string name="swap_screen_invalid_selected_no_dst">No destination token selected</string>
@@ -442,6 +443,7 @@
     <string name="swap_screen_invalid_vault">Transaction will likely fail, vault could not be loaded.</string>
     <string name="edit_address_title">Edit Address</string>
     <string name="join_keysign_failed_connect_to_server">Failed to connect to server</string>
+    <string name="join_keysign_relay_unavailable">Relay server unavailable, please try again</string>
     <string name="network_connection_lost">Network connection lost. Please check your internet connection</string>
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
 
@@ -699,6 +701,9 @@
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_cacao_amount_format" translatable="false">%1$s CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">Stake CACAO</string>
+    <string name="unstake_cacao_title">Unstake CACAO</string>
+    <string name="unstake_cacao_available_format">Available: %1$s</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>
     <string name="referral_create_info_content">The referral program is applied for THORChain swaps and is on a best effort basis. You need to register a THORName to use the Vultisig referral. The registration fee is 10 RUNE and 1 RUNE for each year, which is paid to the THORChain network.</string>
     <string name="referral_create_info_title">Referral Program</string>
@@ -809,7 +814,6 @@
     <string name="backup_server_desc">Request Server Vault Share again.</string>
     <string name="share_sheet_more">More</string>
     <string name="x_twitter" translatable="false">X (Twitter)</string>
-    <string name="vult" translatable="false">$VULT</string>
     <string name="error_saving_qr_code">Failed to save QR code. %1$s</string>
     <string name="transaction_type_button_buy">Buy</string>
     <string name="transaction_type_button_receive">Receive</string>
@@ -1065,13 +1069,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Enter your seed phrase</string>
-    <string name="import_seedphrase_subtitle">Enter your 12 or 24 word recovery phrase</string>
-    <string name="import_seedphrase_label">Seed Phrase</string>
-    <string name="import_seedphrase_hint">Enter your recovery phrase…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d words</item>
-        <item quantity="other">%1$d / %2$d words</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Leave a space between each word. Seed phrases of %1$s are supported.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 or 24 words</string>
+    <string name="import_seedphrase_hint">Enter the 12 or 24 words of your seedphrase</string>
     <string name="import_seedphrase_invalid_word_count">You entered %1$s words. Seed phrase must be 12 or 24</string>
     <string name="import_seedphrase_invalid_phrase">Invalid seed phrase</string>
     <string name="import_seedphrase_already_imported">This seed phrase has already been imported</string>

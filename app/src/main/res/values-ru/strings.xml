@@ -334,6 +334,7 @@
     <string name="swap_error_time_out">Запрос на обмен истек. Попробуйте еще раз</string>
     <string name="swap_error_high_price_impact">Влияние на цену слишком высокое. Попробуйте меньшую сумму или другую пару токенов.</string>
     <string name="swap_error_quote_failed">Не удалось получить котировку. Попробуйте снова или измените сумму.</string>
+    <string name="swap_error_rate_limit">Слишком много запросов. Попробуйте позже.</string>
     <string name="swap_screen_invalid_no_vault">Хранилище не выбрано</string>
     <string name="swap_screen_invalid_no_src_error">Исходный токен не выбран</string>
     <string name="swap_screen_invalid_selected_no_dst">Токен назначения не выбран</string>
@@ -342,6 +343,7 @@
     <string name="swap_screen_invalid_quote_calculation">Расчет котировки не удался</string>
     <string name="edit_address_title">Изменить адрес</string>
     <string name="join_keysign_failed_connect_to_server">Не удалось подключиться к серверу</string>
+    <string name="join_keysign_relay_unavailable">Ретранслятор недоступен, повторите попытку</string>
     <string name="network_connection_lost">Сетевое соединение потеряно. Проверьте подключение к интернету</string>
     <string name="send_form_polka_reaping_warning">Убедитесь, что вы оставили достаточно средств для покрытия сборов. Если баланс счета опустится ниже 1 DOT (экзистенциальный депозит), счет будет деактивирован (изъят), а все оставшиеся средства будут потеряны. Вы можете повторно активировать адрес с новым депозитом, превышающим экзистенциальный депозит, в любое время. Однако это не вернет потерянные средства.</string>
     <!-- Push Notifications -->
@@ -507,6 +509,9 @@
     <string name="remove_pool_amount_label">Сумма</string>
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">Стейкинг CACAO</string>
+    <string name="unstake_cacao_title">Анстейкинг CACAO</string>
+    <string name="unstake_cacao_available_format">Доступно: %1$s</string>
     <string name="cacaopool_only_cacao_supported">Для операций пула поддерживается только токен CACAO.</string>
     <string name="referral_create_info_title">Реферальная программа</string>
     <string name="referral_create_info_content">Реферальная программа применяется к обменам THORChain и работает на основе максимальных усилий. Вам необходимо зарегистрировать THORName для использования реферальной программы Vultisig. Плата за регистрацию составляет 10 RUNE и 1 RUNE за каждый год, которая выплачивается сети THORChain.</string>
@@ -994,15 +999,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Введите вашу сид-фразу</string>
-    <string name="import_seedphrase_subtitle">Введите вашу фразу восстановления из 12 или 24 слов</string>
-    <string name="import_seedphrase_label">Сид-фраза</string>
-    <string name="import_seedphrase_hint">Введите вашу фразу восстановления…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d слов</item>
-        <item quantity="few">%1$d / %2$d слов</item>
-        <item quantity="many">%1$d / %2$d слов</item>
-        <item quantity="other">%1$d / %2$d слов</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Оставляйте пробел между словами. Поддерживаются сид-фразы из %1$s.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 или 24 слов</string>
+    <string name="import_seedphrase_hint">Введите 12 или 24 слова вашей сид-фразы</string>
     <string name="import_seedphrase_invalid_word_count">Вы ввели %1$s слов. Сид-фраза должна содержать 12 или 24 слова</string>
     <string name="import_seedphrase_invalid_phrase">Недействительная сид-фраза</string>
     <string name="import_seedphrase_already_imported">Эта сид-фраза уже была импортирована</string>
