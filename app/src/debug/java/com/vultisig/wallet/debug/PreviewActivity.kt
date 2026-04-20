@@ -110,6 +110,7 @@ class PreviewActivity : ComponentActivity() {
                     "import_seedphrase" -> ImportSeedphrasePreview()
                     "defi_account_list" -> DeFiAccountListPreview()
                     "share_qr_keysign" -> ShareQrKeysignPreview()
+                    "share_qr_keysign_swap" -> ShareQrKeysignSwapPreview()
                     "share_qr_keygen" -> ShareQrKeygenPreview()
                     else -> SwapConfirmPreview()
                 }
@@ -522,6 +523,25 @@ private fun ShareQrKeysignPreview() {
                         QrShareField("Vault", "Honeypot Vault DKLS"),
                         QrShareField("Amount", "100 USDC", usdcIcon),
                         QrShareField("To", "0xe3F83...6CE1e8b2"),
+                    ),
+            )
+    )
+}
+
+@Composable
+private fun ShareQrKeysignSwapPreview() {
+    val context = LocalContext.current
+    val srcIcon = remember { BitmapFactory.decodeResource(context.resources, R.drawable.usdc) }
+    val dstIcon = remember { BitmapFactory.decodeResource(context.resources, R.drawable.bitcoin) }
+    ShareQrPreview(
+        info =
+            QrShareInfo(
+                title = "Join Keysign Swap",
+                fields =
+                    listOf(
+                        QrShareField("Vault", "Honeypot Vault DKLS"),
+                        QrShareField("From", "100 USDC", srcIcon),
+                        QrShareField("To", "0.0012 BTC", dstIcon),
                     ),
             )
     )

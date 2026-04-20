@@ -48,7 +48,11 @@ private const val TEXT_TERTIARY_COLOR = 0xFF8295AE.toInt()
 
 data class QrShareField(val label: String, val value: String, val valueIcon: Bitmap? = null)
 
-data class QrShareInfo(val title: String, val fields: List<QrShareField>)
+data class QrShareInfo(val title: String, val fields: List<QrShareField>) {
+    init {
+        require(fields.isNotEmpty()) { "QrShareInfo.fields must not be empty" }
+    }
+}
 
 interface MakeQrCodeBitmapShareFormat : (Context, Bitmap, Int, Bitmap, QrShareInfo) -> Bitmap
 
