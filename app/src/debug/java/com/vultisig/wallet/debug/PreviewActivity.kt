@@ -562,7 +562,7 @@ private fun ShareQrPreview(info: QrShareInfo) {
                         Color.Transparent,
                         null,
                     )
-            val logo = BitmapFactory.decodeResource(context.resources, R.drawable.ic_share_qr_logo)
+            val logo = BitmapFactory.decodeResource(context.resources, R.drawable.logo)
             entry.makeQrCodeBitmapShareFormat().invoke(context, qr, bgColor.toArgb(), logo, info)
         }
     Box(

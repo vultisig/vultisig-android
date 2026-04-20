@@ -7,6 +7,8 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.text.TextPaint
+import android.text.TextUtils
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.scale
@@ -51,6 +53,13 @@ data class QrShareInfo(val title: String, val fields: List<QrShareField>)
 interface MakeQrCodeBitmapShareFormat : (Context, Bitmap, Int, Bitmap, QrShareInfo) -> Bitmap
 
 private fun Float.dp(context: Context): Float = this * context.resources.displayMetrics.density
+
+private fun ellipsizeToWidth(text: String, paint: Paint, maxWidth: Float): String {
+    if (maxWidth <= 0f) return ""
+    if (paint.measureText(text) <= maxWidth) return text
+    val textPaint = if (paint is TextPaint) paint else TextPaint(paint)
+    return TextUtils.ellipsize(text, textPaint, maxWidth, TextUtils.TruncateAt.END).toString()
+}
 
 // Resolve the app's Brockmann Medium font from this shared data-module use case. The font lives
 // in the app module's resources, so it is not reachable via R.font here — name lookup is the only
@@ -198,8 +207,11 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         val metaContentLeft = cardLeft + metaPadding
         val metaContentRight = cardRight - metaPadding
 
+        val metaContentWidth = metaContentRight - metaContentLeft
+
         val titleBaselineY = metaCardTop + metaPadding + titleLineHeight * 0.75f
-        canvas.drawText(info.title, metaContentLeft, titleBaselineY, titlePaint)
+        val ellipsizedTitle = ellipsizeToWidth(info.title, titlePaint, metaContentWidth)
+        canvas.drawText(ellipsizedTitle, metaContentLeft, titleBaselineY, titlePaint)
 
         val valueIconSize = VALUE_ICON_SIZE_DP.dp(context)
         val valueIconToTextGap = VALUE_ICON_TO_TEXT_GAP_DP.dp(context)
@@ -207,17 +219,23 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         var rowsCursorY = metaCardTop + metaPadding + titleLineHeight + titleToFieldsGap
         info.fields.forEachIndexed { index, field ->
             val textBaselineY = rowsCursorY + fieldLineHeight * 0.75f
-            canvas.drawText(field.label, metaContentLeft, textBaselineY, labelPaint)
-            val valueTextWidth = valuePaint.measureText(field.value)
+            val iconPx =
+                if (field.valueIcon != null) valueIconSize.roundToInt().coerceAtLeast(1) else 0
+            val iconReservation = if (iconPx > 0) iconPx + valueIconToTextGap else 0f
+            val ellipsizedLabel = ellipsizeToWidth(field.label, labelPaint, metaContentWidth * 0.5f)
+            val labelMeasured = labelPaint.measureText(ellipsizedLabel)
+            val valueMaxWidth = metaContentWidth - labelMeasured - iconReservation
+            val ellipsizedValue = ellipsizeToWidth(field.value, valuePaint, valueMaxWidth)
+            canvas.drawText(ellipsizedLabel, metaContentLeft, textBaselineY, labelPaint)
+            val valueTextWidth = valuePaint.measureText(ellipsizedValue)
             val icon = field.valueIcon
             if (icon != null) {
-                val iconPx = valueIconSize.roundToInt().coerceAtLeast(1)
                 val scaledIcon = icon.scale(iconPx, iconPx)
                 val iconLeft = metaContentRight - valueTextWidth - valueIconToTextGap - iconPx
                 val iconTop = rowsCursorY + (fieldLineHeight - iconPx) / 2f
                 canvas.drawBitmap(scaledIcon, iconLeft, iconTop, null)
             }
-            canvas.drawText(field.value, metaContentRight, textBaselineY, valuePaint)
+            canvas.drawText(ellipsizedValue, metaContentRight, textBaselineY, valuePaint)
             rowsCursorY += fieldLineHeight
             if (index < info.fields.lastIndex) {
                 rowsCursorY += fieldRowGap
