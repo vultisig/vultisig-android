@@ -443,6 +443,7 @@
     <string name="swap_screen_invalid_vault">Transaction will likely fail, vault could not be loaded.</string>
     <string name="edit_address_title">Edit Address</string>
     <string name="join_keysign_failed_connect_to_server">Failed to connect to server</string>
+    <string name="join_keysign_relay_unavailable">Relay server unavailable, please try again</string>
     <string name="network_connection_lost">Network connection lost. Please check your internet connection</string>
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
 
@@ -700,6 +701,9 @@
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_cacao_amount_format" translatable="false">%1$s CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">Stake CACAO</string>
+    <string name="unstake_cacao_title">Unstake CACAO</string>
+    <string name="unstake_cacao_available_format">Available: %1$s</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>
     <string name="referral_create_info_content">The referral program is applied for THORChain swaps and is on a best effort basis. You need to register a THORName to use the Vultisig referral. The registration fee is 10 RUNE and 1 RUNE for each year, which is paid to the THORChain network.</string>
     <string name="referral_create_info_title">Referral Program</string>

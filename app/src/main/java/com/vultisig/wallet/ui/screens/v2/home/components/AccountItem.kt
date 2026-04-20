@@ -38,6 +38,7 @@ internal fun AccountItem(
     account: AccountUiModel,
     isBalanceVisible: Boolean,
     onCopy: (String) -> Unit,
+    showAddress: Boolean = true,
     onClick: () -> Unit = {},
 ) {
     Row(
@@ -54,7 +55,7 @@ internal fun AccountItem(
 
         Column(
             modifier = Modifier.fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = if (showAddress) Arrangement.SpaceBetween else Arrangement.Center,
             horizontalAlignment = Alignment.Start,
         ) {
             Text(
@@ -65,11 +66,13 @@ internal fun AccountItem(
                 overflow = TextOverflow.Ellipsis,
             )
 
-            CopiableAddress(
-                address = account.address,
-                modifier = Modifier.padding(top = 2.dp),
-                onAddressCopied = onCopy,
-            )
+            if (showAddress) {
+                CopiableAddress(
+                    address = account.address,
+                    modifier = Modifier.padding(top = 2.dp),
+                    onAddressCopied = onCopy,
+                )
+            }
         }
 
         UiSpacer(weight = 1f)

@@ -639,6 +639,7 @@
 
     <!-- Join Keysign Failed -->
     <string name="join_keysign_failed_connect_to_server">连接服务器失败</string>
+    <string name="join_keysign_relay_unavailable">中继服务器不可用，请重试</string>
 
     <!-- Network Connection -->
     <string name="network_connection_lost">网络连接丢失。请检查您的互联网连接</string>
@@ -753,6 +754,9 @@
     <string name="remove_pool_amount_label">金额</string>
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">质押 CACAO</string>
+    <string name="unstake_cacao_title">解除质押 CACAO</string>
+    <string name="unstake_cacao_available_format">可用: %1$s</string>
     <string name="cacaopool_only_cacao_supported">池操作仅支持 CACAO 代币</string>
     <string name="referral_create_info_content">推荐计划适用于 THORChain 交换，并尽力而为。您需要注册 THORName 才能使用 Vultisig 推荐。注册费为 10 RUNE，每年 1 RUNE，支付给 THORChain 网络。</string>
     <string name="referral_create_info_title">推荐计划</string>

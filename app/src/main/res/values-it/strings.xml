@@ -343,6 +343,7 @@
     <string name="swap_screen_invalid_gas_fee_calculation">Calcolo della tariffa del gas non riuscito</string>
     <string name="swap_screen_invalid_quote_calculation">Calcolo preventivo fallito</string>
     <string name="join_keysign_failed_connect_to_server">Connessione al server non riuscita</string>
+    <string name="join_keysign_relay_unavailable">Server relay non disponibile, riprova</string>
     <string name="network_connection_lost">Connessione di rete persa. Controlla la tua connessione Internet</string>
     <string name="send_form_polka_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un account scende sotto 1 DOT (deposito esistenziale), l\'account verrà disattivato (raccolto) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="edit_address_title">Modifica indirizzo</string>
@@ -509,6 +510,9 @@
     <string name="remove_pool_amount_label">Quantità</string>
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">Puntare CACAO</string>
+    <string name="unstake_cacao_title">Rimuovi puntata CACAO</string>
+    <string name="unstake_cacao_available_format">Disponibile: %1$s</string>
     <string name="cacaopool_only_cacao_supported">Per le operazioni del pool è supportato solo il token CACAO</string>
     <string name="referral_create_info_title">Programma referral</string>
     <string name="referral_create_info_content">Il programma referral si applica agli scambi THORChain ed è su base best effort. Devi registrare un THORName per utilizzare il referral Vultisig. La tassa di registrazione è di 10 RUNE e 1 RUNE per ogni anno, che viene pagata alla rete THORChain.</string>

@@ -343,6 +343,7 @@
     <string name="swap_screen_invalid_quote_calculation">Расчет котировки не удался</string>
     <string name="edit_address_title">Изменить адрес</string>
     <string name="join_keysign_failed_connect_to_server">Не удалось подключиться к серверу</string>
+    <string name="join_keysign_relay_unavailable">Ретранслятор недоступен, повторите попытку</string>
     <string name="network_connection_lost">Сетевое соединение потеряно. Проверьте подключение к интернету</string>
     <string name="send_form_polka_reaping_warning">Убедитесь, что вы оставили достаточно средств для покрытия сборов. Если баланс счета опустится ниже 1 DOT (экзистенциальный депозит), счет будет деактивирован (изъят), а все оставшиеся средства будут потеряны. Вы можете повторно активировать адрес с новым депозитом, превышающим экзистенциальный депозит, в любое время. Однако это не вернет потерянные средства.</string>
     <!-- Push Notifications -->
@@ -508,6 +509,9 @@
     <string name="remove_pool_amount_label">Сумма</string>
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">Стейкинг CACAO</string>
+    <string name="unstake_cacao_title">Анстейкинг CACAO</string>
+    <string name="unstake_cacao_available_format">Доступно: %1$s</string>
     <string name="cacaopool_only_cacao_supported">Для операций пула поддерживается только токен CACAO.</string>
     <string name="referral_create_info_title">Реферальная программа</string>
     <string name="referral_create_info_content">Реферальная программа применяется к обменам THORChain и работает на основе максимальных усилий. Вам необходимо зарегистрировать THORName для использования реферальной программы Vultisig. Плата за регистрацию составляет 10 RUNE и 1 RUNE за каждый год, которая выплачивается сети THORChain.</string>
