@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
+import java.nio.ByteBuffer
 import java.security.GeneralSecurityException
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -57,9 +58,13 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
         }
     }
 
-    private fun isPbkdf2(data: ByteArray): Boolean =
-        data.size >= PBKDF2_MAGIC_SIZE &&
-            data.copyOfRange(0, PBKDF2_MAGIC_SIZE).contentEquals(PBKDF2_MAGIC)
+    private fun isPbkdf2(data: ByteArray): Boolean {
+        if (data.size < PBKDF2_MAGIC_SIZE) return false
+        for (i in 0 until PBKDF2_MAGIC_SIZE) {
+            if (data[i] != PBKDF2_MAGIC[i]) return false
+        }
+        return true
+    }
 
     private fun decryptPbkdf2(data: ByteArray, password: ByteArray): ByteArray {
         val salt = data.copyOfRange(PBKDF2_MAGIC_SIZE, PBKDF2_MAGIC_SIZE + SALT_LENGTH)
@@ -75,7 +80,9 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
     }
 
     private fun deriveKey(password: ByteArray, salt: ByteArray): ByteArray {
-        val passwordChars = String(password, Charsets.UTF_8).toCharArray()
+        val charBuffer = Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(password))
+        val passwordChars = CharArray(charBuffer.remaining())
+        charBuffer.get(passwordChars)
         val keySpec = PBEKeySpec(passwordChars, salt, PBKDF2_ITERATIONS, KEY_LENGTH_BITS)
         return try {
             val factory = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM)
@@ -83,6 +90,9 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
         } finally {
             keySpec.clearPassword()
             passwordChars.fill('\u0000')
+            if (charBuffer.hasArray()) {
+                charBuffer.array().fill('\u0000')
+            }
         }
     }
 

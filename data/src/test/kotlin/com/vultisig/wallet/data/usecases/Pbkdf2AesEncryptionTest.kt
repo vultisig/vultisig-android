@@ -78,14 +78,33 @@ class Pbkdf2AesEncryptionTest {
 
     @Test
     fun `decrypts legacy GCM backup whose first IV byte is 0x02`() {
-        var legacyCiphertext: ByteArray
-        do {
-            legacyCiphertext =
+        val maxAttempts = 10_000
+        var legacyCiphertext: ByteArray? = null
+        var attempts = 0
+        while (legacyCiphertext == null && attempts < maxAttempts) {
+            val candidate =
                 legacyAes.encrypt(originalInput.toByteArray(Charsets.UTF_8), password.toByteArray())
-        } while (legacyCiphertext[0] != 0x02.toByte())
+            if (candidate[0] == 0x02.toByte()) {
+                legacyCiphertext = candidate
+            }
+            attempts++
+        }
+        assertNotNull(
+            legacyCiphertext,
+            "Could not produce a legacy ciphertext starting with 0x02 in $maxAttempts attempts",
+        )
 
         val decrypted = pbkdf2Aes.decrypt(legacyCiphertext, password.toByteArray())
         assertNotNull(decrypted)
         assertEquals(originalInput, decrypted.toString(Charsets.UTF_8))
+    }
+
+    @Test
+    fun `returns null for PBKDF2 payload smaller than header plus tag`() {
+        val magic = byteArrayOf(0x56, 0x4C, 0x54, 0x02) // "VLT\x02"
+        val tooShort = magic + ByteArray(10)
+
+        val decrypted = pbkdf2AesNoLegacy.decrypt(tooShort, password.toByteArray())
+        assertNull(decrypted)
     }
 }
