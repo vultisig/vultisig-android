@@ -179,7 +179,7 @@ private fun ImportSeedphraseStepIcon() {
     ) {
         UiIcon(
             drawableResId = R.drawable.import_seed,
-            tint = Color(0xFF28BBC1),
+            tint = Theme.v2.colors.buttons.ctaPrimary,
             contentDescription = null,
             size = 18.dp,
         )
