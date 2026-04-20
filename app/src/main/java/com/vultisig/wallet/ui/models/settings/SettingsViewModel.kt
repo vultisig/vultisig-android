@@ -264,10 +264,10 @@ constructor(
                         items =
                             listOf(
                                 Notifications,
+                                ReferralCode,
                                 Language("English"),
                                 Currency("USD"),
                                 AddressBook,
-                                ReferralCode,
                             ),
                     ),
                     SettingsGroupUiModel(
@@ -280,7 +280,7 @@ constructor(
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.vultisig_community),
-                        items = listOf(Twitter, Vult, Discord, Github, VultisigWebsite),
+                        items = listOf(Twitter, Discord, Github, VultisigWebsite),
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.settings_screen_legal),
