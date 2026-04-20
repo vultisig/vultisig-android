@@ -443,6 +443,7 @@
     <string name="swap_screen_invalid_vault">Transaction will likely fail, vault could not be loaded.</string>
     <string name="edit_address_title">Edit Address</string>
     <string name="join_keysign_failed_connect_to_server">Failed to connect to server</string>
+    <string name="join_keysign_relay_unavailable">Relay server unavailable, please try again</string>
     <string name="network_connection_lost">Network connection lost. Please check your internet connection</string>
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
 
@@ -1069,13 +1070,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Enter your seed phrase</string>
-    <string name="import_seedphrase_subtitle">Enter your 12 or 24 word recovery phrase</string>
-    <string name="import_seedphrase_label">Seed Phrase</string>
-    <string name="import_seedphrase_hint">Enter your recovery phrase…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d words</item>
-        <item quantity="other">%1$d / %2$d words</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Leave a space between each word. Seed phrases of %1$s are supported.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 or 24 words</string>
+    <string name="import_seedphrase_hint">Enter the 12 or 24 words of your seedphrase</string>
     <string name="import_seedphrase_invalid_word_count">You entered %1$s words. Seed phrase must be 12 or 24</string>
     <string name="import_seedphrase_invalid_phrase">Invalid seed phrase</string>
     <string name="import_seedphrase_already_imported">This seed phrase has already been imported</string>

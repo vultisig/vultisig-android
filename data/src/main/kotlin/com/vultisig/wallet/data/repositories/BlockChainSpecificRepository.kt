@@ -42,6 +42,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
@@ -468,13 +469,49 @@ constructor(
 
             TokenStandard.SUI ->
                 coroutineScope {
-                    val gasPriceDeferred = async { suiApi.getReferenceGasPrice() }
                     val coinsDeferred = async { suiApi.getAllCoins(address) }
+                    val transfer =
+                        Transfer(
+                            coin = token,
+                            vault = VaultData("", ""),
+                            amount = tokenAmountValue ?: BigInteger.ZERO,
+                            to = dstAddress ?: address,
+                        )
 
+                    suspend fun paddedDefaultSuiFees(): GasFees {
+                        val price = suiApi.getReferenceGasPrice()
+                        val padded = SUI_DEFAULT_GAS_BUDGET.increaseByPercent(15)
+                        return GasFees(price = price, limit = padded, amount = padded)
+                    }
+
+                    val suiFeesDeferred = async {
+                        try {
+                            when (val fees = feeServiceComposite.calculateFees(transfer)) {
+                                is GasFees -> fees
+                                else -> {
+                                    Timber.w(
+                                        "Unexpected fee type %s for SUI; using padded default gas budget",
+                                        fees::class.simpleName,
+                                    )
+                                    paddedDefaultSuiFees()
+                                }
+                            }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Timber.w(
+                                e,
+                                "SUI fee estimation failed; using padded default gas budget",
+                            )
+                            paddedDefaultSuiFees()
+                        }
+                    }
+
+                    val suiFees = suiFeesDeferred.await()
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Sui(
-                            referenceGasPrice = gasPriceDeferred.await(),
-                            gasBudget = SUI_DEFAULT_GAS_BUDGET,
+                            referenceGasPrice = suiFees.price,
+                            gasBudget = suiFees.limit,
                             coins = coinsDeferred.await(),
                         ),
                         utxos = emptyList(),

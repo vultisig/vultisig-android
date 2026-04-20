@@ -22,15 +22,20 @@ import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.Fee
+import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.utils.increaseByPercent
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -146,9 +151,193 @@ internal class BlockChainSpecificRepositoryImplTest {
         )
     }
 
+    @Test
+    fun `SUI specific uses GasFees limit and price from fee service`() = runTest {
+        val simulatedBudget = BigInteger("4200000")
+        val simulatedPrice = BigInteger("750")
+        val result =
+            repository(
+                    suiApi = suiApi(referenceGasPrice = BigInteger("1")),
+                    suiFeeService = suiFeeService(limit = simulatedBudget, price = simulatedPrice),
+                )
+                .getSpecific(
+                    chain = Chain.Sui,
+                    address = SOURCE_ADDRESS,
+                    token = suiCoin(),
+                    gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                )
+
+        val specific = result.blockChainSpecific as BlockChainSpecific.Sui
+        assertEquals(simulatedBudget, specific.gasBudget)
+        assertEquals(simulatedPrice, specific.referenceGasPrice)
+    }
+
+    @Test
+    fun `SUI specific falls back to padded default budget when fee service throws`() = runTest {
+        val fallbackPrice = BigInteger("500")
+        val result =
+            repository(
+                    suiApi = suiApi(referenceGasPrice = fallbackPrice),
+                    suiFeeService = failingFeeService(),
+                )
+                .getSpecific(
+                    chain = Chain.Sui,
+                    address = SOURCE_ADDRESS,
+                    token = suiCoin(),
+                    gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                )
+
+        val specific = result.blockChainSpecific as BlockChainSpecific.Sui
+        assertEquals(SUI_DEFAULT_GAS_BUDGET.increaseByPercent(15), specific.gasBudget)
+        assertEquals(fallbackPrice, specific.referenceGasPrice)
+    }
+
+    @Test
+    fun `SUI specific uses default fees when primary throws but default succeeds`() = runTest {
+        val defaultBudget = BigInteger("3450000")
+        val defaultPrice = BigInteger("620")
+        val result =
+            repository(
+                    suiApi = suiApi(referenceGasPrice = BigInteger("1")),
+                    suiFeeService =
+                        suiFeeService(
+                            limit = BigInteger.ZERO,
+                            primaryThrows = true,
+                            defaultLimit = defaultBudget,
+                            defaultPrice = defaultPrice,
+                        ),
+                )
+                .getSpecific(
+                    chain = Chain.Sui,
+                    address = SOURCE_ADDRESS,
+                    token = suiCoin(),
+                    gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                )
+
+        val specific = result.blockChainSpecific as BlockChainSpecific.Sui
+        assertEquals(defaultBudget, specific.gasBudget)
+        assertEquals(defaultPrice, specific.referenceGasPrice)
+    }
+
+    @Test
+    fun `SUI specific falls back to padded default when fee service returns unexpected type`() =
+        runTest {
+            val fallbackPrice = BigInteger("500")
+            val result =
+                repository(
+                        suiApi = suiApi(referenceGasPrice = fallbackPrice),
+                        suiFeeService = basicFeeService(),
+                    )
+                    .getSpecific(
+                        chain = Chain.Sui,
+                        address = SOURCE_ADDRESS,
+                        token = suiCoin(),
+                        gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                        isSwap = false,
+                        isMaxAmountEnabled = false,
+                        isDeposit = false,
+                    )
+
+            val specific = result.blockChainSpecific as BlockChainSpecific.Sui
+            assertEquals(SUI_DEFAULT_GAS_BUDGET.increaseByPercent(15), specific.gasBudget)
+            assertEquals(fallbackPrice, specific.referenceGasPrice)
+        }
+
+    @Test
+    fun `SUI specific rethrows CancellationException without falling back`() = runTest {
+        assertFailsWith<CancellationException> {
+            repository(
+                    suiApi = suiApi(referenceGasPrice = BigInteger("500")),
+                    suiFeeService = cancellingFeeService(),
+                )
+                .getSpecific(
+                    chain = Chain.Sui,
+                    address = SOURCE_ADDRESS,
+                    token = suiCoin(),
+                    gasFee = TokenValue(BigInteger.ONE, suiCoin()),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                )
+        }
+    }
+
+    private fun suiApi(referenceGasPrice: BigInteger): SuiApi = mockk {
+        coEvery { getReferenceGasPrice() } returns referenceGasPrice
+        coEvery { getAllCoins(any()) } returns emptyList()
+    }
+
+    private fun suiFeeService(
+        limit: BigInteger,
+        price: BigInteger = BigInteger.ZERO,
+        defaultPrice: BigInteger = price,
+        primaryThrows: Boolean = false,
+        defaultLimit: BigInteger = BigInteger.ZERO,
+    ): FeeService =
+        object : FeeService {
+            override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
+                if (primaryThrows) throw java.io.IOException("sui rpc down")
+                return GasFees(price = price, limit = limit, amount = limit)
+            }
+
+            override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee =
+                GasFees(price = defaultPrice, limit = defaultLimit, amount = defaultLimit)
+        }
+
+    private fun cancellingFeeService(): FeeService =
+        object : FeeService {
+            override suspend fun calculateFees(transaction: BlockchainTransaction): Fee =
+                throw CancellationException("sui fee calculation cancelled")
+
+            override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee =
+                throw CancellationException("sui default fee calculation cancelled")
+        }
+
+    private fun failingFeeService(): FeeService =
+        object : FeeService {
+            override suspend fun calculateFees(transaction: BlockchainTransaction): Fee =
+                throw java.io.IOException("primary rpc down")
+
+            override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee =
+                throw java.io.IOException("default rpc down")
+        }
+
+    private fun basicFeeService(): FeeService =
+        object : FeeService {
+            override suspend fun calculateFees(transaction: BlockchainTransaction): Fee =
+                BasicFee(BigInteger.ZERO)
+
+            override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee =
+                BasicFee(BigInteger.ZERO)
+        }
+
+    private fun suiCoin() =
+        Coin(
+            chain = Chain.Sui,
+            ticker = "SUI",
+            logo = "",
+            address = SOURCE_ADDRESS,
+            decimal = 9,
+            hexPublicKey = "pub",
+            priceProviderID = "sui",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     private fun repository(
-        evmApi: EvmApi,
-        evmFeeService: FeeService,
+        evmApi: EvmApi = mockk<EvmApi>(relaxed = true),
+        evmFeeService: FeeService = NoOpFeeService,
+        suiApi: SuiApi = mockk<SuiApi>(relaxed = true),
+        suiFeeService: FeeService = NoOpFeeService,
     ): BlockChainSpecificRepositoryImpl {
         val evmApiFactory =
             object : EvmApiFactory {
@@ -165,7 +354,7 @@ internal class BlockChainSpecificRepositoryImplTest {
             dashApi = mockk<DashApi>(relaxed = true),
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
             bittensorApi = mockk<BittensorApi>(relaxed = true),
-            suiApi = mockk<SuiApi>(relaxed = true),
+            suiApi = suiApi,
             tonApi = mockk<TonApi>(relaxed = true),
             rippleApi = mockk<RippleApi>(relaxed = true),
             tronApi = mockk<TronApi>(relaxed = true),
@@ -177,7 +366,7 @@ internal class BlockChainSpecificRepositoryImplTest {
                     polkadotFeeService = NoOpFeeService,
                     bittensorFeeService = NoOpFeeService,
                     rippleFeeService = NoOpFeeService,
-                    suiFeeService = NoOpFeeService,
+                    suiFeeService = suiFeeService,
                     tonFeeService = NoOpFeeService,
                     tronFeeService = NoOpFeeService,
                     solanaFeeService = NoOpFeeService,

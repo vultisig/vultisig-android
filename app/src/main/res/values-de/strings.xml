@@ -344,6 +344,7 @@
     <string name="swap_screen_invalid_quote_calculation">Angebotsberechnung fehlgeschlagen</string>
     <string name="edit_address_title">Adresse bearbeiten</string>
     <string name="join_keysign_failed_connect_to_server">Verbindung zum Server fehlgeschlagen</string>
+    <string name="join_keysign_relay_unavailable">Relay-Server nicht verfügbar, bitte versuchen Sie es erneut</string>
     <string name="network_connection_lost">Netzwerkverbindung verloren. Bitte überprüfen Sie Ihre Internetverbindung</string>
     <string name="send_form_polka_reaping_warning">Stellen Sie sicher, dass Sie genügend Geld übrig lassen, um die Gebühren zu decken. Wenn ein Kontostand unter 1 DOT (Existential Deposit) fällt, wird das Konto deaktiviert (geerntet) und alle verbleibenden Gelder gehen verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung reaktivieren, die größer als die Existenzeinzahlung ist. Dadurch werden die verlorenen Gelder jedoch nicht wiederhergestellt.</string>
     <!-- Push Notifications -->
@@ -993,13 +994,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Seed-Phrase eingeben</string>
-    <string name="import_seedphrase_subtitle">Geben Sie Ihre Wiederherstellungsphrase mit 12 oder 24 Wörtern ein</string>
-    <string name="import_seedphrase_label">Seed-Phrase</string>
-    <string name="import_seedphrase_hint">Wiederherstellungsphrase eingeben…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d Wörter</item>
-        <item quantity="other">%1$d / %2$d Wörter</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Lassen Sie zwischen jedem Wort ein Leerzeichen. Seed-Phrasen mit %1$s werden unterstützt.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 oder 24 Wörtern</string>
+    <string name="import_seedphrase_hint">Geben Sie die 12 oder 24 Wörter Ihrer Seed-Phrase ein</string>
     <string name="import_seedphrase_invalid_word_count">Sie haben %1$s Wörter eingegeben. Die Seed-Phrase muss 12 oder 24 Wörter haben</string>
     <string name="import_seedphrase_invalid_phrase">Ungültige Seed-Phrase</string>
     <string name="import_seedphrase_already_imported">Diese Seed-Phrase wurde bereits importiert</string>

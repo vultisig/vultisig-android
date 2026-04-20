@@ -639,6 +639,7 @@
 
     <!-- Join Keysign Failed -->
     <string name="join_keysign_failed_connect_to_server">连接服务器失败</string>
+    <string name="join_keysign_relay_unavailable">中继服务器不可用，请重试</string>
 
     <!-- Network Connection -->
     <string name="network_connection_lost">网络连接丢失。请检查您的互联网连接</string>
@@ -1323,12 +1324,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">输入您的助记词</string>
-    <string name="import_seedphrase_subtitle">输入您的12或24个单词的恢复短语</string>
-    <string name="import_seedphrase_label">助记词</string>
-    <string name="import_seedphrase_hint">输入您的恢复短语…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="other">%1$d / %2$d 个单词</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">请在每个单词之间留一个空格。支持%1$s的助记词。</string>
+    <string name="import_seedphrase_subtitle_highlight">12 或 24 个单词</string>
+    <string name="import_seedphrase_hint">输入您助记词的 12 或 24 个单词</string>
     <string name="import_seedphrase_invalid_word_count">您输入了 %1$s 个单词。助记词必须是 12 或 24 个单词</string>
     <string name="import_seedphrase_invalid_phrase">无效的助记词</string>
     <string name="import_seedphrase_already_imported">该助记词已被导入</string>

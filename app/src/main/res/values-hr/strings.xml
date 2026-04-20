@@ -343,6 +343,7 @@
     <string name="swap_screen_invalid_gas_fee_calculation">Izračun naknade za plin nije uspio</string>
     <string name="swap_screen_invalid_quote_calculation">Izračun ponude nije uspio</string>
     <string name="join_keysign_failed_connect_to_server">Povezivanje s poslužiteljem nije uspjelo</string>
+    <string name="join_keysign_relay_unavailable">Relay poslužitelj nije dostupan, pokušajte ponovo</string>
     <string name="network_connection_lost">Mrežna veza izgubljena. Provjerite svoju internetsku vezu</string>
     <string name="send_form_polka_reaping_warning">Ostavite dovoljno sredstava za pokrivanje naknada. Ako stanje na računu padne ispod 1 DOT (egzistencijalni depozit), račun će biti deaktiviran (požnjet) i sva preostala sredstva bit će izgubljena. Adresu možete ponovno aktivirati s novim pologom većim od egzistencijalnog pologa u bilo kojem trenutku. Međutim, to neće vratiti izgubljena sredstva.</string>
     <string name="edit_address_title">Uredi adresu</string>
@@ -997,14 +998,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Unesite svoju frazu za oporavak</string>
-    <string name="import_seedphrase_subtitle">Unesite svoju frazu za oporavak od 12 ili 24 riječi</string>
-    <string name="import_seedphrase_label">Fraza za oporavak</string>
-    <string name="import_seedphrase_hint">Unesite svoju frazu za oporavak…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d riječi</item>
-        <item quantity="few">%1$d / %2$d riječi</item>
-        <item quantity="other">%1$d / %2$d riječi</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Ostavite razmak između svake riječi. Podržane su fraze za oporavak od %1$s.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 ili 24 riječi</string>
+    <string name="import_seedphrase_hint">Unesite 12 ili 24 riječi vaše fraze za oporavak</string>
     <string name="import_seedphrase_invalid_word_count">Unijeli ste %1$s riječi. Fraza za oporavak mora imati 12 ili 24 riječi.</string>
     <string name="import_seedphrase_invalid_phrase">Nevažeća fraza za oporavak</string>
     <string name="import_seedphrase_already_imported">Ova fraza za oporavak je već uvezena</string>
