@@ -434,6 +434,7 @@
     <string name="swap_screen_invalid_vault">거래가 실패할 가능성이 높습니다. 볼트를 불러올 수 없습니다.</string>
     <string name="edit_address_title">주소 수정</string>
     <string name="join_keysign_failed_connect_to_server">서버 연결 실패</string>
+    <string name="join_keysign_relay_unavailable">릴레이 서버를 사용할 수 없습니다. 다시 시도해 주세요</string>
     <string name="network_connection_lost">네트워크 연결이 끊어졌습니다. 인터넷 연결을 확인해 주세요</string>
     <string name="send_form_polka_reaping_warning">수수료를 충당할 충분한 자금을 남겨두세요. 계정 잔액이 1 DOT(최소 예치금) 아래로 떨어지면 계정이 비활성화(수확)되고 남은 자금이 손실됩니다. 언제든지 최소 예치금보다 큰 새 입금으로 주소를 재활성화할 수 있습니다. 그러나 손실된 자금은 복구되지 않습니다.</string>
 

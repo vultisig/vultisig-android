@@ -342,6 +342,7 @@
     <string name="swap_screen_invalid_gas_fee_calculation">Berekening van gasvergoeding mislukt</string>
     <string name="swap_screen_invalid_quote_calculation">Berekening offerte mislukt</string>
     <string name="join_keysign_failed_connect_to_server">Verbinding met server mislukt</string>
+    <string name="join_keysign_relay_unavailable">Relayserver niet beschikbaar, probeer het opnieuw</string>
     <string name="network_connection_lost">Netwerkverbinding verbroken. Controleer uw internetverbinding.</string>
     <string name="send_form_polka_reaping_warning">Zorg ervoor dat u voldoende geld achterlaat om de kosten te dekken. Als een rekeningsaldo onder 1 DOT (Existential Deposit) zakt, wordt de rekening gedeactiveerd (gereapeerd) en gaan alle resterende fondsen verloren. U kunt het adres op elk gewenst moment reactiveren met een nieuwe storting die groter is dan de existentiële storting. Dit zal echter niet de verloren fondsen terugkrijgen.</string>
     <string name="edit_address_title">Adres bewerken</string>

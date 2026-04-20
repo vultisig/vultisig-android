@@ -639,6 +639,7 @@
 
     <!-- Join Keysign Failed -->
     <string name="join_keysign_failed_connect_to_server">连接服务器失败</string>
+    <string name="join_keysign_relay_unavailable">中继服务器不可用，请重试</string>
 
     <!-- Network Connection -->
     <string name="network_connection_lost">网络连接丢失。请检查您的互联网连接</string>

@@ -343,6 +343,7 @@
     <string name="swap_screen_invalid_quote_calculation">Расчет котировки не удался</string>
     <string name="edit_address_title">Изменить адрес</string>
     <string name="join_keysign_failed_connect_to_server">Не удалось подключиться к серверу</string>
+    <string name="join_keysign_relay_unavailable">Ретранслятор недоступен, повторите попытку</string>
     <string name="network_connection_lost">Сетевое соединение потеряно. Проверьте подключение к интернету</string>
     <string name="send_form_polka_reaping_warning">Убедитесь, что вы оставили достаточно средств для покрытия сборов. Если баланс счета опустится ниже 1 DOT (экзистенциальный депозит), счет будет деактивирован (изъят), а все оставшиеся средства будут потеряны. Вы можете повторно активировать адрес с новым депозитом, превышающим экзистенциальный депозит, в любое время. Однако это не вернет потерянные средства.</string>
     <!-- Push Notifications -->
