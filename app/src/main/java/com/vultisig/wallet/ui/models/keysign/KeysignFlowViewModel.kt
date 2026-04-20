@@ -33,12 +33,11 @@ import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isSecureVault
-import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
+import com.vultisig.wallet.data.models.tokenLogoRes
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -312,12 +311,8 @@ constructor(
                     }
                 }
 
-            val srcLogoModel =
-                keysignPayload?.coin?.let { (getCoinLogo(it.logo) as? Int) ?: it.chain.logo }
-            val dstLogoModel =
-                keysignPayload?.swapPayload?.dstToken?.let {
-                    (getCoinLogo(it.logo) as? Int) ?: it.chain.logo
-                }
+            val srcLogoModel = keysignPayload?.coin?.tokenLogoRes()
+            val dstLogoModel = keysignPayload?.swapPayload?.dstToken?.tokenLogoRes()
             uiState.update {
                 it.copy(
                     vault = vault,
