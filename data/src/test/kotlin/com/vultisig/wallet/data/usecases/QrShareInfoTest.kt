@@ -78,6 +78,7 @@ internal class QrShareInfoTest {
             )
 
         assertEquals(a, b)
+        assertEquals(a.hashCode(), b.hashCode())
     }
 
     @Test
