@@ -28,7 +28,6 @@ import com.vultisig.wallet.ui.models.settings.SettingsItem.ShareTheApp
 import com.vultisig.wallet.ui.models.settings.SettingsItem.TermsOfService
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Twitter
 import com.vultisig.wallet.ui.models.settings.SettingsItem.VaultSetting
-import com.vultisig.wallet.ui.models.settings.SettingsItem.Vult
 import com.vultisig.wallet.ui.models.settings.SettingsItem.VultisigWebsite
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -152,15 +151,6 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.discord),
                 leadingIcon = R.drawable.discord,
-                trailingIcon = R.drawable.ic_small_caret_right,
-            )
-        )
-
-    data object Vult :
-        SettingsItem(
-            SettingsItemUiModel(
-                title = UiText.StringResource(R.string.vult),
-                leadingIcon = R.drawable.vult,
                 trailingIcon = R.drawable.ic_small_caret_right,
             )
         )
@@ -309,7 +299,6 @@ constructor(
             }
 
             Discord -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.DISCORD))
-            Vult -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_TOKEN))
             Faq -> {
                 viewModelScope.launch { navigator.route(Route.FAQSetting) }
             }
