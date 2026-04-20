@@ -989,13 +989,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Voer uw herstelzin in</string>
-    <string name="import_seedphrase_subtitle">Voer uw herstelzin van 12 of 24 woorden in</string>
-    <string name="import_seedphrase_label">Herstelzin</string>
-    <string name="import_seedphrase_hint">Voer uw herstelzin in…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d woorden</item>
-        <item quantity="other">%1$d / %2$d woorden</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Laat een spatie tussen elk woord. Herstelzinnen van %1$s worden ondersteund.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 of 24 woorden</string>
+    <string name="import_seedphrase_hint">Voer de 12 of 24 woorden van uw herstelzin in</string>
     <string name="import_seedphrase_invalid_word_count">Je hebt %1$s woorden ingevoerd. De herstelzin moet 12 of 24 woorden bevatten</string>
     <string name="import_seedphrase_invalid_phrase">Ongeldige herstelzin</string>
     <string name="import_seedphrase_already_imported">Deze herstelzin is al geïmporteerd</string>
