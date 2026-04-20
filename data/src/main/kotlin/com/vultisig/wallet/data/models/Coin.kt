@@ -103,15 +103,19 @@ fun Coin.swapAssetName(): String =
                 (contractAddress.contains("factory/") || contractAddress.contains("ibc/"))
         ) {
             "${chain.swapAssetName()}.${ticker}"
-        } else if (chain == Chain.ThorChain)
-            if (contractAddress.contains(Regex("""\w+-\w+"""))) contractAddress
+        } else if (chain == Chain.ThorChain) {
+            if (contractAddress.contains(Regex("""^\w+-\w+$"""))) contractAddress
             else "${chain.swapAssetName()}.${ticker}"
-        else "${chain.swapAssetName()}.${ticker}-${contractAddress}"
+        } else {
+            "${chain.swapAssetName()}.${ticker}-${contractAddress}"
+        }
     }
 
 /**
  * Normalizes [swapAssetName] for same-asset identity comparisons. EVM contract addresses are
- * lowercased to handle checksum-casing differences from QR payloads.
+ * lowercased to handle EIP-55 checksum-casing differences from QR payloads. Non-EVM chains (e.g.
+ * Cosmos ibc/, Kujira factory/) use case-sensitive canonical forms as returned by the THORChain API
+ * and are not altered.
  */
 fun Coin.swapAssetComparisonName(): String {
     val name = swapAssetName()
