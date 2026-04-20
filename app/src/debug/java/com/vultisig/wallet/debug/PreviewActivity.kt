@@ -14,11 +14,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
+import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
@@ -42,6 +46,7 @@ import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
+import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
@@ -74,6 +79,7 @@ class PreviewActivity : ComponentActivity() {
                     "solana_display" -> SolanaDisplayPreview()
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
+                    "defi_account_list" -> DeFiAccountListPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -374,3 +380,86 @@ private fun SwapErrorPreview() {
         srcAmountTextFieldState = TextFieldState("1000"),
     )
 }
+
+@Composable
+private fun DeFiAccountListPreview() {
+    val accounts =
+        listOf(
+            deFiAccount(
+                chain = Chain.ThorChain,
+                chainName = "THORChain",
+                address = "thor1mtqtupwgjwn397w3dx9fqmqgzrjcal5yxz8q7v",
+                fiat = "$32,201.15",
+                native = "32,020.12 RUNE",
+            ),
+            deFiAccount(
+                chain = Chain.Ethereum,
+                chainName = "Ethereum",
+                address = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+                fiat = "$7,400.00",
+                assets = 4,
+            ),
+            deFiAccount(
+                chain = Chain.MayaChain,
+                chainName = "Maya",
+                address = "maya1mtqtupwgjwn397w3dx9fqmqgzrjcal5yxz8q7v",
+                fiat = "$1,240.50",
+                assets = 3,
+            ),
+            deFiAccount(
+                chain = Chain.Solana,
+                chainName = "Solana",
+                address = "8FE27ioQh3T7o22QsYVT5Re8NnHFqmFNbdqwiF3ywuZQ",
+                fiat = "$990.00",
+                assets = 3,
+            ),
+            deFiAccount(
+                chain = Chain.Tron,
+                chainName = "Tron",
+                address = "TXYZopq123abc456def789ghi012jkl345mno678",
+                fiat = "$865.75",
+                native = "10,829.10 TRX",
+            ),
+        )
+
+    androidx.compose.foundation.layout.Box(
+        modifier =
+            Modifier.fillMaxSize()
+                .background(com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.primary)
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+    ) {
+        androidx.compose.foundation.layout.Column(
+            modifier =
+                Modifier.background(
+                    color = com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.secondary,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                )
+        ) {
+            AccountList(
+                onAccountClick = {},
+                snackbarState = rememberVsSnackbarState(),
+                accounts = accounts,
+                isBalanceVisible = true,
+                showAddress = false,
+            )
+        }
+    }
+}
+
+private fun deFiAccount(
+    chain: Chain,
+    chainName: String,
+    address: String,
+    fiat: String,
+    native: String? = null,
+    assets: Int = 0,
+): AccountUiModel =
+    AccountUiModel(
+        model = Address(chain = chain, address = address, accounts = emptyList()),
+        chainName = chainName,
+        logo = chain.logo,
+        address = address,
+        nativeTokenAmount = native,
+        fiatAmount = fiat,
+        assetsSize = assets,
+    )

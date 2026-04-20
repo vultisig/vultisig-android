@@ -344,6 +344,7 @@
     <string name="swap_screen_invalid_quote_calculation">Falha no cálculo da cotação</string>
     <string name="edit_address_title">Editar endereço</string>
     <string name="join_keysign_failed_connect_to_server">Falha ao ligar ao servidor</string>
+    <string name="join_keysign_relay_unavailable">Servidor de retransmissão indisponível, tente novamente</string>
     <string name="network_connection_lost">Ligação de rede perdida. Verifique a sua ligação com a Internet</string>
     <string name="send_form_polka_reaping_warning">Certifique-se de que deixa fundos suficientes para cobrir as taxas. Se o saldo de uma conta cair abaixo de 1 DOT (Depósito Existencial), a conta será desativada (recolhida) e quaisquer fundos remanescentes serão perdidos. Pode reativar o endereço com um novo depósito maior do que o depósito existencial a qualquer momento. No entanto, isto não recuperará os fundos perdidos.</string>
     <!-- Push Notifications -->
@@ -507,6 +508,9 @@
     <string name="remove_pool_amount_label">Montante</string>
     <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">Apostar CACAO</string>
+    <string name="unstake_cacao_title">Desapostar CACAO</string>
+    <string name="unstake_cacao_available_format">Disponível: %1$s</string>
     <string name="cacaopool_only_cacao_supported">Apenas o token CACAO é suportado neste pool</string>
     <string name="referral_create_info_title">Programa de referência</string>
     <string name="referral_create_info_content">O programa de referência aplica-se a trocas THORChain e é feito com base no melhor esforço. Você precisa registrar um THORName para usar a referência Vultisig. A taxa de registro é de 10 RUNE e 1 RUNE por cada ano, que é paga à rede THORChain.</string>
