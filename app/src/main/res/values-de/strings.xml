@@ -303,6 +303,7 @@
     <string name="reshare_start_join_reshare_button">Reshare beitreten</string>
     <string name="deposit_error_invalid_lpunits">LP-Einheiten sind ungültig</string>
     <string name="deposit_error_invalid_assets">Assets ist ungültig</string>
+    <string name="deposit_error_chain_not_enabled">Enable %1$s in this vault to withdraw %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Diese Einlage hat ihre Fälligkeit noch nicht erreicht.</string>
     <string name="deposit_form_screen_assets">Vermögenswert</string>
     <string name="deposit_form_screen_asset_selection">Anlagenauswahl</string>

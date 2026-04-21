@@ -392,6 +392,7 @@
     <string name="reshare_start_join_reshare_button">재공유 참여</string>
     <string name="deposit_error_invalid_lpunits">LP 유닛이 유효하지 않습니다</string>
     <string name="deposit_error_invalid_assets">자산이 유효하지 않습니다</string>
+    <string name="deposit_error_chain_not_enabled">Enable %1$s in this vault to withdraw %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">이 예치는 아직 만기에 도달하지 않았습니다</string>
     <string name="deposit_form_screen_assets">자산</string>
     <string name="deposit_form_screen_asset_selection">자산 선택</string>
