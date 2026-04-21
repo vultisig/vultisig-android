@@ -40,7 +40,8 @@ internal fun TronResourceTypeTab(
         )
         Row(
             modifier =
-                Modifier.fillMaxWidth()
+                Modifier
+                    .fillMaxWidth()
                     .clip(RoundedCornerShape(88.dp))
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .padding(4.dp),
