@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.RippleFees
-import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.Swap
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Deferred
@@ -32,8 +32,10 @@ import kotlinx.coroutines.supervisorScope
  */
 class RippleFeeService @Inject constructor(private val rippleApi: RippleApi) : FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = supervisorScope {
-        require(transaction is Transfer) {
-            "Invalid Transaction type: ${transaction::class.simpleName}"
+        // For a swap, `to` is the user's own address, so the account-activation probe would always
+        // return zero — skip the fetchAccountsInfo RPC and return just the dynamic network fee.
+        if (transaction is Swap) {
+            return@supervisorScope calculateDefaultFees(transaction)
         }
         val toAddress = transaction.to
 

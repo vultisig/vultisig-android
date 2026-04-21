@@ -5,15 +5,11 @@ import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.Fee
-import com.vultisig.wallet.data.blockchain.model.Transfer
 import javax.inject.Inject
 import kotlinx.coroutines.coroutineScope
 
 class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory) : FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = coroutineScope {
-        require(transaction is Transfer) {
-            "Transaction type not supported ${transaction::class.simpleName}"
-        }
         val chain = transaction.coin.chain
         val coin = transaction.coin
         val toAddress = transaction.to
