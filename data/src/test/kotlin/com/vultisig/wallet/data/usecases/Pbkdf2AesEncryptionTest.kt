@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
-import io.ktor.util.decodeBase64Bytes
+import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -53,7 +53,7 @@ class Pbkdf2AesEncryptionTest {
     fun `decrypts legacy GCM format`() {
         val encryptedBase64 = "zPMOwnPVMFKMf9LOIFkyqBOr8AC1SIdQ34Ruk5gmRqxZ+lIyK7zM5/1NUjXlAg=="
         val decrypted =
-            pbkdf2Aes.decrypt(encryptedBase64.decodeBase64Bytes(), password.toByteArray())
+            pbkdf2Aes.decrypt(Base64.getDecoder().decode(encryptedBase64), password.toByteArray())
         assertNotNull(decrypted)
         assertEquals(originalInput, decrypted.toString(Charsets.UTF_8))
     }

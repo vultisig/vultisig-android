@@ -28,6 +28,7 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
 
         val keyBytes = deriveKey(password, salt)
         val keySpec = SecretKeySpec(keyBytes, AES)
+        keyBytes.fill(0)
 
         val iv = ByteArray(IV_LENGTH)
         random.nextBytes(iv)
@@ -73,6 +74,7 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
 
         val keyBytes = deriveKey(password, salt)
         val keySpec = SecretKeySpec(keyBytes, AES)
+        keyBytes.fill(0)
 
         val cipher = Cipher.getInstance(AES_GCM_NO_PADDING)
         cipher.init(Cipher.DECRYPT_MODE, keySpec, GCMParameterSpec(GCM_TAG_BITS, iv))
