@@ -16,9 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
@@ -40,8 +38,7 @@ internal fun TronResourceTypeTab(
         )
         Row(
             modifier =
-                Modifier
-                    .fillMaxWidth()
+                Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(88.dp))
                     .background(Theme.v2.colors.backgrounds.secondary)
                     .padding(4.dp),
@@ -87,11 +84,7 @@ private fun ResourceTypeSegment(
             modifier
                 .clip(RoundedCornerShape(77.dp))
                 .background(background)
-                .semantics {
-                    selected = isSelected
-                    role = Role.Tab
-                }
-                .clickable(onClick = onClick)
+                .clickable { if (!isSelected) onClick() }
                 .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
