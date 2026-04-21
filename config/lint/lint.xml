@@ -48,8 +48,8 @@
     <issue id="UnusedIds" severity="warning" />
     <issue id="UnusedNamespace" severity="fatal" />
     <issue id="UnusedQuantity" severity="fatal" />
-    <issue id="UnusedResources" severity="warning" />
-    <issue id="UnusedTranslation" severity="warning" />
+    <issue id="UnusedResources" severity="error" />
+    <issue id="UnusedTranslation" severity="error" />
     <issue id="UnknownNullness" severity="fatal" />
     <issue id="VectorPath" severity="ignore" />
 </lint>
