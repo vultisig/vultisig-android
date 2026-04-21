@@ -181,6 +181,7 @@
     <string name="send_error_no_token">토큰이 선택되지 않았습니다</string>
     <string name="send_error_no_gas_fee">가스 수수료 없음</string>
     <string name="send_error_no_address">주소가 유효하지 않습니다</string>
+    <string name="deposit_error_chain_not_enabled">이 볼트에서 %2$s을(를) 출금하려면 %1$s을(를) 활성화하세요</string>
     <string name="send_error_no_amount">금액은 양수여야 합니다</string>
     <string name="send_error_invalid_operator_fee">운영자 수수료는 0에서 10000 베이시스 포인트 사이의 유효한 숫자여야 합니다</string>
     <string name="send_error_max_shares">금액이 잔액을 초과할 수 없습니다</string>
