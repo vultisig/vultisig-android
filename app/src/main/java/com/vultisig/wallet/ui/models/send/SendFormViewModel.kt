@@ -513,6 +513,7 @@ constructor(
         uiState.update { it.copy(tronResourceType = type) }
         applyTronStakingMemo(type)
         tokenAmountFieldState.clearText()
+        fiatAmountFieldState.clearText()
         uiState.update { it.copy(selectedAmountFraction = null) }
         if (defiType == DeFiNavActions.UNFREEZE_TRX) {
             updateTronFrozenBalanceDisplay(type)
@@ -1404,8 +1405,15 @@ constructor(
 
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance =
-                        getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
-                            ?: BigInteger.ZERO
+                        if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                            currentTronFrozenBalance()
+                                ?.movePointRight(selectedToken.decimal)
+                                ?.toBigInteger()
+                                ?: BigInteger.ZERO
+                        } else {
+                            getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
+                                ?: BigInteger.ZERO
+                        }
 
                     if (tokenAmountInt > availableTokenBalance) {
                         throw InvalidTransactionDataException(
