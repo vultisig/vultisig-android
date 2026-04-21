@@ -21,7 +21,6 @@ import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -328,8 +327,14 @@ internal class EthereumFeeServiceTest {
     // ---------- Error paths ----------
 
     @Test
-    fun `calculateFees rejects non-transfer transactions`() = runTest {
-        assertFailsWith<IllegalArgumentException> { service.calculateFees(swap(Chain.Ethereum)) }
+    fun `calculateFees uses default-fee path for swap transactions`() = runTest {
+        coEvery { evmApi.getBaseFee() } returns gwei(100)
+        stubFeeHistory(listOf(gwei(5)))
+
+        val fee = service.calculateFees(swap(Chain.Ethereum)) as Eip1559
+
+        assertEquals(DEFAULT_SWAP_LIMIT, fee.limit)
+        assertEquals(gwei(10), fee.networkPrice)
     }
 
     // ---------- Helpers ----------

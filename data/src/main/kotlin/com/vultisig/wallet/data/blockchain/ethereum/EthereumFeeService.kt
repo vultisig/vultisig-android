@@ -23,6 +23,9 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
     FeeService {
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
+        if (transaction is Swap) {
+            return calculateDefaultFees(transaction)
+        }
         require(transaction is Transfer) {
             "Invalid Transaction Type ${transaction::class.simpleName}"
         }

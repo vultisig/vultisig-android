@@ -9,7 +9,13 @@ import javax.inject.Inject
 import kotlinx.coroutines.coroutineScope
 
 class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory) : FeeService {
-    override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = coroutineScope {
+    override suspend fun calculateFees(transaction: BlockchainTransaction): Fee =
+        coroutineScope { estimateFee(transaction) }
+
+    override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee =
+        estimateFee(transaction)
+
+    private suspend fun estimateFee(transaction: BlockchainTransaction): Fee {
         val chain = transaction.coin.chain
         val coin = transaction.coin
         val toAddress = transaction.to
@@ -26,9 +32,5 @@ class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory)
             networkPrice = feeEstimate.maxFeePerGas,
             amount = feeEstimate.maxFeePerGas * feeEstimate.gasLimit,
         )
-    }
-
-    override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
-        error("Rpc Error: Can't fetch fees")
     }
 }
