@@ -198,7 +198,6 @@
     <string name="camera_permission_open_settings">Apri impostazioni</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">L\'indirizzo non è valido</string>
-    <string name="deposit_error_chain_not_enabled">Abilita %1$s in questo vault per prelevare %2$s</string>
     <string name="vault_settings_error_backup_file">si è verificato un errore</string>
     <string name="vault_settings_delete_vault_name">Nome Cassaforte:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">Chiave ECDSA:</string>

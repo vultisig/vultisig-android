@@ -198,7 +198,6 @@
     <string name="camera_permission_open_settings">Einstellungen öffnen</string>
     <string name="verify_transaction_value">Wert</string>
     <string name="send_error_no_address">Adresse ist ungültig</string>
-    <string name="deposit_error_chain_not_enabled">Aktivieren Sie %1$s in diesem Tresor, um %2$s abzuheben</string>
     <string name="vault_settings_error_backup_file">ein Fehler ist aufgetreten</string>
     <string name="vault_settings_delete_vault_name">Tresorname:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Schlüssel:</string>

@@ -198,7 +198,6 @@
     <string name="camera_permission_open_settings">Otvori postavke</string>
     <string name="verify_transaction_value">Vrijednost</string>
     <string name="send_error_no_address">Adresa je nevažeća</string>
-    <string name="deposit_error_chain_not_enabled">Omogućite %1$s u ovom sefu za podizanje %2$s</string>
     <string name="vault_settings_error_backup_file">dogodila se pogreška</string>
     <string name="vault_settings_delete_vault_name">Ime sefa:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA ključ:</string>

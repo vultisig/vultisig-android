@@ -198,7 +198,6 @@
     <string name="camera_permission_open_settings">Abrir configurações</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">Endereço inválido</string>
-    <string name="deposit_error_chain_not_enabled">Ative %1$s neste cofre para sacar %2$s</string>
     <string name="vault_settings_error_backup_file">um erro ocorreu</string>
     <string name="vault_settings_delete_vault_name">Nome do Cofre:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">Chave ECDSA:</string>
