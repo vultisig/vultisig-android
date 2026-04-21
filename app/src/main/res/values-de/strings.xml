@@ -463,6 +463,11 @@
     <string name="tron_defi_countdown_days">%1$d Tage, %2$d Std.</string>
     <string name="tron_defi_countdown_hours">%1$d Std., %2$d Min.</string>
     <string name="tron_defi_error_trx_not_in_vault">TRX-Coin nicht im Vault gefunden</string>
+    <string name="tron_freeze_screen_title">TRON für Ressource einfrieren</string>
+    <string name="tron_unfreeze_screen_title">TRON für Ressource entfrieren</string>
+    <string name="tron_resource_type">Ressourcentyp</string>
+    <string name="tron_resource_bandwidth">Bandbreite</string>
+    <string name="tron_resource_energy">Energie</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Slippage ist erforderlich</string>
     <string name="slippage_invalid_error">Slippage muss zwischen 1 und 100 liegen</string>

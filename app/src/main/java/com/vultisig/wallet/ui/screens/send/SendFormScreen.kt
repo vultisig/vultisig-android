@@ -35,6 +35,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -49,6 +50,7 @@ import com.vultisig.wallet.ui.models.send.SendFormViewModel
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.tron.TronResourceTypeTab
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -114,6 +116,7 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
             onScanProviderAddressRequest = viewModel::scanProviderAddress,
             onAddressProviderBookClick = { viewModel.openAddressBook(AddressBookType.PROVIDER) },
             onAutoCompound = { viewModel.onAutoCompound(it) },
+            onTronResourceTypeChange = viewModel::setTronResourceType,
         )
 
         val selectedChain = state.selectedCoin?.model?.address?.chain
@@ -178,6 +181,9 @@ private fun SendFormScreen(
 
     // autocompound
     onAutoCompound: (Boolean) -> Unit = {},
+
+    // tron freeze/unfreeze
+    onTronResourceTypeChange: (TronResourceType) -> Unit = {},
 ) {
     val focusManager = LocalFocusManager.current
 
@@ -208,6 +214,8 @@ private fun SendFormScreen(
                 DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
                 DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE -> stringResource(R.string.withdraw)
+                DeFiNavActions.FREEZE_TRX -> stringResource(R.string.tron_freeze_screen_title)
+                DeFiNavActions.UNFREEZE_TRX -> stringResource(R.string.tron_unfreeze_screen_title)
                 else -> stringResource(R.string.send_screen_title)
             },
         onBackClick = onBackClick,
@@ -293,6 +301,7 @@ private fun SendFormScreen(
                         // trade
                         slippageFieldState = slippageFieldState,
                         onAutoCompoundCheckedChange = onAutoCompound,
+                        onTronResourceTypeChange = onTronResourceTypeChange,
                     )
                 }
             }
@@ -346,6 +355,9 @@ private fun SendFormContent(
 
     // stake tcy
     onAutoCompoundCheckedChange: (Boolean) -> Unit,
+
+    // tron freeze/unfreeze
+    onTronResourceTypeChange: (TronResourceType) -> Unit,
 ) {
     val amountInputs =
         AmountInputs(
@@ -478,6 +490,18 @@ private fun SendFormContent(
             state.defiType == DeFiNavActions.FREEZE_TRX ||
             state.defiType == DeFiNavActions.UNFREEZE_TRX
     ) {
+        val resourceType = state.tronResourceType
+        if (
+            resourceType != null &&
+                (state.defiType == DeFiNavActions.FREEZE_TRX ||
+                    state.defiType == DeFiNavActions.UNFREEZE_TRX)
+        ) {
+            TronResourceTypeTab(
+                selected = resourceType,
+                onSelectionChange = onTronResourceTypeChange,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
         FoldableAmountWidget(
             state = state,
             addressFieldState = addressFieldState,

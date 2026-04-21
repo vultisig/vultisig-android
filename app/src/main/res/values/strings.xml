@@ -81,6 +81,11 @@
     <string name="tron_defi_countdown_days">%1$d days, %2$d hrs</string>
     <string name="tron_defi_countdown_hours">%1$d hrs, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">TRX coin not found in vault</string>
+    <string name="tron_freeze_screen_title">Freezing TRON for resource</string>
+    <string name="tron_unfreeze_screen_title">Unfreezing TRON for resource</string>
+    <string name="tron_resource_type">Resource Type</string>
+    <string name="tron_resource_bandwidth">Bandwidth</string>
+    <string name="tron_resource_energy">Energy</string>
     <string name="circle_defi_description">Deposit your USDC into a Circle account and earn yield. Securely within your Vultisig vault.</string>
     <string name="circle_defi_control_info">Funds remain fully under your vault\'s control. Circle accounts are self-custodial and yield is generated through secure off-chain treasuries.</string>
     <string name="usdc_deposit_title">USDC Deposit</string>

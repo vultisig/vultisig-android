@@ -81,6 +81,11 @@
     <string name="tron_defi_countdown_days">%1$d일 %2$d시간</string>
     <string name="tron_defi_countdown_hours">%1$d시간 %2$d분</string>
     <string name="tron_defi_error_trx_not_in_vault">볼트에서 TRX 코인을 찾을 수 없습니다</string>
+    <string name="tron_freeze_screen_title">리소스를 위해 TRON 동결</string>
+    <string name="tron_unfreeze_screen_title">리소스를 위해 TRON 동결 해제</string>
+    <string name="tron_resource_type">리소스 유형</string>
+    <string name="tron_resource_bandwidth">대역폭</string>
+    <string name="tron_resource_energy">에너지</string>
     <string name="circle_defi_description">USDC를 Circle 계정에 예치하고 수익을 얻으세요. Vultisig 볼트 내에서 안전하게 관리됩니다.</string>
     <string name="circle_defi_control_info">자금은 완전히 볼트의 통제 하에 있습니다. Circle 계정은 자기 수탁형이며 수익은 안전한 오프체인 트레저리를 통해 생성됩니다.</string>
     <string name="usdc_deposit_title">USDC 예치</string>

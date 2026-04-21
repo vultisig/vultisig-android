@@ -86,11 +86,9 @@ internal sealed interface TronDeFiUiState {
 
 @Immutable data class TronPendingWithdrawalUiModel(val amountTrx: String, val expiryEpochMs: Long)
 
-internal enum class TronAction(val memo: String, val defiType: DeFiNavActions) {
-    FREEZE_BANDWIDTH("FREEZE:BANDWIDTH", DeFiNavActions.FREEZE_TRX),
-    FREEZE_ENERGY("FREEZE:ENERGY", DeFiNavActions.FREEZE_TRX),
-    UNFREEZE_BANDWIDTH("UNFREEZE:BANDWIDTH", DeFiNavActions.UNFREEZE_TRX),
-    UNFREEZE_ENERGY("UNFREEZE:ENERGY", DeFiNavActions.UNFREEZE_TRX),
+internal enum class TronAction(val defiType: DeFiNavActions) {
+    FREEZE(DeFiNavActions.FREEZE_TRX),
+    UNFREEZE(DeFiNavActions.UNFREEZE_TRX),
 }
 
 @HiltViewModel
@@ -270,7 +268,6 @@ constructor(
                     chainId = Chain.Tron.id,
                     tokenId = trxCoin.id,
                     address = trxCoin.address,
-                    memo = action.memo,
                     type = action.defiType.type,
                 )
             )

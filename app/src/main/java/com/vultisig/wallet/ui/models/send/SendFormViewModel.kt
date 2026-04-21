@@ -14,12 +14,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.R.string
+import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
+import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
+import com.vultisig.wallet.data.blockchain.tron.tronStakingMemo
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
@@ -193,6 +197,10 @@ internal data class SendFormUiModel(
     val isAmountSelectionLoading: Boolean = false,
     val selectedAmountFraction: AmountFraction? = null,
     val amountFractionEntries: List<AmountFraction> = listOf(F25, F50, F75, F100),
+
+    // Tron freeze/unfreeze
+    val tronResourceType: TronResourceType? = null,
+    val tronBalanceAvailableOverride: String? = null,
 )
 
 internal data class SendSrc(val address: Address, val account: Account)
@@ -251,6 +259,7 @@ constructor(
     private val feeServiceComposite: FeeServiceComposite,
     private val chainValidationService: ChainValidationService,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
+    private val tronApi: TronApi,
 ) : ViewModel() {
 
     private var vault: Vault? = null
@@ -324,6 +333,13 @@ constructor(
     private var lastFiatValueUserInput = ""
 
     private val isSwitchingAccounts = MutableStateFlow(false)
+
+    // Tron freeze/unfreeze state — populated when defiType is FREEZE_TRX or UNFREEZE_TRX.
+    private val tronFrozenBandwidthTrx = MutableStateFlow<BigDecimal?>(null)
+    private val tronFrozenEnergyTrx = MutableStateFlow<BigDecimal?>(null)
+
+    private fun isTronStakingType(): Boolean =
+        defiType == DeFiNavActions.FREEZE_TRX || defiType == DeFiNavActions.UNFREEZE_TRX
 
     init {
         loadData(
@@ -476,8 +492,84 @@ constructor(
     private fun initFormType() {
         val autoCompound =
             defiType == DeFiNavActions.STAKE_STCY || defiType == DeFiNavActions.UNSTAKE_STCY
-        uiState.update { it.copy(defiType = this.defiType, isAutocompound = autoCompound) }
+        val initialResourceType = if (isTronStakingType()) TronResourceType.BANDWIDTH else null
+        uiState.update {
+            it.copy(
+                defiType = this.defiType,
+                isAutocompound = autoCompound,
+                tronResourceType = initialResourceType,
+            )
+        }
+        if (isTronStakingType()) {
+            applyTronStakingMemo(TronResourceType.BANDWIDTH)
+            if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                loadTronFrozenBalances()
+            }
+        }
     }
+
+    fun setTronResourceType(type: TronResourceType) {
+        if (uiState.value.tronResourceType == type) return
+        uiState.update { it.copy(tronResourceType = type) }
+        applyTronStakingMemo(type)
+        tokenAmountFieldState.clearText()
+        uiState.update { it.copy(selectedAmountFraction = null) }
+        if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+            updateTronFrozenBalanceDisplay(type)
+        }
+    }
+
+    private fun applyTronStakingMemo(type: TronResourceType) {
+        val op =
+            when (defiType) {
+                DeFiNavActions.FREEZE_TRX -> TronStakingOperation.FREEZE
+                DeFiNavActions.UNFREEZE_TRX -> TronStakingOperation.UNFREEZE
+                else -> return
+            }
+        memoFieldState.setTextAndPlaceCursorAtEnd(tronStakingMemo(op, type))
+    }
+
+    private fun loadTronFrozenBalances() {
+        viewModelScope.launch {
+            try {
+                val vault = vault ?: vaultRepository.get(vaultId ?: return@launch) ?: return@launch
+                val trxCoin =
+                    vault.coins.firstOrNull { it.chain == Chain.Tron && it.isNativeToken }
+                        ?: return@launch
+                val account = withContext(Dispatchers.IO) { tronApi.getAccount(trxCoin.address) }
+                val sunPerTrx = BigDecimal(1_000_000L)
+                tronFrozenBandwidthTrx.value =
+                    BigDecimal(account.frozenBandwidthSun).divide(sunPerTrx, 6, RoundingMode.DOWN)
+                tronFrozenEnergyTrx.value =
+                    BigDecimal(account.frozenEnergySun).divide(sunPerTrx, 6, RoundingMode.DOWN)
+                updateTronFrozenBalanceDisplay(
+                    uiState.value.tronResourceType ?: TronResourceType.BANDWIDTH
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to load Tron frozen balances")
+            }
+        }
+    }
+
+    private fun updateTronFrozenBalanceDisplay(type: TronResourceType) {
+        val frozen =
+            when (type) {
+                TronResourceType.BANDWIDTH -> tronFrozenBandwidthTrx.value
+                TronResourceType.ENERGY -> tronFrozenEnergyTrx.value
+            } ?: return
+        uiState.update {
+            it.copy(tronBalanceAvailableOverride = frozen.stripTrailingZeros().toPlainString())
+        }
+    }
+
+    private fun currentTronFrozenBalance(): BigDecimal? =
+        when (uiState.value.tronResourceType) {
+            TronResourceType.BANDWIDTH -> tronFrozenBandwidthTrx.value
+            TronResourceType.ENERGY -> tronFrozenEnergyTrx.value
+            null -> null
+        }
 
     private fun loadVaultName() {
         viewModelScope.launch {
@@ -863,6 +955,14 @@ constructor(
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
         val token = selectedAccount.token
 
+        if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+            val frozen = currentTronFrozenBalance() ?: return BigDecimal.ZERO
+            return frozen
+                .multiply(percentage.toBigDecimal())
+                .setScale(token.decimal, RoundingMode.DOWN)
+                .stripTrailingZeros()
+        }
+
         var amount =
             if (gasFee.value != null) {
                 fetchPercentageOfAvailableBalance(percentage)
@@ -935,6 +1035,14 @@ constructor(
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
         val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
 
+        if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+            val frozen = currentTronFrozenBalance() ?: return BigDecimal.ZERO
+            return frozen
+                .multiply(percentage.toBigDecimal())
+                .setScale(selectedAccount.token.decimal, RoundingMode.DOWN)
+                .stripTrailingZeros()
+        }
+
         val availableTokenBalance =
             if (
                 defiType == null ||
@@ -946,8 +1054,7 @@ constructor(
                     defiType == DeFiNavActions.REDEEM_YRUNE ||
                     defiType == DeFiNavActions.MINT_YTCY ||
                     defiType == DeFiNavActions.REDEEM_YTCY ||
-                    defiType == DeFiNavActions.FREEZE_TRX ||
-                    defiType == DeFiNavActions.UNFREEZE_TRX
+                    defiType == DeFiNavActions.FREEZE_TRX
             ) {
                 getAvailableTokenBalance(selectedAccount, currentGasFee.value)
             } else {
@@ -2226,7 +2333,8 @@ constructor(
                     this.defiType == DeFiNavActions.MINT_YTCY ||
                     this.defiType == DeFiNavActions.REDEEM_YRUNE ||
                     this.defiType == DeFiNavActions.REDEEM_YTCY ||
-                    this.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE
+                    this.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
+                    this.defiType == DeFiNavActions.FREEZE_TRX
             ) {
                 viewModelScope.launch {
                     accountsRepository

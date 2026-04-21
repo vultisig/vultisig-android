@@ -461,6 +461,11 @@
     <string name="tron_defi_countdown_days">%1$d dias, %2$d h</string>
     <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">Moeda TRX não encontrada no cofre</string>
+    <string name="tron_freeze_screen_title">Congelando TRON para recurso</string>
+    <string name="tron_unfreeze_screen_title">Descongelando TRON para recurso</string>
+    <string name="tron_resource_type">Tipo de Recurso</string>
+    <string name="tron_resource_bandwidth">Largura de Banda</string>
+    <string name="tron_resource_energy">Energia</string>
     <string name="deposit_form_operator_slippage_title">Derrapagem</string>
     <string name="slippage_required_error">A derrapagem é obrigatória</string>
     <string name="slippage_invalid_error">A derrapagem deve estar entre 1 e 100</string>
