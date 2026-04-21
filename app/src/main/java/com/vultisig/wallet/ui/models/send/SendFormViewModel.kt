@@ -80,6 +80,7 @@ import com.vultisig.wallet.ui.models.send.AmountFraction.F100
 import com.vultisig.wallet.ui.models.send.AmountFraction.F25
 import com.vultisig.wallet.ui.models.send.AmountFraction.F50
 import com.vultisig.wallet.ui.models.send.AmountFraction.F75
+import com.vultisig.wallet.ui.models.send.observers.FlowCollectorManager
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -339,25 +340,11 @@ constructor(
             type = args.type,
             mscaAddress = args.mscaAddress,
         )
-        loadSelectedCurrency()
-        collectSelectedAccount()
-        collectAmountChanges()
-        calculateGasFees()
-        calculateGasTokenBalance()
-        collectEstimatedFee()
-        collectPlanFee()
-        calculateSpecific()
-        collectAdvanceGasUi()
-        collectAmountChecks()
-        loadVaultName()
-        loadGasSettings()
-        collectDstAddress()
-        collectAddress()
-        collectMaxAmount()
+        FlowCollectorManager(this).start()
     }
 
     @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    private fun collectAddress() {
+    internal fun collectAddress() {
         viewModelScope.launch {
             addressFieldState
                 .textAsFlow()
@@ -407,7 +394,7 @@ constructor(
         }
     }
 
-    private fun loadGasSettings() {
+    internal fun loadGasSettings() {
         viewModelScope.launch {
             advanceGasUiRepository.shouldShowAdvanceGasSettingsIcon.collect {
                 shouldShowAdvanceGasSettingsIcon ->
@@ -481,7 +468,7 @@ constructor(
         uiState.update { it.copy(defiType = this.defiType, isAutocompound = autoCompound) }
     }
 
-    private fun loadVaultName() {
+    internal fun loadVaultName() {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             vaultRepository.get(vaultId)?.let { vault ->
@@ -491,7 +478,7 @@ constructor(
         }
     }
 
-    private fun collectDstAddress() {
+    internal fun collectDstAddress() {
         viewModelScope.launch {
             addressFieldState
                 .textAsFlow()
@@ -2488,7 +2475,7 @@ constructor(
         return defaultCoin
     }
 
-    private fun calculateGasTokenBalance() {
+    internal fun calculateGasTokenBalance() {
         viewModelScope.launch {
             selectedToken
                 .filterNotNull()
@@ -2519,7 +2506,7 @@ constructor(
     }
 
     @OptIn(FlowPreview::class)
-    private fun calculateGasFees() {
+    internal fun calculateGasFees() {
         viewModelScope.launch {
             combine(
                     selectedToken
@@ -2584,7 +2571,7 @@ constructor(
         }
     }
 
-    private fun collectPlanFee() {
+    internal fun collectPlanFee() {
         viewModelScope.launch {
             combine(
                     selectedToken.filterNotNull(),
@@ -2634,7 +2621,7 @@ constructor(
         }
     }
 
-    private fun collectMaxAmount() {
+    internal fun collectMaxAmount() {
         viewModelScope.launch {
             isMaxAmount.collect { isMax ->
                 val chain = selectedAccount?.token?.chain ?: return@collect
@@ -2653,7 +2640,7 @@ constructor(
         }
     }
 
-    private fun collectEstimatedFee() {
+    internal fun collectEstimatedFee() {
         viewModelScope.launch {
             combine(
                     selectedToken.filterNotNull(),
@@ -2692,7 +2679,7 @@ constructor(
         }
     }
 
-    private fun calculateSpecific() {
+    internal fun calculateSpecific() {
         viewModelScope.launch {
             combine(selectedToken.filterNotNull(), gasFee.filterNotNull()) { token, gasFee ->
                     val chain = token.chain
@@ -2736,7 +2723,7 @@ constructor(
                 } else gasFee.value
         )
 
-    private fun loadSelectedCurrency() {
+    internal fun loadSelectedCurrency() {
         viewModelScope.launch {
             appCurrency.collect { appCurrency ->
                 uiState.update { it.copy(fiatCurrency = appCurrency.ticker) }
@@ -2744,7 +2731,7 @@ constructor(
         }
     }
 
-    private fun collectAdvanceGasUi() {
+    internal fun collectAdvanceGasUi() {
         advanceGasUiRepository.showSettings
             .onEach { showGasSettings ->
                 uiState.update { it.copy(showGasSettings = showGasSettings) }
@@ -2752,7 +2739,7 @@ constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun collectSelectedAccount() {
+    internal fun collectSelectedAccount() {
         viewModelScope.launch {
             combine(selectedToken.filterNotNull(), accounts, isSwitchingAccounts) {
                     token,
@@ -2791,7 +2778,7 @@ constructor(
         }
     }
 
-    private fun collectAmountChanges() {
+    internal fun collectAmountChanges() {
         viewModelScope.launch {
             combine(
                     selectedToken.filterNotNull(),
@@ -2837,7 +2824,7 @@ constructor(
         }
     }
 
-    private fun collectAmountChecks() {
+    internal fun collectAmountChecks() {
         viewModelScope.launch {
             combine(
                     selectedToken.filterNotNull(),
