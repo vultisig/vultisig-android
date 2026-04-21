@@ -334,7 +334,7 @@ internal class EthereumFeeServiceTest {
         val fee = service.calculateFees(swap(Chain.Ethereum)) as Eip1559
 
         assertEquals(DEFAULT_SWAP_LIMIT, fee.limit)
-        assertEquals(gwei(10), fee.networkPrice)
+        assertEquals(gwei(110), fee.networkPrice)
     }
 
     // ---------- Helpers ----------

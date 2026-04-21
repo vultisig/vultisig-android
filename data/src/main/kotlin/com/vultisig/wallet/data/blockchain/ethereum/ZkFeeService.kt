@@ -9,8 +9,9 @@ import javax.inject.Inject
 import kotlinx.coroutines.coroutineScope
 
 class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory) : FeeService {
-    override suspend fun calculateFees(transaction: BlockchainTransaction): Fee =
-        coroutineScope { estimateFee(transaction) }
+    override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = coroutineScope {
+        estimateFee(transaction)
+    }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee =
         estimateFee(transaction)
@@ -25,7 +26,7 @@ class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory)
         val feeEstimate =
             evmApi.zkEstimateFee(srcAddress = coin.address, dstAddress = toAddress, data = data)
 
-        Eip1559(
+        return Eip1559(
             limit = feeEstimate.gasLimit,
             maxPriorityFeePerGas = feeEstimate.maxPriorityFeePerGas,
             maxFeePerGas = feeEstimate.maxFeePerGas,
