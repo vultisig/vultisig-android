@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
@@ -108,6 +109,9 @@ constructor(
     /**
      * Emits an adjusted gas fee whenever token, address, memo, amount, or fee-related settings
      * change. Debounces input at 350 ms. Errors in fee calculation are logged and suppressed.
+     *
+     * @param recalculate optional trigger flow; each new emission forces a recalculation even when
+     *   other inputs are unchanged (e.g. from a manual refresh action).
      */
     fun gasFeesFlow(
         selectedToken: StateFlow<Coin?>,
@@ -118,6 +122,7 @@ constructor(
         specific: StateFlow<BlockChainSpecificAndUtxo?>,
         resolvedDstAddress: StateFlow<String?>,
         vault: () -> Vault?,
+        recalculate: Flow<Long> = flowOf(0L),
     ): Flow<TokenValue> =
         combine(
             selectedToken
@@ -129,6 +134,7 @@ constructor(
                 }
                 .debounce(350)
                 .distinctUntilChanged()
+                .combine(recalculate) { data, _ -> data }
                 .mapNotNull { (triple, tokenAmount) ->
                     val (token, dst, memo) = triple
                     val currentVault = vault() ?: return@mapNotNull null
@@ -303,12 +309,7 @@ constructor(
 
         var amount =
             if (gasFee != null) {
-                fetchPercentageOfAvailableBalance(
-                    percentage,
-                    selectedAccount,
-                    gasFee,
-                    defiType,
-                )
+                fetchPercentageOfAvailableBalance(percentage, selectedAccount, gasFee, defiType)
             } else {
                 getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)
                     ?.decimal
@@ -381,7 +382,7 @@ constructor(
     }
 
     /** Resolves the Bitcoin transaction plan for a UTXO send. */
-    private suspend fun getBitcoinTransactionPlan(
+    internal suspend fun getBitcoinTransactionPlan(
         vaultId: String,
         selectedToken: Coin,
         dstAddress: String,

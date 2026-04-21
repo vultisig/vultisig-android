@@ -44,7 +44,6 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getDustThreshold
-import com.vultisig.wallet.data.models.hasReaping
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.toValue
@@ -247,6 +246,8 @@ constructor(
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val calculationUseCase: CalculationUseCase,
+    private val chainValidationService: ChainValidationService,
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
 ) : ViewModel() {
 
     private var vault: Vault? = null
@@ -2364,6 +2365,7 @@ constructor(
                     specific = specific,
                     resolvedDstAddress = resolvedDstAddress,
                     vault = { vault },
+                    recalculate = recalculateGasFee,
                 )
                 .collect { fee -> gasFee.value = fee }
         }
@@ -2639,24 +2641,7 @@ constructor(
     fun refreshGasFee() {
         viewModelScope.launch {
             uiState.update { it.copy(isRefreshing = true) }
-
-            val gasFee =
-                try {
-                    gasFeeRepository.getGasFee(
-                        chain = srcAddress.chain,
-                        address = srcAddress.address,
-                        isNativeToken = srcAddress.isNativeToken,
-                        to = addressFieldState.text.toString(),
-                        memo = memoFieldState.text.toString(),
-                    )
-                } catch (e: Exception) {
-                    uiState.update { it.copy(isRefreshing = false) }
-                    return@launch
-                }
-
-            this@SendFormViewModel.gasFee.value =
-                calculationUseCase.adjustGasFee(gasFee, gasSettings.value, specific.value)
-
+            recalculateGasFee.update { it + 1 }
             // Rapid toggling of isRefreshing can cause the initial true value to be skipped,
             // displaying only the false value in the UI resulting in the swipe refresh being
             // frozen.
