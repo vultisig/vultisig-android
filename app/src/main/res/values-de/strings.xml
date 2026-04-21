@@ -296,7 +296,7 @@
     <string name="qr_title_join_keysign_swap_description">Tresor: %1$s\n Von: %2$s\n An: %3$s</string>
     <string name="qr_share_label_vault">Tresor</string>
     <string name="qr_share_label_amount">Menge</string>
-    <string name="qr_share_label_to">An</string>
+    <string name="qr_share_label_to">Zu</string>
     <string name="qr_share_label_from">Von</string>
     <string name="qr_share_label_type">Typ</string>
     <string name="qr_share_type_fast_vault">Schneller Tresor</string>

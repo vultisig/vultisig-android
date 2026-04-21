@@ -73,13 +73,16 @@ internal fun KeysignPeerDiscovery(
         remember(uiModel.srcTokenLogoRes) {
             uiModel.srcTokenLogoRes?.let { BitmapFactory.decodeResource(context.resources, it) }
         }
+    DisposableEffect(srcIconBitmap) { onDispose { srcIconBitmap?.recycle() } }
     val dstIconBitmap =
         remember(uiModel.dstTokenLogoRes) {
             uiModel.dstTokenLogoRes?.let { BitmapFactory.decodeResource(context.resources, it) }
         }
+    DisposableEffect(dstIconBitmap) { onDispose { dstIconBitmap?.recycle() } }
     val vultisigLogoBitmap = remember {
         BitmapFactory.decodeResource(context.resources, R.drawable.logo)
     }
+    DisposableEffect(vultisigLogoBitmap) { onDispose { vultisigLogoBitmap.recycle() } }
     val qrShareInfo =
         QrShareInfo(
             title = qrShareTitle,

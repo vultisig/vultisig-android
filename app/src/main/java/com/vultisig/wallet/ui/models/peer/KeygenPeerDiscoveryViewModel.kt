@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.core.graphics.scale
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -208,15 +207,6 @@ constructor(
     fun shareQr(activity: Context) {
         val qr = qrBitmap.value ?: return
 
-        val scaleModifier = 4
-
-        val scaledQr =
-            qr.scale(
-                width = qr.width * scaleModifier,
-                height = qr.height * scaleModifier,
-                filter = false,
-            )
-
         val typeRes =
             if (email != null) R.string.qr_share_type_fast_vault
             else R.string.qr_share_type_secure_vault
@@ -236,7 +226,7 @@ constructor(
                     ),
             )
 
-        val shareBitmap = createQrCodeSharingBitmap(scaledQr, info)
+        val shareBitmap = createQrCodeSharingBitmap(qr, info)
 
         activity.share(shareBitmap, shareFileName(vaultName, vaultName.sha256(), ShareType.KEYGEN))
     }

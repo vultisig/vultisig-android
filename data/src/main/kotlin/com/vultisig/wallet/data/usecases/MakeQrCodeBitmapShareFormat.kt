@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Typeface
+import android.os.Build
 import android.text.TextPaint
 import android.text.TextUtils
 import androidx.core.content.res.ResourcesCompat
@@ -67,15 +68,28 @@ private fun ellipsizeToWidth(text: String, paint: Paint, maxWidth: Float): Strin
 
 // Resolve the app's Brockmann Medium font from this shared data-module use case. The font lives
 // in the app module's resources, so it is not reachable via R.font here — name lookup is the only
-// option available across modules.
+// option available across modules. `getIdentifier` is the reason for the @SuppressLint.
 @SuppressLint("DiscouragedApi")
 private fun loadBrockmannMedium(context: Context): Typeface {
     val id = context.resources.getIdentifier("brockmann_medium", "font", context.packageName)
-    return id.takeIf { it != 0 }?.let { ResourcesCompat.getFont(context, it) }
-        ?: Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    val resolved = id.takeIf { it != 0 }?.let { ResourcesCompat.getFont(context, it) }
+    if (resolved != null) return resolved
+    // Brockmann Medium is weight 500; fall back to a matching weight so the share bitmap does not
+    // render noticeably heavier than Figma when the font resource is unavailable.
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        Typeface.create(Typeface.DEFAULT, 500, false)
+    } else {
+        Typeface.DEFAULT
+    }
 }
 
 internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCodeBitmapShareFormat {
+
+    @Volatile private var cachedTypeface: Typeface? = null
+
+    private fun titleTypeface(context: Context): Typeface =
+        cachedTypeface ?: loadBrockmannMedium(context).also { cachedTypeface = it }
+
     override fun invoke(
         context: Context,
         qrCodeBitmap: Bitmap,
@@ -175,7 +189,7 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         canvas.drawRoundRect(metaCardRect, cardCorner, cardCorner, cardFillPaint)
         canvas.drawRoundRect(metaCardRect, cardCorner, cardCorner, borderPaint)
 
-        val titleTypeface = loadBrockmannMedium(context)
+        val titleTypeface = titleTypeface(context)
         val titlePaint =
             Paint().apply {
                 isAntiAlias = true
@@ -228,7 +242,10 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
             val iconReservation = if (iconPx > 0) iconPx + valueIconToTextGap else 0f
             val ellipsizedLabel = ellipsizeToWidth(field.label, labelPaint, metaContentWidth * 0.5f)
             val labelMeasured = labelPaint.measureText(ellipsizedLabel)
-            val valueMaxWidth = metaContentWidth - labelMeasured - iconReservation
+            // Guard against negatives on narrow cards with wide localized labels + an icon;
+            // otherwise `ellipsizeToWidth` returns "" and the value silently disappears.
+            val valueMaxWidth =
+                (metaContentWidth - labelMeasured - iconReservation).coerceAtLeast(0f)
             val ellipsizedValue = ellipsizeToWidth(field.value, valuePaint, valueMaxWidth)
             canvas.drawText(ellipsizedLabel, metaContentLeft, textBaselineY, labelPaint)
             val valueTextWidth = valuePaint.measureText(ellipsizedValue)
@@ -238,6 +255,7 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
                 val iconLeft = metaContentRight - valueTextWidth - valueIconToTextGap - iconPx
                 val iconTop = rowsCursorY + (fieldLineHeight - iconPx) / 2f
                 canvas.drawBitmap(scaledIcon, iconLeft, iconTop, null)
+                if (scaledIcon !== icon) scaledIcon.recycle()
             }
             canvas.drawText(ellipsizedValue, metaContentRight, textBaselineY, valuePaint)
             rowsCursorY += fieldLineHeight
@@ -259,6 +277,7 @@ internal class MakeQrCodeBitmapShareFormatImpl @Inject constructor() : MakeQrCod
         val scaledLogo = logo.scale(scaledLogoSize, scaledLogoSize)
         val logoLeft = (finalWidth - scaledLogoSize) / 2f
         canvas.drawBitmap(scaledLogo, logoLeft, signatureTop, null)
+        if (scaledLogo !== logo) scaledLogo.recycle()
 
         val signatureTextPaint =
             Paint().apply {

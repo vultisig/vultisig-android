@@ -33,6 +33,7 @@ import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -64,6 +65,7 @@ constructor(
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
     private var qrBitmap: Bitmap? = null
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
+    private var saveShareQrBitmapJob: Job? = null
 
     suspend fun loadTransaction(transactionId: TransactionId) {
         val transaction = transactionRepository.getTransaction(transactionId)
@@ -214,13 +216,21 @@ constructor(
         activity.share(qrBitmap, shareFileName(requireNotNull(vault), ShareType.SEND))
     }
 
-    internal fun saveShareQrBitmap(context: Context, color: Int, info: QrShareInfo, logo: Bitmap) =
-        viewModelScope.launch {
-            val bitmap = qrBitmap ?: return@launch
-            val qrBitmap =
-                withContext(Dispatchers.IO) {
-                    makeQrCodeBitmapShareFormat(context, bitmap, color, logo, info)
-                }
-            shareQrBitmap.value = qrBitmap
-        }
+    internal fun saveShareQrBitmap(context: Context, color: Int, info: QrShareInfo, logo: Bitmap) {
+        // Cancel any in-flight render so rapid `qrShareInfo` updates (painter then icons) can't
+        // race and let a stale bitmap overwrite a fresher one. The previous rendered bitmap is
+        // recycled on replacement to avoid leaks when icons/amounts change repeatedly.
+        saveShareQrBitmapJob?.cancel()
+        saveShareQrBitmapJob =
+            viewModelScope.launch {
+                val bitmap = qrBitmap ?: return@launch
+                val rendered =
+                    withContext(Dispatchers.IO) {
+                        makeQrCodeBitmapShareFormat(context, bitmap, color, logo, info)
+                    }
+                val previous = shareQrBitmap.value
+                shareQrBitmap.value = rendered
+                if (previous != null && previous !== rendered) previous.recycle()
+            }
+    }
 }

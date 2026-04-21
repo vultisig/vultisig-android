@@ -19,15 +19,12 @@ constructor(
     @param:ApplicationContext private val context: Context,
     private val makeQrCodeBitmapShareFormat: MakeQrCodeBitmapShareFormat,
 ) : CreateQrCodeSharingBitmapUseCase {
-    override fun invoke(qr: Bitmap, info: QrShareInfo): Bitmap {
-        val logo = BitmapFactory.decodeResource(context.resources, R.drawable.logo)
 
-        return makeQrCodeBitmapShareFormat(
-            context,
-            qr,
-            colors.backgrounds.primary.toArgb(),
-            logo,
-            info,
-        )
+    // R.drawable.logo never changes; decode once and reuse across shares.
+    private val logo: Bitmap by lazy {
+        BitmapFactory.decodeResource(context.resources, R.drawable.logo)
     }
+
+    override fun invoke(qr: Bitmap, info: QrShareInfo): Bitmap =
+        makeQrCodeBitmapShareFormat(context, qr, colors.backgrounds.primary.toArgb(), logo, info)
 }

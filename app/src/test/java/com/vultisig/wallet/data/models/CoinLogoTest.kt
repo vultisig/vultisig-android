@@ -75,4 +75,68 @@ internal class CoinLogoTest {
         val res = coin(logo = "eth", chain = Chain.Ethereum).tokenLogoRes()
         assertEquals(R.drawable.ethereum, res)
     }
+
+    // Multi-alias entries are easy to break by typo — any alias that silently falls through to the
+    // chain logo would be a regression. Pin each known alias to its drawable so renames get caught.
+    @Test
+    fun `tokenLogoRes resolves solana aliases`() {
+        assertEquals(R.drawable.solana, coin(logo = "sol").tokenLogoRes())
+        assertEquals(R.drawable.solana, coin(logo = "solana").tokenLogoRes())
+    }
+
+    @Test
+    fun `tokenLogoRes resolves polygon aliases`() {
+        assertEquals(R.drawable.polygon, coin(logo = "pol").tokenLogoRes())
+        assertEquals(R.drawable.polygon, coin(logo = "matic").tokenLogoRes())
+        assertEquals(R.drawable.polygon, coin(logo = "polygon").tokenLogoRes())
+        assertEquals(R.drawable.polygon, coin(logo = "eth_polygon").tokenLogoRes())
+    }
+
+    @Test
+    fun `tokenLogoRes resolves zksync aliases`() {
+        assertEquals(R.drawable.zksync, coin(logo = "zksync").tokenLogoRes())
+        assertEquals(R.drawable.zksync, coin(logo = "zsync-era").tokenLogoRes())
+    }
+
+    @Test
+    fun `tokenLogoRes resolves wif aliases`() {
+        assertEquals(R.drawable.wif, coin(logo = "wif").tokenLogoRes())
+        assertEquals(R.drawable.wif, coin(logo = "dogwifhat-wif-logo").tokenLogoRes())
+    }
+
+    @Test
+    fun `tokenLogoRes resolves raydium aliases`() {
+        assertEquals(R.drawable.ray, coin(logo = "ray").tokenLogoRes())
+        assertEquals(R.drawable.ray, coin(logo = "raydium-ray-seeklogo-2").tokenLogoRes())
+    }
+
+    @Test
+    fun `tokenLogoRes resolves astro aliases`() {
+        assertEquals(R.drawable.astro, coin(logo = "astro").tokenLogoRes())
+        assertEquals(R.drawable.astro, coin(logo = "terra-astroport").tokenLogoRes())
+    }
+
+    @Test
+    fun `tokenLogoRes resolves levana aliases`() {
+        assertEquals(R.drawable.lvn, coin(logo = "lvn").tokenLogoRes())
+        assertEquals(R.drawable.lvn, coin(logo = "levana").tokenLogoRes())
+    }
+
+    @Test
+    fun `tokenLogoRes resolves fuzion aliases`() {
+        assertEquals(R.drawable.fuzion, coin(logo = "fuzion").tokenLogoRes())
+        assertEquals(R.drawable.fuzion, coin(logo = "fuzn").tokenLogoRes())
+    }
+
+    @Test
+    fun `tokenLogoRes resolves vulti aliases`() {
+        assertEquals(R.drawable.vulti, coin(logo = "vult").tokenLogoRes())
+        assertEquals(R.drawable.vulti, coin(logo = "vulti").tokenLogoRes())
+    }
+
+    @Test
+    fun `tokenLogoRes resolves hyperliquid aliases`() {
+        assertEquals(R.drawable.hyperliquid, coin(logo = "hype").tokenLogoRes())
+        assertEquals(R.drawable.hyperliquid, coin(logo = "whype").tokenLogoRes())
+    }
 }
