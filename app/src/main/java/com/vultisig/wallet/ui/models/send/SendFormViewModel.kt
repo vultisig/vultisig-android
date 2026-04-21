@@ -2982,6 +2982,53 @@ constructor(
 
     companion object {
         private const val GAS_FEE_TIMEOUT_MS = 5_000L
+        private const val REQUEST_ADDRESS_ID = "request_address_id"
+        private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
+    }
+}
+
+/**
+ * Returns the best matching [SendSrc] for [selectedTokenId] and [filterByChain], or the first entry
+ * if neither is specified.
+ */
+internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain: Chain?): SendSrc {
+    val address =
+        when {
+            !selectedTokenId.isNullOrBlank() ->
+                first { it -> it.accounts.any { it.token.id == selectedTokenId } }
+
+            filterByChain != null -> first { it.chain == filterByChain }
+            else -> first()
+        }
+
+    val account =
+        when {
+            !selectedTokenId.isNullOrBlank() ->
+                address.accounts.first { it.token.id == selectedTokenId }
+            filterByChain != null -> address.accounts.first { it.token.isNativeToken }
+            else -> address.accounts.first()
+        }
+
+    return SendSrc(address, account)
+}
+
+/**
+ * Returns the [SendSrc] that matches [currentSrc], or delegates to [firstSendSrc] when
+ * [selectedTokenId] is non-null.
+ */
+internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: SendSrc): SendSrc {
+    if (selectedTokenId == null) {
+        val selectedAddress = currentSrc.address
+        val selectedAccount = currentSrc.account
+        val address = first {
+            it.chain == selectedAddress.chain && it.address == selectedAddress.address
+        }
+        return SendSrc(
+            address,
+            address.accounts.first { it.token.ticker == selectedAccount.token.ticker },
+        )
+    } else {
+        return firstSendSrc(selectedTokenId, null)
     }
 }
 
