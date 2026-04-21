@@ -56,7 +56,7 @@ class SuiFeeService @Inject constructor(private val suiApi: SuiApi) : FeeService
             return@coroutineScope calculateDefaultFees(transaction)
         }
         require(transaction is Transfer) {
-            "Invalid Transfer type: ${transaction::class.simpleName}"
+            "Invalid Transaction type: ${transaction::class.simpleName}"
         }
         val fromAddress = transaction.coin.address
 

@@ -211,6 +211,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         val chain = transaction.coin.chain
 
         return when {
+            transaction is Swap && chain == Chain.Mantle -> DEFAULT_MANTLE_SWAP_LIMIT
             transaction is Swap -> DEFAULT_SWAP_LIMIT
             chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
             transaction is Transfer && transaction.coin.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT

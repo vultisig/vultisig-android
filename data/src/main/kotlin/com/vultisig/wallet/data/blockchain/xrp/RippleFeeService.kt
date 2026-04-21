@@ -32,8 +32,10 @@ import kotlinx.coroutines.supervisorScope
  */
 class RippleFeeService @Inject constructor(private val rippleApi: RippleApi) : FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = supervisorScope {
-        // For a swap, `to` is the user's own address, so the account-activation probe would always
-        // return zero — skip the fetchAccountsInfo RPC and return just the dynamic network fee.
+        // A swap's destination is an already-funded routing/vault account, so the
+        // activation-reserve
+        // probe (fetchAccountsInfo) would always resolve to zero — skip it and delegate to
+        // calculateDefaultFees, which returns only the dynamic network fee.
         if (transaction is Swap) {
             return@supervisorScope calculateDefaultFees(transaction)
         }

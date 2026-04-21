@@ -6,12 +6,10 @@ import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.Fee
 import javax.inject.Inject
-import kotlinx.coroutines.coroutineScope
 
 class ZkFeeService @Inject constructor(private val evmApiFactory: EvmApiFactory) : FeeService {
-    override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = coroutineScope {
+    override suspend fun calculateFees(transaction: BlockchainTransaction): Fee =
         estimateFee(transaction)
-    }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee =
         estimateFee(transaction)
