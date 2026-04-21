@@ -35,6 +35,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import vultisig.keysign.v1.CustomMessagePayload
@@ -224,10 +225,20 @@ constructor(
         saveShareQrBitmapJob =
             viewModelScope.launch {
                 val bitmap = qrBitmap ?: return@launch
+                // Allocation happens on IO; if cancellation races with the render, `withContext`'s
+                // prompt-cancellation guarantee discards the returned bitmap before we can recycle
+                // it. Recycle in-place and return null so the native memory is released instead of
+                // waiting for GC.
                 val rendered =
                     withContext(Dispatchers.IO) {
-                        makeQrCodeBitmapShareFormat(context, bitmap, color, logo, info)
-                    }
+                        val bmp = makeQrCodeBitmapShareFormat(context, bitmap, color, logo, info)
+                        if (!isActive) {
+                            bmp.recycle()
+                            null
+                        } else {
+                            bmp
+                        }
+                    } ?: return@launch
                 val previous = shareQrBitmap.value
                 shareQrBitmap.value = rendered
                 if (previous != null && previous !== rendered) previous.recycle()

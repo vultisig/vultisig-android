@@ -207,8 +207,15 @@ constructor(
     fun shareQr(activity: Context) {
         val qr = qrBitmap.value ?: return
 
+        // Mirror loadData()'s fast/secure predicate: active-vault migrate (signers > 2) goes
+        // through peer discovery even when email+password are present, so the share card must
+        // not advertise "Fast Vault" for it.
+        val isFastVault =
+            !email.isNullOrBlank() &&
+                !password.isNullOrBlank() &&
+                !(args?.action == TssAction.Migrate && signers.size > 2)
         val typeRes =
-            if (email != null) R.string.qr_share_type_fast_vault
+            if (isFastVault) R.string.qr_share_type_fast_vault
             else R.string.qr_share_type_secure_vault
         val info =
             QrShareInfo(
