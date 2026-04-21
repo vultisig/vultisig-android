@@ -562,7 +562,7 @@
     <!-- Deposit Errors -->
     <string name="deposit_error_invalid_lpunits">LP 单位无效</string>
     <string name="deposit_error_invalid_assets">资产无效</string>
-    <string name="deposit_error_chain_not_enabled">Enable %1$s in this vault to withdraw %2$s</string>
+    <string name="deposit_error_chain_not_enabled">请在此保险库中启用 %1$s 以提取 %2$s</string>
 
     <!-- Deposit Form Screen -->
     <string name="deposit_error_has_not_reached_maturity">这笔存款尚未到期。</string>
