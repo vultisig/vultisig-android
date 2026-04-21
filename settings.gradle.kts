@@ -20,8 +20,12 @@ dependencyResolutionManagement {
         maven {
             url = uri("https://maven.pkg.github.com/trustwallet/wallet-core")
             credentials {
-                username = System.getenv("TRUSTWALLET_USER")
-                password = System.getenv("TRUSTWALLET_PAT")
+                username = System.getenv("TRUSTWALLET_USER")?.takeIf { it.isNotBlank() }
+                    ?: System.getenv("GITHUB_ACTOR")?.takeIf { it.isNotBlank() }
+                    ?: "token"
+                password = System.getenv("TRUSTWALLET_PAT")?.takeIf { it.isNotBlank() }
+                    ?: System.getenv("GH_TOKEN")?.takeIf { it.isNotBlank() }
+                    ?: ""
             }
             content {
                 includeGroup("com.trustwallet")
