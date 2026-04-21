@@ -182,6 +182,7 @@
     <string name="send_error_no_token">No token selected</string>
     <string name="send_error_no_gas_fee">No gas fees</string>
     <string name="send_error_no_address">Address is invalid</string>
+    <string name="deposit_error_chain_not_enabled">Enable %1$s in this vault to withdraw %2$s</string>
     <string name="send_error_no_amount">Amount must be a positive number</string>
     <string name="send_error_invalid_operator_fee">Operator fee must be a valid number between 0 and 10000 basis points</string>
     <string name="send_error_max_shares">Amount should not exceed balance</string>
