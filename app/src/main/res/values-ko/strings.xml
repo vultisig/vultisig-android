@@ -961,6 +961,7 @@
     <string name="operation">작업</string>
     <string name="thorchain_address_not_found_in_vault">볼트에서 THORChain 주소를 찾을 수 없습니다. 볼트에 RUNE이 있는지 확인해 주세요</string>
     <string name="deposit_error_not_secured_asset">선택한 자산은 보안 자산이 아니므로 처리할 수 없습니다</string>
+    <string name="deposit_error_chain_not_enabled">%1$s 체인이 이 볼트에서 활성화되지 않았습니다</string>
     <string name="keysign_password_hide_hint">힌트 숨기기</string>
     <string name="keysign_password_show_hint">힌트 표시</string>
     <!-- Circle MSCA Account -->
