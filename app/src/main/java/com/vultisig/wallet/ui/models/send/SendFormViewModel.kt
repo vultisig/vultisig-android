@@ -859,7 +859,7 @@ constructor(
                 percentage = percentage,
                 vault = vault,
                 selectedAccount = selectedAccount,
-                gasFee = gasFee,
+                gasFee = gasFee.value,
                 gasSettings = gasSettings,
                 specific = specific,
                 defiType = defiType,

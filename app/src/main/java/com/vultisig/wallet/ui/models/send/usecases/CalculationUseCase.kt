@@ -289,7 +289,7 @@ constructor(
         percentage: Float,
         vault: Vault?,
         selectedAccount: Account?,
-        gasFee: StateFlow<TokenValue?>,
+        gasFee: TokenValue?,
         gasSettings: StateFlow<GasSettings?>,
         specific: StateFlow<BlockChainSpecificAndUtxo?>,
         defiType: DeFiNavActions?,
@@ -302,11 +302,11 @@ constructor(
         val token = selectedAccount.token
 
         var amount =
-            if (gasFee.value != null) {
+            if (gasFee != null) {
                 fetchPercentageOfAvailableBalance(
                     percentage,
                     selectedAccount,
-                    gasFee.value,
+                    gasFee,
                     defiType,
                 )
             } else {
@@ -335,7 +335,7 @@ constructor(
 
         val chain = token.chain
 
-        if (gasFee.value != null && chain.standard == TokenStandard.EVM) {
+        if (gasFee != null && chain.standard == TokenStandard.EVM) {
             return PercentageAmountResult(amount, null)
         }
 
