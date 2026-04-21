@@ -16,13 +16,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.R.string
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
-import com.vultisig.wallet.data.blockchain.model.Transfer
-import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
-import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.AddressBookEntry
@@ -46,9 +43,11 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.coinType
-import com.vultisig.wallet.data.models.getPubKeyByChain
+import com.vultisig.wallet.data.models.getDustThreshold
+import com.vultisig.wallet.data.models.hasReaping
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
@@ -74,6 +73,7 @@ import com.vultisig.wallet.ui.models.send.AmountFraction.F100
 import com.vultisig.wallet.ui.models.send.AmountFraction.F25
 import com.vultisig.wallet.ui.models.send.AmountFraction.F50
 import com.vultisig.wallet.ui.models.send.AmountFraction.F75
+import com.vultisig.wallet.ui.models.send.usecases.CalculationUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -107,18 +107,15 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -249,8 +246,7 @@ constructor(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val feeServiceComposite: FeeServiceComposite,
-    private val chainValidationService: ChainValidationService,
-    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
+    private val calculationUseCase: CalculationUseCase,
 ) : ViewModel() {
 
     private var vault: Vault? = null
@@ -857,115 +853,18 @@ constructor(
             }
     }
 
-    private suspend fun calculatePercentageWithAccurateFee(percentage: Float): BigDecimal {
-        val vault = vault ?: return BigDecimal.ZERO
-        val isMax = percentage == 1f
-        val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
-        val token = selectedAccount.token
-
-        var amount =
-            if (gasFee.value != null) {
-                fetchPercentageOfAvailableBalance(percentage)
-            } else {
-                getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)
-                    ?.decimal
-                    ?.multiply(percentage.toBigDecimal()) ?: BigDecimal.ZERO
-            }
-
-        if (
-            defiType != null &&
-                defiType != DeFiNavActions.BOND &&
-                defiType != DeFiNavActions.STAKE_RUJI &&
-                defiType != DeFiNavActions.UNSTAKE_RUJI &&
-                defiType != DeFiNavActions.STAKE_TCY &&
-                defiType != DeFiNavActions.UNSTAKE_TCY &&
-                defiType != DeFiNavActions.STAKE_STCY &&
-                defiType != DeFiNavActions.UNSTAKE_STCY &&
-                defiType != DeFiNavActions.REDEEM_YRUNE &&
-                defiType != DeFiNavActions.MINT_YTCY &&
-                defiType != DeFiNavActions.REDEEM_YTCY &&
-                defiType != DeFiNavActions.FREEZE_TRX &&
-                defiType != DeFiNavActions.UNFREEZE_TRX
-        ) {
-            return amount
-        }
-
-        val chain = token.chain
-
-        if (gasFee.value != null && chain.standard == TokenStandard.EVM) {
-            return amount
-        }
-
-        try {
-            val tokenAmountInt = amount.movePointRight(token.decimal).toBigInteger()
-            val blockchainTransaction =
-                Transfer(
-                    coin = token,
-                    vault =
-                        VaultData(
-                            vaultHexChainCode = vault.hexChainCode,
-                            vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                        ),
-                    amount = tokenAmountInt,
-                    to = addressFieldState.text.asAddressInput(),
-                    memo = memoFieldState.text.toString(),
-                    isMax = isMax,
-                )
-
-            val calculatedFee =
-                withContext(Dispatchers.IO) {
-                    feeServiceComposite.calculateFees(blockchainTransaction)
-                }
-
-            val nativeCoin =
-                withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-
-            val newGasFee = TokenValue(value = calculatedFee.amount, token = nativeCoin)
-
-            gasFee.value = adjustGasFee(newGasFee, gasSettings.value, specific.value)
-            amount = fetchPercentageOfAvailableBalance(percentage)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to calculate gas fee for percentage amount")
-        }
-
-        return amount
-    }
-
-    private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal {
-        val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
-        val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
-
-        val availableTokenBalance =
-            if (
-                defiType == null ||
-                    defiType == DeFiNavActions.BOND ||
-                    defiType == DeFiNavActions.STAKE_RUJI ||
-                    defiType == DeFiNavActions.STAKE_TCY ||
-                    defiType == DeFiNavActions.STAKE_STCY ||
-                    defiType == DeFiNavActions.MINT_YRUNE ||
-                    defiType == DeFiNavActions.REDEEM_YRUNE ||
-                    defiType == DeFiNavActions.MINT_YTCY ||
-                    defiType == DeFiNavActions.REDEEM_YTCY ||
-                    defiType == DeFiNavActions.FREEZE_TRX ||
-                    defiType == DeFiNavActions.UNFREEZE_TRX
-            ) {
-                getAvailableTokenBalance(selectedAccount, currentGasFee.value)
-            } else {
-                getAvailableTokenBalance(
-                    selectedAccount,
-                    BigInteger
-                        .ZERO, // Substraction should not happen to DeFi Balance (Unbond, Staked,
-                    // Rewards,
-                    // etc...)
-                )
-            }
-
-        return availableTokenBalance
-            ?.decimal
-            ?.multiply(percentage.toBigDecimal())
-            ?.setScale(selectedAccount.token.decimal, RoundingMode.DOWN)
-            ?.stripTrailingZeros() ?: BigDecimal.ZERO
-    }
+    private suspend fun calculatePercentageWithAccurateFee(percentage: Float): BigDecimal =
+        calculationUseCase.calculatePercentageWithAccurateFee(
+            percentage = percentage,
+            vault = vault,
+            selectedAccount = selectedAccount,
+            gasFee = gasFee,
+            gasSettings = gasSettings,
+            specific = specific,
+            defiType = defiType,
+            addressText = addressFieldState.text.toString(),
+            memoText = memoFieldState.text.toString(),
+        )
 
     fun dismissError() {
         uiState.update { it.copy(errorText = null) }
@@ -1270,7 +1169,8 @@ constructor(
                         .let { specific ->
                             if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
                                 planBtc.value
-                                    ?: getBitcoinTransactionPlan(
+                                    ?: calculationUseCase
+                                        .getBitcoinTransactionPlan(
                                             vaultId = vaultId,
                                             selectedToken = selectedToken,
                                             dstAddress = dstAddress,
@@ -2143,33 +2043,42 @@ constructor(
         )
     }
 
-    private suspend fun getBitcoinTransactionPlan(
-        vaultId: String,
-        selectedToken: Coin,
-        dstAddress: String,
-        tokenAmountInt: BigInteger,
+    @kotlin.ExperimentalStdlibApi
+    private fun selectUtxosIfNeeded(
+        chain: Chain,
         specific: BlockChainSpecificAndUtxo,
-        memo: String?,
-    ): Bitcoin.TransactionPlan {
-        val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
-        val keysignPayload =
-            KeysignPayload(
-                coin = selectedToken,
-                toAddress = dstAddress,
-                toAmount = tokenAmountInt,
-                blockChainSpecific = specific.blockChainSpecific,
-                memo = memo,
-                vaultPublicKeyECDSA = vault.pubKeyECDSA,
-                vaultLocalPartyID = vault.localPartyID,
-                utxos = specific.utxos,
-                libType = vault.libType,
-                wasmExecuteContractPayload = null,
+    ): BlockChainSpecificAndUtxo {
+        specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
+
+        val updatedUtxo =
+            planBtc.value?.utxosOrBuilderList?.map { planUtxo ->
+                UtxoInfo(
+                    hash = planUtxo.outPoint.hash.toByteArray().reversedArray().toHexString(),
+                    index = planUtxo.outPoint.index.toUInt(),
+                    amount = planUtxo.amount,
+                )
+            } ?: return specific
+
+        return specific.copy(utxos = updatedUtxo)
+    }
+
+    private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
+        val minAmount = chain.getDustThreshold
+        if (tokenAmountInt < minAmount) {
+            val symbol = chain.coinType.symbol
+            val name = chain.raw
+            val formattedMinAmount = chain.toValue(minAmount).toString()
+            throw InvalidTransactionDataException(
+                UiText.FormattedText(
+                    R.string.send_form_minimum_send_amount_is_requires_this,
+                    listOf(formattedMinAmount, symbol, name),
+                )
             )
+        }
 
-        val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
-
-        val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
-        return plan
+        if (planBtc.value?.error != SigningError.OK) {
+            throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
+        }
     }
 
     private fun hideLoading() {
@@ -2186,9 +2095,6 @@ constructor(
         lastTokenValueUserInput = ""
         selectedToken.value = token
     }
-
-    private fun calculateGasLimit(chain: Chain, specific: BlockChainSpecific?): BigInteger =
-        (specific as? BlockChainSpecific.Ethereum)?.gasLimit ?: BigInteger.valueOf(1)
 
     private fun showError(text: UiText) {
         uiState.update { it.copy(errorText = text) }
@@ -2434,210 +2340,79 @@ constructor(
 
     private fun calculateGasTokenBalance() {
         viewModelScope.launch {
-            selectedToken
-                .filterNotNull()
-                .map {
-                    if (it.isNativeToken) {
-                        null
-                    } else {
-                        accounts.value
-                            .find { account ->
-                                account.token.isNativeToken && account.token.chain == it.chain
-                            }
-                            ?.tokenValue
-                    }
-                }
-                .collect { gasTokenBalance ->
-                    if (gasTokenBalance == null) {
-                        uiState.update { it.copy(gasTokenBalance = null) }
-                    } else {
-                        uiState.update {
-                            it.copy(
-                                gasTokenBalance =
-                                    UiText.DynamicString(mapTokenValueToString(gasTokenBalance))
-                            )
-                        }
-                    }
-                }
+            calculationUseCase.gasTokenBalanceFlow(selectedToken, accounts).collect {
+                gasTokenBalance ->
+                uiState.update { it.copy(gasTokenBalance = gasTokenBalance) }
+            }
         }
     }
 
     @OptIn(FlowPreview::class)
     private fun calculateGasFees() {
         viewModelScope.launch {
-            combine(
-                    combine(
-                            selectedToken.filterNotNull(),
-                            addressFieldState.textAsFlow(),
-                            memoFieldState.textAsFlow(),
-                            tokenAmountFieldState.textAsFlow(),
-                            recalculateGasFee,
-                        ) { token, dst, memo, tokenAmount, nonce ->
-                            GasFeeInput(
-                                token,
-                                dst.asAddressInput(),
-                                memo.toString(),
-                                tokenAmount,
-                                nonce,
-                            )
-                        }
-                        .debounce(350)
-                        .distinctUntilChanged()
-                        .mapNotNull { (token, dst, memo, tokenAmount) ->
-                            val vault = vault ?: return@mapNotNull null
-                            val tokenAmount = tokenAmount.toString().toBigDecimalOrNull()
-
-                            val tokenAmountInt =
-                                tokenAmount?.movePointRight(token.decimal)?.toBigInteger()
-                                    ?: return@mapNotNull null
-
-                            val chain = token.chain
-                            val blockchainTransaction =
-                                Transfer(
-                                    coin = token,
-                                    vault =
-                                        VaultData(
-                                            vaultHexChainCode = vault.hexChainCode,
-                                            vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                                        ),
-                                    amount = tokenAmountInt,
-                                    to = resolvedDstAddress.value ?: dst,
-                                    memo = memo,
-                                    isMax = false,
-                                )
-
-                            val fees =
-                                withContext(Dispatchers.IO) {
-                                    feeServiceComposite.calculateFees(blockchainTransaction)
-                                }
-                            val nativeCoin =
-                                withContext(Dispatchers.IO) {
-                                    tokenRepository.getNativeToken(chain.id)
-                                }
-
-                            TokenValue(value = fees.amount, token = nativeCoin)
-                        }
-                        .catch { Timber.e(it) },
-                    gasSettings,
-                    specific,
-                ) { gasFee, gasSettings, specific ->
-                    this@SendFormViewModel.gasFee.value =
-                        adjustGasFee(gasFee, gasSettings, specific)
-                }
-                .collect()
+            calculationUseCase
+                .gasFeesFlow(
+                    selectedToken = selectedToken,
+                    addressFlow = addressFieldState.textAsFlow(),
+                    memoFlow = memoFieldState.textAsFlow(),
+                    tokenAmountFlow = tokenAmountFieldState.textAsFlow(),
+                    gasSettings = gasSettings,
+                    specific = specific,
+                    resolvedDstAddress = resolvedDstAddress,
+                    vault = { vault },
+                )
+                .collect { fee -> gasFee.value = fee }
         }
     }
 
     private fun collectPlanFee() {
         viewModelScope.launch {
-            combine(
-                    selectedToken.filterNotNull(),
-                    addressFieldState.textAsFlow(),
-                    tokenAmountFieldState.textAsFlow(),
-                    specific.filterNotNull(),
-                    memoFieldState.textAsFlow(),
-                ) { token, dstAddress, tokenAmount, specific, memo ->
-                    PlanFeeInput(token, dstAddress, tokenAmount, specific, memo)
+            calculationUseCase
+                .planFeeFlow(
+                    selectedToken = selectedToken,
+                    addressFlow = addressFieldState.textAsFlow(),
+                    tokenAmountFlow = tokenAmountFieldState.textAsFlow(),
+                    specific = specific,
+                    memoFlow = memoFieldState.textAsFlow(),
+                    vaultId = { vaultId },
+                )
+                .collect { result ->
+                    result ?: return@collect
+                    planFee.value = result.planFee
+                    planBtc.value = result.planBtc
                 }
-                .combine(recalculateGasFee) { data, _ -> data }
-                .mapNotNull { (token, dstAddress, tokenAmount, specific, memo) ->
-                    try {
-                        val chain = token.chain
-                        if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) {
-                            planFee.value = 1
-                            return@mapNotNull null
-                        }
-
-                        val vaultId =
-                            vaultId
-                                ?: throw InvalidTransactionDataException(
-                                    UiText.StringResource(R.string.send_error_no_token)
-                                )
-
-                        val resolvedDstAddress =
-                            addressParserRepository.resolveName(dstAddress.asAddressInput(), chain)
-                        val tokenAmountInt =
-                            tokenAmount
-                                .toString()
-                                .toBigDecimal()
-                                .movePointRight(token.decimal)
-                                .toBigInteger()
-
-                        val plan =
-                            getBitcoinTransactionPlan(
-                                vaultId,
-                                token,
-                                resolvedDstAddress,
-                                tokenAmountInt,
-                                specific,
-                                memo.toString(),
-                            )
-
-                        planFee.value = plan.fee
-                        planBtc.value = plan
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                    }
-                }
-                .collect()
         }
     }
 
     private fun collectMaxAmount() {
         viewModelScope.launch {
-            isMaxAmount.collect { isMax ->
-                val chain = selectedAccount?.token?.chain ?: return@collect
-                // Only require to re-trigger utxo chains, due to no change output utxo and
-                // therefore
-                // less fees
-                if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                    val spec =
-                        specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO
-                            ?: return@collect
-                    val updatedSpec =
-                        specific.value?.copy(blockChainSpecific = spec.copy(sendMaxAmount = isMax))
-                    specific.value = updatedSpec
-                }
-            }
+            calculationUseCase
+                .maxAmountSpecificFlow(
+                    isMaxAmount = isMaxAmount,
+                    selectedAccount = { selectedAccount },
+                    specific = specific,
+                )
+                .collect { updatedSpec -> specific.value = updatedSpec }
         }
     }
 
     private fun collectEstimatedFee() {
         viewModelScope.launch {
-            combine(
-                    selectedToken.filterNotNull(),
-                    gasFee.filterNotNull(),
-                    gasSettings,
-                    planFee.filterNotNull(),
-                ) { token, gasFee, gasSettings, planFee ->
-                    val chain = token.chain
-                    val evmGasSettings = gasSettings as? GasSettings.Eth
-                    val estimatedFee =
-                        gasFeeToEstimatedFee(
-                            GasFeeParams(
-                                gasLimit =
-                                    if (evmGasSettings != null) evmGasSettings.gasLimit
-                                    else BigInteger.valueOf(1),
-                                gasFee =
-                                    selectGasFeeForFeeEstimation(
-                                        chain = chain,
-                                        gasFee = gasFee,
-                                        planFee = planFee,
-                                        evmGasSettings = evmGasSettings,
-                                    ),
-                                selectedToken = token,
-                                perUnit = true,
-                            )
-                        )
-
+            calculationUseCase
+                .estimatedFeeFlow(
+                    selectedToken = selectedToken,
+                    gasFee = gasFee,
+                    gasSettings = gasSettings,
+                    planFee = planFee,
+                )
+                .collect { result ->
                     uiState.update {
                         it.copy(
-                            estimatedFee = UiText.DynamicString(estimatedFee.formattedFiatValue),
-                            totalGas = UiText.DynamicString(estimatedFee.formattedTokenValue),
+                            estimatedFee = UiText.DynamicString(result.estimatedFee),
+                            totalGas = UiText.DynamicString(result.totalGas),
                         )
                     }
                 }
-                .collect()
         }
     }
 
@@ -2670,21 +2445,6 @@ constructor(
                 .collect()
         }
     }
-
-    private fun adjustGasFee(
-        gasFee: TokenValue,
-        gasSettings: GasSettings?,
-        spec: BlockChainSpecificAndUtxo?,
-    ) =
-        gasFee.copy(
-            value =
-                if (
-                    gasSettings is GasSettings.UTXO &&
-                        spec?.blockChainSpecific is BlockChainSpecific.UTXO
-                ) {
-                    gasSettings.byteFee
-                } else gasFee.value
-        )
 
     private fun loadSelectedCurrency() {
         viewModelScope.launch {
@@ -2875,7 +2635,24 @@ constructor(
     fun refreshGasFee() {
         viewModelScope.launch {
             uiState.update { it.copy(isRefreshing = true) }
-            recalculateGasFee.update { it + 1 }
+
+            val gasFee =
+                try {
+                    gasFeeRepository.getGasFee(
+                        chain = srcAddress.chain,
+                        address = srcAddress.address,
+                        isNativeToken = srcAddress.isNativeToken,
+                        to = addressFieldState.text.toString(),
+                        memo = memoFieldState.text.toString(),
+                    )
+                } catch (e: Exception) {
+                    uiState.update { it.copy(isRefreshing = false) }
+                    return@launch
+                }
+
+            this@SendFormViewModel.gasFee.value =
+                calculationUseCase.adjustGasFee(gasFee, gasSettings.value, specific.value)
+
             // Rapid toggling of isRefreshing can cause the initial true value to be skipped,
             // displaying only the false value in the UI resulting in the swipe refresh being
             // frozen.
