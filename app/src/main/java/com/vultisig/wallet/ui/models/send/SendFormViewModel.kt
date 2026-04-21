@@ -3340,6 +3340,10 @@ constructor(
     }
 }
 
+/**
+ * Returns the first [SendSrc] matching [selectedTokenId] or [filterByChain], falling back to the
+ * first address.
+ */
 internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain: Chain?): SendSrc {
     val address =
         when {
@@ -3361,6 +3365,10 @@ internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain:
     return SendSrc(address, account)
 }
 
+/**
+ * Refreshes [currentSrc] against the latest address list, preserving chain/ticker when no
+ * [selectedTokenId] is set.
+ */
 internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: SendSrc): SendSrc {
     if (selectedTokenId == null) {
         val selectedAddress = currentSrc.address
