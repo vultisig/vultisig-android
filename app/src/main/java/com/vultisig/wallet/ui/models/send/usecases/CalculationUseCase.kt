@@ -31,7 +31,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -46,6 +45,9 @@ import wallet.core.jni.proto.Bitcoin
 
 /** Result of a plan fee calculation for UTXO chains. */
 internal data class PlanFeeResult(val planFee: Long, val planBtc: Bitcoin.TransactionPlan?)
+
+/** Result of a percentage amount calculation, including an optionally refreshed gas fee. */
+internal data class PercentageAmountResult(val amount: BigDecimal, val updatedGasFee: TokenValue?)
 
 /** Result of an estimated fee calculation for UI display. */
 internal data class EstimatedFeeUiResult(val estimatedFee: String, val totalGas: String)
@@ -231,15 +233,16 @@ constructor(
                     return@combine PlanFeeResult(planFee = 1L, planBtc = null)
                 }
 
-                val id = vaultId() ?: error("No vault ID for plan fee calculation")
-                val resolvedAddress =
-                    addressParserRepository.resolveName(dstAddress.toString(), chain)
                 val tokenAmountInt =
                     tokenAmount
                         .toString()
-                        .toBigDecimal()
-                        .movePointRight(token.decimal)
-                        .toBigInteger()
+                        .toBigDecimalOrNull()
+                        ?.movePointRight(token.decimal)
+                        ?.toBigInteger() ?: return@combine null
+
+                val id = vaultId() ?: error("No vault ID for plan fee calculation")
+                val resolvedAddress =
+                    addressParserRepository.resolveName(dstAddress.toString(), chain)
 
                 val plan =
                     getBitcoinTransactionPlan(
@@ -265,42 +268,47 @@ constructor(
         isMaxAmount: Flow<Boolean>,
         selectedAccount: () -> Account?,
         specific: StateFlow<BlockChainSpecificAndUtxo?>,
-    ): Flow<BlockChainSpecificAndUtxo?> =
-        isMaxAmount.mapNotNull { isMax ->
-            val chain = selectedAccount()?.token?.chain ?: return@mapNotNull null
-            if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                val spec =
-                    specific.value?.blockChainSpecific as? BlockChainSpecific.UTXO
-                        ?: return@mapNotNull null
-                specific.value?.copy(blockChainSpecific = spec.copy(sendMaxAmount = isMax))
-            } else null
-        }
+    ): Flow<BlockChainSpecificAndUtxo> =
+        combine(isMaxAmount, specific) { isMax, spec ->
+                val chain = selectedAccount()?.token?.chain ?: return@combine null
+                if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                    val utxoSpec =
+                        spec?.blockChainSpecific as? BlockChainSpecific.UTXO ?: return@combine null
+                    spec.copy(blockChainSpecific = utxoSpec.copy(sendMaxAmount = isMax))
+                } else null
+            }
+            .filterNotNull()
 
     /**
      * Calculates the token amount corresponding to [percentage] of the available balance, fetching
-     * an accurate gas fee estimate if not already cached. Writes the refreshed gas fee to [gasFee].
+     * an accurate gas fee estimate if not already cached.
      *
-     * @return the computed amount, or [BigDecimal.ZERO] if required state is unavailable.
+     * @return the computed amount and the refreshed gas fee (null if no refresh occurred).
      */
     suspend fun calculatePercentageWithAccurateFee(
         percentage: Float,
         vault: Vault?,
         selectedAccount: Account?,
-        gasFee: MutableStateFlow<TokenValue?>,
+        gasFee: StateFlow<TokenValue?>,
         gasSettings: StateFlow<GasSettings?>,
         specific: StateFlow<BlockChainSpecificAndUtxo?>,
         defiType: DeFiNavActions?,
         addressText: String,
         memoText: String,
-    ): BigDecimal {
-        vault ?: return BigDecimal.ZERO
-        selectedAccount ?: return BigDecimal.ZERO
+    ): PercentageAmountResult {
+        vault ?: return PercentageAmountResult(BigDecimal.ZERO, null)
+        selectedAccount ?: return PercentageAmountResult(BigDecimal.ZERO, null)
         val isMax = percentage == 1f
         val token = selectedAccount.token
 
         var amount =
             if (gasFee.value != null) {
-                fetchPercentageOfAvailableBalance(percentage, selectedAccount, gasFee, defiType)
+                fetchPercentageOfAvailableBalance(
+                    percentage,
+                    selectedAccount,
+                    gasFee.value,
+                    defiType,
+                )
             } else {
                 getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)
                     ?.decimal
@@ -318,15 +326,17 @@ constructor(
                 defiType != DeFiNavActions.UNSTAKE_STCY &&
                 defiType != DeFiNavActions.REDEEM_YRUNE &&
                 defiType != DeFiNavActions.MINT_YTCY &&
-                defiType != DeFiNavActions.REDEEM_YTCY
+                defiType != DeFiNavActions.REDEEM_YTCY &&
+                defiType != DeFiNavActions.FREEZE_TRX &&
+                defiType != DeFiNavActions.UNFREEZE_TRX
         ) {
-            return amount
+            return PercentageAmountResult(amount, null)
         }
 
         val chain = token.chain
 
         if (gasFee.value != null && chain.standard == TokenStandard.EVM) {
-            return amount
+            return PercentageAmountResult(amount, null)
         }
 
         try {
@@ -354,19 +364,24 @@ constructor(
                 withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
 
             val newGasFee = TokenValue(value = calculatedFee.amount, token = nativeCoin)
-
-            gasFee.value = adjustGasFee(newGasFee, gasSettings.value, specific.value)
+            val updatedGasFee = adjustGasFee(newGasFee, gasSettings.value, specific.value)
             amount =
-                fetchPercentageOfAvailableBalance(percentage, selectedAccount, gasFee, defiType)
+                fetchPercentageOfAvailableBalance(
+                    percentage,
+                    selectedAccount,
+                    updatedGasFee,
+                    defiType,
+                )
+            return PercentageAmountResult(amount, updatedGasFee)
         } catch (e: Exception) {
             Timber.e(e, "Failed to calculate gas fee for percentage amount")
         }
 
-        return amount
+        return PercentageAmountResult(amount, null)
     }
 
     /** Resolves the Bitcoin transaction plan for a UTXO send. */
-    internal suspend fun getBitcoinTransactionPlan(
+    private suspend fun getBitcoinTransactionPlan(
         vaultId: String,
         selectedToken: Coin,
         dstAddress: String,
@@ -397,10 +412,10 @@ constructor(
     private suspend fun fetchPercentageOfAvailableBalance(
         percentage: Float,
         selectedAccount: Account,
-        gasFee: StateFlow<TokenValue?>,
+        gasFee: TokenValue?,
         defiType: DeFiNavActions?,
     ): BigDecimal {
-        val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
+        val currentGasFee = gasFee ?: return BigDecimal.ZERO
 
         val availableTokenBalance =
             if (
@@ -412,7 +427,9 @@ constructor(
                     defiType == DeFiNavActions.MINT_YRUNE ||
                     defiType == DeFiNavActions.REDEEM_YRUNE ||
                     defiType == DeFiNavActions.MINT_YTCY ||
-                    defiType == DeFiNavActions.REDEEM_YTCY
+                    defiType == DeFiNavActions.REDEEM_YTCY ||
+                    defiType == DeFiNavActions.FREEZE_TRX ||
+                    defiType == DeFiNavActions.UNFREEZE_TRX
             ) {
                 getAvailableTokenBalance(selectedAccount, currentGasFee.value)
             } else {

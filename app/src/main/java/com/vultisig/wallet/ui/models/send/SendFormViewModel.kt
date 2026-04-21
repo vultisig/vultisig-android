@@ -853,18 +853,22 @@ constructor(
             }
     }
 
-    private suspend fun calculatePercentageWithAccurateFee(percentage: Float): BigDecimal =
-        calculationUseCase.calculatePercentageWithAccurateFee(
-            percentage = percentage,
-            vault = vault,
-            selectedAccount = selectedAccount,
-            gasFee = gasFee,
-            gasSettings = gasSettings,
-            specific = specific,
-            defiType = defiType,
-            addressText = addressFieldState.text.toString(),
-            memoText = memoFieldState.text.toString(),
-        )
+    private suspend fun calculatePercentageWithAccurateFee(percentage: Float): BigDecimal {
+        val result =
+            calculationUseCase.calculatePercentageWithAccurateFee(
+                percentage = percentage,
+                vault = vault,
+                selectedAccount = selectedAccount,
+                gasFee = gasFee,
+                gasSettings = gasSettings,
+                specific = specific,
+                defiType = defiType,
+                addressText = addressFieldState.text.toString(),
+                memoText = memoFieldState.text.toString(),
+            )
+        result.updatedGasFee?.let { gasFee.value = it }
+        return result.amount
+    }
 
     fun dismissError() {
         uiState.update { it.copy(errorText = null) }
