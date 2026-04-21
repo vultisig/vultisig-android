@@ -1408,8 +1408,7 @@ constructor(
                         if (defiType == DeFiNavActions.UNFREEZE_TRX) {
                             currentTronFrozenBalance()
                                 ?.movePointRight(selectedToken.decimal)
-                                ?.toBigInteger()
-                                ?: BigInteger.ZERO
+                                ?.toBigInteger() ?: BigInteger.ZERO
                         } else {
                             getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
                                 ?: BigInteger.ZERO
