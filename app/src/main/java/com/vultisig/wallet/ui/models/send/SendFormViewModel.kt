@@ -80,6 +80,7 @@ import com.vultisig.wallet.ui.models.send.AmountFraction.F100
 import com.vultisig.wallet.ui.models.send.AmountFraction.F25
 import com.vultisig.wallet.ui.models.send.AmountFraction.F50
 import com.vultisig.wallet.ui.models.send.AmountFraction.F75
+import com.vultisig.wallet.ui.models.send.state.SendFormStateManager
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -110,8 +111,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
@@ -126,7 +125,6 @@ import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -261,7 +259,10 @@ constructor(
     private var vault: Vault? = null
     private val args = savedStateHandle.toRoute<Route.Send>()
 
-    val uiState = MutableStateFlow(SendFormUiModel())
+    private val stateManager = SendFormStateManager(appCurrencyRepository, viewModelScope)
+
+    val uiState
+        get() = stateManager.uiState
 
     private val _focusFieldChannel = Channel<SendFocusField>(Channel.BUFFERED)
     val focusFieldFlow = _focusFieldChannel.receiveAsFlow()
@@ -284,12 +285,14 @@ constructor(
 
     private var mscaAddress: String? = null
 
-    private val selectedToken = MutableStateFlow<Coin?>(null)
+    private val selectedToken
+        get() = stateManager.selectedToken
 
     private val selectedTokenValue: Coin?
         get() = selectedToken.value
 
-    private val accounts = MutableStateFlow(emptyList<Account>())
+    private val accounts
+        get() = stateManager.accounts
 
     private val selectedAccount: Account?
         get() {
@@ -303,30 +306,39 @@ constructor(
 
     private var chooseAmountFractionJob: Job? = null
 
-    private val appCurrency =
-        appCurrencyRepository.currency.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(),
-            appCurrencyRepository.defaultCurrency,
-        )
+    private val appCurrency
+        get() = stateManager.appCurrency
 
-    private val planFee = MutableStateFlow<Long?>(null)
-    private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
+    private val planFee
+        get() = stateManager.planFee
 
-    private val gasFee = MutableStateFlow<TokenValue?>(null)
-    private val resolvedDstAddress = MutableStateFlow<String?>(null)
-    private val dstAddressLabel = MutableStateFlow<String?>(null)
+    private val planBtc
+        get() = stateManager.planBtc
 
-    private var gasSettings = MutableStateFlow<GasSettings?>(null)
+    private val gasFee
+        get() = stateManager.gasFee
 
-    private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
+    private val resolvedDstAddress
+        get() = stateManager.resolvedDstAddress
+
+    private val dstAddressLabel
+        get() = stateManager.dstAddressLabel
+
+    private val gasSettings
+        get() = stateManager.gasSettings
+
+    private val specific
+        get() = stateManager.specific
+
     private var maxAmount = BigDecimal.ZERO
-    private val isMaxAmount = MutableStateFlow(false)
+    private val isMaxAmount
+        get() = stateManager.isMaxAmount
 
     private var lastTokenValueUserInput = ""
     private var lastFiatValueUserInput = ""
 
-    private val isSwitchingAccounts = MutableStateFlow(false)
+    private val isSwitchingAccounts
+        get() = stateManager.isSwitchingAccounts
 
     init {
         loadData(
