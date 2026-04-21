@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.usecases
 
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import org.junit.jupiter.api.Test
 
 /**
@@ -93,6 +94,6 @@ internal class QrShareInfoTest {
     @Test
     fun `QrShareField default valueIcon is null`() {
         val field = QrShareField("Vault", "My Vault")
-        assertEquals(null, field.valueIcon)
+        assertNull(field.valueIcon)
     }
 }
