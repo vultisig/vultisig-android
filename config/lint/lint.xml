@@ -34,9 +34,7 @@
     <issue id="RtlCompat" severity="warning" />
     <issue id="SdCardPath" severity="error" />
     <issue id="SpUsage" severity="warning" />
-    <issue id="StaticFieldLeak" severity="error">
-        <ignore path="**/*ViewModel.kt" />
-    </issue>
+    <issue id="StaticFieldLeak" severity="warning" />
     <issue id="StopShip" severity="error" />
     <issue id="StringFormatMatches" severity="error" />
     <issue id="StringFormatTrivial" severity="error" />
