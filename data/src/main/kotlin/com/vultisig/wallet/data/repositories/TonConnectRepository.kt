@@ -7,6 +7,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
+import timber.log.Timber
 
 /** Persists the active TonConnect session across app restarts via DataStore. */
 interface TonConnectRepository {
@@ -23,18 +24,31 @@ interface TonConnectRepository {
 /** DataStore-backed [TonConnectRepository] implementation. */
 internal class TonConnectRepositoryImpl
 @Inject
-constructor(private val dataStore: AppDataStore, private val json: Json) : TonConnectRepository {
+constructor(private val dataStore: AppDataStore, json: Json) : TonConnectRepository {
+
+    private val json: Json = Json(from = json) { coerceInputValues = true }
 
     override val session: Flow<TonConnectSession?> =
         dataStore.readData(KEY_SESSION).map { raw ->
             raw?.ifEmpty { null }
-                ?.let { runCatching { json.decodeFromString<TonConnectSession>(it) }.getOrNull() }
+                ?.let {
+                    runCatching { json.decodeFromString<TonConnectSession>(it) }
+                        .onFailure { e ->
+                            Timber.w(
+                                e,
+                                "Failed to decode TonConnectSession; dropping persisted value",
+                            )
+                        }
+                        .getOrNull()
+                }
         }
 
     override suspend fun saveSession(session: TonConnectSession) {
         dataStore.set(KEY_SESSION, json.encodeToString(TonConnectSession.serializer(), session))
     }
 
+    // AppDataStore has no remove/clear API, so we write an empty string as a sentinel
+    // for "no session"; the session flow converts empty strings back to null.
     override suspend fun clearSession() {
         dataStore.set(KEY_SESSION, "")
     }

@@ -3,6 +3,7 @@
 package com.vultisig.wallet.app.activity
 
 import android.content.Context
+import android.net.Uri
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
@@ -16,8 +17,11 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -140,5 +144,31 @@ internal class MainViewModelTest {
             // no advance — init coroutine has not executed yet
 
             assertTrue(vm.isLoading.value)
+        }
+
+    @Test
+    fun `openUri with TonConnect URI invokes handleTonConnectUri and skips routing`() =
+        runTest(dispatcher) {
+            coEvery { vaultRepository.hasVaults() } returns true
+            val tcUri = "tc://?v=2&id=abc&r=payload"
+            val uri = mockk<Uri>()
+            every { uri.toString() } returns tcUri
+            mockkStatic(Uri::class)
+            every { Uri.decode(any()) } answers { firstArg() }
+            coEvery { handleTonConnectUri(tcUri) } returns "abc"
+
+            try {
+                val vm = createViewModel()
+                vm.onNavigationReady()
+                advanceUntilIdle()
+
+                vm.openUri(uri)
+                advanceUntilIdle()
+
+                coVerify(exactly = 1) { handleTonConnectUri(tcUri) }
+                coVerify(exactly = 0) { navigator.route(any<Route>()) }
+            } finally {
+                unmockkStatic(Uri::class)
+            }
         }
 }

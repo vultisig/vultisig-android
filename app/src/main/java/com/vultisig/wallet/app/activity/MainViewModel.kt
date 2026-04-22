@@ -177,7 +177,14 @@ constructor(
             _navigationReady.await()
             val deepLinkHelper = DeepLinkHelper(uri)
             if (deepLinkHelper.isTonConnectUri()) {
-                handleTonConnectUri(uri.toString())
+                runCatching { handleTonConnectUri(uri.toString()) }
+                    .onFailure { throwable ->
+                        Timber.w(throwable, "Failed to handle TonConnect URI")
+                        snackbarFlow.showMessage(
+                            context.getString(R.string.unknown_error),
+                            SnackbarType.Error,
+                        )
+                    }
             } else if (deepLinkHelper.isSendDeeplink()) {
                 if (hasAnyVault()) {
                     navigator.route(
