@@ -43,10 +43,12 @@ constructor(private val tonConnectRepository: TonConnectRepository) : HandleTonC
         }
 
         // Validate requestPayload is valid JSON
-        val isValidJson = runCatching {
-            Json.parseToJsonElement(requestPayload)
-            true
-        }.getOrElse { false }
+        val isValidJson =
+            runCatching {
+                    Json.parseToJsonElement(requestPayload)
+                    true
+                }
+                .getOrElse { false }
 
         if (!isValidJson) {
             Timber.w("TonConnect session rejected: invalid request payload JSON")
