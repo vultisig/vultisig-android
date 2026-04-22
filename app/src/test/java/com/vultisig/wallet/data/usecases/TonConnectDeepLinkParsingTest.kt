@@ -118,8 +118,7 @@ internal class TonConnectDeepLinkParsingTest {
 
     @Test
     fun `use case persists session when proto contains signTon`() = runTest {
-        val signTon =
-            SignTon(tonMessages = listOf(TonMessage(to = "EQabc", amount = "1000000000")))
+        val signTon = SignTon(tonMessages = listOf(TonMessage(to = "EQabc", amount = "1000000000")))
         val proto =
             KeysignMessageProto(
                 sessionId = "sess-1",
