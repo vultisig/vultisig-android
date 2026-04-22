@@ -617,13 +617,18 @@ constructor(
                     )
                 Timber.tag("KeysignFlowViewModel")
                     .d(
-                        "joinKeysign: chain=${request.chain}, isEcdsa=${request.isEcdsa}, tssKeysignType=$tssKeysignType, messages=${messagesToSign.map { it.take(16) }}"
+                        "joinKeysign: chain=%s, isEcdsa=%s, tssKeysignType=%s, messages=%s",
+                        request.chain,
+                        request.isEcdsa,
+                        tssKeysignType,
+                        messagesToSign.map { it.take(16) },
                     )
                 vultiSignerRepository.joinKeysign(request)
                 Timber.tag("KeysignFlowViewModel").d("joinKeysign: server notified successfully")
             }
         } catch (e: Exception) {
-            Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")
+            Timber.tag("KeysignFlowViewModel").e(e, "startSession failed")
+            moveToState(KeysignFlowState.Error((e.message ?: "Failed to start session").asUiText()))
         }
     }
 
