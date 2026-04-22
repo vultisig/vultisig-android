@@ -35,7 +35,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [MainViewModel]. */
 internal class MainViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
@@ -54,20 +53,17 @@ internal class MainViewModelTest {
         mockk(relaxed = true)
     private val networkUtils: NetworkUtils = mockk(relaxed = true)
 
-    /** Sets up coroutine dispatcher and network mock before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         every { networkUtils.observeConnectivityAsFlow() } returns emptyFlow()
     }
 
-    /** Resets coroutine dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         Dispatchers.resetMain()
     }
 
-    /** Creates a [MainViewModel] with all dependencies injected from test doubles. */
     private fun createViewModel() =
         MainViewModel(
             context = context,
@@ -82,7 +78,6 @@ internal class MainViewModelTest {
             networkUtils = networkUtils,
         )
 
-    /** Verifies startDestination is Home and isLoading clears when hasVaults returns true. */
     @Test
     fun `hasVaults returns true - startDestination is Home and isLoading clears`() =
         runTest(dispatcher) {
@@ -95,7 +90,6 @@ internal class MainViewModelTest {
             assertFalse(vm.isLoading.value)
         }
 
-    /** Verifies startDestination is AddVault and isLoading clears when hasVaults returns false. */
     @Test
     fun `hasVaults returns false - startDestination is AddVault and isLoading clears`() =
         runTest(dispatcher) {
@@ -108,9 +102,6 @@ internal class MainViewModelTest {
             assertFalse(vm.isLoading.value)
         }
 
-    /**
-     * Verifies startDestination falls back to AddVault when hasVaults suspends past the timeout.
-     */
     @Test
     fun `hasVaults suspends past timeout - falls back to AddVault and isLoading clears`() =
         runTest(dispatcher) {
@@ -125,9 +116,6 @@ internal class MainViewModelTest {
             assertFalse(vm.isLoading.value)
         }
 
-    /**
-     * Verifies startDestination falls back to AddVault and isLoading clears when hasVaults throws.
-     */
     @Test
     fun `hasVaults throws - falls back to AddVault and isLoading clears`() =
         runTest(dispatcher) {
@@ -140,7 +128,6 @@ internal class MainViewModelTest {
             assertFalse(vm.isLoading.value)
         }
 
-    /** Verifies isLoading is true before the init coroutine has executed. */
     @Test
     fun `isLoading starts true before init coroutine runs`() =
         runTest(dispatcher) {

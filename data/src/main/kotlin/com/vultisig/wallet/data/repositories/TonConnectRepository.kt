@@ -30,6 +30,8 @@ internal class TonConnectRepositoryImpl
 @Inject
 constructor(private val dataStore: AppDataStore, private val json: Json) : TonConnectRepository {
 
+    // TODO(#4147): upgrade to stateIn(scope, SharingStarted.WhileSubscribed(5_000), null)
+    //              once a real consumer subscribes from multiple call sites.
     /** Reads and deserializes the session from DataStore; emits null when absent or unparseable. */
     override val session: Flow<TonKeysignSession?> =
         dataStore.readData(KEY_SESSION).map { raw ->
