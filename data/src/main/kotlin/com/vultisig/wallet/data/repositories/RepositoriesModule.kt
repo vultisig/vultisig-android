@@ -250,6 +250,7 @@ internal interface RepositoriesModule {
         impl: PreventScreenshotsRepositoryImpl
     ): PreventScreenshotsRepository
 
+    /** Binds [TonConnectRepositoryImpl] as [TonConnectRepository]. */
     @Binds
     @Singleton
     fun bindTonConnectRepository(impl: TonConnectRepositoryImpl): TonConnectRepository

@@ -13,6 +13,7 @@ import timber.log.Timber
  */
 interface HandleTonConnectUriUseCase : suspend (String) -> String?
 
+/** Default [HandleTonConnectUriUseCase] implementation. */
 internal class HandleTonConnectUriUseCaseImpl
 @Inject
 constructor(private val tonConnectRepository: TonConnectRepository) : HandleTonConnectUriUseCase {
