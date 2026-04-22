@@ -9,7 +9,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 
-/** Persists the active TonConnect session across app restarts via DataStore. */
+/**
+ * Persists the active TonConnect session across app restarts via DataStore.
+ *
+ * TODO(#4147): nothing in production reads [session] yet; wiring a real consumer is tracked there.
+ */
 interface TonConnectRepository {
     /** Emits the current session, or null when no session is active. */
     val session: Flow<TonKeysignSession?>

@@ -285,8 +285,12 @@ constructor(
 
                 val payloadProto = protoBuf.decodeFromByteArray<KeysignMessage>(rawJson)
                 Timber.d("Decoded KeysignMessageProto: $payloadProto")
-                runCatching { persistTonConnectSession(payloadProto, vaultId) }
-                    .onFailure { Timber.w(it, "Failed to persist TonConnect session") }
+                // Only persist for TON payloads; full TonConnect vs. mobile-to-mobile
+                // distinction will be added in sub-issue #4147.
+                if (payloadProto.keysignPayload?.signTon != null) {
+                    runCatching { persistTonConnectSession(payloadProto, vaultId) }
+                        .onFailure { Timber.w(it, "Failed to persist TonConnect session") }
+                }
                 _sessionID = payloadProto.sessionId
                 _serviceName = payloadProto.serviceName
                 _useVultisigRelay = payloadProto.useVultisigRelay
