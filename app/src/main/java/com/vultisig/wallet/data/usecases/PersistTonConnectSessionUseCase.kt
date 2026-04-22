@@ -12,9 +12,8 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import vultisig.keysign.v1.SignTon
 
 /**
- * Detects TonConnect-originated signing requests (KeysignPayload.sign_data == SignTon) inside a
- * decoded [KeysignMessageProto] and persists a [TonKeysignSession] for the given vault.
- * Sub-issues #4147+ will flesh out dApp metadata and consumer logic.
+ * Detects TON signing requests ([KeysignPayload.signTon] present) in a [KeysignMessageProto] and
+ * persists a [TonKeysignSession] keyed by vault ID for later TonConnect consumer use.
  */
 internal interface PersistTonConnectSessionUseCase {
     suspend operator fun invoke(message: KeysignMessageProto, vaultId: String)

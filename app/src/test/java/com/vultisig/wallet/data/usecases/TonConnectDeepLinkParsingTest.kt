@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.JOIN_KEYSIGN_FLOW
 import com.vultisig.wallet.data.models.TonKeysignSession
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
+import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.repositories.TonConnectRepository
 import io.ktor.util.decodeBase64Bytes
 import io.mockk.Runs
@@ -28,6 +29,8 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import vultisig.keysign.v1.SignTon
+import vultisig.keysign.v1.TonMessage
 
 /**
  * End-to-end test of the SignTransaction deep-link pipeline for a real sample URL:
@@ -106,11 +109,34 @@ internal class TonConnectDeepLinkParsingTest {
         val decompressed = decompressQr(helper.getJsonData()!!.decodeBase64Bytes())
         val proto = protoBuf.decodeFromByteArray(KeysignMessageProto.serializer(), decompressed)
 
+        coEvery { repository.saveSession(any()) } just Runs
+
+        useCase(proto, "vault-42")
+
+        coVerify(exactly = 0) { repository.saveSession(any()) }
+    }
+
+    @Test
+    fun `use case persists session when proto contains signTon`() = runTest {
+        val signTon =
+            SignTon(tonMessages = listOf(TonMessage(to = "EQabc", amount = "1000000000")))
+        val proto =
+            KeysignMessageProto(
+                sessionId = "sess-1",
+                serviceName = "svc",
+                encryptionKeyHex = "aabbcc",
+                keysignPayload = KeysignPayloadProto(signTon = signTon),
+                useVultisigRelay = false,
+                payloadId = "",
+            )
+
         val captured = slot<TonKeysignSession>()
         coEvery { repository.saveSession(capture(captured)) } just Runs
 
         useCase(proto, "vault-42")
 
-        coVerify(exactly = 0) { repository.saveSession(any()) }
+        coVerify(exactly = 1) { repository.saveSession(any()) }
+        assertEquals("vault-42", captured.captured.vaultId)
+        assertTrue(captured.captured.signTonProtoBase64.isNotEmpty())
     }
 }
