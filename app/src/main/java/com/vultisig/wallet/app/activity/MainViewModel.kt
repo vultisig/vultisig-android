@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
+import com.vultisig.wallet.data.usecases.HandleTonConnectUriUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.data.usecases.KeysignTransactionSummary
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -63,6 +64,7 @@ constructor(
     private val appUpdateManager: AppUpdateManager,
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
+    private val handleTonConnectUri: HandleTonConnectUriUseCase,
     private val getKeysignTransactionSummary: GetKeysignTransactionSummaryUseCase,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     networkUtils: NetworkUtils,
@@ -174,7 +176,9 @@ constructor(
         viewModelScope.safeLaunch {
             _navigationReady.await()
             val deepLinkHelper = DeepLinkHelper(uri)
-            if (deepLinkHelper.isSendDeeplink()) {
+            if (deepLinkHelper.isTonConnectUri()) {
+                handleTonConnectUri(uri.toString())
+            } else if (deepLinkHelper.isSendDeeplink()) {
                 if (hasAnyVault()) {
                     navigator.route(
                         Route.VaultList(

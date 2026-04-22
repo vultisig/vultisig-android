@@ -7,6 +7,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
+import com.vultisig.wallet.data.usecases.HandleTonConnectUriUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -47,6 +48,7 @@ internal class MainViewModelTest {
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase =
         mockk(relaxed = true)
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase = mockk(relaxed = true)
+    private val handleTonConnectUri: HandleTonConnectUriUseCase = mockk(relaxed = true)
     private val getKeysignTransactionSummary: GetKeysignTransactionSummaryUseCase =
         mockk(relaxed = true)
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper =
@@ -73,6 +75,7 @@ internal class MainViewModelTest {
             appUpdateManager = appUpdateManager,
             initializeThorChainNetworkId = initializeThorChainNetworkId,
             getDirectionByQrCodeUseCase = getDirectionByQrCodeUseCase,
+            handleTonConnectUri = handleTonConnectUri,
             getKeysignTransactionSummary = getKeysignTransactionSummary,
             mapTokenValueToStringWithUnit = mapTokenValueToStringWithUnit,
             networkUtils = networkUtils,

@@ -249,6 +249,10 @@ internal interface RepositoriesModule {
     fun bindPreventScreenshotsRepository(
         impl: PreventScreenshotsRepositoryImpl
     ): PreventScreenshotsRepository
+
+    @Binds
+    @Singleton
+    fun bindTonConnectRepository(impl: TonConnectRepositoryImpl): TonConnectRepository
 }
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class PrettyJson

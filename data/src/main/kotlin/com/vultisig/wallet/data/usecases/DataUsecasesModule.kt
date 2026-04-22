@@ -215,4 +215,10 @@ internal interface DataUsecasesModule {
     fun bindRefreshPendingTransactionsUseCase(
         impl: RefreshPendingTransactionsUseCaseImpl
     ): RefreshPendingTransactionsUseCase
+
+    @Binds
+    @Singleton
+    fun bindHandleTonConnectUriUseCase(
+        impl: HandleTonConnectUriUseCaseImpl
+    ): HandleTonConnectUriUseCase
 }
