@@ -310,6 +310,7 @@
     <string name="reshare_start_join_reshare_button">Junte-se a partilhar novamente</string>
     <string name="deposit_error_invalid_lpunits">As unidades LP são inválidas</string>
     <string name="deposit_error_invalid_assets">Os recursos são inválidos</string>
+    <string name="deposit_error_chain_not_enabled">Ative %1$s neste cofre para retirar %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Este depósito ainda não atingiu o seu prazo de vencimento.</string>
     <string name="deposit_form_screen_assets">Ativo</string>
     <string name="deposit_form_screen_asset_selection">Seleção de ativos</string>

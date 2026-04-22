@@ -1451,12 +1451,14 @@ constructor(
 
         val selectedSecureAsset = state.value.selectedSecuredAsset
 
+        val secureAssetChain = selectedSecureAsset.ticker.getChain()
         val dstAddr =
-            accountsRepository
-                .loadAddress(vaultId, selectedSecureAsset.ticker.getChain())
-                .firstOrNull()
+            accountsRepository.loadAddress(vaultId, secureAssetChain).firstOrNull()
                 ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
+                    UiText.FormattedText(
+                        R.string.deposit_error_chain_not_enabled,
+                        listOf(secureAssetChain.raw, selectedSecureAsset.ticker),
+                    )
                 )
 
         if (dstAddr.address.isBlank()) {
