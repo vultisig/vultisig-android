@@ -5,7 +5,7 @@ import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
-import com.vultisig.wallet.data.blockchain.model.Transfer
+import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.SolanaHelper
 import com.vultisig.wallet.data.models.Coin
@@ -55,8 +55,12 @@ import wallet.core.jni.CoinType
 class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : FeeService {
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
-        require(transaction is Transfer) {
-            "Invalid Transaction Type: ${transaction::class.simpleName}"
+        // Jupiter builds its own versioned tx at signing time. Serializing a fake SPL/SOL transfer
+        // here to probe getFeeForMessage is wasted RPC work on every 450ms gas tick — the constant
+        // base + dynamic priority fee in calculateDefaultFees is accurate enough for the UI
+        // display.
+        if (transaction is Swap) {
+            return calculateDefaultFees(transaction)
         }
         val vaultHexPubKey = transaction.vault.vaultHexPublicKey
         val toAddress = transaction.to
@@ -161,10 +165,6 @@ class SolanaFeeService @Inject constructor(private val solanaApi: SolanaApi) : F
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
-        require(transaction is Transfer) {
-            "Invalid Transaction Type: ${transaction::class.simpleName}"
-        }
-
         val dynamicFeePrice = solanaApi.getMedianPriorityFee(listOf(transaction.coin.address))
         val priorityFee = dynamicFeePrice * SOLANA_PRIORITY_FEE_LIMIT.toBigInteger()
 

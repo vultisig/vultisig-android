@@ -294,6 +294,13 @@
     <string name="qr_title_join_keygen_description">Digitalize com dispositivos para participar na geração do cofre</string>
     <string name="qr_title_join_keysign_description">Cofre: %1$s\nValor: %2$s\n Para: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Cofre: %1$s De: %2$s\n Para: %3$s</string>
+    <string name="qr_share_label_vault">Cofre</string>
+    <string name="qr_share_label_amount">Montante</string>
+    <string name="qr_share_label_to">Para</string>
+    <string name="qr_share_label_from">De</string>
+    <string name="qr_share_label_type">Tipo</string>
+    <string name="qr_share_type_fast_vault">Cofre rápido</string>
+    <string name="qr_share_type_secure_vault">Cofre seguro</string>
     <string name="error_folder_must_have_at_least_one_vault">A pasta necessita de pelo menos um cofre selecionado</string>
     <string name="import_file_password_hint_text">Dica: %s</string>
     <string name="scan_qr_upload_qr_code">Enviar código QR</string>
@@ -303,6 +310,7 @@
     <string name="reshare_start_join_reshare_button">Junte-se a partilhar novamente</string>
     <string name="deposit_error_invalid_lpunits">As unidades LP são inválidas</string>
     <string name="deposit_error_invalid_assets">Os recursos são inválidos</string>
+    <string name="deposit_error_chain_not_enabled">Ative %1$s neste cofre para retirar %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Este depósito ainda não atingiu o seu prazo de vencimento.</string>
     <string name="deposit_form_screen_assets">Ativo</string>
     <string name="deposit_form_screen_asset_selection">Seleção de ativos</string>

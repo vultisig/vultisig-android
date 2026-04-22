@@ -395,6 +395,13 @@
     <string name="qr_title_join_keygen_description">Scan with devices to join the\nvault generation</string>
     <string name="qr_title_join_keysign_description">Vault: %1$s\nAmount: %2$s\n To: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Vault: %1$s\nFrom: %2$s\n To: %3$s</string>
+    <string name="qr_share_label_vault">Vault</string>
+    <string name="qr_share_label_amount">Amount</string>
+    <string name="qr_share_label_to">To</string>
+    <string name="qr_share_label_from">From</string>
+    <string name="qr_share_label_type">Type</string>
+    <string name="qr_share_type_fast_vault">Fast Vault</string>
+    <string name="qr_share_type_secure_vault">Secure Vault</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
     <string name="share_vault_qr_uid" translatable="false">UID: %1$s</string>
     <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
@@ -406,6 +413,7 @@
     <string name="reshare_start_join_reshare_button">Join Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP units are invalid</string>
     <string name="deposit_error_invalid_assets">Assets are invalid</string>
+    <string name="deposit_error_chain_not_enabled">Enable %1$s in this vault to withdraw %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">This deposit has not reached its maturity period yet</string>
     <string name="deposit_form_screen_assets">Asset</string>
     <string name="deposit_form_screen_asset_selection">Asset selection</string>

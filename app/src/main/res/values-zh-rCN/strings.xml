@@ -548,6 +548,13 @@
     <string name="qr_title_join_keygen_description">扫描设备以加入\n保险库生成</string>
     <string name="qr_title_join_keysign_description">保险库：%1$s\n金额：%2$s\n至：%3$s</string>
     <string name="qr_title_join_keysign_swap_description">保险库：%1$s\n从：%2$s\n至：%3$s</string>
+    <string name="qr_share_label_vault">保险库</string>
+    <string name="qr_share_label_amount">金额</string>
+    <string name="qr_share_label_to">至</string>
+    <string name="qr_share_label_from">从</string>
+    <string name="qr_share_label_type">类型</string>
+    <string name="qr_share_type_fast_vault">快速保险库</string>
+    <string name="qr_share_type_secure_vault">安全保险库</string>
 
     <!-- Error Folder -->
     <string name="error_folder_must_have_at_least_one_vault">文件夹需要至少一个选定的保险库</string>
@@ -567,6 +574,7 @@
     <!-- Deposit Errors -->
     <string name="deposit_error_invalid_lpunits">LP 单位无效</string>
     <string name="deposit_error_invalid_assets">资产无效</string>
+    <string name="deposit_error_chain_not_enabled">请在此保险库中启用 %1$s 以提取 %2$s</string>
 
     <!-- Deposit Form Screen -->
     <string name="deposit_error_has_not_reached_maturity">这笔存款尚未到期。</string>
