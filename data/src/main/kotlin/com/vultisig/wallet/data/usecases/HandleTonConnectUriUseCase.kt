@@ -18,6 +18,7 @@ internal class HandleTonConnectUriUseCaseImpl
 @Inject
 constructor(private val tonConnectRepository: TonConnectRepository) : HandleTonConnectUriUseCase {
 
+    /** Validates [uri] as a TonConnect v2 URI, persists the session, and returns the client ID. */
     override suspend fun invoke(uri: String): String? {
         val helper = DeepLinkHelper(uri)
         if (!helper.isTonConnectUri()) {

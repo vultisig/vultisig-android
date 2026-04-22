@@ -28,6 +28,7 @@ constructor(private val dataStore: AppDataStore, json: Json) : TonConnectReposit
 
     private val json: Json = Json(from = json) { coerceInputValues = true }
 
+    /** Reads and deserializes the session from DataStore; emits null when absent or unparseable. */
     override val session: Flow<TonConnectSession?> =
         dataStore.readData(KEY_SESSION).map { raw ->
             raw?.ifEmpty { null }
@@ -43,10 +44,12 @@ constructor(private val dataStore: AppDataStore, json: Json) : TonConnectReposit
                 }
         }
 
+    /** Serializes [session] to JSON and writes it to DataStore. */
     override suspend fun saveSession(session: TonConnectSession) {
         dataStore.set(KEY_SESSION, json.encodeToString(TonConnectSession.serializer(), session))
     }
 
+    /** Writes an empty string to DataStore, effectively clearing the persisted session. */
     // AppDataStore has no remove/clear API, so we write an empty string as a sentinel
     // for "no session"; the session flow converts empty strings back to null.
     override suspend fun clearSession() {
