@@ -22,7 +22,6 @@ import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
@@ -604,26 +603,23 @@ constructor(
                             moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
                             return
                         }
-                val chain = _keysignPayload?.coin?.chain?.raw ?: ""
-                val isEcdsa = tssKeysignType == TssKeyType.ECDSA
-                Timber.tag("KeysignFlowViewModel")
-                    .d(
-                        "joinKeysign: chain=$chain, isEcdsa=$isEcdsa, tssKeysignType=$tssKeysignType, messages=${messagesToSign.map { it.take(16) }}"
-                    )
-                vultiSignerRepository.joinKeysign(
-                    JoinKeysignRequestJson(
-                        publicKeyEcdsa = vault.pubKeyECDSA,
-                        messages = messagesToSign,
-                        sessionId = sessionID,
-                        hexEncryptionKey = _encryptionKeyHex,
+                val request =
+                    JoinKeysignRequestBuilder.build(
+                        vault = vault,
+                        chain = _keysignPayload?.coin?.chain,
                         derivePath =
                             (_keysignPayload?.coin?.coinType ?: CoinType.ETHEREUM).derivationPath(),
-                        isEcdsa = isEcdsa,
+                        sessionId = sessionID,
+                        encryptionKeyHex = _encryptionKeyHex,
+                        messages = messagesToSign,
                         password = password,
-                        chain = chain,
-                        mldsa = tssKeysignType == TssKeyType.MLDSA,
+                        tssKeysignType = tssKeysignType,
                     )
-                )
+                Timber.tag("KeysignFlowViewModel")
+                    .d(
+                        "joinKeysign: chain=${request.chain}, isEcdsa=${request.isEcdsa}, tssKeysignType=$tssKeysignType, messages=${messagesToSign.map { it.take(16) }}"
+                    )
+                vultiSignerRepository.joinKeysign(request)
                 Timber.tag("KeysignFlowViewModel").d("joinKeysign: server notified successfully")
             }
         } catch (e: Exception) {
@@ -652,17 +648,17 @@ constructor(
                                 return
                             }
                     vultiSignerRepository.joinKeysign(
-                        JoinKeysignRequestJson(
-                            publicKeyEcdsa = vault.pubKeyECDSA,
-                            messages = messagesToSign,
-                            sessionId = sessionID,
-                            hexEncryptionKey = _encryptionKeyHex,
+                        JoinKeysignRequestBuilder.build(
+                            vault = vault,
+                            chain = _keysignPayload?.coin?.chain,
                             derivePath =
                                 (_keysignPayload?.coin?.coinType ?: CoinType.ETHEREUM)
                                     .derivationPath(),
-                            isEcdsa = tssKeysignType == TssKeyType.ECDSA,
+                            sessionId = sessionID,
+                            encryptionKeyHex = _encryptionKeyHex,
+                            messages = messagesToSign,
                             password = password,
-                            chain = _keysignPayload?.coin?.chain?.name ?: "",
+                            tssKeysignType = tssKeysignType,
                         )
                     )
                 }
