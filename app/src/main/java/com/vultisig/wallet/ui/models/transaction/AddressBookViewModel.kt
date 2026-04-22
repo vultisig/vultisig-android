@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -26,10 +27,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal data class AddressBookUiModel(
     val isEditModeEnabled: Boolean = false,
     val entries: List<AddressBookEntryUiModel> = emptyList(),
+    val pendingDeletion: AddressBookEntryUiModel? = null,
 )
 
 internal data class AddressBookEntryUiModel(
@@ -135,10 +138,22 @@ constructor(
         )
     }
 
-    fun deleteAddress(model: AddressBookEntryUiModel) {
-        viewModelScope.launch {
-            addressBookRepository.delete(model.model.chain.id, model.model.address)
-            orderRepository.delete(null, model.model.id)
+    fun requestDeleteAddress(model: AddressBookEntryUiModel) {
+        state.update { it.copy(pendingDeletion = model) }
+    }
+
+    fun cancelDeleteAddress() {
+        state.update { it.copy(pendingDeletion = null) }
+    }
+
+    fun confirmDeleteAddress() {
+        val target = state.value.pendingDeletion ?: return
+        state.update { it.copy(pendingDeletion = null) }
+        viewModelScope.safeLaunch(
+            onError = { e -> Timber.e(e, "Failed to delete address book entry") }
+        ) {
+            addressBookRepository.delete(target.model.chain.id, target.model.address)
+            orderRepository.delete(null, target.model.id)
             loadData()
         }
     }

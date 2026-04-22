@@ -38,9 +38,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 internal data class ImportFileState(
@@ -95,11 +97,15 @@ constructor(
         val vaultFileContent = uiModel.value.fileContent
         if (!vaultFileContent.isNullOrBlank()) {
             viewModelScope.launch {
-                val result = saveToDb(vaultFileContent, key)
-                hidePasswordPromptDialog()
-                when (result) {
-                    SaveResult.Success -> showSuccessImport()
-                    SaveResult.Duplicate -> showDuplicateError()
+                when (saveToDb(vaultFileContent, key)) {
+                    SaveResult.Success -> {
+                        hidePasswordPromptDialog()
+                        showSuccessImport()
+                    }
+                    SaveResult.Duplicate -> {
+                        hidePasswordPromptDialog()
+                        showDuplicateError()
+                    }
                     SaveResult.Failed -> showErrorHint()
                 }
             }
@@ -118,7 +124,9 @@ constructor(
 
     private suspend fun saveToDb(fileContent: String, password: String?): SaveResult =
         try {
-            insertVaultToDb(parseVaultFromString(fileContent, password))
+            val vault =
+                withContext(Dispatchers.Default) { parseVaultFromString(fileContent, password) }
+            insertVaultToDb(vault)
             SaveResult.Success
         } catch (e: DuplicateVaultException) {
             Timber.e(e)

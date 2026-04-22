@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
+    <issue id="AllowBackup" severity="error" />
     <issue id="AndroidGradlePluginVersion" severity="warning" />
     <issue id="ComposableLambdaParameterNaming" severity="warning" />
     <issue id="ComposableLambdaParameterPosition" severity="error" />
     <issue id="DuplicateStrings" severity="ignore" />
     <issue id="EasterEgg" severity="error" />
     <issue id="ExpensiveAssertion" severity="error" />
+    <issue id="ExportedContentProvider" severity="error" />
+    <issue id="ExportedReceiver" severity="error" />
+    <issue id="ExportedService" severity="error" />
     <issue id="GradleDependency" severity="warning" />
-    <issue id="HardwareIds" severity="warning" />
+    <issue id="HardwareIds" severity="error" />
     <issue id="IconLocation" severity="ignore" />
     <issue id="IconMissingDensityFolder" severity="ignore" />
     <issue id="IconXmlAndPng" severity="ignore" />
@@ -28,10 +32,10 @@
     <issue id="Registered" severity="warning" />
     <issue id="ResourceCycle" severity="warning" />
     <issue id="RtlCompat" severity="warning" />
-    <issue id="SdCardPath" severity="warning" />
+    <issue id="SdCardPath" severity="error" />
     <issue id="SpUsage" severity="warning" />
     <issue id="StaticFieldLeak" severity="warning" />
-    <issue id="StopShip" severity="warning" />
+    <issue id="StopShip" severity="error" />
     <issue id="StringFormatMatches" severity="error" />
     <issue id="StringFormatTrivial" severity="error" />
     <issue id="TypographyDashes" severity="warning" />

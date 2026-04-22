@@ -4,7 +4,6 @@ import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
-import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.crypto.TonHelper.RECOMMENDED_JETTONS_AMOUNT
 
 /**
@@ -32,7 +31,6 @@ class TonFeeService : FeeService {
     }
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
-        require(transaction is Transfer) { "Invalid Transaction: ${transaction::class.simpleName}" }
         val isTokenTransfer = !transaction.coin.isNativeToken
 
         val feeAmount =

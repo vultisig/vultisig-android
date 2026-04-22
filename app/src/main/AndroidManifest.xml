@@ -97,7 +97,8 @@
 
         <service
             android:name=".data.mediator.MediatorService"
-            android:enabled="true" />
+            android:enabled="true"
+            android:exported="false" />
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
             android:enabled="false"

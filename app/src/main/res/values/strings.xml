@@ -65,6 +65,22 @@
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquidity Pool</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">Available Balance</string>
+    <string name="tron_defi_staking">Staking</string>
+    <string name="tron_defi_bandwidth">Bandwidth</string>
+    <string name="tron_defi_energy">Energy</string>
+    <string name="tron_defi_freeze">Freeze</string>
+    <string name="tron_defi_unfreeze">Unfreeze</string>
+    <string name="tron_defi_tron_freeze">TRON Freeze</string>
+    <string name="tron_defi_frozen">Frozen</string>
+    <string name="tron_defi_unfreezing">Unfreezing</string>
+    <string name="tron_defi_resources">Resources</string>
+    <string name="tron_defi_pending_withdrawals">Pending Withdrawals</string>
+    <string name="tron_defi_ready_to_claim">Ready to claim</string>
+    <string name="tron_defi_countdown_days">%1$d days, %2$d hrs</string>
+    <string name="tron_defi_countdown_hours">%1$d hrs, %2$d min</string>
+    <string name="tron_defi_error_trx_not_in_vault">TRX coin not found in vault</string>
     <string name="circle_defi_description">Deposit your USDC into a Circle account and earn yield. Securely within your Vultisig vault.</string>
     <string name="circle_defi_control_info">Funds remain fully under your vault\'s control. Circle accounts are self-custodial and yield is generated through secure off-chain treasuries.</string>
     <string name="usdc_deposit_title">USDC Deposit</string>
@@ -190,6 +206,7 @@
     <string name="verify_transaction_consent_amount">The amount is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
     <string name="camera_permission_denied">Camera permission not granted. Please, enable it in the settings.</string>
+    <string name="camera_permission_open_settings">Open Settings</string>
     <string name="join_keysign_discovering_session_id">Discovering Session ID</string>
     <string name="transaction_done_title">Done</string>
     <string name="transaction_done_overview">Overview</string>
@@ -227,7 +244,6 @@
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s Assets</string>
     <string name="s_of_s_vault">%1$s-of-%2$s Vault Setup</string>
-    <string name="scan_qr_screen_return_vault">Return to Vault</string>
     <string name="rename_vault_screen_vault_name">Vault Name</string>
     <string name="faq_settings_q1">What is Vultisig?</string>
     <string name="faq_settings_q2">What are the benefits of using Vultisig?</string>
@@ -323,6 +339,8 @@
     <string name="add_address_address_title">Address</string>
     <string name="add_address_type_hint">Type here</string>
     <string name="join_keysign_invalid_qr">Invalid QR code content</string>
+    <string name="settings_screen_privacy">Privacy</string>
+    <string name="settings_screen_prevent_screenshots">Prevent Screenshots</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Privacy Policy</string>
     <string name="settings_screen_tos">Terms of Service</string>
@@ -372,15 +390,25 @@
     <string name="qr_title_join_keygen_description">Scan with devices to join the\nvault generation</string>
     <string name="qr_title_join_keysign_description">Vault: %1$s\nAmount: %2$s\n To: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Vault: %1$s\nFrom: %2$s\n To: %3$s</string>
+    <string name="qr_share_label_vault">Vault</string>
+    <string name="qr_share_label_amount">Amount</string>
+    <string name="qr_share_label_to">To</string>
+    <string name="qr_share_label_from">From</string>
+    <string name="qr_share_label_type">Type</string>
+    <string name="qr_share_type_fast_vault">Fast Vault</string>
+    <string name="qr_share_type_secure_vault">Secure Vault</string>
     <string name="error_folder_must_have_at_least_one_vault">Folder needs at least one selected vault</string>
     <string name="share_vault_qr_uid" translatable="false">UID: %1$s</string>
     <string name="share_vault_qr_address" translatable="false">vultisig.com</string>
     <string name="import_file_password_hint_text">Hint: %s</string>
-    <string name="scan_qr_upload_from_gallery">Upload QR</string>
+    <string name="scan_qr_upload_qr_code">Upload QR Code</string>
+    <string name="scan_qr_hint_title">Having trouble scanning?</string>
+    <string name="scan_qr_hint_message">If the QR code isn\'t scanning right away:\n• Move the phone slightly closer or farther from the screen\n• Make sure the screen is well lit and free of glare\n• Keep both devices steady for a moment</string>
     <string name="no_barcodes_found">No barcodes found</string>
     <string name="reshare_start_join_reshare_button">Join Reshare</string>
     <string name="deposit_error_invalid_lpunits">LP units are invalid</string>
     <string name="deposit_error_invalid_assets">Assets are invalid</string>
+    <string name="deposit_error_chain_not_enabled">Enable %1$s in this vault to withdraw %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">This deposit has not reached its maturity period yet</string>
     <string name="deposit_form_screen_assets">Asset</string>
     <string name="deposit_form_screen_asset_selection">Asset selection</string>
@@ -413,6 +441,7 @@
     <string name="swap_error_time_out">Swap request timed out. Please try again</string>
     <string name="swap_error_high_price_impact">Price impact is too high. Try a smaller amount or a different token pair.</string>
     <string name="swap_error_quote_failed">Swap quote failed. Please try again or adjust the amount.</string>
+    <string name="swap_error_rate_limit">Too many requests. Please try again later.</string>
     <string name="swap_screen_invalid_no_vault">No vault selected</string>
     <string name="swap_screen_invalid_no_src_error">No source token selected</string>
     <string name="swap_screen_invalid_selected_no_dst">No destination token selected</string>
@@ -422,6 +451,7 @@
     <string name="swap_screen_invalid_vault">Transaction will likely fail, vault could not be loaded.</string>
     <string name="edit_address_title">Edit Address</string>
     <string name="join_keysign_failed_connect_to_server">Failed to connect to server</string>
+    <string name="join_keysign_relay_unavailable">Relay server unavailable, please try again</string>
     <string name="network_connection_lost">Network connection lost. Please check your internet connection</string>
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
 
@@ -592,8 +622,9 @@
     <string name="keygen_email_error">Incorrect email, please check</string>
     <string name="scan_qr_screen_title">Scan QR Code</string>
     <string name="verify_transaction_function_inputs_title">Function Inputs</string>
-    <string name="verify_your_server_share_password">Verify your Server Share Password</string>
-    <string name="periodically_ask_verify_password">We will periodically ask you to verify your fast sign password so you will always remember it</string>
+    <string name="fast_vault_password_reminder_title">Verify your password for:</string>
+    <string name="fast_vault_password_reminder_done_button">Done</string>
+    <string name="periodically_ask_verify_password">We periodically ask for a verification so you don\'t forget your password.</string>
 
     <string name="security_scanner_medium_risk_title">Medium Security Risk</string>
     <string name="security_scanner_high_risk_title">High Security Risk</string>
@@ -673,6 +704,14 @@
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Token value</string>
     <string name="token_fiat_toggle_fiat_label">Fiat value</string>
+    <string name="remove_pool_title">Remove Pool</string>
+    <string name="remove_pool_amount_label">Amount</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_cacao_amount_format" translatable="false">%1$s CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">Stake CACAO</string>
+    <string name="unstake_cacao_title">Unstake CACAO</string>
+    <string name="unstake_cacao_available_format">Available: %1$s</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>
     <string name="referral_create_info_content">The referral program is applied for THORChain swaps and is on a best effort basis. You need to register a THORName to use the Vultisig referral. The registration fee is 10 RUNE and 1 RUNE for each year, which is paid to the THORChain network.</string>
     <string name="referral_create_info_title">Referral Program</string>
@@ -757,6 +796,10 @@
     <string name="share_vault_qr_info">This QR Code lets you share a view-only version of your Vault</string>
     <string name="add_address_title_label">Label</string>
     <string name="address_book_title_edit">Edit Address Book</string>
+    <string name="address_book_delete_entry_title">Delete address?</string>
+    <string name="address_book_delete_entry_message">%1$s will be removed from your address book</string>
+    <string name="address_book_delete_entry_confirm">Delete</string>
+    <string name="address_book_delete_entry_cancel">Cancel</string>
     <string name="backup_password_request_title">Do you want to encrypt your backup with a password?</string>
     <string name="backup_password_request_caution_encrypt_desc">If you choose to add a password, it will be used to encrypt the backup file.</string>
     <string name="backup_password_request_highlight_encrypt">encrypt</string>
@@ -779,7 +822,6 @@
     <string name="backup_server_desc">Request Server Vault Share again.</string>
     <string name="share_sheet_more">More</string>
     <string name="x_twitter" translatable="false">X (Twitter)</string>
-    <string name="vult" translatable="false">$VULT</string>
     <string name="error_saving_qr_code">Failed to save QR code. %1$s</string>
     <string name="transaction_type_button_buy">Buy</string>
     <string name="transaction_type_button_receive">Receive</string>
@@ -848,6 +890,7 @@
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Supported file types: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Vault with duplicate name exists</string>
     <string name="join_key_gen_unknown_tssaction">Unknown TssAction</string>
+    <string name="join_key_gen_mediator_discovery_timeout">Could not find the other device on your network</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Waiting for other devices to join</string>
     <string name="join_key_gen_your_vault_will_start_generating">Your vault will start generating from the moment you finalize setting up your vault on your main device</string>
     <string name="join_key_sign_wrong_signing_library_type">Wrong signing library type</string>
@@ -1034,13 +1077,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Enter your seed phrase</string>
-    <string name="import_seedphrase_subtitle">Enter your 12 or 24 word recovery phrase</string>
-    <string name="import_seedphrase_label">Seed Phrase</string>
-    <string name="import_seedphrase_hint">Enter your recovery phrase…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d words</item>
-        <item quantity="other">%1$d / %2$d words</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Leave a space between each word. Seed phrases of %1$s are supported.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 or 24 words</string>
+    <string name="import_seedphrase_hint">Enter the 12 or 24 words of your seedphrase</string>
     <string name="import_seedphrase_invalid_word_count">You entered %1$s words. Seed phrase must be 12 or 24</string>
     <string name="import_seedphrase_invalid_phrase">Invalid seed phrase</string>
     <string name="import_seedphrase_already_imported">This seed phrase has already been imported</string>

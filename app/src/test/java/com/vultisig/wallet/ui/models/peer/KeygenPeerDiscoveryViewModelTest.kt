@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -377,5 +378,30 @@ internal class KeygenPeerDiscoveryViewModelTest {
         assertEquals(2, vm.state.value.selectedDevices.size)
         assertTrue(vm.state.value.selectedDevices.contains("d1"))
         assertTrue(vm.state.value.selectedDevices.contains("d2"))
+    }
+
+    // --- Crash path tests ---
+
+    @Test
+    fun `when toRoute throws, init navigates back`() {
+        every { any<SavedStateHandle>().toRoute<Route.Keygen.PeerDiscovery>() } throws
+            IllegalStateException("deserialization failed")
+
+        createViewModel()
+
+        coVerify { navigator.navigate(Destination.Back) }
+    }
+
+    @Test
+    fun `tryAgain does nothing when args is null`() {
+        every { any<SavedStateHandle>().toRoute<Route.Keygen.PeerDiscovery>() } throws
+            IllegalStateException("deserialization failed")
+
+        val vm = createViewModel()
+        // args is null; tryAgain should be a no-op and not crash
+        vm.tryAgain()
+
+        // navigate(Back) called exactly once (from init), not a second time from tryAgain
+        coVerify(exactly = 1) { navigator.navigate(Destination.Back) }
     }
 }

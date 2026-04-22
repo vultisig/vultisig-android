@@ -23,6 +23,8 @@ sealed class SwapException(message: String) : Exception(message) {
 
     class HighPriceImpact(message: String) : SwapException(message)
 
+    class RateLimitExceeded(message: String) : SwapException(message)
+
     companion object {
         fun handleSwapException(error: String): SwapException {
             with(error.lowercase()) {
@@ -45,11 +47,14 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("trading is halted") -> SwapRouteNotAvailable(error)
                     contains("timeout") -> TimeOut(error)
                     contains("unable to resolve host") -> NetworkConnection(error)
+                    contains("too many requests") || contains("rate limit") ->
+                        RateLimitExceeded(error)
                     contains("slippage") -> HighPriceImpact(error)
                     contains("price impact") -> HighPriceImpact(error)
                     contains("exceeds desired slippage") -> HighPriceImpact(error)
                     contains("route not profitable") -> HighPriceImpact(error)
                     contains("slippage tolerance exceeded") -> HighPriceImpact(error)
+                    contains("too many requests") -> RateLimitExceeded(error)
                     else -> UnkownSwapError(error)
                 }
             }

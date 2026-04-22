@@ -13,10 +13,15 @@ import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -33,6 +38,7 @@ internal fun TokenAmountInput(
     modifier: Modifier = Modifier,
     maxBalance: BigDecimal? = null,
     focusRequester: FocusRequester? = null,
+    onLostFocus: (() -> Unit)? = null,
     onKeyboardAction: (() -> Unit)? = null,
 ) {
     Column(
@@ -80,6 +86,18 @@ internal fun TokenAmountInput(
                         .then(
                             if (focusRequester != null) Modifier.focusRequester(focusRequester)
                             else Modifier
+                        )
+                        .then(
+                            if (onLostFocus != null) {
+                                var wasFocused by remember { mutableStateOf(false) }
+                                Modifier.onFocusChanged { focusState ->
+                                    if (focusState.isFocused) {
+                                        wasFocused = true
+                                    } else if (wasFocused) {
+                                        onLostFocus()
+                                    }
+                                }
+                            } else Modifier
                         ),
                 decorator = { textField ->
                     if (primaryFieldState.text.isEmpty()) {

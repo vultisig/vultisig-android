@@ -3,6 +3,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.common.toByteStringOrHex
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
@@ -37,6 +38,22 @@ class TronHelper(
                 buildTronSmartContractPayload(keysignPayload, tronSpecific)
             keysignPayload.tronTransferAssetContractPayload != null ->
                 buildTronTransferAssetSmartContractPayload(keysignPayload, tronSpecific)
+            keysignPayload.coin.isNativeToken &&
+                keysignPayload.coin.address == keysignPayload.toAddress &&
+                keysignPayload.memo != null &&
+                TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) &&
+                keysignPayload.memo.startsWith("FREEZE:") ->
+                buildFreezeBalanceV2(keysignPayload, tronSpecific)
+            keysignPayload.coin.isNativeToken &&
+                keysignPayload.coin.address == keysignPayload.toAddress &&
+                keysignPayload.memo != null &&
+                TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) &&
+                keysignPayload.memo.startsWith("UNFREEZE:") ->
+                buildUnfreezeBalanceV2(keysignPayload, tronSpecific)
+            keysignPayload.coin.isNativeToken &&
+                keysignPayload.memo != null &&
+                TRON_STAKING_MEMO_REGEX.matches(keysignPayload.memo) ->
+                error("Staking memo requires destination address to match sender address")
             keysignPayload.coin.isNativeToken -> buildCoinTransfer(keysignPayload, tronSpecific)
             else -> buildTokenTransfer(keysignPayload, tronSpecific)
         }
@@ -222,6 +239,64 @@ class TronHelper(
                 )
                 .setExpiration(tronSpecific.expiration.toLong())
         keysignPayload.memo?.let { memo -> txBuild.setMemo(memo) }
+        val input = Tron.SigningInput.newBuilder().setTransaction(txBuild.build()).build()
+        return input.toByteArray()
+    }
+
+    private fun buildFreezeBalanceV2(
+        keysignPayload: KeysignPayload,
+        tronSpecific: BlockChainSpecific.Tron,
+    ): ByteArray {
+        val memo = keysignPayload.memo ?: error("FREEZE memo required")
+        val resource = memo.removePrefix("FREEZE:")
+        require(resource == "BANDWIDTH" || resource == "ENERGY") {
+            "Invalid TRON resource type: $resource"
+        }
+
+        val contract =
+            Tron.FreezeBalanceV2Contract.newBuilder()
+                .setOwnerAddress(keysignPayload.coin.address)
+                .setFrozenBalance(keysignPayload.toAmount.toLong())
+                .setResource(resource)
+                .build()
+
+        val txBuild =
+            Tron.Transaction.newBuilder()
+                .setFreezeBalanceV2(contract)
+                .setTimestamp(tronSpecific.timestamp.toLong())
+                .setBlockHeader(buildBlockHeader(tronSpecific))
+                .setExpiration(tronSpecific.expiration.toLong())
+                .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
+
+        val input = Tron.SigningInput.newBuilder().setTransaction(txBuild.build()).build()
+        return input.toByteArray()
+    }
+
+    private fun buildUnfreezeBalanceV2(
+        keysignPayload: KeysignPayload,
+        tronSpecific: BlockChainSpecific.Tron,
+    ): ByteArray {
+        val memo = keysignPayload.memo ?: error("UNFREEZE memo required")
+        val resource = memo.removePrefix("UNFREEZE:")
+        require(resource == "BANDWIDTH" || resource == "ENERGY") {
+            "Invalid TRON resource type: $resource"
+        }
+
+        val contract =
+            Tron.UnfreezeBalanceV2Contract.newBuilder()
+                .setOwnerAddress(keysignPayload.coin.address)
+                .setUnfreezeBalance(keysignPayload.toAmount.toLong())
+                .setResource(resource)
+                .build()
+
+        val txBuild =
+            Tron.Transaction.newBuilder()
+                .setUnfreezeBalanceV2(contract)
+                .setTimestamp(tronSpecific.timestamp.toLong())
+                .setBlockHeader(buildBlockHeader(tronSpecific))
+                .setExpiration(tronSpecific.expiration.toLong())
+                .setFeeLimit(tronSpecific.gasFeeEstimation.toLong())
+
         val input = Tron.SigningInput.newBuilder().setTransaction(txBuild.build()).build()
         return input.toByteArray()
     }

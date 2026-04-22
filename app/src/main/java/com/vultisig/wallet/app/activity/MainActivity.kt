@@ -9,6 +9,7 @@ import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -27,6 +28,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.google.android.play.core.appupdate.AppUpdateManager
@@ -35,11 +37,13 @@ import com.google.android.play.core.install.model.AppUpdateType
 import com.vultisig.wallet.app.activity.components.AnimatedSplash
 import com.vultisig.wallet.app.activity.components.CheckDeeplink
 import com.vultisig.wallet.app.activity.components.MainActivityContent
+import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @AndroidEntryPoint
@@ -48,6 +52,8 @@ class MainActivity : AppCompatActivity() {
     private val mainViewModel: MainViewModel by viewModels<MainViewModel>()
 
     @Inject lateinit var appUpdateManager: AppUpdateManager
+
+    @Inject lateinit var preventScreenshotsRepository: PreventScreenshotsRepository
 
     private val pushNotificationReceiver =
         object : BroadcastReceiver() {
@@ -84,6 +90,8 @@ class MainActivity : AppCompatActivity() {
             }
 
         enableEdgeToEdge(statusBarStyle = systemBarStyle, navigationBarStyle = systemBarStyle)
+
+        observePreventScreenshots()
 
         setContent {
             OnBoardingComposeTheme {
@@ -151,6 +159,23 @@ class MainActivity : AppCompatActivity() {
             unregisterReceiver(pushNotificationReceiver)
         } catch (e: IllegalArgumentException) {
             Timber.w(e, "Receiver was not registered")
+        }
+    }
+
+    private fun observePreventScreenshots() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                preventScreenshotsRepository.isEnabled.collect { isEnabled ->
+                    if (isEnabled) {
+                        window.setFlags(
+                            WindowManager.LayoutParams.FLAG_SECURE,
+                            WindowManager.LayoutParams.FLAG_SECURE,
+                        )
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                }
+            }
         }
     }
 

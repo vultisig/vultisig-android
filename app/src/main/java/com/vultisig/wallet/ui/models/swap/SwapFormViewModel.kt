@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
@@ -11,73 +9,41 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
-import com.vultisig.wallet.data.blockchain.model.Swap
-import com.vultisig.wallet.data.blockchain.model.VaultData
-import com.vultisig.wallet.data.chains.helpers.EvmHelper
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
-import com.vultisig.wallet.data.chains.helpers.UtxoHelper
-import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
-import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
-import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.data.models.getDustThreshold
-import com.vultisig.wallet.data.models.getPubKeyByChain
-import com.vultisig.wallet.data.models.getSwapProviderId
-import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
-import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
-import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
-import com.vultisig.wallet.data.repositories.RequestResultRepository
-import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
-import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.ConvertBpsToFiatUseCase
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
-import com.vultisig.wallet.data.usecases.ConvertTokenToToken
-import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
-import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
-import com.vultisig.wallet.data.usecases.SearchTokenUseCase
 import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
-import com.vultisig.wallet.data.utils.TextFieldUtils
-import com.vultisig.wallet.data.utils.thorswapMultiplier
-import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
+import com.vultisig.wallet.ui.models.findCurrentSrc
+import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
-import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
-import com.vultisig.wallet.ui.models.swap.SwapFormViewModel.QuoteCache.Companion.MAX_SIZE
+import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_DST_TOKEN_ID
+import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_SRC_TOKEN_ID
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.asUiText
-import com.vultisig.wallet.ui.utils.or
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
@@ -87,16 +53,12 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -112,8 +74,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import timber.log.Timber
-import wallet.core.jni.proto.Bitcoin
-import wallet.core.jni.proto.Common.SigningError
 
 internal data class SwapFormUiModel(
     val selectedSrcToken: TokenBalanceUiModel? = null,
@@ -146,28 +106,19 @@ internal class SwapFormViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
-    private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
     private val resolveProvider: ResolveProviderUseCase,
     private val allowanceRepository: AllowanceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
-    private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
-    private val accountsRepository: AccountsRepository,
-    private val feeServiceComposite: FeeServiceComposite,
-    private val vaultRepository: VaultRepository,
-    private val swapQuoteRepository: SwapQuoteRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
-    private val blockChainSpecificRepository: BlockChainSpecificRepository,
-    private val tokenRepository: TokenRepository,
-    private val requestResultRepository: RequestResultRepository,
-    private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
-    private val searchToken: SearchTokenUseCase,
-    private val referralRepository: ReferralCodeSettingsRepository,
-    private val convertTokenToTokenUseCase: ConvertTokenToToken,
     private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
-    private val convertBpsToFiat: ConvertBpsToFiatUseCase,
+    private val referralRepository: ReferralCodeSettingsRepository,
+    private val swapValidator: SwapValidator,
+    private val swapDiscountChecker: SwapDiscountChecker,
+    private val swapGasCalculator: SwapGasCalculator,
+    private val swapTokenSelector: SwapTokenSelector,
+    private val swapQuoteManager: SwapQuoteManager,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -177,7 +128,7 @@ constructor(
     val srcAmountState = TextFieldState()
 
     private var vaultId: String? = null
-    private var chain: Chain? = null
+    private val chain = MutableStateFlow<Chain?>(null)
 
     private var quote: SwapQuote? = null
 
@@ -205,89 +156,6 @@ constructor(
 
     private var refreshQuoteJob: Job? = null
 
-    /**
-     * Cache of recent swap quotes that avoids redundant API calls when flipping tokens back and
-     * forth or revisiting a recently-quoted pair.
-     *
-     * Freshness is driven entirely by each [SwapQuote.expiredAt] — the cache never assumes a fixed
-     * TTL. Expired entries are evicted on every [put], and [MAX_SIZE] acts purely as a memory
-     * safety bound.
-     */
-    private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
-
-        private data class Key(
-            val srcTokenId: String,
-            val dstTokenId: String,
-            val srcAmount: BigInteger,
-            val provider: SwapProvider,
-        )
-
-        private val entries = linkedMapOf<Key, SwapQuote>()
-
-        fun get(
-            srcTokenId: String,
-            dstTokenId: String,
-            srcAmount: BigInteger,
-            provider: SwapProvider,
-        ): SwapQuote? {
-            val key = Key(srcTokenId, dstTokenId, srcAmount, provider)
-            val quote = entries[key] ?: return null
-            return if (Clock.System.now() < quote.expiredAt) {
-                quote
-            } else {
-                entries.remove(key)
-                null
-            }
-        }
-
-        fun put(
-            srcTokenId: String,
-            dstTokenId: String,
-            srcAmount: BigInteger,
-            provider: SwapProvider,
-            quote: SwapQuote,
-        ) {
-            entries[Key(srcTokenId, dstTokenId, srcAmount, provider)] = quote
-            evict()
-        }
-
-        private fun evict() {
-            val now = Clock.System.now()
-            entries.entries.removeAll { now >= it.value.expiredAt }
-            // Insertion-order eviction as a memory safety net
-            val iter = entries.entries.iterator()
-            while (entries.size > maxSize && iter.hasNext()) {
-                iter.next()
-                iter.remove()
-            }
-        }
-
-        companion object {
-            /**
-             * Memory safety bound, not a TTL proxy. Covers typical usage: ~2–3 token pairs × 2
-             * directions within any quote's lifetime.
-             */
-            private const val MAX_SIZE = 6
-        }
-    }
-
-    private val quoteCache = QuoteCache()
-
-    /**
-     * Prevents fee compounding across repeated flips by saving the source amount before each flip.
-     * On flip-back, restores the saved amount instead of using the fee-deducted destination
-     * estimate.
-     *
-     * Staleness guard: [flippedAmount] records what the flip set as source. If the current source
-     * text doesn't match (user edited it), the saved state is ignored and a fresh destination
-     * estimate is used instead.
-     *
-     * Both [srcTokenId] and [dstTokenId] are validated on restore to prevent cross-pair
-     * contamination (e.g. a saved USDC→ETH state leaking into ETH→BNB).
-     *
-     * Example: 100 A → 95 B (5 fee). Flip → 95 B → 90 A (5 fee). Flip back → restores 100 A → 95 B
-     * (cache hit, no extra fee).
-     */
     private data class PreFlipState(
         val srcAmount: String,
         val srcTokenId: String,
@@ -319,7 +187,7 @@ constructor(
             )
         }
 
-        collectSelectedAccounts()
+        swapTokenSelector.collectSelectedAccounts(selectedSrc, selectedDst, uiState, viewModelScope)
         collectSelectedTokens()
 
         calculateGas()
@@ -451,7 +319,11 @@ constructor(
                         when (quote) {
                             is SwapQuote.ThorChain -> {
                                 val specificAndUtxo =
-                                    getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken,
+                                        srcAddress,
+                                        gasFee,
+                                    )
 
                                 val dstAddress =
                                     quote.data.router ?: quote.data.inboundAddress ?: srcAddress
@@ -508,7 +380,11 @@ constructor(
 
                             is SwapQuote.MayaChain -> {
                                 val specificAndUtxo =
-                                    getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken,
+                                        srcAddress,
+                                        gasFee,
+                                    )
 
                                 val dstAddress =
                                     if (
@@ -532,52 +408,53 @@ constructor(
 
                                 val isAffiliate = true
 
-                                val regularSwapTransaction =
-                                    RegularSwapTransaction(
-                                        id = UUID.randomUUID().toString(),
-                                        vaultId = vaultId,
-                                        srcToken = srcToken,
-                                        srcTokenValue = srcTokenValue,
-                                        dstToken = dstToken,
-                                        dstAddress = dstAddress,
-                                        expectedDstTokenValue = dstTokenValue,
-                                        blockChainSpecific = specificAndUtxo,
-                                        estimatedFees = quote.fees,
-                                        gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
-                                        memo = quote.data.memo,
-                                        isApprovalRequired = isApprovalRequired,
-                                        gasFeeFiatValue = gasFeeFiatValue,
-                                        payload =
-                                            SwapPayload.MayaChain(
-                                                THORChainSwapPayload(
-                                                    fromAddress = srcAddress,
-                                                    fromCoin = srcToken,
-                                                    toCoin = dstToken,
-                                                    vaultAddress =
-                                                        quote.data.inboundAddress ?: srcAddress,
-                                                    routerAddress = quote.data.router,
-                                                    fromAmount = srcTokenValue.value,
-                                                    toAmountDecimal = dstTokenValue.decimal,
-                                                    toAmountLimit = "0",
-                                                    streamingInterval = "3",
-                                                    streamingQuantity = "0",
-                                                    expirationTime =
-                                                        (System.currentTimeMillis().milliseconds +
-                                                                15.minutes)
-                                                            .inWholeSeconds
-                                                            .toULong(),
-                                                    isAffiliate = isAffiliate,
-                                                )
-                                            ),
-                                    )
-
-                                regularSwapTransaction
+                                RegularSwapTransaction(
+                                    id = UUID.randomUUID().toString(),
+                                    vaultId = vaultId,
+                                    srcToken = srcToken,
+                                    srcTokenValue = srcTokenValue,
+                                    dstToken = dstToken,
+                                    dstAddress = dstAddress,
+                                    expectedDstTokenValue = dstTokenValue,
+                                    blockChainSpecific = specificAndUtxo,
+                                    estimatedFees = quote.fees,
+                                    gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
+                                    memo = quote.data.memo,
+                                    isApprovalRequired = isApprovalRequired,
+                                    gasFeeFiatValue = gasFeeFiatValue,
+                                    payload =
+                                        SwapPayload.MayaChain(
+                                            THORChainSwapPayload(
+                                                fromAddress = srcAddress,
+                                                fromCoin = srcToken,
+                                                toCoin = dstToken,
+                                                vaultAddress =
+                                                    quote.data.inboundAddress ?: srcAddress,
+                                                routerAddress = quote.data.router,
+                                                fromAmount = srcTokenValue.value,
+                                                toAmountDecimal = dstTokenValue.decimal,
+                                                toAmountLimit = "0",
+                                                streamingInterval = "3",
+                                                streamingQuantity = "0",
+                                                expirationTime =
+                                                    (System.currentTimeMillis().milliseconds +
+                                                            15.minutes)
+                                                        .inWholeSeconds
+                                                        .toULong(),
+                                                isAffiliate = isAffiliate,
+                                            )
+                                        ),
+                                )
                             }
 
                             is SwapQuote.OneInch -> {
                                 val dstAddress = quote.data.tx.to
                                 val specificAndUtxo =
-                                    getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken,
+                                        srcAddress,
+                                        gasFee,
+                                    )
 
                                 val allowance =
                                     allowanceRepository.getAllowance(
@@ -664,33 +541,14 @@ constructor(
         }
     }
 
-    private suspend fun getSpecificAndUtxo(srcToken: Coin, srcAddress: String, gasFee: TokenValue) =
-        try {
-            blockChainSpecificRepository.getSpecific(
-                chain = srcToken.chain,
-                address = srcAddress,
-                token = srcToken,
-                gasFee = gasFee,
-                isSwap = true,
-                isMaxAmountEnabled = false,
-                isDeposit = srcToken.chain == Chain.MayaChain,
-                gasLimit = getGasLimit(srcToken),
-            )
-        } catch (e: Exception) {
-            Timber.d(e)
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.swap_screen_invalid_specific_and_utxo)
-            )
-        }
-
     fun selectSrcNetwork() {
         viewModelScope.launch {
             val newSendSrc =
-                selectNetwork(
+                swapTokenSelector.selectNetwork(
                     vaultId = vaultId ?: return@launch,
                     selectedChain = selectedSrc.value?.address?.chain ?: return@launch,
+                    addresses = addresses.value,
                 ) ?: return@launch
-
             selectedSrcId.value = newSendSrc.account.token.id
         }
     }
@@ -698,12 +556,12 @@ constructor(
     fun selectSrcNetworkPopup(offset: Offset) {
         viewModelScope.launch {
             val newSendSrc =
-                selectNetworkPopup(
+                swapTokenSelector.selectNetworkPopup(
                     vaultId = vaultId ?: return@launch,
                     selectedChain = selectedSrc.value?.address?.chain ?: return@launch,
                     position = offset,
+                    addresses = addresses.value,
                 ) ?: return@launch
-
             selectedSrcId.value = newSendSrc.account.token.id
         }
     }
@@ -711,11 +569,11 @@ constructor(
     fun selectDstNetwork() {
         viewModelScope.launch {
             val newSendSrc =
-                selectNetwork(
+                swapTokenSelector.selectNetwork(
                     vaultId = vaultId ?: return@launch,
                     selectedChain = selectedDst.value?.address?.chain ?: return@launch,
+                    addresses = addresses.value,
                 ) ?: return@launch
-
             selectedDstId.value = newSendSrc.account.token.id
         }
     }
@@ -723,60 +581,14 @@ constructor(
     fun selectDstNetworkPopup(position: Offset) {
         viewModelScope.launch {
             val newSendSrc =
-                selectNetworkPopup(
+                swapTokenSelector.selectNetworkPopup(
                     vaultId = vaultId ?: return@launch,
                     selectedChain = selectedDst.value?.address?.chain ?: return@launch,
                     position = position,
+                    addresses = addresses.value,
                 ) ?: return@launch
-
             selectedDstId.value = newSendSrc.account.token.id
         }
-    }
-
-    private suspend fun selectNetwork(vaultId: VaultId, selectedChain: Chain): SendSrc? {
-        val requestId = Uuid.random().toString()
-        navigator.route(
-            Route.SelectNetwork(
-                vaultId = vaultId,
-                selectedNetworkId = selectedChain.id,
-                requestId = requestId,
-                filters = Route.SelectNetwork.Filters.SwapAvailable,
-            )
-        )
-
-        val chain: Chain = requestResultRepository.request(requestId) ?: return null
-
-        if (chain == selectedChain) {
-            return null
-        }
-
-        return addresses.value.firstSendSrc(selectedTokenId = null, filterByChain = chain)
-    }
-
-    private suspend fun selectNetworkPopup(
-        vaultId: VaultId,
-        selectedChain: Chain,
-        position: Offset,
-    ): SendSrc? {
-        val requestId = Uuid.random().toString()
-        navigator.route(
-            Route.SelectNetworkPopup(
-                requestId = requestId,
-                pressX = position.x,
-                pressY = position.y,
-                vaultId = vaultId,
-                selectedNetworkId = selectedChain.id,
-                filters = Route.SelectNetwork.Filters.SwapAvailable,
-            )
-        )
-
-        val chain: Chain = requestResultRepository.request(requestId) ?: return null
-
-        if (chain == selectedChain) {
-            return null
-        }
-
-        return addresses.value.firstSendSrc(selectedTokenId = null, filterByChain = chain)
     }
 
     fun selectSrcToken() {
@@ -789,93 +601,31 @@ constructor(
 
     private fun navigateToSelectToken(targetArg: String) {
         viewModelScope.launch {
-            navigator.route(
-                Route.SelectAsset(
-                    vaultId = vaultId ?: return@launch,
-                    requestId = targetArg,
-                    preselectedNetworkId =
-                        (when (targetArg) {
-                                ARG_SELECTED_SRC_TOKEN_ID -> selectedSrc.value?.address?.chain
-                                ARG_SELECTED_DST_TOKEN_ID -> selectedDst.value?.address?.chain
-                                else -> Chain.ThorChain
-                            })
-                            ?.id ?: Chain.ThorChain.id,
-                    networkFilters = Route.SelectNetwork.Filters.SwapAvailable,
-                )
+            swapTokenSelector.navigateToSelectToken(
+                targetArg = targetArg,
+                vaultId = vaultId ?: return@launch,
+                selectedSrc = selectedSrc.value,
+                selectedDst = selectedDst.value,
+                selectedSrcId = selectedSrcId,
+                selectedDstId = selectedDstId,
+                addresses = addresses,
+                uiState = uiState,
             )
-            checkTokenSelectionResponse(targetArg)
         }
     }
 
-    private suspend fun checkTokenSelectionResponse(targetArg: String) {
-        val result = requestResultRepository.request<AssetSelected>(targetArg) ?: return
-
-        if (result.isDisabled) {
-            uiState.update { it.copy(isLoading = true) }
-            val vaultId = vaultId
-            if (vaultId != null) {
-                try {
-                    val account = accountsRepository.loadAccount(vaultId, result.token)
-                    updateAccountInAddresses(account)
-                    uiState.update { it.copy(isLoading = false) }
-                } catch (e: Throwable) {
-                    if (e is CancellationException) throw e
-                    Timber.e(e, "Failed to load account for token")
-                    uiState.update { it.copy(isLoading = false) }
-                    return
-                }
-            } else {
-                uiState.update { it.copy(isLoading = false) }
-            }
-        }
-
-        if (targetArg == ARG_SELECTED_SRC_TOKEN_ID) {
-            selectedSrcId.value = result.token.id
-        } else {
-            selectedDstId.value = result.token.id
-        }
-    }
-
-    private fun updateAccountInAddresses(loadedAccount: Account) {
-        addresses.update { listOfAddresses ->
-            listOfAddresses.map { address ->
-                if (address.chain == loadedAccount.token.chain) {
-                    address.copy(accounts = address.accounts + listOf(loadedAccount))
-                } else {
-                    address
-                }
-            }
-        }
-    }
-
-    /**
-     * Flips source and destination tokens and resolves the new source amount:
-     * - **Flip-back (restore):** If the user hasn't edited the amount since the last flip, restores
-     *   the pre-flip source amount. This prevents fees from compounding on every flip (100 A → 95 B
-     *   → flip back → 100 A, not 95 A).
-     * - **First flip (or after manual edit):** Uses the raw estimated destination [BigDecimal] from
-     *   the current quote (avoids locale formatting issues).
-     *
-     * The reactive [calculateFees] flow picks up changes after a 450 ms debounce and either serves
-     * a cached quote or fetches a fresh one.
-     */
     fun flipSelectedTokens() {
         cacheCurrentQuote()
 
         val currentSrcText = srcAmountState.text.toString()
         val currentSrcTokenId = selectedSrc.value?.account?.token?.id
         val currentDstTokenId = selectedDst.value?.account?.token?.id
-        val newSrcTokenId = currentDstTokenId
-        val newDstTokenId = currentSrcTokenId
 
-        // Restore saved amount if this is a flip-back of the SAME token pair
-        // AND user hasn't edited the amount since the last flip.
-        // Both token IDs are checked to prevent cross-pair contamination.
         val restoredAmount =
             preFlipState
                 ?.takeIf { state ->
-                    state.srcTokenId == newSrcTokenId &&
-                        state.dstTokenId == newDstTokenId &&
+                    state.srcTokenId == currentDstTokenId &&
+                        state.dstTokenId == currentSrcTokenId &&
                         state.flippedAmount == currentSrcText
                 }
                 ?.srcAmount
@@ -889,8 +639,6 @@ constructor(
 
         resetQuoteState()
 
-        // Swap token selections (both resolved values and backing IDs,
-        // so collectSelectedTokens() doesn't overwrite on next addresses emission)
         val bufId = selectedSrcId.value
         selectedSrcId.value = selectedDstId.value
         selectedDstId.value = bufId
@@ -899,7 +647,6 @@ constructor(
         selectedSrc.value = selectedDst.value
         selectedDst.value = buffer
 
-        // Set the resolved source amount
         if (
             newSrcAmount != null &&
                 newSrcAmount.toBigDecimalOrNull().let { it != null && it > BigDecimal.ZERO }
@@ -907,7 +654,6 @@ constructor(
             srcAmountState.setTextAndPlaceCursorAtEnd(newSrcAmount)
         }
 
-        // Save state for potential flip-back (both token IDs required)
         preFlipState =
             if (currentSrcTokenId != null && currentDstTokenId != null) {
                 PreFlipState(
@@ -919,10 +665,6 @@ constructor(
             } else null
     }
 
-    /**
-     * Persists the current quote into [quoteCache] so that flipping back to the same (src, dst,
-     * amount) tuple returns instantly without an API call.
-     */
     private fun cacheCurrentQuote() {
         val currentQuote = quote ?: return
         val currentProvider = provider ?: return
@@ -930,10 +672,15 @@ constructor(
         val dstToken = selectedDst.value?.account?.token ?: return
         val currentAmount = srcAmount?.movePointRight(srcToken.decimal)?.toBigInteger() ?: return
 
-        quoteCache.put(srcToken.id, dstToken.id, currentAmount, currentProvider, currentQuote)
+        swapQuoteManager.cacheQuote(
+            currentQuote,
+            currentProvider,
+            srcToken.id,
+            dstToken.id,
+            currentAmount,
+        )
     }
 
-    /** Clears the active quote and resets destination-related UI fields for a fresh calculation. */
     private fun resetQuoteState() {
         quote = null
         provider = null
@@ -975,7 +722,7 @@ constructor(
     }
 
     fun loadData(vaultId: String, chainId: String?, srcTokenId: String?, dstTokenId: String?) {
-        this.chain = chainId?.let(Chain::fromRaw)
+        this.chain.value = chainId?.let(Chain::fromRaw)
 
         if (!srcTokenId.isNullOrBlank() && this.selectedSrcId.value == null) {
             selectedSrcId.value = srcTokenId
@@ -987,62 +734,27 @@ constructor(
 
         if (this.vaultId != vaultId) {
             this.vaultId = vaultId
-            loadTokens(vaultId)
+            swapTokenSelector.loadTokens(vaultId, addresses, viewModelScope)
         }
     }
 
     fun validateAmount() {
-        val errorMessage = validateSrcAmount(srcAmountState.text.toString())
+        val errorMessage = swapValidator.validateSrcAmount(srcAmountState.text.toString())
         uiState.update { it.copy(error = errorMessage) }
     }
 
-    private fun loadTokens(vaultId: String) {
-        viewModelScope.launch {
-            accountsRepository
-                .loadAddresses(vaultId)
-                .map { addresses -> addresses.filter { it.chain.isSwapSupported } }
-                .catch {
-                    Timber.e(it)
-                    emit(emptyList())
-                }
-                .collect(addresses)
-        }
-    }
-
     private fun collectSelectedTokens() {
-        selectTokensJob?.cancel()
         selectTokensJob =
-            viewModelScope.launch {
-                combine(
-                        addresses.filter { it.isNotEmpty() }, // Only proceed when addresses loaded
-                        selectedSrcId,
-                        selectedDstId,
-                    ) { addresses, srcTokenId, dstTokenId ->
-                        val chain = chain
-                        selectedSrc.updateSrc(srcTokenId, addresses, chain)
-                        selectedDst.updateSrc(dstTokenId, addresses, chain)
-                    }
-                    .collect()
-            }
-    }
-
-    private fun collectSelectedAccounts() {
-        viewModelScope.launch {
-            combine(selectedSrc, selectedDst) { src, dst ->
-                    val srcUiModel = src?.let { accountToTokenBalanceUiModelMapper(it) }
-                    val dstUiModel = dst?.let { accountToTokenBalanceUiModelMapper(it) }
-                    val isSrcNative = src?.account?.token?.isNativeToken ?: false
-                    val isDstNative = dst?.account?.token?.isNativeToken ?: false
-                    uiState.update {
-                        it.copy(
-                            selectedSrcToken = srcUiModel,
-                            selectedDstToken = dstUiModel,
-                            enableMaxAmount = (isSrcNative && isDstNative).not(),
-                        )
-                    }
-                }
-                .collect()
-        }
+            swapTokenSelector.collectSelectedTokens(
+                addresses,
+                selectedSrcId,
+                selectedDstId,
+                selectedSrc,
+                selectedDst,
+                chain,
+                selectTokensJob,
+                viewModelScope,
+            )
     }
 
     private fun calculateGas() {
@@ -1050,99 +762,21 @@ constructor(
             selectedSrc
                 .filterNotNull()
                 .map { sendSrc ->
-                    val chain = sendSrc.address.chain
-                    val selectedToken = sendSrc.account.token
                     val vaultId = vaultId ?: return@map null
-                    val vault = vaultRepository.get(vaultId) ?: return@map null
-
-                    val blockchainTransaction =
-                        Swap(
-                            coin = selectedToken,
-                            vault =
-                                VaultData(
-                                    vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                                    vaultHexChainCode = vault.hexChainCode,
-                                ),
-                            amount = BigInteger.ZERO,
-                            to = sendSrc.address.address,
-                            callData = "",
-                            approvalData = null,
-                            isMax = false,
-                        )
-
-                    val fee =
-                        withContext(Dispatchers.IO) {
-                            feeServiceComposite.calculateFees(blockchainTransaction)
-                        }
-
-                    val nativeCoin =
-                        withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-
-                    sendSrc to TokenValue(value = fee.amount, token = nativeCoin)
+                    swapGasCalculator.calculateGasFee(sendSrc, vaultId)
                 }
                 .filterNotNull()
                 .catch { Timber.e(it) }
-                .collect { (selectedSrc, gasFee) ->
-                    this@SwapFormViewModel.gasFee.value = gasFee
+                .collect { result ->
+                    gasFee.value = result.gasFee
                     try {
-                        val selectedAccount = selectedSrc.account
-                        val chain = selectedAccount.token.chain
-                        val selectedToken = selectedAccount.token
-                        val srcAddress = selectedAccount.token.address
-                        var gasFeeForDisplay = gasFee
-                        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                            // get the utxos for the sendSrc address and calculate the transaction
-                            // plan
-                            // to get the accurate fee for swap transaction
-                            val specific =
-                                blockChainSpecificRepository.getSpecific(
-                                    chain = selectedToken.chain,
-                                    address = selectedToken.address,
-                                    token = selectedToken,
-                                    gasFee = gasFee,
-                                    isSwap = true,
-                                    isMaxAmountEnabled = false,
-                                    isDeposit = false,
-                                )
-                            val vaultId = vaultId ?: return@collect
-                            val plan =
-                                getBitcoinTransactionPlan(
-                                    vaultId,
-                                    selectedToken,
-                                    srcAddress,
-                                    chain.getDustThreshold.add(BigInteger.ONE),
-                                    BlockChainSpecificAndUtxo(
-                                        blockChainSpecific =
-                                            BlockChainSpecific.UTXO(byteFee = gasFee.value, true),
-                                        utxos = specific.utxos,
-                                    ),
-                                    memo = null,
-                                )
-                            gasFeeForDisplay =
-                                gasFeeForDisplay.copy(value = plan.fee.toBigInteger())
-                        }
-
-                        val estimatedNetworkFee =
-                            gasFeeToEstimatedFee(
-                                GasFeeParams(
-                                    gasLimit =
-                                        BigInteger.valueOf(
-                                            1
-                                        ), // gasFee is the total fee for swap transaction , it is
-                                    // not the unit price
-                                    gasFee = gasFeeForDisplay,
-                                    selectedToken = selectedToken,
-                                    perUnit = true,
-                                )
-                            )
-
-                        estimatedNetworkFeeFiatValue.value = estimatedNetworkFee.fiatValue
-                        estimatedNetworkFeeTokenValue.value = estimatedNetworkFee.tokenValue
+                        estimatedNetworkFeeFiatValue.value = result.estimated.fiatValue
+                        estimatedNetworkFeeTokenValue.value = result.estimated.tokenValue
 
                         uiState.update {
                             it.copy(
-                                networkFee = estimatedNetworkFee.formattedTokenValue,
-                                networkFeeFiat = estimatedNetworkFee.formattedFiatValue,
+                                networkFee = result.estimated.formattedTokenValue,
+                                networkFeeFiat = result.estimated.formattedFiatValue,
                             )
                         }
                     } catch (e: Exception) {
@@ -1155,38 +789,6 @@ constructor(
         }
     }
 
-    private suspend fun getBitcoinTransactionPlan(
-        vaultId: String,
-        selectedToken: Coin,
-        dstAddress: String,
-        tokenAmountInt: BigInteger,
-        specific: BlockChainSpecificAndUtxo,
-        memo: String?,
-    ): Bitcoin.TransactionPlan {
-        val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
-        val keysignPayload =
-            KeysignPayload(
-                coin = selectedToken,
-                toAddress = dstAddress,
-                toAmount = tokenAmountInt,
-                blockChainSpecific = specific.blockChainSpecific,
-                memo = memo,
-                vaultPublicKeyECDSA = vault.pubKeyECDSA,
-                vaultLocalPartyID = vault.localPartyID,
-                utxos = specific.utxos,
-                libType = vault.libType,
-                wasmExecuteContractPayload = null,
-            )
-
-        val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
-
-        val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
-        if (plan.error != SigningError.OK) {
-            Timber.e("UTXO plan error: ${plan.error.name}")
-        }
-        return plan
-    }
-
     private fun collectTotalFee() {
         estimatedNetworkFeeFiatValue
             .filterNotNull()
@@ -1197,29 +799,6 @@ constructor(
                 uiState.update { it.copy(totalFee = fiatValueToString(totalFee)) }
             }
             .launchIn(viewModelScope)
-    }
-
-    /**
-     * Returns a cached [SwapQuote] if one exists for the given token pair + amount and hasn't
-     * expired, otherwise invokes [fetch] and caches the result.
-     *
-     * Single entry-point for all quote retrieval across provider branches in [calculateFees],
-     * ensuring consistent caching behaviour.
-     */
-    private suspend fun getCachedQuoteOrFetch(
-        srcTokenId: String,
-        dstTokenId: String,
-        srcAmount: BigInteger,
-        provider: SwapProvider,
-        fetch: suspend () -> SwapQuote,
-    ): SwapQuote {
-        quoteCache.get(srcTokenId, dstTokenId, srcAmount, provider)?.let {
-            return it
-        }
-
-        return fetch().also { fresh ->
-            quoteCache.put(srcTokenId, dstTokenId, srcAmount, provider, fresh)
-        }
     }
 
     @OptIn(FlowPreview::class)
@@ -1263,11 +842,6 @@ constructor(
 
                         val currency = appCurrencyRepository.currency.first()
 
-                        val srcFiatValue = convertTokenValueToFiat(srcToken, tokenValue, currency)
-
-                        val srcFiatValueText = fiatValueToString(srcFiatValue)
-
-                        val srcNativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
                         val vultBPSDiscount =
                             vaultId?.let { id ->
                                 getDiscountBpsUseCase.invoke(id, provider).takeIf { it != 0 }
@@ -1275,488 +849,101 @@ constructor(
 
                         val referral =
                             referralCode.value
-                                ?: vaultId
-                                    ?.takeIf { srcToken.chain.id == Chain.ThorChain.id }
-                                    ?.let { referralRepository.getExternalReferralBy(it) }
+                                ?: vaultId?.let { referralRepository.getExternalReferralBy(it) }
 
-                        referral?.let { code ->
-                            val tierType = vultBPSDiscount?.getTierType()
-                            checkReferralBpsDiscount(tierType, srcToken, tokenValue, code)
-                        }
-
-                        checkVultBpsDiscount(srcToken, tokenValue, vultBPSDiscount)
-
-                        when (provider) {
-                            SwapProvider.MAYA,
-                            SwapProvider.THORCHAIN -> {
-                                val isAffiliate = true
-
-                                val (quote, recommendedMinAmountToken) =
-                                    if (provider == SwapProvider.MAYA) {
-                                        val mayaSwapQuote =
-                                            getCachedQuoteOrFetch(
-                                                srcToken.id,
-                                                dstToken.id,
-                                                srcTokenValue,
-                                                SwapProvider.MAYA,
-                                            ) {
-                                                swapQuoteRepository.getMayaSwapQuote(
-                                                    dstAddress = dst.address.address,
-                                                    srcToken = srcToken,
-                                                    dstToken = dstToken,
-                                                    tokenValue = tokenValue,
-                                                    isAffiliate = isAffiliate,
-                                                    bpsDiscount = vultBPSDiscount ?: 0,
-                                                    referralCode = referral.orEmpty(),
-                                                )
-                                            }
-                                                as SwapQuote.MayaChain
-                                        mayaSwapQuote to mayaSwapQuote.recommendedMinTokenValue
-                                    } else {
-
-                                        val thorSwapQuote =
-                                            getCachedQuoteOrFetch(
-                                                srcToken.id,
-                                                dstToken.id,
-                                                srcTokenValue,
-                                                SwapProvider.THORCHAIN,
-                                            ) {
-                                                swapQuoteRepository.getSwapQuote(
-                                                    dstAddress = dst.address.address,
-                                                    srcToken = srcToken,
-                                                    dstToken = dstToken,
-                                                    tokenValue = tokenValue,
-                                                    referralCode = referral.orEmpty(),
-                                                    bpsDiscount = vultBPSDiscount ?: 0,
-                                                )
-                                            }
-                                                as SwapQuote.ThorChain
-                                        thorSwapQuote to thorSwapQuote.recommendedMinTokenValue
-                                    }
-                                this@SwapFormViewModel.quote = quote
-
-                                val recommendedMinAmountTokenString =
-                                    mapTokenValueToDecimalUiString(recommendedMinAmountToken)
-                                amount.let {
-                                    if (amount < recommendedMinAmountToken.decimal) {
-                                        throw SwapException.SmallSwapAmount(
-                                            recommendedMinAmountTokenString
-                                        )
-                                    }
-                                }
-
-                                val fiatFees =
-                                    convertTokenValueToFiat(dstToken, quote.fees, currency)
-                                swapFeeFiat.value = fiatFees
-
-                                val estimatedDstTokenValue =
-                                    mapTokenValueToDecimalUiString(quote.expectedDstValue)
-
-                                val estimatedDstFiatValue =
-                                    convertTokenValueToFiat(
-                                        dstToken,
-                                        quote.expectedDstValue,
-                                        currency,
+                        if (provider == SwapProvider.THORCHAIN) {
+                            referral?.let { code ->
+                                val tierType = vultBPSDiscount?.getTierType()
+                                val result =
+                                    swapDiscountChecker.checkReferralBpsDiscount(
+                                        tierType,
+                                        srcToken,
+                                        tokenValue,
+                                        code,
                                     )
-
+                                result.referralCode?.let { rc -> referralCode.update { rc } }
                                 uiState.update {
                                     it.copy(
-                                        provider =
-                                            if (provider == SwapProvider.MAYA)
-                                                R.string.swap_form_provider_mayachain.asUiText()
-                                            else R.string.swap_form_provider_thorchain.asUiText(),
-                                        srcFiatValue = srcFiatValueText,
-                                        estimatedDstTokenValue = estimatedDstTokenValue,
-                                        estimatedDstFiatValue =
-                                            fiatValueToString(estimatedDstFiatValue),
-                                        fee = fiatValueToString(fiatFees),
-                                        formError = null,
-                                        isSwapDisabled = false,
-                                        isLoading = false,
-                                        expiredAt = this@SwapFormViewModel.quote?.expiredAt,
+                                        referralBpsDiscount = result.referralBpsDiscount,
+                                        referralBpsDiscountFiatValue =
+                                            result.referralBpsDiscountFiatValue,
                                     )
                                 }
                             }
-
-                            SwapProvider.KYBER -> {
-                                val swapQuote =
-                                    getCachedQuoteOrFetch(
-                                        srcToken.id,
-                                        dstToken.id,
-                                        srcTokenValue,
-                                        SwapProvider.KYBER,
-                                    ) {
-                                        val apiQuote =
-                                            swapQuoteRepository.getKyberSwapQuote(
-                                                srcToken = srcToken,
-                                                dstToken = dstToken,
-                                                tokenValue = tokenValue,
-                                                affiliateBps =
-                                                    maxOf(
-                                                        0,
-                                                        KYBER_AFFILIATE_FEE_BPS -
-                                                            (vultBPSDiscount ?: 0),
-                                                    ),
-                                            )
-                                        val expectedDstValue =
-                                            TokenValue(
-                                                value = apiQuote.dstAmount.toBigInteger(),
-                                                token = dstToken,
-                                            )
-                                        val gasFees =
-                                            apiQuote.tx.gasPrice.toBigInteger() *
-                                                (apiQuote.tx.gas.takeIf { it != 0L }
-                                                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
-                                                    .toBigInteger()
-                                        val (feeAmount, feeCoin) =
-                                            try {
-                                                if (apiQuote.tx.swapFeeTokenContract.isNotEmpty()) {
-                                                    val tokenContract =
-                                                        apiQuote.tx.swapFeeTokenContract
-                                                    val chainId = srcNativeToken.chain.id
-                                                    val amount = apiQuote.tx.swapFee.toBigInteger()
-                                                    val coinAndFiatValue =
-                                                        searchToken(chainId, tokenContract)
-                                                            ?: error("Can't find token or price")
-                                                    val newNativeAmount =
-                                                        convertTokenToTokenUseCase
-                                                            .convertTokenToToken(
-                                                                amount,
-                                                                coinAndFiatValue,
-                                                                srcNativeToken,
-                                                            )
-                                                    Pair(newNativeAmount, srcNativeToken)
-                                                } else {
-                                                    Pair(gasFees, srcNativeToken)
-                                                }
-                                            } catch (t: Throwable) {
-                                                Timber.e(t)
-                                                Pair(BigInteger.ZERO, srcNativeToken)
-                                            }
-                                        val updatedTx =
-                                            apiQuote.tx.copy(swapFee = feeAmount.toString())
-                                        val tokenFees =
-                                            TokenValue(value = feeAmount, token = feeCoin)
-                                        SwapQuote.OneInch(
-                                            expectedDstValue = expectedDstValue,
-                                            fees = tokenFees,
-                                            data = apiQuote.copy(tx = updatedTx),
-                                            expiredAt = Clock.System.now() + expiredAfter,
-                                            provider = provider.getSwapProviderId(),
-                                        )
-                                    }
-                                this@SwapFormViewModel.quote = swapQuote
-
-                                val fiatFees =
-                                    convertTokenValueToFiat(
-                                        srcNativeToken,
-                                        swapQuote.fees,
-                                        currency,
-                                    )
-                                swapFeeFiat.value = fiatFees
-
-                                val estimatedDstTokenValue =
-                                    mapTokenValueToDecimalUiString(swapQuote.expectedDstValue)
-
-                                val estimatedDstFiatValue =
-                                    convertTokenValueToFiat(
-                                        dstToken,
-                                        swapQuote.expectedDstValue,
-                                        currency,
-                                    )
-
-                                uiState.update {
-                                    it.copy(
-                                        provider = R.string.swap_for_provider_kyber.asUiText(),
-                                        srcFiatValue = srcFiatValueText,
-                                        estimatedDstTokenValue = estimatedDstTokenValue,
-                                        estimatedDstFiatValue =
-                                            fiatValueToString(estimatedDstFiatValue),
-                                        fee = fiatValueToString(fiatFees),
-                                        formError = null,
-                                        isSwapDisabled = false,
-                                        isLoading = false,
-                                        expiredAt = this@SwapFormViewModel.quote?.expiredAt,
-                                    )
-                                }
-                            }
-
-                            SwapProvider.ONEINCH -> {
-                                val isAffiliate = true
-
-                                val swapQuote =
-                                    getCachedQuoteOrFetch(
-                                        srcToken.id,
-                                        dstToken.id,
-                                        srcTokenValue,
-                                        SwapProvider.ONEINCH,
-                                    ) {
-                                        val apiQuote =
-                                            swapQuoteRepository.getOneInchSwapQuote(
-                                                srcToken = srcToken,
-                                                dstToken = dstToken,
-                                                tokenValue = tokenValue,
-                                                isAffiliate = isAffiliate,
-                                                bpsDiscount = vultBPSDiscount ?: 0,
-                                            )
-                                        val expectedDstValue =
-                                            TokenValue(
-                                                value = apiQuote.dstAmount.toBigInteger(),
-                                                token = dstToken,
-                                            )
-                                        val tokenFees =
-                                            TokenValue(
-                                                value =
-                                                    apiQuote.tx.gasPrice.toBigInteger() *
-                                                        (apiQuote.tx.gas.takeIf { it != 0L }
-                                                                ?: EvmHelper
-                                                                    .DEFAULT_ETH_SWAP_GAS_UNIT)
-                                                            .toBigInteger(),
-                                                token = srcNativeToken,
-                                            )
-                                        SwapQuote.OneInch(
-                                            expectedDstValue = expectedDstValue,
-                                            fees = tokenFees,
-                                            data = apiQuote,
-                                            expiredAt = Clock.System.now() + expiredAfter,
-                                            provider = provider.getSwapProviderId(),
-                                        )
-                                    }
-
-                                this@SwapFormViewModel.quote = swapQuote
-
-                                val fiatFees =
-                                    convertTokenValueToFiat(
-                                        srcNativeToken,
-                                        swapQuote.fees,
-                                        currency,
-                                    )
-                                swapFeeFiat.value = fiatFees
-
-                                val estimatedDstTokenValue =
-                                    mapTokenValueToDecimalUiString(swapQuote.expectedDstValue)
-
-                                val estimatedDstFiatValue =
-                                    convertTokenValueToFiat(
-                                        dstToken,
-                                        swapQuote.expectedDstValue,
-                                        currency,
-                                    )
-
-                                uiState.update {
-                                    it.copy(
-                                        provider = R.string.swap_for_provider_1inch.asUiText(),
-                                        srcFiatValue = srcFiatValueText,
-                                        estimatedDstTokenValue = estimatedDstTokenValue,
-                                        estimatedDstFiatValue =
-                                            fiatValueToString(estimatedDstFiatValue),
-                                        fee = fiatValueToString(fiatFees),
-                                        formError = null,
-                                        isSwapDisabled = false,
-                                        isLoading = false,
-                                        expiredAt = this@SwapFormViewModel.quote?.expiredAt,
-                                    )
-                                }
-                            }
-
-                            SwapProvider.LIFI,
-                            SwapProvider.JUPITER -> {
-                                val swapQuote =
-                                    getCachedQuoteOrFetch(
-                                        srcToken.id,
-                                        dstToken.id,
-                                        srcTokenValue,
-                                        provider,
-                                    ) {
-                                        val apiQuote =
-                                            if (provider == SwapProvider.LIFI)
-                                                swapQuoteRepository.getLiFiSwapQuote(
-                                                    srcAddress = src.address.address,
-                                                    dstAddress = dst.address.address,
-                                                    srcToken = srcToken,
-                                                    dstToken = dstToken,
-                                                    tokenValue = tokenValue,
-                                                    bpsDiscount = vultBPSDiscount ?: 0,
-                                                )
-                                            else
-                                                swapQuoteRepository.getJupiterSwapQuote(
-                                                    srcAddress = src.address.address,
-                                                    srcToken = srcToken,
-                                                    dstToken = dstToken,
-                                                    tokenValue = tokenValue,
-                                                )
-
-                                        val expectedDstValue =
-                                            TokenValue(
-                                                value = apiQuote.dstAmount.toBigInteger(),
-                                                token = dstToken,
-                                            )
-
-                                        val (feeAmount, feeCoin) =
-                                            try {
-                                                if (apiQuote.tx.swapFeeTokenContract.isNotEmpty()) {
-                                                    val tokenContract =
-                                                        apiQuote.tx.swapFeeTokenContract
-                                                    val chainId = srcNativeToken.chain.id
-                                                    val amount = apiQuote.tx.swapFee.toBigInteger()
-                                                    val coinAndFiatValue =
-                                                        searchToken(chainId, tokenContract)
-                                                            ?: error("Can't find token or price")
-                                                    val newNativeAmount =
-                                                        convertTokenToTokenUseCase
-                                                            .convertTokenToToken(
-                                                                amount,
-                                                                coinAndFiatValue,
-                                                                srcNativeToken,
-                                                            )
-                                                    Pair(newNativeAmount, srcNativeToken)
-                                                } else {
-                                                    Pair(
-                                                        apiQuote.tx.swapFee.toBigInteger(),
-                                                        srcNativeToken,
-                                                    )
-                                                }
-                                            } catch (t: Throwable) {
-                                                Timber.e(t)
-                                                Pair(BigInteger.ZERO, srcNativeToken)
-                                            }
-
-                                        val updatedTx =
-                                            apiQuote.tx.copy(swapFee = feeAmount.toString())
-                                        val tokenFees =
-                                            TokenValue(value = feeAmount, token = feeCoin)
-                                        SwapQuote.OneInch(
-                                            expectedDstValue = expectedDstValue,
-                                            fees = tokenFees,
-                                            data = apiQuote.copy(tx = updatedTx),
-                                            expiredAt = Clock.System.now() + expiredAfter,
-                                            provider = provider.getSwapProviderId(),
-                                        )
-                                    }
-
-                                this@SwapFormViewModel.quote = swapQuote
-
-                                val fiatFees =
-                                    convertTokenValueToFiat(
-                                        srcNativeToken,
-                                        swapQuote.fees,
-                                        currency,
-                                    )
-                                swapFeeFiat.value = fiatFees
-                                val estimatedDstTokenValue =
-                                    mapTokenValueToDecimalUiString(swapQuote.expectedDstValue)
-
-                                val estimatedDstFiatValue =
-                                    convertTokenValueToFiat(
-                                        dstToken,
-                                        swapQuote.expectedDstValue,
-                                        currency,
-                                    )
-
-                                uiState.update {
-                                    it.copy(
-                                        provider =
-                                            if (provider == SwapProvider.LIFI) {
-                                                R.string.swap_for_provider_li_fi.asUiText()
-                                            } else {
-                                                R.string.swap_for_provider_jupiter.asUiText()
-                                            },
-                                        srcFiatValue = srcFiatValueText,
-                                        estimatedDstTokenValue = estimatedDstTokenValue,
-                                        estimatedDstFiatValue =
-                                            fiatValueToString(estimatedDstFiatValue),
-                                        fee = fiatValueToString(fiatFees),
-                                        formError = null,
-                                        isSwapDisabled = false,
-                                        isLoading = false,
-                                        expiredAt = this@SwapFormViewModel.quote?.expiredAt,
-                                    )
-                                }
+                        } else {
+                            uiState.update {
+                                it.copy(
+                                    referralBpsDiscount = null,
+                                    referralBpsDiscountFiatValue = null,
+                                )
                             }
                         }
 
-                        validateBalanceForSwap(src, srcTokenValue)
+                        val vultResult =
+                            swapDiscountChecker.checkVultBpsDiscount(
+                                srcToken,
+                                tokenValue,
+                                vultBPSDiscount,
+                            )
+                        uiState.update {
+                            it.copy(
+                                vultBpsDiscount = vultResult.vultBpsDiscount,
+                                vultBpsDiscountFiatValue = vultResult.vultBpsDiscountFiatValue,
+                                tierType = vultResult.tierType,
+                            )
+                        }
+
+                        val quoteResult =
+                            swapQuoteManager.fetchQuote(
+                                provider = provider,
+                                src = src,
+                                dst = dst,
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                srcTokenValue = srcTokenValue,
+                                tokenValue = tokenValue,
+                                currency = currency,
+                                vultBPSDiscount = vultBPSDiscount,
+                                referral = referral,
+                                amount = amount,
+                            )
+
+                        this@SwapFormViewModel.quote = quoteResult.quote
+                        swapFeeFiat.value = quoteResult.swapFeeFiat
+
+                        uiState.update {
+                            it.copy(
+                                provider = quoteResult.providerUiText,
+                                srcFiatValue = quoteResult.srcFiatValueText,
+                                estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
+                                estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
+                                fee = quoteResult.feeText,
+                                formError = null,
+                                isSwapDisabled = false,
+                                isLoading = false,
+                                expiredAt = this@SwapFormViewModel.quote?.expiredAt,
+                            )
+                        }
+
+                        val balanceError =
+                            swapValidator.validateBalanceForSwap(
+                                src,
+                                srcTokenValue,
+                                estimatedNetworkFeeTokenValue.value,
+                            )
+                        if (balanceError != null) {
+                            uiState.update {
+                                it.copy(isSwapDisabled = true, formError = balanceError.formError)
+                            }
+                        }
                     } catch (e: SwapException) {
                         this@SwapFormViewModel.quote = null
                         val formError =
-                            when (e) {
-                                is SwapException.SwapIsNotSupported ->
-                                    UiText.StringResource(R.string.swap_route_not_available)
-
-                                is SwapException.AmountCannotBeZero ->
-                                    UiText.StringResource(R.string.swap_form_invalid_amount)
-
-                                is SwapException.SameAssets ->
-                                    UiText.StringResource(
-                                        R.string.swap_screen_same_asset_error_message
-                                    )
-
-                                is SwapException.UnkownSwapError ->
-                                    UiText.StringResource(R.string.swap_error_quote_failed)
-
-                                is SwapException.HighPriceImpact ->
-                                    UiText.StringResource(R.string.swap_error_high_price_impact)
-
-                                is SwapException.InsufficentSwapAmount ->
-                                    UiText.StringResource(R.string.swap_error_amount_too_low)
-
-                                is SwapException.SwapRouteNotAvailable ->
-                                    UiText.StringResource(R.string.swap_route_not_available)
-
-                                is SwapException.TimeOut ->
-                                    UiText.StringResource(R.string.swap_error_time_out)
-
-                                is SwapException.NetworkConnection ->
-                                    UiText.StringResource(R.string.network_connection_lost)
-
-                                is SwapException.SmallSwapAmount -> {
-                                    val rawAmount =
-                                        e.message?.let { msg ->
-                                            Regex("""recommended_min_amount_in:\s*(\d+)""")
-                                                .find(msg)
-                                                ?.groupValues
-                                                ?.get(1)
-                                                ?.toLongOrNull()
-                                        }
-                                    if (rawAmount != null) {
-                                        val multiplier = srcToken.thorswapMultiplier
-                                        val tokenAmount =
-                                            BigDecimal(rawAmount)
-                                                .divide(multiplier)
-                                                .movePointRight(srcToken.decimal)
-                                                .toBigInteger()
-                                        val formattedAmount =
-                                            mapTokenValueToDecimalUiString(
-                                                TokenValue(value = tokenAmount, token = srcToken)
-                                            )
-                                        UiText.FormattedText(
-                                            R.string.swap_form_minimum_amount,
-                                            listOf(
-                                                formattedAmount,
-                                                uiState.value.selectedSrcToken?.title ?: "",
-                                            ),
-                                        )
-                                    } else if (e.message?.toDoubleOrNull() != null) {
-                                        UiText.FormattedText(
-                                            R.string.swap_form_minimum_amount,
-                                            listOf(
-                                                e.message ?: "",
-                                                uiState.value.selectedSrcToken?.title ?: "",
-                                            ),
-                                        )
-                                    } else {
-                                        e.message?.let { UiText.DynamicString(it) }
-                                            ?: UiText.StringResource(
-                                                R.string.swap_error_amount_too_low
-                                            )
-                                    }
-                                }
-
-                                is SwapException.InsufficientFunds ->
-                                    UiText.StringResource(
-                                        R.string.swap_error_small_insufficient_funds
-                                    )
-                            }
+                            swapQuoteManager.mapSwapExceptionToFormError(
+                                e,
+                                srcToken,
+                                uiState.value.selectedSrcToken?.title,
+                            )
                         uiState.update {
                             it.copy(
                                 provider = UiText.Empty,
@@ -1770,7 +957,7 @@ constructor(
                                 expiredAt = null,
                             )
                         }
-                        Timber.e("swapError $e")
+                        Timber.e(e, "swapError")
                     } catch (e: Exception) {
                         this@SwapFormViewModel.quote = null
                         isLoading = false
@@ -1779,55 +966,6 @@ constructor(
 
                     this@SwapFormViewModel.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
                 }
-        }
-    }
-
-    private suspend fun checkVultBpsDiscount(
-        srcToken: Coin,
-        tokenValue: TokenValue,
-        vultBPSDiscount: Int?,
-    ) {
-        vultBPSDiscount?.let {
-            val vultBpsDiscountFiat =
-                convertBpsToFiat(token = srcToken, tokenValue = tokenValue, bps = vultBPSDiscount)
-            val vultBpsDiscountFiatValue = fiatValueToString(vultBpsDiscountFiat)
-            val tierType = vultBPSDiscount.getTierType()
-            uiState.update {
-                it.copy(
-                    vultBpsDiscount = vultBPSDiscount,
-                    vultBpsDiscountFiatValue = vultBpsDiscountFiatValue,
-                    tierType = tierType,
-                )
-            }
-        }
-            ?: uiState.update {
-                it.copy(vultBpsDiscount = null, vultBpsDiscountFiatValue = null, tierType = null)
-            }
-    }
-
-    private suspend fun checkReferralBpsDiscount(
-        tierType: TierType?,
-        srcToken: Coin,
-        tokenValue: TokenValue,
-        code: String,
-    ) {
-        val referralBpsDiscount =
-            THORChainSwaps.REFERRED_USER_FEE_RATE_BP.takeUnless { tierType == TierType.ULTIMATE }
-        referralBpsDiscount?.let {
-            val referralBpsDiscountFiatValue =
-                convertBpsToFiat(
-                    token = srcToken,
-                    tokenValue = tokenValue,
-                    bps = referralBpsDiscount,
-                )
-            val referralBpsDiscountFiat = fiatValueToString(referralBpsDiscountFiatValue)
-            referralCode.update { code }
-            uiState.update {
-                it.copy(
-                    referralBpsDiscount = referralBpsDiscount,
-                    referralBpsDiscountFiatValue = referralBpsDiscountFiat,
-                )
-            }
         }
     }
 
@@ -1842,72 +980,6 @@ constructor(
             }
     }
 
-    private fun validateBalanceForSwap(src: SendSrc, srcAmountValue: BigInteger) {
-        val srcToken = src.account.token
-        val selectedSrcBalance = src.account.tokenValue?.value ?: return
-
-        if (srcToken.isNativeToken) {
-            val totalRequired =
-                srcAmountValue + (estimatedNetworkFeeTokenValue.value?.value ?: BigInteger.ZERO)
-            if (totalRequired > selectedSrcBalance) {
-                uiState.update {
-                    it.copy(
-                        isSwapDisabled = true,
-                        formError =
-                            UiText.FormattedText(
-                                R.string.swap_error_insufficient_balance_and_fees,
-                                listOf(srcToken.ticker),
-                            ),
-                    )
-                }
-            }
-        } else {
-            if (srcAmountValue > selectedSrcBalance) {
-                uiState.update {
-                    it.copy(
-                        isSwapDisabled = true,
-                        formError =
-                            UiText.FormattedText(
-                                R.string.swap_error_insufficient_source_token,
-                                listOf(srcToken.ticker),
-                            ),
-                    )
-                }
-            } else {
-                val nativeTokenAccount = src.address.accounts.find { it.token.isNativeToken }
-                val nativeTokenValue = nativeTokenAccount?.tokenValue?.value ?: return
-                if (
-                    nativeTokenValue <
-                        (estimatedNetworkFeeTokenValue.value?.value ?: BigInteger.ZERO)
-                ) {
-                    uiState.update {
-                        it.copy(
-                            isSwapDisabled = true,
-                            formError =
-                                UiText.FormattedText(
-                                    R.string.swap_error_insufficient_gas_fees,
-                                    listOf(
-                                        "${nativeTokenAccount.token.ticker} (${nativeTokenAccount.token.chain.raw})"
-                                    ),
-                                ),
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private fun validateSrcAmount(srcAmount: String): UiText? {
-        if (srcAmount.isEmpty() || srcAmount.length > TextFieldUtils.AMOUNT_MAX_LENGTH) {
-            return UiText.StringResource(R.string.swap_form_invalid_amount)
-        }
-        val srcAmountAmountBigDecimal = srcAmount.toBigDecimalOrNull()
-        if (srcAmountAmountBigDecimal == null || srcAmountAmountBigDecimal <= BigDecimal.ZERO) {
-            return UiText.StringResource(R.string.swap_error_no_amount)
-        }
-        return null
-    }
-
     fun hideError() {
         uiState.update { it.copy(error = null, formError = null) }
     }
@@ -1916,20 +988,9 @@ constructor(
         uiState.update { it.copy(error = error) }
     }
 
-    private fun getGasLimit(token: Coin): BigInteger? {
-        val isEVMSwap = token.isNativeToken && token.chain in listOf(Chain.Ethereum, Chain.Arbitrum)
-        return if (isEVMSwap)
-            BigInteger.valueOf(if (token.chain == Chain.Ethereum) ETH_GAS_LIMIT else ARB_GAS_LIMIT)
-        else null
-    }
-
     companion object {
-        const val ETH_GAS_LIMIT: Long = 40_000
-        const val ARB_GAS_LIMIT: Long = 400_000
-        private const val KYBER_AFFILIATE_FEE_BPS = 50
-
-        private const val ARG_SELECTED_SRC_TOKEN_ID = "ARG_SELECTED_SRC_TOKEN_ID"
-        private const val ARG_SELECTED_DST_TOKEN_ID = "ARG_SELECTED_DST_TOKEN_ID"
+        const val ETH_GAS_LIMIT: Long = SwapGasCalculator.ETH_GAS_LIMIT
+        const val ARB_GAS_LIMIT: Long = SwapGasCalculator.ARB_GAS_LIMIT
     }
 }
 
@@ -1959,46 +1020,4 @@ internal fun MutableStateFlow<SendSrc?>.updateSrc(
                 addresses.findCurrentSrc(selectedTokenId, selectedSrcValue)
             }
         }
-}
-
-internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain: Chain?): SendSrc? {
-    val address =
-        when {
-            !selectedTokenId.isNullOrBlank() ->
-                firstOrNull() { it -> it.accounts.any { it.token.id == selectedTokenId } }
-                    ?: this.first()
-
-            filterByChain != null -> firstOrNull { it.chain == filterByChain } ?: return null
-            else -> first()
-        }
-    val account =
-        when {
-            !selectedTokenId.isNullOrBlank() ->
-                address.accounts.firstOrNull() { it.token.id == selectedTokenId }
-                    ?: address.accounts.first()
-
-            filterByChain != null ->
-                address.accounts.firstOrNull { it.token.isNativeToken } ?: return null
-
-            else -> address.accounts.first()
-        }
-
-    return SendSrc(address, account)
-}
-
-internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: SendSrc): SendSrc? {
-    if (selectedTokenId == null) {
-        val selectedAddress = currentSrc.address
-        val selectedAccount = currentSrc.account
-        val address =
-            firstOrNull {
-                it.chain == selectedAddress.chain && it.address == selectedAddress.address
-            } ?: return null
-        val account =
-            address.accounts.firstOrNull { it.token.ticker == selectedAccount.token.ticker }
-                ?: return null
-        return SendSrc(address, account)
-    } else {
-        return firstSendSrc(selectedTokenId, null)
-    }
 }

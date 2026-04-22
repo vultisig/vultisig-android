@@ -114,7 +114,37 @@ data class TronAccountResourceJson(
     @SerialName("tronPowerLimit") val tronPowerLimit: Long = 0L,
 )
 
-@Serializable data class TronAccountJson(@SerialName("address") val address: String = "")
+@Serializable
+data class TronFrozenV2Json(
+    @SerialName("type") val type: String? = null,
+    @SerialName("amount") val amount: Long = 0L,
+)
+
+@Serializable
+data class TronUnfrozenV2Json(
+    @SerialName("type") val type: String? = null,
+    @SerialName("unfreeze_amount") val unfreezeAmount: Long? = null,
+    @SerialName("unfreeze_expire_time") val unfreezeExpireTime: Long? = null,
+)
+
+@Serializable
+data class TronAccountJson(
+    @SerialName("address") val address: String = "",
+    @SerialName("balance") val balance: Long? = null,
+    @SerialName("frozenV2") val frozenV2: List<TronFrozenV2Json>? = null,
+    @SerialName("unfrozenV2") val unfrozenV2: List<TronUnfrozenV2Json>? = null,
+) {
+    val frozenBandwidthSun: Long
+        get() =
+            frozenV2?.filter { it.type == null || it.type == "BANDWIDTH" }?.sumOf { it.amount }
+                ?: 0L
+
+    val frozenEnergySun: Long
+        get() = frozenV2?.filter { it.type == "ENERGY" }?.sumOf { it.amount } ?: 0L
+
+    val unfreezingTotalSun: Long
+        get() = unfrozenV2?.sumOf { it.unfreezeAmount ?: 0L } ?: 0L
+}
 
 @Serializable
 data class TronContractInfoJson(

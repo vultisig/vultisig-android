@@ -163,7 +163,6 @@
     <string name="import_file_screen_success_import">Il caveau è stato importato con successo</string>
     <string name="verify_swap_consent_amount">L\'importo dello swap è corretto</string>
     <string name="successfully_scanned_barcode">Codice a barre scansionato correttamente: %1$s</string>
-    <string name="scan_qr_screen_return_vault">Torna al Caveau</string>
     <string name="verify_transaction_error_not_enough_consent">Si prega di controllare tutti i consensi</string>
     <string name="send_error_no_token">Nessun token selezionato</string>
     <string name="send_error_no_gas_fee">Nessuna commissione per il gas</string>
@@ -196,6 +195,7 @@
     <string name="chain_token_screen_address_copied">%1$s copiato negli appunti</string>
     <string name="s_of_s_vault">%1$s del caveau %2$s</string>
     <string name="camera_permission_denied">Autorizzazione della telecamera non concessa. Abilitala nelle impostazioni.</string>
+    <string name="camera_permission_open_settings">Apri impostazioni</string>
     <string name="verify_transaction_value">Valor</string>
     <string name="send_error_no_address">L\'indirizzo non è valido</string>
     <string name="vault_settings_error_backup_file">si è verificato un errore</string>
@@ -249,6 +249,8 @@
     <string name="add_address_address_title">Indirizzo</string>
     <string name="add_address_type_hint">Scrivi qui</string>
     <string name="join_keysign_invalid_qr">Contenuto del codice QR non valido</string>
+    <string name="settings_screen_privacy">Privacy</string>
+    <string name="settings_screen_prevent_screenshots">Impedisci screenshot</string>
     <string name="settings_screen_legal">Legal</string>
     <string name="settings_screen_privacy_policy">Informativa sulla privacy</string>
     <string name="settings_screen_tos">Termini di servizio</string>
@@ -292,13 +294,23 @@
     <string name="qr_title_join_keygen_description">Esegui la scansione con i dispositivi per partecipare alla\n generazione del vault</string>
     <string name="qr_title_join_keysign_description">Cassaforte: %1$s\n Importo: %2$s\n A: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Cassaforte: %1$s\n Da: %2$s\n A: %3$s</string>
+    <string name="qr_share_label_vault">Cassaforte</string>
+    <string name="qr_share_label_amount">Importo</string>
+    <string name="qr_share_label_to">A</string>
+    <string name="qr_share_label_from">Da</string>
+    <string name="qr_share_label_type">Tipo</string>
+    <string name="qr_share_type_fast_vault">Cassaforte rapida</string>
+    <string name="qr_share_type_secure_vault">Cassaforte sicura</string>
     <string name="error_folder_must_have_at_least_one_vault">La cartella necessita di almeno un vault selezionato</string>
     <string name="import_file_password_hint_text">Suggerimento: %s</string>
-    <string name="scan_qr_upload_from_gallery">Carica dalla \nGalleria</string>
+    <string name="scan_qr_upload_qr_code">Carica codice QR</string>
+    <string name="scan_qr_hint_title">Problemi con la scansione?</string>
+    <string name="scan_qr_hint_message">Se il codice QR non viene scansionato subito:\n• Avvicina o allontana leggermente il telefono dallo schermo\n• Assicurati che lo schermo sia ben illuminato e senza riflessi\n• Tieni entrambi i dispositivi fermi per un momento</string>
     <string name="no_barcodes_found">Nessun codice a barre trovato</string>
     <string name="reshare_start_join_reshare_button">Unisciti a Reshare</string>
     <string name="deposit_error_invalid_lpunits">Le unità LP non sono valide</string>
     <string name="deposit_error_invalid_assets">Le risorse non sono valide</string>
+    <string name="deposit_error_chain_not_enabled">Abilita %1$s in questo vault per prelevare %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Questo deposito non ha ancora raggiunto il suo periodo di scadenza</string>
     <string name="deposit_form_screen_assets">Attività</string>
     <string name="deposit_form_screen_asset_selection">Selezione asset</string>
@@ -331,6 +343,7 @@
     <string name="swap_error_time_out">La richiesta di scambio è scaduta. Riprova.</string>
     <string name="swap_error_high_price_impact">L\'impatto sul prezzo è troppo alto. Prova con un importo inferiore o una coppia di token diversa.</string>
     <string name="swap_error_quote_failed">Preventivo di swap fallito. Riprova o modifica l\'importo.</string>
+    <string name="swap_error_rate_limit">Troppe richieste. Riprova più tardi.</string>
     <string name="swap_screen_invalid_no_vault">Nessun caveau selezionato</string>
     <string name="swap_screen_invalid_no_src_error">Nessun token sorgente selezionato</string>
     <string name="swap_screen_invalid_selected_no_dst">Nessun token di destinazione selezionato</string>
@@ -338,6 +351,7 @@
     <string name="swap_screen_invalid_gas_fee_calculation">Calcolo della tariffa del gas non riuscito</string>
     <string name="swap_screen_invalid_quote_calculation">Calcolo preventivo fallito</string>
     <string name="join_keysign_failed_connect_to_server">Connessione al server non riuscita</string>
+    <string name="join_keysign_relay_unavailable">Server relay non disponibile, riprova</string>
     <string name="network_connection_lost">Connessione di rete persa. Controlla la tua connessione Internet</string>
     <string name="send_form_polka_reaping_warning">Assicurati di lasciare fondi sufficienti per coprire le commissioni. Se il saldo di un account scende sotto 1 DOT (deposito esistenziale), l\'account verrà disattivato (raccolto) e tutti i fondi rimanenti andranno persi. Puoi riattivare l\'indirizzo con un nuovo deposito superiore al deposito esistenziale in qualsiasi momento. Tuttavia, questo non recupererà i fondi persi.</string>
     <string name="edit_address_title">Modifica indirizzo</string>
@@ -405,8 +419,9 @@
     <string name="send_shares_currency_hint">Inserisci quote</string>
     <string name="send_error_max_shares">L\'importo non deve superare il saldo</string>
     <string name="deposit_form_shares_title">Quote (Saldo: %1$s)</string>
-    <string name="verify_your_server_share_password">Verifica la password di condivisione del server</string>
-    <string name="periodically_ask_verify_password">Ti chiederemo periodicamente di verificare la tua password di accesso rapido in modo che tu possa sempre ricordarla</string>
+    <string name="fast_vault_password_reminder_title">Verifica la tua password per:</string>
+    <string name="fast_vault_password_reminder_done_button">Fatto</string>
+    <string name="periodically_ask_verify_password">Ti chiediamo periodicamente una verifica affinché tu non dimentichi la tua password.</string>
 
     <string name="security_scanner_medium_risk_title">Rischio di sicurezza medio</string>
     <string name="security_scanner_high_risk_title">Rischio di sicurezza elevato</string>
@@ -440,6 +455,22 @@
     <string name="defi_bond">Bond</string>
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Pool di liquidità</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">Saldo Disponibile</string>
+    <string name="tron_defi_staking">Staking</string>
+    <string name="tron_defi_bandwidth">Larghezza di Banda</string>
+    <string name="tron_defi_energy">Energia</string>
+    <string name="tron_defi_freeze">Congela</string>
+    <string name="tron_defi_unfreeze">Scongela</string>
+    <string name="tron_defi_tron_freeze">TRON Congela</string>
+    <string name="tron_defi_frozen">Congelato</string>
+    <string name="tron_defi_unfreezing">Scongelamento</string>
+    <string name="tron_defi_resources">Risorse</string>
+    <string name="tron_defi_pending_withdrawals">Prelievi in Sospeso</string>
+    <string name="tron_defi_ready_to_claim">Pronto per il prelievo</string>
+    <string name="tron_defi_countdown_days">%1$d giorni, %2$d h</string>
+    <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
+    <string name="tron_defi_error_trx_not_in_vault">Moneta TRX non trovata nel vault</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Lo slippage è obbligatorio</string>
     <string name="slippage_invalid_error">Lo slippage deve essere compreso tra 1 e 100</string>
@@ -483,6 +514,13 @@
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Valore token</string>
     <string name="token_fiat_toggle_fiat_label">Valore fiat</string>
+    <string name="remove_pool_title">Rimuovi Pool</string>
+    <string name="remove_pool_amount_label">Quantità</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">Puntare CACAO</string>
+    <string name="unstake_cacao_title">Rimuovi puntata CACAO</string>
+    <string name="unstake_cacao_available_format">Disponibile: %1$s</string>
     <string name="cacaopool_only_cacao_supported">Per le operazioni del pool è supportato solo il token CACAO</string>
     <string name="referral_create_info_title">Programma referral</string>
     <string name="referral_create_info_content">Il programma referral si applica agli scambi THORChain ed è su base best effort. Devi registrare un THORName per utilizzare il referral Vultisig. La tassa di registrazione è di 10 RUNE e 1 RUNE per ogni anno, che viene pagata alla rete THORChain.</string>
@@ -559,6 +597,10 @@
     <string name="share_vault_qr_info">Questo codice QR consente di condividere una versione a sola lettura della tua cassaforte</string>
     <string name="add_address_title_label">Etichetta</string>
     <string name="address_book_title_edit">Modifica rubrica</string>
+    <string name="address_book_delete_entry_title">Eliminare l\'indirizzo?</string>
+    <string name="address_book_delete_entry_message">%1$s verrà rimosso dalla tua rubrica</string>
+    <string name="address_book_delete_entry_confirm">Elimina</string>
+    <string name="address_book_delete_entry_cancel">Annulla</string>
     <string name="backup_password_request_title">Vuoi crittografare il tuo backup con una password?</string>
     <string name="backup_password_request_caution_encrypt_desc">Se scegli di aggiungere una password, questa verrà utilizzata per crittografare il file di backup.</string>
     <string name="backup_password_request_highlight_encrypt">crittografa</string>
@@ -672,6 +714,7 @@
     <string name="migration_password_enter_your_password_to_unlock">Inserisci la tua password per sbloccare la tua condivisione server e avviare l\'aggiornamento</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Esiste un Vault con nome duplicato</string>
     <string name="join_key_gen_unknown_tssaction">TssAction sconosciuta</string>
+    <string name="join_key_gen_mediator_discovery_timeout">Impossibile trovare l\'altro dispositivo sulla rete</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">In attesa che altri dispositivi si uniscano</string>
     <string name="join_key_gen_your_vault_will_start_generating">Il vault inizierà a generare dati dal momento in cui finalizzi la configurazione del vault sul tuo dispositivo principale</string>
     <string name="join_key_sign_wrong_signing_library_type">Tipo di libreria di firma errato</string>
@@ -959,13 +1002,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">Inserisci la tua frase seed</string>
-    <string name="import_seedphrase_subtitle">Inserisci la tua frase di recupero di 12 o 24 parole</string>
-    <string name="import_seedphrase_label">Frase seed</string>
-    <string name="import_seedphrase_hint">Inserisci la tua frase di recupero…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="one">%1$d / %2$d parole</item>
-        <item quantity="other">%1$d / %2$d parole</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">Lascia uno spazio tra ogni parola. Sono supportate frasi seed di %1$s.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 o 24 parole</string>
+    <string name="import_seedphrase_hint">Inserisci le 12 o 24 parole della tua frase seed</string>
     <string name="import_seedphrase_invalid_word_count">Hai inserito %1$s parole. La frase seed deve essere di 12 o 24 parole</string>
     <string name="import_seedphrase_invalid_phrase">Frase seed non valida</string>
     <string name="import_seedphrase_already_imported">Questa frase seed è già stata importata</string>

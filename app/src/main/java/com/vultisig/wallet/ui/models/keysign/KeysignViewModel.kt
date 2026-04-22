@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
+import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
@@ -95,6 +96,19 @@ internal sealed class KeysignState {
 
     data class Error(val errorMessage: UiText) : KeysignState()
 }
+
+internal val KeysignState.progress: Float
+    get() =
+        when (this) {
+            is KeysignState.CreatingInstance -> 0.0f
+            is KeysignState.KeysignECDSA -> 0.33f
+            is KeysignState.KeysignEdDSA -> 0.66f
+            // EdDSA and MLDSA are mutually exclusive signing paths, so both map to 66%
+            is KeysignState.KeysignMLDSA -> 0.66f
+            is KeysignState.KeysignFinished -> 1f
+            // Dead code: Error state is rendered by a separate branch in KeysignView
+            is KeysignState.Error -> 0f
+        }
 
 internal sealed interface TransactionTypeUiModel {
     data class Send(val tx: TransactionDetailsUiModel) : TransactionTypeUiModel
@@ -604,6 +618,7 @@ constructor(
                             when (it) {
                                 is SendTransactionHistoryData -> TransactionType.SEND
                                 is SwapTransactionHistoryData -> TransactionType.SWAP
+                                is UnknownTransactionHistoryData -> return@runCatching
                             },
                         confirmedAt = null,
                         failureReason = null,

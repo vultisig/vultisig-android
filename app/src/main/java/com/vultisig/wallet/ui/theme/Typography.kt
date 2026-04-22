@@ -66,7 +66,8 @@ internal data class VsTypography(
         val subtitle: TextStyle,
     )
 
-    @Immutable data class Body(val l: BodyStyles, val m: BodyStyles, val s: BodyStyles)
+    @Immutable
+    data class Body(val l: BodyStyles, val m: BodyStyles, val s: BodyStyles, val xs: BodyStyles)
 
     @Immutable data class BodyStyles(val medium: TextStyle, val regular: TextStyle)
 
@@ -206,6 +207,25 @@ internal data class VsTypography(
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 14.sp,
                                         lineHeight = 20.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                            ),
+                        xs =
+                            BodyStyles(
+                                medium =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 12.sp,
+                                        lineHeight = 16.sp,
+                                        fontFamily = fontFamily,
+                                        lineHeightStyle = lineHeightStyle,
+                                    ),
+                                regular =
+                                    TextStyle(
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 12.sp,
+                                        lineHeight = 16.sp,
                                         fontFamily = fontFamily,
                                         lineHeightStyle = lineHeightStyle,
                                     ),

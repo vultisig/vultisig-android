@@ -65,6 +65,22 @@
     <string name="defi_bond">본딩</string>
     <string name="defi_stake">스테이킹</string>
     <string name="liquidity_pool">유동성 풀</string>
+    <!-- Tron DeFi -->
+    <string name="tron_defi_available_balance">사용 가능 잔액</string>
+    <string name="tron_defi_staking">스테이킹</string>
+    <string name="tron_defi_bandwidth">대역폭</string>
+    <string name="tron_defi_energy">에너지</string>
+    <string name="tron_defi_freeze">동결</string>
+    <string name="tron_defi_unfreeze">동결 해제</string>
+    <string name="tron_defi_tron_freeze">TRON 동결</string>
+    <string name="tron_defi_frozen">동결됨</string>
+    <string name="tron_defi_unfreezing">동결 해제 중</string>
+    <string name="tron_defi_resources">리소스</string>
+    <string name="tron_defi_pending_withdrawals">대기 중인 출금</string>
+    <string name="tron_defi_ready_to_claim">청구 가능</string>
+    <string name="tron_defi_countdown_days">%1$d일 %2$d시간</string>
+    <string name="tron_defi_countdown_hours">%1$d시간 %2$d분</string>
+    <string name="tron_defi_error_trx_not_in_vault">볼트에서 TRX 코인을 찾을 수 없습니다</string>
     <string name="circle_defi_description">USDC를 Circle 계정에 예치하고 수익을 얻으세요. Vultisig 볼트 내에서 안전하게 관리됩니다.</string>
     <string name="circle_defi_control_info">자금은 완전히 볼트의 통제 하에 있습니다. Circle 계정은 자기 수탁형이며 수익은 안전한 오프체인 트레저리를 통해 생성됩니다.</string>
     <string name="usdc_deposit_title">USDC 예치</string>
@@ -189,6 +205,7 @@
     <string name="verify_transaction_consent_amount">금액이 정확합니다</string>
     <string name="verify_transaction_error_not_enough_consent">모든 동의 항목을 확인해 주세요</string>
     <string name="camera_permission_denied">카메라 권한이 부여되지 않았습니다. 설정에서 활성화해 주세요.</string>
+    <string name="camera_permission_open_settings">설정 열기</string>
     <string name="join_keysign_discovering_session_id">세션 ID 검색 중</string>
     <string name="transaction_done_title">완료</string>
     <string name="transaction_done_overview">개요</string>
@@ -226,7 +243,6 @@
     <string name="confirm_delete_delete_vault">볼트 삭제</string>
     <string name="vault_accounts_account_assets">%1$s 자산</string>
     <string name="s_of_s_vault">%1$s-of-%2$s 볼트 설정</string>
-    <string name="scan_qr_screen_return_vault">볼트로 돌아가기</string>
     <string name="rename_vault_screen_vault_name">볼트 이름</string>
     <string name="faq_settings_q1">Vultisig란 무엇인가요?</string>
     <string name="faq_settings_q2">Vultisig를 사용하면 어떤 이점이 있나요?</string>
@@ -316,6 +332,8 @@
     <string name="add_address_address_title">주소</string>
     <string name="add_address_type_hint">여기에 입력하세요</string>
     <string name="join_keysign_invalid_qr">유효하지 않은 QR 코드 내용</string>
+    <string name="settings_screen_privacy">개인정보</string>
+    <string name="settings_screen_prevent_screenshots">스크린샷 방지</string>
     <string name="settings_screen_legal">법적 고지</string>
     <string name="settings_screen_privacy_policy">개인정보 처리방침</string>
     <string name="settings_screen_tos">서비스 이용약관</string>
@@ -365,13 +383,23 @@
     <string name="qr_title_join_keygen_description">기기로 스캔하여\n볼트 생성에 참여하세요</string>
     <string name="qr_title_join_keysign_description">볼트: %1$s\n금액: %2$s\n 수신: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">볼트: %1$s\n보내기: %2$s\n 받기: %3$s</string>
+    <string name="qr_share_label_vault">볼트</string>
+    <string name="qr_share_label_amount">금액</string>
+    <string name="qr_share_label_to">받는</string>
+    <string name="qr_share_label_from">보내는</string>
+    <string name="qr_share_label_type">유형</string>
+    <string name="qr_share_type_fast_vault">빠른 볼트</string>
+    <string name="qr_share_type_secure_vault">보안 볼트</string>
     <string name="error_folder_must_have_at_least_one_vault">폴더에는 최소 하나의 볼트가 선택되어야 합니다</string>
     <string name="import_file_password_hint_text">힌트: %s</string>
-    <string name="scan_qr_upload_from_gallery">QR 업로드</string>
+    <string name="scan_qr_upload_qr_code">QR 코드 업로드</string>
+    <string name="scan_qr_hint_title">스캔에 문제가 있나요?</string>
+    <string name="scan_qr_hint_message">QR 코드가 바로 스캔되지 않는 경우:\n• 화면에서 휴대폰을 약간 가까이 또는 멀리 이동하세요\n• 화면이 잘 밝혀져 있고 눈부심이 없는지 확인하세요\n• 두 기기를 잠시 고정하세요</string>
     <string name="no_barcodes_found">바코드를 찾을 수 없습니다</string>
     <string name="reshare_start_join_reshare_button">재공유 참여</string>
     <string name="deposit_error_invalid_lpunits">LP 유닛이 유효하지 않습니다</string>
     <string name="deposit_error_invalid_assets">자산이 유효하지 않습니다</string>
+    <string name="deposit_error_chain_not_enabled">%2$s을(를) 출금하려면 이 볼트에서 %1$s을(를) 활성화하세요</string>
     <string name="deposit_error_has_not_reached_maturity">이 예치는 아직 만기에 도달하지 않았습니다</string>
     <string name="deposit_form_screen_assets">자산</string>
     <string name="deposit_form_screen_asset_selection">자산 선택</string>
@@ -404,6 +432,7 @@
     <string name="swap_error_time_out">스왑 요청 시간이 초과되었습니다. 다시 시도해 주세요</string>
     <string name="swap_error_high_price_impact">가격 영향이 너무 큽니다. 더 적은 금액이나 다른 토큰 쌍을 시도하세요.</string>
     <string name="swap_error_quote_failed">스왑 견적에 실패했습니다. 다시 시도하거나 금액을 조정하세요.</string>
+    <string name="swap_error_rate_limit">요청이 너무 많습니다. 나중에 다시 시도해 주세요.</string>
     <string name="swap_screen_invalid_no_vault">볼트가 선택되지 않았습니다</string>
     <string name="swap_screen_invalid_no_src_error">출발 토큰이 선택되지 않았습니다</string>
     <string name="swap_screen_invalid_selected_no_dst">도착 토큰이 선택되지 않았습니다</string>
@@ -413,6 +442,7 @@
     <string name="swap_screen_invalid_vault">거래가 실패할 가능성이 높습니다. 볼트를 불러올 수 없습니다.</string>
     <string name="edit_address_title">주소 수정</string>
     <string name="join_keysign_failed_connect_to_server">서버 연결 실패</string>
+    <string name="join_keysign_relay_unavailable">릴레이 서버를 사용할 수 없습니다. 다시 시도해 주세요</string>
     <string name="network_connection_lost">네트워크 연결이 끊어졌습니다. 인터넷 연결을 확인해 주세요</string>
     <string name="send_form_polka_reaping_warning">수수료를 충당할 충분한 자금을 남겨두세요. 계정 잔액이 1 DOT(최소 예치금) 아래로 떨어지면 계정이 비활성화(수확)되고 남은 자금이 손실됩니다. 언제든지 최소 예치금보다 큰 새 입금으로 주소를 재활성화할 수 있습니다. 그러나 손실된 자금은 복구되지 않습니다.</string>
 
@@ -584,8 +614,9 @@
     <string name="keygen_email_error">이메일이 올바르지 않습니다. 확인해 주세요</string>
     <string name="scan_qr_screen_title">QR 코드 스캔</string>
     <string name="verify_transaction_function_inputs_title">함수 입력값</string>
-    <string name="verify_your_server_share_password">서버 공유 비밀번호 확인</string>
-    <string name="periodically_ask_verify_password">비밀번호를 항상 기억할 수 있도록 주기적으로 빠른 서명 비밀번호 확인을 요청합니다</string>
+    <string name="fast_vault_password_reminder_title">비밀번호를 확인하세요:</string>
+    <string name="fast_vault_password_reminder_done_button">완료</string>
+    <string name="periodically_ask_verify_password">비밀번호를 잊지 않도록 주기적으로 확인을 요청합니다.</string>
 
     <string name="security_scanner_medium_risk_title">중간 보안 위험</string>
     <string name="security_scanner_high_risk_title">높은 보안 위험</string>
@@ -665,6 +696,13 @@
     <string name="max">최대</string>
     <string name="token_fiat_toggle_token_label">토큰 가치</string>
     <string name="token_fiat_toggle_fiat_label">법정화폐 가치</string>
+    <string name="remove_pool_title">풀 제거</string>
+    <string name="remove_pool_amount_label">금액</string>
+    <string name="remove_pool_zero_cacao">0 CACAO</string>
+    <string name="remove_pool_percent_format">%1$d%%</string>
+    <string name="stake_cacao_title">CACAO 스테이킹</string>
+    <string name="unstake_cacao_title">CACAO 언스테이킹</string>
+    <string name="unstake_cacao_available_format">사용 가능: %1$s</string>
     <string name="cacaopool_only_cacao_supported">풀 작업에는 CACAO 토큰만 지원됩니다</string>
     <string name="referral_create_info_content">추천 프로그램은 THORChain 스왑에 적용되며 최선의 노력으로 제공됩니다. Vultisig 추천을 사용하려면 THORName을 등록해야 합니다. 등록비는 10 RUNE이며 매년 1 RUNE이 THORChain 네트워크에 지불됩니다.</string>
     <string name="referral_create_info_title">추천 프로그램</string>
@@ -743,6 +781,10 @@
     <string name="share_vault_qr_info">이 QR 코드로 볼트의 읽기 전용 버전을 공유할 수 있습니다</string>
     <string name="add_address_title_label">라벨</string>
     <string name="address_book_title_edit">주소록 수정</string>
+    <string name="address_book_delete_entry_title">주소를 삭제하시겠습니까?</string>
+    <string name="address_book_delete_entry_message">%1$s이(가) 주소록에서 삭제됩니다</string>
+    <string name="address_book_delete_entry_confirm">삭제</string>
+    <string name="address_book_delete_entry_cancel">취소</string>
     <string name="backup_password_request_title">백업을 비밀번호로 암호화하시겠습니까?</string>
     <string name="backup_password_request_caution_encrypt_desc">비밀번호를 추가하면 백업 파일을 암호화하는 데 사용됩니다.</string>
     <string name="backup_password_request_highlight_encrypt">암호화</string>
@@ -830,6 +872,7 @@
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[지원 파일 형식: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">동일한 이름의 볼트가 존재합니다</string>
     <string name="join_key_gen_unknown_tssaction">알 수 없는 TssAction</string>
+    <string name="join_key_gen_mediator_discovery_timeout">네트워크에서 다른 기기를 찾을 수 없습니다</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">다른 기기의 참여를 기다리는 중</string>
     <string name="join_key_gen_your_vault_will_start_generating">메인 기기에서 볼트 설정을 완료하는 즉시 볼트 생성이 시작됩니다</string>
     <string name="join_key_sign_wrong_signing_library_type">잘못된 서명 라이브러리 유형</string>
@@ -989,12 +1032,9 @@
 
     <!-- Key Import / Seed Phrase Import -->
     <string name="import_seedphrase_title">시드 구문 입력</string>
-    <string name="import_seedphrase_subtitle">12자 또는 24자 복구 구문을 입력하세요</string>
-    <string name="import_seedphrase_label">시드 구문</string>
-    <string name="import_seedphrase_hint">복구 구문을 입력하세요…</string>
-    <plurals name="import_seedphrase_word_count">
-        <item quantity="other">%1$d / %2$d 단어</item>
-    </plurals>
+    <string name="import_seedphrase_subtitle">각 단어 사이에 공백을 두세요. %1$s의 시드 구문이 지원됩니다.</string>
+    <string name="import_seedphrase_subtitle_highlight">12 또는 24 단어</string>
+    <string name="import_seedphrase_hint">시드 구문의 12 또는 24 단어를 입력하세요</string>
     <string name="import_seedphrase_invalid_word_count">%1$s 단어를 입력하셨습니다. 시드 구문은 12 또는 24 단어여야 합니다</string>
     <string name="import_seedphrase_invalid_phrase">유효하지 않은 시드 구문</string>
     <string name="import_seedphrase_already_imported">이 시드 구문은 이미 가져온 상태입니다</string>

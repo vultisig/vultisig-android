@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain
 
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.maya.MayaCacaoStakingService
@@ -10,6 +11,7 @@ import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionServi
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.TCYStakingService
 import com.vultisig.wallet.data.blockchain.thorchain.ThorchainDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.tron.TronDeFiBalanceService
 import com.vultisig.wallet.data.repositories.ActiveBondedNodeRepository
 import com.vultisig.wallet.data.repositories.ScaCircleAccountRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
@@ -102,6 +104,17 @@ internal interface BlockchainServicesModule {
                 mayachainBondUseCase = mayachainBondUseCase,
                 mayaCacaoStakingService = mayaCacaoStakingService,
                 activeBondedNodeRepository = activeBondedNodeRepository,
+                stakingDetailsRepository = stakingDetailsRepository,
+            )
+
+        @Provides
+        @Singleton
+        fun provideTronDeFiBalanceService(
+            tronApi: TronApi,
+            stakingDetailsRepository: StakingDetailsRepository,
+        ): TronDeFiBalanceService =
+            TronDeFiBalanceService(
+                tronApi = tronApi,
                 stakingDetailsRepository = stakingDetailsRepository,
             )
     }

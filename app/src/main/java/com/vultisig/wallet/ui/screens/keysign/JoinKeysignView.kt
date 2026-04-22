@@ -16,6 +16,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignError
@@ -171,9 +172,9 @@ internal fun JoinKeysignView(navController: NavHostController) {
                 }
                 ErrorView(
                     title = errorLabel,
-                    buttonText = buttonText,
                     description = infoText,
-                    onButtonClick = viewModel::tryAgain,
+                    buttonUiModel =
+                        ErrorViewButtonUiModel(text = buttonText, onClick = viewModel::tryAgain),
                 )
             }
         }
@@ -211,8 +212,8 @@ private fun JoinKeysignViewPreview() {
         content = {
             ErrorView(
                 title = stringResource(R.string.signing_error_please_try_again_s, ""),
-                buttonText = stringResource(R.string.try_again),
-                onButtonClick = {},
+                buttonUiModel =
+                    ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
             )
         },
     )

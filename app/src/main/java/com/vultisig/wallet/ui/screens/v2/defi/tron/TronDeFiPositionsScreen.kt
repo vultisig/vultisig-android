@@ -1,0 +1,390 @@
+package com.vultisig.wallet.ui.screens.v2.defi.tron
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.models.ResourceUsage
+import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.v2.tab.VsTab
+import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.models.defi.TronAction
+import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
+import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
+import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
+import com.vultisig.wallet.ui.models.defi.TronStakingUiModel
+import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
+import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
+import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
+import kotlinx.coroutines.delay
+
+private val TRON_DEFI_TABS = listOf(DeFiTab.STAKED)
+private const val TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1_000L
+
+private data class CountdownParts(val days: Long, val hours: Long, val minutes: Long)
+
+private fun countdownParts(expiryEpochMs: Long, nowMs: Long): CountdownParts? {
+    if (expiryEpochMs <= nowMs) return null
+    val remaining = expiryEpochMs - nowMs
+    return CountdownParts(
+        days = remaining / (1_000L * 60 * 60 * 24),
+        hours = (remaining % (1_000L * 60 * 60 * 24)) / (1_000L * 60 * 60),
+        minutes = (remaining % (1_000L * 60 * 60)) / (1_000L * 60),
+    )
+}
+
+@Composable
+internal fun TronDeFiPositionsScreen(
+    vaultId: VaultId,
+    viewModel: TronDeFiPositionsViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(vaultId) { viewModel.setData(vaultId) }
+
+    TronDeFiPositionsScreenContent(
+        state = state,
+        onTabSelected = viewModel::onTabSelected,
+        onEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(true) },
+        onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
+        onDonePositionClick = viewModel::onPositionSelectionDone,
+        onPositionSelectionChange = viewModel::onPositionSelectionChange,
+        // TODO(#4014): TronFreezePositionCard will pass the specific TronAction per row
+        //  once it exposes per-resource callbacks. Until then both default to BANDWIDTH.
+        //  ENERGY freeze/unfreeze is intentionally unreachable from the UI in this PR.
+        onClickFreeze = { viewModel.onTronAction(TronAction.FREEZE_BANDWIDTH) },
+        onClickUnfreeze = { viewModel.onTronAction(TronAction.UNFREEZE_BANDWIDTH) },
+    )
+}
+
+@Composable
+private fun TronDeFiPositionsScreenContent(
+    state: TronDeFiUiState,
+    onTabSelected: (DeFiTab) -> Unit = {},
+    onEditPositionClick: () -> Unit = {},
+    onCancelEditPositionClick: () -> Unit = {},
+    onDonePositionClick: () -> Unit = {},
+    onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
+    onClickFreeze: () -> Unit = {},
+    onClickUnfreeze: () -> Unit = {},
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            when (state) {
+                TronDeFiUiState.Loading -> {
+                    item {
+                        TronDeFiBanner(isLoading = true, totalValue = "", isBalanceVisible = true)
+                    }
+                }
+                is TronDeFiUiState.Error -> {
+                    item {
+                        TronDeFiBanner(isLoading = false, totalValue = "", isBalanceVisible = true)
+                    }
+                    item {
+                        Text(
+                            text = state.error.asString(),
+                            style = Theme.brockmann.body.m.medium,
+                            color = Theme.v2.colors.alerts.error,
+                        )
+                    }
+                }
+                is TronDeFiUiState.Success -> {
+                    val tronData = state.tronData
+
+                    item {
+                        TronDeFiBanner(
+                            isLoading = false,
+                            totalValue = tronData.totalAmountPrice,
+                            isBalanceVisible = state.isBalanceVisible,
+                        )
+                    }
+
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            VsTabGroup(
+                                index =
+                                    TRON_DEFI_TABS.indexOfFirst { it == state.selectedTab }
+                                        .coerceAtLeast(0)
+                            ) {
+                                TRON_DEFI_TABS.forEach { tab ->
+                                    tab {
+                                        VsTab(
+                                            label = stringResource(tab.displayNameRes),
+                                            onClick = { onTabSelected(tab) },
+                                        )
+                                    }
+                                }
+                            }
+
+                            V2Container(
+                                type = ContainerType.SECONDARY,
+                                cornerType = CornerType.Circular,
+                                modifier = Modifier.clickOnce(onClick = onEditPositionClick),
+                            ) {
+                                UiIcon(
+                                    drawableResId = R.drawable.edit_chain,
+                                    size = 16.dp,
+                                    modifier = Modifier.padding(all = 12.dp),
+                                    tint = Theme.v2.colors.primary.accent4,
+                                )
+                            }
+                        }
+                    }
+
+                    item {
+                        ResourceTwoCardsRow(
+                            resourceUsage =
+                                ResourceUsage(
+                                    availableBandwidth = tronData.availableBandwidth,
+                                    totalBandwidth = tronData.totalBandwidth,
+                                    availableEnergy = tronData.availableEnergy,
+                                    totalEnergy = tronData.totalEnergy,
+                                )
+                        )
+                    }
+
+                    val isTronSelected = state.selectedPositions.contains("TRON")
+                    val pendingWithdrawals = tronData.pendingWithdrawals
+                    if (isTronSelected && tronData.hasFrozenBalance) {
+                        item {
+                            TronFreezePositionCard(
+                                frozenTotalPrice = tronData.frozenTotalPrice,
+                                frozenTotalTrx = tronData.frozenTotalTrx,
+                                isBalanceVisible = state.isBalanceVisible,
+                                onClickFreeze = onClickFreeze,
+                                onClickUnfreeze = onClickUnfreeze,
+                            )
+                        }
+                    } else if (isTronSelected && pendingWithdrawals.isEmpty()) {
+                        item { NoPositionsContainer() }
+                    }
+
+                    if (pendingWithdrawals.isNotEmpty()) {
+                        item {
+                            TronPendingWithdrawalsCard(
+                                withdrawals = pendingWithdrawals,
+                                isBalanceVisible = state.isBalanceVisible,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (state is TronDeFiUiState.Success && state.showPositionSelectionDialog) {
+            val searchTextFieldState = remember { TextFieldState() }
+            PositionsSelectionDialog(
+                stakePositions = state.stakePositionsDialog,
+                selectedPositions = state.tempSelectedPositions,
+                searchTextFieldState = searchTextFieldState,
+                onPositionSelectionChange = onPositionSelectionChange,
+                onDoneClick = onDonePositionClick,
+                onCancelClick = onCancelEditPositionClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TronPendingWithdrawalsCard(
+    withdrawals: List<TronPendingWithdrawalUiModel>,
+    isBalanceVisible: Boolean,
+) {
+    val latestExpiry = remember(withdrawals) { withdrawals.maxOfOrNull { it.expiryEpochMs } ?: 0L }
+    val nowMs by
+        produceState(initialValue = System.currentTimeMillis(), key1 = latestExpiry) {
+            while (value < latestExpiry) {
+                val delta = latestExpiry - value
+                val interval = if (delta > 60 * 60 * 1_000L) 60_000L else 1_000L
+                delay(interval)
+                value = System.currentTimeMillis()
+            }
+        }
+
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.tron_defi_pending_withdrawals),
+            style = Theme.brockmann.body.l.medium,
+            color = Theme.v2.colors.text.primary,
+        )
+
+        withdrawals.forEach { withdrawal ->
+            TronPendingWithdrawalRow(
+                withdrawal = withdrawal,
+                nowMs = nowMs,
+                isBalanceVisible = isBalanceVisible,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TronPendingWithdrawalRow(
+    withdrawal: TronPendingWithdrawalUiModel,
+    nowMs: Long,
+    isBalanceVisible: Boolean,
+) {
+    val countdown = countdownParts(withdrawal.expiryEpochMs, nowMs)
+    val isClaimable = countdown == null
+    val timeRemainingText =
+        when {
+            countdown == null -> stringResource(R.string.tron_defi_ready_to_claim)
+            countdown.days > 0 ->
+                stringResource(R.string.tron_defi_countdown_days, countdown.days, countdown.hours)
+            else ->
+                stringResource(
+                    R.string.tron_defi_countdown_hours,
+                    countdown.hours,
+                    countdown.minutes,
+                )
+        }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = if (isBalanceVisible) "${withdrawal.amountTrx} TRX" else HIDE_BALANCE_CHARS,
+                style = Theme.brockmann.body.m.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+            if (!isClaimable) {
+                Text(
+                    text = timeRemainingText,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.secondary,
+                )
+            }
+        }
+
+        if (isClaimable) {
+            Box(
+                modifier =
+                    Modifier.clip(RoundedCornerShape(8.dp))
+                        .background(Theme.v2.colors.alerts.success.copy(alpha = 0.12f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = timeRemainingText,
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.alerts.success,
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TronDeFiPositionsScreenLoadingPreview() {
+    TronDeFiPositionsScreenContent(state = TronDeFiUiState.Loading)
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TronDeFiPositionsScreenErrorPreview() {
+    TronDeFiPositionsScreenContent(
+        state =
+            TronDeFiUiState.Error(
+                com.vultisig.wallet.ui.utils.UiText.DynamicString("TRX coin not found in vault")
+            )
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TronDeFiPositionsScreenNoPositionsPreview() {
+    TronDeFiPositionsScreenContent(
+        state =
+            TronDeFiUiState.Success(
+                tronData =
+                    TronStakingUiModel(
+                        totalAmountPrice = "$1240.05",
+                        availableBandwidth = 1500L,
+                        totalBandwidth = 2000L,
+                        availableEnergy = 1L,
+                        totalEnergy = 2L,
+                    )
+            )
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TronDeFiPositionsScreenPreview() {
+    TronDeFiPositionsScreenContent(
+        state =
+            TronDeFiUiState.Success(
+                tronData =
+                    TronStakingUiModel(
+                        totalAmountPrice = "$1240.05",
+                        frozenTotalPrice = "$4,800",
+                        frozenTotalTrx = "800",
+                        hasFrozenBalance = true,
+                        availableBandwidth = 15000L,
+                        totalBandwidth = 20000L,
+                        availableEnergy = 50000L,
+                        totalEnergy = 100000L,
+                        pendingWithdrawals =
+                            listOf(
+                                TronPendingWithdrawalUiModel(
+                                    amountTrx = "50.000000",
+                                    expiryEpochMs = System.currentTimeMillis() - 1_000L,
+                                ),
+                                TronPendingWithdrawalUiModel(
+                                    amountTrx = "30.000000",
+                                    expiryEpochMs = System.currentTimeMillis() + TWO_DAYS_MS,
+                                ),
+                            ),
+                    )
+            )
+    )
+}

@@ -7,6 +7,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -19,6 +20,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.usecases.QrShareField
+import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
@@ -62,21 +65,41 @@ internal fun KeysignPeerDiscovery(
     val qrShareBackground = Theme.v2.colors.backgrounds.primary
 
     val vault = uiModel.vault
-    val qrShareDescription =
-        if (isSwap)
-            stringResource(
-                R.string.qr_title_join_keysign_swap_description,
-                vault.name.forCanvasMinify(),
-                uiModel.amount.forCanvasMinify(),
-                uiModel.toAmount.forCanvasMinify(),
-            )
-        else
-            stringResource(
-                R.string.qr_title_join_keysign_description,
-                vault.name.forCanvasMinify(),
-                uiModel.amount.forCanvasMinify(),
-                uiModel.toAddress.forCanvasMinify(),
-            )
+    val labelVault = stringResource(R.string.qr_share_label_vault)
+    val labelAmount = stringResource(R.string.qr_share_label_amount)
+    val labelTo = stringResource(R.string.qr_share_label_to)
+    val labelFrom = stringResource(R.string.qr_share_label_from)
+    val srcIconBitmap =
+        remember(uiModel.srcTokenLogoRes) {
+            uiModel.srcTokenLogoRes?.let { BitmapFactory.decodeResource(context.resources, it) }
+        }
+    DisposableEffect(srcIconBitmap) { onDispose { srcIconBitmap?.recycle() } }
+    val dstIconBitmap =
+        remember(uiModel.dstTokenLogoRes) {
+            uiModel.dstTokenLogoRes?.let { BitmapFactory.decodeResource(context.resources, it) }
+        }
+    DisposableEffect(dstIconBitmap) { onDispose { dstIconBitmap?.recycle() } }
+    val vultisigLogoBitmap = remember {
+        BitmapFactory.decodeResource(context.resources, R.drawable.logo)
+    }
+    DisposableEffect(vultisigLogoBitmap) { onDispose { vultisigLogoBitmap.recycle() } }
+    val qrShareInfo =
+        QrShareInfo(
+            title = qrShareTitle,
+            fields =
+                if (isSwap)
+                    listOf(
+                        QrShareField(labelVault, vault.name.forCanvasMinify()),
+                        QrShareField(labelFrom, uiModel.amount.forCanvasMinify(), srcIconBitmap),
+                        QrShareField(labelTo, uiModel.toAmount.forCanvasMinify(), dstIconBitmap),
+                    )
+                else
+                    listOf(
+                        QrShareField(labelVault, vault.name.forCanvasMinify()),
+                        QrShareField(labelAmount, uiModel.amount.forCanvasMinify(), srcIconBitmap),
+                        QrShareField(labelTo, uiModel.toAddress.forCanvasMinify()),
+                    ),
+        )
 
     LaunchedEffect(key1 = viewModel.participants) {
         viewModel.participants.collect { newList ->
@@ -108,99 +131,55 @@ internal fun KeysignPeerDiscovery(
 
     DisposableEffect(Unit) { onDispose { viewModel.stopParticipantDiscovery() } }
 
-    LaunchedEffect(uiModel.qrBitmapPainter) {
+    LaunchedEffect(uiModel.qrBitmapPainter, qrShareInfo) {
         sharedViewModel.saveShareQrBitmap(
             context,
             qrShareBackground.toArgb(),
-            qrShareTitle,
-            qrShareDescription,
-            BitmapFactory.decodeResource(context.resources, R.drawable.ic_share_qr_logo),
+            qrShareInfo,
+            vultisigLogoBitmap,
         )
     }
-
-    KeysignPeerDiscovery(
-        localPartyId = vault.localPartyID,
-        isLookingForVultiServer =
-            viewModel.isFastSign && Utils.getThreshold(vault.signers.size) == 2,
-        minimumDevices = Utils.getThreshold(vault.signers.size),
-        selectionState = selectionState,
-        participants = participants,
-        bitmapPainter = uiModel.qrBitmapPainter,
-        networkPromptOption = networkOption,
-        onChangeNetwork = { viewModel.changeNetworkPromptOption(it, context) },
-        onAddParticipant = { viewModel.addParticipant(it) },
-        onRemoveParticipant = { viewModel.removeParticipant(it) },
-        onShareQrClick = { sharedViewModel.shareQRCode(activity) },
-        onStopParticipantDiscovery = viewModel::moveToKeysignState,
-        onBackClick = viewModel::back,
-        onResendNotification = viewModel::sendNotification,
-        resendCooldownSeconds = uiModel.resendCooldownSeconds,
-        enableNotification = uiModel.enableNotification,
-    )
-}
-
-@Composable
-private fun KeysignPeerDiscovery(
-    isLookingForVultiServer: Boolean,
-    localPartyId: String,
-    minimumDevices: Int,
-    selectionState: List<String>,
-    participants: List<String>,
-    bitmapPainter: BitmapPainter?,
-    networkPromptOption: NetworkOption,
-    onChangeNetwork: (NetworkOption) -> Unit = {},
-    onAddParticipant: (String) -> Unit = {},
-    onRemoveParticipant: (String) -> Unit = {},
-    onStopParticipantDiscovery: () -> Unit = {},
-    onShareQrClick: () -> Unit = {},
-    onBackClick: () -> Unit = {},
-    onResendNotification: () -> Unit = {},
-    resendCooldownSeconds: Int = 0,
-    enableNotification: Boolean,
-) {
+    val isLookingForVultiServer =
+        viewModel.isFastSign && Utils.getThreshold(vault.signers.size) == 2
     if (isLookingForVultiServer) {
         ConnectingToServer(false)
     } else {
+        val minimumDevices = Utils.getThreshold(vault.signers.size)
         PeerDiscoveryScreen(
             state =
                 PeerDiscoveryUiModel(
-                    qr = bitmapPainter,
-                    network = networkPromptOption,
-                    localPartyId = localPartyId,
-                    devices = participants.filter { it != localPartyId },
-                    selectedDevices = selectionState.filter { it != localPartyId },
+                    qr = uiModel.qrBitmapPainter,
+                    network = networkOption,
+                    localPartyId = vault.localPartyID,
+                    devices = participants.filter { it != vault.localPartyID },
+                    selectedDevices = selectionState.filter { it != vault.localPartyID },
                     minimumDevices = minimumDevices,
                     minimumDevicesDisplayed = minimumDevices,
                     showQrHelpModal = false,
                     showDevicesHint = false,
                     connectingToServer = null,
                     error = null,
-                    enableNotification = enableNotification,
-                    resendCooldownSeconds = resendCooldownSeconds,
+                    enableNotification = uiModel.enableNotification,
+                    resendCooldownSeconds = uiModel.resendCooldownSeconds,
                 ),
-            onBackClick = onBackClick,
+            onBackClick = viewModel::back,
             showHelp = false,
             onHelpClick = {},
-            onShareQrClick = onShareQrClick,
+            onShareQrClick = { sharedViewModel.shareQRCode(activity) },
             onCloseHintClick = {},
             onDismissQrHelpModal = {},
             onSwitchModeClick = {
-                onChangeNetwork(
-                    when (networkPromptOption) {
+                viewModel.changeNetworkPromptOption(
+                    when (networkOption) {
                         NetworkOption.Internet -> NetworkOption.Local
                         NetworkOption.Local -> NetworkOption.Internet
-                    }
+                    },
+                    context,
                 )
             },
-            onDeviceClick = { device ->
-                if (device in selectionState) {
-                    onRemoveParticipant(device)
-                } else {
-                    onAddParticipant(device)
-                }
-            },
-            onNextClick = onStopParticipantDiscovery,
-            onResendNotification = onResendNotification,
+            onDeviceClick = viewModel::handleParticipant,
+            onNextClick = viewModel::moveToKeysignState,
+            onResendNotification = viewModel::sendNotification,
         )
     }
 }
@@ -208,15 +187,36 @@ private fun KeysignPeerDiscovery(
 @Preview
 @Composable
 private fun KeysignPeerDiscoveryPreview() {
-    KeysignPeerDiscovery(
-        isLookingForVultiServer = false,
-        selectionState = listOf("1", "2"),
-        localPartyId = "1",
-        minimumDevices = 2,
-        participants = listOf("1", "2", "3"),
-        bitmapPainter =
-            BitmapPainter(createBitmap(1, 1).asImageBitmap(), filterQuality = FilterQuality.None),
-        networkPromptOption = NetworkOption.Internet,
-        enableNotification = true,
+    val selectionState = listOf("1", "2")
+    PeerDiscoveryScreen(
+        state =
+            PeerDiscoveryUiModel(
+                qr =
+                    BitmapPainter(
+                        createBitmap(1, 1).asImageBitmap(),
+                        filterQuality = FilterQuality.None,
+                    ),
+                network = NetworkOption.Internet,
+                localPartyId = "1",
+                devices = listOf("1", "2", "3").filter { it != "1" },
+                selectedDevices = selectionState.filter { it != "1" },
+                minimumDevices = 2,
+                minimumDevicesDisplayed = 2,
+                showQrHelpModal = false,
+                showDevicesHint = false,
+                connectingToServer = null,
+                error = null,
+                enableNotification = true,
+            ),
+        onBackClick = {},
+        showHelp = false,
+        onHelpClick = {},
+        onShareQrClick = {},
+        onCloseHintClick = {},
+        onDismissQrHelpModal = {},
+        onSwitchModeClick = {},
+        onDeviceClick = {},
+        onNextClick = {},
+        onResendNotification = {},
     )
 }

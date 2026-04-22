@@ -247,6 +247,12 @@ internal interface RepositoriesModule {
     fun bindNotificationTokenRepository(
         impl: NotificationTokenRepositoryImpl
     ): NotificationTokenRepository
+
+    @Binds
+    @Singleton
+    fun bindPreventScreenshotsRepository(
+        impl: PreventScreenshotsRepositoryImpl
+    ): PreventScreenshotsRepository
 }
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class PrettyJson

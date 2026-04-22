@@ -30,6 +30,7 @@ import io.mockk.unmockkStatic
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -149,7 +150,7 @@ internal class ImportFileViewModelTest {
 
         vm.decryptVaultData()
 
-        val state = vm.uiModel.value
+        val state = vm.uiModel.first { it.error != null }
         assertEquals(
             UiText.StringResource(R.string.import_file_screen_duplicate_vault),
             state.error,
@@ -171,7 +172,7 @@ internal class ImportFileViewModelTest {
 
         vm.saveFileToAppDir()
 
-        val state = vm.uiModel.value
+        val state = vm.uiModel.first { it.error != null }
         assertEquals(
             UiText.StringResource(R.string.import_file_screen_duplicate_vault),
             state.error,

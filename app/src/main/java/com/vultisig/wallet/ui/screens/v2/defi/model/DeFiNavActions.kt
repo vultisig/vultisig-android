@@ -24,6 +24,8 @@ internal enum class DeFiNavActions(val type: String) {
     UNSTAKE_CACAO("unstake_cacao"),
     ADD_LP("add_lp"),
     REMOVE_LP("remove_lp"),
+    FREEZE_TRX("freeze_trx"),
+    UNFREEZE_TRX("unfreeze_trx"),
 }
 
 internal fun parseDepositType(type: String?): DeFiNavActions? {
@@ -71,6 +73,10 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
         "add_lp" -> DeFiNavActions.ADD_LP
         "removelp",
         "remove_lp" -> DeFiNavActions.REMOVE_LP
+        "freezetrx",
+        "freeze_trx" -> DeFiNavActions.FREEZE_TRX
+        "unfreezetrx",
+        "unfreeze_trx" -> DeFiNavActions.UNFREEZE_TRX
         else -> {
             try {
                 type?.let { DeFiNavActions.valueOf(it.uppercase()) }

@@ -19,9 +19,8 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
+import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
-import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
-import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Account
@@ -47,13 +46,9 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.coinType
-import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.getPubKeyByChain
-import com.vultisig.wallet.data.models.hasReaping
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.models.payload.UtxoInfo
-import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
@@ -70,9 +65,9 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
+import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
-import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.AmountFraction.F100
@@ -92,6 +87,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.YTCY_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asAddressInput
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -133,7 +129,6 @@ import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.proto.Bitcoin
-import wallet.core.jni.proto.Common.SigningError
 
 @Immutable
 internal data class TokenBalanceUiModel(
@@ -254,6 +249,8 @@ constructor(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val feeServiceComposite: FeeServiceComposite,
+    private val chainValidationService: ChainValidationService,
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
 ) : ViewModel() {
 
     private var vault: Vault? = null
@@ -363,7 +360,7 @@ constructor(
                 .textAsFlow()
                 .debounce(300)
                 .combine(selectedToken.filterNotNull()) { address, token ->
-                    address.toString() to token
+                    address.asAddressInput() to token
                 }
                 .mapLatest { (addressStr, token) ->
                     if (chainAccountAddressRepository.isValid(token.chain, addressStr)) {
@@ -382,7 +379,8 @@ constructor(
                             val resolved =
                                 addressParserRepository.resolveName(addressStr, token.chain)
                             // Ignore stale result if user changed input while resolving
-                            if (addressFieldState.text.toString() != addressStr) return@mapLatest
+                            if (addressFieldState.text.asAddressInput() != addressStr)
+                                return@mapLatest
                             if (chainAccountAddressRepository.isValid(token.chain, resolved)) {
                                 dstAddressLabel.value = addressStr
                                 resolvedDstAddress.value = resolved
@@ -773,22 +771,9 @@ constructor(
             val vaultId = vaultId ?: return@launch
             val selectedChain = selectedTokenValue?.chain ?: return@launch
 
-            val requestId =
-                when (addressType) {
-                    AddressBookType.OUTPUT -> REQUEST_ADDRESS_ID
-                    AddressBookType.PROVIDER -> REQUEST_PROVIDER_ADDRESS_ID
-                }
-
-            navigator.route(
-                Route.AddressBook(
-                    requestId = requestId,
-                    chainId = selectedChain.id,
-                    excludeVaultId = vaultId,
-                )
-            )
-
             val address: AddressBookEntry =
-                requestResultRepository.request(requestId) ?: return@launch
+                requestAddressBookEntry(chainId = selectedChain.id, excludeVaultId = vaultId)
+                    ?: return@launch
 
             when (addressType) {
                 AddressBookType.OUTPUT -> {
@@ -898,7 +883,9 @@ constructor(
                 defiType != DeFiNavActions.UNSTAKE_STCY &&
                 defiType != DeFiNavActions.REDEEM_YRUNE &&
                 defiType != DeFiNavActions.MINT_YTCY &&
-                defiType != DeFiNavActions.REDEEM_YTCY
+                defiType != DeFiNavActions.REDEEM_YTCY &&
+                defiType != DeFiNavActions.FREEZE_TRX &&
+                defiType != DeFiNavActions.UNFREEZE_TRX
         ) {
             return amount
         }
@@ -920,7 +907,7 @@ constructor(
                             vaultHexPublicKey = vault.getPubKeyByChain(chain),
                         ),
                     amount = tokenAmountInt,
-                    to = addressFieldState.text.toString(),
+                    to = addressFieldState.text.asAddressInput(),
                     memo = memoFieldState.text.toString(),
                     isMax = isMax,
                 )
@@ -958,7 +945,9 @@ constructor(
                     defiType == DeFiNavActions.MINT_YRUNE ||
                     defiType == DeFiNavActions.REDEEM_YRUNE ||
                     defiType == DeFiNavActions.MINT_YTCY ||
-                    defiType == DeFiNavActions.REDEEM_YTCY
+                    defiType == DeFiNavActions.REDEEM_YTCY ||
+                    defiType == DeFiNavActions.FREEZE_TRX ||
+                    defiType == DeFiNavActions.UNFREEZE_TRX
             ) {
                 getAvailableTokenBalance(selectedAccount, currentGasFee.value)
             } else {
@@ -1151,7 +1140,10 @@ constructor(
                 val chain = selectedAccount.token.chain
 
                 if (
-                    !chainAccountAddressRepository.isValid(chain, addressFieldState.text.toString())
+                    !chainAccountAddressRepository.isValid(
+                        chain,
+                        addressFieldState.text.asAddressInput(),
+                    )
                 ) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_address)
@@ -1173,7 +1165,7 @@ constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
-                val rawInput = addressFieldState.text.toString()
+                val rawInput = addressFieldState.text.asAddressInput()
                 val dstAddress =
                     try {
                         addressParserRepository.resolveName(rawInput, chain)
@@ -1218,7 +1210,11 @@ constructor(
                 val isMaxAmount = tokenAmount == maxAmount
 
                 if (chain == Chain.Tron) {
-                    if (srcAddress == dstAddress) {
+                    val isTronStakingOp =
+                        memo != null &&
+                            selectedToken.isNativeToken &&
+                            TRON_STAKING_MEMO_REGEX.matches(memo)
+                    if (!isTronStakingOp && srcAddress == dstAddress) {
                         throw InvalidTransactionDataException(
                             UiText.StringResource(R.string.send_error_same_address)
                         )
@@ -1287,7 +1283,13 @@ constructor(
                                             planFee.value = plan.fee
                                         }
 
-                                selectUtxosIfNeeded(chain, specific)
+                                val selectedSpecific =
+                                    chainValidationService.selectUtxosIfNeeded(
+                                        chain = chain,
+                                        specific = specific,
+                                        plan = planBtc.value,
+                                    )
+                                selectedSpecific
                             } else {
                                 specific
                             }
@@ -1308,7 +1310,7 @@ constructor(
                     }
 
                     if (chain == Chain.Cardano) {
-                        validateCardanoUTXORequirements(
+                        chainValidationService.validateCardanoUTXORequirements(
                             sendAmount = tokenAmountInt,
                             totalBalance = selectedTokenValue.value,
                             estimatedFee = gasFee.value,
@@ -1316,7 +1318,11 @@ constructor(
                     }
 
                     if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                        validateBtcLikeAmount(tokenAmountInt, chain)
+                        chainValidationService.validateBtcLikeAmount(
+                            tokenAmountInt,
+                            chain,
+                            planBtc.value,
+                        )
                     }
                 } else {
                     val nativeTokenAccount =
@@ -2088,7 +2094,7 @@ constructor(
                     }
 
                 val slippage = slippageFieldState.text.toString()
-                val slippageValidation = validateSlippage(slippage)
+                val slippageValidation = chainValidationService.validateSlippage(slippage)
                 if (slippageValidation != null) {
                     throw InvalidTransactionDataException(slippageValidation)
                 }
@@ -2110,7 +2116,7 @@ constructor(
                             ThorchainFunctions.redeemYToken(
                                 fromAddress = srcAddress,
                                 tokenContract = tokenContract,
-                                slippage = slippage.formatSlippage(),
+                                slippage = chainValidationService.formatSlippage(slippage),
                                 denom = selectedToken.contractAddress,
                                 amount = tokenAmountInt,
                             ),
@@ -2131,74 +2137,10 @@ constructor(
         }
     }
 
-    private fun String.formatSlippage(): String {
-        val divider = "100".toBigDecimal()
-        return try {
-            this.toBigDecimal().setScale(2, RoundingMode.DOWN).divide(divider).toPlainString()
-        } catch (t: Throwable) {
-            "0.01" // Default slippage for safety
-        }
-    }
-
-    private fun validateSlippage(slippage: String?): UiText? {
-        if (slippage.isNullOrBlank()) {
-            return UiText.StringResource(R.string.slippage_required_error)
-        }
-
-        return try {
-            val value = slippage.toBigDecimal()
-            if (value < BigDecimal.ZERO || value > BigDecimal("100")) {
-                UiText.StringResource(R.string.slippage_invalid_error)
-            } else {
-                null
-            }
-        } catch (e: NumberFormatException) {
-            UiText.StringResource(R.string.slippage_format_error)
-        }
-    }
-
     private suspend fun getFeesFiatValue(gasFee: TokenValue, selectedToken: Coin): EstimatedGasFee {
         return gasFeeToEstimatedFee(
             GasFeeParams(BigInteger.valueOf(1), gasFee = gasFee, selectedToken = selectedToken)
         )
-    }
-
-    @kotlin.ExperimentalStdlibApi
-    private fun selectUtxosIfNeeded(
-        chain: Chain,
-        specific: BlockChainSpecificAndUtxo,
-    ): BlockChainSpecificAndUtxo {
-        specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
-
-        val updatedUtxo =
-            planBtc.value?.utxosOrBuilderList?.map { planUtxo ->
-                UtxoInfo(
-                    hash = planUtxo.outPoint.hash.toByteArray().reversedArray().toHexString(),
-                    index = planUtxo.outPoint.index.toUInt(),
-                    amount = planUtxo.amount,
-                )
-            } ?: return specific
-
-        return specific.copy(utxos = updatedUtxo)
-    }
-
-    private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
-        val minAmount = chain.getDustThreshold
-        if (tokenAmountInt < minAmount) {
-            val symbol = chain.coinType.symbol
-            val name = chain.raw
-            val formattedMinAmount = chain.toValue(minAmount).toString()
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.send_form_minimum_send_amount_is_requires_this,
-                    listOf(formattedMinAmount, symbol, name),
-                )
-            )
-        }
-
-        if (planBtc.value?.error != SigningError.OK) {
-            throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
-        }
     }
 
     private suspend fun getBitcoinTransactionPlan(
@@ -2482,6 +2424,8 @@ constructor(
                 DeFiNavActions.UNSTAKE_CACAO,
                 DeFiNavActions.ADD_LP,
                 DeFiNavActions.REMOVE_LP -> Coins.MayaChain.CACAO
+                DeFiNavActions.FREEZE_TRX,
+                DeFiNavActions.UNFREEZE_TRX -> Coins.Tron.TRX
                 null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
             }
 
@@ -2529,7 +2473,13 @@ constructor(
                             tokenAmountFieldState.textAsFlow(),
                             recalculateGasFee,
                         ) { token, dst, memo, tokenAmount, nonce ->
-                            GasFeeInput(token, dst.toString(), memo.toString(), tokenAmount, nonce)
+                            GasFeeInput(
+                                token,
+                                dst.asAddressInput(),
+                                memo.toString(),
+                                tokenAmount,
+                                nonce,
+                            )
                         }
                         .debounce(350)
                         .distinctUntilChanged()
@@ -2605,7 +2555,7 @@ constructor(
                                 )
 
                         val resolvedDstAddress =
-                            addressParserRepository.resolveName(dstAddress.toString(), chain)
+                            addressParserRepository.resolveName(dstAddress.asAddressInput(), chain)
                         val tokenAmountInt =
                             tokenAmount
                                 .toString()
@@ -2846,57 +2796,16 @@ constructor(
                     tokenAmountFieldState.textAsFlow(),
                     gasFee.filterNotNull(),
                 ) { selectedToken, tokenAmount, gasFee ->
-                    checkIsReapable(selectedToken, tokenAmount.toString(), gasFee)
+                    val reapingError =
+                        chainValidationService.checkIsReapable(
+                            selectedAccount,
+                            selectedToken,
+                            tokenAmount.toString(),
+                            gasFee,
+                        )
+                    uiState.update { it.copy(reapingError = reapingError) }
                 }
                 .collect()
-        }
-    }
-
-    private fun checkIsReapable(selectedToken: Coin, tokenAmount: String, gasFee: TokenValue) {
-        val selectedAccount = selectedAccount
-        if (selectedAccount != null) {
-            val selectedChain = selectedToken.chain
-
-            if (selectedChain.hasReaping) {
-                val balance = selectedAccount.tokenValue?.value ?: BigInteger.ZERO
-                val tokenAmountInt =
-                    tokenAmount
-                        .toBigDecimalOrNull()
-                        ?.movePointRight(selectedToken.decimal)
-                        ?.toBigInteger() ?: BigInteger.ZERO
-
-                val existentialDeposit =
-                    when {
-                        selectedChain == Chain.Polkadot &&
-                            selectedToken.ticker == Coins.Polkadot.DOT.ticker -> {
-                            PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-                        }
-
-                        selectedChain == Chain.Ripple &&
-                            selectedToken.ticker == Coins.Ripple.XRP.ticker -> {
-                            RippleHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-                        }
-
-                        else -> return
-                    }
-
-                if (balance - (gasFee.value + tokenAmountInt) < existentialDeposit) {
-                    uiState.update {
-                        it.copy(
-                            reapingError =
-                                UiText.StringResource(
-                                    when (selectedChain) {
-                                        Chain.Polkadot -> R.string.send_form_polka_reaping_warning
-                                        Chain.Ripple -> R.string.send_form_ripple_reaping_warning
-                                        else -> return
-                                    }
-                                )
-                        )
-                    }
-                } else {
-                    uiState.update { it.copy(reapingError = null) }
-                }
-            }
         }
     }
 
@@ -2976,51 +2885,6 @@ constructor(
         }
     }
 
-    private fun validateCardanoUTXORequirements(
-        sendAmount: BigInteger,
-        totalBalance: BigInteger,
-        estimatedFee: BigInteger,
-    ) {
-        val minUTXOValue: BigInteger = Chain.Cardano.getDustThreshold
-
-        // 1. Check send amount meets minimum
-        if (sendAmount < minUTXOValue) {
-            val minAmountADA = Chain.Cardano.toValue(minUTXOValue)
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(R.string.minimum_send_amount_is_ada, listOf(minAmountADA))
-            )
-        }
-
-        // 2. Check sufficient balance
-        val totalNeeded = sendAmount + estimatedFee
-        if (totalBalance < totalNeeded) {
-            val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
-            val errorMessage =
-                if (totalBalance > estimatedFee && totalBalance > BigInteger.ZERO) {
-                    UiText.FormattedText(
-                        R.string.insufficient_balance_try_send,
-                        listOf(totalBalanceADA),
-                    )
-                } else {
-                    UiText.FormattedText(R.string.insufficient_balance_ada, listOf(totalBalanceADA))
-                }
-            throw InvalidTransactionDataException(errorMessage)
-        }
-
-        // 3. Check remaining balance (change) meets minimum UTXO requirement
-        val remainingBalance = totalBalance - sendAmount - estimatedFee
-        if (remainingBalance > BigInteger.ZERO && remainingBalance < minUTXOValue) {
-            val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
-
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.this_amount_would_leave_too_little_change,
-                    listOf(totalBalanceADA),
-                )
-            )
-        }
-    }
-
     private suspend fun accountValidation(): AccountValidation {
         val vaultId =
             vaultId
@@ -3053,7 +2917,7 @@ constructor(
 
         val dstAddress =
             try {
-                addressParserRepository.resolveName(addressFieldState.text.toString(), chain)
+                addressParserRepository.resolveName(addressFieldState.text.asAddressInput(), chain)
             } catch (e: Exception) {
                 Timber.e(e)
                 throw InvalidTransactionDataException(
@@ -3124,7 +2988,7 @@ constructor(
         gasFee: TokenValue,
         chain: Chain,
     ): DepositTransaction {
-        val memo = "claim:${selectedToken.contractAddress}:$tokenAmountInt"
+        val memo = ThorchainFunctions.rujiRewardsMemo(selectedToken.contractAddress, tokenAmountInt)
 
         val specific =
             blockChainSpecificRepository.getSpecific(
@@ -3180,7 +3044,7 @@ constructor(
                 ""
             } else {
                 val basisPoints = (percentage * 100).toInt().coerceIn(0, 10000)
-                "TCY-:$basisPoints"
+                ThorchainFunctions.tcyUnstakeMemo(basisPoints)
             }
 
         val specific =
@@ -3337,45 +3201,6 @@ constructor(
 
     companion object {
         private const val GAS_FEE_TIMEOUT_MS = 5_000L
-        private const val REQUEST_ADDRESS_ID = "request_address_id"
-        private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
-    }
-}
-
-internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain: Chain?): SendSrc {
-    val address =
-        when {
-            !selectedTokenId.isNullOrBlank() ->
-                first { it -> it.accounts.any { it.token.id == selectedTokenId } }
-
-            filterByChain != null -> first { it.chain == filterByChain }
-            else -> first()
-        }
-
-    val account =
-        when {
-            !selectedTokenId.isNullOrBlank() ->
-                address.accounts.first { it.token.id == selectedTokenId }
-            filterByChain != null -> address.accounts.first { it.token.isNativeToken }
-            else -> address.accounts.first()
-        }
-
-    return SendSrc(address, account)
-}
-
-internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: SendSrc): SendSrc {
-    if (selectedTokenId == null) {
-        val selectedAddress = currentSrc.address
-        val selectedAccount = currentSrc.account
-        val address = first {
-            it.chain == selectedAddress.chain && it.address == selectedAddress.address
-        }
-        return SendSrc(
-            address,
-            address.accounts.first { it.token.ticker == selectedAccount.token.ticker },
-        )
-    } else {
-        return firstSendSrc(selectedTokenId, null)
     }
 }
 

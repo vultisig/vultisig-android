@@ -23,11 +23,13 @@ import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionCircle
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionMaya
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionTokens
+import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionTron
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.Wallet
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.defi.circle.CircleDeFiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.defi.maya.MayachainDefiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.defi.thorchain.ThorchainDefiPositionsScreen
+import com.vultisig.wallet.ui.screens.v2.defi.tron.TronDeFiPositionsScreen
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CryptoConnectionSelect
 
@@ -42,10 +44,10 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
         content = {
             when (val route = uiModel.route) {
                 is PositionCircle -> CircleDeFiPositionsScreen(vaultId = route.vaultId)
-
                 is PositionTokens -> ThorchainDefiPositionsScreen(vaultId = route.vaultId)
                 is PositionMaya ->
                     MayachainDefiPositionsScreen(vaultId = (uiModel.route as PositionMaya).vaultId)
+                is PositionTron -> TronDeFiPositionsScreen(vaultId = route.vaultId)
                 is Wallet -> ChainTokensScreen(vaultId = route.vaultId, chainId = route.chainId)
                 null -> Unit
             }

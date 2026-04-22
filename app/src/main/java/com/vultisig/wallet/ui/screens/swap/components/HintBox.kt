@@ -137,6 +137,34 @@ internal fun HintBox(
 }
 
 @Composable
+internal fun HintBox(
+    modifier: Modifier = Modifier,
+    isVisible: Boolean,
+    isPointerTriangleOnTop: Boolean = true,
+    offset: IntOffset,
+    pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    pointerOffset: DpOffset = DpOffset.Zero,
+    onDismissClick: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(),
+        exit = fadeOut(),
+        modifier = Modifier.zIndex(Float.MAX_VALUE).offset { offset },
+    ) {
+        HintBoxPopupContent(
+            modifier = modifier,
+            isPointerOnTop = isPointerTriangleOnTop,
+            pointerAlignment = pointerAlignment,
+            pointerOffset = pointerOffset,
+            onDismissClick = onDismissClick,
+            content = content,
+        )
+    }
+}
+
+@Composable
 private fun HintBoxPopupContent(
     modifier: Modifier = Modifier,
     title: String? = null,
@@ -148,7 +176,44 @@ private fun HintBoxPopupContent(
     textStyle: TextStyle = Theme.brockmann.supplementary.footnote,
     onDismissClick: () -> Unit,
 ) {
+    HintBoxPopupContent(
+        modifier = modifier,
+        isPointerOnTop = isPointerOnTop,
+        pointerAlignment = pointerAlignment,
+        pointerOffset = pointerOffset,
+        onDismissClick = onDismissClick,
+    ) {
+        if (!title.isNullOrEmpty()) {
+            Row {
+                Text(
+                    text = title,
+                    style = Theme.brockmann.body.m.medium,
+                    color = Theme.v2.colors.text.inverse,
+                )
+                UiSpacer(weight = 1f)
+                UiIcon(
+                    drawableResId = R.drawable.x,
+                    size = 16.dp,
+                    tint = Theme.v2.colors.text.button.disabled,
+                )
+            }
 
+            UiSpacer(size = 2.dp)
+        }
+
+        Text(text = message, color = textColor, style = textStyle)
+    }
+}
+
+@Composable
+private fun HintBoxPopupContent(
+    modifier: Modifier = Modifier,
+    isPointerOnTop: Boolean,
+    pointerAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
+    pointerOffset: DpOffset = DpOffset.Zero,
+    onDismissClick: () -> Unit,
+    content: @Composable () -> Unit,
+) {
     val shapeColor = Theme.v2.colors.neutrals.n200
     Column(modifier = modifier.clickable(onClick = onDismissClick)) {
         if (isPointerOnTop) {
@@ -174,25 +239,7 @@ private fun HintBoxPopupContent(
                     )
                     .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            if (!title.isNullOrEmpty()) {
-                Row {
-                    Text(
-                        text = title,
-                        style = Theme.brockmann.body.m.medium,
-                        color = Theme.v2.colors.text.inverse,
-                    )
-                    UiSpacer(weight = 1f)
-                    UiIcon(
-                        drawableResId = R.drawable.x,
-                        size = 16.dp,
-                        tint = Theme.v2.colors.text.button.disabled,
-                    )
-                }
-
-                UiSpacer(size = 2.dp)
-            }
-
-            Text(text = message, color = textColor, style = Theme.brockmann.supplementary.footnote)
+            content()
         }
 
         if (isPointerOnTop.not()) {
@@ -231,4 +278,21 @@ private fun HintBoxDownPointerPreview() {
         isVisible = true,
         isPointerTriangleOnTop = false,
     )
+}
+
+@Preview
+@Composable
+private fun HintBoxCustomContentPreview() {
+    HintBox(
+        modifier = Modifier.width(250.dp),
+        onDismissClick = {},
+        offset = IntOffset.Zero,
+        isVisible = true,
+    ) {
+        Text(
+            text = "Custom content inside HintBox",
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.v2.colors.text.tertiary,
+        )
+    }
 }

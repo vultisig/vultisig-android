@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -229,4 +230,28 @@ internal fun MayachainDefiPositionsScreenContent(
             UiSpacer(size = 16.dp)
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun MayachainDefiPositionsScreenBondedTabPreview() {
+    MayachainDefiPositionsScreenContent(
+        state = MayachainDefiPositionsUiModel(selectedTab = DeFiTab.BONDED.displayNameRes)
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun MayachainDefiPositionsScreenStakedTabPreview() {
+    MayachainDefiPositionsScreenContent(
+        state = MayachainDefiPositionsUiModel(selectedTab = DeFiTab.STAKED.displayNameRes)
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun MayachainDefiPositionsScreenLpTabPreview() {
+    MayachainDefiPositionsScreenContent(
+        state = MayachainDefiPositionsUiModel(selectedTab = DeFiTab.LP.displayNameRes)
+    )
 }

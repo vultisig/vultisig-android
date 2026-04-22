@@ -58,6 +58,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
@@ -172,6 +173,8 @@ internal data class DepositFormUiModel(
     val selectedPoolCacaoDepth: Long = 0L,
     val totalGas: UiText = UiText.Empty,
     val estimatedFee: UiText = UiText.Empty,
+    val removeLpPercent: Float = 0f,
+    val removeLpCacaoDisplay: String = "",
 )
 
 @HiltViewModel
@@ -200,6 +203,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -288,17 +292,7 @@ constructor(
                         DepositOption.WithdrawSecuredAsset,
                     )
 
-                Chain.MayaChain ->
-                    listOf(
-                        DepositOption.Bond,
-                        DepositOption.Unbond,
-                        DepositOption.Leave,
-                        DepositOption.Custom,
-                        DepositOption.AddCacaoPool,
-                        DepositOption.RemoveCacaoPool,
-                        DepositOption.AddLiquidity,
-                        DepositOption.RemoveLiquidity,
-                    )
+                Chain.MayaChain -> listOf(DepositOption.Leave, DepositOption.Custom)
 
                 Chain.Kujira,
                 Chain.Osmosis -> listOf(DepositOption.TransferIbc)
@@ -391,7 +385,9 @@ constructor(
                             }
                         }
 
-                    updateTokenAmount(account, chain, targetTicker, vaultId)
+                    if (depositOption != DepositOption.RemoveLiquidity) {
+                        updateTokenAmount(account, chain, targetTicker, vaultId)
+                    }
 
                     if (depositOption == DepositOption.SecuredAsset) {
                         collectSecuredAssetAddresses()
@@ -503,6 +499,106 @@ constructor(
         }
     }
 
+    private fun loadRemoveLpData() {
+        val poolId =
+            lpPoolId
+                ?: run {
+                    state.update {
+                        it.copy(
+                            availableLpUnits = null,
+                            selectedPoolTotalLpUnits = 0L,
+                            selectedPoolCacaoDepth = 0L,
+                            errorText = UiText.StringResource(R.string.dialog_default_error_body),
+                        )
+                    }
+                    return
+                }
+        state.update {
+            it.copy(
+                availableLpUnits = null,
+                selectedPoolTotalLpUnits = 0L,
+                selectedPoolCacaoDepth = 0L,
+                removeLpPercent = 0f,
+                removeLpCacaoDisplay = "",
+                balance = R.string.share_balance_loading.asUiText(),
+            )
+        }
+        viewModelScope.safeLaunch {
+            val userAddress =
+                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                    ?.address
+                    ?: run {
+                        state.update {
+                            it.copy(
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body)
+                            )
+                        }
+                        return@safeLaunch
+                    }
+            val memberDetails =
+                withContext(Dispatchers.IO) {
+                    mayachainBondRepository.getMemberDetails(userAddress)
+                }
+            val userLpUnits =
+                memberDetails.pools.find { it.pool == poolId }?.liquidityUnits
+                    ?: run {
+                        state.update {
+                            it.copy(
+                                availableLpUnits = null,
+                                selectedPoolTotalLpUnits = 0L,
+                                selectedPoolCacaoDepth = 0L,
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body),
+                            )
+                        }
+                        return@safeLaunch
+                    }
+            val poolStats = withContext(Dispatchers.IO) { mayachainBondRepository.getLpPoolStats() }
+            val pool =
+                poolStats.find { it.asset == poolId }
+                    ?: run {
+                        state.update {
+                            it.copy(
+                                availableLpUnits = null,
+                                selectedPoolTotalLpUnits = 0L,
+                                selectedPoolCacaoDepth = 0L,
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body),
+                            )
+                        }
+                        return@safeLaunch
+                    }
+            val totalPoolUnits = pool.units.toLongOrNull() ?: 0L
+            val cacaoDepth = pool.cacaoDepth.toLongOrNull() ?: 0L
+            val userAvailableUnits = userLpUnits.toLongOrNull()
+            val userCacao =
+                if (userAvailableUnits != null) {
+                    RemoveLpCalculator.computeCacaoDisplay(
+                        selectedUnits = userAvailableUnits,
+                        cacaoDepth = cacaoDepth,
+                        totalPoolUnits = totalPoolUnits,
+                    )
+                } else null
+            val balanceText =
+                if (userCacao != null) {
+                    UiText.FormattedText(
+                        R.string.remove_pool_cacao_amount_format,
+                        listOf(userCacao),
+                    )
+                } else UiText.Empty
+            state.update {
+                it.copy(
+                    availableLpUnits = userLpUnits,
+                    selectedPoolTotalLpUnits = totalPoolUnits,
+                    selectedPoolCacaoDepth = cacaoDepth,
+                    balance = balanceText,
+                )
+            }
+            setRemoveLpPercent(state.value.removeLpPercent)
+        }
+    }
+
     fun selectBondAsset(asset: String) {
         val pool = lpBondPoolMap[asset]
         state.update {
@@ -521,6 +617,20 @@ constructor(
     fun setMaxLpUnits() {
         val units = state.value.availableLpUnits ?: return
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(units)
+    }
+
+    fun setRemoveLpPercent(percent: Float) {
+        val s = state.value
+        val availableUnits = s.availableLpUnits?.toLongOrNull() ?: return
+        val selectedUnits = (percent * availableUnits).toLong().coerceAtLeast(0L)
+        val cacaoDisplay =
+            RemoveLpCalculator.computeCacaoDisplay(
+                selectedUnits = selectedUnits,
+                cacaoDepth = s.selectedPoolCacaoDepth,
+                totalPoolUnits = s.selectedPoolTotalLpUnits,
+            ) ?: return
+        lpUnitsFieldState.setTextAndPlaceCursorAtEnd(selectedUnits.toString())
+        state.update { it.copy(removeLpPercent = percent, removeLpCacaoDisplay = cacaoDisplay) }
     }
 
     private suspend fun updateTokenAmount(
@@ -684,11 +794,17 @@ constructor(
                     handleRemoveCacaoOption()
                 }
 
-                DepositOption.AddLiquidity,
+                DepositOption.AddLiquidity -> {
+                    state.update {
+                        it.copy(selectedToken = Coins.MayaChain.CACAO, unstakableAmount = null)
+                    }
+                }
+
                 DepositOption.RemoveLiquidity -> {
                     state.update {
                         it.copy(selectedToken = Coins.MayaChain.CACAO, unstakableAmount = null)
                     }
+                    loadRemoveLpData()
                 }
 
                 DepositOption.WithdrawSecuredAsset -> {
@@ -909,6 +1025,13 @@ constructor(
         state.update { it.copy(tokenAmountError = errorText) }
     }
 
+    fun validateAndDeposit() {
+        validateTokenAmount()
+        if (state.value.tokenAmountError == null) {
+            deposit()
+        }
+    }
+
     fun validateProvider() {
         val errorText = validateDstAddress(providerFieldState.text.toString())
         state.update { it.copy(providerError = errorText) }
@@ -984,16 +1107,9 @@ constructor(
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             val chainId = chain?.id ?: return@launch
-            val requestId = java.util.UUID.randomUUID().toString()
-            navigator.route(
-                Route.AddressBook(
-                    requestId = requestId,
-                    chainId = chainId,
-                    excludeVaultId = vaultId,
-                )
-            )
             val address: AddressBookEntry =
-                requestResultRepository.request(requestId) ?: return@launch
+                requestAddressBookEntry(chainId = chainId, excludeVaultId = vaultId)
+                    ?: return@launch
             setNodeAddress(address.address)
         }
     }
@@ -1335,12 +1451,14 @@ constructor(
 
         val selectedSecureAsset = state.value.selectedSecuredAsset
 
+        val secureAssetChain = selectedSecureAsset.ticker.getChain()
         val dstAddr =
-            accountsRepository
-                .loadAddress(vaultId, selectedSecureAsset.ticker.getChain())
-                .firstOrNull()
+            accountsRepository.loadAddress(vaultId, secureAssetChain).firstOrNull()
                 ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
+                    UiText.FormattedText(
+                        R.string.deposit_error_chain_not_enabled,
+                        listOf(secureAssetChain.raw, selectedSecureAsset.ticker),
+                    )
                 )
 
         if (dstAddr.address.isBlank()) {
@@ -1514,11 +1632,12 @@ constructor(
         val srcAddress = selectedToken.address
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
 
-        val basisPoints = tokenAmountFieldState.text.toString().toIntOrNull()
+        val s = state.value
+        val basisPoints = (s.removeLpPercent * 100).toInt()
 
         validateBasisPoints(basisPoints)?.let { throw InvalidTransactionDataException(it) }
 
-        val memo = DepositMemo.RemoveLiquidity(poolId, basisPoints!! * 100)
+        val memo = DepositMemo.RemoveLiquidity(poolId, basisPoints * 100)
 
         val specific =
             blockChainSpecificRepository.getSpecific(
