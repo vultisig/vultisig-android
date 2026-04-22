@@ -14,12 +14,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.R.string
-import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
+import com.vultisig.wallet.data.blockchain.tron.GetTronFrozenBalancesUseCase
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
@@ -261,7 +261,7 @@ constructor(
     private val feeServiceComposite: FeeServiceComposite,
     private val chainValidationService: ChainValidationService,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
-    private val tronApi: TronApi,
+    private val getTronFrozenBalances: GetTronFrozenBalancesUseCase,
 ) : ViewModel() {
 
     private var vault: Vault? = null
@@ -559,17 +559,9 @@ constructor(
                 val trxCoin =
                     vault.coins.firstOrNull { it.chain == Chain.Tron && it.isNativeToken }
                         ?: return@safeLaunch
-                val account = withContext(Dispatchers.IO) { tronApi.getAccount(trxCoin.address) }
-                val sunPerTrx = BigDecimal(1_000_000L)
-                tronFrozenBandwidthTrx.value =
-                    TronFrozenBalanceState.Loaded(
-                        BigDecimal(account.frozenBandwidthSun)
-                            .divide(sunPerTrx, 6, RoundingMode.DOWN)
-                    )
-                tronFrozenEnergyTrx.value =
-                    TronFrozenBalanceState.Loaded(
-                        BigDecimal(account.frozenEnergySun).divide(sunPerTrx, 6, RoundingMode.DOWN)
-                    )
+                val balances = getTronFrozenBalances(trxCoin.address)
+                tronFrozenBandwidthTrx.value = TronFrozenBalanceState.Loaded(balances.bandwidthTrx)
+                tronFrozenEnergyTrx.value = TronFrozenBalanceState.Loaded(balances.energyTrx)
                 updateTronFrozenBalanceDisplay(
                     uiState.value.tronResourceType ?: TronResourceType.BANDWIDTH
                 )
@@ -2802,12 +2794,28 @@ constructor(
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun calculateSpecific() {
         viewModelScope.launch {
-            combine(selectedToken.filterNotNull(), gasFee.filterNotNull()) { token, gasFee ->
+            val dstAddressFlow =
+                addressFieldState
+                    .textAsFlow()
+                    .map { it.toString().asAddressInput() }
+                    .debounce(300)
+                    .distinctUntilChanged()
+
+            combine(selectedToken.filterNotNull(), gasFee.filterNotNull(), dstAddressFlow) {
+                    token,
+                    gasFee,
+                    dstAddress ->
                     val chain = token.chain
                     val srcAddress = token.address
                     advanceGasUiRepository.updateTokenStandard(token.chain.standard)
+
+                    val validDstAddress =
+                        dstAddress.takeIf {
+                            it.isNotBlank() && chainAccountAddressRepository.isValid(chain, it)
+                        }
 
                     try {
                         val spec =
@@ -2819,6 +2827,7 @@ constructor(
                                 isSwap = false,
                                 isMaxAmountEnabled = false,
                                 isDeposit = false,
+                                dstAddress = validDstAddress,
                             )
                         specific.value = spec
                         advanceGasUiRepository.updateBlockChainSpecific(spec.blockChainSpecific)
