@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
+import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.share
@@ -32,7 +33,9 @@ import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import vultisig.keysign.v1.CustomMessagePayload
@@ -63,6 +66,7 @@ constructor(
     val qrBitmapPainter = MutableStateFlow<BitmapPainter?>(null)
     private var qrBitmap: Bitmap? = null
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
+    private var saveShareQrBitmapJob: Job? = null
 
     suspend fun loadTransaction(transactionId: TransactionId) {
         val transaction = transactionRepository.getTransaction(transactionId)
@@ -213,19 +217,31 @@ constructor(
         activity.share(qrBitmap, shareFileName(requireNotNull(vault), ShareType.SEND))
     }
 
-    internal fun saveShareQrBitmap(
-        context: Context,
-        color: Int,
-        title: String,
-        description: String,
-        logo: Bitmap,
-    ) =
-        viewModelScope.launch {
-            val bitmap = qrBitmap ?: return@launch
-            val qrBitmap =
-                withContext(Dispatchers.IO) {
-                    makeQrCodeBitmapShareFormat(context, bitmap, color, logo, title, description)
-                }
-            shareQrBitmap.value = qrBitmap
-        }
+    internal fun saveShareQrBitmap(context: Context, color: Int, info: QrShareInfo, logo: Bitmap) {
+        // Cancel any in-flight render so rapid `qrShareInfo` updates (painter then icons) can't
+        // race and let a stale bitmap overwrite a fresher one. The previous rendered bitmap is
+        // recycled on replacement to avoid leaks when icons/amounts change repeatedly.
+        saveShareQrBitmapJob?.cancel()
+        saveShareQrBitmapJob =
+            viewModelScope.launch {
+                val bitmap = qrBitmap ?: return@launch
+                // Allocation happens on IO; if cancellation races with the render, `withContext`'s
+                // prompt-cancellation guarantee discards the returned bitmap before we can recycle
+                // it. Recycle in-place and return null so the native memory is released instead of
+                // waiting for GC.
+                val rendered =
+                    withContext(Dispatchers.IO) {
+                        val bmp = makeQrCodeBitmapShareFormat(context, bitmap, color, logo, info)
+                        if (!isActive) {
+                            bmp.recycle()
+                            null
+                        } else {
+                            bmp
+                        }
+                    } ?: return@launch
+                val previous = shareQrBitmap.value
+                shareQrBitmap.value = rendered
+                if (previous != null && previous !== rendered) previous.recycle()
+            }
+    }
 }

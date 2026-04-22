@@ -58,6 +58,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
@@ -202,6 +203,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -290,17 +292,7 @@ constructor(
                         DepositOption.WithdrawSecuredAsset,
                     )
 
-                Chain.MayaChain ->
-                    listOf(
-                        DepositOption.Bond,
-                        DepositOption.Unbond,
-                        DepositOption.Leave,
-                        DepositOption.Custom,
-                        DepositOption.AddCacaoPool,
-                        DepositOption.RemoveCacaoPool,
-                        DepositOption.AddLiquidity,
-                        DepositOption.RemoveLiquidity,
-                    )
+                Chain.MayaChain -> listOf(DepositOption.Leave, DepositOption.Custom)
 
                 Chain.Kujira,
                 Chain.Osmosis -> listOf(DepositOption.TransferIbc)
@@ -1115,16 +1107,9 @@ constructor(
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             val chainId = chain?.id ?: return@launch
-            val requestId = java.util.UUID.randomUUID().toString()
-            navigator.route(
-                Route.AddressBook(
-                    requestId = requestId,
-                    chainId = chainId,
-                    excludeVaultId = vaultId,
-                )
-            )
             val address: AddressBookEntry =
-                requestResultRepository.request(requestId) ?: return@launch
+                requestAddressBookEntry(chainId = chainId, excludeVaultId = vaultId)
+                    ?: return@launch
             setNodeAddress(address.address)
         }
     }
@@ -1466,12 +1451,14 @@ constructor(
 
         val selectedSecureAsset = state.value.selectedSecuredAsset
 
+        val secureAssetChain = selectedSecureAsset.ticker.getChain()
         val dstAddr =
-            accountsRepository
-                .loadAddress(vaultId, selectedSecureAsset.ticker.getChain())
-                .firstOrNull()
+            accountsRepository.loadAddress(vaultId, secureAssetChain).firstOrNull()
                 ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
+                    UiText.FormattedText(
+                        R.string.deposit_error_chain_not_enabled,
+                        listOf(secureAssetChain.raw, selectedSecureAsset.ticker),
+                    )
                 )
 
         if (dstAddr.address.isBlank()) {

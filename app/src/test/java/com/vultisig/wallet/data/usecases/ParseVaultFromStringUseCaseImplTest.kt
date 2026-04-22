@@ -36,7 +36,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
             ParseVaultFromStringUseCaseImpl(
                 vaultFromOldJsonMapper = mockk<VaultFromOldJsonMapper>(),
                 mapHexToPlainString = mockk<MapHexToPlainString>(),
-                encryption = mockk<Encryption>(),
+                encryption = mockk<VaultBackupEncryption>(),
                 protoBuf = protoBuf,
                 json = mockk(),
             )

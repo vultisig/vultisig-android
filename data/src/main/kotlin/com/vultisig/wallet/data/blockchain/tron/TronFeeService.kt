@@ -7,7 +7,7 @@ import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.TronChainParametersJson
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
-import com.vultisig.wallet.data.blockchain.model.Fee
+import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.TronFees
 import com.vultisig.wallet.data.utils.Numeric
@@ -70,6 +70,12 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): TronFees =
         coroutineScope {
+            // THORChain swap outbound tx shape is known only at signing time. The default estimator
+            // already returns a swap-safe TronFees, so short-circuit here instead of attempting an
+            // RPC simulation that relies on Transfer-only fields (contract, amount, memo).
+            if (transaction is Swap) {
+                return@coroutineScope calculateDefaultFees(transaction)
+            }
             require(transaction is Transfer) {
                 "Transaction type not supported ${transaction::class.simpleName}"
             }
@@ -313,14 +319,10 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
         }
     }
 
-    override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
-        require(transaction is Transfer) {
-            "Invalid Transaction Type: ${transaction::class.simpleName}"
-        }
-
+    override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): TronFees {
         val toAddress = transaction.to
         val isNativeCoin = transaction.coin.isNativeToken
-        val hasMemo = !transaction.memo.isNullOrEmpty()
+        val hasMemo = (transaction as? Transfer)?.memo?.isNotEmpty() == true
         val isTokenTransfer = !transaction.coin.isNativeToken
 
         val isNewAccount =

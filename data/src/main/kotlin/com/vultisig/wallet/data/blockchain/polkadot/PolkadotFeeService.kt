@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
+import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
 import com.vultisig.wallet.data.models.Chain
@@ -36,6 +37,12 @@ import kotlinx.coroutines.coroutineScope
  */
 class PolkadotFeeService @Inject constructor(private val polkadotApi: PolkadotApi) : FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
+        // Polkadot extrinsic build is Transfer-shaped (specific method/args). A Swap carries opaque
+        // callData so fall back to the constant estimate — good enough for UI, and DOT has no live
+        // swap provider today.
+        if (transaction is Swap) {
+            return calculateDefaultFees(transaction)
+        }
         require(transaction is Transfer) {
             "Invalid Transaction type: ${transaction::class.simpleName}"
         }

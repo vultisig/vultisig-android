@@ -28,7 +28,7 @@ internal class ParseVaultFromStringUseCaseImpl
 constructor(
     private val vaultFromOldJsonMapper: VaultFromOldJsonMapper,
     private val mapHexToPlainString: MapHexToPlainString,
-    private val encryption: Encryption,
+    private val encryption: VaultBackupEncryption,
     private val protoBuf: ProtoBuf,
     private val json: Json,
 ) : ParseVaultFromStringUseCase {

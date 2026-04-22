@@ -38,9 +38,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 internal data class ImportFileState(
@@ -122,7 +124,9 @@ constructor(
 
     private suspend fun saveToDb(fileContent: String, password: String?): SaveResult =
         try {
-            insertVaultToDb(parseVaultFromString(fileContent, password))
+            val vault =
+                withContext(Dispatchers.Default) { parseVaultFromString(fileContent, password) }
+            insertVaultToDb(vault)
             SaveResult.Success
         } catch (e: DuplicateVaultException) {
             Timber.e(e)

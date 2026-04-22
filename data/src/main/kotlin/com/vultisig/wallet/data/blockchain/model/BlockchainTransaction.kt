@@ -8,6 +8,7 @@ sealed interface BlockchainTransaction {
     val vault: VaultData
     val amount: BigInteger
     val isMax: Boolean
+    val to: String
 }
 
 data class Transfer(
@@ -15,7 +16,7 @@ data class Transfer(
     override val vault: VaultData,
     override val isMax: Boolean = false,
     override val amount: BigInteger,
-    val to: String,
+    override val to: String,
     val memo: String? = null,
 ) : BlockchainTransaction
 
@@ -24,7 +25,7 @@ data class Swap(
     override val vault: VaultData,
     override val isMax: Boolean = false,
     override val amount: BigInteger,
-    val to: String,
+    override val to: String,
     val callData: String,
     val approvalData: String?,
     val limit: BigInteger = BigInteger.ZERO,

@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.model.Eip1559
@@ -21,7 +22,6 @@ import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -328,8 +328,25 @@ internal class EthereumFeeServiceTest {
     // ---------- Error paths ----------
 
     @Test
-    fun `calculateFees rejects non-transfer transactions`() = runTest {
-        assertFailsWith<IllegalArgumentException> { service.calculateFees(swap(Chain.Ethereum)) }
+    fun `calculateFees uses default-fee path for swap transactions`() = runTest {
+        coEvery { evmApi.getBaseFee() } returns gwei(100)
+        stubFeeHistory(listOf(gwei(5)))
+
+        val fee = service.calculateFees(swap(Chain.Ethereum)) as Eip1559
+
+        assertEquals(DEFAULT_SWAP_LIMIT, fee.limit)
+        assertEquals(gwei(110), fee.networkPrice)
+    }
+
+    @Test
+    fun `calculateFees uses Mantle-specific limit for Mantle swap transactions`() = runTest {
+        coEvery { evmApi.getBaseFee() } returns gwei(100)
+        stubFeeHistory(listOf(gwei(5)))
+
+        val fee = service.calculateFees(swap(Chain.Mantle)) as Eip1559
+
+        assertEquals(DEFAULT_MANTLE_SWAP_LIMIT, fee.limit)
+        assertEquals(gwei(110), fee.networkPrice)
     }
 
     // ---------- Helpers ----------
