@@ -181,17 +181,18 @@ private fun TronDeFiPositionsScreenContent(
 
                     val isTronSelected = state.selectedPositions.contains("TRON")
                     val pendingWithdrawals = tronData.pendingWithdrawals
-                    if (isTronSelected && tronData.hasFrozenBalance) {
+                    if (isTronSelected) {
                         item {
                             TronFreezePositionCard(
                                 frozenTotalPrice = tronData.frozenTotalPrice,
                                 frozenTotalTrx = tronData.frozenTotalTrx,
                                 isBalanceVisible = state.isBalanceVisible,
+                                isUnfreezeEnabled = tronData.hasFrozenBalance,
                                 onClickFreeze = onClickFreeze,
                                 onClickUnfreeze = onClickUnfreeze,
                             )
                         }
-                    } else if (isTronSelected && pendingWithdrawals.isEmpty()) {
+                    } else if (pendingWithdrawals.isEmpty()) {
                         item { NoPositionsContainer() }
                     }
 
