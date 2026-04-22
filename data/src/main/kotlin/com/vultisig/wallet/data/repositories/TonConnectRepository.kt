@@ -20,6 +20,7 @@ interface TonConnectRepository {
     suspend fun clearSession()
 }
 
+/** DataStore-backed [TonConnectRepository] implementation. */
 internal class TonConnectRepositoryImpl
 @Inject
 constructor(private val dataStore: AppDataStore, private val json: Json) : TonConnectRepository {
