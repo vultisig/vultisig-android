@@ -292,17 +292,7 @@ constructor(
                         DepositOption.WithdrawSecuredAsset,
                     )
 
-                Chain.MayaChain ->
-                    listOf(
-                        DepositOption.Bond,
-                        DepositOption.Unbond,
-                        DepositOption.Leave,
-                        DepositOption.Custom,
-                        DepositOption.AddCacaoPool,
-                        DepositOption.RemoveCacaoPool,
-                        DepositOption.AddLiquidity,
-                        DepositOption.RemoveLiquidity,
-                    )
+                Chain.MayaChain -> listOf(DepositOption.Leave, DepositOption.Custom)
 
                 Chain.Kujira,
                 Chain.Osmosis -> listOf(DepositOption.TransferIbc)
