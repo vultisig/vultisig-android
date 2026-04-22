@@ -172,6 +172,10 @@ constructor(
         }
     }
 
+    /**
+     * Handles an incoming deep-link [uri]; routes TonConnect URIs to the use case, send deep-links
+     * to the vault list, and all other URIs to the vault import flow.
+     */
     fun openUri(uri: Uri) {
         viewModelScope.safeLaunch {
             _navigationReady.await()
