@@ -294,6 +294,13 @@
     <string name="qr_title_join_keygen_description">Mit Geräten scannen, um der \nVault-Generation beizutreten</string>
     <string name="qr_title_join_keysign_description">Tresor: %1$s\nVon: %2$s\n Bis: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Tresor: %1$s\n Von: %2$s\n An: %3$s</string>
+    <string name="qr_share_label_vault">Tresor</string>
+    <string name="qr_share_label_amount">Menge</string>
+    <string name="qr_share_label_to">Zu</string>
+    <string name="qr_share_label_from">Von</string>
+    <string name="qr_share_label_type">Typ</string>
+    <string name="qr_share_type_fast_vault">Schneller Tresor</string>
+    <string name="qr_share_type_secure_vault">Sicherer Tresor</string>
     <string name="error_folder_must_have_at_least_one_vault">Für den Ordner ist mindestens ein ausgewählter Tresor erforderlich</string>
     <string name="import_file_password_hint_text">Hinweis: %s</string>
     <string name="scan_qr_upload_qr_code">QR-Code hochladen</string>

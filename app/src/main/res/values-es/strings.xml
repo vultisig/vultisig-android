@@ -294,6 +294,13 @@
     <string name="qr_title_join_keygen_description">Escanear con dispositivos para unirse a la\n generación de bóveda</string>
     <string name="qr_title_join_keysign_description">Bóveda: %1$s\nCantidad: %2$s\n Para: %3$s</string>
     <string name="qr_title_join_keysign_swap_description">Bóveda: %1$s\n Desde: %2$s\n Hasta: %3$s</string>
+    <string name="qr_share_label_vault">Bóveda</string>
+    <string name="qr_share_label_amount">Cantidad</string>
+    <string name="qr_share_label_to">Para</string>
+    <string name="qr_share_label_from">Desde</string>
+    <string name="qr_share_label_type">Tipo</string>
+    <string name="qr_share_type_fast_vault">Bóveda rápida</string>
+    <string name="qr_share_type_secure_vault">Bóveda segura</string>
     <string name="error_folder_must_have_at_least_one_vault">La carpeta necesita al menos una bóveda seleccionada</string>
     <string name="import_file_password_hint_text">Pista: %s</string>
     <string name="scan_qr_upload_qr_code">Subir código QR</string>

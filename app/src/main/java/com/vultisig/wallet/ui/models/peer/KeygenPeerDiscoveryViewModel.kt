@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.core.graphics.scale
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -48,6 +47,8 @@ import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
+import com.vultisig.wallet.data.usecases.QrShareField
+import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -61,6 +62,7 @@ import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.forCanvasMinify
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -205,21 +207,33 @@ constructor(
     fun shareQr(activity: Context) {
         val qr = qrBitmap.value ?: return
 
-        val scaleModifier = 4
-
-        val scaledQr =
-            qr.scale(
-                width = qr.width * scaleModifier,
-                height = qr.height * scaleModifier,
-                filter = false,
+        // Mirror loadData()'s fast/secure predicate: active-vault migrate (signers > 2) goes
+        // through peer discovery even when email+password are present, so the share card must
+        // not advertise "Fast Vault" for it.
+        val isFastVault =
+            !email.isNullOrBlank() &&
+                !password.isNullOrBlank() &&
+                !(args?.action == TssAction.Migrate && signers.size > 2)
+        val typeRes =
+            if (isFastVault) R.string.qr_share_type_fast_vault
+            else R.string.qr_share_type_secure_vault
+        val info =
+            QrShareInfo(
+                title = context.getString(R.string.qr_title_join_keygen),
+                fields =
+                    listOf(
+                        QrShareField(
+                            context.getString(R.string.qr_share_label_vault),
+                            vaultName.forCanvasMinify(),
+                        ),
+                        QrShareField(
+                            context.getString(R.string.qr_share_label_type),
+                            context.getString(typeRes),
+                        ),
+                    ),
             )
 
-        val shareBitmap =
-            createQrCodeSharingBitmap(
-                scaledQr,
-                R.string.qr_title_join_keygen,
-                R.string.qr_title_join_keygen_description,
-            )
+        val shareBitmap = createQrCodeSharingBitmap(qr, info)
 
         activity.share(shareBitmap, shareFileName(vaultName, vaultName.sha256(), ShareType.KEYGEN))
     }
