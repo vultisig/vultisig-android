@@ -74,23 +74,6 @@ class DeepLinkHelper(input: String) {
         return scheme.equals("vultisig://send", ignoreCase = true)
     }
 
-    /** Returns true when the URI matches the TonConnect v2 protocol (`tc://` + `v=2`). */
-    fun isTonConnectUri(): Boolean =
-        scheme.startsWith("tc://", ignoreCase = true) && parameters["v"] == "2"
-
-    /** The dApp's ephemeral public key (`id` parameter). */
-    fun getTonConnectClientId(): String? = parameters["id"]
-
-    /**
-     * URL-decoded JSON connect request payload from the `r` parameter (TonConnect v2 spec).
-     *
-     * Note: `Uri.decode()` does not treat `+` as space; callers must handle that if needed.
-     */
-    fun getTonConnectRequest(): String? = parameters["r"]
-
-    /** Optional return URL for native-app handoff (`ret` parameter). */
-    fun getTonConnectRet(): String? = parameters["ret"]
-
     /** Returns true when the URI contains a `resharePrefix` parameter. */
     fun hasResharePrefix(): Boolean {
         return parameters.containsKey("resharePrefix")

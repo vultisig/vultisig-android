@@ -58,6 +58,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
+import com.vultisig.wallet.data.usecases.PersistTonConnectSessionUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -190,6 +191,7 @@ constructor(
     private val mapKeysignMessageFromProto: KeysignMessageFromProtoMapper,
     private val protoBuf: ProtoBuf,
     private val decompressQr: DecompressQrUseCase,
+    private val persistTonConnectSession: PersistTonConnectSessionUseCase,
     private val sessionApi: SessionApi,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val routerApi: RouterApi,
@@ -283,6 +285,7 @@ constructor(
 
                 val payloadProto = protoBuf.decodeFromByteArray<KeysignMessage>(rawJson)
                 Timber.d("Decoded KeysignMessageProto: $payloadProto")
+                persistTonConnectSession(payloadProto, vaultId)
                 _sessionID = payloadProto.sessionId
                 _serviceName = payloadProto.serviceName
                 _useVultisigRelay = payloadProto.useVultisigRelay

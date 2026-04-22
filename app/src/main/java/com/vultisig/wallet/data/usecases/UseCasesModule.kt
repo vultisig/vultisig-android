@@ -44,6 +44,12 @@ internal interface UseCasesModule {
     @Singleton
     fun bindDecompressQrUseCase(impl: DecompressQrUseCaseImpl): DecompressQrUseCase
 
+    @Binds
+    @Singleton
+    fun bindPersistTonConnectSessionUseCase(
+        impl: PersistTonConnectSessionUseCaseImpl
+    ): PersistTonConnectSessionUseCase
+
     @Binds @Singleton fun bindEnableTokenUseCase(impl: EnableTokenUseCaseImpl): EnableTokenUseCase
 
     @Binds

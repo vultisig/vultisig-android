@@ -12,8 +12,5 @@ const val JOIN_SEND_ON_ADDRESS_FLOW = "SendOnAddress"
 /** QR flow type for the standard send flow. */
 const val SEND_FLOW = "Send"
 
-/** QR flow type for TonConnect deep-link URIs. */
-const val TONCONNECT_FLOW = "TonConnect"
-
 /** QR flow type returned when no other type matches. */
 const val UNKNOWN_FLOW = "Unknown"

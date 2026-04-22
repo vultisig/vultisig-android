@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
-import com.vultisig.wallet.data.usecases.HandleTonConnectUriUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.data.usecases.KeysignTransactionSummary
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -64,7 +63,6 @@ constructor(
     private val appUpdateManager: AppUpdateManager,
     private val initializeThorChainNetworkId: InitializeThorChainNetworkIdUseCase,
     private val getDirectionByQrCodeUseCase: GetDirectionByQrCodeUseCase,
-    private val handleTonConnectUri: HandleTonConnectUriUseCase,
     private val getKeysignTransactionSummary: GetKeysignTransactionSummaryUseCase,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     networkUtils: NetworkUtils,
@@ -173,23 +171,14 @@ constructor(
     }
 
     /**
-     * Handles an incoming deep-link [uri]; routes TonConnect URIs to the use case, send deep-links
-     * to the vault list, and all other URIs to the vault import flow.
+     * Handles an incoming deep-link [uri]; routes send deep-links to the vault list and all other
+     * URIs to the vault import flow.
      */
     fun openUri(uri: Uri) {
         viewModelScope.safeLaunch {
             _navigationReady.await()
             val deepLinkHelper = DeepLinkHelper(uri)
-            if (deepLinkHelper.isTonConnectUri()) {
-                runCatching { handleTonConnectUri(uri.toString()) }
-                    .onFailure { throwable ->
-                        Timber.w(throwable, "Failed to handle TonConnect URI")
-                        snackbarFlow.showMessage(
-                            context.getString(R.string.unknown_error),
-                            SnackbarType.Error,
-                        )
-                    }
-            } else if (deepLinkHelper.isSendDeeplink()) {
+            if (deepLinkHelper.isSendDeeplink()) {
                 if (hasAnyVault()) {
                     navigator.route(
                         Route.VaultList(
