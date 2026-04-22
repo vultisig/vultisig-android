@@ -5,7 +5,7 @@ package com.vultisig.wallet.data.usecases
 import android.net.Uri
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.JOIN_KEYSIGN_FLOW
-import com.vultisig.wallet.data.models.TonConnectSession
+import com.vultisig.wallet.data.models.TonKeysignSession
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.repositories.TonConnectRepository
 import io.ktor.util.decodeBase64Bytes
@@ -99,23 +99,18 @@ internal class TonConnectDeepLinkParsingTest {
     }
 
     @Test
-    fun `use case persists session iff decoded payload contains signTon`() = runTest {
+    fun `use case is no-op for sample payload that contains no signTon`() = runTest {
+        // The sample URL carries a session-routing message (no signTon field), so
+        // PersistTonConnectSessionUseCase must not call saveSession.
         val helper = DeepLinkHelper(sampleUri)
         val decompressed = decompressQr(helper.getJsonData()!!.decodeBase64Bytes())
         val proto = protoBuf.decodeFromByteArray(KeysignMessageProto.serializer(), decompressed)
-        val expectedVaultId = "vault-42"
 
-        val captured = slot<TonConnectSession>()
+        val captured = slot<TonKeysignSession>()
         coEvery { repository.saveSession(capture(captured)) } just Runs
 
-        useCase(proto, expectedVaultId)
+        useCase(proto, "vault-42")
 
-        val hasSignTon = proto.keysignPayload?.signTon != null
-        if (hasSignTon) {
-            coVerify(exactly = 1) { repository.saveSession(any()) }
-            assertEquals(expectedVaultId, captured.captured.vaultId)
-        } else {
-            coVerify(exactly = 0) { repository.saveSession(any()) }
-        }
+        coVerify(exactly = 0) { repository.saveSession(any()) }
     }
 }

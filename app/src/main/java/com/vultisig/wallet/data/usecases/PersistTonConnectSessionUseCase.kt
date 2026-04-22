@@ -2,10 +2,10 @@
 
 package com.vultisig.wallet.data.usecases
 
-import com.vultisig.wallet.data.models.TonConnectSession
+import com.vultisig.wallet.data.models.TonKeysignSession
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.repositories.TonConnectRepository
-import io.ktor.util.encodeBase64
+import java.util.Base64
 import javax.inject.Inject
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -13,7 +13,7 @@ import vultisig.keysign.v1.SignTon
 
 /**
  * Detects TonConnect-originated signing requests (KeysignPayload.sign_data == SignTon) inside a
- * decoded [KeysignMessageProto] and persists a [TonConnectSession] for the given vault.
+ * decoded [KeysignMessageProto] and persists a [TonKeysignSession] for the given vault.
  * Sub-issues #4147+ will flesh out dApp metadata and consumer logic.
  */
 internal interface PersistTonConnectSessionUseCase {
@@ -30,9 +30,11 @@ constructor(
     @OptIn(ExperimentalSerializationApi::class)
     override suspend fun invoke(message: KeysignMessageProto, vaultId: String) {
         val signTon = message.keysignPayload?.signTon ?: return
-        val rawPayload = protoBuf.encodeToByteArray(SignTon.serializer(), signTon).encodeBase64()
+        val signTonProtoBase64 =
+            Base64.getEncoder()
+                .encodeToString(protoBuf.encodeToByteArray(SignTon.serializer(), signTon))
         tonConnectRepository.saveSession(
-            TonConnectSession(vaultId = vaultId, clientId = "", rawPayload = rawPayload)
+            TonKeysignSession(vaultId = vaultId, signTonProtoBase64 = signTonProtoBase64)
         )
     }
 }

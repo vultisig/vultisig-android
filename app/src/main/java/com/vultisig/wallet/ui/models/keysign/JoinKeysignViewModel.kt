@@ -285,7 +285,8 @@ constructor(
 
                 val payloadProto = protoBuf.decodeFromByteArray<KeysignMessage>(rawJson)
                 Timber.d("Decoded KeysignMessageProto: $payloadProto")
-                persistTonConnectSession(payloadProto, vaultId)
+                runCatching { persistTonConnectSession(payloadProto, vaultId) }
+                    .onFailure { Timber.w(it, "Failed to persist TonConnect session") }
                 _sessionID = payloadProto.sessionId
                 _serviceName = payloadProto.serviceName
                 _useVultisigRelay = payloadProto.useVultisigRelay

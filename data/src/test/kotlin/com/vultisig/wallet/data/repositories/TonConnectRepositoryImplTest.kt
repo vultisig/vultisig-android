@@ -1,13 +1,14 @@
 package com.vultisig.wallet.data.repositories
 
 import androidx.datastore.preferences.core.Preferences
-import com.vultisig.wallet.data.models.TonConnectSession
+import com.vultisig.wallet.data.models.TonKeysignSession
 import com.vultisig.wallet.data.sources.AppDataStore
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import java.util.Base64
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -26,15 +27,21 @@ class TonConnectRepositoryImplTest {
                 {
                     stored.value = secondArg()
                 }
+            coEvery { it.editData(any()) } coAnswers
+                {
+                    stored.value = null
+                    mockk()
+                }
         }
 
-    private val repo = TonConnectRepositoryImpl(dataStore, Json)
+    private val repo = TonConnectRepositoryImpl(dataStore, Json { ignoreUnknownKeys = true })
 
+    // signTonProtoBase64 holds base64 of protobuf bytes, matching production shape.
     private val session =
-        TonConnectSession(
+        TonKeysignSession(
             vaultId = "vault-1",
-            clientId = "client-1",
-            rawPayload = "{\"clientId\":\"client-1\",\"hello\":\"world\"}",
+            signTonProtoBase64 =
+                Base64.getEncoder().encodeToString(byteArrayOf(0x0a, 0x02, 0x41, 0x42)),
         )
 
     @Test
@@ -46,7 +53,7 @@ class TonConnectRepositoryImplTest {
         coVerify { dataStore.set(capture(keySlot), capture(valueSlot)) }
         assertEquals(
             session,
-            Json.decodeFromString(TonConnectSession.serializer(), valueSlot.captured),
+            Json.decodeFromString(TonKeysignSession.serializer(), valueSlot.captured),
         )
 
         assertEquals(session, repo.session.first())
@@ -59,22 +66,17 @@ class TonConnectRepositoryImplTest {
     }
 
     @Test
-    fun `session emits null when stored string is empty sentinel`() = runTest {
-        stored.value = ""
-        assertNull(repo.session.first())
-    }
-
-    @Test
     fun `session emits null when stored string is unparseable`() = runTest {
         stored.value = "not-json{"
         assertNull(repo.session.first())
     }
 
     @Test
-    fun `clearSession writes empty sentinel`() = runTest {
+    fun `clearSession removes key from DataStore and session emits null`() = runTest {
         repo.saveSession(session)
         repo.clearSession()
 
+        coVerify { dataStore.editData(any()) }
         assertNull(repo.session.first())
     }
 }

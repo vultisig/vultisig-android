@@ -2,7 +2,7 @@
 
 package com.vultisig.wallet.data.usecases
 
-import com.vultisig.wallet.data.models.TonConnectSession
+import com.vultisig.wallet.data.models.TonKeysignSession
 import com.vultisig.wallet.data.repositories.TonConnectRepository
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -10,7 +10,9 @@ import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import java.util.Base64
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -59,16 +61,24 @@ internal class PersistTonConnectSessionUseCaseImplTest {
     }
 
     @Test
-    fun `persists session with vaultId when signTon is present`() = runTest {
-        val signTon =
-            SignTon(tonMessages = listOf(TonMessage(to = "UQabc", amount = "1", payload = null)))
-        val captured = slot<TonConnectSession>()
-        coEvery { repository.saveSession(capture(captured)) } just Runs
+    fun `persists session with vaultId and non-empty base64 payload when signTon is present`() =
+        runTest {
+            val signTon =
+                SignTon(
+                    tonMessages = listOf(TonMessage(to = "UQabc", amount = "1", payload = null))
+                )
+            val captured = slot<TonKeysignSession>()
+            coEvery { repository.saveSession(capture(captured)) } just Runs
 
-        useCase(message(signTon), vaultId = "v-1")
+            useCase(message(signTon), vaultId = "v-1")
 
-        coVerify(exactly = 1) { repository.saveSession(any()) }
-        assertEquals("v-1", captured.captured.vaultId)
-        assertEquals("", captured.captured.clientId)
-    }
+            coVerify(exactly = 1) { repository.saveSession(any()) }
+            assertEquals("v-1", captured.captured.vaultId)
+            val raw = captured.captured.signTonProtoBase64
+            assertTrue(raw.isNotEmpty(), "signTonProtoBase64 must not be empty")
+            // Round-trip: decode the base64 back to the original SignTon
+            val decoded =
+                protoBuf.decodeFromByteArray(SignTon.serializer(), Base64.getDecoder().decode(raw))
+            assertEquals(signTon, decoded)
+        }
 }
