@@ -126,10 +126,7 @@ constructor(
                 onError = { e ->
                     Timber.e(e, "Failed to load Tron DeFi data")
                     _state.value =
-                        TronDeFiUiState.Error(
-                            e.message?.asUiText()
-                                ?: R.string.error_view_default_description.asUiText()
-                        )
+                        TronDeFiUiState.Error(R.string.error_view_default_description.asUiText())
                 }
             ) {
                 _state.value = TronDeFiUiState.Loading
