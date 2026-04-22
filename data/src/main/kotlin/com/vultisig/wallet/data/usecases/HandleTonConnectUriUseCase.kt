@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.models.TonConnectSession
 import com.vultisig.wallet.data.repositories.TonConnectRepository
 import javax.inject.Inject
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 
 /**
@@ -19,7 +20,7 @@ constructor(private val tonConnectRepository: TonConnectRepository) : HandleTonC
     override suspend fun invoke(uri: String): String? {
         val helper = DeepLinkHelper(uri)
         if (!helper.isTonConnectUri()) {
-            Timber.w("Not a TonConnect URI: %s", uri)
+            Timber.w("Not a TonConnect URI: <redacted>")
             return null
         }
 
@@ -29,9 +30,26 @@ constructor(private val tonConnectRepository: TonConnectRepository) : HandleTonC
             return null
         }
 
+        // Validate clientId format (TonConnect v2 ephemeral public key: 64 hex chars)
+        if (!clientId.matches(Regex("^[0-9a-fA-F]{64}$"))) {
+            Timber.w("TonConnect session rejected: invalid client id format")
+            return null
+        }
+
         val requestPayload = helper.getTonConnectRequest()
         if (requestPayload.isNullOrBlank()) {
             Timber.w("TonConnect URI missing request payload")
+            return null
+        }
+
+        // Validate requestPayload is valid JSON
+        val isValidJson = runCatching {
+            Json.parseToJsonElement(requestPayload)
+            true
+        }.getOrElse { false }
+
+        if (!isValidJson) {
+            Timber.w("TonConnect session rejected: invalid request payload JSON")
             return null
         }
 
@@ -43,7 +61,7 @@ constructor(private val tonConnectRepository: TonConnectRepository) : HandleTonC
                 vaultId = null,
             )
         tonConnectRepository.saveSession(session)
-        Timber.d("TonConnect session persisted for client %s", clientId)
+        Timber.d("TonConnect session persisted")
         return clientId
     }
 }

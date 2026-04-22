@@ -81,7 +81,11 @@ class DeepLinkHelper(input: String) {
     /** The dApp's ephemeral public key (`id` parameter). */
     fun getTonConnectClientId(): String? = parameters["id"]
 
-    /** Base64url-encoded connect request payload (`r` parameter). */
+    /**
+     * URL-decoded JSON connect request payload from the `r` parameter (TonConnect v2 spec).
+     *
+     * Note: `Uri.decode()` does not treat `+` as space; callers must handle that if needed.
+     */
     fun getTonConnectRequest(): String? = parameters["r"]
 
     /** Optional return URL for native-app handoff (`ret` parameter). */
