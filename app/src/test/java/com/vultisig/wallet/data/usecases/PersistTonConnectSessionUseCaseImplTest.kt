@@ -61,10 +61,7 @@ internal class PersistTonConnectSessionUseCaseImplTest {
     @Test
     fun `persists session with vaultId when signTon is present`() = runTest {
         val signTon =
-            SignTon(
-                tonMessages =
-                    listOf(TonMessage(to = "UQabc", amount = "1", payload = null))
-            )
+            SignTon(tonMessages = listOf(TonMessage(to = "UQabc", amount = "1", payload = null)))
         val captured = slot<TonConnectSession>()
         coEvery { repository.saveSession(capture(captured)) } just Runs
 
