@@ -24,6 +24,7 @@ import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.SigningLibType
@@ -541,7 +542,7 @@ constructor(
                         .getOrNull()
                 val provider = resolvedProvider?.getSwapProviderId().orEmpty()
 
-                fun buildSwapUiModel(
+                suspend fun buildSwapUiModel(
                     providerFee: TokenValue,
                     providerFeeToken: Coin,
                 ): SwapTransactionUiModel {
