@@ -24,20 +24,16 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -96,7 +92,7 @@ internal class CircleDeFiPositionsViewModelTest {
         coEvery { circleApi.createScAccount(OWNER_ADDRESS) } throws
             NetworkException(500, "Entity needs to setup paymaster policy")
 
-        val type = awaitSnackbarAfter { vm.onCreateAccount() }
+        val type = snackbarTypeShownBy { vm.onCreateAccount() }
 
         assertEquals(SnackbarType.Error, type)
         coVerify(exactly = 0) { scaCircleAccountRepository.saveAccount(any(), any()) }
@@ -111,13 +107,10 @@ internal class CircleDeFiPositionsViewModelTest {
             coEvery { scaCircleAccountRepository.saveAccount(VAULT_ID, MSCA_ADDRESS) } just Runs
             coEvery { circleApi.createScAccount(OWNER_ADDRESS) } returns MSCA_ADDRESS
 
-            val type = awaitSnackbarAfter { vm.onCreateAccount() }
+            val type = snackbarTypeShownBy { vm.onCreateAccount() }
 
             assertEquals(SnackbarType.Success, type)
             coVerify(exactly = 1) { scaCircleAccountRepository.saveAccount(VAULT_ID, MSCA_ADDRESS) }
-            // onCreateAccount updates state after showing the snackbar on a non-test
-            // dispatcher, so wait for it to propagate instead of racing the ViewModel.
-            awaitAccountOpen(vm)
             assertTrue(vm.state.value.circleDefi.isAccountOpen)
         }
 
@@ -130,7 +123,7 @@ internal class CircleDeFiPositionsViewModelTest {
         // `onCreateAccount` and surfaced as a user-visible error, never reach the API.
         coEvery { vaultRepository.get(VAULT_ID) } returns null
 
-        val type = awaitSnackbarAfter { vm.onCreateAccount() }
+        val type = snackbarTypeShownBy { vm.onCreateAccount() }
 
         assertEquals(SnackbarType.Error, type)
         coVerify(exactly = 0) { circleApi.createScAccount(any()) }
@@ -148,30 +141,16 @@ internal class CircleDeFiPositionsViewModelTest {
     }
 
     /**
-     * Captures the first `snackbarFlow.showMessage(...)` call that follows [action]. Because the
-     * production code hops to `Dispatchers.IO` for the network call, the assertions would otherwise
-     * race the real IO thread. Awaiting the snackbar invocation — which every path of
-     * `onCreateAccount` reaches before updating state — synchronises the test deterministically.
+     * Captures the `SnackbarType` argument passed to `snackbarFlow.showMessage(...)` by [action].
+     * Because the ViewModel runs on the test dispatcher (Main and IO are both the shared
+     * `testDispatcher`), by the time `action()` returns every launched coroutine has run to
+     * completion — no real-time wait or virtual-clock advance is needed.
      */
-    private suspend fun awaitSnackbarAfter(action: () -> Unit): SnackbarType {
-        val captured = CompletableDeferred<SnackbarType>()
-        coEvery { snackbarFlow.showMessage(any(), any()) } coAnswers
-            {
-                captured.complete(secondArg())
-            }
+    private fun snackbarTypeShownBy(action: () -> Unit): SnackbarType {
+        val captured = slot<SnackbarType>()
+        coEvery { snackbarFlow.showMessage(any(), capture(captured)) } just Runs
         action()
-        // onCreateAccount hops to the real Dispatchers.IO for the network call. The test
-        // scheduler's virtual clock doesn't advance for real-thread work, so the timeout
-        // must use a real dispatcher.
-        return withContext(Dispatchers.Default.limitedParallelism(1)) {
-            withTimeout(5.seconds) { captured.await() }
-        }
-    }
-
-    private suspend fun awaitAccountOpen(vm: CircleDeFiPositionsViewModel) {
-        withContext(Dispatchers.Default.limitedParallelism(1)) {
-            withTimeout(5.seconds) { vm.state.first { it.circleDefi.isAccountOpen } }
-        }
+        return captured.captured
     }
 
     private fun createViewModel(): CircleDeFiPositionsViewModel =
@@ -188,6 +167,7 @@ internal class CircleDeFiPositionsViewModelTest {
             appCurrencyRepository = appCurrencyRepository,
             balanceVisibilityRepository = balanceVisibilityRepository,
             context = context,
+            ioDispatcher = testDispatcher,
         )
 
     private companion object {
