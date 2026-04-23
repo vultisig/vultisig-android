@@ -68,7 +68,8 @@ constructor(
 
         val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
 
-        var gasFee = TokenValue(value = fee.amount, token = nativeCoin)
+        val gasFee = TokenValue(value = fee.amount, token = nativeCoin)
+        var estimatedTotalFee = gasFee
 
         if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
             val specific =
@@ -93,14 +94,14 @@ constructor(
                     ),
                     memo = null,
                 )
-            gasFee = gasFee.copy(value = (plan ?: return null).fee.toBigInteger())
+            estimatedTotalFee = gasFee.copy(value = (plan ?: return null).fee.toBigInteger())
         }
 
         val estimated =
             gasFeeToEstimatedFee(
                 GasFeeParams(
                     gasLimit = BigInteger.valueOf(1),
-                    gasFee = gasFee,
+                    gasFee = estimatedTotalFee,
                     selectedToken = selectedToken,
                     perUnit = true,
                 )
