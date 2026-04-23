@@ -24,7 +24,6 @@ import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.blockchain.tron.TronFrozenBalanceState
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
-import com.vultisig.wallet.data.blockchain.tron.stripTronStakingMemoForFeeEstimation
 import com.vultisig.wallet.data.blockchain.tron.tronStakingMemo
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
@@ -1040,7 +1039,7 @@ constructor(
                         ),
                     amount = tokenAmountInt,
                     to = addressFieldState.text.asAddressInput(),
-                    memo = memoFieldState.text.toString().stripTronStakingMemoForFeeEstimation(),
+                    memo = memoFieldState.text.toString(),
                     isMax = isMax,
                 )
 
@@ -2668,7 +2667,7 @@ constructor(
                                         ),
                                     amount = tokenAmountInt,
                                     to = resolvedDstAddress.value ?: dst,
-                                    memo = memo.stripTronStakingMemoForFeeEstimation(),
+                                    memo = memo,
                                     isMax = false,
                                 )
 
