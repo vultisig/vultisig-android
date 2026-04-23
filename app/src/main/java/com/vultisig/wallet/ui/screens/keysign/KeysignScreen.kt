@@ -109,5 +109,6 @@ private fun Keysign(
         onBack = viewModel::navigateToHome,
         onAddToAddressBook = keysignViewModel::navigateToAddressBook,
         showSaveToAddressBook = keysignViewModel.showSaveToAddressBook.collectAsState().value,
+        hasBackClick = true,
     )
 }
