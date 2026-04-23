@@ -45,6 +45,7 @@ internal fun KeysignView(
     progressLink: String?,
     transactionTypeUiModel: TransactionTypeUiModel?,
     showToolbar: Boolean = false,
+    hasBackClick: Boolean,
     showSaveToAddressBook: Boolean,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -101,7 +102,7 @@ internal fun KeysignView(
                 KeysignErrorScreen(
                     errorMessage = state.errorMessage,
                     tryAgain = onBack,
-                    onBack = onBack,
+                    onBack = onBack.takeIf { hasBackClick },
                 )
             }
 
@@ -165,5 +166,6 @@ private fun KeysignPreview() {
         onComplete = {},
         onAddToAddressBook = {},
         showSaveToAddressBook = true,
+        hasBackClick = true,
     )
 }
