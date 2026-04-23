@@ -342,13 +342,14 @@ constructor(
 
         data class Loaded(val value: BigDecimal) : TronFrozenBalanceState()
 
-        data class Error(val message: String) : TronFrozenBalanceState()
+        data object Error : TronFrozenBalanceState()
     }
 
     private val tronFrozenBandwidthTrx =
         MutableStateFlow<TronFrozenBalanceState>(TronFrozenBalanceState.Loading)
     private val tronFrozenEnergyTrx =
         MutableStateFlow<TronFrozenBalanceState>(TronFrozenBalanceState.Loading)
+    private var loadTronFrozenBalancesJob: Job? = null
 
     private fun isTronStakingType(): Boolean =
         defiType == DeFiNavActions.FREEZE_TRX || defiType == DeFiNavActions.UNFREEZE_TRX
@@ -521,12 +522,20 @@ constructor(
     }
 
     fun setTronResourceType(type: TronResourceType) {
+        // Ignore toggles while a send is in flight so the captured memo/resource type
+        // used by send() can't diverge from the one visible in the tab.
+        if (uiState.value.isLoading) return
         if (uiState.value.tronResourceType == type) return
-        uiState.update { it.copy(tronResourceType = type, tronBalanceAvailableOverride = null) }
+        uiState.update {
+            it.copy(
+                tronResourceType = type,
+                tronBalanceAvailableOverride = null,
+                selectedAmountFraction = null,
+            )
+        }
         applyTronStakingMemo(type)
         tokenAmountFieldState.clearText()
         fiatAmountFieldState.clearText()
-        uiState.update { it.copy(selectedAmountFraction = null) }
         if (defiType == DeFiNavActions.UNFREEZE_TRX) {
             updateTronFrozenBalanceDisplay(type)
         }
@@ -537,38 +546,42 @@ constructor(
             when (defiType) {
                 DeFiNavActions.FREEZE_TRX -> TronStakingOperation.FREEZE
                 DeFiNavActions.UNFREEZE_TRX -> TronStakingOperation.UNFREEZE
-                else -> return
+                else -> error("applyTronStakingMemo called outside Tron staking")
             }
         memoFieldState.setTextAndPlaceCursorAtEnd(tronStakingMemo(op, type))
     }
 
     private fun loadTronFrozenBalances() {
-        viewModelScope.safeLaunch(
-            onError = { e ->
-                Timber.e(e, "Failed to load Tron frozen balances")
-                tronFrozenBandwidthTrx.value =
-                    TronFrozenBalanceState.Error(e.message ?: "Unknown error")
-                tronFrozenEnergyTrx.value =
-                    TronFrozenBalanceState.Error(e.message ?: "Unknown error")
+        loadTronFrozenBalancesJob?.cancel()
+        loadTronFrozenBalancesJob =
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Failed to load Tron frozen balances")
+                    tronFrozenBandwidthTrx.value = TronFrozenBalanceState.Error
+                    tronFrozenEnergyTrx.value = TronFrozenBalanceState.Error
+                }
+            ) {
+                uiState.update { it.copy(isTronFrozenBalancesLoading = true) }
+                try {
+                    val vault = vault ?: vaultRepository.get(vaultId ?: return@safeLaunch)
+                    val trxCoin =
+                        vault?.coins?.firstOrNull { it.chain == Chain.Tron && it.isNativeToken }
+                    if (trxCoin == null) {
+                        tronFrozenBandwidthTrx.value = TronFrozenBalanceState.Error
+                        tronFrozenEnergyTrx.value = TronFrozenBalanceState.Error
+                        return@safeLaunch
+                    }
+                    val balances = getTronFrozenBalances(trxCoin.address)
+                    tronFrozenBandwidthTrx.value =
+                        TronFrozenBalanceState.Loaded(balances.bandwidthTrx)
+                    tronFrozenEnergyTrx.value = TronFrozenBalanceState.Loaded(balances.energyTrx)
+                    updateTronFrozenBalanceDisplay(
+                        uiState.value.tronResourceType ?: TronResourceType.BANDWIDTH
+                    )
+                } finally {
+                    uiState.update { it.copy(isTronFrozenBalancesLoading = false) }
+                }
             }
-        ) {
-            uiState.update { it.copy(isTronFrozenBalancesLoading = true) }
-            try {
-                val vault =
-                    vault ?: vaultRepository.get(vaultId ?: return@safeLaunch) ?: return@safeLaunch
-                val trxCoin =
-                    vault.coins.firstOrNull { it.chain == Chain.Tron && it.isNativeToken }
-                        ?: return@safeLaunch
-                val balances = getTronFrozenBalances(trxCoin.address)
-                tronFrozenBandwidthTrx.value = TronFrozenBalanceState.Loaded(balances.bandwidthTrx)
-                tronFrozenEnergyTrx.value = TronFrozenBalanceState.Loaded(balances.energyTrx)
-                updateTronFrozenBalanceDisplay(
-                    uiState.value.tronResourceType ?: TronResourceType.BANDWIDTH
-                )
-            } finally {
-                uiState.update { it.copy(isTronFrozenBalancesLoading = false) }
-            }
-        }
     }
 
     private fun updateTronFrozenBalanceDisplay(type: TronResourceType) {
@@ -1453,12 +1466,32 @@ constructor(
                         }
 
                     if (tokenAmountInt > availableTokenBalance) {
+                        val errorRes =
+                            if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                                R.string.send_error_insufficient_frozen_balance
+                            } else {
+                                R.string.send_error_insufficient_native_balance_with_fees
+                            }
                         throw InvalidTransactionDataException(
-                            UiText.FormattedText(
-                                R.string.send_error_insufficient_native_balance_with_fees,
-                                listOf(selectedToken.ticker),
-                            )
+                            UiText.FormattedText(errorRes, listOf(selectedToken.ticker))
                         )
+                    }
+
+                    // On UNFREEZE the amount comes from frozen stake, but the broadcast itself
+                    // still burns gas from the liquid balance (or free bandwidth quota). Surface
+                    // insufficient liquid balance before we attempt to sign.
+                    if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                        val liquidForGas =
+                            getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)?.value
+                                ?: BigInteger.ZERO
+                        if (liquidForGas < gasFee.value) {
+                            throw InvalidTransactionDataException(
+                                UiText.FormattedText(
+                                    R.string.send_error_insufficient_native_balance_with_fees,
+                                    listOf(selectedToken.ticker),
+                                )
+                            )
+                        }
                     }
 
                     if (chain == Chain.Cardano) {
@@ -2645,6 +2678,10 @@ constructor(
                                     ?: return@mapNotNull null
 
                             val chain = token.chain
+                            // Tron freeze/unfreeze memos are UI markers, not attached to the
+                            // broadcast tx. Exclude them from fee estimation to avoid a phantom
+                            // memo fee charge.
+                            val feeMemo = memo.takeUnless { TRON_STAKING_MEMO_REGEX.matches(it) }
                             val blockchainTransaction =
                                 Transfer(
                                     coin = token,
@@ -2655,7 +2692,7 @@ constructor(
                                         ),
                                     amount = tokenAmountInt,
                                     to = resolvedDstAddress.value ?: dst,
-                                    memo = memo,
+                                    memo = feeMemo,
                                     isMax = false,
                                 )
 
