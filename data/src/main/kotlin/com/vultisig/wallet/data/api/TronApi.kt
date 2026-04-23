@@ -27,6 +27,7 @@ import io.ktor.http.contentType
 import io.ktor.http.path
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import timber.log.Timber
@@ -63,16 +64,26 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
     private val tronGrid = "https://api.vultisig.com/tron"
 
     override suspend fun broadcastTransaction(tx: String): String {
-        val httpResponse =
-            httpClient.post(tronGrid) {
-                url { path("tron", "wallet", "broadcasttransaction") }
-                contentType(ContentType.Application.Json)
-                setBody(tx)
+        repeat(MAX_BROADCAST_RETRIES) { attempt ->
+            val httpResponse =
+                httpClient.post(tronGrid) {
+                    url { path("tron", "wallet", "broadcasttransaction") }
+                    contentType(ContentType.Application.Json)
+                    setBody(tx)
+                }
+            val response = httpResponse.body<TronBroadcastTxResponseJson>()
+            if (response.code == NOT_ENOUGH_EFFECTIVE_CONNECTION_ERROR_CODE) {
+                Timber.d("Tron broadcast NOT_ENOUGH_EFFECTIVE_CONNECTION, attempt %d", attempt + 1)
+                if (attempt < MAX_BROADCAST_RETRIES - 1) {
+                    delay(1000L shl attempt)
+                }
+                return@repeat
             }
-        val tronBroadcastTxResponseJson = httpResponse.body<TronBroadcastTxResponseJson>()
-        return tronBroadcastTxResponseJson.txId.takeIf {
-            tronBroadcastTxResponseJson.code in listOf(null, DUP_TRANSACTION_ERROR_CODE)
-        } ?: throw Exception("Error broadcasting transaction: ${tronBroadcastTxResponseJson.code}")
+            return response.txId.takeIf {
+                response.code in listOf(null, DUP_TRANSACTION_ERROR_CODE)
+            } ?: throw Exception("Error broadcasting transaction: ${response.code}")
+        }
+        throw Exception("Tron network is unstable. Please try again shortly.")
     }
 
     override suspend fun getSpecific() =
@@ -179,5 +190,8 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
     companion object {
         const val TRANSFER_FUNCTION_SELECTOR = "transfer(address,uint256)"
         private const val DUP_TRANSACTION_ERROR_CODE = "DUP_TRANSACTION_ERROR"
+        private const val NOT_ENOUGH_EFFECTIVE_CONNECTION_ERROR_CODE =
+            "NOT_ENOUGH_EFFECTIVE_CONNECTION"
+        private const val MAX_BROADCAST_RETRIES = 3
     }
 }
