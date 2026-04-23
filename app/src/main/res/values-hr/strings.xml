@@ -182,6 +182,7 @@
     <string name="send_error_insufficient_balance">Nedostatna sredstva</string>
     <string name="send_error_msca_not_deployed">MSCA račun još nije raspoređen, molimo pokušajte ponovo</string>
     <string name="send_error_insufficient_native_balance_with_fees">Nedovoljno %1$s salda</string>
+    <string name="send_error_insufficient_frozen_balance">Iznos premašuje zamrznuti %1$s saldo</string>
     <string name="verify_swap_agree_receive_amount">Slažem se s minimalnim iznosom koji ću dobiti</string>
     <string name="vault_settings_success_backup_file">datoteka spremljena u Downloads/%1$s</string>
     <string name="swap_form_estimated_fees_title">Naknada za zamjenu</string>
@@ -472,6 +473,12 @@
     <string name="tron_defi_countdown_days">%1$d dana, %2$d h</string>
     <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">TRX token nije pronađen u vaultu</string>
+    <string name="tron_freeze_screen_title">Zamrzni TRON</string>
+    <string name="tron_unfreeze_screen_title">Odmrzni TRON</string>
+    <string name="tron_frozen_balances_error">Nije moguće učitati zamrznuta stanja. Povuci za ponovni pokušaj.</string>
+    <string name="tron_resource_type">Vrsta resursa</string>
+    <string name="tron_resource_bandwidth">Propusnost</string>
+    <string name="tron_resource_energy">Energija</string>
     <string name="deposit_form_operator_slippage_title">Proklizavanje</string>
     <string name="slippage_required_error">Proklizavanje je obavezno</string>
     <string name="slippage_invalid_error">Proklizavanje mora biti između 1 i 100</string>

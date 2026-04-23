@@ -231,9 +231,11 @@ internal fun FoldableAmountWidget(
                 )
 
                 val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
+                val balanceText =
+                    state.tronBalanceAvailableOverride ?: state.selectedCoin?.balance ?: "0"
 
                 Text(
-                    text = (state.selectedCoin?.balance ?: "0") + ticker,
+                    text = balanceText + ticker,
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.secondary,
                     textAlign = TextAlign.End,
