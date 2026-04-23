@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
+import com.vultisig.wallet.data.blockchain.tron.stripTronStakingMemoForFeeEstimation
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
@@ -898,7 +899,7 @@ constructor(
                                 ),
                             amount = tokenValue.value,
                             to = payload.toAddress,
-                            memo = payload.memo,
+                            memo = payload.memo.stripTronStakingMemoForFeeEstimation(),
                             isMax = false,
                         )
 
