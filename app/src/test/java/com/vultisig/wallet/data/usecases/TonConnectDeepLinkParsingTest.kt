@@ -12,8 +12,8 @@ import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.slot
+import java.util.Base64
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -63,6 +63,11 @@ internal class TonConnectDeepLinkParsingTest {
 
         coVerify(exactly = 1) { repository.saveSession(any()) }
         assertEquals("vault-42", captured.captured.vaultId)
-        assertTrue(captured.captured.signTonProtoBase64.isNotEmpty())
+        val decoded =
+            protoBuf.decodeFromByteArray(
+                SignTon.serializer(),
+                Base64.getDecoder().decode(captured.captured.signTonProtoBase64),
+            )
+        assertEquals(signTon, decoded)
     }
 }
