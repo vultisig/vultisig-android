@@ -95,6 +95,17 @@ internal sealed class KeysignState {
     data class KeysignFinished(val transactionStatus: TransactionStatus) : KeysignState()
 
     data class Error(val errorMessage: UiText) : KeysignState()
+
+    val isInProgress: Boolean
+        get() =
+            when (this) {
+                CreatingInstance,
+                KeysignECDSA,
+                KeysignEdDSA,
+                KeysignMLDSA -> true
+                is KeysignFinished,
+                is Error -> false
+            }
 }
 
 internal val KeysignState.progress: Float
