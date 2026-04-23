@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.oneInchChainId
+import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.data.utils.thorswapMultiplier
 import java.math.BigDecimal
@@ -257,6 +258,9 @@ constructor(
         referralCode: String,
         bpsDiscount: Int,
     ): SwapQuote {
+        if (srcToken.swapAssetComparisonName() == dstToken.swapAssetComparisonName()) {
+            throw SwapException.SameAssets("Source and Target cannot be the same")
+        }
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
         val thorQuote =
@@ -424,25 +428,6 @@ constructor(
     private fun String.convertToTokenValue(token: Coin): TokenValue =
         BigDecimal(this).divide(token.thorswapMultiplier).let {
             TokenValue(value = (it.movePointRight(token.decimal)).toBigInteger(), token = token)
-        }
-
-    private fun Coin.swapAssetName(): String =
-        if (isNativeToken) {
-            if (chain == Chain.GaiaChain) {
-                "${chain.swapAssetName()}.ATOM"
-            } else {
-                "${chain.swapAssetName()}.${ticker}"
-            }
-        } else {
-            if (
-                chain == Chain.Kujira &&
-                    (contractAddress.contains("factory/") || contractAddress.contains("ibc/"))
-            ) {
-                "${chain.swapAssetName()}.${ticker}"
-            } else if (chain == Chain.ThorChain)
-                if (contractAddress.contains(Regex("""\w+-\w+"""))) contractAddress
-                else "${chain.swapAssetName()}.${ticker}"
-            else "${chain.swapAssetName()}.${ticker}-${contractAddress}"
         }
 
     override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
