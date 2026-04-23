@@ -522,7 +522,7 @@ constructor(
 
     fun setTronResourceType(type: TronResourceType) {
         if (uiState.value.tronResourceType == type) return
-        uiState.update { it.copy(tronResourceType = type) }
+        uiState.update { it.copy(tronResourceType = type, tronBalanceAvailableOverride = null) }
         applyTronStakingMemo(type)
         tokenAmountFieldState.clearText()
         fiatAmountFieldState.clearText()
@@ -2797,6 +2797,10 @@ constructor(
     @OptIn(FlowPreview::class)
     private fun calculateSpecific() {
         viewModelScope.launch {
+            // dstAddress is forwarded to getSpecific() for every chain so that
+            // TRON fee estimation can account for bandwidth delegated to the receiver.
+            // Recomputing specifics on every keystroke would be wasteful, so the
+            // address is debounced before triggering the recalculation.
             val dstAddressFlow =
                 addressFieldState
                     .textAsFlow()

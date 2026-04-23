@@ -10,13 +10,7 @@ import kotlinx.coroutines.withContext
 private const val SUN_PER_TRX = 1_000_000L
 private const val TRX_SCALE = 6
 
-data class TronFrozenBalances(val bandwidthTrx: BigDecimal, val energyTrx: BigDecimal) {
-    fun forResource(type: TronResourceType): BigDecimal =
-        when (type) {
-            TronResourceType.BANDWIDTH -> bandwidthTrx
-            TronResourceType.ENERGY -> energyTrx
-        }
-}
+data class TronFrozenBalances(val bandwidthTrx: BigDecimal, val energyTrx: BigDecimal)
 
 class GetTronFrozenBalancesUseCase @Inject constructor(private val tronApi: TronApi) {
 

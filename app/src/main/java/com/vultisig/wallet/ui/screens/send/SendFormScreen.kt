@@ -491,11 +491,7 @@ private fun SendFormContent(
             state.defiType == DeFiNavActions.UNFREEZE_TRX
     ) {
         val resourceType = state.tronResourceType
-        if (
-            resourceType != null &&
-                (state.defiType == DeFiNavActions.FREEZE_TRX ||
-                    state.defiType == DeFiNavActions.UNFREEZE_TRX)
-        ) {
+        if (resourceType != null) {
             TronResourceTypeTab(
                 selected = resourceType,
                 onSelectionChange = onTronResourceTypeChange,
