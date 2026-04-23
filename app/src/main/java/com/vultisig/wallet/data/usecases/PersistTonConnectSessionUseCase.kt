@@ -26,7 +26,6 @@ constructor(
     private val protoBuf: ProtoBuf,
 ) : PersistTonConnectSessionUseCase {
 
-    @OptIn(ExperimentalSerializationApi::class)
     override suspend fun invoke(message: KeysignMessageProto, vaultId: String) {
         val signTon = message.keysignPayload?.signTon ?: return
         val signTonProtoBase64 =

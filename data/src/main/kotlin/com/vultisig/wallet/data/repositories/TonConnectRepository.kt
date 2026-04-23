@@ -5,12 +5,17 @@ import com.vultisig.wallet.data.models.TonKeysignSession
 import com.vultisig.wallet.data.sources.AppDataStore
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import timber.log.Timber
 
 /**
  * Persists the active TonConnect session across app restarts via DataStore.
+ *
+ * The `TonConnect` prefix is forward-looking: today the payload is just a keysign snapshot
+ * ([TonKeysignSession]); in #4147 this type will absorb dApp metadata and the name will describe
+ * the stored shape.
  *
  * TODO(#4147): nothing in production reads [session] yet; wiring a real consumer is tracked there.
  */
@@ -34,15 +39,27 @@ constructor(private val dataStore: AppDataStore, private val json: Json) : TonCo
     //              once a real consumer subscribes from multiple call sites.
     /** Reads and deserializes the session from DataStore; emits null when absent or unparseable. */
     override val session: Flow<TonKeysignSession?> =
-        dataStore.readData(KEY_SESSION).map { raw ->
-            raw?.let {
-                runCatching { json.decodeFromString<TonKeysignSession>(it) }
-                    .onFailure {
-                        Timber.w("Failed to decode TonKeysignSession; dropping persisted value")
-                    }
-                    .getOrNull()
+        dataStore
+            .readData(KEY_SESSION)
+            .map { raw ->
+                raw?.let {
+                    runCatching { json.decodeFromString<TonKeysignSession>(it) }
+                        .onFailure {
+                            Timber.w(
+                                "Failed to decode TonKeysignSession (%s); dropping persisted value",
+                                it::class.simpleName,
+                            )
+                        }
+                        .getOrNull()
+                }
             }
-        }
+            .catch {
+                Timber.w(
+                    "Failed to read TonKeysignSession (%s); emitting null",
+                    it::class.simpleName,
+                )
+                emit(null)
+            }
 
     /** Serializes [session] to JSON and writes it to DataStore. */
     override suspend fun saveSession(session: TonKeysignSession) {

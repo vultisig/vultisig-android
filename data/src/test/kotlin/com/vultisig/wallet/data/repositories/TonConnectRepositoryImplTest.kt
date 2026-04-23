@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories
 import androidx.datastore.preferences.core.Preferences
 import com.vultisig.wallet.data.models.TonKeysignSession
 import com.vultisig.wallet.data.sources.AppDataStore
+import com.vultisig.wallet.data.testutils.productionLikeJson
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -11,8 +12,8 @@ import io.mockk.slot
 import java.util.Base64
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -34,7 +35,7 @@ class TonConnectRepositoryImplTest {
                 }
         }
 
-    private val repo = TonConnectRepositoryImpl(dataStore, Json { ignoreUnknownKeys = true })
+    private val repo = TonConnectRepositoryImpl(dataStore, productionLikeJson())
 
     // signTonProtoBase64 holds base64 of protobuf bytes, matching production shape.
     private val session =
@@ -53,7 +54,8 @@ class TonConnectRepositoryImplTest {
         coVerify { dataStore.set(capture(keySlot), capture(valueSlot)) }
         assertEquals(
             session,
-            Json.decodeFromString(TonKeysignSession.serializer(), valueSlot.captured),
+            productionLikeJson()
+                .decodeFromString(TonKeysignSession.serializer(), valueSlot.captured),
         )
 
         assertEquals(session, repo.session.first())
@@ -69,6 +71,17 @@ class TonConnectRepositoryImplTest {
     fun `session emits null when stored string is unparseable`() = runTest {
         stored.value = "not-json{"
         assertNull(repo.session.first())
+    }
+
+    @Test
+    fun `session emits null when DataStore read throws`() = runTest {
+        val throwingDataStore: AppDataStore =
+            mockk<AppDataStore>().also {
+                every { it.readData(any<Preferences.Key<String>>()) } returns
+                    flow { throw RuntimeException("disk error") }
+            }
+        val throwingRepo = TonConnectRepositoryImpl(throwingDataStore, productionLikeJson())
+        assertNull(throwingRepo.session.first())
     }
 
     @Test
