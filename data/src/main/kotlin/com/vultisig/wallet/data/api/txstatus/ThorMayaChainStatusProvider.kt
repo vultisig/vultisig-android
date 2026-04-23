@@ -15,7 +15,7 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
     private val apiUrls =
         mapOf(
             Chain.ThorChain to "https://thornode.thorchain.network/thorchain/tx/status",
-            Chain.MayaChain to "https://mayanode.mayachain.info/mayachain/tx/status",
+            Chain.MayaChain to "https://stagenet.mayanode.mayachain.info/mayachain/tx/status",
         )
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {

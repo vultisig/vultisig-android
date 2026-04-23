@@ -57,8 +57,8 @@ class ThorChainHelper(
                 vaultHexPublicKey = vaultHexPublicKey,
                 vaultHexChainCode = vaultHexChainCode,
                 ticker = "CACAO",
-                hrp = "maya",
-                networkId = "mayachain-mainnet-v1",
+                hrp = "smaya",
+                networkId = "mayachain-stagenet-v2",
                 gasUnit = MAYA_CHAIN_GAS_UNIT,
             )
 

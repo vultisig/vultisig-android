@@ -157,7 +157,7 @@ constructor(
     override suspend fun getBalance(address: String): List<CosmosBalance> {
         val response =
             httpClient.get(
-                "https://mayanode.mayachain.info/cosmos/bank/v1beta1/balances/$address"
+                "https://stagenet.mayanode.mayachain.info/cosmos/bank/v1beta1/balances/$address"
             ) {
                 header(xClientID, xClientIDValue)
             }
@@ -169,7 +169,7 @@ constructor(
         return try {
             val request =
                 httpClient
-                    .get("https://midgard.mayachain.info") {
+                    .get("https://stagenet.midgard.mayachain.info") {
                         url { path("v2", "cacaopool", address) }
                     }
                     .body<List<MayaChainDepositCacaoResponse>>()
@@ -194,14 +194,16 @@ constructor(
                 maxOf(THORChainSwaps.AFFILIATE_FEE_RATE.toInt() - bpsDiscount, 0).toString()
 
             val response =
-                httpClient.get("https://mayanode.mayachain.info/mayachain/quote/swap") {
+                httpClient.get("https://stagenet.mayanode.mayachain.info/mayachain/quote/swap") {
                     parameter("from_asset", fromAsset)
                     parameter("to_asset", toAsset)
                     parameter("amount", amount)
                     parameter("destination", address)
                     parameter("streaming_interval", MAYA_STREAMING_INTERVAL)
-                    parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
-                    parameter("affiliate_bps", if (isAffiliate) affiliateFeeRate else "0")
+                    //                    parameter("affiliate",
+                    // THORChainSwaps.AFFILIATE_FEE_ADDRESS)
+                    //                    parameter("affiliate_bps", if (isAffiliate)
+                    // affiliateFeeRate else "0")
                     header(xClientID, xClientIDValue)
                 }
             if (!response.status.isSuccess()) {
@@ -225,7 +227,7 @@ constructor(
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response =
-            httpClient.get("https://mayanode.mayachain.info/auth/accounts/$address") {
+            httpClient.get("https://stagenet.mayanode.mayachain.info/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
         val responseBody = response.body<THORChainAccountResultJson>()
@@ -236,7 +238,7 @@ constructor(
     override suspend fun broadcastTransaction(tx: String): String? {
         try {
             val response =
-                httpClient.post("https://mayanode.mayachain.info/cosmos/tx/v1beta1/txs") {
+                httpClient.post("https://stagenet.mayanode.mayachain.info/cosmos/tx/v1beta1/txs") {
                     contentType(ContentType.Application.Json)
                     header(xClientID, xClientIDValue)
                     setBody(tx)
@@ -255,7 +257,7 @@ constructor(
 
     override suspend fun getLatestBlock(): MayaLatestBlockInfoResponse {
         try {
-            val response = httpClient.get("https://mayanode.mayachain.info/blocks/latest")
+            val response = httpClient.get("https://stagenet.mayanode.mayachain.info/blocks/latest")
             val responseBody = response.body<MayaLatestBlockInfoResponse>()
             Timber.d("getLatestBlock: $responseBody")
             return responseBody
@@ -268,7 +270,9 @@ constructor(
     override suspend fun getCacaoProvider(address: String): CacaoProviderResponse {
         try {
             val response =
-                httpClient.get("https://mayanode.mayachain.info/mayachain/cacao_provider/$address")
+                httpClient.get(
+                    "https://stagenet.mayanode.mayachain.info/mayachain/cacao_provider/$address"
+                )
 
             val body = response.body<CacaoProviderResponse>()
             Timber.d("getCacaoProvider: $body")
@@ -281,7 +285,8 @@ constructor(
 
     override suspend fun getMayaConstants(): Map<String, Long> {
         try {
-            val response = httpClient.get("https://mayanode.mayachain.info/mayachain/mimir")
+            val response =
+                httpClient.get("https://stagenet.mayanode.mayachain.info/mayachain/mimir")
             val body = response.body<Map<String, Long>>()
             Timber.d("getMayaConstants: $body")
             return body
@@ -338,8 +343,8 @@ constructor(
             .bodyOrThrow<MayaNodePool>()
 
     companion object {
-        private const val MAYA_NODE_BASE = "https://mayanode.mayachain.info"
-        private const val MAYA_MIDGARD_BASE = "https://midgard.mayachain.info/v2"
+        private const val MAYA_NODE_BASE = "https://stagenet.mayanode.mayachain.info"
+        private const val MAYA_MIDGARD_BASE = "https://stagenet.midgard.mayachain.info/v2"
         private const val LP_POOL_STATUS_KEY = "status"
         private const val LP_POOL_STATUS = "available"
         private const val LP_POOL_PERIOD_KEY = "period"

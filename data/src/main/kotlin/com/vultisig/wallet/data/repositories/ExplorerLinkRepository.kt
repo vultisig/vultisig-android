@@ -35,7 +35,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         when (payload) {
             is SwapPayload.ThorChain -> "https://runescan.io/tx/${tx.removePrefix("0x")}"
             is SwapPayload.MayaChain ->
-                "https://www.explorer.mayachain.info/tx/${tx.removePrefix("0x")}"
+                "https://stagenet.explorer.mayachain.info/tx/${tx.removePrefix("0x")}"
             is SwapPayload.EVM -> {
                 if (payload.data.quote.tx.swapFee.toBigIntegerOrNull() != null) {
                     if (
@@ -98,7 +98,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Dydx -> "https://www.mintscan.io/dydx/"
                 Chain.Kujira -> "https://finder.kujira.network/kaiyo-1/"
                 Chain.Litecoin -> "https://blockchair.com/litecoin/"
-                Chain.MayaChain -> "https://www.explorer.mayachain.info/"
+                Chain.MayaChain -> "https://stagenet.explorer.mayachain.info/"
                 Chain.Optimism -> "https://optimistic.etherscan.io/"
                 Chain.Polygon -> "https://polygonscan.com/"
                 Chain.Solana -> "https://orb.helius.dev/"
