@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +39,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.StyledText
 import com.vultisig.wallet.ui.components.StyledTextPart
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VsCircularLoading
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
@@ -151,17 +153,26 @@ private fun ReferralScreen(
             UiSpacer(16.dp)
 
             VsButton(
-                label =
-                    if (state.isSaveEnabled) {
-                        stringResource(R.string.referral_save_referral_code)
-                    } else {
-                        stringResource(R.string.referral_edit_referred)
-                    },
                 modifier = Modifier.fillMaxWidth(),
                 variant = VsButtonVariant.Secondary,
-                state = VsButtonState.Enabled,
+                state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
                 onClick = onSavedOrEditExternalReferral,
-            )
+            ) {
+                if (state.isLoading) {
+                    VsCircularLoading(modifier = Modifier.size(20.dp))
+                } else {
+                    Text(
+                        text =
+                            if (state.isSaveEnabled) {
+                                stringResource(R.string.referral_save_referral_code)
+                            } else {
+                                stringResource(R.string.referral_edit_referred)
+                            },
+                        style = Theme.brockmann.button.semibold.medium,
+                        color = Theme.v2.colors.text.button.primary,
+                    )
+                }
+            }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,

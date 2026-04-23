@@ -505,6 +505,13 @@ constructor(
             return false
         }
 
+        if (
+            response.status == HttpStatusCode.InternalServerError &&
+                response.bodyAsText().contains("fail to fetch THORName")
+        ) {
+            return false
+        }
+
         val thorName = response.bodyOrThrow<ThorOwnerData>()
 
         return thorName.aliases.any { alias ->
