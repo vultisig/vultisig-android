@@ -39,6 +39,7 @@ data class Coin(
     }
 }
 
+/** True if the coin represents a liquidity-pool position rather than a plain token. */
 val Coin.isLpToken: Boolean
     get() =
         when (chain) {
@@ -52,15 +53,17 @@ val Coin.isLpToken: Boolean
             else -> false
         }
 
+/** Returns true if this coin's chain allows zero-gas transactions. */
 fun Coin.allowZeroGas(): Boolean {
     return this.chain == Chain.Polkadot || this.chain == Chain.Bittensor || this.chain == Chain.Tron
 }
 
+/** Returns the ticker without the LP "X/" prefix, uppercased. */
 fun Coin.getNotNativeTicker(): String {
     return this.ticker.uppercase().removePrefix("X/")
 }
 
-// THORChain-side: is this coin a secured asset token on THORChain itself
+/** Returns true if this coin is a THORChain secured-asset token (on the THORChain side). */
 fun Coin.isSecuredAsset(): Boolean {
     if (chain != Chain.ThorChain) return false
     if (isNativeToken) return false
@@ -69,17 +72,52 @@ fun Coin.isSecuredAsset(): Boolean {
     return parts.size == 2 && parts[0].isNotBlank() && parts[1].isNotBlank()
 }
 
-// Source-chain side: can this coin be deposited into THORChain as a SECURE+ asset
+/** Returns true if this coin can be deposited into THORChain as a SECURE+ asset. */
 fun Coin.isSecuredAssetEligible(): Boolean {
     val eligibleTickers = listOf("BTC", "ETH", "BCH", "LTC", "DOGE", "AVAX", "BNB")
     return eligibleTickers.contains(ticker.uppercase()) &&
         (isNativeToken || contractAddress == "${ticker.lowercase()}-${ticker.lowercase()}")
 }
 
+/** Returns the chain portion of a secured-asset contract address, uppercased. */
 fun Coin.securedAssetChain(): String {
     return contractAddress.substringBefore("-").uppercase()
 }
 
+/** Returns the symbol portion of a secured-asset contract address, uppercased. */
 fun Coin.securedAssetSymbol(): String {
     return contractAddress.substringAfter("-").uppercase()
+}
+
+/** Returns the THORSwap-formatted asset name (e.g. "ETH.USDC-0xA0b..." or "THOR.RUNE"). */
+fun Coin.swapAssetName(): String =
+    if (isNativeToken) {
+        if (chain == Chain.GaiaChain) {
+            "${chain.swapAssetName()}.ATOM"
+        } else {
+            "${chain.swapAssetName()}.${ticker}"
+        }
+    } else {
+        if (
+            chain == Chain.Kujira &&
+                (contractAddress.contains("factory/") || contractAddress.contains("ibc/"))
+        ) {
+            "${chain.swapAssetName()}.${ticker}"
+        } else if (chain == Chain.ThorChain) {
+            if (contractAddress.contains(Regex("""^\w+-\w+$"""))) contractAddress
+            else "${chain.swapAssetName()}.${ticker}"
+        } else {
+            "${chain.swapAssetName()}.${ticker}-${contractAddress}"
+        }
+    }
+
+/**
+ * Normalizes [swapAssetName] for same-asset identity comparisons. EVM contract addresses are
+ * lowercased to handle EIP-55 checksum-casing differences from QR payloads. Non-EVM chains (e.g.
+ * Cosmos ibc/, Kujira factory/) use case-sensitive canonical forms as returned by the THORChain API
+ * and are not altered.
+ */
+fun Coin.swapAssetComparisonName(): String {
+    val name = swapAssetName()
+    return if (chain.standard == TokenStandard.EVM) name.lowercase() else name
 }
