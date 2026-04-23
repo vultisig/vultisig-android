@@ -43,7 +43,6 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
@@ -2045,25 +2044,6 @@ constructor(
         )
     }
 
-    @kotlin.ExperimentalStdlibApi
-    private fun selectUtxosIfNeeded(
-        chain: Chain,
-        specific: BlockChainSpecificAndUtxo,
-    ): BlockChainSpecificAndUtxo {
-        specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
-
-        val updatedUtxo =
-            planBtc.value?.utxosOrBuilderList?.map { planUtxo ->
-                UtxoInfo(
-                    hash = planUtxo.outPoint.hash.toByteArray().reversedArray().toHexString(),
-                    index = planUtxo.outPoint.index.toUInt(),
-                    amount = planUtxo.amount,
-                )
-            } ?: return specific
-
-        return specific.copy(utxos = updatedUtxo)
-    }
-
     private fun hideLoading() {
         uiState.update { it.copy(isLoading = false) }
     }
@@ -2945,8 +2925,6 @@ constructor(
 
     companion object {
         private const val GAS_FEE_TIMEOUT_MS = 5_000L
-        private const val REQUEST_ADDRESS_ID = "request_address_id"
-        private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
     }
 }
 

@@ -284,6 +284,7 @@ constructor(
                 } else null
             }
             .filterNotNull()
+            .distinctUntilChanged()
 
     /**
      * Calculates the token amount corresponding to [percentage] of the available balance, fetching
