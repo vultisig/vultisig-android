@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
 import com.vultisig.wallet.data.blockchain.tron.GetTronFrozenBalancesUseCase
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
+import com.vultisig.wallet.data.blockchain.tron.TronFrozenBalanceState
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
 import com.vultisig.wallet.data.blockchain.tron.tronStakingMemo
@@ -203,6 +204,7 @@ internal data class SendFormUiModel(
     val tronResourceType: TronResourceType? = null,
     val tronBalanceAvailableOverride: String? = null,
     val isTronFrozenBalancesLoading: Boolean = false,
+    val hasTronFrozenBalancesError: Boolean = false,
 )
 
 internal data class SendSrc(val address: Address, val account: Account)
@@ -336,18 +338,7 @@ constructor(
 
     private val isSwitchingAccounts = MutableStateFlow(false)
 
-    // Tron freeze/unfreeze state — populated when defiType is FREEZE_TRX or UNFREEZE_TRX.
-    private sealed class TronFrozenBalanceState {
-        data object Loading : TronFrozenBalanceState()
-
-        data class Loaded(val value: BigDecimal) : TronFrozenBalanceState()
-
-        data object Error : TronFrozenBalanceState()
-    }
-
-    private val tronFrozenBandwidthTrx =
-        MutableStateFlow<TronFrozenBalanceState>(TronFrozenBalanceState.Loading)
-    private val tronFrozenEnergyTrx =
+    private val tronFrozenBalances =
         MutableStateFlow<TronFrozenBalanceState>(TronFrozenBalanceState.Loading)
     private var loadTronFrozenBalancesJob: Job? = null
 
@@ -557,8 +548,7 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to load Tron frozen balances")
-                    tronFrozenBandwidthTrx.value = TronFrozenBalanceState.Error
-                    tronFrozenEnergyTrx.value = TronFrozenBalanceState.Error
+                    setTronFrozenBalanceState(TronFrozenBalanceState.Error)
                 }
             ) {
                 uiState.update { it.copy(isTronFrozenBalancesLoading = true) }
@@ -567,14 +557,11 @@ constructor(
                     val trxCoin =
                         vault?.coins?.firstOrNull { it.chain == Chain.Tron && it.isNativeToken }
                     if (trxCoin == null) {
-                        tronFrozenBandwidthTrx.value = TronFrozenBalanceState.Error
-                        tronFrozenEnergyTrx.value = TronFrozenBalanceState.Error
+                        setTronFrozenBalanceState(TronFrozenBalanceState.Error)
                         return@safeLaunch
                     }
                     val balances = getTronFrozenBalances(trxCoin.address)
-                    tronFrozenBandwidthTrx.value =
-                        TronFrozenBalanceState.Loaded(balances.bandwidthTrx)
-                    tronFrozenEnergyTrx.value = TronFrozenBalanceState.Loaded(balances.energyTrx)
+                    setTronFrozenBalanceState(TronFrozenBalanceState.Loaded(balances))
                     updateTronFrozenBalanceDisplay(
                         uiState.value.tronResourceType ?: TronResourceType.BANDWIDTH
                     )
@@ -584,35 +571,29 @@ constructor(
             }
     }
 
-    private fun updateTronFrozenBalanceDisplay(type: TronResourceType) {
-        val state =
-            when (type) {
-                TronResourceType.BANDWIDTH -> tronFrozenBandwidthTrx.value
-                TronResourceType.ENERGY -> tronFrozenEnergyTrx.value
-            }
-        val frozen =
-            when (state) {
-                is TronFrozenBalanceState.Loaded -> state.value
-                is TronFrozenBalanceState.Loading,
-                is TronFrozenBalanceState.Error -> return
-            }
+    private fun setTronFrozenBalanceState(state: TronFrozenBalanceState) {
+        tronFrozenBalances.value = state
         uiState.update {
-            it.copy(tronBalanceAvailableOverride = frozen.stripTrailingZeros().toPlainString())
+            it.copy(hasTronFrozenBalancesError = state is TronFrozenBalanceState.Error)
+        }
+    }
+
+    private fun updateTronFrozenBalanceDisplay(type: TronResourceType) {
+        val balances =
+            (tronFrozenBalances.value as? TronFrozenBalanceState.Loaded)?.balances ?: return
+        uiState.update {
+            it.copy(
+                tronBalanceAvailableOverride =
+                    balances.forResource(type).stripTrailingZeros().toPlainString()
+            )
         }
     }
 
     private fun currentTronFrozenBalance(): BigDecimal? {
-        val state =
-            when (uiState.value.tronResourceType) {
-                TronResourceType.BANDWIDTH -> tronFrozenBandwidthTrx.value
-                TronResourceType.ENERGY -> tronFrozenEnergyTrx.value
-                null -> return null
-            }
-        return when (state) {
-            is TronFrozenBalanceState.Loaded -> state.value
-            is TronFrozenBalanceState.Loading,
-            is TronFrozenBalanceState.Error -> null
-        }
+        val type = uiState.value.tronResourceType ?: return null
+        val balances =
+            (tronFrozenBalances.value as? TronFrozenBalanceState.Loaded)?.balances ?: return null
+        return balances.forResource(type)
     }
 
     private fun loadVaultName() {
@@ -955,7 +936,6 @@ constructor(
     }
 
     fun chooseMaxTokenAmount() {
-        // Early return if Tron frozen balances are still loading for UNFREEZE_TRX
         if (defiType == DeFiNavActions.UNFREEZE_TRX && uiState.value.isTronFrozenBalancesLoading) {
             return
         }
@@ -978,7 +958,6 @@ constructor(
     }
 
     fun choosePercentageAmount(amountFraction: AmountFraction) {
-        // Early return if Tron frozen balances are still loading for UNFREEZE_TRX
         if (defiType == DeFiNavActions.UNFREEZE_TRX && uiState.value.isTronFrozenBalancesLoading) {
             return
         }

@@ -471,8 +471,9 @@
     <string name="tron_defi_countdown_days">%1$d дн., %2$d ч</string>
     <string name="tron_defi_countdown_hours">%1$d ч, %2$d мин</string>
     <string name="tron_defi_error_trx_not_in_vault">Монета TRX не найдена в хранилище</string>
-    <string name="tron_freeze_screen_title">Заморозка TRON для ресурса</string>
-    <string name="tron_unfreeze_screen_title">Разморозка TRON для ресурса</string>
+    <string name="tron_freeze_screen_title">Заморозить TRON</string>
+    <string name="tron_unfreeze_screen_title">Разморозить TRON</string>
+    <string name="tron_frozen_balances_error">Не удалось загрузить замороженные балансы. Потяните, чтобы повторить.</string>
     <string name="tron_resource_type">Тип ресурса</string>
     <string name="tron_resource_bandwidth">Пропускная способность</string>
     <string name="tron_resource_energy">Энергия</string>

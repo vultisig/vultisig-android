@@ -472,8 +472,9 @@
     <string name="tron_defi_countdown_days">%1$d días, %2$d h</string>
     <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">Moneda TRX no encontrada en la bóveda</string>
-    <string name="tron_freeze_screen_title">Congelando TRON por recurso</string>
-    <string name="tron_unfreeze_screen_title">Descongelando TRON por recurso</string>
+    <string name="tron_freeze_screen_title">Congelar TRON</string>
+    <string name="tron_unfreeze_screen_title">Descongelar TRON</string>
+    <string name="tron_frozen_balances_error">No se pudieron cargar los saldos congelados. Desliza para reintentar.</string>
     <string name="tron_resource_type">Tipo de Recurso</string>
     <string name="tron_resource_bandwidth">Ancho de Banda</string>
     <string name="tron_resource_energy">Energía</string>

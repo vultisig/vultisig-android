@@ -498,6 +498,14 @@ private fun SendFormContent(
                 modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
+        if (state.hasTronFrozenBalancesError) {
+            Text(
+                text = stringResource(R.string.tron_frozen_balances_error),
+                color = Theme.v2.colors.alerts.error,
+                style = Theme.brockmann.supplementary.footnote,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
         FoldableAmountWidget(
             state = state,
             addressFieldState = addressFieldState,

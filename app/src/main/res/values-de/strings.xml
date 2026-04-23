@@ -472,8 +472,9 @@
     <string name="tron_defi_countdown_days">%1$d Tage, %2$d Std.</string>
     <string name="tron_defi_countdown_hours">%1$d Std., %2$d Min.</string>
     <string name="tron_defi_error_trx_not_in_vault">TRX-Coin nicht im Vault gefunden</string>
-    <string name="tron_freeze_screen_title">TRON für Ressource einfrieren</string>
-    <string name="tron_unfreeze_screen_title">TRON für Ressource entfrieren</string>
+    <string name="tron_freeze_screen_title">TRON einfrieren</string>
+    <string name="tron_unfreeze_screen_title">TRON entfrieren</string>
+    <string name="tron_frozen_balances_error">Eingefrorene Guthaben konnten nicht geladen werden. Zum erneuten Versuch ziehen.</string>
     <string name="tron_resource_type">Ressourcentyp</string>
     <string name="tron_resource_bandwidth">Bandbreite</string>
     <string name="tron_resource_energy">Energie</string>

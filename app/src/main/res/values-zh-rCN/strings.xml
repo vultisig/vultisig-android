@@ -76,8 +76,9 @@
     <string name="tron_defi_countdown_days">%1$d天 %2$d小时</string>
     <string name="tron_defi_countdown_hours">%1$d小时 %2$d分钟</string>
     <string name="tron_defi_error_trx_not_in_vault">在金库中未找到TRX代币</string>
-    <string name="tron_freeze_screen_title">为资源冻结TRON</string>
-    <string name="tron_unfreeze_screen_title">为资源解冻TRON</string>
+    <string name="tron_freeze_screen_title">冻结 TRON</string>
+    <string name="tron_unfreeze_screen_title">解冻 TRON</string>
+    <string name="tron_frozen_balances_error">无法加载已冻结余额。下拉重试。</string>
     <string name="tron_resource_type">资源类型</string>
     <string name="tron_resource_bandwidth">带宽</string>
     <string name="tron_resource_energy">能量</string>
