@@ -182,6 +182,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                     setBody(mapOf("value" to txHash))
                 }
                 .body<TronTransactionStatusResponse?>()
+                ?.takeIf { it.txId != null }
         } catch (_: Exception) {
             null
         }
