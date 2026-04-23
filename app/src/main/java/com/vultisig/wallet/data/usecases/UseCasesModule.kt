@@ -44,6 +44,7 @@ internal interface UseCasesModule {
     @Singleton
     fun bindDecompressQrUseCase(impl: DecompressQrUseCaseImpl): DecompressQrUseCase
 
+    // TODO(#4147): gate this binding behind a feature flag until a real consumer is wired.
     @Binds
     @Singleton
     fun bindPersistTonConnectSessionUseCase(
