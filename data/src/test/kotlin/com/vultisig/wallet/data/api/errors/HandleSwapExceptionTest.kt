@@ -87,6 +87,12 @@ class HandleSwapExceptionTest {
     }
 
     @Test
+    fun `amount less than dust threshold maps to SmallSwapAmount`() {
+        val result = SwapException.handleSwapException("amount less than dust threshold")
+        assertInstanceOf(SwapException.SmallSwapAmount::class.java, result)
+    }
+
+    @Test
     fun `network error maps to NetworkConnection`() {
         val result = SwapException.handleSwapException("Unable to resolve host api.example.com")
         assertInstanceOf(SwapException.NetworkConnection::class.java, result)

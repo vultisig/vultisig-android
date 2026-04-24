@@ -40,8 +40,7 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("insufficient funds") -> InsufficientFunds(error)
                     contains("no available quotes for the requested") ->
                         SwapRouteNotAvailable(error)
-                    contains("amount less than dust threshold: invalid request") ->
-                        SmallSwapAmount(error)
+                    contains("amount less than dust threshold") -> SmallSwapAmount(error)
                     contains("amount less than min swap amount") -> SmallSwapAmount(error)
                     contains("pool does not exist") -> SwapRouteNotAvailable(error)
                     contains("trading is halted") -> SwapRouteNotAvailable(error)
