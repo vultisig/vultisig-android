@@ -14,7 +14,6 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
-import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
@@ -358,14 +357,10 @@ constructor(
             .get("https://thornode.thorchain.network/thorchain/inbound_addresses") {
                 header(xClientID, xClientIDValue)
             }
-            .throwIfUnsuccessful()
-            .body()
+            .bodyOrThrow()
 
     override suspend fun getPools(): List<ThorChainPoolJson> =
-        httpClient
-            .get("$NNRLM_URL/pools") { header(xClientID, xClientIDValue) }
-            .throwIfUnsuccessful()
-            .body()
+        httpClient.get("$NNRLM_URL/pools") { header(xClientID, xClientIDValue) }.bodyOrThrow()
 
     override suspend fun getConstants(): ThorchainConstantsResponse {
         val response =
