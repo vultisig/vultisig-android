@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -22,6 +23,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -176,6 +178,17 @@ internal class VerifyTransactionViewModelTest {
             vm.checkConsentAmount(true)
             vm.joinKeySign()
             coVerify { launchKeysign(any(), any(), any(), any(), any()) }
+        }
+
+    /** Verifies uiState.transaction reflects srcAddress and dstAddress returned by the mapper. */
+    @Test
+    fun `transaction srcAddress and dstAddress reflect mapper output`() =
+        runTest(testDispatcher) {
+            val expected = TransactionDetailsUiModel(srcAddress = "0xSRC", dstAddress = "0xDST")
+            coEvery { mapTransactionToUiModel(any()) } returns expected
+            val vm = createViewModel()
+            assertEquals("0xSRC", vm.uiState.value.transaction.srcAddress)
+            assertEquals("0xDST", vm.uiState.value.transaction.dstAddress)
         }
 
     private companion object {

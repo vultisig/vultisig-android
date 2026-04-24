@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.transaction
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
@@ -139,6 +140,20 @@ internal class AddressEntryViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             assertNull(vm.state.value.titleError)
+        }
+
+    /** Verifies saveAddress passes the pre-selected chain to address validation. */
+    @Test
+    fun `saveAddress validates address against the pre-selected Bitcoin chain`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.AddressEntry>() } returns
+                Route.AddressEntry(chainId = "Bitcoin", address = "bc1q0000", vaultId = VAULT_ID)
+            every { chainAccountAddressRepository.isValid(Chain.Bitcoin, any()) } returns true
+            val vm = createViewModel()
+            vm.titleTextFieldState.edit { replace(0, length, "Alice") }
+            vm.saveAddress()
+            advanceUntilIdle()
+            assertNull(vm.state.value.addressError)
         }
 
     private companion object {

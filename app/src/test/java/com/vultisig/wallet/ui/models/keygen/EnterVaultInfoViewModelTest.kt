@@ -170,4 +170,26 @@ internal class EnterVaultInfoViewModelTest {
             vm.onEvent(EnterVaultInfoEvent.Next)
             assertEquals(StepType.Email, vm.uiState.value.activeStep)
         }
+
+    /** Verifies a secure vault (count=2) only exposes the Name step with no email or password. */
+    @Test
+    fun `secure vault with count 2 exposes only the Name step`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel() // count=2 from setUp
+            assertEquals(1, vm.uiState.value.stepAndStates.size)
+            assertTrue(vm.uiState.value.stepAndStates.containsKey(StepType.Name))
+            assertFalse(vm.uiState.value.stepAndStates.containsKey(StepType.Email))
+        }
+
+    /** Verifies a non-secure vault (count=1) exposes Name, Email, and Password steps. */
+    @Test
+    fun `non-secure vault with count 1 exposes Name Email and Password steps`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.EnterVaultInfo>() } returns
+                Route.EnterVaultInfo(count = 1, tssAction = TssAction.KEYGEN)
+            val vm = createViewModel()
+            assertEquals(3, vm.uiState.value.stepAndStates.size)
+            assertTrue(vm.uiState.value.stepAndStates.containsKey(StepType.Email))
+            assertTrue(vm.uiState.value.stepAndStates.containsKey(StepType.Password))
+        }
 }
