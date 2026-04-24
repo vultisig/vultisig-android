@@ -80,11 +80,8 @@ internal fun TronDeFiPositionsScreen(
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = viewModel::onPositionSelectionDone,
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
-        // TODO(#4014): TronFreezePositionCard will pass the specific TronAction per row
-        //  once it exposes per-resource callbacks. Until then both default to BANDWIDTH.
-        //  ENERGY freeze/unfreeze is intentionally unreachable from the UI in this PR.
-        onClickFreeze = { viewModel.onTronAction(TronAction.FREEZE_BANDWIDTH) },
-        onClickUnfreeze = { viewModel.onTronAction(TronAction.UNFREEZE_BANDWIDTH) },
+        onClickFreeze = { viewModel.onTronAction(TronAction.FREEZE) },
+        onClickUnfreeze = { viewModel.onTronAction(TronAction.UNFREEZE) },
     )
 }
 
@@ -184,17 +181,18 @@ private fun TronDeFiPositionsScreenContent(
 
                     val isTronSelected = state.selectedPositions.contains("TRON")
                     val pendingWithdrawals = tronData.pendingWithdrawals
-                    if (isTronSelected && tronData.hasFrozenBalance) {
+                    if (isTronSelected) {
                         item {
                             TronFreezePositionCard(
                                 frozenTotalPrice = tronData.frozenTotalPrice,
                                 frozenTotalTrx = tronData.frozenTotalTrx,
                                 isBalanceVisible = state.isBalanceVisible,
+                                isUnfreezeEnabled = tronData.hasFrozenBalance,
                                 onClickFreeze = onClickFreeze,
                                 onClickUnfreeze = onClickUnfreeze,
                             )
                         }
-                    } else if (isTronSelected && pendingWithdrawals.isEmpty()) {
+                    } else if (pendingWithdrawals.isEmpty()) {
                         item { NoPositionsContainer() }
                     }
 

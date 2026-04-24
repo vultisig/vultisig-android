@@ -182,6 +182,7 @@
     <string name="send_error_insufficient_balance">Fondi insufficienti</string>
     <string name="send_error_msca_not_deployed">Account MSCA non ancora distribuito, riprova</string>
     <string name="send_error_insufficient_native_balance_with_fees">Saldo %1$s insufficiente</string>
+    <string name="send_error_insufficient_frozen_balance">L\'importo supera il saldo %1$s congelato</string>
     <string name="verify_swap_agree_receive_amount">Accetto l\'importo minimo che riceverò</string>
     <string name="vault_settings_success_backup_file">file salvato in Download/%1$s</string>
     <string name="swap_form_estimated_fees_title">Commissione di cambio</string>
@@ -471,6 +472,12 @@
     <string name="tron_defi_countdown_days">%1$d giorni, %2$d h</string>
     <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">Moneta TRX non trovata nel vault</string>
+    <string name="tron_freeze_screen_title">Congela TRON</string>
+    <string name="tron_unfreeze_screen_title">Scongela TRON</string>
+    <string name="tron_frozen_balances_error">Impossibile caricare i saldi congelati. Trascina per riprovare.</string>
+    <string name="tron_resource_type">Tipo di risorsa</string>
+    <string name="tron_resource_bandwidth">Larghezza di Banda</string>
+    <string name="tron_resource_energy">Energia</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Lo slippage è obbligatorio</string>
     <string name="slippage_invalid_error">Lo slippage deve essere compreso tra 1 e 100</string>

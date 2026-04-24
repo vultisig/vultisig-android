@@ -32,6 +32,7 @@ internal fun TronFreezePositionCard(
     frozenTotalPrice: String,
     frozenTotalTrx: String,
     isBalanceVisible: Boolean,
+    isUnfreezeEnabled: Boolean,
     onClickFreeze: () -> Unit,
     onClickUnfreeze: () -> Unit,
 ) {
@@ -101,6 +102,7 @@ internal fun TronFreezePositionCard(
                     background = Theme.v2.colors.backgrounds.tertiary_2,
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = TronFreezeCardIconCircleColor,
+                    enabled = isUnfreezeEnabled,
                     modifier = Modifier.weight(1f),
                     onClick = onClickUnfreeze,
                 )
@@ -126,6 +128,7 @@ private fun TronFreezePositionCardPreview() {
             frozenTotalPrice = "$4,800",
             frozenTotalTrx = "800.000000",
             isBalanceVisible = true,
+            isUnfreezeEnabled = true,
             onClickFreeze = {},
             onClickUnfreeze = {},
         )
