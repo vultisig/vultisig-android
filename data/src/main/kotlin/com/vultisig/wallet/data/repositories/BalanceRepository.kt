@@ -169,7 +169,10 @@ constructor(
 
     override suspend fun invalidateDeFiBalance(address: String, chain: Chain, vaultId: String) {
         val key = deFiCacheKey(address, chain, vaultId) ?: return
-        defiBalanceCache.remove(key)
+        val mutex = lockFor(key)
+        mutex.withLock {
+            defiBalanceCache.remove(key)
+        }
     }
 
     private fun deFiCacheKey(address: String, chain: Chain, vaultId: String): String? =
