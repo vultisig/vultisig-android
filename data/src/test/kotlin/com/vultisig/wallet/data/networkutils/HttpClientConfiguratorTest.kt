@@ -25,6 +25,10 @@ class HttpClientConfiguratorTest {
     private val jsonHeaders =
         headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
 
+    /**
+     * Verifies a safe GET request is retried three times on IOException before throwing
+     * NetworkException.
+     */
     @Test
     fun `retryOnIOException forSafeMethod retriesThreeTimes`() = runTest {
         val callCount = AtomicInteger(0)
@@ -42,6 +46,10 @@ class HttpClientConfiguratorTest {
         assertEquals(4, callCount.get())
     }
 
+    /**
+     * Verifies a safe GET request is retried three times on HTTP 500, succeeding on the fourth
+     * call.
+     */
     @Test
     fun `retryOn500 forSafeMethod retriesThreeTimes`() = runTest {
         val callCount = AtomicInteger(0)
@@ -62,6 +70,10 @@ class HttpClientConfiguratorTest {
         assertEquals(4, callCount.get())
     }
 
+    /**
+     * Verifies a safe GET request is retried three times on HTTP 429, succeeding on the fourth
+     * call.
+     */
     @Test
     fun `retryOn429 forSafeMethod retriesThreeTimes`() = runTest {
         val callCount = AtomicInteger(0)
@@ -82,6 +94,10 @@ class HttpClientConfiguratorTest {
         assertEquals(4, callCount.get())
     }
 
+    /**
+     * Verifies a safe GET request is retried three times on HTTP 408, succeeding on the fourth
+     * call.
+     */
     @Test
     fun `retryOn408 forSafeMethod retriesThreeTimes`() = runTest {
         val callCount = AtomicInteger(0)
@@ -102,6 +118,10 @@ class HttpClientConfiguratorTest {
         assertEquals(4, callCount.get())
     }
 
+    /**
+     * Verifies an unsafe POST request is NOT retried on HTTP 500 and returns the error response
+     * immediately.
+     */
     @Test
     fun `retryOn500 forPostMethod doesNotRetry`() = runTest {
         val callCount = AtomicInteger(0)
