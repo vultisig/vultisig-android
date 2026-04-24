@@ -156,6 +156,10 @@ class SwapQuoteRepositoryProvidersTest {
                 ),
         )
 
+    /**
+     * Verifies that a successful ThorChain API response is deserialized into a
+     * [SwapQuote.ThorChain].
+     */
     @Test
     fun `getSwapQuote returns ThorChain quote on success`() = runTest {
         coEvery {
@@ -173,6 +177,10 @@ class SwapQuoteRepositoryProvidersTest {
         assertInstanceOf(SwapQuote.ThorChain::class.java, result)
     }
 
+    /**
+     * Verifies that a pool-does-not-exist exception is mapped to
+     * [SwapException.SwapRouteNotAvailable].
+     */
     @Test
     fun `getSwapQuote maps pool-not-found error to SwapRouteNotAvailable`() = runTest {
         coEvery {
@@ -191,6 +199,10 @@ class SwapQuoteRepositoryProvidersTest {
         assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, ex)
     }
 
+    /**
+     * Verifies that a successful MayaChain API response is deserialized into a
+     * [SwapQuote.MayaChain].
+     */
     @Test
     fun `getMayaSwapQuote returns MayaChain quote on success`() = runTest {
         coEvery {
@@ -209,6 +221,10 @@ class SwapQuoteRepositoryProvidersTest {
         assertInstanceOf(SwapQuote.MayaChain::class.java, result)
     }
 
+    /**
+     * Verifies that an outbound-requirements error from Maya is mapped to
+     * [SwapException.InsufficentSwapAmount].
+     */
     @Test
     fun `getMayaSwapQuote maps outbound-does-not-meet-requirements to InsufficentSwapAmount`() =
         runTest {
@@ -232,6 +248,7 @@ class SwapQuoteRepositoryProvidersTest {
             assertInstanceOf(SwapException.InsufficentSwapAmount::class.java, ex)
         }
 
+    /** Verifies that a successful 1inch API response returns the correct dst amount. */
     @Test
     fun `getOneInchSwapQuote returns EVMSwapQuoteJson on success`() = runTest {
         coEvery { oneInchApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any()) } returns
@@ -248,6 +265,10 @@ class SwapQuoteRepositoryProvidersTest {
         assertEquals("1000000", result.dstAmount)
     }
 
+    /**
+     * Verifies that an insufficient-funds error from 1inch is mapped to
+     * [SwapException.InsufficientFunds].
+     */
     @Test
     fun `getOneInchSwapQuote maps insufficient-funds error to InsufficientFunds`() = runTest {
         coEvery { oneInchApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any()) } returns
@@ -265,6 +286,7 @@ class SwapQuoteRepositoryProvidersTest {
         assertInstanceOf(SwapException.InsufficientFunds::class.java, ex)
     }
 
+    /** Verifies that a successful LiFi API response returns the correct dst amount. */
     @Test
     fun `getLiFiSwapQuote returns EVMSwapQuoteJson on success`() = runTest {
         coEvery {
@@ -284,6 +306,10 @@ class SwapQuoteRepositoryProvidersTest {
         assertEquals("1000000", result.dstAmount)
     }
 
+    /**
+     * Verifies that a no-available-quotes LiFi error is mapped to
+     * [SwapException.SwapRouteNotAvailable].
+     */
     @Test
     fun `getLiFiSwapQuote maps no-available-quotes to SwapRouteNotAvailable`() = runTest {
         coEvery {
@@ -307,6 +333,10 @@ class SwapQuoteRepositoryProvidersTest {
         assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, ex)
     }
 
+    /**
+     * Verifies that a not-enough-asset error from Kyber is mapped to
+     * [SwapException.InsufficentSwapAmount].
+     */
     @Test
     fun `getKyberSwapQuote maps not-enough-asset error to InsufficentSwapAmount`() = runTest {
         coEvery { kyberApi.getSwapQuote(any(), any(), any(), any(), any(), any()) } returns
@@ -326,6 +356,7 @@ class SwapQuoteRepositoryProvidersTest {
         assertInstanceOf(SwapException.InsufficentSwapAmount::class.java, ex)
     }
 
+    /** Verifies that a successful Kyber API response returns the correct dst amount. */
     @Test
     fun `getKyberSwapQuote returns EVMSwapQuoteJson on success`() = runTest {
         coEvery { kyberApi.getSwapQuote(any(), any(), any(), any(), any(), any()) } returns
@@ -360,6 +391,10 @@ class SwapQuoteRepositoryProvidersTest {
         assertEquals("990000", result.dstAmount)
     }
 
+    /**
+     * Verifies that a no-available-quotes error from Kyber is mapped to
+     * [SwapException.SwapRouteNotAvailable].
+     */
     @Test
     fun `getKyberSwapQuote maps no-available-quotes error to SwapRouteNotAvailable`() = runTest {
         coEvery { kyberApi.getSwapQuote(any(), any(), any(), any(), any(), any()) } returns
@@ -379,6 +414,7 @@ class SwapQuoteRepositoryProvidersTest {
         assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, ex)
     }
 
+    /** Verifies that a successful Jupiter API response returns the correct dst amount. */
     @Test
     fun `getJupiterSwapQuote returns EVMSwapQuoteJson with correct dst amount`() = runTest {
         val jupiterResult =
@@ -400,6 +436,10 @@ class SwapQuoteRepositoryProvidersTest {
         assertEquals("1000000000", result.dstAmount)
     }
 
+    /**
+     * Verifies that a rate-limit exception from Jupiter is mapped to
+     * [SwapException.RateLimitExceeded].
+     */
     @Test
     fun `getJupiterSwapQuote maps rate-limit exception to RateLimitExceeded`() = runTest {
         coEvery { jupiterApi.getSwapQuote(any(), any(), any(), any()) } throws

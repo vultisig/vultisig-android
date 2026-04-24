@@ -7,8 +7,17 @@ import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.WasmExecuteContractPayload
 import wallet.core.jni.Base64
 
+/** Builders for CosmWasm execute-contract payloads and THORChain transaction memos. */
 object ThorchainFunctions {
 
+    /**
+     * Builds the CosmWasm payload to bond (stake) RUJI tokens.
+     *
+     * @param fromAddress sender address
+     * @param stakingContract RUJI staking contract address
+     * @param denom token denomination
+     * @param amount amount in base units
+     */
     fun stakeRUJI(
         fromAddress: String,
         stakingContract: String,
@@ -27,6 +36,13 @@ object ThorchainFunctions {
         )
     }
 
+    /**
+     * Builds the CosmWasm payload to withdraw (unstake) RUJI tokens.
+     *
+     * @param fromAddress sender address
+     * @param amount amount to withdraw, as a string
+     * @param stakingContract RUJI staking contract address
+     */
     fun unstakeRUJI(
         fromAddress: String,
         amount: String,
@@ -43,6 +59,12 @@ object ThorchainFunctions {
         )
     }
 
+    /**
+     * Builds the CosmWasm payload to claim pending RUJI staking rewards.
+     *
+     * @param fromAddress sender address
+     * @param stakingContract RUJI staking contract address
+     */
     fun claimRujiRewards(fromAddress: String, stakingContract: String): WasmExecuteContractPayload {
         require(fromAddress.isNotEmpty()) { "FromAddress cannot be empty" }
         require(stakingContract.isNotEmpty()) { "stakingContract cannot be empty" }
@@ -55,6 +77,15 @@ object ThorchainFunctions {
         )
     }
 
+    /**
+     * Builds the CosmWasm payload to mint (deposit) yTokens via a vault contract.
+     *
+     * @param fromAddress sender address
+     * @param stakingContract vault/staking contract address
+     * @param tokenContract yToken contract address
+     * @param denom token denomination to deposit
+     * @param amount amount in base units
+     */
     fun mintYToken(
         fromAddress: String,
         stakingContract: String,
@@ -96,6 +127,15 @@ object ThorchainFunctions {
         )
     }
 
+    /**
+     * Builds the CosmWasm payload to redeem (burn) yTokens and withdraw the underlying asset.
+     *
+     * @param fromAddress sender address
+     * @param tokenContract yToken contract address
+     * @param slippage maximum acceptable slippage
+     * @param denom yToken denomination
+     * @param amount amount to redeem in base units
+     */
     fun redeemYToken(
         fromAddress: String,
         tokenContract: String,
@@ -121,6 +161,14 @@ object ThorchainFunctions {
         )
     }
 
+    /**
+     * Builds the CosmWasm payload to bond (stake) TCY tokens via the liquid staking contract.
+     *
+     * @param fromAddress sender address
+     * @param stakingContract TCY liquid staking contract address
+     * @param denom token denomination
+     * @param amount amount in base units
+     */
     fun stakeTcyCompound(
         fromAddress: String,
         stakingContract: String,
@@ -139,6 +187,13 @@ object ThorchainFunctions {
         )
     }
 
+    /**
+     * Builds the CosmWasm payload to unbond TCY units from the liquid staking contract.
+     *
+     * @param units number of LP units to unbond
+     * @param stakingContract TCY liquid staking contract address
+     * @param fromAddress sender address
+     */
     fun unStakeTcyCompound(
         units: BigInteger,
         stakingContract: String,

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
+/** Unit tests for [selectGasFeeForFeeEstimation] covering chain-specific fee selection logic. */
 internal class SelectGasFeeForFeeEstimationTest {
 
     private val cardanoFee =
@@ -16,6 +17,10 @@ internal class SelectGasFeeForFeeEstimationTest {
 
     private val ethFee = TokenValue(value = BigInteger.valueOf(1L), unit = "ETH", decimals = 18)
 
+    /**
+     * Verifies Cardano fee is passed through unchanged (regression: was overwritten with
+     * planFee=1).
+     */
     @Test
     fun `cardano returns the original gas fee unchanged - regression for fee showing 0`() {
         // planFee is the sentinel value 1 for Cardano because it skips the BTC UTXO planner.
@@ -33,6 +38,7 @@ internal class SelectGasFeeForFeeEstimationTest {
         assertEquals(BigInteger.valueOf(180_000L), result.value)
     }
 
+    /** Verifies that a positive Bitcoin plan fee replaces the original gas fee. */
     @Test
     fun `bitcoin with positive plan fee uses the plan fee value`() {
         val result =
@@ -47,6 +53,7 @@ internal class SelectGasFeeForFeeEstimationTest {
         assertEquals(btcFee.unit, result.unit)
     }
 
+    /** Verifies that a zero or negative Bitcoin plan fee falls back to the original gas fee. */
     @Test
     fun `bitcoin with non-positive plan fee falls back to the original gas fee`() {
         val result =
@@ -60,6 +67,7 @@ internal class SelectGasFeeForFeeEstimationTest {
         assertEquals(btcFee, result)
     }
 
+    /** Verifies that a null plan fee on a UTXO chain throws [InvalidTransactionDataException]. */
     @Test
     fun `utxo chain with null plan fee throws InvalidTransactionDataException`() {
         assertThrows<InvalidTransactionDataException> {
@@ -72,6 +80,7 @@ internal class SelectGasFeeForFeeEstimationTest {
         }
     }
 
+    /** Verifies that the EVM base fee is extracted from evmGasSettings for Ethereum. */
     @Test
     fun `ethereum uses the base fee from evm gas settings`() {
         val baseFee = BigInteger.valueOf(42L)
@@ -91,6 +100,7 @@ internal class SelectGasFeeForFeeEstimationTest {
         assertEquals(baseFee, result.value)
     }
 
+    /** Verifies that non-UTXO chains without EVM settings return the original gas fee. */
     @Test
     fun `non-utxo chain without evm settings returns the original gas fee`() {
         val result =
@@ -104,6 +114,7 @@ internal class SelectGasFeeForFeeEstimationTest {
         assertEquals(ethFee, result)
     }
 
+    /** Verifies that Bitcoin uses the plan fee even when evmGasSettings is also provided. */
     @Test
     fun `bitcoin with non-null evm gas settings uses plan fee and ignores evm settings`() {
         val result =
@@ -122,6 +133,7 @@ internal class SelectGasFeeForFeeEstimationTest {
         assertEquals(BigInteger.valueOf(500L), result.value)
     }
 
+    /** Verifies that a zero EVM base fee results in a zero-value fee token. */
     @Test
     fun `ethereum with zero base fee returns fee of zero`() {
         val result =
