@@ -5,11 +5,14 @@ import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.KyberSwapRouteResponse
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.Fees
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapErrorResponse
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteData
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapEstimateJson
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteError
@@ -36,6 +39,13 @@ import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
+/**
+ * Unit tests for [SwapQuoteRepositoryImpl] covering all swap providers.
+ *
+ * These tests verify repository-level logic: error-to-exception mapping and object assembly. API
+ * interfaces are mocked, so HTTP transport and JSON deserialization are intentionally not exercised
+ * here.
+ */
 class SwapQuoteRepositoryProvidersTest {
 
     private val thorChainApi: ThorChainApi = mockk()
@@ -308,6 +318,59 @@ class SwapQuoteRepositoryProvidersTest {
                 )
             }
         assertInstanceOf(SwapException.InsufficentSwapAmount::class.java, ex)
+    }
+
+    @Test
+    fun `getKyberSwapQuote returns EVMSwapQuoteJson on success`() = runTest {
+        coEvery { kyberApi.getSwapQuote(any(), any(), any(), any(), any(), any()) } returns
+            KyberSwapQuoteDeserialized.Result(mockk<KyberSwapRouteResponse>(relaxed = true))
+        coEvery { kyberApi.getKyberSwapQuote(any(), any(), any(), any(), any()) } returns
+            KyberSwapQuoteJson(
+                code = 0,
+                message = "success",
+                data =
+                    KyberSwapQuoteData(
+                        amountIn = "1000000",
+                        amountInUsd = "1.0",
+                        amountOut = "990000",
+                        amountOutUsd = "0.99",
+                        gas = null,
+                        gasUsd = "0.01",
+                        data = "0x",
+                        routerAddress = "0xrouter",
+                        transactionValue = "0",
+                    ),
+                requestId = "req-id",
+            )
+
+        val result =
+            repository.getKyberSwapQuote(
+                srcToken = ethCoin,
+                dstToken = usdcEthCoin,
+                tokenValue = TokenValue(value = BigInteger("1000000"), token = ethCoin),
+                affiliateBps = 50,
+            )
+
+        assertEquals("990000", result.dstAmount)
+    }
+
+    @Test
+    fun `getKyberSwapQuote maps no-available-quotes error to SwapRouteNotAvailable`() = runTest {
+        coEvery { kyberApi.getSwapQuote(any(), any(), any(), any(), any(), any()) } returns
+            KyberSwapQuoteDeserialized.Error(
+                KyberSwapErrorResponse("no available quotes for the requested token pair")
+            )
+
+        val ex =
+            assertThrows<SwapException> {
+                repository.getKyberSwapQuote(
+                    srcToken = ethCoin,
+                    dstToken = usdcEthCoin,
+                    tokenValue = TokenValue(value = BigInteger("1000000"), token = ethCoin),
+                    affiliateBps = 50,
+                )
+            }
+        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, ex)
     }
 
     @Test

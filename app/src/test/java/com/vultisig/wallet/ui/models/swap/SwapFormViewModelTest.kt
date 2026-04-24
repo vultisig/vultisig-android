@@ -1844,6 +1844,56 @@ internal class SwapFormViewModelTest {
             coVerify { swapTransactionRepository.addTransaction(match { !it.isApprovalRequired }) }
         }
 
+    @Test
+    fun `swap surfaces error and does not sign when allowance lookup fails`() =
+        runTest(mainDispatcher) {
+            val dstValue = TokenValue(value = BigInteger("50000000000000000"), token = ETH_COIN)
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote = createThorChainQuote(expectedDstValue = dstValue),
+                    estimatedDstTokenValue = "0.05",
+                )
+            coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } throws
+                RuntimeException("network error during allowance lookup")
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                mockk(relaxed = true)
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress()),
+                    srcTokenId = USDC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.swap()
+            advanceUntilIdle()
+
+            assertNotNull(vm.uiState.value.error)
+            coVerify(exactly = 0) { swapTransactionRepository.addTransaction(any()) }
+            coVerify(exactly = 0) { navigator.route(match { it is Route.VerifySwap }) }
+        }
+
     // endregion
 
     // region calculateFees — quote re-fetch
