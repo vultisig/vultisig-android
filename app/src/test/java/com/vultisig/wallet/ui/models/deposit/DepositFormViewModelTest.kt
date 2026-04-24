@@ -31,12 +31,14 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
+import io.mockk.coEvery
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -235,18 +237,17 @@ internal class DepositFormViewModelTest {
             vm.loadData("vault1", Chain.ThorChain.raw, null, null)
             advanceUntilIdle()
 
-            vm.state.update {
-                it.copy(
-                    depositOption = DepositOption.WithdrawSecuredAsset,
-                    selectedSecuredAsset =
-                        TokenWithdrawSecureAsset(
-                            ticker = "BTC",
-                            contract = "",
-                            coin = Coin.EMPTY,
-                            tokenValue = null,
-                        ),
+            coEvery { accountsRepository.loadAddress("vault1", Chain.Bitcoin) } returns emptyFlow()
+            vm.selectDepositOption(DepositOption.WithdrawSecuredAsset)
+            vm.onSelectSecureAsset(
+                TokenWithdrawSecureAsset(
+                    ticker = "BTC",
+                    contract = "",
+                    coin = Coin.EMPTY,
+                    tokenValue = null,
                 )
-            }
+            )
+            advanceUntilIdle()
             vm.thorAddressFieldState.setTextAndPlaceCursorAtEnd("thor1somevalidaddress")
 
             vm.deposit()
