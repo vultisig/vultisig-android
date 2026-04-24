@@ -1549,6 +1549,529 @@ internal class SwapFormViewModelTest {
 
     // endregion
 
+    // region calculateFees — additional swap providers
+
+    @Test
+    fun `calculateFees with OneInch sets provider name`() =
+        runTest(mainDispatcher) {
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.ONEINCH
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote = createOneInchQuote(),
+                    provider = SwapProvider.ONEINCH,
+                    providerUiText = R.string.swap_for_provider_1inch.asUiText(),
+                )
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_for_provider_1inch),
+                vm.uiState.value.provider,
+            )
+        }
+
+    @Test
+    fun `calculateFees with LiFi sets provider name`() =
+        runTest(mainDispatcher) {
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.LIFI
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote = createOneInchQuote(),
+                    provider = SwapProvider.LIFI,
+                    providerUiText = R.string.swap_for_provider_li_fi.asUiText(),
+                )
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_for_provider_li_fi),
+                vm.uiState.value.provider,
+            )
+        }
+
+    @Test
+    fun `calculateFees with Kyber sets provider name`() =
+        runTest(mainDispatcher) {
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.KYBER
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote = createOneInchQuote(),
+                    provider = SwapProvider.KYBER,
+                    providerUiText = R.string.swap_for_provider_kyber.asUiText(),
+                )
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_for_provider_kyber),
+                vm.uiState.value.provider,
+            )
+        }
+
+    @Test
+    fun `calculateFees with Jupiter sets provider name`() =
+        runTest(mainDispatcher) {
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.JUPITER
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote = createOneInchQuote(),
+                    provider = SwapProvider.JUPITER,
+                    providerUiText = R.string.swap_for_provider_jupiter.asUiText(),
+                )
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_for_provider_jupiter),
+                vm.uiState.value.provider,
+            )
+        }
+
+    // endregion
+
+    // region swap — allowance approval
+
+    @Test
+    fun `swap requires allowance approval for ERC-20 token with zero allowance`() =
+        runTest(mainDispatcher) {
+            val dstValue = TokenValue(value = BigInteger("50000000000000000"), token = ETH_COIN)
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote = createThorChainQuote(expectedDstValue = dstValue),
+                    estimatedDstTokenValue = "0.05",
+                )
+            coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns
+                BigInteger.ZERO
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                mockk(relaxed = true)
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress()),
+                    srcTokenId = USDC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.swap()
+            advanceUntilIdle()
+
+            coVerify { swapTransactionRepository.addTransaction(match { it.isApprovalRequired }) }
+        }
+
+    @Test
+    fun `swap skips allowance approval when allowance exceeds swap amount`() =
+        runTest(mainDispatcher) {
+            val dstValue = TokenValue(value = BigInteger("50000000000000000"), token = ETH_COIN)
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote = createThorChainQuote(expectedDstValue = dstValue),
+                    estimatedDstTokenValue = "0.05",
+                )
+            // 10 USDC allowance > 1 USDC srcAmount (1_000_000 units)
+            coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns
+                BigInteger("10000000")
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                mockk(relaxed = true)
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress()),
+                    srcTokenId = USDC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.swap()
+            advanceUntilIdle()
+
+            coVerify { swapTransactionRepository.addTransaction(match { !it.isApprovalRequired }) }
+        }
+
+    @Test
+    fun `swap with native src token does not require allowance`() =
+        runTest(mainDispatcher) {
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                mockk(relaxed = true)
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.swap()
+            advanceUntilIdle()
+
+            coVerify { swapTransactionRepository.addTransaction(match { !it.isApprovalRequired }) }
+        }
+
+    // endregion
+
+    // region calculateFees — quote re-fetch
+
+    @Test
+    fun `calculateFees re-fetches quote when amount changes`() =
+        runTest(mainDispatcher) {
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("2")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            coVerify(exactly = 2) {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+        }
+
+    // endregion
+
+    // region flipSelectedTokens — decimal adjustment
+
+    @Test
+    fun `flipSelectedTokens sets src amount from expected dst value for ETH to USDC swap`() =
+        runTest(mainDispatcher) {
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress()),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = USDC_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.flipSelectedTokens()
+            advanceUntilIdle()
+
+            // expectedDstValue = 95_000_000 / 10^6 = 95.0 USDC, USDC decimal = 6
+            // formatFlippedAmount(6): setScale(6, DOWN).stripTrailingZeros() = "95"
+            assertEquals("95", vm.srcAmountState.text.toString())
+        }
+
+    @Test
+    fun `flipSelectedTokens sets src amount from expected dst value for USDC to ETH swap`() =
+        runTest(mainDispatcher) {
+            val ethDstValue = TokenValue(value = BigInteger("50000000000000000"), token = ETH_COIN)
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote = createThorChainQuote(expectedDstValue = ethDstValue),
+                    estimatedDstTokenValue = "0.05",
+                )
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress()),
+                    srcTokenId = USDC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("95")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.flipSelectedTokens()
+            advanceUntilIdle()
+
+            // expectedDstValue = 50_000_000_000_000_000 / 10^18 = 0.05 ETH, ETH decimal = 18
+            // formatFlippedAmount(18): setScale(min(18,8)=8, DOWN).stripTrailingZeros() = "0.05"
+            assertEquals("0.05", vm.srcAmountState.text.toString())
+        }
+
+    // endregion
+
+    // region calculateFees — RateLimitExceeded
+
+    @Test
+    fun `calculateFees handles RateLimitExceeded exception`() =
+        runTest(mainDispatcher) {
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapException.RateLimitExceeded("Too many requests")
+            coEvery { swapQuoteManager.mapSwapExceptionToFormError(any(), any(), any()) } returns
+                UiText.StringResource(R.string.swap_error_rate_limit)
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.isSwapDisabled)
+            assertEquals(
+                UiText.StringResource(R.string.swap_error_rate_limit),
+                vm.uiState.value.formError,
+            )
+        }
+
+    // endregion
+
+    // region swap — success navigation
+
+    @Test
+    fun `swap navigates to VerifySwap on success`() =
+        runTest(mainDispatcher) {
+            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            coEvery {
+                swapQuoteManager.fetchQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+                mockk(relaxed = true)
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.swap()
+            advanceUntilIdle()
+
+            coVerify { navigator.route(match { it is Route.VerifySwap }) }
+        }
+
+    // endregion
+
     // region formatFlippedAmount integration
 
     @Test
@@ -1703,6 +2226,17 @@ internal class SwapFormViewModelTest {
             expiredAt = Clock.System.now() + 1.minutes,
             recommendedMinTokenValue = TokenValue(value = BigInteger("1000"), token = ETH_COIN),
             data = mockk(relaxed = true),
+        )
+
+    private fun createOneInchQuote(
+        expectedDstValue: TokenValue = TokenValue(value = BigInteger("95000000"), token = USDC_COIN)
+    ): SwapQuote.OneInch =
+        SwapQuote.OneInch(
+            expectedDstValue = expectedDstValue,
+            fees = TokenValue(value = BigInteger("1000000000000000"), token = ETH_COIN),
+            expiredAt = Clock.System.now() + 1.minutes,
+            data = mockk(relaxed = true),
+            provider = "1inch",
         )
 
     private fun createMayaChainQuote(
