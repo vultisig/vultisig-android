@@ -100,8 +100,9 @@ class ThorchainFunctionsTest {
         assertEquals("cosmos1sender", payload.senderAddress)
         assertEquals("""{ "account": { "bond": {} } }""", payload.executeMsg)
         assertEquals(1, payload.coins.size)
-        assertEquals("uruji", payload.coins[0].denom)
-        assertEquals("1000000", payload.coins[0].amount)
+        val coin0 = payload.coins[0]!!
+        assertEquals("uruji", coin0.denom)
+        assertEquals("1000000", coin0.amount)
     }
 
     /** Verifies [ThorchainFunctions.stakeRUJI] rejects an empty sender address. */
@@ -226,8 +227,9 @@ class ThorchainFunctionsTest {
         val json = JSONObject(payload.executeMsg)
         assertEquals("1.5", json.getJSONObject("withdraw").getString("slippage"))
         assertEquals(1, payload.coins.size)
-        assertEquals("yrune", payload.coins[0].denom)
-        assertEquals("200000", payload.coins[0].amount)
+        val coin0 = payload.coins[0]!!
+        assertEquals("yrune", coin0.denom)
+        assertEquals("200000", coin0.amount)
     }
 
     /** Verifies [ThorchainFunctions.redeemYToken] rejects an empty slippage string. */
@@ -275,8 +277,9 @@ class ThorchainFunctionsTest {
         assertEquals("cosmos1sender", payload.senderAddress)
         assertEquals("""{ "liquid": { "bond": {} } }""", payload.executeMsg)
         assertEquals(1, payload.coins.size)
-        assertEquals("x/staking-tcy", payload.coins[0].denom)
-        assertEquals("5000000", payload.coins[0].amount)
+        val coin0 = payload.coins[0]!!
+        assertEquals("x/staking-tcy", coin0.denom)
+        assertEquals("5000000", coin0.amount)
     }
 
     /** Verifies [ThorchainFunctions.stakeTcyCompound] rejects an empty sender address. */
@@ -308,8 +311,9 @@ class ThorchainFunctionsTest {
         assertEquals("cosmos1sender", payload.senderAddress)
         assertEquals("""{ "liquid": { "unbond": {} } }""", payload.executeMsg)
         assertEquals(1, payload.coins.size)
-        assertEquals("x/staking-tcy", payload.coins[0].denom)
-        assertEquals("1000000", payload.coins[0].amount)
+        val coin0 = payload.coins[0]!!
+        assertEquals("x/staking-tcy", coin0.denom)
+        assertEquals("1000000", coin0.amount)
     }
 
     /** Verifies [ThorchainFunctions.unStakeTcyCompound] rejects zero units. */
