@@ -28,6 +28,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/** Unit tests for [SettingsViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class SettingsViewModelTest {
 
@@ -39,6 +40,7 @@ internal class SettingsViewModelTest {
     private lateinit var referralRepository: ReferralCodeSettingsRepositoryContract
     private lateinit var preventScreenshotsRepository: PreventScreenshotsRepository
 
+    /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
@@ -52,6 +54,7 @@ internal class SettingsViewModelTest {
         preventScreenshotsRepository = mockk(relaxed = true)
     }
 
+    /** Cleans up mocks and resets test dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
@@ -68,6 +71,7 @@ internal class SettingsViewModelTest {
             savedStateHandle = SavedStateHandle(),
         )
 
+    /** Verifies clicking AddressBook navigates to AddressBookScreen. */
     @Test
     fun `clicking AddressBook navigates to AddressBookScreen`() =
         runTest(testDispatcher) {
@@ -76,6 +80,7 @@ internal class SettingsViewModelTest {
             coVerify { navigator.route(Route.AddressBookScreen(vaultId = VAULT_ID)) }
         }
 
+    /** Verifies clicking ShareTheApp opens share bottom sheet. */
     @Test
     fun `clicking ShareTheApp opens share bottom sheet`() =
         runTest(testDispatcher) {
@@ -84,6 +89,7 @@ internal class SettingsViewModelTest {
             assertTrue(vm.state.value.showShareBottomSheet)
         }
 
+    /** Verifies onDismissShareLinkBottomSheet hides share bottom sheet. */
     @Test
     fun `onDismissShareLinkBottomSheet hides share bottom sheet`() =
         runTest(testDispatcher) {
@@ -93,6 +99,7 @@ internal class SettingsViewModelTest {
             assertFalse(vm.state.value.showShareBottomSheet)
         }
 
+    /** Verifies onDismissReferralBottomSheet hides referral sheet. */
     @Test
     fun `onDismissReferralBottomSheet hides referral sheet`() =
         runTest(testDispatcher) {
@@ -102,6 +109,7 @@ internal class SettingsViewModelTest {
             assertFalse(vm.state.value.hasToShowReferralCodeSheet)
         }
 
+    /** Verifies clicking PreventScreenshots calls setEnabled with toggled value. */
     @Test
     fun `clicking PreventScreenshots calls setEnabled with toggled value`() =
         runTest(testDispatcher) {
@@ -110,6 +118,7 @@ internal class SettingsViewModelTest {
             coVerify { preventScreenshotsRepository.setEnabled(true) }
         }
 
+    /** Verifies clicking VaultSetting navigates to VaultSettings. */
     @Test
     fun `clicking VaultSetting navigates to VaultSettings`() =
         runTest(testDispatcher) {

@@ -32,6 +32,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/** Unit tests for [AddressEntryViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class AddressEntryViewModelTest {
 
@@ -44,6 +45,7 @@ internal class AddressEntryViewModelTest {
     private lateinit var orderRepository: OrderRepository<AddressBookOrderEntity>
     private lateinit var requestResultRepository: RequestResultRepository
 
+    /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
@@ -58,6 +60,7 @@ internal class AddressEntryViewModelTest {
         requestResultRepository = mockk(relaxed = true)
     }
 
+    /** Cleans up mocks and resets test dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
@@ -75,6 +78,7 @@ internal class AddressEntryViewModelTest {
             requestResultRepository = requestResultRepository,
         )
 
+    /** Verifies saveAddress with blank title sets titleError. */
     @Test
     fun `saveAddress with blank title sets titleError`() =
         runTest(testDispatcher) {
@@ -83,6 +87,7 @@ internal class AddressEntryViewModelTest {
             assertNotNull(vm.state.value.titleError)
         }
 
+    /** Verifies saveAddress with title over 100 chars sets titleError. */
     @Test
     fun `saveAddress with title over 100 chars sets titleError`() =
         runTest(testDispatcher) {
@@ -92,6 +97,7 @@ internal class AddressEntryViewModelTest {
             assertNotNull(vm.state.value.titleError)
         }
 
+    /** Verifies saveAddress with invalid address sets addressError. */
     @Test
     fun `saveAddress with invalid address sets addressError`() =
         runTest(testDispatcher) {
@@ -103,6 +109,7 @@ internal class AddressEntryViewModelTest {
             assertNotNull(vm.state.value.addressError)
         }
 
+    /** Verifies setOutputAddress sets the address field text. */
     @Test
     fun `setOutputAddress sets the address field text`() =
         runTest(testDispatcher) {
@@ -111,6 +118,7 @@ internal class AddressEntryViewModelTest {
             assertEquals("0xdeadbeef", vm.addressTextFieldState.text.toString())
         }
 
+    /** Verifies saveAddress with valid inputs calls addressBookRepository add. */
     @Test
     fun `saveAddress with valid inputs calls addressBookRepository add`() =
         runTest(testDispatcher) {
@@ -125,6 +133,7 @@ internal class AddressEntryViewModelTest {
             coVerify { addressBookRepository.add(any()) }
         }
 
+    /** Verifies titleError is null initially. */
     @Test
     fun `titleError is null initially`() =
         runTest(testDispatcher) {

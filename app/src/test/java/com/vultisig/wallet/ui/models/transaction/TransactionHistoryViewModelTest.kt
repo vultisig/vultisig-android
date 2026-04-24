@@ -33,6 +33,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/** Unit tests for [TransactionHistoryViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class TransactionHistoryViewModelTest {
 
@@ -42,6 +43,7 @@ internal class TransactionHistoryViewModelTest {
     private lateinit var refreshPendingTransactions: RefreshPendingTransactionsUseCase
     private lateinit var navigator: Navigator<Destination>
 
+    /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
@@ -53,6 +55,7 @@ internal class TransactionHistoryViewModelTest {
         navigator = mockk(relaxed = true)
     }
 
+    /** Cleans up mocks and resets test dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
@@ -67,6 +70,7 @@ internal class TransactionHistoryViewModelTest {
             navigator = navigator,
         )
 
+    /** Verifies selectTab updates selectedTab and sets isLoading. */
     @Test
     fun `selectTab updates selectedTab and sets isLoading`() =
         runTest(testDispatcher) {
@@ -76,6 +80,7 @@ internal class TransactionHistoryViewModelTest {
             assertTrue(vm.uiState.value.isLoading)
         }
 
+    /** Verifies openSearch sets isAssetSearchSheetVisible to true. */
     @Test
     fun `openSearch sets isAssetSearchSheetVisible to true`() =
         runTest(testDispatcher) {
@@ -84,6 +89,7 @@ internal class TransactionHistoryViewModelTest {
             assertTrue(vm.uiState.value.isAssetSearchSheetVisible)
         }
 
+    /** Verifies confirmAssetSearch closes the asset search sheet. */
     @Test
     fun `confirmAssetSearch closes the asset search sheet`() =
         runTest(testDispatcher) {
@@ -93,6 +99,7 @@ internal class TransactionHistoryViewModelTest {
             assertFalse(vm.uiState.value.isAssetSearchSheetVisible)
         }
 
+    /** Verifies openDetail sets selectedItem. */
     @Test
     fun `openDetail sets selectedItem`() =
         runTest(testDispatcher) {
@@ -103,6 +110,7 @@ internal class TransactionHistoryViewModelTest {
             assertEquals(item, vm.uiState.value.selectedItem)
         }
 
+    /** Verifies dismissDetail clears selectedItem. */
     @Test
     fun `dismissDetail clears selectedItem`() =
         runTest(testDispatcher) {
@@ -112,6 +120,7 @@ internal class TransactionHistoryViewModelTest {
             assertNull(vm.uiState.value.selectedItem)
         }
 
+    /** Verifies toggleAssetSelection adds asset to selectedAssetIds. */
     @Test
     fun `toggleAssetSelection adds asset to selectedAssetIds`() =
         runTest(testDispatcher) {
@@ -121,6 +130,7 @@ internal class TransactionHistoryViewModelTest {
             assertTrue(vm.uiState.value.selectedAssetIds.contains("Ethereum:ETH"))
         }
 
+    /** Verifies clearAllFilters resets selectedAssets and ids. */
     @Test
     fun `clearAllFilters resets selectedAssets and ids`() =
         runTest(testDispatcher) {

@@ -36,6 +36,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/** Unit tests for [EnterVaultInfoViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class EnterVaultInfoViewModelTest {
 
@@ -50,6 +51,7 @@ internal class EnterVaultInfoViewModelTest {
     private lateinit var keyImportRepository: KeyImportRepository
     private lateinit var checkServerVaultExists: CheckServerVaultExistsUseCase
 
+    /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
@@ -67,6 +69,7 @@ internal class EnterVaultInfoViewModelTest {
         every { isNameLengthValid(any()) } returns true
     }
 
+    /** Cleans up mocks and resets test dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
@@ -86,6 +89,7 @@ internal class EnterVaultInfoViewModelTest {
             savedStateHandle = SavedStateHandle(),
         )
 
+    /** Verifies the initial active step is Name. */
     @Test
     fun `initial active step is Name`() =
         runTest(testDispatcher) {
@@ -93,6 +97,7 @@ internal class EnterVaultInfoViewModelTest {
             assertEquals(StepType.Name, vm.uiState.value.activeStep)
         }
 
+    /** Verifies ShowMoreInfo event sets isMoreInfoVisible to true. */
     @Test
     fun `ShowMoreInfo event sets isMoreInfoVisible to true`() =
         runTest(testDispatcher) {
@@ -101,6 +106,7 @@ internal class EnterVaultInfoViewModelTest {
             assertTrue(vm.uiState.value.isMoreInfoVisible)
         }
 
+    /** Verifies HideMoreInfo event sets isMoreInfoVisible to false. */
     @Test
     fun `HideMoreInfo event sets isMoreInfoVisible to false`() =
         runTest(testDispatcher) {
@@ -110,6 +116,7 @@ internal class EnterVaultInfoViewModelTest {
             assertFalse(vm.uiState.value.isMoreInfoVisible)
         }
 
+    /** Verifies TogglePasswordVisibility event toggles isPasswordVisible. */
     @Test
     fun `TogglePasswordVisibility event toggles isPasswordVisible`() =
         runTest(testDispatcher) {
@@ -120,6 +127,7 @@ internal class EnterVaultInfoViewModelTest {
             assertFalse(vm.uiState.value.isPasswordVisible)
         }
 
+    /** Verifies dismissServerVaultWarning clears showServerVaultExistsWarning. */
     @Test
     fun `dismissServerVaultWarning clears showServerVaultExistsWarning`() =
         runTest(testDispatcher) {
@@ -128,6 +136,7 @@ internal class EnterVaultInfoViewModelTest {
             assertFalse(vm.uiState.value.showServerVaultExistsWarning)
         }
 
+    /** Verifies Back event from Name step navigates back. */
     @Test
     fun `Back event from Name step navigates back`() =
         runTest(testDispatcher) {

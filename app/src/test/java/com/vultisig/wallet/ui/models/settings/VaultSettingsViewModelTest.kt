@@ -33,6 +33,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/** Unit tests for [VaultSettingsViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class VaultSettingsViewModelTest {
 
@@ -47,6 +48,7 @@ internal class VaultSettingsViewModelTest {
     private lateinit var vultiSignerRepository: VultiSignerRepository
     private lateinit var snackbarFlow: SnackbarFlow
 
+    /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
@@ -63,6 +65,7 @@ internal class VaultSettingsViewModelTest {
         snackbarFlow = mockk(relaxed = true)
     }
 
+    /** Cleans up mocks and resets test dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
@@ -82,6 +85,7 @@ internal class VaultSettingsViewModelTest {
             snackbarFlow = snackbarFlow,
         )
 
+    /** Verifies clicking Advanced sets isAdvanceSetting to true. */
     @Test
     fun `clicking Advanced sets isAdvanceSetting to true`() =
         runTest(testDispatcher) {
@@ -90,6 +94,7 @@ internal class VaultSettingsViewModelTest {
             assertTrue(vm.uiModel.value.isAdvanceSetting)
         }
 
+    /** Verifies onBackClick when isAdvanceSetting is true resets it to false. */
     @Test
     fun `onBackClick when isAdvanceSetting is true resets it to false`() =
         runTest(testDispatcher) {
@@ -99,6 +104,7 @@ internal class VaultSettingsViewModelTest {
             assertFalse(vm.uiModel.value.isAdvanceSetting)
         }
 
+    /** Verifies onBackClick when not in advanced mode navigates back. */
     @Test
     fun `onBackClick when not in advanced mode navigates back`() =
         runTest(testDispatcher) {
@@ -107,6 +113,7 @@ internal class VaultSettingsViewModelTest {
             coVerify { navigator.navigate(Destination.Back) }
         }
 
+    /** Verifies onDismissBackupVaultBottomSheet hides the sheet. */
     @Test
     fun `onDismissBackupVaultBottomSheet hides the sheet`() =
         runTest(testDispatcher) {
@@ -115,6 +122,7 @@ internal class VaultSettingsViewModelTest {
             assertFalse(vm.uiModel.value.isBackupVaultBottomSheetVisible)
         }
 
+    /** Verifies onDismissBiometricFastSignBottomSheet hides biometric sheet. */
     @Test
     fun `onDismissBiometricFastSignBottomSheet hides biometric sheet`() =
         runTest(testDispatcher) {
@@ -123,6 +131,7 @@ internal class VaultSettingsViewModelTest {
             assertFalse(vm.uiModel.value.isBiometricFastSignBottomSheetVisible)
         }
 
+    /** Verifies togglePasswordVisibility toggles isPasswordVisible. */
     @Test
     fun `togglePasswordVisibility toggles isPasswordVisible`() =
         runTest(testDispatcher) {

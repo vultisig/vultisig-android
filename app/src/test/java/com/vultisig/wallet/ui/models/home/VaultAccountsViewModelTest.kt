@@ -46,6 +46,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/** Unit tests for [VaultAccountsViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class VaultAccountsViewModelTest {
 
@@ -72,6 +73,7 @@ internal class VaultAccountsViewModelTest {
     private lateinit var pushNotificationManager: PushNotificationManager
     private lateinit var snackbarFlow: SnackbarFlow
 
+    /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
@@ -102,6 +104,7 @@ internal class VaultAccountsViewModelTest {
         every { lastOpenedVaultRepository.lastOpenedVaultId } returns emptyFlow()
     }
 
+    /** Cleans up mocks and resets test dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
@@ -133,6 +136,7 @@ internal class VaultAccountsViewModelTest {
             snackbarFlow = snackbarFlow,
         )
 
+    /** Verifies dismissBackupReminder sets showMonthlyBackupReminder to false. */
     @Test
     fun `dismissBackupReminder sets showMonthlyBackupReminder to false`() =
         runTest(testDispatcher) {
@@ -141,6 +145,7 @@ internal class VaultAccountsViewModelTest {
             assertFalse(vm.uiState.value.showMonthlyBackupReminder)
         }
 
+    /** Verifies tempRemoveBanner sets isBannerVisible to false. */
     @Test
     fun `tempRemoveBanner sets isBannerVisible to false`() =
         runTest(testDispatcher) {
@@ -149,6 +154,7 @@ internal class VaultAccountsViewModelTest {
             assertFalse(vm.uiState.value.isBannerVisible)
         }
 
+    /** Verifies onNotificationPermissionResult true sets showNotificationVaultSheet. */
     @Test
     fun `onNotificationPermissionResult true sets showNotificationVaultSheet`() =
         runTest(testDispatcher) {
@@ -157,6 +163,7 @@ internal class VaultAccountsViewModelTest {
             assertTrue(vm.uiState.value.showNotificationVaultSheet)
         }
 
+    /** Verifies onNotificationPermissionResult false does not show vault sheet. */
     @Test
     fun `onNotificationPermissionResult false does not show vault sheet`() =
         runTest(testDispatcher) {
@@ -165,6 +172,7 @@ internal class VaultAccountsViewModelTest {
             assertFalse(vm.uiState.value.showNotificationVaultSheet)
         }
 
+    /** Verifies onNotificationVaultSheetDismiss hides the vault sheet. */
     @Test
     fun `onNotificationVaultSheetDismiss hides the vault sheet`() =
         runTest(testDispatcher) {
@@ -174,6 +182,7 @@ internal class VaultAccountsViewModelTest {
             assertFalse(vm.uiState.value.showNotificationVaultSheet)
         }
 
+    /** Verifies cryptoConnectionType defaults to Wallet. */
     @Test
     fun `cryptoConnectionType defaults to Wallet`() =
         runTest(testDispatcher) {

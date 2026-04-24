@@ -34,6 +34,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/** Unit tests for [VerifyTransactionViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class VerifyTransactionViewModelTest {
 
@@ -49,6 +50,7 @@ internal class VerifyTransactionViewModelTest {
     private lateinit var vaultRepository: VaultRepository
     private lateinit var addressBookRepository: AddressBookRepository
 
+    /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
@@ -66,6 +68,7 @@ internal class VerifyTransactionViewModelTest {
         addressBookRepository = mockk(relaxed = true)
     }
 
+    /** Cleans up mocks and resets test dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
@@ -86,6 +89,7 @@ internal class VerifyTransactionViewModelTest {
             addressBookRepository = addressBookRepository,
         )
 
+    /** Verifies checkConsentAddress sets consentAddress true. */
     @Test
     fun `checkConsentAddress sets consentAddress true`() =
         runTest(testDispatcher) {
@@ -94,6 +98,7 @@ internal class VerifyTransactionViewModelTest {
             assertTrue(vm.uiState.value.consentAddress)
         }
 
+    /** Verifies checkConsentAmount sets consentAmount true. */
     @Test
     fun `checkConsentAmount sets consentAmount true`() =
         runTest(testDispatcher) {
@@ -102,6 +107,7 @@ internal class VerifyTransactionViewModelTest {
             assertTrue(vm.uiState.value.consentAmount)
         }
 
+    /** Verifies hasAllConsents is false when only address consent is given. */
     @Test
     fun `hasAllConsents is false when only address consent is given`() =
         runTest(testDispatcher) {
@@ -110,6 +116,7 @@ internal class VerifyTransactionViewModelTest {
             assertFalse(vm.uiState.value.hasAllConsents)
         }
 
+    /** Verifies hasAllConsents is true when both consents are given. */
     @Test
     fun `hasAllConsents is true when both consents are given`() =
         runTest(testDispatcher) {
@@ -119,6 +126,7 @@ internal class VerifyTransactionViewModelTest {
             assertTrue(vm.uiState.value.hasAllConsents)
         }
 
+    /** Verifies joinKeySign sets errorText when consents not checked. */
     @Test
     fun `joinKeySign sets errorText when consents not checked`() =
         runTest(testDispatcher) {
@@ -127,6 +135,7 @@ internal class VerifyTransactionViewModelTest {
             assertNotNull(vm.uiState.value.errorText)
         }
 
+    /** Verifies dismissError clears errorText. */
     @Test
     fun `dismissError clears errorText`() =
         runTest(testDispatcher) {
@@ -136,6 +145,7 @@ internal class VerifyTransactionViewModelTest {
             assertNull(vm.uiState.value.errorText)
         }
 
+    /** Verifies dismissScanningWarning sets showScanningWarning to false. */
     @Test
     fun `dismissScanningWarning sets showScanningWarning to false`() =
         runTest(testDispatcher) {

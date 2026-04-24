@@ -42,6 +42,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/** Unit tests for [KeygenViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class KeygenViewModelTest {
 
@@ -64,6 +65,7 @@ internal class KeygenViewModelTest {
     private lateinit var referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
 
+    /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
@@ -106,6 +108,7 @@ internal class KeygenViewModelTest {
         chainAccountAddressRepository = mockk(relaxed = true)
     }
 
+    /** Cleans up mocks and resets test dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
@@ -133,6 +136,7 @@ internal class KeygenViewModelTest {
             chainAccountAddressRepository = chainAccountAddressRepository,
         )
 
+    /** Verifies the state action matches the route arg. */
     @Test
     fun `state action matches the route arg`() =
         runTest(testDispatcher) {
@@ -140,6 +144,7 @@ internal class KeygenViewModelTest {
             assertEquals(TssAction.SingleKeygen, vm.state.value.action)
         }
 
+    /** Verifies init with empty keys transitions to error state. */
     @Test
     fun `init with empty keys transitions to error state`() =
         runTest(testDispatcher) {
@@ -147,6 +152,7 @@ internal class KeygenViewModelTest {
             assertNotNull(vm.state.value.error)
         }
 
+    /** Verifies isSuccess is false after keygen error. */
     @Test
     fun `isSuccess is false after keygen error`() =
         runTest(testDispatcher) {
@@ -154,6 +160,7 @@ internal class KeygenViewModelTest {
             assertFalse(vm.state.value.isSuccess)
         }
 
+    /** Verifies keygenState is CreatingInstance after keygen error. */
     @Test
     fun `keygenState is CreatingInstance after keygen error`() =
         runTest(testDispatcher) {
@@ -161,6 +168,7 @@ internal class KeygenViewModelTest {
             assertEquals(KeygenState.CreatingInstance, vm.state.value.keygenState)
         }
 
+    /** Verifies progress is 0f after keygen error. */
     @Test
     fun `progress is 0f after keygen error`() =
         runTest(testDispatcher) {
@@ -168,6 +176,7 @@ internal class KeygenViewModelTest {
             assertEquals(0f, vm.state.value.progress)
         }
 
+    /** Verifies tryAgain navigates back. */
     @Test
     fun `tryAgain navigates back`() =
         runTest(testDispatcher) {
