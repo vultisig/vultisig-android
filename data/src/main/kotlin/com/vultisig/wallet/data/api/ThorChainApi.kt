@@ -353,17 +353,13 @@ constructor(
         return response.body()
     }
 
-    override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> {
-        val response =
-            httpClient.get("https://thornode.thorchain.network/thorchain/inbound_addresses") {
+    override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> =
+        httpClient
+            .get("https://thornode.thorchain.network/thorchain/inbound_addresses") {
                 header(xClientID, xClientIDValue)
             }
-        if (!response.status.isSuccess()) {
-            // Error getting THORChain inbound addresses
-            throw Exception("Error getting THORChain inbound addresses")
-        }
-        return response.body()
-    }
+            .throwIfUnsuccessful()
+            .body()
 
     override suspend fun getPools(): List<ThorChainPoolJson> =
         httpClient
