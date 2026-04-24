@@ -338,6 +338,7 @@
     <string name="form_token_selection_asset">Risorsa</string>
     <string name="insufficient_native_token">%1$s insufficienti per le commissioni del gas</string>
     <string name="swap_error_amount_too_low">Importo dello swap troppo basso</string>
+    <string name="swap_error_amount_below_dust_threshold">L\'importo è inferiore alla soglia di dust. Aumenta l\'importo e riprova.</string>
     <string name="swap_error_insufficient_balance_and_fees">Saldo %1$s insufficiente per lo swap e le commissioni del gas. Ricarica %1$s o riduci l\'importo dello swap</string>
     <string name="swap_error_insufficient_source_token">Saldo %1$s insufficiente per lo scambio</string>
     <string name="swap_error_insufficient_gas_fees">Non c\'è abbastanza %1$s per coprire le commissioni del gas. Si prega di finanziare il portafoglio.</string>

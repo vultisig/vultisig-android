@@ -338,6 +338,7 @@
     <string name="form_token_selection_asset">Vermögenswert</string>
     <string name="insufficient_native_token">Nicht genügend %1$s für Gasgebühren</string>
     <string name="swap_error_amount_too_low">Swap-Betrag zu niedrig</string>
+    <string name="swap_error_amount_below_dust_threshold">Der Betrag liegt unter dem Dust-Schwellenwert. Bitte erhöhen Sie den Betrag und versuchen Sie es erneut.</string>
     <string name="swap_error_insufficient_balance_and_fees">Unzureichendes %1$s-Guthaben für den Swap und Gasgebühren. Laden Sie %1$s auf oder reduzieren Sie den Swap-Betrag</string>
     <string name="swap_error_insufficient_source_token">Unzureichendes %1$s-Guthaben zum Tauschen</string>
     <string name="swap_error_insufficient_gas_fees">Nicht genügend %1$s für Gasgebühren. Bitte füllen Sie die Wallet auf.</string>
