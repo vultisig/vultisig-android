@@ -23,7 +23,9 @@ internal fun isMaliGpu(): Boolean =
         val display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
         EGL14.eglInitialize(display, IntArray(1), 0, IntArray(1), 0)
         val vendor = EGL14.eglQueryString(display, EGL14.EGL_VENDOR) ?: ""
-        "mali" in vendor.lowercase()
+        // Mali EGL implementations report EGL_VENDOR = "ARM"; some variants include "mali"
+        val vendorLower = vendor.lowercase()
+        "arm" in vendorLower || "mali" in vendorLower
     } catch (_: Throwable) {
         false
     }
