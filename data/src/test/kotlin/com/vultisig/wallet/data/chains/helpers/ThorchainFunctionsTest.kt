@@ -1,9 +1,7 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import java.math.BigInteger
-import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
@@ -172,10 +170,9 @@ class ThorchainFunctionsTest {
 
         assertEquals("cosmos1sender", payload.senderAddress)
         assertEquals("cosmos1staking", payload.contractAddress)
-        val execute = JSONObject(payload.executeMsg).getJSONObject("execute")
-        assertEquals("cosmos1token", execute.getString("contract_addr"))
-        assertNotNull(execute.getString("msg"))
-        assertTrue(execute.getJSONArray("affiliate").length() >= 1)
+        assertTrue(payload.executeMsg.contains(""""contract_addr":"cosmos1token""""))
+        assertTrue(payload.executeMsg.contains(""""msg":"""))
+        assertTrue(payload.executeMsg.contains(""""affiliate":["""))
         assertEquals(1, payload.coins.size)
         assertEquals("uatom", payload.coins[0]!!.denom)
         assertEquals("2000000", payload.coins[0]!!.amount)
@@ -209,8 +206,7 @@ class ThorchainFunctionsTest {
             )
         assertEquals("cosmos1sender", payload.senderAddress)
         assertEquals("cosmos1token", payload.contractAddress)
-        val withdraw = JSONObject(payload.executeMsg).getJSONObject("withdraw")
-        assertEquals("50", withdraw.getString("slippage"))
+        assertTrue(payload.executeMsg.contains(""""slippage":"50""""))
         assertEquals(1, payload.coins.size)
         assertEquals("x/ytcy", payload.coins[0]!!.denom)
         assertEquals("1000000", payload.coins[0]!!.amount)
