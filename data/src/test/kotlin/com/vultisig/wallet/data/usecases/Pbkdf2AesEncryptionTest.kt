@@ -135,6 +135,7 @@ class Pbkdf2AesEncryptionTest {
         )
     }
 
+    /** Verifies that ciphertext produced by the iOS client decrypts to the expected plaintext. */
     @Test
     fun `decrypt_iosClientVector_returnsExpectedPlaintext`() {
         val (pwd, expected, ciphertext) = loadFixture("ios")
@@ -143,6 +144,9 @@ class Pbkdf2AesEncryptionTest {
         assertEquals(expected, decrypted.toString(Charsets.UTF_8))
     }
 
+    /**
+     * Verifies that ciphertext produced by the Extension client decrypts to the expected plaintext.
+     */
     @Test
     fun `decrypt_extensionClientVector_returnsExpectedPlaintext`() {
         val (pwd, expected, ciphertext) = loadFixture("extension")
@@ -151,6 +155,7 @@ class Pbkdf2AesEncryptionTest {
         assertEquals(expected, decrypted.toString(Charsets.UTF_8))
     }
 
+    /** Verifies that ciphertext produced by the Web client decrypts to the expected plaintext. */
     @Test
     fun `decrypt_webClientVector_returnsExpectedPlaintext`() {
         val (pwd, expected, ciphertext) = loadFixture("web")
@@ -159,6 +164,7 @@ class Pbkdf2AesEncryptionTest {
         assertEquals(expected, decrypted.toString(Charsets.UTF_8))
     }
 
+    /** Verifies that the same salt and password always derive the same key (PBKDF2 determinism). */
     @Test
     fun `encrypt_sameSaltAndPassword_producesDeterministicKey`() {
         // deriveKey is private; verify determinism by decrypting a pre-computed vector twice.
@@ -173,6 +179,10 @@ class Pbkdf2AesEncryptionTest {
         assertContentEquals(first, second)
     }
 
+    /**
+     * Verifies that 100 encryptions of the same input produce 100 distinct ciphertexts (random
+     * salt).
+     */
     @Test
     fun `encrypt_differentSalts_producesDifferentCiphertexts`() {
         val data = originalInput.toByteArray(Charsets.UTF_8)
@@ -181,6 +191,7 @@ class Pbkdf2AesEncryptionTest {
         assertEquals(100, outputs.distinct().size, "All 100 encryptions must be distinct")
     }
 
+    /** Verifies that a payload with a valid header but corrupt GCM tag is rejected with null. */
     @Test
     fun `rejectsMalformedGcmTag_returnsNull`() {
         val magic = byteArrayOf(0x56, 0x4C, 0x54, 0x02)
@@ -192,6 +203,9 @@ class Pbkdf2AesEncryptionTest {
         assertNull(result)
     }
 
+    /**
+     * Verifies that decryption succeeds only when PBKDF2_ITERATIONS matches the 600,000 constant.
+     */
     @Test
     fun `usesExpectedIterationCount`() {
         // This vector was produced with exactly 600,000 PBKDF2-HMAC-SHA256 iterations.

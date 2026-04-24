@@ -123,6 +123,7 @@ class RequestServerBackupUseCaseTest {
 
     // ── HTTP error classes ────────────────────────────────────────────────────
 
+    /** Stubs the repository to return the given [errorType] and invokes the use case. */
     private suspend fun invokeWithError(
         errorType: ServerBackupResult.ErrorType
     ): ServerBackupResult {
@@ -134,12 +135,19 @@ class RequestServerBackupUseCaseTest {
         return useCase(testVaultId, testEmail, testPassword)
     }
 
+    /**
+     * Verifies that a 400 Bad Request response maps to [ServerBackupResult.ErrorType.BAD_REQUEST].
+     */
     @Test
     fun `invoke returns bad request error for 400`() = runTest {
         val result = invokeWithError(ServerBackupResult.ErrorType.BAD_REQUEST)
         assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.BAD_REQUEST), result)
     }
 
+    /**
+     * Verifies that a 401 Unauthorized response maps to
+     * [ServerBackupResult.ErrorType.INVALID_PASSWORD].
+     */
     @Test
     fun `invoke returns invalid password error for 401 Unauthorized`() = runTest {
         val result = invokeWithError(ServerBackupResult.ErrorType.INVALID_PASSWORD)
@@ -149,6 +157,10 @@ class RequestServerBackupUseCaseTest {
         )
     }
 
+    /**
+     * Verifies that a 403 Forbidden response maps to
+     * [ServerBackupResult.ErrorType.INVALID_PASSWORD].
+     */
     @Test
     fun `invoke returns invalid password error for 403 Forbidden`() = runTest {
         val result = invokeWithError(ServerBackupResult.ErrorType.INVALID_PASSWORD)
@@ -158,42 +170,60 @@ class RequestServerBackupUseCaseTest {
         )
     }
 
+    /** Verifies that a 404 Not Found response maps to [ServerBackupResult.ErrorType.UNKNOWN]. */
     @Test
     fun `invoke returns unknown error for 404 Not Found`() = runTest {
         val result = invokeWithError(ServerBackupResult.ErrorType.UNKNOWN)
         assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.UNKNOWN), result)
     }
 
+    /**
+     * Verifies that a 500 Internal Server Error response maps to
+     * [ServerBackupResult.ErrorType.UNKNOWN].
+     */
     @Test
     fun `invoke returns unknown error for 500 Internal Server Error`() = runTest {
         val result = invokeWithError(ServerBackupResult.ErrorType.UNKNOWN)
         assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.UNKNOWN), result)
     }
 
+    /** Verifies that a 502 Bad Gateway response maps to [ServerBackupResult.ErrorType.UNKNOWN]. */
     @Test
     fun `invoke returns unknown error for 502 Bad Gateway`() = runTest {
         val result = invokeWithError(ServerBackupResult.ErrorType.UNKNOWN)
         assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.UNKNOWN), result)
     }
 
+    /**
+     * Verifies that a 503 Service Unavailable response maps to
+     * [ServerBackupResult.ErrorType.UNKNOWN].
+     */
     @Test
     fun `invoke returns unknown error for 503 Service Unavailable`() = runTest {
         val result = invokeWithError(ServerBackupResult.ErrorType.UNKNOWN)
         assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.UNKNOWN), result)
     }
 
+    /** Verifies that a connection timeout maps to [ServerBackupResult.ErrorType.NETWORK_ERROR]. */
     @Test
     fun `invoke returns network error for connection timeout`() = runTest {
         val result = invokeWithError(ServerBackupResult.ErrorType.NETWORK_ERROR)
         assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.NETWORK_ERROR), result)
     }
 
+    /**
+     * Verifies that a DNS failure or connection refused maps to
+     * [ServerBackupResult.ErrorType.NETWORK_ERROR].
+     */
     @Test
     fun `invoke returns network error for DNS failure or connection refused`() = runTest {
         val result = invokeWithError(ServerBackupResult.ErrorType.NETWORK_ERROR)
         assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.NETWORK_ERROR), result)
     }
 
+    /**
+     * Verifies that a rate-limit response maps to [ServerBackupResult.ErrorType.TOO_MANY_REQUESTS].
+     */
     @Test
     fun `invoke returns too many requests error for rate limit response`() = runTest {
         val result = invokeWithError(ServerBackupResult.ErrorType.TOO_MANY_REQUESTS)

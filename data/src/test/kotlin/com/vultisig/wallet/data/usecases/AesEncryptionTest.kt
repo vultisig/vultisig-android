@@ -189,6 +189,7 @@ class AesEncryptionTest {
 
     // ── edge cases ────────────────────────────────────────────────────────────
 
+    /** Verifies that decryption returns null when ciphertext is too short for GCM auth tag. */
     @Test
     fun `decrypt_truncatedCiphertext_returnsNull`() {
         // 16 bytes: GCM extracts 12-byte IV but only 4 bytes remain — not enough
@@ -197,6 +198,7 @@ class AesEncryptionTest {
         assertNull(aes.decrypt(ByteArray(16), password.toByteArray()))
     }
 
+    /** Verifies that decryption returns null when given random bytes of invalid length. */
     @Test
     fun `decrypt_invalidIvLength_returnsNull`() {
         // 32 bytes of non-zero garbage: GCM authentication will fail (wrong key/tag),
@@ -205,6 +207,9 @@ class AesEncryptionTest {
         assertNull(aes.decrypt(invalid, password.toByteArray()))
     }
 
+    /**
+     * Verifies that decryption returns null when given garbage bytes that fail both GCM and CBC.
+     */
     @Test
     fun `decrypt_wrongVersionPrefix_returnsNull`() {
         // AesEncryption has no magic prefix; any garbage that fails both GCM auth
