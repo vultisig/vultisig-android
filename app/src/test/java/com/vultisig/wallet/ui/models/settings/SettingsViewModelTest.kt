@@ -99,12 +99,13 @@ internal class SettingsViewModelTest {
             assertFalse(vm.state.value.showShareBottomSheet)
         }
 
-    /** Verifies onDismissReferralBottomSheet hides referral sheet. */
+    /** Verifies onDismissReferralBottomSheet hides referral sheet after it was opened. */
     @Test
     fun `onDismissReferralBottomSheet hides referral sheet`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            vm.state.value.copy(hasToShowReferralCodeSheet = true)
+            vm.onClickReferralCode()
+            assertTrue(vm.state.value.hasToShowReferralCodeSheet)
             vm.onDismissReferralBottomSheet()
             assertFalse(vm.state.value.hasToShowReferralCodeSheet)
         }

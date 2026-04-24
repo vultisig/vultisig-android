@@ -144,36 +144,16 @@ internal class KeygenViewModelTest {
             assertEquals(TssAction.SingleKeygen, vm.state.value.action)
         }
 
-    /** Verifies init with empty keys transitions to error state. */
+    /** Verifies init with empty keys surfaces error and leaves keygen at CreatingInstance. */
     @Test
-    fun `init with empty keys transitions to error state`() =
+    fun `init with empty keys surfaces error and leaves keygen at CreatingInstance`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            assertNotNull(vm.state.value.error)
-        }
-
-    /** Verifies isSuccess is false after keygen error. */
-    @Test
-    fun `isSuccess is false after keygen error`() =
-        runTest(testDispatcher) {
-            val vm = createViewModel()
-            assertFalse(vm.state.value.isSuccess)
-        }
-
-    /** Verifies keygenState is CreatingInstance after keygen error. */
-    @Test
-    fun `keygenState is CreatingInstance after keygen error`() =
-        runTest(testDispatcher) {
-            val vm = createViewModel()
-            assertEquals(KeygenState.CreatingInstance, vm.state.value.keygenState)
-        }
-
-    /** Verifies progress is 0f after keygen error. */
-    @Test
-    fun `progress is 0f after keygen error`() =
-        runTest(testDispatcher) {
-            val vm = createViewModel()
-            assertEquals(0f, vm.state.value.progress)
+            val state = vm.state.value
+            assertNotNull(state.error)
+            assertFalse(state.isSuccess)
+            assertEquals(KeygenState.CreatingInstance, state.keygenState)
+            assertEquals(0f, state.progress)
         }
 
     /** Verifies tryAgain navigates back. */

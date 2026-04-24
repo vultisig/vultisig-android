@@ -144,4 +144,30 @@ internal class EnterVaultInfoViewModelTest {
             vm.onEvent(EnterVaultInfoEvent.Back)
             coVerify { navigator.navigate(Destination.Back) }
         }
+
+    /**
+     * Verifies Next event does not advance step when name validation fails (count=1 gives 3 steps
+     * so advancement from Name to Email is observable).
+     */
+    @Test
+    fun `Next event does not advance step when name is invalid`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.EnterVaultInfo>() } returns
+                Route.EnterVaultInfo(count = 1, tssAction = TssAction.KEYGEN)
+            every { isNameLengthValid(any()) } returns false
+            val vm = createViewModel()
+            vm.onEvent(EnterVaultInfoEvent.Next)
+            assertEquals(StepType.Name, vm.uiState.value.activeStep)
+        }
+
+    /** Verifies Next event advances from Name to Email when device count is 1 (3-step flow). */
+    @Test
+    fun `Next event advances to Email step when device count is 1`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.EnterVaultInfo>() } returns
+                Route.EnterVaultInfo(count = 1, tssAction = TssAction.KEYGEN)
+            val vm = createViewModel()
+            vm.onEvent(EnterVaultInfoEvent.Next)
+            assertEquals(StepType.Email, vm.uiState.value.activeStep)
+        }
 }

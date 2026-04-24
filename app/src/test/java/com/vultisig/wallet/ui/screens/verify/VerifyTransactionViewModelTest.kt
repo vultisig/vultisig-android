@@ -16,6 +16,8 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -24,6 +26,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -145,13 +148,34 @@ internal class VerifyTransactionViewModelTest {
             assertNull(vm.uiState.value.errorText)
         }
 
-    /** Verifies dismissScanningWarning sets showScanningWarning to false. */
+    /** Verifies dismissScanningWarning sets showScanningWarning to false after it was true. */
     @Test
     fun `dismissScanningWarning sets showScanningWarning to false`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
+            vm.uiState.update { it.copy(showScanningWarning = true) }
             vm.dismissScanningWarning()
             assertFalse(vm.uiState.value.showScanningWarning)
+        }
+
+    /** Verifies hasFastSign is true when isVaultHasFastSignById returns true. */
+    @Test
+    fun `hasFastSign is true when isVaultHasFastSignById returns true`() =
+        runTest(testDispatcher) {
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+            val vm = createViewModel()
+            assertTrue(vm.uiState.value.hasFastSign)
+        }
+
+    /** Verifies joinKeySign calls launchKeysign when both consents are given. */
+    @Test
+    fun `joinKeySign calls launchKeysign when both consents are given`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.checkConsentAddress(true)
+            vm.checkConsentAmount(true)
+            vm.joinKeySign()
+            coVerify { launchKeysign(any(), any(), any(), any(), any()) }
         }
 
     private companion object {

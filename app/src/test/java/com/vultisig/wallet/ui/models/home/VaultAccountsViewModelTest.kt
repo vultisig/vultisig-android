@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
@@ -28,16 +29,20 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -188,5 +193,33 @@ internal class VaultAccountsViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             assertTrue(vm.uiState.value.cryptoConnectionType == CryptoConnectionType.Wallet)
+        }
+
+    /** Verifies refreshData re-invokes accountsRepository with isRefresh=true. */
+    @Test
+    fun `refreshData re-invokes accountsRepository with isRefresh true`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+
+            val vm = createViewModel()
+            vm.refreshData()
+
+            verify { accountsRepository.loadAddresses("vault-1", true) }
+        }
+
+    /** Verifies isRefreshing resets to false when account load errors during refresh. */
+    @Test
+    fun `isRefreshing resets to false after error during refresh`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddresses(any(), any()) } returns
+                flow { throw RuntimeException("Balance load failed") }
+
+            val vm = createViewModel()
+            vm.refreshData()
+
+            assertFalse(vm.uiState.value.isRefreshing)
         }
 }
