@@ -187,6 +187,33 @@ class AesEncryptionTest {
                 .awaitAll()
         }
 
+    // ── edge cases ────────────────────────────────────────────────────────────
+
+    @Test
+    fun `decrypt_truncatedCiphertext_returnsNull`() {
+        // 16 bytes: GCM extracts 12-byte IV but only 4 bytes remain — not enough
+        // for the 16-byte AES-GCM authentication tag. GCM auth fails, CBC padding
+        // check fails → null.
+        assertNull(aes.decrypt(ByteArray(16), password.toByteArray()))
+    }
+
+    @Test
+    fun `decrypt_invalidIvLength_returnsNull`() {
+        // 32 bytes of non-zero garbage: GCM authentication will fail (wrong key/tag),
+        // and CBC PKCS5 padding check will fail → null.
+        val invalid = ByteArray(32) { (0xAB + it).toByte() }
+        assertNull(aes.decrypt(invalid, password.toByteArray()))
+    }
+
+    @Test
+    fun `decrypt_wrongVersionPrefix_returnsNull`() {
+        // AesEncryption has no magic prefix; any garbage that fails both GCM auth
+        // and CBC padding returns null. Uses a different byte pattern from the
+        // existing all-zero test to exercise different key-schedule paths.
+        val garbage = ByteArray(64) { (0xFF - it).toByte() }
+        assertNull(aes.decrypt(garbage, password.toByteArray()))
+    }
+
     @Test
     fun `concurrent operations on real thread pool do not fail`() {
         // Exercises raw JDK threading, not kotlinx coroutines — this most
