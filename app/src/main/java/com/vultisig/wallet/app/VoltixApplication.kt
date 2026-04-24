@@ -2,6 +2,7 @@ package com.vultisig.wallet.app
 
 import android.app.Application
 import android.content.Context
+import android.opengl.EGL14
 import androidx.annotation.VisibleForTesting
 import app.rive.runtime.kotlin.core.Rive
 import com.vultisig.wallet.BuildConfig
@@ -17,7 +18,21 @@ internal fun resetRiveInitialized() {
     isRiveInitialized = false
 }
 
+internal fun isMaliGpu(): Boolean =
+    try {
+        val display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
+        EGL14.eglInitialize(display, IntArray(1), 0, IntArray(1), 0)
+        val vendor = EGL14.eglQueryString(display, EGL14.EGL_VENDOR) ?: ""
+        "mali" in vendor.lowercase()
+    } catch (_: Throwable) {
+        false
+    }
+
 internal fun initializeRive(context: Context) {
+    if (isMaliGpu()) {
+        Timber.w("Skipping Rive initialization on Mali GPU to prevent librive-android.so crash")
+        return
+    }
     try {
         Rive.init(context)
         isRiveInitialized = true

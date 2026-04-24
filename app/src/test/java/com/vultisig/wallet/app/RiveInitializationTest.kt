@@ -5,7 +5,8 @@ import app.rive.runtime.kotlin.core.Rive
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
-import io.mockk.unmockkObject
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.AfterEach
@@ -24,7 +25,7 @@ internal class RiveInitializationTest {
 
     @AfterEach
     fun tearDown() {
-        unmockkObject(Rive)
+        unmockkAll()
         resetRiveInitialized()
     }
 
@@ -58,5 +59,26 @@ internal class RiveInitializationTest {
         initializeRive(context)
 
         assertFalse(isRiveInitialized)
+    }
+
+    @Test
+    fun `initializeRive skips Rive init when Mali GPU is detected`() {
+        mockkStatic("com.vultisig.wallet.app.VoltixApplicationKt")
+        every { isMaliGpu() } returns true
+
+        initializeRive(context)
+
+        assertFalse(isRiveInitialized)
+    }
+
+    @Test
+    fun `initializeRive proceeds normally when Mali GPU is not detected`() {
+        mockkStatic("com.vultisig.wallet.app.VoltixApplicationKt")
+        every { isMaliGpu() } returns false
+        every { Rive.init(any(), any()) } returns Unit
+
+        initializeRive(context)
+
+        assertTrue(isRiveInitialized)
     }
 }
