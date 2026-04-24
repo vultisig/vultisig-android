@@ -114,6 +114,8 @@ interface BalanceRepository {
     suspend fun getTcyAutoCompoundAmount(address: String): String?
 
     suspend fun invalidateBalance(address: String, coin: Coin)
+
+    suspend fun invalidateDeFiBalance(address: String, chain: Chain, vaultId: String)
 }
 
 internal class BalanceRepositoryImpl
@@ -163,6 +165,18 @@ constructor(
             address = address,
             ticker = coin.ticker,
         )
+    }
+
+    override suspend fun invalidateDeFiBalance(address: String, chain: Chain, vaultId: String) {
+        val key =
+            when (chain) {
+                ThorChain,
+                Ethereum -> address
+                MayaChain,
+                Chain.Tron -> "${chain.id}:$vaultId:$address"
+                else -> return
+            }
+        defiBalanceCache.remove(key)
     }
 
     override suspend fun getCachedTokenBalanceAndPrice(
