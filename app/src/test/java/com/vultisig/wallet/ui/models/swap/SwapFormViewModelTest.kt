@@ -67,6 +67,10 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/**
+ * Unit tests for [SwapFormViewModel] covering provider selection, allowance approval, error
+ * handling, quote refresh, token flip decimal adjustment, and swap navigation.
+ */
 internal class SwapFormViewModelTest {
 
     private val scheduler = TestCoroutineScheduler()
@@ -186,6 +190,10 @@ internal class SwapFormViewModelTest {
             swapQuoteManager = swapQuoteManager,
         )
 
+    /**
+     * Creates a [SwapFormViewModel] with the given [addresses] pre-loaded and optional explicit
+     * [srcTokenId]/[dstTokenId] overrides on the route.
+     */
     private fun createViewModelWithAddresses(
         addresses: List<Address> = listOf(ethAddress(), btcAddress()),
         srcTokenId: String? = null,
@@ -2196,6 +2204,7 @@ internal class SwapFormViewModelTest {
             )
     }
 
+    /** Creates an [Account] with the given [coin] and optional [balance]. */
     private fun createAccount(coin: Coin, balance: BigInteger? = null): Account =
         Account(
             token = coin,
@@ -2204,6 +2213,7 @@ internal class SwapFormViewModelTest {
             price = null,
         )
 
+    /** Returns an Ethereum [Address] holding ETH and USDC accounts with default balances. */
     private fun ethAddress(): Address =
         Address(
             chain = Chain.Ethereum,
@@ -2215,6 +2225,7 @@ internal class SwapFormViewModelTest {
                 ),
         )
 
+    /** Returns an Ethereum [Address] with the given ETH [balance] and a fixed USDC balance. */
     private fun ethAddressWithBalance(balance: BigInteger): Address =
         Address(
             chain = Chain.Ethereum,
@@ -2239,6 +2250,7 @@ internal class SwapFormViewModelTest {
             dstTokenId = BTC_COIN.id,
         )
 
+    /** Returns a Bitcoin [Address] holding a BTC account with a default balance. */
     private fun btcAddress(): Address =
         Address(
             chain = Chain.Bitcoin,
@@ -2246,6 +2258,7 @@ internal class SwapFormViewModelTest {
             accounts = listOf(createAccount(BTC_COIN, BigInteger("100000000"))),
         )
 
+    /** Builds a [QuoteFetchResult] with sensible defaults, overridable per-field for each test. */
     private fun createDefaultQuoteFetchResult(
         quote: SwapQuote = createThorChainQuote(),
         provider: SwapProvider = SwapProvider.THORCHAIN,
@@ -2267,6 +2280,7 @@ internal class SwapFormViewModelTest {
             swapFeeFiat = swapFeeFiat,
         )
 
+    /** Creates a [SwapQuote.ThorChain] fixture with the given [expectedDstValue]. */
     private fun createThorChainQuote(
         expectedDstValue: TokenValue = TokenValue(value = BigInteger("95000000"), token = USDC_COIN)
     ): SwapQuote.ThorChain =
@@ -2278,6 +2292,7 @@ internal class SwapFormViewModelTest {
             data = mockk(relaxed = true),
         )
 
+    /** Creates a [SwapQuote.OneInch] fixture with the given [expectedDstValue]. */
     private fun createOneInchQuote(
         expectedDstValue: TokenValue = TokenValue(value = BigInteger("95000000"), token = USDC_COIN)
     ): SwapQuote.OneInch =
@@ -2289,6 +2304,7 @@ internal class SwapFormViewModelTest {
             provider = "1inch",
         )
 
+    /** Creates a [SwapQuote.MayaChain] fixture with the given [expectedDstValue]. */
     private fun createMayaChainQuote(
         expectedDstValue: TokenValue = TokenValue(value = BigInteger("95000000"), token = USDC_COIN)
     ): SwapQuote.MayaChain =

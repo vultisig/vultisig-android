@@ -65,6 +65,9 @@ class SwapQuoteRepositoryProvidersTest {
             kyberApi = kyberApi,
         )
 
+    /**
+     * Creates a minimal [Coin] on [chain] with the given [ticker] and optional contract address.
+     */
     private fun coin(
         chain: Chain,
         ticker: String,
@@ -96,6 +99,7 @@ class SwapQuoteRepositoryProvidersTest {
             isNativeToken = false,
         )
 
+    /** Returns a minimal [THORChainSwapQuote] fixture with configurable amounts. */
     private fun makeThorQuote(
         expectedAmountOut: String = "9500000000",
         feesTotal: String = "500000000",
@@ -122,6 +126,7 @@ class SwapQuoteRepositoryProvidersTest {
             error = null,
         )
 
+    /** Returns a minimal [EVMSwapQuoteJson] fixture for 1inch/LiFi/Kyber tests. */
     private fun makeEvmQuote() =
         EVMSwapQuoteJson(
             dstAmount = "1000000",
@@ -136,6 +141,7 @@ class SwapQuoteRepositoryProvidersTest {
                 ),
         )
 
+    /** Returns a minimal [LiFiSwapQuoteJson] fixture for LiFi success-path tests. */
     private fun makeLiFiQuote() =
         LiFiSwapQuoteJson(
             estimate = LiFiSwapEstimateJson(toAmount = "1000000", feeCosts = emptyList()),
