@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
+/** Unit tests for [ThorchainFunctions] memo builders and CosmWasm payload constructors. */
 class ThorchainFunctionsTest {
 
+    /** Verifies [ThorchainFunctions.rujiRewardsMemo] produces the expected claim memo format. */
     @Test
     fun `rujiRewardsMemo builds correct memo string`() {
         val memo =
@@ -18,6 +20,7 @@ class ThorchainFunctionsTest {
         assertEquals("claim:cosmos1contractabc:1000000", memo)
     }
 
+    /** Verifies [ThorchainFunctions.rujiRewardsMemo] handles a zero token amount. */
     @Test
     fun `rujiRewardsMemo handles zero amount`() {
         val memo =
@@ -28,24 +31,30 @@ class ThorchainFunctionsTest {
         assertEquals("claim:cosmos1contract:0", memo)
     }
 
+    /** Verifies [ThorchainFunctions.tcyUnstakeMemo] produces the expected TCY unstake memo. */
     @Test
     fun `tcyUnstakeMemo builds correct memo string`() {
         val memo = ThorchainFunctions.tcyUnstakeMemo(basisPoints = 5000)
         assertEquals("TCY-:5000", memo)
     }
 
+    /** Verifies [ThorchainFunctions.tcyUnstakeMemo] accepts zero basis points. */
     @Test
     fun `tcyUnstakeMemo handles zero basis points`() {
         val memo = ThorchainFunctions.tcyUnstakeMemo(basisPoints = 0)
         assertEquals("TCY-:0", memo)
     }
 
+    /**
+     * Verifies [ThorchainFunctions.tcyUnstakeMemo] accepts the maximum basis-point value (10000).
+     */
     @Test
     fun `tcyUnstakeMemo handles max basis points`() {
         val memo = ThorchainFunctions.tcyUnstakeMemo(basisPoints = 10000)
         assertEquals("TCY-:10000", memo)
     }
 
+    /** Verifies [ThorchainFunctions.rujiRewardsMemo] rejects a blank contract address. */
     @Test
     fun `rujiRewardsMemo throws on blank contractAddress`() {
         assertThrows<IllegalArgumentException> {
@@ -56,6 +65,7 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /** Verifies [ThorchainFunctions.rujiRewardsMemo] rejects a negative token amount. */
     @Test
     fun `rujiRewardsMemo throws on negative tokenAmountInt`() {
         assertThrows<IllegalArgumentException> {
@@ -66,12 +76,17 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /** Verifies [ThorchainFunctions.tcyUnstakeMemo] rejects basis points outside [0, 10000]. */
     @Test
     fun `tcyUnstakeMemo throws on out-of-range basisPoints`() {
         assertThrows<IllegalArgumentException> { ThorchainFunctions.tcyUnstakeMemo(-1) }
         assertThrows<IllegalArgumentException> { ThorchainFunctions.tcyUnstakeMemo(10001) }
     }
 
+    /**
+     * Verifies [ThorchainFunctions.stakeRUJI] builds a CosmWasm payload with a bond execute
+     * message.
+     */
     @Test
     fun `stakeRUJI builds payload with correct contract address and bond message`() {
         val payload =
@@ -89,6 +104,7 @@ class ThorchainFunctionsTest {
         assertEquals("1000000", payload.coins[0].amount)
     }
 
+    /** Verifies [ThorchainFunctions.stakeRUJI] rejects an empty sender address. */
     @Test
     fun `stakeRUJI throws on empty fromAddress`() {
         assertThrows<IllegalArgumentException> {
@@ -101,6 +117,7 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /** Verifies [ThorchainFunctions.stakeRUJI] rejects an empty staking contract address. */
     @Test
     fun `stakeRUJI throws on empty stakingContract`() {
         assertThrows<IllegalArgumentException> {
@@ -113,6 +130,7 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /** Verifies [ThorchainFunctions.unstakeRUJI] builds a withdraw payload with no native coins. */
     @Test
     fun `unstakeRUJI builds payload with withdraw amount and no coins`() {
         val payload =
@@ -130,6 +148,7 @@ class ThorchainFunctionsTest {
         assertEquals(0, payload.coins.size)
     }
 
+    /** Verifies [ThorchainFunctions.unstakeRUJI] rejects an empty sender address. */
     @Test
     fun `unstakeRUJI throws on empty fromAddress`() {
         assertThrows<IllegalArgumentException> {
@@ -141,6 +160,7 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /** Verifies [ThorchainFunctions.unstakeRUJI] rejects an empty staking contract address. */
     @Test
     fun `unstakeRUJI throws on empty stakingContract`() {
         assertThrows<IllegalArgumentException> {
@@ -152,6 +172,9 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /**
+     * Verifies [ThorchainFunctions.claimRujiRewards] builds a claim payload with no native coins.
+     */
     @Test
     fun `claimRujiRewards builds payload with claim message and no coins`() {
         val payload =
@@ -165,6 +188,7 @@ class ThorchainFunctionsTest {
         assertEquals(0, payload.coins.size)
     }
 
+    /** Verifies [ThorchainFunctions.claimRujiRewards] rejects an empty sender address. */
     @Test
     fun `claimRujiRewards throws on empty fromAddress`() {
         assertThrows<IllegalArgumentException> {
@@ -175,6 +199,7 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /** Verifies [ThorchainFunctions.claimRujiRewards] rejects an empty staking contract address. */
     @Test
     fun `claimRujiRewards throws on empty stakingContract`() {
         assertThrows<IllegalArgumentException> {
@@ -182,6 +207,10 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /**
+     * Verifies [ThorchainFunctions.redeemYToken] builds a payload encoding the slippage in the
+     * execute message.
+     */
     @Test
     fun `redeemYToken builds payload with slippage in execute message`() {
         val payload =
@@ -201,6 +230,7 @@ class ThorchainFunctionsTest {
         assertEquals("200000", payload.coins[0].amount)
     }
 
+    /** Verifies [ThorchainFunctions.redeemYToken] rejects an empty slippage string. */
     @Test
     fun `redeemYToken throws on empty slippage`() {
         assertThrows<IllegalArgumentException> {
@@ -214,6 +244,7 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /** Verifies [ThorchainFunctions.redeemYToken] rejects an empty sender address. */
     @Test
     fun `redeemYToken throws on empty fromAddress`() {
         assertThrows<IllegalArgumentException> {
@@ -227,6 +258,10 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /**
+     * Verifies [ThorchainFunctions.stakeTcyCompound] builds a liquid-bond payload with the given
+     * denom.
+     */
     @Test
     fun `stakeTcyCompound builds payload with liquid-bond message and provided denom`() {
         val payload =
@@ -244,6 +279,7 @@ class ThorchainFunctionsTest {
         assertEquals("5000000", payload.coins[0].amount)
     }
 
+    /** Verifies [ThorchainFunctions.stakeTcyCompound] rejects an empty sender address. */
     @Test
     fun `stakeTcyCompound throws on empty fromAddress`() {
         assertThrows<IllegalArgumentException> {
@@ -256,6 +292,10 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /**
+     * Verifies [ThorchainFunctions.unStakeTcyCompound] builds a liquid-unbond payload with the TCY
+     * denom.
+     */
     @Test
     fun `unStakeTcyCompound builds payload with liquid-unbond message using TCY denom`() {
         val payload =
@@ -272,6 +312,7 @@ class ThorchainFunctionsTest {
         assertEquals("1000000", payload.coins[0].amount)
     }
 
+    /** Verifies [ThorchainFunctions.unStakeTcyCompound] rejects zero units. */
     @Test
     fun `unStakeTcyCompound throws when units is zero`() {
         assertThrows<IllegalArgumentException> {
@@ -283,6 +324,7 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /** Verifies [ThorchainFunctions.unStakeTcyCompound] rejects negative units. */
     @Test
     fun `unStakeTcyCompound throws when units is negative`() {
         assertThrows<IllegalArgumentException> {
@@ -294,6 +336,9 @@ class ThorchainFunctionsTest {
         }
     }
 
+    /**
+     * Verifies [ThorchainFunctions.unStakeTcyCompound] rejects an empty staking contract address.
+     */
     @Test
     fun `unStakeTcyCompound throws on empty stakingContract`() {
         assertThrows<IllegalArgumentException> {

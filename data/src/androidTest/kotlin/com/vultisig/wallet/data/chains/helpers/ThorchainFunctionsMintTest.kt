@@ -6,8 +6,13 @@ import kotlin.test.assertNotNull
 import org.json.JSONObject
 import org.junit.Test
 
+/** Instrumented tests for [ThorchainFunctions] mint/yToken payload construction. */
 class ThorchainFunctionsMintTest {
 
+    /**
+     * Verifies [ThorchainFunctions.mintYToken] produces a payload with correct contract, coins, and
+     * affiliate fields.
+     */
     @Test
     fun mintYToken_payload_includes_execute_with_contractAddr_base64Msg_and_affiliate() {
         val payload =

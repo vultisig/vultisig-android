@@ -95,6 +95,7 @@ internal class SwapFormViewModelTest {
 
     private val currencyFlow = MutableStateFlow(AppCurrency.USD)
 
+    /** Sets up the test main dispatcher and all mock dependencies before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(mainDispatcher)
@@ -165,12 +166,14 @@ internal class SwapFormViewModelTest {
         swapQuoteManager = mockk(relaxed = true)
     }
 
+    /** Resets the main dispatcher and static mocks after each test. */
     @AfterEach
     fun tearDown() {
         Dispatchers.resetMain()
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
     }
 
+    /** Creates a [SwapFormViewModel] using the current mock configuration. */
     private fun createViewModel() =
         SwapFormViewModel(
             savedStateHandle = savedStateHandle,

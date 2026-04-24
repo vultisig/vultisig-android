@@ -50,6 +50,10 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/**
+ * Unit tests for [DepositFormViewModel] covering deposit-option loading, token selection, field
+ * validation, and error propagation.
+ */
 internal class DepositFormViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -80,16 +84,19 @@ internal class DepositFormViewModelTest {
         mockk(relaxed = true)
     private val vaultRepository: VaultRepository = mockk(relaxed = true)
 
+    /** Sets the test main dispatcher before each test. */
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
     }
 
+    /** Resets the main dispatcher after each test. */
     @AfterEach
     fun tearDown() {
         Dispatchers.resetMain()
     }
 
+    /** Constructs a [DepositFormViewModel] with all mocked dependencies. */
     private fun buildVm() =
         DepositFormViewModel(
             navigator = navigator,
@@ -117,6 +124,7 @@ internal class DepositFormViewModelTest {
             requestAddressBookEntry = requestAddressBookEntry,
         )
 
+    /** Verifies MayaChain only exposes [DepositOption.Leave] and [DepositOption.Custom] options. */
     @Test
     fun `loadData for MayaChain exposes only Leave and Custom deposit options`() {
         val vm = buildVm()
@@ -134,6 +142,10 @@ internal class DepositFormViewModelTest {
         )
     }
 
+    /**
+     * Verifies ThorChain deposit options include both [DepositOption.Bond] and
+     * [DepositOption.Leave].
+     */
     @Test
     fun `loadData for ThorChain includes Bond and Leave in deposit options`() {
         val vm = buildVm()
@@ -150,6 +162,7 @@ internal class DepositFormViewModelTest {
         assertTrue(DepositOption.Leave in options)
     }
 
+    /** Verifies selecting [DepositOption.Bond] on ThorChain auto-selects the RUNE token. */
     @Test
     fun `selectDepositOption Bond on ThorChain sets selectedToken to RUNE`() = runTest {
         val vm = buildVm()
@@ -166,6 +179,7 @@ internal class DepositFormViewModelTest {
         assertEquals(Coins.ThorChain.RUNE, vm.state.value.selectedToken)
     }
 
+    /** Verifies selecting [DepositOption.Leave] on MayaChain auto-selects the CACAO token. */
     @Test
     fun `selectDepositOption Leave on MayaChain sets selectedToken to CACAO`() = runTest {
         val vm = buildVm()
@@ -182,6 +196,9 @@ internal class DepositFormViewModelTest {
         assertEquals(Coins.MayaChain.CACAO, vm.state.value.selectedToken)
     }
 
+    /**
+     * Verifies selecting [DepositOption.AddLiquidity] on MayaChain auto-selects the CACAO token.
+     */
     @Test
     fun `selectDepositOption AddLiquidity sets selectedToken to CACAO`() = runTest {
         val vm = buildVm()
@@ -198,6 +215,10 @@ internal class DepositFormViewModelTest {
         assertEquals(Coins.MayaChain.CACAO, vm.state.value.selectedToken)
     }
 
+    /**
+     * Verifies [DepositFormViewModel.validateTokenAmount] sets an error when the amount field is
+     * empty.
+     */
     @Test
     fun `validateTokenAmount with empty field sets tokenAmountError`() {
         val vm = buildVm()
@@ -207,6 +228,10 @@ internal class DepositFormViewModelTest {
         assertNotNull(vm.state.value.tokenAmountError)
     }
 
+    /**
+     * Verifies [DepositFormViewModel.validateTokenAmount] clears the error when a valid amount is
+     * entered.
+     */
     @Test
     fun `validateTokenAmount with valid amount clears tokenAmountError`() {
         val vm = buildVm()
@@ -217,6 +242,10 @@ internal class DepositFormViewModelTest {
         assertNull(vm.state.value.tokenAmountError)
     }
 
+    /**
+     * Verifies [DepositFormViewModel.validateBasisPoints] sets an error when basis points
+     * exceed 100.
+     */
     @Test
     fun `validateBasisPoints with value above 100 sets basisPointsError`() {
         val vm = buildVm()
@@ -227,6 +256,10 @@ internal class DepositFormViewModelTest {
         assertNotNull(vm.state.value.basisPointsError)
     }
 
+    /**
+     * Verifies [DepositFormViewModel.validateCustomMemo] sets an error when the memo field is
+     * blank.
+     */
     @Test
     fun `validateCustomMemo with blank field sets customMemoError`() {
         val vm = buildVm()
@@ -236,6 +269,10 @@ internal class DepositFormViewModelTest {
         assertNotNull(vm.state.value.customMemoError)
     }
 
+    /**
+     * Verifies [DepositFormViewModel.validateSlippage] sets an error when the slippage field is
+     * empty.
+     */
     @Test
     fun `validateSlippage with empty field sets slippageError`() {
         val vm = buildVm()
@@ -245,6 +282,10 @@ internal class DepositFormViewModelTest {
         assertNotNull(vm.state.value.slippageError)
     }
 
+    /**
+     * Verifies that depositing a [DepositOption.WithdrawSecuredAsset] with a chain not enabled in
+     * the vault shows a chain-not-enabled error.
+     */
     @Test
     fun `deposit WithdrawSecuredAsset when chain not enabled in vault shows chain-not-enabled error`() =
         runTest {
