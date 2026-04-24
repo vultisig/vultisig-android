@@ -108,15 +108,10 @@ object ThorchainFunctions {
         require(slippage.isNotEmpty()) { "slippage cannot be empty" }
         require(denom.isNotEmpty()) { "denom cannot be empty" }
 
-        val executePayload =
-            JSONObject().apply {
-                put(KEY_WITHDRAW, JSONObject().apply { put(KEY_SLIPPAGE, slippage) })
-            }
-
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = tokenContract,
-            executeMsg = executePayload.toString(),
+            executeMsg = """{"$KEY_WITHDRAW":{"$KEY_SLIPPAGE":"$slippage"}}""",
             coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
         )
     }

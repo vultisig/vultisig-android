@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.send
 
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -12,7 +13,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
+import wallet.core.jni.CoinType
+import wallet.core.jni.CoinTypeConfiguration
 
 internal class ChainValidationServiceTest {
 
@@ -71,6 +75,19 @@ internal class ChainValidationServiceTest {
             isNativeToken = true,
         )
 
+    private val xrpCoin =
+        Coin(
+            chain = Chain.Ripple,
+            ticker = "XRP",
+            logo = "",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     @Test
     fun `checkIsReapable - null account returns null`() {
         val gasFee = TokenValue(BigInteger.ONE, "DOT", 10)
@@ -93,7 +110,10 @@ internal class ChainValidationServiceTest {
         val account = Account(dotCoin, TokenValue(balance, "DOT", 10), null, null)
         val gasFee = TokenValue(BigInteger.valueOf(5_000_000_000L), "DOT", 10) // 0.5 DOT
         val result = service.checkIsReapable(account, dotCoin, "10.0", gasFee)
-        assertTrue(result is UiText.StringResource)
+        assertEquals(
+            R.string.send_form_polka_reaping_warning,
+            (result as UiText.StringResource).resId,
+        )
     }
 
     @Test
@@ -102,6 +122,36 @@ internal class ChainValidationServiceTest {
         val account = Account(ethCoin, TokenValue(BigInteger.ONE, "ETH", 18), null, null)
         val gasFee = TokenValue(BigInteger.ONE, "ETH", 18)
         assertNull(service.checkIsReapable(account, ethCoin, "0.001", gasFee))
+    }
+
+    @Test
+    fun `checkIsReapable - ripple null account returns null`() {
+        val gasFee = TokenValue(BigInteger.valueOf(12L), "XRP", 6)
+        assertNull(service.checkIsReapable(null, xrpCoin, "1.0", gasFee))
+    }
+
+    @Test
+    fun `checkIsReapable - ripple sufficient balance returns null`() {
+        // 5 XRP balance, sending 1 XRP, 12 drops fee → 3,999,988 drops remaining > 1,000,000
+        // reserve
+        val balance = BigInteger.valueOf(5_000_000L) // 5 XRP (6 decimals)
+        val account = Account(xrpCoin, TokenValue(balance, "XRP", 6), null, null)
+        val gasFee = TokenValue(BigInteger.valueOf(12L), "XRP", 6)
+        assertNull(service.checkIsReapable(account, xrpCoin, "1.0", gasFee))
+    }
+
+    @Test
+    fun `checkIsReapable - ripple below reserve returns warning`() {
+        // 2 XRP balance, sending 1.5 XRP, 12 drops fee → 499,988 drops remaining < 1,000,000
+        // reserve
+        val balance = BigInteger.valueOf(2_000_000L) // 2 XRP
+        val account = Account(xrpCoin, TokenValue(balance, "XRP", 6), null, null)
+        val gasFee = TokenValue(BigInteger.valueOf(12L), "XRP", 6)
+        val result = service.checkIsReapable(account, xrpCoin, "1.5", gasFee)
+        assertEquals(
+            R.string.send_form_ripple_reaping_warning,
+            (result as UiText.StringResource).resId,
+        )
     }
 
     @Test
@@ -127,7 +177,10 @@ internal class ChainValidationServiceTest {
                     estimatedFee = BigInteger.valueOf(200_000),
                 )
             }
-        assertTrue(exception.text is UiText.FormattedText)
+        assertEquals(
+            R.string.minimum_send_amount_is_ada,
+            (exception.text as UiText.FormattedText).resId,
+        )
     }
 
     @Test
@@ -140,13 +193,14 @@ internal class ChainValidationServiceTest {
                     estimatedFee = BigInteger.valueOf(200_000),
                 )
             }
-        assertTrue(exception.text is UiText.FormattedText)
+        assertEquals(
+            R.string.insufficient_balance_try_send,
+            (exception.text as UiText.FormattedText).resId,
+        )
     }
 
     @Test
     fun `validateCardanoUTXORequirements - change below minUTXO throws`() {
-        // Send 8 ADA from 10 ADA balance with 0.2 ADA fee → 1.8 ADA remaining
-        // But 1.8 ADA > 1.4 ADA dust, so let's pick values that leave change < 1.4 ADA
         // Send 8.5 ADA from 10 ADA with 0.2 ADA fee → 1.3 ADA remaining < 1.4 ADA dust
         val exception =
             assertThrows(InvalidTransactionDataException::class.java) {
@@ -156,7 +210,10 @@ internal class ChainValidationServiceTest {
                     estimatedFee = BigInteger.valueOf(200_000), // 0.2 ADA
                 )
             }
-        assertTrue(exception.text is UiText.FormattedText)
+        assertEquals(
+            R.string.this_amount_would_leave_too_little_change,
+            (exception.text as UiText.FormattedText).resId,
+        )
     }
 
     @Test
@@ -177,6 +234,44 @@ internal class ChainValidationServiceTest {
             sendAmount = BigInteger.valueOf(9_800_000), // 9.8 ADA
             totalBalance = BigInteger.valueOf(10_000_000), // 10 ADA
             estimatedFee = BigInteger.valueOf(200_000), // 0.2 ADA
+        )
+    }
+
+    // validateBtcLikeAmount tests
+
+    @Test
+    fun `validateBtcLikeAmount - null plan throws insufficient utxos error`() {
+        val exception =
+            assertThrows(InvalidTransactionDataException::class.java) {
+                service.validateBtcLikeAmount(
+                    tokenAmountInt = BigInteger.valueOf(1_000L), // above 546 BTC dust
+                    chain = Chain.Bitcoin,
+                    plan = null,
+                )
+            }
+        assertEquals(
+            R.string.insufficient_utxos_error,
+            (exception.text as UiText.StringResource).resId,
+        )
+    }
+
+    @Test
+    fun `validateBtcLikeAmount - below dust threshold throws formatted minimum send error`() {
+        val nativeAvailable =
+            runCatching { CoinTypeConfiguration.getSymbol(CoinType.BITCOIN) }.isSuccess
+        assumeTrue(nativeAvailable)
+
+        val exception =
+            assertThrows(InvalidTransactionDataException::class.java) {
+                service.validateBtcLikeAmount(
+                    tokenAmountInt = BigInteger.valueOf(100L), // below 546 BTC dust
+                    chain = Chain.Bitcoin,
+                    plan = null,
+                )
+            }
+        assertEquals(
+            R.string.send_form_minimum_send_amount_is_requires_this,
+            (exception.text as UiText.FormattedText).resId,
         )
     }
 

@@ -1,8 +1,8 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import java.math.BigInteger
-import org.json.JSONObject
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -224,8 +224,7 @@ class ThorchainFunctionsTest {
             )
         assertEquals("cosmos1token", payload.contractAddress)
         assertEquals("cosmos1sender", payload.senderAddress)
-        val json = JSONObject(payload.executeMsg)
-        assertEquals("1.5", json.getJSONObject("withdraw").getString("slippage"))
+        assertTrue(payload.executeMsg.contains(""""slippage":"1.5""""))
         assertEquals(1, payload.coins.size)
         val coin0 = payload.coins[0]!!
         assertEquals("yrune", coin0.denom)

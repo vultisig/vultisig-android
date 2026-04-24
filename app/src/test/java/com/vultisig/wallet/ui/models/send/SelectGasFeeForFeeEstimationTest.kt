@@ -103,4 +103,40 @@ internal class SelectGasFeeForFeeEstimationTest {
 
         assertEquals(ethFee, result)
     }
+
+    @Test
+    fun `bitcoin with non-null evm gas settings uses plan fee and ignores evm settings`() {
+        val result =
+            selectGasFeeForFeeEstimation(
+                chain = Chain.Bitcoin,
+                gasFee = btcFee,
+                planFee = 500L,
+                evmGasSettings =
+                    GasSettings.Eth(
+                        baseFee = BigInteger.valueOf(99L),
+                        priorityFee = BigInteger.ONE,
+                        gasLimit = BigInteger.valueOf(21_000L),
+                    ),
+            )
+
+        assertEquals(BigInteger.valueOf(500L), result.value)
+    }
+
+    @Test
+    fun `ethereum with zero base fee returns fee of zero`() {
+        val result =
+            selectGasFeeForFeeEstimation(
+                chain = Chain.Ethereum,
+                gasFee = ethFee,
+                planFee = null,
+                evmGasSettings =
+                    GasSettings.Eth(
+                        baseFee = BigInteger.ZERO,
+                        priorityFee = BigInteger.valueOf(2L),
+                        gasLimit = BigInteger.valueOf(21_000L),
+                    ),
+            )
+
+        assertEquals(BigInteger.ZERO, result.value)
+    }
 }
