@@ -1,6 +1,6 @@
 package com.vultisig.wallet.ui.utils
 
-private val URI_REGEX = Regex("^[a-zA-Z]+:(.+)$")
+private val URI_REGEX = Regex("^[a-zA-Z][a-zA-Z0-9+\\-.]*:(.+)$")
 
 /**
  * Returns this user-entered destination address with surrounding Unicode whitespace stripped and

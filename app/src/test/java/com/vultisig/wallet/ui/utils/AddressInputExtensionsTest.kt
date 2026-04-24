@@ -32,67 +32,67 @@ internal class AddressInputExtensionsTest {
     }
 
     @Test
-    fun `unicode_nonbreaking_space_is_stripped`() {
-        val nbsp = '\u00A0'
+    fun `unicode nonbreaking space is stripped`() {
+        val nbsp = ' '
         assertEquals(EVM_ADDRESS, "$nbsp$EVM_ADDRESS$nbsp".asAddressInput())
     }
 
     @Test
-    fun `unicode_en_quad_is_stripped`() {
-        val enQuad = '\u2000'
+    fun `unicode en quad is stripped`() {
+        val enQuad = ' '
         assertEquals(EVM_ADDRESS, "$enQuad$EVM_ADDRESS$enQuad".asAddressInput())
     }
 
     @Test
-    fun `unicode_narrow_nobreak_space_is_stripped`() {
-        val nnbs = '\u202F'
+    fun `unicode narrow nobreak space is stripped`() {
+        val nnbs = ' '
         assertEquals(EVM_ADDRESS, "$nnbs$EVM_ADDRESS$nnbs".asAddressInput())
     }
 
     @Test
-    fun `unicode_ideographic_space_is_stripped`() {
-        val ideographic = '\u3000'
+    fun `unicode ideographic space is stripped`() {
+        val ideographic = '　'
         assertEquals(EVM_ADDRESS, "$ideographic$EVM_ADDRESS$ideographic".asAddressInput())
     }
 
     @Test
-    fun `tab_and_carriage_return_are_stripped`() {
+    fun `tab and carriage return are stripped`() {
         assertEquals(EVM_ADDRESS, "\t$EVM_ADDRESS\r".asAddressInput())
     }
 
     @Test
-    fun `bip21_uri_extracts_bare_btc_address`() {
+    fun `bip21 uri extracts bare btc address`() {
         assertEquals(BTC_ADDRESS, "bitcoin:$BTC_ADDRESS?amount=50".asAddressInput())
     }
 
     @Test
-    fun `bip21_uri_without_query_extracts_bare_address`() {
+    fun `bip21 uri without query extracts bare address`() {
         assertEquals(BTC_ADDRESS, "bitcoin:$BTC_ADDRESS".asAddressInput())
     }
 
     @Test
-    fun `eip681_uri_extracts_bare_evm_address`() {
+    fun `eip681 uri extracts bare evm address`() {
         assertEquals(EVM_ADDRESS, "ethereum:$EVM_ADDRESS@1?value=10".asAddressInput())
     }
 
     @Test
-    fun `eip681_uri_without_chain_id_extracts_bare_address`() {
+    fun `eip681 uri without chain id extracts bare address`() {
         assertEquals(EVM_ADDRESS, "ethereum:$EVM_ADDRESS?value=10".asAddressInput())
     }
 
     @Test
-    fun `thorname_passes_through_unchanged`() {
+    fun `thorname passes through unchanged`() {
         assertEquals("abc.thor", "abc.thor".asAddressInput())
     }
 
     @Test
-    fun `evm_checksum_case_preserved`() {
-        assertEquals(EVM_ADDRESS, EVM_ADDRESS.asAddressInput())
+    fun `evm checksum case preserved`() {
+        assertEquals(EVM_ADDRESS, "ethereum:$EVM_ADDRESS@1".asAddressInput())
     }
 
     @Test
-    fun `whitespace_only_returns_empty`() {
-        val ideographic = '\u3000'
+    fun `whitespace only returns empty`() {
+        val ideographic = '　'
         assertEquals("", "   $ideographic\t\n".asAddressInput())
     }
 
