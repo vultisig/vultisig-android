@@ -14,6 +14,7 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.util.appendIfNameAbsent
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.serialization.json.Json
 
 /**
@@ -50,6 +51,23 @@ object MockHttpClient {
         ) {
             installDefaults()
         }
+
+    /**
+     * Builds a client that steps through [responses] in order, pinning the last entry once the
+     * sequence is exhausted. Each entry is a [Pair] of (status, body).
+     */
+    fun respondingWithSequence(vararg responses: Pair<HttpStatusCode, String>): HttpClient {
+        val index = AtomicInteger(0)
+        return HttpClient(
+            MockEngine {
+                val i = minOf(index.getAndIncrement(), responses.size - 1)
+                val (status, body) = responses[i]
+                respond(content = body, status = status, headers = JSON_HEADERS)
+            }
+        ) {
+            installDefaults()
+        }
+    }
 
     /**
      * Installs the standard plugins matching production
