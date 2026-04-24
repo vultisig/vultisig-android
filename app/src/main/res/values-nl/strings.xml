@@ -113,6 +113,7 @@
     <string name="send_error_insufficient_balance">Onvoldoende saldo</string>
     <string name="send_error_msca_not_deployed">MSCA-account nog niet geïmplementeerd, probeer het opnieuw</string>
     <string name="send_error_insufficient_native_balance_with_fees">Onvoldoende %1$s saldo</string>
+    <string name="send_error_insufficient_frozen_balance">Bedrag overschrijdt bevroren %1$s saldo</string>
     <string name="settings_screen_language">Taal</string>
     <string name="settings_screen_currency">Valuta</string>
     <string name="settings_screen_share_the_app">Deel de app</string>
@@ -468,6 +469,12 @@
     <string name="tron_defi_countdown_days">%1$d dagen, %2$d uur</string>
     <string name="tron_defi_countdown_hours">%1$d uur, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">TRX-coin niet gevonden in kluis</string>
+    <string name="tron_freeze_screen_title">TRON bevriezen</string>
+    <string name="tron_unfreeze_screen_title">TRON ontdooien</string>
+    <string name="tron_frozen_balances_error">Bevroren saldi konden niet worden geladen. Trek om opnieuw te proberen.</string>
+    <string name="tron_resource_type">Brontype</string>
+    <string name="tron_resource_bandwidth">Bandbreedte</string>
+    <string name="tron_resource_energy">Energie</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Slippage is vereist</string>
     <string name="slippage_invalid_error">Slippage moet tussen 1 en 100 liggen</string>
