@@ -38,4 +38,29 @@ class ThorchainFunctionsMintTest {
         assertEquals("thor1svfwxevnxtm4ltnw92hrqpqk4vzuzw9a4jzy04", affiliate.getString(0))
         assertEquals(10, affiliate.getInt(1))
     }
+
+    /**
+     * Verifies [ThorchainFunctions.redeemYToken] encodes the slippage inside a `withdraw` object
+     * using the JSONObject-based construction.
+     */
+    @Test
+    fun redeemYToken_payload_encodes_slippage_in_withdraw_object() {
+        val payload =
+            ThorchainFunctions.redeemYToken(
+                fromAddress = "cosmos1sender",
+                tokenContract = "cosmos1token",
+                slippage = "1.5",
+                denom = "yrune",
+                amount = BigInteger.valueOf(200_000L),
+            )
+
+        assertEquals("cosmos1token", payload.contractAddress)
+        assertEquals("cosmos1sender", payload.senderAddress)
+        assertEquals(1, payload.coins.size)
+        assertEquals("yrune", payload.coins[0].denom)
+        assertEquals("200000", payload.coins[0].amount)
+
+        val withdraw = JSONObject(payload.executeMsg).getJSONObject("withdraw")
+        assertEquals("1.5", withdraw.getString("slippage"))
+    }
 }
