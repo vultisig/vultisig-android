@@ -26,40 +26,37 @@ constructor(
     private val searchKujiToken: SearchKujiraTokenUseCase,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
 ) : SearchTokenUseCase {
+
     override suspend fun invoke(chainId: String, contractAddress: String): CoinAndFiatValue? {
         val chain = Chain.fromRaw(chainId)
-        val address = contractAddress.trim()
-        if (!isContractAddressValid(chain, address)) return null
-
-        val searchedToken =
-            when {
-                chain.standard == EVM -> searchEvmToken(chainId, address)
-                chain.standard == SOL -> searchSolToken(address)
-                chain == Chain.Kujira -> searchKujiToken(address)
-                else -> null
-            } ?: return null
-
-        if (!searchedToken.coin.hasSaneMetadata()) return null
-
-        val currency = appCurrencyRepository.currency.first()
-        val tokenFiatValue = FiatValue(searchedToken.price, currency.ticker)
-        return CoinAndFiatValue(searchedToken.coin, tokenFiatValue)
+        return contractAddress
+            .trim()
+            .takeIf { it.isValidAddressOn(chain) }
+            ?.let { address -> dispatch(chain, chainId, address) }
+            ?.takeIf { it.coin.hasSaneMetadata() }
+            ?.withFiatValue()
     }
 
-    private fun isContractAddressValid(chain: Chain, address: String): Boolean {
-        if (address.isEmpty()) return false
-        val candidate = canonicalize(chain, address)
-        return chainAccountAddressRepository.isValid(chain, candidate)
-    }
-
-    // Kujira factory denoms take the form `factory/<creator-address>/<sub-denom>`;
-    // the creator segment is what WalletCore can validate as bech32.
-    private fun canonicalize(chain: Chain, address: String): String =
-        if (chain == Chain.Kujira && address.startsWith(KUJIRA_FACTORY_PREFIX)) {
-            address.substringAfter('/').substringBefore('/')
-        } else {
-            address
+    private suspend fun dispatch(chain: Chain, chainId: String, address: String): CoinAndPrice? =
+        when {
+            chain.standard == EVM -> searchEvmToken(chainId, address)
+            chain.standard == SOL -> searchSolToken(address)
+            chain == Chain.Kujira -> searchKujiToken(address)
+            else -> null
         }
+
+    private suspend fun CoinAndPrice.withFiatValue(): CoinAndFiatValue {
+        val currency = appCurrencyRepository.currency.first()
+        return CoinAndFiatValue(coin, FiatValue(price, currency.ticker))
+    }
+
+    private fun String.isValidAddressOn(chain: Chain): Boolean =
+        isNotEmpty() && chainAccountAddressRepository.isValid(chain, canonicalizedFor(chain))
+
+    private fun String.canonicalizedFor(chain: Chain): String =
+        if (chain == Chain.Kujira && startsWith(KUJIRA_FACTORY_PREFIX)) {
+            substringAfter('/').substringBefore('/')
+        } else this
 
     private fun Coin.hasSaneMetadata(): Boolean = ticker.isNotBlank() && decimal in 0..MAX_DECIMALS
 
