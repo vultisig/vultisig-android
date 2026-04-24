@@ -88,8 +88,8 @@ class ThorchainFunctionsTest {
         assertEquals("cosmos1contract", payload.contractAddress)
         assertEquals("""{ "account": { "bond": {} } }""", payload.executeMsg)
         assertEquals(1, payload.coins.size)
-        assertEquals("x/ruji", payload.coins[0].denom)
-        assertEquals("1000000", payload.coins[0].amount)
+        assertEquals("x/ruji", payload.coins[0]!!.denom)
+        assertEquals("1000000", payload.coins[0]!!.amount)
     }
 
     @Test
@@ -177,8 +177,8 @@ class ThorchainFunctionsTest {
         assertNotNull(execute.getString("msg"))
         assertTrue(execute.getJSONArray("affiliate").length() >= 1)
         assertEquals(1, payload.coins.size)
-        assertEquals("uatom", payload.coins[0].denom)
-        assertEquals("2000000", payload.coins[0].amount)
+        assertEquals("uatom", payload.coins[0]!!.denom)
+        assertEquals("2000000", payload.coins[0]!!.amount)
     }
 
     @Test
@@ -212,8 +212,8 @@ class ThorchainFunctionsTest {
         val withdraw = JSONObject(payload.executeMsg).getJSONObject("withdraw")
         assertEquals("50", withdraw.getString("slippage"))
         assertEquals(1, payload.coins.size)
-        assertEquals("x/ytcy", payload.coins[0].denom)
-        assertEquals("1000000", payload.coins[0].amount)
+        assertEquals("x/ytcy", payload.coins[0]!!.denom)
+        assertEquals("1000000", payload.coins[0]!!.amount)
     }
 
     @Test
@@ -236,8 +236,8 @@ class ThorchainFunctionsTest {
         assertEquals("cosmos1contract", payload.contractAddress)
         assertEquals("""{ "liquid": { "bond": {} } }""", payload.executeMsg)
         assertEquals(1, payload.coins.size)
-        assertEquals("x/staking-tcy", payload.coins[0].denom)
-        assertEquals("5000000", payload.coins[0].amount)
+        assertEquals("x/staking-tcy", payload.coins[0]!!.denom)
+        assertEquals("5000000", payload.coins[0]!!.amount)
     }
 
     @Test
@@ -262,8 +262,8 @@ class ThorchainFunctionsTest {
         assertEquals("cosmos1contract", payload.contractAddress)
         assertEquals("""{ "liquid": { "unbond": {} } }""", payload.executeMsg)
         assertEquals(1, payload.coins.size)
-        assertEquals("x/staking-tcy", payload.coins[0].denom)
-        assertEquals("42", payload.coins[0].amount)
+        assertEquals("x/staking-tcy", payload.coins[0]!!.denom)
+        assertEquals("42", payload.coins[0]!!.amount)
     }
 
     @Test
