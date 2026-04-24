@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.models
 
+import com.vultisig.wallet.data.models.LOCAL_PARTY_ID_PREFIX
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
