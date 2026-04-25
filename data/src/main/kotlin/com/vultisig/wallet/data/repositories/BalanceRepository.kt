@@ -114,6 +114,8 @@ interface BalanceRepository {
     suspend fun getTcyAutoCompoundAmount(address: String): String?
 
     suspend fun invalidateBalance(address: String, coin: Coin)
+
+    suspend fun invalidateDeFiBalance(address: String, chain: Chain, vaultId: String)
 }
 
 internal class BalanceRepositoryImpl
@@ -164,6 +166,21 @@ constructor(
             ticker = coin.ticker,
         )
     }
+
+    override suspend fun invalidateDeFiBalance(address: String, chain: Chain, vaultId: String) {
+        val key = deFiCacheKey(address, chain, vaultId) ?: return
+        val mutex = lockFor(key)
+        mutex.withLock { defiBalanceCache.remove(key) }
+    }
+
+    private fun deFiCacheKey(address: String, chain: Chain, vaultId: String): String? =
+        when (chain) {
+            ThorChain,
+            Ethereum -> address
+            MayaChain,
+            Chain.Tron -> "${chain.id}:$vaultId:$address"
+            else -> null
+        }
 
     override suspend fun getCachedTokenBalanceAndPrice(
         address: String,
@@ -363,58 +380,24 @@ constructor(
         coin: Coin,
         vaultId: String,
     ): List<DeFiBalance> {
-        return when (coin.chain) {
-            ThorChain -> {
-                val mutex = lockFor(address)
-                mutex.withLock {
-                    defiBalanceCache.get(address)
-                        ?: run {
-                            val remote =
-                                thorchainDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
-                            defiBalanceCache.put(address, remote)
-                            remote
-                        }
-                }
+        val cacheKey =
+            deFiCacheKey(address, coin.chain, vaultId) ?: error("Not supported ${coin.chain}")
+        val service =
+            when (coin.chain) {
+                ThorChain -> thorchainDeFiBalanceService
+                Ethereum -> circleDeFiBalanceService
+                MayaChain -> mayaDeFiBalanceService
+                Chain.Tron -> tronDeFiBalanceService
+                else -> error("Not supported ${coin.chain}")
             }
-            Ethereum -> {
-                val mutex = lockFor(address)
-                mutex.withLock {
-                    defiBalanceCache.get(address)
-                        ?: run {
-                            val remote =
-                                circleDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
-                            defiBalanceCache.put(address, remote)
-                            remote
-                        }
+        val mutex = lockFor(cacheKey)
+        return mutex.withLock {
+            defiBalanceCache.get(cacheKey)
+                ?: run {
+                    val remote = service.getRemoteDeFiBalance(address, vaultId)
+                    defiBalanceCache.put(cacheKey, remote)
+                    remote
                 }
-            }
-            MayaChain -> {
-                val cacheKey = "${Chain.MayaChain.id}:$vaultId:$address"
-                val mutex = lockFor(cacheKey)
-                mutex.withLock {
-                    defiBalanceCache.get(cacheKey)
-                        ?: run {
-                            val remote =
-                                mayaDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
-                            defiBalanceCache.put(cacheKey, remote)
-                            remote
-                        }
-                }
-            }
-            Chain.Tron -> {
-                val cacheKey = "${Chain.Tron.id}:$vaultId:$address"
-                val mutex = lockFor(cacheKey)
-                mutex.withLock {
-                    defiBalanceCache.get(cacheKey)
-                        ?: run {
-                            val remote =
-                                tronDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
-                            defiBalanceCache.put(cacheKey, remote)
-                            remote
-                        }
-                }
-            }
-            else -> error("Not supported")
         }
     }
 

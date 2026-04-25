@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -26,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.models.VaultId
@@ -71,7 +71,10 @@ internal fun TronDeFiPositionsScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(vaultId) { viewModel.setData(vaultId) }
+    LifecycleResumeEffect(vaultId) {
+        viewModel.setData(vaultId)
+        onPauseOrDispose {}
+    }
 
     TronDeFiPositionsScreenContent(
         state = state,
