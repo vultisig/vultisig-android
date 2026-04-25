@@ -343,9 +343,11 @@ constructor(
                     codeSpace = null,
                     rawLog = response.bodyAsText(),
                 )
-            return response.body()
+            error(
+                "getTransactionDetail failed: status=${response.status}, body=${response.bodyAsText()}"
+            )
         }
-        val envelope = response.body<CosmosEnvelopedTxResponse>()
+        val envelope = response.bodyOrThrow<CosmosEnvelopedTxResponse>()
         return ThorChainTransactionJson(
             code = envelope.txResponse.code,
             codeSpace = envelope.txResponse.codeSpace,
