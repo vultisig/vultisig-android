@@ -16,6 +16,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal data class SignMessageTransactionUiModel(
     val method: String = "",
@@ -47,7 +48,12 @@ constructor(
 
     init {
         viewModelScope.launch {
-            val payload = customMessagePayloadRepo.get(transactionId).payload
+            val payload =
+                customMessagePayloadRepo.get(transactionId)?.payload
+                    ?: run {
+                        Timber.e("Sign message payload not found: %s", transactionId)
+                        return@launch
+                    }
 
             state.update {
                 it.copy(

@@ -226,14 +226,14 @@ constructor(
 
     private fun loadTransaction() {
         viewModelScope.launch {
-            transaction =
-                runCatching { transactionRepository.getTransaction(transactionId) }
-                    .getOrElse {
-                        Timber.e(it, "Failed to load transaction")
+            val tx =
+                transactionRepository.getTransaction(transactionId)
+                    ?: run {
+                        Timber.e("Transaction not found: %s", transactionId)
                         navigator.back()
                         return@launch
                     }
-            val tx = transaction ?: return@launch
+            transaction = tx
             val transactionUiModel = mapTransactionToUiModel(tx)
 
             val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }

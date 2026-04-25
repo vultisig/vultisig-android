@@ -521,10 +521,10 @@ constructor(
                         }
 
                         else -> {
-                            val transactionDetailsUiModel =
-                                mapTransactionToUiModel(
-                                    transactionRepository.getTransaction(transactionId)
-                                )
+                            val tx =
+                                transactionRepository.getTransaction(transactionId)
+                                    ?: error("Transaction not found: $transactionId")
+                            val transactionDetailsUiModel = mapTransactionToUiModel(tx)
                             transactionHistoryData.update {
                                 transactionHistoryDataMapper(transactionDetailsUiModel)
                             }

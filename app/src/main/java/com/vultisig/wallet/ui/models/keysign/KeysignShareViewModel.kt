@@ -69,7 +69,9 @@ constructor(
     private var saveShareQrBitmapJob: Job? = null
 
     suspend fun loadTransaction(transactionId: TransactionId) {
-        val transaction = transactionRepository.getTransaction(transactionId)
+        val transaction =
+            transactionRepository.getTransaction(transactionId)
+                ?: error("Transaction not found: $transactionId")
 
         val vault = vaultRepository.get(transaction.vaultId)!!
 
@@ -98,7 +100,7 @@ constructor(
     }
 
     suspend fun loadSignMessageTx(id: String) {
-        val dto = customMessagePayloadRepo.get(id)
+        val dto = customMessagePayloadRepo.get(id) ?: error("Sign message payload not found: $id")
 
         val vault = vaultRepository.get(dto.vaultId)!!
 
