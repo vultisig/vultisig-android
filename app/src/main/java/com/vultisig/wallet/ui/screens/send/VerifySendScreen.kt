@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,7 +45,6 @@ import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
-import com.vultisig.wallet.ui.models.mappers.UNLIMITED_TOKEN_AMOUNT
 import com.vultisig.wallet.ui.screens.swap.SwapToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
@@ -193,22 +191,6 @@ internal fun VerifySendScreen(
                     UiSpacer(24.dp)
 
                     SwapToken(valuedToken = tx.token)
-
-                    if (tx.token.value == UNLIMITED_TOKEN_AMOUNT) {
-                        UiSpacer(4.dp)
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.padding(start = 32.dp),
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_triangle_alert),
-                                contentDescription = null,
-                                tint = Theme.v2.colors.alerts.warning,
-                                modifier = Modifier.size(14.dp),
-                            )
-                        }
-                    }
 
                     UiSpacer(12.dp)
 

@@ -1,44 +1,30 @@
 package com.vultisig.wallet.data.api.errors
 
-@Suppress("SerialVersionUIDInSerializableClass")
 sealed class SwapException(message: String) : Exception(message) {
-    @Suppress("SerialVersionUIDInSerializableClass")
     class SwapIsNotSupported(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class AmountCannotBeZero(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class SameAssets(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class UnkownSwapError(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class InsufficentSwapAmount(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class SwapRouteNotAvailable(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class TimeOut(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class NetworkConnection(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class SmallSwapAmount(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class InsufficientFunds(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class HighPriceImpact(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class RateLimitExceeded(message: String) : SwapException(message)
 
-    @Suppress("SerialVersionUIDInSerializableClass")
     class AmountBelowDustThreshold(message: String) : SwapException(message)
 
     companion object {
