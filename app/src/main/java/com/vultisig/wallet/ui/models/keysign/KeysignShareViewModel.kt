@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 
 @HiltViewModel
@@ -71,7 +72,10 @@ constructor(
     suspend fun loadTransaction(transactionId: TransactionId) {
         val transaction =
             transactionRepository.getTransaction(transactionId)
-                ?: error("Transaction not found: $transactionId")
+                ?: run {
+                    Timber.e("Transaction not found: %s", transactionId)
+                    throw IllegalStateException()
+                }
 
         val vault = vaultRepository.get(transaction.vaultId)!!
 
@@ -100,7 +104,12 @@ constructor(
     }
 
     suspend fun loadSignMessageTx(id: String) {
-        val dto = customMessagePayloadRepo.get(id) ?: error("Sign message payload not found: $id")
+        val dto =
+            customMessagePayloadRepo.get(id)
+                ?: run {
+                    Timber.e("Sign message payload not found: %s", id)
+                    throw IllegalStateException()
+                }
 
         val vault = vaultRepository.get(dto.vaultId)!!
 
