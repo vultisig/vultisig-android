@@ -8,13 +8,35 @@ import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosEnvelopedTxResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.api.models.thorchain.BlockNumber
+import com.vultisig.wallet.data.api.models.thorchain.BondedNodesResponse
+import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
+import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
+import com.vultisig.wallet.data.api.models.thorchain.MidgardHealth
+import com.vultisig.wallet.data.api.models.thorchain.MidgardNetworkData
+import com.vultisig.wallet.data.api.models.thorchain.NodeDetailsResponse
+import com.vultisig.wallet.data.api.models.thorchain.RootData
+import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
+import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
+import com.vultisig.wallet.data.api.models.thorchain.TcyDistribution
+import com.vultisig.wallet.data.api.models.thorchain.TcyModuleBalanceResponse
+import com.vultisig.wallet.data.api.models.thorchain.TcyStakeResponse
+import com.vultisig.wallet.data.api.models.thorchain.TcyStakersResponse
+import com.vultisig.wallet.data.api.models.thorchain.TcyUserDistributionsResponse
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainTransactionJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorNameResponseJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorOwnerData
+import com.vultisig.wallet.data.api.models.thorchain.ThorchainConstantsResponse
+import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
+import com.vultisig.wallet.data.chains.helpers.ThorChainAffiliateHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
@@ -34,9 +56,6 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -124,8 +143,6 @@ interface ThorChainApi {
     suspend fun fetchTcyModuleBalance(): TcyModuleBalanceResponse
 
     suspend fun fetchTcyStakers(): TcyStakersResponse
-
-    fun buildAffiliateParams(referralCode: String, discountBps: Int): Map<String, String>
 }
 
 internal class ThorChainApiImpl
@@ -193,7 +210,10 @@ constructor(
         bpsDiscount: Int,
     ): THORChainSwapQuoteDeserialized {
         val affiliateParams =
-            buildAffiliateParams(referralCode = referralCode, discountBps = bpsDiscount)
+            ThorChainAffiliateHelper.buildAffiliateParams(
+                referralCode = referralCode,
+                discountBps = bpsDiscount,
+            )
 
         val response =
             httpClient.get("https://thornode.thorchain.network/thorchain/quote/swap") {
@@ -219,48 +239,6 @@ constructor(
                 THORChainSwapQuoteError(HttpStatusCode.fromValue(response.status.value).description)
             )
         }
-    }
-
-    override fun buildAffiliateParams(referralCode: String, discountBps: Int): Map<String, String> {
-        val affiliateParams = mutableMapOf<String, String>()
-
-        // For ultimate clean referral, and return 0 bps affiliate
-        if (discountBps >= 50) {
-            affiliateParams["affiliate"] = THORChainSwaps.AFFILIATE_FEE_ADDRESS
-            affiliateParams["affiliate_bps"] = "0"
-
-            return affiliateParams
-        }
-
-        if (referralCode.isNotEmpty()) {
-            val affiliateFeeRateBp =
-                calculateBpsAfterDiscount(
-                    baseBps = THORChainSwaps.REFERRED_AFFILIATE_FEE_RATE_BP,
-                    discountBps = discountBps,
-                )
-
-            // Build nested affiliate with new thorchain structure
-            val affiliates = "$referralCode/${THORChainSwaps.AFFILIATE_FEE_ADDRESS}"
-            val affiliateBps = "${THORChainSwaps.REFERRED_USER_FEE_RATE_BP}/$affiliateFeeRateBp"
-
-            affiliateParams["affiliate"] = affiliates
-            affiliateParams["affiliate_bps"] = affiliateBps
-        } else {
-            val affiliateFeeRateBp =
-                calculateBpsAfterDiscount(
-                    baseBps = THORChainSwaps.AFFILIATE_FEE_RATE_BP,
-                    discountBps = discountBps,
-                )
-
-            affiliateParams["affiliate"] = THORChainSwaps.AFFILIATE_FEE_ADDRESS
-            affiliateParams["affiliate_bps"] = affiliateFeeRateBp.toString()
-        }
-
-        return affiliateParams
-    }
-
-    private fun calculateBpsAfterDiscount(baseBps: Int, discountBps: Int): Int {
-        return maxOf(0, baseBps - discountBps)
     }
 
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
@@ -545,7 +523,7 @@ constructor(
             .bodyOrThrow<VaultRedemptionResponseJson>()
     }
 
-    suspend fun getThorchainDenomMetadata(denom: String): DenomMetadata? {
+    private suspend fun getThorchainDenomMetadata(denom: String): DenomMetadata? {
         return try {
             val encodedDenom = java.net.URLEncoder.encode(denom, Charsets.UTF_8.name())
             val response =
@@ -559,7 +537,7 @@ constructor(
         }
     }
 
-    suspend fun getFetchThorchainAllDenomMetadata(): List<DenomMetadata>? {
+    private suspend fun getFetchThorchainAllDenomMetadata(): List<DenomMetadata>? {
         return try {
             val response =
                 httpClient
@@ -676,214 +654,4 @@ constructor(
         // https://github.com/cosmos/cosmos-sdk/blob/v0.50.0/types/errors/errors.go#L79
         private const val ERR_TX_IN_MEMPOOL_CACHE = 19
     }
-}
-
-@Serializable
-private data class CosmosEnvelopedTxResponse(
-    @SerialName("tx_response") val txResponse: TxResponseBody
-)
-
-@Serializable
-private data class TxResponseBody(
-    @SerialName("code") val code: Int?,
-    @SerialName("codespace") val codeSpace: String?,
-    @SerialName("raw_log") val rawLog: String?,
-)
-
-@Serializable
-data class ThorOwnerData(
-    @SerialName("name") val name: String,
-    @SerialName("expire_block_height") val expireBlockHeight: Long,
-    @SerialName("owner") val owner: String,
-    @SerialName("preferred_asset") val preferredAsset: String,
-    @SerialName("preferred_asset_swap_threshold_rune") val preferredAssetSwapThresholdRune: String,
-    @SerialName("affiliate_collector_rune") val affiliateCollectorRune: String,
-    @SerialName("aliases") val aliases: List<Aliases> = emptyList(),
-) {
-    @Serializable data class Aliases(val chain: String, val address: String)
-}
-
-@Serializable
-private data class ThorNameEntryJson(
-    @SerialName("chain") val chain: String,
-    @SerialName("address") val address: String,
-)
-
-@Serializable
-private data class ThorNameResponseJson(
-    @SerialName("entries") val entries: List<ThorNameEntryJson>
-)
-
-@Serializable
-data class ThorChainTransactionJson(
-    @SerialName("code") val code: Int?,
-    @SerialName("codespace") val codeSpace: String?,
-    @SerialName("rawLog") val rawLog: String,
-)
-
-@Serializable
-data class THORChainInboundAddress(
-    @SerialName("chain") val chain: String,
-    @SerialName("address") val address: String,
-    @SerialName("halted") val halted: Boolean,
-    @SerialName("global_trading_paused") val globalTradingPaused: Boolean,
-    @SerialName("chain_trading_paused") val chainTradingPaused: Boolean,
-    @SerialName("chain_lp_actions_paused") val chainLPActionsPaused: Boolean,
-    @SerialName("gas_rate") val gasRate: String,
-    @SerialName("gas_rate_units") val gasRateUnits: String,
-)
-
-@Serializable
-data class ThorChainPoolJson(
-    // formatted as THOR.TCY
-    @SerialName("asset") val asset: String,
-    // asset price in usd with 8 decimals
-    @Contextual @SerialName("asset_tor_price") val assetTorPrice: BigInteger,
-)
-
-@Serializable data class RootData(val node: AccountNode?)
-
-@Serializable data class AccountNode(val merge: MergeInfo?, val stakingV2: List<StakingV2?>?)
-
-@Serializable data class MergeInfo(val accounts: List<MergeAccount>)
-
-@Serializable data class MergeAccount(val pool: Pool?, val size: Size?, val shares: String?)
-
-@Serializable data class Pool(val mergeAsset: MergeAsset?, val summary: Summary? = null)
-
-@Serializable data class MergeAsset(val metadata: Metadata?)
-
-@Serializable data class Metadata(val symbol: String?)
-
-@Serializable data class Size(val amount: String?)
-
-@Serializable
-data class StakingV2(
-    val account: String,
-    val bonded: Bonded,
-    val pendingRevenue: PendingRevenue?,
-    val pool: Pool?,
-)
-
-@Serializable data class Bonded(val amount: String, val asset: Asset)
-
-@Serializable data class PendingRevenue(val amount: String, val asset: Asset)
-
-@Serializable data class Asset(val metadata: Metadata? = null)
-
-@Serializable data class Summary(val apr: Apr? = null)
-
-@Serializable data class Apr(val value: String? = null)
-
-@Serializable data class BlockNumber(val thorchain: Long)
-
-data class RujiStakeBalances(
-    val stakeAmount: BigInteger = BigInteger.ZERO,
-    val stakeTicker: String = "",
-    val rewardsAmount: BigInteger = BigInteger.ZERO,
-    val rewardsTicker: String = "USDC",
-    val apr: Double = 0.0,
-)
-
-@Serializable
-data class VaultRedemptionResponseJson(@SerialName("data") val data: VaultRedemptionDataJson)
-
-@Serializable
-data class VaultRedemptionDataJson(
-    @SerialName("shares") val shares: String = "",
-    @SerialName("nav") val nav: String = "",
-    @SerialName("nav_per_share") val navPerShare: String = "",
-    @SerialName("liquid_bond_shares") val liquidBondShares: String = "",
-    @SerialName("liquid_bond_size") val liquidBondSize: String = "",
-)
-
-@Serializable
-data class BondedNodesResponse(
-    @SerialName("address") val address: String,
-    @SerialName("nodes") val nodes: List<BondedNode>,
-    @SerialName("totalBonded") val totalBonded: String,
-)
-
-@Serializable
-data class BondedNode(
-    @SerialName("address") val address: String,
-    @SerialName("bond") val bond: String,
-    @SerialName("status") val status: String,
-)
-
-@Serializable
-data class NodeDetailsResponse(
-    @SerialName("node_address") val nodeAddress: String,
-    @SerialName("status") val status: String,
-    @SerialName("current_award") val currentAward: String,
-    @SerialName("bond_providers") val bondProviders: BondProviders,
-)
-
-@Serializable
-data class BondProviders(
-    @SerialName("node_operator_fee") val nodeOperatorFee: String,
-    @SerialName("providers") val providers: List<BondProvider>,
-)
-
-@Serializable
-data class BondProvider(
-    @SerialName("bond_address") val bondAddress: String,
-    @SerialName("bond") val bond: String,
-)
-
-@Serializable
-data class ChurnEntry(
-    @SerialName("date") val date: String,
-    @SerialName("height") val height: String,
-)
-
-@Serializable
-data class MidgardNetworkData(
-    @SerialName("bondingAPY") val bondingAPY: String,
-    @SerialName("nextChurnHeight") val nextChurnHeight: String,
-)
-
-@Serializable
-data class MidgardHealth(val lastThorNode: HeightInfo) {
-    @Serializable
-    data class HeightInfo(
-        val height: Long,
-        val timestamp: Long, // seconds since epoch
-    )
-}
-
-// TCY Staking
-@Serializable data class TcyStakeResponse(val amount: String? = null, val address: String = "")
-
-@Serializable
-data class TcyDistribution(val block: String, val amount: String, val timestamp: String? = null)
-
-@Serializable
-data class TcyUserDistributionsResponse(
-    val distributions: List<TcyUserDistribution>,
-    val total: String? = null,
-) {
-    @Serializable data class TcyUserDistribution(val date: String, val amount: String)
-}
-
-@Serializable
-data class TcyModuleBalanceResponse(val coins: List<ModuleCoin> = emptyList()) {
-    @Serializable data class ModuleCoin(val denom: String, val amount: String)
-}
-
-@Serializable
-data class TcyStakersResponse(@SerialName("tcy_stakers") val tcyStakers: List<TcyStaker>) {
-    @Serializable data class TcyStaker(val address: String, val amount: String)
-}
-
-@Serializable
-data class ThorchainConstantsResponse(@SerialName("int_64_values") val int64Values: Int64Values) {
-    @Serializable
-    data class Int64Values(
-        @SerialName("MinRuneForTCYStakeDistribution")
-        val minRuneForTCYStakeDistribution: Long? = null,
-        @SerialName("MinTCYForTCYStakeDistribution")
-        val minTcyForTCYStakeDistribution: Long? = null,
-        @SerialName("TCYStakeSystemIncomeBps") val tcyStakeSystemIncomeBps: Long? = null,
-    )
 }
