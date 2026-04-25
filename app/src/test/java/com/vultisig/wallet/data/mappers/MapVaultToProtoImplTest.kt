@@ -45,6 +45,7 @@ internal class MapVaultToProtoImplTest {
             )
 
         assertEquals(2, proto.chainPublicKeys.size)
+        // Generated proto element type is nullable; assertNotNull lifts it for direct access.
         val ethereum = assertNotNull(proto.chainPublicKeys[0])
         assertEquals("Ethereum", ethereum.chain)
         assertEquals("ethPub", ethereum.publicKey)
