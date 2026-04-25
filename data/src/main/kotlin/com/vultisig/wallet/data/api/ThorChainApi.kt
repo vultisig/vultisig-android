@@ -307,7 +307,7 @@ constructor(
             }
             throw Exception("Error broadcasting transaction: $responseRawString")
         } catch (e: Exception) {
-            Timber.tag("THORChainService").e("Error broadcasting transaction: ${e.message}")
+            Timber.tag("THORChainService").e(e, "Error broadcasting transaction")
             throw e
         }
     }
@@ -671,6 +671,9 @@ constructor(
         private const val NNRLM_URL = "https://thornode.thorchain.network/thorchain"
         private const val THORNODE_BASE = "https://thornode.thorchain.network"
         private const val MIDGARD_URL = "https://midgard.thorchain.network/v2"
+        // Cosmos SDK ErrTxInMempoolCache (code 19): tx already accepted into mempool, treat as
+        // success.
+        // https://github.com/cosmos/cosmos-sdk/blob/v0.50.0/types/errors/errors.go#L79
         private const val ERR_TX_IN_MEMPOOL_CACHE = 19
     }
 }
