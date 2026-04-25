@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.send
 
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -12,6 +13,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.fail
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 
 internal class ChainValidationServiceTest {
@@ -93,7 +96,10 @@ internal class ChainValidationServiceTest {
         val account = Account(dotCoin, TokenValue(balance, "DOT", 10), null, null)
         val gasFee = TokenValue(BigInteger.valueOf(5_000_000_000L), "DOT", 10) // 0.5 DOT
         val result = service.checkIsReapable(account, dotCoin, "10.0", gasFee)
-        assertTrue(result is UiText.StringResource)
+        assertEquals(
+            R.string.send_form_polka_reaping_warning,
+            (result as UiText.StringResource).resId,
+        )
     }
 
     @Test
@@ -127,7 +133,10 @@ internal class ChainValidationServiceTest {
                     estimatedFee = BigInteger.valueOf(200_000),
                 )
             }
-        assertTrue(exception.text is UiText.FormattedText)
+        assertEquals(
+            R.string.minimum_send_amount_is_ada,
+            (exception.text as UiText.FormattedText).resId,
+        )
     }
 
     @Test
@@ -140,13 +149,14 @@ internal class ChainValidationServiceTest {
                     estimatedFee = BigInteger.valueOf(200_000),
                 )
             }
-        assertTrue(exception.text is UiText.FormattedText)
+        assertEquals(
+            R.string.insufficient_balance_try_send,
+            (exception.text as UiText.FormattedText).resId,
+        )
     }
 
     @Test
     fun `validateCardanoUTXORequirements - change below minUTXO throws`() {
-        // Send 8 ADA from 10 ADA balance with 0.2 ADA fee → 1.8 ADA remaining
-        // But 1.8 ADA > 1.4 ADA dust, so let's pick values that leave change < 1.4 ADA
         // Send 8.5 ADA from 10 ADA with 0.2 ADA fee → 1.3 ADA remaining < 1.4 ADA dust
         val exception =
             assertThrows(InvalidTransactionDataException::class.java) {
@@ -156,7 +166,10 @@ internal class ChainValidationServiceTest {
                     estimatedFee = BigInteger.valueOf(200_000), // 0.2 ADA
                 )
             }
-        assertTrue(exception.text is UiText.FormattedText)
+        assertEquals(
+            R.string.this_amount_would_leave_too_little_change,
+            (exception.text as UiText.FormattedText).resId,
+        )
     }
 
     @Test
@@ -178,6 +191,86 @@ internal class ChainValidationServiceTest {
             totalBalance = BigInteger.valueOf(10_000_000), // 10 ADA
             estimatedFee = BigInteger.valueOf(200_000), // 0.2 ADA
         )
+    }
+
+    // checkIsReapable Ripple tests
+
+    private val xrpCoin =
+        Coin(
+            chain = Chain.Ripple,
+            ticker = "XRP",
+            logo = "",
+            address = "",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    @Test
+    fun `checkIsReapable - xrp sufficient balance returns null`() {
+        // 20 XRP balance, sending 5 XRP, 0.1 XRP fee → 14.9 XRP remaining > 1 XRP threshold
+        val balance = BigInteger.valueOf(20_000_000L) // 20 XRP (6 decimals)
+        val account = Account(xrpCoin, TokenValue(balance, "XRP", 6), null, null)
+        val gasFee = TokenValue(BigInteger.valueOf(100_000L), "XRP", 6) // 0.1 XRP
+        assertNull(service.checkIsReapable(account, xrpCoin, "5.0", gasFee))
+    }
+
+    @Test
+    fun `checkIsReapable - xrp balance below existential deposit returns ripple reaping warning`() {
+        // 11 XRP balance, sending 10 XRP, 0.5 XRP fee → 0.5 XRP remaining < 1 XRP threshold
+        val balance = BigInteger.valueOf(11_000_000L) // 11 XRP
+        val account = Account(xrpCoin, TokenValue(balance, "XRP", 6), null, null)
+        val gasFee = TokenValue(BigInteger.valueOf(500_000L), "XRP", 6) // 0.5 XRP
+        val result = service.checkIsReapable(account, xrpCoin, "10.0", gasFee)
+        assertEquals(
+            R.string.send_form_ripple_reaping_warning,
+            (result as UiText.StringResource).resId,
+        )
+    }
+
+    // validateBtcLikeAmount tests
+
+    @Test
+    fun `validateBtcLikeAmount - null plan with above-dust amount throws insufficient utxos error`() {
+        val exception =
+            assertThrows(InvalidTransactionDataException::class.java) {
+                service.validateBtcLikeAmount(
+                    tokenAmountInt = BigInteger.valueOf(10_000L),
+                    chain = Chain.Bitcoin,
+                    plan = null,
+                )
+            }
+        assertEquals(
+            R.string.insufficient_utxos_error,
+            (exception.text as UiText.StringResource).resId,
+        )
+    }
+
+    @Test
+    fun `validateBtcLikeAmount - amount below Bitcoin dust throws FormattedText with minimum send amount message`() {
+        try {
+            service.validateBtcLikeAmount(
+                tokenAmountInt = BigInteger.valueOf(100L),
+                chain = Chain.Bitcoin,
+                plan = null,
+            )
+            fail("Expected InvalidTransactionDataException to be thrown")
+        } catch (e: InvalidTransactionDataException) {
+            assertEquals(
+                R.string.send_form_minimum_send_amount_is_requires_this,
+                (e.text as UiText.FormattedText).resId,
+            )
+        } catch (e: Throwable) {
+            if (
+                e is UnsatisfiedLinkError ||
+                    e is ExceptionInInitializerError ||
+                    e is NoClassDefFoundError
+            ) {
+                assumeTrue(false, "WalletCore JNI not available: ${e.message}")
+            } else throw e
+        }
     }
 
     // selectUtxosIfNeeded tests (non-UTXO pass-through and null plan)
