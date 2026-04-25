@@ -148,7 +148,7 @@ constructor(
                 response.body<TcyStakerResponse>().unstakable
             }
         } catch (e: Exception) {
-            // Exception occurred while fetching or parsing TCY staker data
+            Timber.e(e, "Error fetching TCY staker data for %s", address)
             null
         }
     }
@@ -214,8 +214,7 @@ constructor(
         return try {
             json.decodeFromString(thorChainSwapQuoteResponseJsonSerializer, response.body<String>())
         } catch (e: Exception) {
-            Timber.tag("THORChainService")
-                .e("Error deserializing THORChain swap quote: ${e.message}")
+            Timber.e(e, "Error deserializing THORChain swap quote")
             THORChainSwapQuoteDeserialized.Error(
                 THORChainSwapQuoteError(HttpStatusCode.fromValue(response.status.value).description)
             )
@@ -299,10 +298,11 @@ constructor(
                     setBody(tx)
                 }
             val responseRawString = response.bodyAsText()
-            val result = response.body<CosmosTransactionBroadcastResponse>()
+            val result =
+                json.decodeFromString<CosmosTransactionBroadcastResponse>(responseRawString)
 
             val txResponse = result.txResponse
-            if (txResponse?.code == 0 || txResponse?.code == 19) {
+            if (txResponse?.code == 0 || txResponse?.code == ERR_TX_IN_MEMPOOL_CACHE) {
                 return txResponse.txHash
             }
             throw Exception("Error broadcasting transaction: $responseRawString")
@@ -335,21 +335,22 @@ constructor(
         val response =
             httpClient.get("https://thornode.thorchain.network/cosmos/tx/v1beta1/txs/$tx")
         if (!response.status.isSuccess()) {
-            // The  URL initially returns a 'not found' response but eventually
+            // The URL initially returns a 'not found' response but eventually
             // provides a successful response after some time
-            if (response.status.equals(HttpStatusCode.NotFound))
+            if (response.status == HttpStatusCode.NotFound)
                 return ThorChainTransactionJson(
                     code = null,
                     codeSpace = null,
                     rawLog = response.bodyAsText(),
                 )
-        } else
-            return ThorChainTransactionJson(
-                code = response.status.value,
-                codeSpace = HttpStatusCode.fromValue(response.status.value).description,
-                rawLog = response.bodyAsText(),
-            )
-        return response.body()
+            return response.body()
+        }
+        val envelope = response.body<CosmosEnvelopedTxResponse>()
+        return ThorChainTransactionJson(
+            code = envelope.txResponse.code,
+            codeSpace = envelope.txResponse.codeSpace,
+            rawLog = envelope.txResponse.rawLog ?: "",
+        )
     }
 
     override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> =
@@ -668,8 +669,21 @@ constructor(
         private const val NNRLM_URL = "https://thornode.thorchain.network/thorchain"
         private const val THORNODE_BASE = "https://thornode.thorchain.network"
         private const val MIDGARD_URL = "https://midgard.thorchain.network/v2"
+        private const val ERR_TX_IN_MEMPOOL_CACHE = 19
     }
 }
+
+@Serializable
+private data class CosmosEnvelopedTxResponse(
+    @SerialName("tx_response") val txResponse: TxResponseBody
+)
+
+@Serializable
+private data class TxResponseBody(
+    @SerialName("code") val code: Int?,
+    @SerialName("codespace") val codeSpace: String?,
+    @SerialName("raw_log") val rawLog: String?,
+)
 
 @Serializable
 data class ThorOwnerData(
