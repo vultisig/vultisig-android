@@ -821,7 +821,7 @@
     <string name="vault_backup_screen_donot_receive_email">Niste primili e-poštu?</string>
     <string name="onboarding_desc_page_5_part_2">odvojeno u</string>
     <string name="onboarding_desc_page_5_part_3">druga lokacija</string>
-    <string name="scan_qr_code_modal_annotation">Preuzmite Vultisig na svoj drugi uređaj (uređaje) i odaberite \'Skeniraj QR kod\'</string>
+    <string name="scan_qr_code_modal_annotation">Na drugom uređaju otvorite aplikaciju i dodirnite \'Skeniraj QR kod\' za povezivanje.</string>
     <string name="onboarding_desc_page_2_part_3">radi povećanja sigurnosti i</string>
     <string name="onboarding_desc_page_2_part_4">uklonite jedinstvenu točku kvara</string>
     <string name="onboarding_desc_page_3_part_1">Svaki uređaj</string>
@@ -874,14 +874,13 @@
     <string name="fast_vault_password_screen_reenter_password_hint">Ponovno unesite lozinku</string>
     <string name="fast_vault_name_screen_next">Sljedeće</string>
     <string name="enter_email_screen_next">Sljedeće</string>
-    <string name="scan_qr_code_modal_next">Sljedeće</string>
+    <string name="scan_qr_code_modal_next">Pokreni skeniranje</string>
     <string name="peer_discovery_action_next_title">Sljedeće</string>
     <string name="home_page_no_chains_enabled">Nisu omogućeni lanci</string>
     <string name="onboarding_desc_page_3_part_3">jedno dijeljenje trezora</string>
     <string name="select_vault_type_fast_title">Brzo postavljanje na 1 uređaju</string>
     <string name="select_vault_type_fast_desc_1">Potreban je samo 1 uređaj</string>
-    <string name="scan_qr_code_modal_scan_the">Skenirajte</string>
-    <string name="scan_qr_code_modal_qr_code">QR kod</string>
+    <string name="scan_qr_code_modal_scan_the">Skenirajte QR na svojim drugim uređajima</string>
     <string name="tx_overview_screen_title">Gotovo</string>
     <string name="fast_vault_password_screen_warning">Lozinka se ne može resetirati ili oporaviti</string>
     <string name="referral_top_bar_list">Preporuka</string>

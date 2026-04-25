@@ -816,7 +816,7 @@
     <string name="vault_backup_screen_donot_receive_email">¿No recibiste un correo?</string>
     <string name="onboarding_desc_page_5_part_2">por separado en un</string>
     <string name="onboarding_desc_page_5_part_3">Otra ubicación</string>
-    <string name="scan_qr_code_modal_annotation">Descarga Vultisig en tus otros dispositivos y selecciona «Escanear código QR».</string>
+    <string name="scan_qr_code_modal_annotation">En tu otro dispositivo, abre la aplicación y toca «Escanear código QR» para conectarlo.</string>
     <string name="onboarding_desc_page_2_part_3">para aumentar la seguridad y</string>
     <string name="onboarding_desc_page_2_part_4">Elimina el único punto de fallo</string>
     <string name="onboarding_desc_page_3_part_1">Cada dispositivo</string>
@@ -869,14 +869,13 @@
     <string name="fast_vault_password_screen_reenter_password_hint">Vuelve a introducir la contraseña</string>
     <string name="fast_vault_name_screen_next">Siguiente</string>
     <string name="enter_email_screen_next">Siguiente</string>
-    <string name="scan_qr_code_modal_next">Siguiente</string>
+    <string name="scan_qr_code_modal_next">Iniciar escaneo</string>
     <string name="peer_discovery_action_next_title">Siguiente</string>
     <string name="home_page_no_chains_enabled">Sin cadenas habilitadas</string>
     <string name="onboarding_desc_page_3_part_3">Un acceso a la bóveda</string>
     <string name="select_vault_type_fast_title">Configuración rápida en un solo dispositivo</string>
     <string name="select_vault_type_fast_desc_1">Solo se necesita un dispositivo</string>
-    <string name="scan_qr_code_modal_scan_the">Escanear</string>
-    <string name="scan_qr_code_modal_qr_code">Código QR</string>
+    <string name="scan_qr_code_modal_scan_the">Escanea el QR en tus otros dispositivos</string>
     <string name="tx_overview_screen_title">Listo</string>
     <string name="fast_vault_password_screen_warning">La contraseña no se puede restablecer ni recuperar.</string>
     <string name="referral_top_bar_list">Referido</string>
