@@ -32,6 +32,7 @@ import com.vultisig.wallet.data.api.models.thorchain.TcyStakeResponse
 import com.vultisig.wallet.data.api.models.thorchain.TcyStakersResponse
 import com.vultisig.wallet.data.api.models.thorchain.TcyUserDistributionsResponse
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainStatusResponse
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainTransactionJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorNameResponseJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorOwnerData
@@ -57,10 +58,7 @@ import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import timber.log.Timber
 
@@ -281,13 +279,10 @@ constructor(
     override suspend fun getNetworkChainId(): String =
         httpClient
             .get("$THORCHAIN_RPC_URL/status")
-            .bodyOrThrow<JsonObject>()["result"]
-            ?.jsonObject
-            ?.get("node_info")
-            ?.jsonObject
-            ?.get("network")
-            ?.jsonPrimitive
-            ?.content ?: error("Couldn't find network field in response for THORChain chain id")
+            .bodyOrThrow<ThorChainStatusResponse>()
+            .result
+            .nodeInfo
+            .network
 
     override suspend fun resolveName(name: String, chain: String): String? =
         httpClient
