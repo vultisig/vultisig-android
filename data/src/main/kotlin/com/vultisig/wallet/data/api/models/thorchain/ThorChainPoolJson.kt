@@ -5,6 +5,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** THORChain pool entry with asset identifier and its USD price in TOR with 8 decimals. */
 @Serializable
 data class ThorChainPoolJson(
     // formatted as THOR.TCY

@@ -1,7 +1,14 @@
 package com.vultisig.wallet.data.chains.helpers
 
+/** Builds THORChain swap affiliate query parameters, applying referral codes and BPS discounts. */
 object ThorChainAffiliateHelper {
 
+    /**
+     * Returns the `affiliate` and `affiliate_bps` query parameters for a swap request.
+     *
+     * @param referralCode user's referral code; empty string means no referrer
+     * @param discountBps discount in basis points to subtract from the base affiliate fee
+     */
     fun buildAffiliateParams(referralCode: String, discountBps: Int): Map<String, String> {
         val affiliateParams = mutableMapOf<String, String>()
 

@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api.models.thorchain
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** Inbound vault address and trading-halt status for a given chain from the THORChain API. */
 @Serializable
 data class THORChainInboundAddress(
     @SerialName("chain") val chain: String,

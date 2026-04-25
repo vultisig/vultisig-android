@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api.models.thorchain
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/** THORName owner metadata including affiliated addresses and referral configuration. */
 @Serializable
 data class ThorOwnerData(
     @SerialName("name") val name: String,
@@ -13,5 +14,6 @@ data class ThorOwnerData(
     @SerialName("affiliate_collector_rune") val affiliateCollectorRune: String,
     @SerialName("aliases") val aliases: List<Aliases> = emptyList(),
 ) {
+    /** A chain-specific alias address registered under a THORName. */
     @Serializable data class Aliases(val chain: String, val address: String)
 }
