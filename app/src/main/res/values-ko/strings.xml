@@ -433,6 +433,7 @@
     <string name="form_token_selection_asset">자산</string>
     <string name="insufficient_native_token">가스 수수료를 충당할 %1$s이(가) 부족합니다</string>
     <string name="swap_error_amount_too_low">스왑 금액이 너무 적습니다</string>
+    <string name="swap_error_amount_below_dust_threshold">금액이 더스트 한도보다 낮습니다. 금액을 늘린 후 다시 시도하세요.</string>
     <string name="swap_error_insufficient_balance_and_fees">스왑과 가스 수수료를 위한 %1$s 잔액이 부족합니다. %1$s을(를) 충전하거나 스왑 금액을 줄여주세요</string>
     <string name="swap_error_insufficient_source_token">스왑할 %1$s 잔액이 부족합니다</string>
     <string name="swap_error_insufficient_gas_fees">가스 수수료를 충당할 %1$s이(가) 부족합니다. 지갑에 자금을 충전해 주세요.</string>

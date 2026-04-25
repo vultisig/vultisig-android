@@ -338,6 +338,7 @@
     <string name="form_token_selection_asset">Activo</string>
     <string name="insufficient_native_token">No hay suficiente %1$s para las comisiones de gas</string>
     <string name="swap_error_amount_too_low">El monto de intercambio es demasiado bajo</string>
+    <string name="swap_error_amount_below_dust_threshold">El monto es inferior al umbral de polvo. Aumenta el monto e inténtalo de nuevo.</string>
     <string name="swap_error_insufficient_balance_and_fees">Saldo de %1$s insuficiente para el intercambio y las comisiones de gas. Recargue %1$s o reduzca el monto del intercambio</string>
     <string name="swap_error_insufficient_source_token">Saldo de %1$s insuficiente para intercambiar</string>
     <string name="swap_error_insufficient_gas_fees">No hay suficiente %1$s para cubrir las comisiones de gas. Por favor, cargue la billetera.</string>
