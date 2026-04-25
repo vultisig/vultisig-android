@@ -350,32 +350,7 @@ constructor(
     @OptIn(ExperimentalEncodingApi::class)
     override suspend fun getRujiMergeBalances(address: String): List<MergeAccount> {
         val accountBase64 = Base64.encode("Account:$address".toByteArray())
-
-        val query =
-            """
-        {
-          node(id:"$accountBase64") {
-            ... on Account {
-              merge {
-                accounts {
-                  pool {
-                    mergeAsset {
-                      metadata {
-                        symbol
-                      }
-                    }
-                  }
-                  size {
-                    amount
-                  }
-                  shares
-                }
-              }
-            }
-          }
-        }
-        """
-                .trimIndent()
+        val query = RUJI_MERGE_QUERY.format(accountBase64)
 
         val response =
             httpClient
@@ -395,43 +370,7 @@ constructor(
     @OptIn(ExperimentalEncodingApi::class)
     override suspend fun getRujiStakeBalance(address: String): RujiStakeBalances {
         val accountBase64 = Base64.encode("Account:$address".toByteArray())
-
-        val query =
-            """
-        {
-          node(id:"$accountBase64") {
-            ... on Account {
-              stakingV2 {
-                account
-                bonded {
-                  amount
-                  asset {
-                    metadata {
-                      symbol
-                    }
-                  }
-                }
-                pendingRevenue {
-                  amount
-                  asset {
-                    metadata {
-                      symbol
-                    }
-                  }
-                }
-                pool {
-                  summary {
-                    apr {
-                      value
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        """
-                .trimIndent()
+        val query = RUJI_STAKE_QUERY.format(accountBase64)
 
         val httpResponse =
             httpClient.post(RUJI_GRAPHQL_URL) {
@@ -653,6 +592,67 @@ constructor(
         private const val THORCHAIN_RPC_URL = "https://rpc.thorchain.network"
         private const val IBS_TEAM_URL = "https://thorchain.ibs.team"
         private const val RUJI_GRAPHQL_URL = "https://api.vultisig.com/ruji/api/graphql"
+
+        private const val RUJI_MERGE_QUERY =
+            """
+        {
+          node(id:"%s") {
+            ... on Account {
+              merge {
+                accounts {
+                  pool {
+                    mergeAsset {
+                      metadata {
+                        symbol
+                      }
+                    }
+                  }
+                  size {
+                    amount
+                  }
+                  shares
+                }
+              }
+            }
+          }
+        }
+        """
+
+        private const val RUJI_STAKE_QUERY =
+            """
+        {
+          node(id:"%s") {
+            ... on Account {
+              stakingV2 {
+                account
+                bonded {
+                  amount
+                  asset {
+                    metadata {
+                      symbol
+                    }
+                  }
+                }
+                pendingRevenue {
+                  amount
+                  asset {
+                    metadata {
+                      symbol
+                    }
+                  }
+                }
+                pool {
+                  summary {
+                    apr {
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """
         // Cosmos SDK ErrTxInMempoolCache (code 19): tx already accepted into mempool, treat as
         // success.
         // https://github.com/cosmos/cosmos-sdk/blob/v0.50.0/types/errors/errors.go#L79
