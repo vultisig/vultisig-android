@@ -27,7 +27,7 @@ class ThorChainAffiliateHelperTest {
     }
 
     @Test
-    fun `no referral code, discount exceeding base clamps to zero`() {
+    fun `no referral code, partial discount near base produces small affiliate bps`() {
         val params =
             ThorChainAffiliateHelper.buildAffiliateParams(referralCode = "", discountBps = 49)
 

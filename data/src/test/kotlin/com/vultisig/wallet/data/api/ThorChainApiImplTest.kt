@@ -9,6 +9,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -154,6 +155,6 @@ class ThorChainApiImplTest {
                 runBlocking { api.broadcastTransaction(tx = "{}") }
             }
         // The full raw body is preserved in the exception message so callers can debug.
-        assert(ex.message?.contains("\"code\": 5") == true) { "actual: ${ex.message}" }
+        assertTrue(ex.message?.contains("\"code\": 5") == true, "actual: ${ex.message}")
     }
 }
