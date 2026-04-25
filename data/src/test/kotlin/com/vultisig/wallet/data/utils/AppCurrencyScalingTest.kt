@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.utils
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import java.math.BigDecimal
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 internal class AppCurrencyScalingTest {
@@ -39,7 +40,7 @@ internal class AppCurrencyScalingTest {
     fun `every supported currency reports a non-negative scale`() {
         AppCurrency.entries.forEach { currency ->
             val digits = currency.fractionDigits
-            assert(digits >= 0) { "${currency.ticker} reported $digits" }
+            assertTrue(digits >= 0) { "${currency.ticker} reported $digits" }
         }
     }
 }
