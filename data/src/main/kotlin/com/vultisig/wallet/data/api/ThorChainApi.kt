@@ -337,14 +337,14 @@ constructor(
 
     @OptIn(ExperimentalEncodingApi::class)
     override suspend fun getRujiMergeBalances(address: String): List<MergeAccount> {
-        val accountBase64 = Base64.encode("Account:$address".toByteArray())
+        val accountBase64 = Base64.encode("$RUJI_ACCOUNT_PREFIX$address".toByteArray())
         val query = RUJI_MERGE_QUERY.format(accountBase64)
 
         val response =
             httpClient
                 .post(RUJI_GRAPHQL_URL) {
                     contentType(ContentType.Application.Json)
-                    setBody(buildJsonObject { put("query", query) })
+                    setBody(buildJsonObject { put(GRAPHQL_QUERY_KEY, query) })
                 }
                 .bodyOrThrow<GraphQLResponse<RootData>>()
 
@@ -357,13 +357,13 @@ constructor(
 
     @OptIn(ExperimentalEncodingApi::class)
     override suspend fun getRujiStakeBalance(address: String): RujiStakeBalances {
-        val accountBase64 = Base64.encode("Account:$address".toByteArray())
+        val accountBase64 = Base64.encode("$RUJI_ACCOUNT_PREFIX$address".toByteArray())
         val query = RUJI_STAKE_QUERY.format(accountBase64)
 
         val httpResponse =
             httpClient.post(RUJI_GRAPHQL_URL) {
                 contentType(ContentType.Application.Json)
-                setBody(buildJsonObject { put("query", query) })
+                setBody(buildJsonObject { put(GRAPHQL_QUERY_KEY, query) })
             }
         if (!httpResponse.status.isSuccess()) {
             throw Exception("Could not fetch balances: status ${httpResponse.status.value}")
@@ -404,7 +404,7 @@ constructor(
 
         if (
             response.status == HttpStatusCode.InternalServerError &&
-                response.bodyAsText().contains("fail to fetch THORName")
+                response.bodyAsText().contains(THORNAME_FETCH_FAILED_ERROR)
         ) {
             return false
         }
@@ -660,6 +660,9 @@ constructor(
         private const val DEFAULT_REWARDS_TICKER = "USDC"
         private const val THOR_CHAIN_NAME = "THOR"
         private const val TCY_STAKER_NOT_FOUND_ERROR = "TCYStaker doesn't exist"
+        private const val THORNAME_FETCH_FAILED_ERROR = "fail to fetch THORName"
         private const val STATUS_QUERY_BASE64 = "eyJzdGF0dXMiOiB7fX0="
+        private const val RUJI_ACCOUNT_PREFIX = "Account:"
+        private const val GRAPHQL_QUERY_KEY = "query"
     }
 }
