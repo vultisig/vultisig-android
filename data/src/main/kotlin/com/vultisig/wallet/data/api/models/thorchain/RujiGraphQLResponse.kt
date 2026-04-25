@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable data class RootData(val node: AccountNode?)
 
 /** GraphQL account node containing merge and staking position data. */
-@Serializable data class AccountNode(val merge: MergeInfo?, val stakingV2: List<StakingV2?>?)
+@Serializable data class AccountNode(val merge: MergeInfo?, val stakingV2: List<StakingV2>?)
 
 /** Merge pool positions held by an account. */
 @Serializable data class MergeInfo(val accounts: List<MergeAccount>)

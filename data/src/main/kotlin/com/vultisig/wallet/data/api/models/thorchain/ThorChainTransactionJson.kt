@@ -8,5 +8,5 @@ import kotlinx.serialization.Serializable
 data class ThorChainTransactionJson(
     @SerialName("code") val code: Int?,
     @SerialName("codespace") val codeSpace: String?,
-    @SerialName("rawLog") val rawLog: String,
+    @SerialName("raw_log") val rawLog: String,
 )

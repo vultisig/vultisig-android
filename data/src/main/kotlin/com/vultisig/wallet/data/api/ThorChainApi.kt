@@ -279,11 +279,12 @@ constructor(
             val result =
                 json.decodeFromString<CosmosTransactionBroadcastResponse>(responseRawString)
 
-            val txResponse = result.txResponse
-            if (txResponse?.code == 0 || txResponse?.code == ERR_TX_IN_MEMPOOL_CACHE) {
+            val txResponse =
+                result.txResponse ?: error("Error broadcasting transaction: $responseRawString")
+            if (txResponse.code == 0 || txResponse.code == ERR_TX_IN_MEMPOOL_CACHE) {
                 return txResponse.txHash
             }
-            throw Exception("Error broadcasting transaction: $responseRawString")
+            error("Error broadcasting transaction: $responseRawString")
         } catch (e: Exception) {
             Timber.tag("THORChainService").e(e, "Error broadcasting transaction")
             throw e
@@ -532,7 +533,7 @@ constructor(
                     .body<MetadataResponse>()
             response.metadata
         } catch (e: Exception) {
-            Timber.e(e, "Failed to fetch denom metadata for $denom")
+            Timber.e(e, "Failed to fetch denom metadata for %s", denom)
             null
         }
     }
@@ -609,8 +610,8 @@ constructor(
         ) {
             TcyStakeResponse(address = address, amount = "0")
         } else if (!httpResponse.status.isSuccess()) {
-            Timber.e("FetchTcyStakedAmount %s", "${httpResponse.status}")
-            error("Error Fetching Tcy Staked: ")
+            Timber.e("FetchTcyStakedAmount %s", httpResponse.status)
+            error("Error Fetching Tcy Staked: status=${httpResponse.status}")
         } else {
             httpResponse.bodyOrThrow<TcyStakeResponse>()
         }

@@ -150,7 +150,7 @@ class ThorChainApiImplTest {
         val api = newApi(HttpStatusCode.OK, body)
 
         val ex =
-            assertThrows(Exception::class.java) {
+            assertThrows(IllegalStateException::class.java) {
                 runBlocking { api.broadcastTransaction(tx = "{}") }
             }
         // The full raw body is preserved in the exception message so callers can debug.
