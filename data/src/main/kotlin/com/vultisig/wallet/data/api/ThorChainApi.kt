@@ -41,7 +41,6 @@ import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -162,7 +161,7 @@ constructor(
             if (!response.status.isSuccess()) {
                 null
             } else {
-                response.body<TcyStakerResponse>().unstakable
+                response.bodyOrThrow<TcyStakerResponse>().unstakable
             }
         } catch (e: Exception) {
             Timber.e(e, "Error fetching TCY staker data for %s", address)
@@ -178,7 +177,7 @@ constructor(
         } else {
             val stakingTcyAmount =
                 response
-                    .body<ThorTcyBalancesResponseJson>()
+                    .bodyOrThrow<ThorTcyBalancesResponseJson>()
                     .balances
                     .find { it.denom == "x/staking-tcy" }
                     ?.amount
@@ -194,7 +193,7 @@ constructor(
             httpClient.get("$THORNODE_BASE/cosmos/bank/v1beta1/balances/$address") {
                 header(xClientID, xClientIDValue)
             }
-        val resp = response.body<CosmosBalanceResponse>()
+        val resp = response.bodyOrThrow<CosmosBalanceResponse>()
         return resp.balances ?: emptyList()
     }
 
@@ -230,7 +229,10 @@ constructor(
                 }
             }
         return try {
-            json.decodeFromString(thorChainSwapQuoteResponseJsonSerializer, response.body<String>())
+            json.decodeFromString(
+                thorChainSwapQuoteResponseJsonSerializer,
+                response.bodyOrThrow<String>(),
+            )
         } catch (e: Exception) {
             Timber.e(e, "Error deserializing THORChain swap quote")
             THORChainSwapQuoteDeserialized.Error(
@@ -244,14 +246,14 @@ constructor(
             httpClient.get("$THORNODE_BASE/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
-        return response.body<THORChainAccountResultJson>().result?.value
+        return response.bodyOrThrow<THORChainAccountResultJson>().result?.value
             ?: error("Field value is not found in the response")
     }
 
     override suspend fun getTHORChainNativeTransactionFee(): BigInteger {
         val response =
             httpClient.get("$THORNODE_BASE/thorchain/network") { header(xClientID, xClientIDValue) }
-        val content = response.body<NativeTxFeeRune>()
+        val content = response.bodyOrThrow<NativeTxFeeRune>()
         return content.value?.let { BigInteger(it) } ?: 0.toBigInteger()
     }
 
@@ -288,7 +290,7 @@ constructor(
     override suspend fun getNetworkChainId(): String =
         httpClient
             .get("$THORCHAIN_RPC_URL/status")
-            .body<JsonObject>()["result"]
+            .bodyOrThrow<JsonObject>()["result"]
             ?.jsonObject
             ?.get("node_info")
             ?.jsonObject
@@ -299,7 +301,7 @@ constructor(
     override suspend fun resolveName(name: String, chain: String): String? =
         httpClient
             .get("$MIDGARD_URL/thorname/lookup/$name")
-            .body<ThorNameResponseJson>()
+            .bodyOrThrow<ThorNameResponseJson>()
             .entries
             .find { it.chain == chain }
             ?.address
@@ -381,7 +383,7 @@ constructor(
                     contentType(ContentType.Application.Json)
                     setBody(buildJsonObject { put("query", query) })
                 }
-                .body<GraphQLResponse<RootData>>()
+                .bodyOrThrow<GraphQLResponse<RootData>>()
 
         if (!response.errors.isNullOrEmpty()) {
             throw Exception("Could not fetch balances: ${response.errors}")
@@ -440,7 +442,7 @@ constructor(
             throw Exception("Could not fetch balances: status ${httpResponse.status.value}")
         }
 
-        val response = httpResponse.body<GraphQLResponse<RootData>>()
+        val response = httpResponse.bodyOrThrow<GraphQLResponse<RootData>>()
         if (!response.errors.isNullOrEmpty()) {
             throw Exception("Could not fetch balances: ${response.errors}")
         }
@@ -529,7 +531,7 @@ constructor(
             val response =
                 httpClient
                     .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
-                    .body<MetadataResponse>()
+                    .bodyOrThrow<MetadataResponse>()
             response.metadata
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch denom metadata for %s", denom)
@@ -542,7 +544,7 @@ constructor(
             val response =
                 httpClient
                     .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata?pagination.limit=1000")
-                    .body<MetadatasResponse>()
+                    .bodyOrThrow<MetadatasResponse>()
             response.metadatas
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch denom metadata list")
