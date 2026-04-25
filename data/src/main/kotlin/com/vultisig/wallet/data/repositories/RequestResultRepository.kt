@@ -15,7 +15,7 @@ internal class RequestResultRepositoryImpl @Inject constructor() : RequestResult
 
     private data class Response(val requestId: String, val result: Any?)
 
-    private val results = MutableSharedFlow<Response>()
+    private val results = MutableSharedFlow<Response>(replay = 1)
 
     @Suppress("UNCHECKED_CAST")
     override suspend fun <T> request(requestId: String): T? =
