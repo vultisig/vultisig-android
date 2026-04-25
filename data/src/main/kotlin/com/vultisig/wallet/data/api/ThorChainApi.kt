@@ -172,7 +172,7 @@ constructor(
                 response
                     .bodyOrThrow<ThorTcyBalancesResponseJson>()
                     .balances
-                    .find { it.denom == "x/staking-tcy" }
+                    .find { it.denom == STAKING_TCY_DENOM }
                     ?.amount
             stakingTcyAmount
         }
@@ -265,7 +265,10 @@ constructor(
 
             val txResponse =
                 result.txResponse ?: error("Error broadcasting transaction: $responseRawString")
-            if (txResponse.code == 0 || txResponse.code == ERR_TX_IN_MEMPOOL_CACHE) {
+            if (
+                txResponse.code == COSMOS_TX_SUCCESS_CODE ||
+                    txResponse.code == ERR_TX_IN_MEMPOOL_CACHE
+            ) {
                 return txResponse.txHash
             }
             error("Error broadcasting transaction: $responseRawString")
@@ -284,7 +287,7 @@ constructor(
             ?.jsonObject
             ?.get("network")
             ?.jsonPrimitive
-            ?.content ?: error("Could't find network field in response for THORChain chain id")
+            ?.content ?: error("Couldn't find network field in response for THORChain chain id")
 
     override suspend fun resolveName(name: String, chain: String): String? =
         httpClient
@@ -381,7 +384,7 @@ constructor(
         val stakeAmount = stake.bonded.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
         val stakeTicker = stake.bonded.asset.metadata?.symbol ?: ""
         val rewardsAmount = stake.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
-        val rewardsTicker = stake.pendingRevenue?.asset?.metadata?.symbol ?: "USDC"
+        val rewardsTicker = stake.pendingRevenue?.asset?.metadata?.symbol ?: DEFAULT_REWARDS_TICKER
         val apr =
             runCatching { (stake.pool?.summary?.apr?.value ?: "0.0").toDouble() }.getOrDefault(0.0)
 
@@ -414,7 +417,7 @@ constructor(
         val thorName = response.bodyOrThrow<ThorOwnerData>()
 
         return thorName.aliases.any { alias ->
-            alias.chain.equals("THOR", ignoreCase = true) && alias.address.isNotBlank()
+            alias.chain.equals(THOR_CHAIN_NAME, ignoreCase = true) && alias.address.isNotBlank()
         }
     }
 
@@ -448,7 +451,8 @@ constructor(
     override suspend fun getThorchainTokenPriceByContract(
         contract: String
     ): VaultRedemptionResponseJson {
-        val url = "$IBS_TEAM_URL/api/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
+        // STATUS_QUERY_BASE64 is the base64-encoded CosmWasm smart query `{"status": {}}`.
+        val url = "$IBS_TEAM_URL/api/cosmwasm/wasm/v1/contract/$contract/smart/$STATUS_QUERY_BASE64"
         return httpClient
             .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow<VaultRedemptionResponseJson>()
@@ -537,8 +541,8 @@ constructor(
                 header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
         return if (
-            httpResponse.status.value == 400 &&
-                httpResponse.bodyAsText().contains("TCYStaker doesn't exist", ignoreCase = true)
+            httpResponse.status == HttpStatusCode.BadRequest &&
+                httpResponse.bodyAsText().contains(TCY_STAKER_NOT_FOUND_ERROR, ignoreCase = true)
         ) {
             TcyStakeResponse(address = address, amount = "0")
         } else if (!httpResponse.status.isSuccess()) {
@@ -651,9 +655,16 @@ constructor(
           }
         }
         """
-        // Cosmos SDK ErrTxInMempoolCache (code 19): tx already accepted into mempool, treat as
-        // success.
+        // Cosmos SDK success code (0) and ErrTxInMempoolCache (19): tx already accepted
+        // into mempool, treated as success.
         // https://github.com/cosmos/cosmos-sdk/blob/v0.50.0/types/errors/errors.go#L79
+        private const val COSMOS_TX_SUCCESS_CODE = 0
         private const val ERR_TX_IN_MEMPOOL_CACHE = 19
+
+        private const val STAKING_TCY_DENOM = "x/staking-tcy"
+        private const val DEFAULT_REWARDS_TICKER = "USDC"
+        private const val THOR_CHAIN_NAME = "THOR"
+        private const val TCY_STAKER_NOT_FOUND_ERROR = "TCYStaker doesn't exist"
+        private const val STATUS_QUERY_BASE64 = "eyJzdGF0dXMiOiB7fX0="
     }
 }
