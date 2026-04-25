@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
+import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
 import com.vultisig.wallet.data.api.models.thorchain.BlockNumber
 import com.vultisig.wallet.data.api.models.thorchain.BondedNodesResponse
 import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
@@ -69,15 +70,7 @@ interface ThorChainApi {
 
     suspend fun getAccountNumber(address: String): THORChainAccountValue
 
-    suspend fun getSwapQuotes(
-        address: String,
-        fromAsset: String,
-        toAsset: String,
-        amount: String,
-        interval: String,
-        referralCode: String,
-        bpsDiscount: Int,
-    ): THORChainSwapQuoteDeserialized
+    suspend fun getSwapQuotes(request: ThorChainSwapQuoteRequest): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
 
@@ -195,27 +188,21 @@ constructor(
     }
 
     override suspend fun getSwapQuotes(
-        address: String,
-        fromAsset: String,
-        toAsset: String,
-        amount: String,
-        interval: String,
-        referralCode: String,
-        bpsDiscount: Int,
+        request: ThorChainSwapQuoteRequest
     ): THORChainSwapQuoteDeserialized {
         val affiliateParams =
             ThorChainAffiliateHelper.buildAffiliateParams(
-                referralCode = referralCode,
-                discountBps = bpsDiscount,
+                referralCode = request.referralCode,
+                discountBps = request.bpsDiscount,
             )
 
         val response =
             httpClient.get("$THORNODE_BASE/thorchain/quote/swap") {
-                parameter("from_asset", fromAsset)
-                parameter("to_asset", toAsset)
-                parameter("amount", amount)
-                parameter("destination", address)
-                parameter("streaming_interval", interval)
+                parameter("from_asset", request.fromAsset)
+                parameter("to_asset", request.toAsset)
+                parameter("amount", request.amount)
+                parameter("destination", request.address)
+                parameter("streaming_interval", request.interval)
                 if (affiliateParams.isNotEmpty()) {
                     affiliateParams.forEach { (key, value) ->
                         when (key) {
