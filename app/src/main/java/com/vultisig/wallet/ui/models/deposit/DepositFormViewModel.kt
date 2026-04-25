@@ -327,10 +327,11 @@ constructor(
             )
         }
 
-        val coinList = tokensToMerge.let {
-            if (chain == Chain.Osmosis) it.filter { it.ticker.equals("LVN", ignoreCase = true) }
-            else it
-        }
+        val coinList =
+            tokensToMerge.let {
+                if (chain == Chain.Osmosis) it.filter { it.ticker.equals("LVN", ignoreCase = true) }
+                else it
+            }
         _state.update {
             it.copy(
                 selectedCoin = coinList.first(),
@@ -702,15 +703,16 @@ constructor(
 
     private fun loadAddress(vaultId: String, chain: Chain) {
         addressJob?.cancel()
-        addressJob = viewModelScope.launch {
-            try {
-                accountsRepository.loadAddress(vaultId, chain).collect { address ->
-                    this@DepositFormViewModel.address.value = address
+        addressJob =
+            viewModelScope.launch {
+                try {
+                    accountsRepository.loadAddress(vaultId, chain).collect { address ->
+                        this@DepositFormViewModel.address.value = address
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e)
                 }
-            } catch (e: Exception) {
-                Timber.e(e)
             }
-        }
     }
 
     fun selectToken() {
@@ -748,9 +750,10 @@ constructor(
                         val vaultId = vaultId ?: return@launch
                         try {
                             val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
-                            val inboundAddress = inboundAddresses.firstOrNull {
-                                it.chain.equals("GAIA", ignoreCase = true)
-                            }
+                            val inboundAddress =
+                                inboundAddresses.firstOrNull {
+                                    it.chain.equals("GAIA", ignoreCase = true)
+                                }
                             if (
                                 inboundAddress != null &&
                                     inboundAddress.halted.not() &&
@@ -866,9 +869,10 @@ constructor(
             thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
 
             val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
-            val inboundAddress = inboundAddresses.firstOrNull {
-                it.chain.equals(state.value.selectedToken.getChainName(), ignoreCase = true)
-            }
+            val inboundAddress =
+                inboundAddresses.firstOrNull {
+                    it.chain.equals(state.value.selectedToken.getChainName(), ignoreCase = true)
+                }
 
             if (
                 inboundAddress != null &&
@@ -2550,39 +2554,44 @@ constructor(
 
     private fun collectAmountChanges() {
         if (amountChangesJob != null) return
-        amountChangesJob = viewModelScope.safeLaunch {
-            combine(
-                    state.map { it.selectedToken }.distinctUntilChanged(),
-                    tokenAmountFieldState.textAsFlow(),
-                    fiatAmountFieldState.textAsFlow(),
-                ) { selectedToken, tokenFieldValue, fiatFieldValue ->
-                    val tokenString = tokenFieldValue.toString()
-                    val fiatString = fiatFieldValue.toString()
-                    if (lastTokenValueUserInput != tokenString) {
-                        val fiatValue =
-                            convertAmountValue(tokenString, selectedToken) { value, price ->
-                                    value
-                                        .multiply(price)
-                                        .setScale(selectedToken.decimal, RoundingMode.DOWN)
-                                        .stripTrailingZeros()
-                                }
-                                ?.takeIf { it.isNotEmpty() } ?: return@combine
-                        lastTokenValueUserInput = tokenString
-                        lastFiatValueUserInput = fiatValue
-                        fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
-                    } else if (lastFiatValueUserInput != fiatString) {
-                        val tokenValue =
-                            convertAmountValue(fiatString, selectedToken) { value, price ->
-                                    value.divide(price, selectedToken.decimal, RoundingMode.DOWN)
-                                }
-                                ?.takeIf { it.isNotEmpty() } ?: return@combine
-                        lastTokenValueUserInput = tokenValue
-                        lastFiatValueUserInput = fiatString
-                        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
+        amountChangesJob =
+            viewModelScope.safeLaunch {
+                combine(
+                        state.map { it.selectedToken }.distinctUntilChanged(),
+                        tokenAmountFieldState.textAsFlow(),
+                        fiatAmountFieldState.textAsFlow(),
+                    ) { selectedToken, tokenFieldValue, fiatFieldValue ->
+                        val tokenString = tokenFieldValue.toString()
+                        val fiatString = fiatFieldValue.toString()
+                        if (lastTokenValueUserInput != tokenString) {
+                            val fiatValue =
+                                convertAmountValue(tokenString, selectedToken) { value, price ->
+                                        value
+                                            .multiply(price)
+                                            .setScale(selectedToken.decimal, RoundingMode.DOWN)
+                                            .stripTrailingZeros()
+                                    }
+                                    ?.takeIf { it.isNotEmpty() } ?: return@combine
+                            lastTokenValueUserInput = tokenString
+                            lastFiatValueUserInput = fiatValue
+                            fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
+                        } else if (lastFiatValueUserInput != fiatString) {
+                            val tokenValue =
+                                convertAmountValue(fiatString, selectedToken) { value, price ->
+                                        value.divide(
+                                            price,
+                                            selectedToken.decimal,
+                                            RoundingMode.DOWN,
+                                        )
+                                    }
+                                    ?.takeIf { it.isNotEmpty() } ?: return@combine
+                            lastTokenValueUserInput = tokenValue
+                            lastFiatValueUserInput = fiatString
+                            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
+                        }
                     }
-                }
-                .collect()
-        }
+                    .collect()
+            }
     }
 
     private suspend fun convertAmountValue(

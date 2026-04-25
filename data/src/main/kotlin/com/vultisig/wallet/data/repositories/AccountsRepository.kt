@@ -155,9 +155,10 @@ constructor(
         mapIndexed { index, account ->
             val newAccounts =
                 account.accounts.map { acc ->
-                    val balance = balances.firstOrNull {
-                        it.address == account.address && it.coinId == acc.token.id
-                    }
+                    val balance =
+                        balances.firstOrNull {
+                            it.address == account.address && it.coinId == acc.token.id
+                        }
                     if (balance != null) {
                         acc.applyBalance(balance.tokenBalance)
                     } else {
@@ -304,51 +305,55 @@ constructor(
                 )
 
             val addressesByChain = addresses.associateBy { it.chain }
-            val cacheBalances = defiChainNativeCoins.flatMap { (chain, nativeCoin) ->
-                addressesByChain[chain]?.let { address ->
-                    balanceRepository.getDeFiCachedTokeBalanceAndPrice(
-                        address = address.address,
-                        coin = nativeCoin,
-                        vaultId = vaultId,
-                    )
-                } ?: emptyList()
-            }
+            val cacheBalances =
+                defiChainNativeCoins.flatMap { (chain, nativeCoin) ->
+                    addressesByChain[chain]?.let { address ->
+                        balanceRepository.getDeFiCachedTokeBalanceAndPrice(
+                            address = address.address,
+                            coin = nativeCoin,
+                            vaultId = vaultId,
+                        )
+                    } ?: emptyList()
+                }
 
             if (cacheBalances.isNotEmpty()) {
-                val balancesByTicker = cacheBalances.associateBy { balance ->
-                    balance.tokenBalance.tokenValue?.unit?.lowercase()
-                }
+                val balancesByTicker =
+                    cacheBalances.associateBy { balance ->
+                        balance.tokenBalance.tokenValue?.unit?.lowercase()
+                    }
 
-                val cachedAddresses = addresses.map { address ->
-                    val updatedAccounts =
-                        address.accounts.map { account ->
-                            val cachedBalance = balancesByTicker[account.token.ticker.lowercase()]
-                            if (cachedBalance != null) {
-                                account.applyBalance(
-                                    cachedBalance.tokenBalance,
-                                    cachedBalance.price,
-                                )
-                            } else {
-                                account.copy(
-                                    tokenValue =
-                                        TokenValue(
-                                            value = BigInteger.ZERO,
-                                            unit = account.token.ticker,
-                                            decimals = account.token.decimal,
-                                        ),
-                                    fiatValue =
-                                        FiatValue(
-                                            value = BigDecimal.ZERO,
-                                            currency = AppCurrency.USD.ticker,
-                                        ),
-                                    price = null,
-                                )
+                val cachedAddresses =
+                    addresses.map { address ->
+                        val updatedAccounts =
+                            address.accounts.map { account ->
+                                val cachedBalance =
+                                    balancesByTicker[account.token.ticker.lowercase()]
+                                if (cachedBalance != null) {
+                                    account.applyBalance(
+                                        cachedBalance.tokenBalance,
+                                        cachedBalance.price,
+                                    )
+                                } else {
+                                    account.copy(
+                                        tokenValue =
+                                            TokenValue(
+                                                value = BigInteger.ZERO,
+                                                unit = account.token.ticker,
+                                                decimals = account.token.decimal,
+                                            ),
+                                        fiatValue =
+                                            FiatValue(
+                                                value = BigDecimal.ZERO,
+                                                currency = AppCurrency.USD.ticker,
+                                            ),
+                                        price = null,
+                                    )
+                                }
                             }
-                        }
-                    val canBeDeFiProvider = address.chain.isDeFiSupported
+                        val canBeDeFiProvider = address.chain.isDeFiSupported
 
-                    address.copy(accounts = updatedAccounts, isDefiProvider = canBeDeFiProvider)
-                }
+                        address.copy(accounts = updatedAccounts, isDefiProvider = canBeDeFiProvider)
+                    }
 
                 send(cachedAddresses)
             }

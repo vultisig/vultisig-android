@@ -415,18 +415,20 @@ constructor(
                         when (coin.chain) {
                             ThorChain -> {
                                 val listCosmosBalance = thorChainApi.getBalance(address)
-                                val balance = listCosmosBalance.find {
-                                    it.denom.equals(coin.ticker, ignoreCase = true) ||
-                                        it.denom.equals(coin.contractAddress, ignoreCase = true)
-                                }
+                                val balance =
+                                    listCosmosBalance.find {
+                                        it.denom.equals(coin.ticker, ignoreCase = true) ||
+                                            it.denom.equals(coin.contractAddress, ignoreCase = true)
+                                    }
                                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
                             }
 
                             MayaChain -> {
                                 val listCosmosBalance = mayaChainApi.getBalance(address)
-                                val balance = listCosmosBalance.find {
-                                    it.denom.equals(coin.ticker, ignoreCase = true)
-                                }
+                                val balance =
+                                    listCosmosBalance.find {
+                                        it.denom.equals(coin.ticker, ignoreCase = true)
+                                    }
                                 balance?.amount?.toBigInteger() ?: 0.toBigInteger()
                             }
 
