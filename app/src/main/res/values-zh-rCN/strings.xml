@@ -632,6 +632,7 @@
 
     <!-- Swap Errors -->
     <string name="swap_error_amount_too_low">交换金额太低</string>
+    <string name="swap_error_amount_below_dust_threshold">金额低于粉尘阈值。请增加金额后重试。</string>
     <string name="swap_error_insufficient_balance_and_fees">%1$s 余额不足以支付交换和 Gas 费用。请充值 %1$s 或减少交换金额</string>
     <string name="swap_error_insufficient_source_token">%1$s 余额不足以进行交换</string>
     <string name="swap_error_insufficient_gas_fees">没有足够的 %1$s 来支付 Gas 费用。请为钱包充值。</string>

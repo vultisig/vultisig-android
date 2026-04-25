@@ -338,6 +338,7 @@
     <string name="form_token_selection_asset">Ativo</string>
     <string name="insufficient_native_token">%1$s insuficiente para taxas de gás</string>
     <string name="swap_error_amount_too_low">Valor de swap muito baixo</string>
+    <string name="swap_error_amount_below_dust_threshold">O valor é inferior ao limite de poeira. Aumente o valor e tente novamente.</string>
     <string name="swap_error_insufficient_balance_and_fees">Saldo de %1$s insuficiente para o swap e taxas de gás. Recarregue %1$s ou reduza o valor do swap</string>
     <string name="swap_error_insufficient_source_token">Saldo de %1$s insuficiente para trocar</string>
     <string name="swap_error_insufficient_gas_fees">Não há %1$s suficiente para cobrir as taxas de gás. Por favor, financie a carteira.</string>

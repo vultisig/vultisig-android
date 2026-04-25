@@ -337,6 +337,7 @@
     <string name="form_token_selection_asset">Актив</string>
     <string name="insufficient_native_token">Недостаточно %1$s для комиссии за газ</string>
     <string name="swap_error_amount_too_low">Сумма обмена слишком мала</string>
+    <string name="swap_error_amount_below_dust_threshold">Сумма меньше пылевого порога. Увеличьте сумму и попробуйте снова.</string>
     <string name="swap_error_insufficient_balance_and_fees">Недостаточный баланс %1$s для обмена и комиссии за газ. Пополните %1$s или уменьшите сумму обмена</string>
     <string name="swap_error_insufficient_source_token">Недостаточный баланс %1$s для обмена</string>
     <string name="swap_error_insufficient_gas_fees">Недостаточно %1$s для оплаты комиссии за газ. Пожалуйста, пополните кошелек.</string>
