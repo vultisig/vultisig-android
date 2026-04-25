@@ -10,41 +10,35 @@ object ThorChainAffiliateHelper {
      * @param discountBps discount in basis points to subtract from the base affiliate fee
      */
     fun buildAffiliateParams(referralCode: String, discountBps: Int): Map<String, String> {
-        val affiliateParams = mutableMapOf<String, String>()
-
-        // For ultimate clean referral, and return 0 bps affiliate
+        // Full discount: drop all affiliate fees and ignore the referral code.
         if (discountBps >= 50) {
-            affiliateParams["affiliate"] = THORChainSwaps.AFFILIATE_FEE_ADDRESS
-            affiliateParams["affiliate_bps"] = "0"
-
-            return affiliateParams
+            return mapOf(
+                "affiliate" to THORChainSwaps.AFFILIATE_FEE_ADDRESS,
+                "affiliate_bps" to "0",
+            )
         }
 
-        if (referralCode.isNotEmpty()) {
+        return if (referralCode.isNotEmpty()) {
             val affiliateFeeRateBp =
                 calculateBpsAfterDiscount(
                     baseBps = THORChainSwaps.REFERRED_AFFILIATE_FEE_RATE_BP,
                     discountBps = discountBps,
                 )
-
-            // Build nested affiliate with new thorchain structure
-            val affiliates = "$referralCode/${THORChainSwaps.AFFILIATE_FEE_ADDRESS}"
-            val affiliateBps = "${THORChainSwaps.REFERRED_USER_FEE_RATE_BP}/$affiliateFeeRateBp"
-
-            affiliateParams["affiliate"] = affiliates
-            affiliateParams["affiliate_bps"] = affiliateBps
+            mapOf(
+                "affiliate" to "$referralCode/${THORChainSwaps.AFFILIATE_FEE_ADDRESS}",
+                "affiliate_bps" to "${THORChainSwaps.REFERRED_USER_FEE_RATE_BP}/$affiliateFeeRateBp",
+            )
         } else {
             val affiliateFeeRateBp =
                 calculateBpsAfterDiscount(
                     baseBps = THORChainSwaps.AFFILIATE_FEE_RATE_BP,
                     discountBps = discountBps,
                 )
-
-            affiliateParams["affiliate"] = THORChainSwaps.AFFILIATE_FEE_ADDRESS
-            affiliateParams["affiliate_bps"] = affiliateFeeRateBp.toString()
+            mapOf(
+                "affiliate" to THORChainSwaps.AFFILIATE_FEE_ADDRESS,
+                "affiliate_bps" to affiliateFeeRateBp.toString(),
+            )
         }
-
-        return affiliateParams
     }
 
     private fun calculateBpsAfterDiscount(baseBps: Int, discountBps: Int): Int {
