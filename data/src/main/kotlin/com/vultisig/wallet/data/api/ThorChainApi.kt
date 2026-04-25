@@ -156,7 +156,7 @@ constructor(
         return try {
             val response =
                 httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
-                    header(xClientID, xClientIDValue)
+                    header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
                 }
             if (!response.status.isSuccess()) {
                 null
@@ -185,13 +185,10 @@ constructor(
         }
     }
 
-    private val xClientID = "X-Client-ID"
-    private val xClientIDValue = "vultisig"
-
     override suspend fun getBalance(address: String): List<CosmosBalance> {
         val response =
             httpClient.get("$THORNODE_BASE/cosmos/bank/v1beta1/balances/$address") {
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
         val resp = response.bodyOrThrow<CosmosBalanceResponse>()
         return resp.balances ?: emptyList()
@@ -244,7 +241,7 @@ constructor(
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response =
             httpClient.get("$THORNODE_BASE/auth/accounts/$address") {
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
         return response.bodyOrThrow<THORChainAccountResultJson>().result?.value
             ?: error("Field value is not found in the response")
@@ -252,14 +249,18 @@ constructor(
 
     override suspend fun getTHORChainNativeTransactionFee(): BigInteger {
         val response =
-            httpClient.get("$THORNODE_BASE/thorchain/network") { header(xClientID, xClientIDValue) }
+            httpClient.get("$THORNODE_BASE/thorchain/network") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
         val content = response.bodyOrThrow<NativeTxFeeRune>()
         return content.value?.let { BigInteger(it) } ?: 0.toBigInteger()
     }
 
     override suspend fun getTHORChainReferralFees(): NativeTxFeeRune {
         return httpClient
-            .get("$THORNODE_BASE/thorchain/network") { header(xClientID, xClientIDValue) }
+            .get("$THORNODE_BASE/thorchain/network") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
             .bodyOrThrow<NativeTxFeeRune>()
     }
 
@@ -268,7 +269,7 @@ constructor(
             val response =
                 httpClient.post(Endpoints.THORCHAIN_BROADCAST_TX) {
                     contentType(ContentType.Application.Json)
-                    header(xClientID, xClientIDValue)
+                    header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
                     setBody(tx)
                 }
             val responseRawString = response.bodyAsText()
@@ -331,18 +332,20 @@ constructor(
 
     override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> =
         httpClient
-            .get("$THORNODE_BASE/thorchain/inbound_addresses") { header(xClientID, xClientIDValue) }
+            .get("$THORNODE_BASE/thorchain/inbound_addresses") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
             .bodyOrThrow()
 
     override suspend fun getPools(): List<ThorChainPoolJson> =
         httpClient
-            .get("$THORNODE_BASE/thorchain/pools") { header(xClientID, xClientIDValue) }
+            .get("$THORNODE_BASE/thorchain/pools") { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow()
 
     override suspend fun getConstants(): ThorchainConstantsResponse {
         val response =
             httpClient.get("$THORNODE_BASE/thorchain/constants") {
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
         return response.bodyOrThrow<ThorchainConstantsResponse>()
     }
@@ -407,7 +410,7 @@ constructor(
     override suspend fun existsReferralCode(code: String): Boolean {
         val response =
             httpClient.get("$THORNODE_BASE/thorchain/thorname/$code") {
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
 
         if (response.status == HttpStatusCode.NotFound) {
@@ -431,7 +434,7 @@ constructor(
     override suspend fun getReferralCodeInfo(code: String): ThorOwnerData {
         val response =
             httpClient.get("$THORNODE_BASE/thorchain/thorname/$code") {
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
         return response.bodyOrThrow<ThorOwnerData>()
     }
@@ -439,7 +442,7 @@ constructor(
     override suspend fun getReferralCodesByAddress(address: String): List<String> {
         val response =
             httpClient.get("$MIDGARD_URL/thorname/rlookup/$address") {
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
         if (response.status.isSuccess()) {
             return response.bodyOrThrow<List<String>>()
@@ -450,7 +453,7 @@ constructor(
     override suspend fun getLastBlock(): Long {
         val response =
             httpClient.get("$THORNODE_BASE/thorchain/lastblock") {
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
         return response.bodyOrThrow<List<BlockNumber>>().firstOrNull()?.thorchain ?: 0L
     }
@@ -460,7 +463,7 @@ constructor(
     ): VaultRedemptionResponseJson {
         val url = "$IBS_TEAM_URL/api/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
         return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow<VaultRedemptionResponseJson>()
     }
 
@@ -499,7 +502,7 @@ constructor(
         val url = "$MIDGARD_URL/bonds/$address"
 
         return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow<BondedNodesResponse>()
     }
 
@@ -507,27 +510,29 @@ constructor(
         val url = "$THORNODE_BASE/thorchain/node/$nodeAddress"
 
         return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow<NodeDetailsResponse>()
     }
 
     override suspend fun getChurns(): List<ChurnEntry> {
         val url = "$MIDGARD_URL/churns"
         return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow<List<ChurnEntry>>()
     }
 
     override suspend fun getChurnInterval(): Long {
         val url = "$THORNODE_BASE/thorchain/mimir/key/CHURNINTERVAL"
-        return httpClient.get(url) { header(xClientID, xClientIDValue) }.bodyOrThrow<Long>()
+        return httpClient
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow<Long>()
     }
 
     override suspend fun getMidgardNetworkData(): MidgardNetworkData {
         val url = "$MIDGARD_URL/network"
 
         return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow<MidgardNetworkData>()
     }
 
@@ -535,14 +540,14 @@ constructor(
         val url = "$MIDGARD_URL/health"
 
         return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow<MidgardHealth>()
     }
 
     override suspend fun fetchTcyStakedAmount(address: String): TcyStakeResponse {
         val httpResponse =
             httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
         return if (
             httpResponse.status.value == 400 &&
@@ -561,28 +566,32 @@ constructor(
         return httpClient
             .get("$THORNODE_BASE/thorchain/tcy_distributions") {
                 parameter("limit", limit)
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
             .bodyOrThrow<List<TcyDistribution>>()
     }
 
     override suspend fun fetchTcyUserDistributions(address: String): TcyUserDistributionsResponse {
         return httpClient
-            .get("$MIDGARD_URL/tcy/distribution/$address") { header(xClientID, xClientIDValue) }
+            .get("$MIDGARD_URL/tcy/distribution/$address") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
             .bodyOrThrow<TcyUserDistributionsResponse>()
     }
 
     override suspend fun fetchTcyModuleBalance(): TcyModuleBalanceResponse {
         return httpClient
             .get("$THORNODE_BASE/thorchain/balance/module/tcy_stake") {
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
             .bodyOrThrow<TcyModuleBalanceResponse>()
     }
 
     override suspend fun fetchTcyStakers(): TcyStakersResponse {
         return httpClient
-            .get("$THORNODE_BASE/thorchain/tcy_stakers") { header(xClientID, xClientIDValue) }
+            .get("$THORNODE_BASE/thorchain/tcy_stakers") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
             .bodyOrThrow<TcyStakersResponse>()
     }
 
@@ -591,6 +600,8 @@ constructor(
         private const val MIDGARD_URL = "https://midgard.thorchain.network/v2"
         private const val THORCHAIN_RPC_URL = "https://rpc.thorchain.network"
         private const val IBS_TEAM_URL = "https://thorchain.ibs.team"
+        private const val X_CLIENT_ID_HEADER = "X-Client-ID"
+        private const val X_CLIENT_ID_VALUE = "vultisig"
         private const val RUJI_GRAPHQL_URL = "https://api.vultisig.com/ruji/api/graphql"
 
         private const val RUJI_MERGE_QUERY =
