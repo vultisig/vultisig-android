@@ -193,6 +193,9 @@ constructor(
         vaultDataStoreRepository.setBackupStatus(adjustedVault.id, true)
         discoverToken(adjustedVault.id, null)
 
+        // MLDSA capability is sticky across hide/restore. Hiding QBTC from the chain list
+        // doesn't strip the key from the backup, so a restored vault always re-adds the QBTC
+        // token — the user may still hold funds there.
         if (adjustedVault.pubKeyMLDSA.isNotBlank()) {
             val qbtcToken = Coins.Qbtc.QBTC
             val (address, pubKey) =
