@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
-import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -16,6 +15,7 @@ import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.api.models.calculateResourceStats
+import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance

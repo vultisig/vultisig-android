@@ -8,9 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MayaChainApi
-import com.vultisig.wallet.data.api.MergeAccount
-import com.vultisig.wallet.data.api.RujiStakeBalances
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
+import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData

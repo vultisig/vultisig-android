@@ -29,7 +29,6 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.util.BlockBackClick
-import com.vultisig.wallet.ui.components.util.dashedBorder
 import com.vultisig.wallet.ui.components.v2.texts.highlightedText
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupOnboardingEvent
@@ -56,17 +55,7 @@ internal fun VaultBackupOnboardingScreen(
         applyDefaultPaddings = false,
         content = {
             Column(modifier = Modifier.fillMaxSize()) {
-                Box(
-                    modifier =
-                        Modifier.size(width = 350.dp, height = 260.dp)
-                            .dashedBorder(
-                                width = 1.dp,
-                                color = Theme.v2.colors.border.light,
-                                dashLength = 4.dp,
-                                intervalLength = 4.dp,
-                                cornerRadius = 0.dp,
-                            )
-                ) {
+                Box(modifier = Modifier.size(width = 350.dp, height = 260.dp)) {
                     RiveAnimation(animation = uiState.rive, modifier = Modifier.fillMaxSize())
                 }
                 UiSpacer(size = 14.dp)
