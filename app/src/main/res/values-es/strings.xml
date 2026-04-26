@@ -721,6 +721,8 @@
     <string name="keysign_password_enter_your_password">Ingrese su contraseña.</string>
     <string name="migration_password_enter_your_password_to_unlock">Ingrese su contraseña para desbloquear su servidor compartido e iniciar la actualización.</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Existe una bóveda con nombre duplicado</string>
+    <string name="join_key_gen_vault_already_on_device">La bóveda \"%1$s\" ya está en este dispositivo</string>
+    <string name="join_key_gen_open_existing_vault">Abrir bóveda</string>
     <string name="join_key_gen_unknown_tssaction">TssAction desconocido</string>
     <string name="join_key_gen_mediator_discovery_timeout">No se pudo encontrar el otro dispositivo en la red</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Esperando a que se unan otros dispositivos</string>

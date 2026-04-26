@@ -718,6 +718,8 @@
     <string name="keysign_password_enter_your_password">Voer uw wachtwoord in</string>
     <string name="migration_password_enter_your_password_to_unlock">Voer uw wachtwoord in om uw servershare te ontgrendelen en de upgrade te starten</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Er bestaat een kluis met een dubbele naam</string>
+    <string name="join_key_gen_vault_already_on_device">Kluis \"%1$s\" staat al op dit apparaat</string>
+    <string name="join_key_gen_open_existing_vault">Kluis openen</string>
     <string name="join_key_gen_unknown_tssaction">Onbekende TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">Kan het andere apparaat niet vinden op het netwerk</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Wachten op andere apparaten om toe te treden</string>

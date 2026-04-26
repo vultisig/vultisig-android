@@ -725,6 +725,8 @@
     <string name="keysign_password_enter_your_password">Unesite svoju lozinku</string>
     <string name="migration_password_enter_your_password_to_unlock">Unesite svoju lozinku za otključavanje dijeljenog poslužitelja i početak nadogradnje</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Trezor s dupliciranim nazivom postoji</string>
+    <string name="join_key_gen_vault_already_on_device">Trezor \"%1$s\" već se nalazi na ovom uređaju</string>
+    <string name="join_key_gen_open_existing_vault">Otvori trezor</string>
     <string name="join_key_gen_unknown_tssaction">Nepoznata TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">Drugi uređaj nije pronađen na mreži</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Čekanje da se drugi uređaji pridruže</string>
