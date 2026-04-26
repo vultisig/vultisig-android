@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
+import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.dstAmount
 import com.vultisig.wallet.data.api.models.quotes.gasForChain
 import com.vultisig.wallet.data.api.swapAggregators.KyberApi
@@ -266,13 +267,15 @@ constructor(
         val thorQuote =
             try {
                 thorChainApi.getSwapQuotes(
-                    address = dstAddress,
-                    fromAsset = srcToken.swapAssetName(),
-                    toAsset = dstToken.swapAssetName(),
-                    amount = thorTokenValue.toString(),
-                    interval = "0",
-                    referralCode = referralCode,
-                    bpsDiscount = bpsDiscount,
+                    ThorChainSwapQuoteRequest(
+                        address = dstAddress,
+                        fromAsset = srcToken.swapAssetName(),
+                        toAsset = dstToken.swapAssetName(),
+                        amount = thorTokenValue.toString(),
+                        interval = "0",
+                        referralCode = referralCode,
+                        bpsDiscount = bpsDiscount,
+                    )
                 )
             } catch (e: Exception) {
                 throw SwapException.handleSwapException(e.message ?: "Unknown error")
