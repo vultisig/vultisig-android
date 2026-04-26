@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.ResourceUsage
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.clickOnce
@@ -291,18 +292,24 @@ private fun TronPendingWithdrawalRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = if (isBalanceVisible) "${withdrawal.amountTrx} TRX" else HIDE_BALANCE_CHARS,
                 style = Theme.brockmann.body.m.medium,
                 color = Theme.v2.colors.text.primary,
             )
-            if (!isClaimable) {
-                Text(
-                    text = timeRemainingText,
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.secondary,
-                )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                withdrawal.resourceType?.let { TronResourceTypeBadge(it) }
+                if (!isClaimable) {
+                    Text(
+                        text = timeRemainingText,
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.secondary,
+                    )
+                }
             }
         }
 
@@ -320,6 +327,40 @@ private fun TronPendingWithdrawalRow(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun TronResourceTypeBadge(resourceType: TronResourceType) {
+    val labelRes =
+        when (resourceType) {
+            TronResourceType.BANDWIDTH -> R.string.tron_resource_bandwidth
+            TronResourceType.ENERGY -> R.string.tron_resource_energy
+        }
+    val iconRes =
+        when (resourceType) {
+            TronResourceType.BANDWIDTH -> R.drawable.bandwidth
+            TronResourceType.ENERGY -> R.drawable.energy
+        }
+    val iconTint =
+        when (resourceType) {
+            TronResourceType.BANDWIDTH -> Theme.v2.colors.alerts.success
+            TronResourceType.ENERGY -> Theme.v2.colors.alerts.warning
+        }
+    Row(
+        modifier =
+            Modifier.clip(RoundedCornerShape(6.dp))
+                .background(Theme.v2.colors.backgrounds.surface2)
+                .padding(horizontal = 8.dp, vertical = 3.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        UiIcon(drawableResId = iconRes, size = 12.dp, tint = iconTint)
+        Text(
+            text = stringResource(labelRes),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.secondary,
+        )
     }
 }
 
@@ -379,10 +420,12 @@ private fun TronDeFiPositionsScreenPreview() {
                                 TronPendingWithdrawalUiModel(
                                     amountTrx = "50.000000",
                                     expiryEpochMs = System.currentTimeMillis() - 1_000L,
+                                    resourceType = TronResourceType.BANDWIDTH,
                                 ),
                                 TronPendingWithdrawalUiModel(
                                     amountTrx = "30.000000",
                                     expiryEpochMs = System.currentTimeMillis() + TWO_DAYS_MS,
+                                    resourceType = TronResourceType.ENERGY,
                                 ),
                             ),
                     )
