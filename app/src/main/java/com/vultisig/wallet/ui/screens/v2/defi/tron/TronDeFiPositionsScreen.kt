@@ -256,7 +256,7 @@ private fun TronPendingWithdrawalRow(
                 value = System.currentTimeMillis()
             }
         }
-    val countdown = countdownParts(withdrawal.expiryEpochMs, nowMs)
+    val countdown = countdownParts(expiryMs, nowMs)
     val isClaimable = countdown == null
     val timeRemainingText =
         when {
