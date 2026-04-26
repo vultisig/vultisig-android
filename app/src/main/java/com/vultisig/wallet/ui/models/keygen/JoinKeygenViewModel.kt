@@ -68,8 +68,7 @@ internal sealed class JoinKeygenError(val message: UiText) {
 
     data object UnknownTss : JoinKeygenError(R.string.join_key_gen_unknown_tssaction.asUiText())
 
-    data object WrongResharePrefix :
-        JoinKeygenError(R.string.join_keysign_wrong_reshare.asUiText())
+    data object WrongResharePrefix : JoinKeygenError(R.string.join_keysign_wrong_reshare.asUiText())
 
     data object DiscoveryTimeout :
         JoinKeygenError(R.string.join_key_gen_mediator_discovery_timeout.asUiText())
@@ -127,6 +126,22 @@ constructor(
                                     protoBuf.decodeFromByteArray<KeygenMessageProto>(bytes)
                                 )
 
+                            // hexChainCode uniquely identifies the vault across devices.
+                            // If a vault with the same chain code is already on this device,
+                            // skip the join and open it instead of running keygen + failing
+                            // on duplicate save.
+                            val alreadyJoinedVault = existingVaults.find {
+                                it.hexChainCode == message.hexChainCode &&
+                                    it.hexChainCode.isNotBlank()
+                            }
+                            if (alreadyJoinedVault != null) {
+                                navigator.route(
+                                    route = Route.Home(openVaultId = alreadyJoinedVault.id),
+                                    opts = NavigationOptions(clearBackStack = true),
+                                )
+                                return@launch
+                            }
+
                             assertNoVaultNameDuplicates(existingVaults, message.vaultName)
 
                             val serverUrl =
@@ -159,8 +174,9 @@ constructor(
                                     protoBuf.decodeFromByteArray<ReshareMessageProto>(bytes)
                                 )
 
-                            val existingVault =
-                                existingVaults.find { it.pubKeyECDSA == message.pubKeyECDSA }
+                            val existingVault = existingVaults.find {
+                                it.pubKeyECDSA == message.pubKeyECDSA
+                            }
 
                             if (
                                 existingVault != null &&
