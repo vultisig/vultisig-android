@@ -1372,7 +1372,7 @@
     <string name="key_import_chains_no_results">没有与您的搜索匹配的链</string>
 
     <string name="key_import_device_count_get_started">开始</string>
-    <string name="choose_device_count_a11y_description">您有多少台设备？已选择 %1$d 台。点击以选择其他。</string>
+    <string name="choose_device_count_a11y_description">您有多少台设备？当前选择：%1$s。点击以选择其他。</string>
     <string name="vault_count_recommended">推荐</string>
 
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>

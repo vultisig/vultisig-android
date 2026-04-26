@@ -1043,7 +1043,7 @@
     <string name="key_import_chains_no_results">Ninguna cadena coincide con tu búsqueda</string>
 
     <string name="key_import_device_count_get_started">Comenzar</string>
-    <string name="choose_device_count_a11y_description">¿Cuántos dispositivos tienes? %1$d seleccionados. Toca para elegir otro.</string>
+    <string name="choose_device_count_a11y_description">¿Cuántos dispositivos tienes? Selección actual: %1$s. Toca para elegir otro.</string>
     <string name="vault_count_recommended">Recomendado</string>
 
     <string name="welcome_tip">Consejo: Puedes usar un navegador como dispositivo</string>

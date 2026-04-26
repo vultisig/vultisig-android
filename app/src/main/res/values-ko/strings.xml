@@ -1070,7 +1070,7 @@
     <string name="key_import_chains_get_started">시작하기</string>
     <string name="key_import_chains_no_results">검색에 일치하는 체인이 없습니다</string>
     <string name="key_import_device_count_get_started">시작하기</string>
-    <string name="choose_device_count_a11y_description">기기를 몇 대 가지고 계신가요? %1$d개 선택됨. 탭하여 다른 옵션을 선택하세요.</string>
+    <string name="choose_device_count_a11y_description">기기를 몇 대 가지고 계신가요? 현재 선택: %1$s. 탭하여 다른 옵션을 선택하세요.</string>
 
     <string name="review_vault_devices_title">볼트 기기 확인</string>
     <string name="review_vault_devices_description">추가한 기기가 올바른지 확인하세요:</string>

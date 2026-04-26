@@ -57,17 +57,18 @@ private fun ChooseDeviceCountScreen(onEvent: (ChooseDeviceCountUiEvent) -> Unit)
                 VsCircularLoading(modifier = Modifier.fillMaxSize().wrapContentSize())
             } else {
                 val vmi = rememberViewModelInstance(file = riveFile)
-                var deviceCount by remember { mutableIntStateOf(1) }
+                var deviceIndex by remember { mutableIntStateOf(0) }
 
                 LaunchedEffect(Unit) {
                     vmi.getNumberFlow("Index").collect { index ->
-                        deviceCount = (index.toInt() + 1).coerceIn(1, 4)
+                        deviceIndex = index.toInt().coerceIn(0, 3)
                         onEvent(ChooseDeviceCountUiEvent.IndexChanged(index.toInt()))
                     }
                 }
 
+                val deviceCountLabel = if (deviceIndex == 3) "4+" else (deviceIndex + 1).toString()
                 val a11yDescription =
-                    stringResource(R.string.choose_device_count_a11y_description, deviceCount)
+                    stringResource(R.string.choose_device_count_a11y_description, deviceCountLabel)
 
                 Box(Modifier.fillMaxSize()) {
                     RiveAnimation(

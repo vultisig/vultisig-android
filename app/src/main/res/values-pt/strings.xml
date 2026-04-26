@@ -1044,7 +1044,7 @@
     <string name="key_import_chains_no_results">Nenhuma cadeia corresponde à sua pesquisa</string>
 
     <string name="key_import_device_count_get_started">Começar</string>
-    <string name="choose_device_count_a11y_description">Quantos dispositivos tem? %1$d selecionados. Toque para escolher outro.</string>
+    <string name="choose_device_count_a11y_description">Quantos dispositivos tem? Seleção atual: %1$s. Toque para escolher outro.</string>
     <string name="vault_count_recommended">Recomendada</string>
 
     <string name="welcome_tip">Dica: Pode usar um browser como dispositivo</string>
