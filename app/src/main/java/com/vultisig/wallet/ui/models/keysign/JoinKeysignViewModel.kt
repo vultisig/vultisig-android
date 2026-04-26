@@ -8,8 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
@@ -22,9 +24,11 @@ import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
@@ -40,6 +44,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
+import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -137,6 +142,10 @@ sealed class JoinKeysignError(val message: UiText) {
 
     data object WrongLibType :
         JoinKeysignError(UiText.StringResource(R.string.join_key_sign_wrong_signing_library_type))
+
+    /** Relay server is unavailable after exhausting all retry attempts. */
+    data object RelayUnavailable :
+        JoinKeysignError(R.string.join_keysign_relay_unavailable.asUiText())
 }
 
 sealed interface JoinKeysignState {
@@ -534,38 +543,109 @@ constructor(
 
                 val vaultName = _currentVault.name
 
-                val provider =
+                val resolvedProvider =
                     runCatching {
                             resolveProviderUseCase(
-                                    SwapSelectionContext(srcToken, dstToken, srcTokenValue)
-                                )
-                                ?.getSwapProviderId()
+                                SwapSelectionContext(srcToken, dstToken, srcTokenValue)
+                            )
                         }
                         .onFailure { Timber.w(it, "Failed to resolve swap provider in join flow") }
                         .getOrNull()
-                        .orEmpty()
+                val provider = resolvedProvider?.getSwapProviderId().orEmpty()
+
+                suspend fun buildSwapUiModel(
+                    providerFee: TokenValue,
+                    providerFeeToken: Coin,
+                ): SwapTransactionUiModel {
+                    val estimatedFee =
+                        convertTokenValueToFiat(providerFeeToken, providerFee, currency)
+                    return SwapTransactionUiModel(
+                        src =
+                            ValuedToken(
+                                value = mapTokenValueToDecimalUiString(srcTokenValue),
+                                token = srcToken,
+                                fiatValue =
+                                    fiatValueToStringMapper(
+                                        convertTokenValueToFiat(srcToken, srcTokenValue, currency)
+                                    ),
+                            ),
+                        dst =
+                            ValuedToken(
+                                value = mapTokenValueToDecimalUiString(dstTokenValue),
+                                token = dstToken,
+                                fiatValue =
+                                    fiatValueToStringMapper(
+                                        convertTokenValueToFiat(dstToken, dstTokenValue, currency)
+                                    ),
+                            ),
+                        networkFee =
+                            ValuedToken(
+                                token = srcToken,
+                                value =
+                                    mapTokenValueToDecimalUiString(
+                                        estimatedNetworkGasFee.tokenValue
+                                    ),
+                                fiatValue =
+                                    fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
+                            ),
+                        providerFee =
+                            ValuedToken(
+                                token = providerFeeToken,
+                                value = providerFee.value.toString(),
+                                fiatValue = fiatValueToStringMapper(estimatedFee),
+                            ),
+                        networkFeeFormatted =
+                            mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
+                                " ${estimatedNetworkGasFee.tokenValue.unit}",
+                        totalFee = fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
+                        provider = provider,
+                    )
+                }
 
                 when (swapPayload) {
                     is SwapPayload.EVM -> {
                         val oneInchSwapTxJson = swapPayload.data.quote.tx
-                        // if swapFee is not null then it provider is Lifi otherwise 1inch
-                        val value =
-                            if (
-                                oneInchSwapTxJson.swapFee.isNotEmpty() &&
-                                    oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null
-                            ) {
-                                oneInchSwapTxJson.swapFee.toBigInteger()
-                            } else {
-                                (oneInchSwapTxJson.gasPrice.toBigIntegerOrNull()
-                                    ?: BigInteger.ZERO) *
-                                    (oneInchSwapTxJson.gas.takeIf { it != 0L }
-                                            ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
-                                        .toBigInteger()
-                            }
                         val hasJupiterSwapProvider =
                             srcToken.chain == Chain.Solana && dstToken.chain == Chain.Solana
+                        // LI.FI is the only aggregator that produces cross-chain EVM swaps, so
+                        // treat src.chain != dst.chain as LI.FI even if provider resolution
+                        // failed in this flow.
+                        val isLiFi =
+                            resolvedProvider == SwapProvider.LIFI ||
+                                srcToken.chain != dstToken.chain
 
-                        val feeToken = if (hasJupiterSwapProvider) srcToken else nativeToken
+                        val feeToken =
+                            when {
+                                // Mirror iOS / SwapFormViewModel: LI.FI integrator fee is a
+                                // percentage of the destination amount, denominated in the
+                                // destination token. The raw "LIFI Fixed Fee" amount has no
+                                // chainId and cannot be safely interpreted as source-native wei
+                                // for cross-chain swaps (#3300).
+                                isLiFi -> dstToken
+                                hasJupiterSwapProvider -> srcToken
+                                else -> nativeToken
+                            }
+
+                        val value =
+                            when {
+                                // VULT tier discount isn't available in the join flow, so this
+                                // uses the base integrator rate. The difference vs. the initiator
+                                // display is at most 0.5% of dstAmount.
+                                isLiFi ->
+                                    LiFiChainApi.integratorFeeAmount(
+                                        dstAmount = dstTokenValue.value
+                                    )
+                                oneInchSwapTxJson.swapFee.isNotEmpty() &&
+                                    oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null ->
+                                    oneInchSwapTxJson.swapFee.toBigInteger()
+                                else ->
+                                    (oneInchSwapTxJson.gasPrice.toBigIntegerOrNull()
+                                        ?: BigInteger.ZERO) *
+                                        (oneInchSwapTxJson.gas.takeIf { it != 0L }
+                                                ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT)
+                                            .toBigInteger()
+                            }
+
                         val estimatedTokenFees = TokenValue(value = value, token = feeToken)
 
                         val estimatedFee =
@@ -636,6 +716,23 @@ constructor(
                     }
 
                     is SwapPayload.ThorChain -> {
+                        if (
+                            srcToken.swapAssetComparisonName() == dstToken.swapAssetComparisonName()
+                        ) {
+                            val lpAddUiModel =
+                                buildSwapUiModel(
+                                    providerFee =
+                                        TokenValue(value = BigInteger.ZERO, token = srcToken),
+                                    providerFeeToken = srcToken,
+                                )
+                            transactionTypeUiModel = TransactionTypeUiModel.Swap(lpAddUiModel)
+                            transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel)
+                            verifyUiModel.value =
+                                VerifyUiModel.Swap(
+                                    VerifySwapUiModel(tx = lpAddUiModel, vaultName = vaultName)
+                                )
+                            return
+                        }
                         val quote =
                             swapQuoteRepository.getSwapQuote(
                                 srcToken = srcToken,
@@ -643,62 +740,7 @@ constructor(
                                 dstAddress = swapPayload.data.toAddress,
                                 tokenValue = srcTokenValue,
                             )
-
-                        val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
-                        val swapTransactionUiModel =
-                            SwapTransactionUiModel(
-                                src =
-                                    ValuedToken(
-                                        value = mapTokenValueToDecimalUiString(srcTokenValue),
-                                        token = srcToken,
-                                        fiatValue =
-                                            fiatValueToStringMapper(
-                                                convertTokenValueToFiat(
-                                                    srcToken,
-                                                    srcTokenValue,
-                                                    currency,
-                                                )
-                                            ),
-                                    ),
-                                dst =
-                                    ValuedToken(
-                                        value = mapTokenValueToDecimalUiString(dstTokenValue),
-                                        token = dstToken,
-                                        fiatValue =
-                                            fiatValueToStringMapper(
-                                                convertTokenValueToFiat(
-                                                    dstToken,
-                                                    dstTokenValue,
-                                                    currency,
-                                                )
-                                            ),
-                                    ),
-                                networkFee =
-                                    ValuedToken(
-                                        token = srcToken,
-                                        value =
-                                            mapTokenValueToDecimalUiString(
-                                                estimatedNetworkGasFee.tokenValue
-                                            ),
-                                        fiatValue =
-                                            fiatValueToStringMapper(
-                                                estimatedNetworkGasFee.fiatValue
-                                            ),
-                                    ),
-                                providerFee =
-                                    ValuedToken(
-                                        token = dstToken,
-                                        value = quote.fees.value.toString(),
-                                        fiatValue = fiatValueToStringMapper(estimatedFee),
-                                    ),
-                                networkFeeFormatted =
-                                    mapTokenValueToDecimalUiString(
-                                        estimatedNetworkGasFee.tokenValue
-                                    ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
-                                totalFee =
-                                    fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
-                                provider = provider,
-                            )
+                        val swapTransactionUiModel = buildSwapUiModel(quote.fees, dstToken)
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
                             mapSwapTransactionToHistoryData(swapTransactionUiModel)
@@ -712,72 +754,32 @@ constructor(
                     }
 
                     is SwapPayload.MayaChain -> {
-                        val isAffiliate = true
-
+                        if (
+                            srcToken.swapAssetComparisonName() == dstToken.swapAssetComparisonName()
+                        ) {
+                            val lpAddUiModel =
+                                buildSwapUiModel(
+                                    providerFee =
+                                        TokenValue(value = BigInteger.ZERO, token = srcToken),
+                                    providerFeeToken = srcToken,
+                                )
+                            transactionTypeUiModel = TransactionTypeUiModel.Swap(lpAddUiModel)
+                            transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel)
+                            verifyUiModel.value =
+                                VerifyUiModel.Swap(
+                                    VerifySwapUiModel(tx = lpAddUiModel, vaultName = vaultName)
+                                )
+                            return
+                        }
                         val quote =
                             swapQuoteRepository.getMayaSwapQuote(
                                 srcToken = srcToken,
                                 dstToken = dstToken,
                                 dstAddress = swapPayload.data.toAddress,
                                 tokenValue = srcTokenValue,
-                                isAffiliate = isAffiliate,
+                                isAffiliate = true,
                             )
-
-                        val estimatedFee = convertTokenValueToFiat(dstToken, quote.fees, currency)
-                        val swapTransactionUiModel =
-                            SwapTransactionUiModel(
-                                src =
-                                    ValuedToken(
-                                        value = mapTokenValueToDecimalUiString(srcTokenValue),
-                                        token = srcToken,
-                                        fiatValue =
-                                            fiatValueToStringMapper(
-                                                convertTokenValueToFiat(
-                                                    srcToken,
-                                                    srcTokenValue,
-                                                    currency,
-                                                )
-                                            ),
-                                    ),
-                                dst =
-                                    ValuedToken(
-                                        value = mapTokenValueToDecimalUiString(dstTokenValue),
-                                        token = dstToken,
-                                        fiatValue =
-                                            fiatValueToStringMapper(
-                                                convertTokenValueToFiat(
-                                                    dstToken,
-                                                    dstTokenValue,
-                                                    currency,
-                                                )
-                                            ),
-                                    ),
-                                providerFee =
-                                    ValuedToken(
-                                        token = dstToken,
-                                        value = quote.fees.value.toString(),
-                                        fiatValue = fiatValueToStringMapper(estimatedFee),
-                                    ),
-                                networkFee =
-                                    ValuedToken(
-                                        token = srcToken,
-                                        value =
-                                            mapTokenValueToDecimalUiString(
-                                                estimatedNetworkGasFee.tokenValue
-                                            ),
-                                        fiatValue =
-                                            fiatValueToStringMapper(
-                                                estimatedNetworkGasFee.fiatValue
-                                            ),
-                                    ),
-                                networkFeeFormatted =
-                                    mapTokenValueToDecimalUiString(
-                                        estimatedNetworkGasFee.tokenValue
-                                    ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
-                                totalFee =
-                                    fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
-                                provider = provider,
-                            )
+                        val swapTransactionUiModel = buildSwapUiModel(quote.fees, dstToken)
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
                             mapSwapTransactionToHistoryData(swapTransactionUiModel)
@@ -1195,6 +1197,21 @@ constructor(
                     sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
+                } catch (e: HttpException) {
+                    Timber.tag("JoinKeysignViewModel")
+                        .e(
+                            "Failed to join keysign (HTTP %d): %s",
+                            e.statusCode,
+                            e.stackTraceToString(),
+                        )
+                    currentState.value =
+                        if (e.statusCode >= 500) {
+                            JoinKeysignState.Error(JoinKeysignError.RelayUnavailable)
+                        } else {
+                            JoinKeysignState.Error(
+                                JoinKeysignError.FailedToStart(e.message.toString())
+                            )
+                        }
                 } catch (e: Exception) {
                     Timber.tag("JoinKeysignViewModel")
                         .e("Failed to join keysign: %s", e.stackTraceToString())
@@ -1216,6 +1233,11 @@ constructor(
                         Route.Home(showVaultList = true),
                         opts = NavigationOptions(clearBackStack = true),
                     )
+
+                JoinKeysignError.RelayUnavailable -> {
+                    currentState.value = JoinKeysignState.JoinKeysign
+                    joinKeysign()
+                }
 
                 else -> navigator.navigate(Destination.Back)
             }

@@ -19,6 +19,7 @@ internal fun AccountList(
     snackbarState: VSSnackbarState,
     accounts: List<AccountUiModel>,
     isBalanceVisible: Boolean,
+    showAddress: Boolean = true,
 ) {
     val context = LocalContext.current
 
@@ -30,6 +31,7 @@ internal fun AccountList(
                         modifier = Modifier.Companion.padding(horizontal = 16.dp, vertical = 12.dp),
                         account = account,
                         isBalanceVisible = isBalanceVisible,
+                        showAddress = showAddress,
                         onClick = { onAccountClick(account) },
                         onCopy = {
                             snackbarState.show(

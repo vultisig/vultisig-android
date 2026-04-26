@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.sign
 
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,62 +48,70 @@ internal fun SignMessageScreen(
     val route = navBackStackEntry?.destination?.route
 
     val useMainNavigator = route == SendDst.Send.route
-    val progressNav =
-        if (useMainNavigator) {
-            navController
-        } else {
-            sendNav
-        }
 
-    val progress: Float
-    val title: String
-
-    when (route) {
-        SendDst.Send.route -> {
-            progress = 0.25f
-            title = stringResource(R.string.sign_message_sign_screen_title)
+    val title =
+        when (route) {
+            SendDst.VerifyTransaction.staticRoute ->
+                stringResource(R.string.verify_transaction_screen_title)
+            else -> stringResource(R.string.sign_message_sign_screen_title)
         }
-        SendDst.VerifyTransaction.staticRoute -> {
-            progress = 0.5f
-            title = stringResource(R.string.verify_transaction_screen_title)
-        }
-        else -> {
-            progress = 0.0f
-            title = stringResource(R.string.sign_message_sign_screen_title)
-        }
-    }
 
     val qrAddress by viewModel.addressProvider.address.collectAsState()
     val qr = qrAddress.takeIf { it.isNotEmpty() }
 
+    SignMessageScreen(
+        title = title,
+        isKeysignFinished = isKeysignFinished,
+        rightIcon = qr?.let { R.drawable.qr_share },
+        onBackClick = { viewModel.navigateToHome(useMainNavigator) },
+        onRightIconClick = { keysignShareViewModel.shareQRCode(context) },
+    ) {
+        NavHost(
+            navController = sendNav,
+            startDestination = SendDst.Send.route,
+            enterTransition = slideInFromEndEnterTransition(),
+            exitTransition = slideOutToStartExitTransition(),
+            popEnterTransition = slideInFromStartEnterTransition(),
+            popExitTransition = slideOutToEndExitTransition(),
+        ) {
+            composable(route = SendDst.Send.route) { SignMessageFormScreen(vaultId = vaultId) }
+            composable(
+                route = SendDst.VerifyTransaction.staticRoute,
+                arguments = SendDst.transactionArgs,
+            ) {
+                VerifySignMessageScreen()
+            }
+        }
+    }
+}
+
+@Composable
+private fun SignMessageScreen(
+    title: String,
+    isKeysignFinished: Boolean,
+    @DrawableRes rightIcon: Int?,
+    onBackClick: () -> Unit,
+    onRightIconClick: () -> Unit,
+    content: @Composable () -> Unit,
+) {
     V2Scaffold(
         title = title,
-        onBackClick = { viewModel.navigateToHome(useMainNavigator) }.takeIf { !isKeysignFinished },
-        rightIcon = qr?.let { R.drawable.qr_share },
-        onRightIconClick = qr?.let { { keysignShareViewModel.shareQRCode(context) } },
-        content = {
-            NavHost(
-                navController = sendNav,
-                startDestination = SendDst.Send.route,
-                enterTransition = slideInFromEndEnterTransition(),
-                exitTransition = slideOutToStartExitTransition(),
-                popEnterTransition = slideInFromStartEnterTransition(),
-                popExitTransition = slideOutToEndExitTransition(),
-            ) {
-                composable(route = SendDst.Send.route) { SignMessageFormScreen(vaultId = vaultId) }
-                composable(
-                    route = SendDst.VerifyTransaction.staticRoute,
-                    arguments = SendDst.transactionArgs,
-                ) {
-                    VerifySignMessageScreen()
-                }
-            }
-        },
+        onBackClick = onBackClick.takeIf { !isKeysignFinished },
+        rightIcon = rightIcon,
+        onRightIconClick = onRightIconClick.takeIf { rightIcon != null },
+        content = content,
     )
 }
 
 @Preview
 @Composable
 private fun SignMessageScreenPreview() {
-    SignMessageScreen(navController = rememberNavController(), vaultId = "")
+    SignMessageScreen(
+        title = "Sign Message",
+        isKeysignFinished = false,
+        rightIcon = R.drawable.qr_share,
+        onBackClick = {},
+        onRightIconClick = {},
+        content = {},
+    )
 }

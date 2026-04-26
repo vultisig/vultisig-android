@@ -19,10 +19,13 @@ import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.genera
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService.Companion.RUJI_REWARDS_COIN
+import com.vultisig.wallet.data.blockchain.tron.GetTronFrozenBalancesUseCase
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
+import com.vultisig.wallet.data.blockchain.tron.TronFrozenBalanceState
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
+import com.vultisig.wallet.data.blockchain.tron.TronStakingOperation
+import com.vultisig.wallet.data.blockchain.tron.tronStakingMemo
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
-import com.vultisig.wallet.data.chains.helpers.PolkadotHelper
-import com.vultisig.wallet.data.chains.helpers.RippleHelper
 import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.models.Account
@@ -48,13 +51,9 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.coinType
-import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.getPubKeyByChain
-import com.vultisig.wallet.data.models.hasReaping
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.models.payload.UtxoInfo
-import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.AdvanceGasUiRepository
@@ -71,9 +70,10 @@ import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
+import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
-import com.vultisig.wallet.data.utils.symbol
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.AmountFraction.F100
@@ -93,6 +93,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.YTCY_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asAddressInput
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -134,7 +135,6 @@ import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.proto.Bitcoin
-import wallet.core.jni.proto.Common.SigningError
 
 @Immutable
 internal data class TokenBalanceUiModel(
@@ -199,6 +199,12 @@ internal data class SendFormUiModel(
     val isAmountSelectionLoading: Boolean = false,
     val selectedAmountFraction: AmountFraction? = null,
     val amountFractionEntries: List<AmountFraction> = listOf(F25, F50, F75, F100),
+
+    // Tron freeze/unfreeze
+    val tronResourceType: TronResourceType? = null,
+    val tronBalanceAvailableOverride: String? = null,
+    val isTronFrozenBalancesLoading: Boolean = false,
+    val hasTronFrozenBalancesError: Boolean = false,
 )
 
 internal data class SendSrc(val address: Address, val account: Account)
@@ -255,6 +261,9 @@ constructor(
     private val depositTransactionRepository: DepositTransactionRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val feeServiceComposite: FeeServiceComposite,
+    private val chainValidationService: ChainValidationService,
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
+    private val getTronFrozenBalances: GetTronFrozenBalancesUseCase,
 ) : ViewModel() {
 
     private var vault: Vault? = null
@@ -329,6 +338,13 @@ constructor(
 
     private val isSwitchingAccounts = MutableStateFlow(false)
 
+    private val tronFrozenBalances =
+        MutableStateFlow<TronFrozenBalanceState>(TronFrozenBalanceState.Loading)
+    private var loadTronFrozenBalancesJob: Job? = null
+
+    private fun isTronStakingType(): Boolean =
+        defiType == DeFiNavActions.FREEZE_TRX || defiType == DeFiNavActions.UNFREEZE_TRX
+
     init {
         loadData(
             vaultId = args.vaultId,
@@ -364,7 +380,7 @@ constructor(
                 .textAsFlow()
                 .debounce(300)
                 .combine(selectedToken.filterNotNull()) { address, token ->
-                    address.toString() to token
+                    address.asAddressInput() to token
                 }
                 .mapLatest { (addressStr, token) ->
                     if (chainAccountAddressRepository.isValid(token.chain, addressStr)) {
@@ -383,7 +399,8 @@ constructor(
                             val resolved =
                                 addressParserRepository.resolveName(addressStr, token.chain)
                             // Ignore stale result if user changed input while resolving
-                            if (addressFieldState.text.toString() != addressStr) return@mapLatest
+                            if (addressFieldState.text.asAddressInput() != addressStr)
+                                return@mapLatest
                             if (chainAccountAddressRepository.isValid(token.chain, resolved)) {
                                 dstAddressLabel.value = addressStr
                                 resolvedDstAddress.value = resolved
@@ -479,7 +496,104 @@ constructor(
     private fun initFormType() {
         val autoCompound =
             defiType == DeFiNavActions.STAKE_STCY || defiType == DeFiNavActions.UNSTAKE_STCY
-        uiState.update { it.copy(defiType = this.defiType, isAutocompound = autoCompound) }
+        val initialResourceType = if (isTronStakingType()) TronResourceType.BANDWIDTH else null
+        uiState.update {
+            it.copy(
+                defiType = this.defiType,
+                isAutocompound = autoCompound,
+                tronResourceType = initialResourceType,
+            )
+        }
+        if (isTronStakingType()) {
+            applyTronStakingMemo(TronResourceType.BANDWIDTH)
+            if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                loadTronFrozenBalances()
+            }
+        }
+    }
+
+    fun setTronResourceType(type: TronResourceType) {
+        // Ignore toggles while a send is in flight so the captured memo/resource type
+        // used by send() can't diverge from the one visible in the tab.
+        if (uiState.value.isLoading) return
+        if (uiState.value.tronResourceType == type) return
+        uiState.update {
+            it.copy(
+                tronResourceType = type,
+                tronBalanceAvailableOverride = null,
+                selectedAmountFraction = null,
+            )
+        }
+        applyTronStakingMemo(type)
+        tokenAmountFieldState.clearText()
+        fiatAmountFieldState.clearText()
+        if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+            updateTronFrozenBalanceDisplay(type)
+        }
+    }
+
+    private fun applyTronStakingMemo(type: TronResourceType) {
+        val op =
+            when (defiType) {
+                DeFiNavActions.FREEZE_TRX -> TronStakingOperation.FREEZE
+                DeFiNavActions.UNFREEZE_TRX -> TronStakingOperation.UNFREEZE
+                else -> error("applyTronStakingMemo called outside Tron staking")
+            }
+        memoFieldState.setTextAndPlaceCursorAtEnd(tronStakingMemo(op, type))
+    }
+
+    private fun loadTronFrozenBalances() {
+        loadTronFrozenBalancesJob?.cancel()
+        loadTronFrozenBalancesJob =
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Failed to load Tron frozen balances")
+                    setTronFrozenBalanceState(TronFrozenBalanceState.Error)
+                }
+            ) {
+                uiState.update { it.copy(isTronFrozenBalancesLoading = true) }
+                try {
+                    val vault = vault ?: vaultRepository.get(vaultId ?: return@safeLaunch)
+                    val trxCoin =
+                        vault?.coins?.firstOrNull { it.chain == Chain.Tron && it.isNativeToken }
+                    if (trxCoin == null) {
+                        setTronFrozenBalanceState(TronFrozenBalanceState.Error)
+                        return@safeLaunch
+                    }
+                    val balances = getTronFrozenBalances(trxCoin.address)
+                    setTronFrozenBalanceState(TronFrozenBalanceState.Loaded(balances))
+                    updateTronFrozenBalanceDisplay(
+                        uiState.value.tronResourceType ?: TronResourceType.BANDWIDTH
+                    )
+                } finally {
+                    uiState.update { it.copy(isTronFrozenBalancesLoading = false) }
+                }
+            }
+    }
+
+    private fun setTronFrozenBalanceState(state: TronFrozenBalanceState) {
+        tronFrozenBalances.value = state
+        uiState.update {
+            it.copy(hasTronFrozenBalancesError = state is TronFrozenBalanceState.Error)
+        }
+    }
+
+    private fun updateTronFrozenBalanceDisplay(type: TronResourceType) {
+        val balances =
+            (tronFrozenBalances.value as? TronFrozenBalanceState.Loaded)?.balances ?: return
+        uiState.update {
+            it.copy(
+                tronBalanceAvailableOverride =
+                    balances.forResource(type).stripTrailingZeros().toPlainString()
+            )
+        }
+    }
+
+    private fun currentTronFrozenBalance(): BigDecimal? {
+        val type = uiState.value.tronResourceType ?: return null
+        val balances =
+            (tronFrozenBalances.value as? TronFrozenBalanceState.Loaded)?.balances ?: return null
+        return balances.forResource(type)
     }
 
     private fun loadVaultName() {
@@ -774,22 +888,9 @@ constructor(
             val vaultId = vaultId ?: return@launch
             val selectedChain = selectedTokenValue?.chain ?: return@launch
 
-            val requestId =
-                when (addressType) {
-                    AddressBookType.OUTPUT -> REQUEST_ADDRESS_ID
-                    AddressBookType.PROVIDER -> REQUEST_PROVIDER_ADDRESS_ID
-                }
-
-            navigator.route(
-                Route.AddressBook(
-                    requestId = requestId,
-                    chainId = selectedChain.id,
-                    excludeVaultId = vaultId,
-                )
-            )
-
             val address: AddressBookEntry =
-                requestResultRepository.request(requestId) ?: return@launch
+                requestAddressBookEntry(chainId = selectedChain.id, excludeVaultId = vaultId)
+                    ?: return@launch
 
             when (addressType) {
                 AddressBookType.OUTPUT -> {
@@ -835,6 +936,9 @@ constructor(
     }
 
     fun chooseMaxTokenAmount() {
+        if (defiType == DeFiNavActions.UNFREEZE_TRX && uiState.value.isTronFrozenBalancesLoading) {
+            return
+        }
         chooseAmountFractionJob?.cancel()
         chooseAmountFractionJob =
             viewModelScope.launch {
@@ -854,6 +958,9 @@ constructor(
     }
 
     fun choosePercentageAmount(amountFraction: AmountFraction) {
+        if (defiType == DeFiNavActions.UNFREEZE_TRX && uiState.value.isTronFrozenBalancesLoading) {
+            return
+        }
         chooseAmountFractionJob?.cancel()
         chooseAmountFractionJob =
             viewModelScope.launch {
@@ -878,6 +985,14 @@ constructor(
         val isMax = percentage == 1f
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
         val token = selectedAccount.token
+
+        if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+            val frozen = currentTronFrozenBalance() ?: return BigDecimal.ZERO
+            return frozen
+                .multiply(percentage.toBigDecimal())
+                .setScale(token.decimal, RoundingMode.DOWN)
+                .stripTrailingZeros()
+        }
 
         var amount =
             if (gasFee.value != null) {
@@ -923,7 +1038,7 @@ constructor(
                             vaultHexPublicKey = vault.getPubKeyByChain(chain),
                         ),
                     amount = tokenAmountInt,
-                    to = addressFieldState.text.toString(),
+                    to = addressFieldState.text.asAddressInput(),
                     memo = memoFieldState.text.toString(),
                     isMax = isMax,
                 )
@@ -951,6 +1066,14 @@ constructor(
         val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
         val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
 
+        if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+            val frozen = currentTronFrozenBalance() ?: return BigDecimal.ZERO
+            return frozen
+                .multiply(percentage.toBigDecimal())
+                .setScale(selectedAccount.token.decimal, RoundingMode.DOWN)
+                .stripTrailingZeros()
+        }
+
         val availableTokenBalance =
             if (
                 defiType == null ||
@@ -962,8 +1085,7 @@ constructor(
                     defiType == DeFiNavActions.REDEEM_YRUNE ||
                     defiType == DeFiNavActions.MINT_YTCY ||
                     defiType == DeFiNavActions.REDEEM_YTCY ||
-                    defiType == DeFiNavActions.FREEZE_TRX ||
-                    defiType == DeFiNavActions.UNFREEZE_TRX
+                    defiType == DeFiNavActions.FREEZE_TRX
             ) {
                 getAvailableTokenBalance(selectedAccount, currentGasFee.value)
             } else {
@@ -1156,7 +1278,10 @@ constructor(
                 val chain = selectedAccount.token.chain
 
                 if (
-                    !chainAccountAddressRepository.isValid(chain, addressFieldState.text.toString())
+                    !chainAccountAddressRepository.isValid(
+                        chain,
+                        addressFieldState.text.asAddressInput(),
+                    )
                 ) {
                     throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.send_error_no_address)
@@ -1178,7 +1303,7 @@ constructor(
                         UiText.StringResource(R.string.send_error_no_gas_fee)
                     )
                 }
-                val rawInput = addressFieldState.text.toString()
+                val rawInput = addressFieldState.text.asAddressInput()
                 val dstAddress =
                     try {
                         addressParserRepository.resolveName(rawInput, chain)
@@ -1296,7 +1421,13 @@ constructor(
                                             planFee.value = plan.fee
                                         }
 
-                                selectUtxosIfNeeded(chain, specific)
+                                val selectedSpecific =
+                                    chainValidationService.selectUtxosIfNeeded(
+                                        chain = chain,
+                                        specific = specific,
+                                        plan = planBtc.value,
+                                    )
+                                selectedSpecific
                             } else {
                                 specific
                             }
@@ -1304,20 +1435,46 @@ constructor(
 
                 if (selectedToken.isNativeToken) {
                     val availableTokenBalance =
-                        getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
-                            ?: BigInteger.ZERO
+                        if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                            currentTronFrozenBalance()
+                                ?.movePointRight(selectedToken.decimal)
+                                ?.toBigInteger() ?: BigInteger.ZERO
+                        } else {
+                            getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
+                                ?: BigInteger.ZERO
+                        }
 
                     if (tokenAmountInt > availableTokenBalance) {
+                        val errorRes =
+                            if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                                R.string.send_error_insufficient_frozen_balance
+                            } else {
+                                R.string.send_error_insufficient_native_balance_with_fees
+                            }
                         throw InvalidTransactionDataException(
-                            UiText.FormattedText(
-                                R.string.send_error_insufficient_native_balance_with_fees,
-                                listOf(selectedToken.ticker),
-                            )
+                            UiText.FormattedText(errorRes, listOf(selectedToken.ticker))
                         )
                     }
 
+                    // On UNFREEZE the amount comes from frozen stake, but the broadcast itself
+                    // still burns gas from the liquid balance (or free bandwidth quota). Surface
+                    // insufficient liquid balance before we attempt to sign.
+                    if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                        val liquidForGas =
+                            getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)?.value
+                                ?: BigInteger.ZERO
+                        if (liquidForGas < gasFee.value) {
+                            throw InvalidTransactionDataException(
+                                UiText.FormattedText(
+                                    R.string.send_error_insufficient_native_balance_with_fees,
+                                    listOf(selectedToken.ticker),
+                                )
+                            )
+                        }
+                    }
+
                     if (chain == Chain.Cardano) {
-                        validateCardanoUTXORequirements(
+                        chainValidationService.validateCardanoUTXORequirements(
                             sendAmount = tokenAmountInt,
                             totalBalance = selectedTokenValue.value,
                             estimatedFee = gasFee.value,
@@ -1325,7 +1482,11 @@ constructor(
                     }
 
                     if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                        validateBtcLikeAmount(tokenAmountInt, chain)
+                        chainValidationService.validateBtcLikeAmount(
+                            tokenAmountInt,
+                            chain,
+                            planBtc.value,
+                        )
                     }
                 } else {
                     val nativeTokenAccount =
@@ -2097,7 +2258,7 @@ constructor(
                     }
 
                 val slippage = slippageFieldState.text.toString()
-                val slippageValidation = validateSlippage(slippage)
+                val slippageValidation = chainValidationService.validateSlippage(slippage)
                 if (slippageValidation != null) {
                     throw InvalidTransactionDataException(slippageValidation)
                 }
@@ -2119,7 +2280,7 @@ constructor(
                             ThorchainFunctions.redeemYToken(
                                 fromAddress = srcAddress,
                                 tokenContract = tokenContract,
-                                slippage = slippage.formatSlippage(),
+                                slippage = chainValidationService.formatSlippage(slippage),
                                 denom = selectedToken.contractAddress,
                                 amount = tokenAmountInt,
                             ),
@@ -2140,74 +2301,10 @@ constructor(
         }
     }
 
-    private fun String.formatSlippage(): String {
-        val divider = "100".toBigDecimal()
-        return try {
-            this.toBigDecimal().setScale(2, RoundingMode.DOWN).divide(divider).toPlainString()
-        } catch (t: Throwable) {
-            "0.01" // Default slippage for safety
-        }
-    }
-
-    private fun validateSlippage(slippage: String?): UiText? {
-        if (slippage.isNullOrBlank()) {
-            return UiText.StringResource(R.string.slippage_required_error)
-        }
-
-        return try {
-            val value = slippage.toBigDecimal()
-            if (value < BigDecimal.ZERO || value > BigDecimal("100")) {
-                UiText.StringResource(R.string.slippage_invalid_error)
-            } else {
-                null
-            }
-        } catch (e: NumberFormatException) {
-            UiText.StringResource(R.string.slippage_format_error)
-        }
-    }
-
     private suspend fun getFeesFiatValue(gasFee: TokenValue, selectedToken: Coin): EstimatedGasFee {
         return gasFeeToEstimatedFee(
             GasFeeParams(BigInteger.valueOf(1), gasFee = gasFee, selectedToken = selectedToken)
         )
-    }
-
-    @kotlin.ExperimentalStdlibApi
-    private fun selectUtxosIfNeeded(
-        chain: Chain,
-        specific: BlockChainSpecificAndUtxo,
-    ): BlockChainSpecificAndUtxo {
-        specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
-
-        val updatedUtxo =
-            planBtc.value?.utxosOrBuilderList?.map { planUtxo ->
-                UtxoInfo(
-                    hash = planUtxo.outPoint.hash.toByteArray().reversedArray().toHexString(),
-                    index = planUtxo.outPoint.index.toUInt(),
-                    amount = planUtxo.amount,
-                )
-            } ?: return specific
-
-        return specific.copy(utxos = updatedUtxo)
-    }
-
-    private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
-        val minAmount = chain.getDustThreshold
-        if (tokenAmountInt < minAmount) {
-            val symbol = chain.coinType.symbol
-            val name = chain.raw
-            val formattedMinAmount = chain.toValue(minAmount).toString()
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.send_form_minimum_send_amount_is_requires_this,
-                    listOf(formattedMinAmount, symbol, name),
-                )
-            )
-        }
-
-        if (planBtc.value?.error != SigningError.OK) {
-            throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
-        }
     }
 
     private suspend fun getBitcoinTransactionPlan(
@@ -2293,7 +2390,8 @@ constructor(
                     this.defiType == DeFiNavActions.MINT_YTCY ||
                     this.defiType == DeFiNavActions.REDEEM_YRUNE ||
                     this.defiType == DeFiNavActions.REDEEM_YTCY ||
-                    this.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE
+                    this.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
+                    this.defiType == DeFiNavActions.FREEZE_TRX
             ) {
                 viewModelScope.launch {
                     accountsRepository
@@ -2540,7 +2638,13 @@ constructor(
                             tokenAmountFieldState.textAsFlow(),
                             recalculateGasFee,
                         ) { token, dst, memo, tokenAmount, nonce ->
-                            GasFeeInput(token, dst.toString(), memo.toString(), tokenAmount, nonce)
+                            GasFeeInput(
+                                token,
+                                dst.asAddressInput(),
+                                memo.toString(),
+                                tokenAmount,
+                                nonce,
+                            )
                         }
                         .debounce(350)
                         .distinctUntilChanged()
@@ -2616,7 +2720,7 @@ constructor(
                                 )
 
                         val resolvedDstAddress =
-                            addressParserRepository.resolveName(dstAddress.toString(), chain)
+                            addressParserRepository.resolveName(dstAddress.asAddressInput(), chain)
                         val tokenAmountInt =
                             tokenAmount
                                 .toString()
@@ -2702,12 +2806,32 @@ constructor(
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun calculateSpecific() {
         viewModelScope.launch {
-            combine(selectedToken.filterNotNull(), gasFee.filterNotNull()) { token, gasFee ->
+            // dstAddress is forwarded to getSpecific() for every chain so that
+            // TRON fee estimation can account for bandwidth delegated to the receiver.
+            // Recomputing specifics on every keystroke would be wasteful, so the
+            // address is debounced before triggering the recalculation.
+            val dstAddressFlow =
+                addressFieldState
+                    .textAsFlow()
+                    .map { it.toString().asAddressInput() }
+                    .debounce(300)
+                    .distinctUntilChanged()
+
+            combine(selectedToken.filterNotNull(), gasFee.filterNotNull(), dstAddressFlow) {
+                    token,
+                    gasFee,
+                    dstAddress ->
                     val chain = token.chain
                     val srcAddress = token.address
                     advanceGasUiRepository.updateTokenStandard(token.chain.standard)
+
+                    val validDstAddress =
+                        dstAddress.takeIf {
+                            it.isNotBlank() && chainAccountAddressRepository.isValid(chain, it)
+                        }
 
                     try {
                         val spec =
@@ -2719,6 +2843,7 @@ constructor(
                                 isSwap = false,
                                 isMaxAmountEnabled = false,
                                 isDeposit = false,
+                                dstAddress = validDstAddress,
                             )
                         specific.value = spec
                         advanceGasUiRepository.updateBlockChainSpecific(spec.blockChainSpecific)
@@ -2857,57 +2982,16 @@ constructor(
                     tokenAmountFieldState.textAsFlow(),
                     gasFee.filterNotNull(),
                 ) { selectedToken, tokenAmount, gasFee ->
-                    checkIsReapable(selectedToken, tokenAmount.toString(), gasFee)
+                    val reapingError =
+                        chainValidationService.checkIsReapable(
+                            selectedAccount,
+                            selectedToken,
+                            tokenAmount.toString(),
+                            gasFee,
+                        )
+                    uiState.update { it.copy(reapingError = reapingError) }
                 }
                 .collect()
-        }
-    }
-
-    private fun checkIsReapable(selectedToken: Coin, tokenAmount: String, gasFee: TokenValue) {
-        val selectedAccount = selectedAccount
-        if (selectedAccount != null) {
-            val selectedChain = selectedToken.chain
-
-            if (selectedChain.hasReaping) {
-                val balance = selectedAccount.tokenValue?.value ?: BigInteger.ZERO
-                val tokenAmountInt =
-                    tokenAmount
-                        .toBigDecimalOrNull()
-                        ?.movePointRight(selectedToken.decimal)
-                        ?.toBigInteger() ?: BigInteger.ZERO
-
-                val existentialDeposit =
-                    when {
-                        selectedChain == Chain.Polkadot &&
-                            selectedToken.ticker == Coins.Polkadot.DOT.ticker -> {
-                            PolkadotHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-                        }
-
-                        selectedChain == Chain.Ripple &&
-                            selectedToken.ticker == Coins.Ripple.XRP.ticker -> {
-                            RippleHelper.DEFAULT_EXISTENTIAL_DEPOSIT.toBigInteger()
-                        }
-
-                        else -> return
-                    }
-
-                if (balance - (gasFee.value + tokenAmountInt) < existentialDeposit) {
-                    uiState.update {
-                        it.copy(
-                            reapingError =
-                                UiText.StringResource(
-                                    when (selectedChain) {
-                                        Chain.Polkadot -> R.string.send_form_polka_reaping_warning
-                                        Chain.Ripple -> R.string.send_form_ripple_reaping_warning
-                                        else -> return
-                                    }
-                                )
-                        )
-                    }
-                } else {
-                    uiState.update { it.copy(reapingError = null) }
-                }
-            }
         }
     }
 
@@ -2987,51 +3071,6 @@ constructor(
         }
     }
 
-    private fun validateCardanoUTXORequirements(
-        sendAmount: BigInteger,
-        totalBalance: BigInteger,
-        estimatedFee: BigInteger,
-    ) {
-        val minUTXOValue: BigInteger = Chain.Cardano.getDustThreshold
-
-        // 1. Check send amount meets minimum
-        if (sendAmount < minUTXOValue) {
-            val minAmountADA = Chain.Cardano.toValue(minUTXOValue)
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(R.string.minimum_send_amount_is_ada, listOf(minAmountADA))
-            )
-        }
-
-        // 2. Check sufficient balance
-        val totalNeeded = sendAmount + estimatedFee
-        if (totalBalance < totalNeeded) {
-            val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
-            val errorMessage =
-                if (totalBalance > estimatedFee && totalBalance > BigInteger.ZERO) {
-                    UiText.FormattedText(
-                        R.string.insufficient_balance_try_send,
-                        listOf(totalBalanceADA),
-                    )
-                } else {
-                    UiText.FormattedText(R.string.insufficient_balance_ada, listOf(totalBalanceADA))
-                }
-            throw InvalidTransactionDataException(errorMessage)
-        }
-
-        // 3. Check remaining balance (change) meets minimum UTXO requirement
-        val remainingBalance = totalBalance - sendAmount - estimatedFee
-        if (remainingBalance > BigInteger.ZERO && remainingBalance < minUTXOValue) {
-            val totalBalanceADA = Chain.Cardano.toValue(totalBalance)
-
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.this_amount_would_leave_too_little_change,
-                    listOf(totalBalanceADA),
-                )
-            )
-        }
-    }
-
     private suspend fun accountValidation(): AccountValidation {
         val vaultId =
             vaultId
@@ -3064,7 +3103,7 @@ constructor(
 
         val dstAddress =
             try {
-                addressParserRepository.resolveName(addressFieldState.text.toString(), chain)
+                addressParserRepository.resolveName(addressFieldState.text.asAddressInput(), chain)
             } catch (e: Exception) {
                 Timber.e(e)
                 throw InvalidTransactionDataException(
@@ -3135,7 +3174,7 @@ constructor(
         gasFee: TokenValue,
         chain: Chain,
     ): DepositTransaction {
-        val memo = "claim:${selectedToken.contractAddress}:$tokenAmountInt"
+        val memo = ThorchainFunctions.rujiRewardsMemo(selectedToken.contractAddress, tokenAmountInt)
 
         val specific =
             blockChainSpecificRepository.getSpecific(
@@ -3191,7 +3230,7 @@ constructor(
                 ""
             } else {
                 val basisPoints = (percentage * 100).toInt().coerceIn(0, 10000)
-                "TCY-:$basisPoints"
+                ThorchainFunctions.tcyUnstakeMemo(basisPoints)
             }
 
         val specific =
@@ -3348,45 +3387,6 @@ constructor(
 
     companion object {
         private const val GAS_FEE_TIMEOUT_MS = 5_000L
-        private const val REQUEST_ADDRESS_ID = "request_address_id"
-        private const val REQUEST_PROVIDER_ADDRESS_ID = "request_provider_address_id"
-    }
-}
-
-internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain: Chain?): SendSrc {
-    val address =
-        when {
-            !selectedTokenId.isNullOrBlank() ->
-                first { it -> it.accounts.any { it.token.id == selectedTokenId } }
-
-            filterByChain != null -> first { it.chain == filterByChain }
-            else -> first()
-        }
-
-    val account =
-        when {
-            !selectedTokenId.isNullOrBlank() ->
-                address.accounts.first { it.token.id == selectedTokenId }
-            filterByChain != null -> address.accounts.first { it.token.isNativeToken }
-            else -> address.accounts.first()
-        }
-
-    return SendSrc(address, account)
-}
-
-internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: SendSrc): SendSrc {
-    if (selectedTokenId == null) {
-        val selectedAddress = currentSrc.address
-        val selectedAccount = currentSrc.account
-        val address = first {
-            it.chain == selectedAddress.chain && it.address == selectedAddress.address
-        }
-        return SendSrc(
-            address,
-            address.accounts.first { it.token.ticker == selectedAccount.token.ticker },
-        )
-    } else {
-        return firstSendSrc(selectedTokenId, null)
     }
 }
 

@@ -157,7 +157,7 @@ data class TronContractInfoJson(
 @Serializable
 data class TronTransactionStatusResponse(
     @SerialName("ret") val ret: List<TronTransactionStatusRet>?,
-    @SerialName("txID") val txId: String,
+    @SerialName("txID") val txId: String? = null,
 )
 
 @Serializable

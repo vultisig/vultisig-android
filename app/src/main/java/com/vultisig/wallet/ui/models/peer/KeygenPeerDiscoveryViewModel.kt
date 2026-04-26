@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.core.graphics.scale
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -48,8 +47,11 @@ import com.vultisig.wallet.data.usecases.ExtractMasterKeysUseCase
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.GenerateServerPartyId
 import com.vultisig.wallet.data.usecases.GenerateServiceName
+import com.vultisig.wallet.data.usecases.QrShareField
+import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.ParticipantName
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.errors.ErrorUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -60,6 +62,7 @@ import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.forCanvasMinify
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareFileName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -91,8 +94,7 @@ data class PeerDiscoveryUiModel(
     val devices: List<String> = emptyList(),
     val selectedDevices: List<String> = emptyList(),
     val minimumDevices: Int = MIN_KEYGEN_DEVICES,
-    // we're trying to promote minimum of three devices
-    val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES + 1,
+    val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES,
     val showQrHelpModal: Boolean = false,
     val showDevicesHint: Boolean = true,
     val connectingToServer: ConnectingToServerUiModel? = null,
@@ -133,13 +135,16 @@ constructor(
     private val networkUtils: NetworkUtils,
 ) : ViewModel() {
 
-    private val args = savedStateHandle.toRoute<Route.Keygen.PeerDiscovery>()
+    private val args: Route.Keygen.PeerDiscovery? =
+        runCatching { savedStateHandle.toRoute<Route.Keygen.PeerDiscovery>() }
+            .onFailure { Timber.e(it, "Failed to deserialize PeerDiscovery args") }
+            .getOrNull()
 
     val state =
         MutableStateFlow(
             PeerDiscoveryUiModel(
-                minimumDevices = args.deviceCount ?: MIN_KEYGEN_DEVICES,
-                minimumDevicesDisplayed = (args.deviceCount ?: (MIN_KEYGEN_DEVICES + 1)),
+                minimumDevices = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
+                minimumDevicesDisplayed = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
                 enableNotification = false,
             )
         )
@@ -154,17 +159,17 @@ constructor(
     // so failures surface as a UI error state rather than crashing ViewModel construction.
     // For other actions, use a random hex immediately.
     private var hexChainCode: String =
-        if (args.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
+        if (args?.action == TssAction.KeyImport) "" else Utils.encryptionKeyHex
     private var localPartyId = Utils.deviceName(context)
-    private val vaultName: String = args.vaultName
+    private val vaultName: String = args?.vaultName ?: ""
     private var libType = SigningLibType.GG20
     private var pubKeyEcdsa = ""
     private var signers: List<String> = emptyList()
     private var resharePrefix: String = ""
 
     // fast vault data
-    private val email = args.email
-    private val password = args.password
+    private val email = args?.email
+    private val password = args?.password
 
     private val qrBitmap = MutableStateFlow<Bitmap?>(null)
 
@@ -173,7 +178,11 @@ constructor(
     private var serverUrl: String = VULTISIG_RELAY_URL
 
     init {
-        loadData()
+        if (args == null) {
+            viewModelScope.launch { navigator.navigate(Destination.Back) }
+        } else {
+            loadData()
+        }
     }
 
     private fun showNetworkWarning() {
@@ -197,21 +206,33 @@ constructor(
     fun shareQr(activity: Context) {
         val qr = qrBitmap.value ?: return
 
-        val scaleModifier = 4
-
-        val scaledQr =
-            qr.scale(
-                width = qr.width * scaleModifier,
-                height = qr.height * scaleModifier,
-                filter = false,
+        // Mirror loadData()'s fast/secure predicate: active-vault migrate (signers > 2) goes
+        // through peer discovery even when email+password are present, so the share card must
+        // not advertise "Fast Vault" for it.
+        val isFastVault =
+            !email.isNullOrBlank() &&
+                !password.isNullOrBlank() &&
+                !(args?.action == TssAction.Migrate && signers.size > 2)
+        val typeRes =
+            if (isFastVault) R.string.qr_share_type_fast_vault
+            else R.string.qr_share_type_secure_vault
+        val info =
+            QrShareInfo(
+                title = context.getString(R.string.qr_title_join_keygen),
+                fields =
+                    listOf(
+                        QrShareField(
+                            context.getString(R.string.qr_share_label_vault),
+                            vaultName.forCanvasMinify(),
+                        ),
+                        QrShareField(
+                            context.getString(R.string.qr_share_label_type),
+                            context.getString(typeRes),
+                        ),
+                    ),
             )
 
-        val shareBitmap =
-            createQrCodeSharingBitmap(
-                scaledQr,
-                R.string.qr_title_join_keygen,
-                R.string.qr_title_join_keygen_description,
-            )
+        val shareBitmap = createQrCodeSharingBitmap(qr, info)
 
         activity.share(shareBitmap, shareFileName(vaultName, vaultName.sha256(), ShareType.KEYGEN))
     }
@@ -221,6 +242,7 @@ constructor(
     }
 
     fun switchMode() {
+        if (args == null) return
         state.update {
             it.copy(
                 network =
@@ -248,12 +270,28 @@ constructor(
     }
 
     fun tryAgain() {
+        if (args == null) return
         loadData()
     }
 
     fun next() {
+        val args = args ?: return
         discoverParticipantsJob?.cancel()
-        viewModelScope.launch {
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "Failed to start keygen session")
+                state.update {
+                    it.copy(
+                        warning =
+                            ErrorUiModel(
+                                title = UiText.StringResource(R.string.error_view_default_title),
+                                description =
+                                    UiText.StringResource(R.string.error_view_default_description),
+                            )
+                    )
+                }
+            }
+        ) {
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
             val keygenCommittee = listOf(localPartyId) + state.value.selectedDevices
             sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
@@ -301,6 +339,7 @@ constructor(
             return
         }
         viewModelScope.launch {
+            val args = args ?: return@launch
             if (args.action == TssAction.KeyImport && hexChainCode.isEmpty()) {
                 val mnemonic = keyImportRepository.get()?.mnemonic
                 if (mnemonic == null) {
@@ -372,7 +411,7 @@ constructor(
                     state.update {
                         it.copy(
                             minimumDevices = existingVault.signers.size,
-                            minimumDevicesDisplayed = existingVault.signers.size + 1,
+                            minimumDevicesDisplayed = existingVault.signers.size,
                         )
                     }
                 }
@@ -512,8 +551,9 @@ constructor(
             }
     }
 
-    private fun createKeygenPayload(isRelayEnabled: Boolean) =
-        when (args.action) {
+    private fun createKeygenPayload(isRelayEnabled: Boolean): String {
+        val args = args ?: return ""
+        return when (args.action) {
             TssAction.KEYGEN ->
                 "https://vultisig.com?type=NewVault&tssType=Keygen&jsonData=" +
                     compressQr(
@@ -588,6 +628,7 @@ constructor(
                         )
                         .encodeBase64()
         }
+    }
 
     private fun TssAction.toLinkTssType(): String =
         when (this) {
@@ -599,6 +640,7 @@ constructor(
         }
 
     private suspend fun requestVultiServerConnection() {
+        val args = args ?: return
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
             when (args.action) {
                 TssAction.ReShare -> {

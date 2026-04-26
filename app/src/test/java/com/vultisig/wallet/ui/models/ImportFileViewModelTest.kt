@@ -7,6 +7,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.fileContent
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -30,6 +32,7 @@ import io.mockk.unmockkStatic
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -142,6 +145,51 @@ internal class ImportFileViewModelTest {
     }
 
     @Test
+    fun `restoring an MLDSA-capable vault re-adds the QBTC token`() = runTest {
+        val vault =
+            Vault(
+                id = "test-vault-id",
+                name = "Test Vault",
+                libType = SigningLibType.KeyImport,
+                pubKeyMLDSA = "mldsa-pubkey",
+            )
+        coEvery { parseVaultFromString(any(), any()) } returns vault
+        coEvery { saveVault(any(), false) } returns Unit
+        coEvery { vaultDataStoreRepository.setBackupStatus(any(), any()) } returns Unit
+        every { discoverToken(any(), any()) } returns Unit
+        coEvery { chainAccountAddressRepository.getAddress(any<Coin>(), any<Vault>()) } returns
+            Pair("qbtc1address", "qbtc-derived-pubkey")
+        coEvery { vaultRepository.addTokenToVault(any(), any()) } returns Unit
+
+        val vm = createViewModel(fileName = "share1of2-test.bak")
+        vm.uiModel.value = vm.uiModel.value.copy(showPasswordPrompt = true)
+        vm.decryptVaultData()
+        vm.uiModel.first { !it.showPasswordPrompt }
+
+        val tokenSlot = slot<Coin>()
+        coVerify { vaultRepository.addTokenToVault("test-vault-id", capture(tokenSlot)) }
+        assertEquals(Coins.Qbtc.QBTC.ticker, tokenSlot.captured.ticker)
+        assertEquals("qbtc1address", tokenSlot.captured.address)
+        assertEquals("qbtc-derived-pubkey", tokenSlot.captured.hexPublicKey)
+    }
+
+    @Test
+    fun `restoring a vault without MLDSA leaves QBTC alone`() = runTest {
+        val vault =
+            Vault(
+                id = "test-vault-id",
+                name = "Test Vault",
+                libType = SigningLibType.DKLS,
+                pubKeyMLDSA = "",
+            )
+        coEvery { parseVaultFromString(any(), any()) } returns vault
+
+        createViewModel(fileName = "share1of2-test.bak").decryptVaultData()
+
+        coVerify(exactly = 0) { vaultRepository.addTokenToVault(any(), any()) }
+    }
+
+    @Test
     fun `decryptVaultData shows error state on SQLite constraint`() = runTest {
         coEvery { parseVaultFromString(any(), any()) } returns testVault()
         coEvery { saveVault(any(), false) } throws SQLiteConstraintException()
@@ -149,7 +197,7 @@ internal class ImportFileViewModelTest {
 
         vm.decryptVaultData()
 
-        val state = vm.uiModel.value
+        val state = vm.uiModel.first { it.error != null }
         assertEquals(
             UiText.StringResource(R.string.import_file_screen_duplicate_vault),
             state.error,
@@ -171,7 +219,7 @@ internal class ImportFileViewModelTest {
 
         vm.saveFileToAppDir()
 
-        val state = vm.uiModel.value
+        val state = vm.uiModel.first { it.error != null }
         assertEquals(
             UiText.StringResource(R.string.import_file_screen_duplicate_vault),
             state.error,

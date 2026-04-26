@@ -87,6 +87,18 @@ class HandleSwapExceptionTest {
     }
 
     @Test
+    fun `dust threshold error maps to AmountBelowDustThreshold`() {
+        val result = SwapException.handleSwapException("amount less than dust threshold")
+        assertInstanceOf(SwapException.AmountBelowDustThreshold::class.java, result)
+    }
+
+    @Test
+    fun `dust threshold error is case insensitive`() {
+        val result = SwapException.handleSwapException("Amount Less Than Dust Threshold")
+        assertInstanceOf(SwapException.AmountBelowDustThreshold::class.java, result)
+    }
+
+    @Test
     fun `network error maps to NetworkConnection`() {
         val result = SwapException.handleSwapException("Unable to resolve host api.example.com")
         assertInstanceOf(SwapException.NetworkConnection::class.java, result)
@@ -96,5 +108,17 @@ class HandleSwapExceptionTest {
     fun `zero amount maps to AmountCannotBeZero`() {
         val result = SwapException.handleSwapException("Amount cannot be zero")
         assertInstanceOf(SwapException.AmountCannotBeZero::class.java, result)
+    }
+
+    @Test
+    fun `too many requests maps to RateLimitExceeded`() {
+        val result = SwapException.handleSwapException("[Jupiter] Too many requests")
+        assertInstanceOf(SwapException.RateLimitExceeded::class.java, result)
+    }
+
+    @Test
+    fun `gateway too many requests maps to RateLimitExceeded`() {
+        val result = SwapException.handleSwapException("[API Gateway] Too many requests")
+        assertInstanceOf(SwapException.RateLimitExceeded::class.java, result)
     }
 }

@@ -36,6 +36,7 @@ internal fun TokenAmountInput(
     primaryLabel: String,
     secondaryText: String,
     modifier: Modifier = Modifier,
+    inputModifier: Modifier = Modifier,
     maxBalance: BigDecimal? = null,
     focusRequester: FocusRequester? = null,
     onLostFocus: (() -> Unit)? = null,
@@ -98,7 +99,8 @@ internal fun TokenAmountInput(
                                     }
                                 }
                             } else Modifier
-                        ),
+                        )
+                        .then(inputModifier),
                 decorator = { textField ->
                     if (primaryFieldState.text.isEmpty()) {
                         Text(

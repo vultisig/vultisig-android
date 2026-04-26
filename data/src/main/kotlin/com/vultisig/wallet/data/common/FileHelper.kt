@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns.DISPLAY_NAME
 import androidx.annotation.RequiresApi
@@ -209,6 +210,15 @@ suspend fun Uri.isValidZipFile(context: Context) = doFileOperation {
                 ZipInputStream(inputStream).use { zipStream -> zipStream.nextEntry != null }
             } ?: false
     } catch (_: Exception) {
+        false
+    }
+}
+
+suspend fun Context.deleteDocument(uri: Uri): Boolean = doFileOperation {
+    try {
+        DocumentsContract.deleteDocument(contentResolver, uri)
+    } catch (e: Exception) {
+        Timber.e(e, "Failed to delete document: %s", uri)
         false
     }
 }

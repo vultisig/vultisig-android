@@ -30,6 +30,8 @@ typealias VaultContainerProto = vultisig.vault.v1.VaultContainer
 
 typealias KeyShareProto = Vault.KeyShare
 
+typealias ChainPublicKeyProto = Vault.ChainPublicKey
+
 fun LibType.toSigningLibType() =
     when (this) {
         LibType.LIB_TYPE_GG20 -> SigningLibType.GG20

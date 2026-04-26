@@ -143,3 +143,8 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         else -> logoName
     }
 }
+
+// Returns a drawable resource id for the coin's logo. Falls back to the chain's native logo when
+// the coin's `logo` string is not in the predefined mapping (e.g. for arbitrary ERC20s where
+// `logo` would otherwise be a URL).
+internal fun Coin.tokenLogoRes(): Int = (getCoinLogo(logo) as? Int) ?: chain.logo

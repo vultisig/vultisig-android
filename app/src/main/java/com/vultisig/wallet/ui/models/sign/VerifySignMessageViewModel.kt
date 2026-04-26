@@ -6,9 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.CustomMessagePayloadRepo
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SendDst
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +20,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal data class SignMessageTransactionUiModel(
     val method: String = "",
@@ -37,6 +42,7 @@ constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val launchKeysignUseCase: LaunchKeysignUseCase,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
+    private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
     val state = MutableStateFlow(VerifySignMessageUiModel())
@@ -46,8 +52,15 @@ constructor(
     private val vaultId: String = requireNotNull(savedStateHandle[SendDst.ARG_VAULT_ID])
 
     init {
-        viewModelScope.launch {
-            val payload = customMessagePayloadRepo.get(transactionId).payload
+        viewModelScope.safeLaunch(
+            onError = {
+                Timber.e(it, "Failed to load sign message payload")
+                navigator.back()
+            }
+        ) {
+            val payload =
+                customMessagePayloadRepo.get(transactionId)?.payload
+                    ?: error("Sign message payload not found: $transactionId")
 
             state.update {
                 it.copy(

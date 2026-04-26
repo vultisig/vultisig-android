@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.models.VaultId
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
@@ -64,13 +63,12 @@ internal class VaultRepositoryImpl
 constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRepository) :
     VaultRepository {
 
-    override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> = flow {
-        emit(requireNotNull(get(vaultId)?.coins))
-    }
+    override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> =
+        getAsFlow(vaultId).map { it?.coins.orEmpty() }
 
     override fun getEnabledChains(vaultId: String): Flow<Set<Chain>> =
-        getEnabledTokens(vaultId).map { enabledTokens ->
-            enabledTokens.asSequence().filter { it.isNativeToken }.map { it.chain }.toSet()
+        getEnabledTokens(vaultId).map { tokens ->
+            tokens.asSequence().filter { it.isNativeToken }.map { it.chain }.toSet()
         }
 
     override suspend fun getDisabledCoinIds(vaultId: VaultId) =
