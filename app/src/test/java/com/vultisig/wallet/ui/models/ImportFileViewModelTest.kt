@@ -41,8 +41,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-private const val VERIFY_TIMEOUT_MS = 1_000L
-
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class ImportFileViewModelTest {
 
@@ -98,6 +96,7 @@ internal class ImportFileViewModelTest {
                 vaultRepository = vaultRepository,
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 snackBarFlow = snackbarFlow,
+                defaultDispatcher = testDispatcher,
             )
         vm.uiModel.value =
             ImportFileState(fileName = fileName, fileContent = fileContent, isZip = false)
@@ -166,11 +165,7 @@ internal class ImportFileViewModelTest {
         createViewModel(fileName = "share1of2-test.bak").decryptVaultData()
 
         val tokenSlot = slot<Coin>()
-        // saveToDb hops onto Dispatchers.Default to parse the vault, which escapes the
-        // test scheduler — poll until the verification succeeds instead of asserting eagerly.
-        coVerify(timeout = VERIFY_TIMEOUT_MS) {
-            vaultRepository.addTokenToVault("test-vault-id", capture(tokenSlot))
-        }
+        coVerify { vaultRepository.addTokenToVault("test-vault-id", capture(tokenSlot)) }
         assertEquals(Coins.Qbtc.QBTC.ticker, tokenSlot.captured.ticker)
         assertEquals("qbtc1address", tokenSlot.captured.address)
         assertEquals("qbtc-derived-pubkey", tokenSlot.captured.hexPublicKey)
