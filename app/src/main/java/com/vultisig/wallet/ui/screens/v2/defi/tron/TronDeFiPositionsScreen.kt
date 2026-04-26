@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
@@ -230,14 +229,26 @@ private fun LazyListScope.TronPendingWithdrawalsCard(
     isBalanceVisible: Boolean,
 ) {
     item {
-        Text(
-            text = stringResource(R.string.tron_defi_pending_withdrawals),
-            style = Theme.brockmann.body.l.medium,
-            color = Theme.v2.colors.text.primary,
-        )
-    }
-    items(withdrawals) { withdrawal ->
-        TronPendingWithdrawalRow(withdrawal = withdrawal, isBalanceVisible = isBalanceVisible)
+        Column(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Theme.v2.colors.backgrounds.secondary)
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.tron_defi_pending_withdrawals),
+                style = Theme.brockmann.body.l.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+            withdrawals.forEach { withdrawal ->
+                TronPendingWithdrawalRow(
+                    withdrawal = withdrawal,
+                    isBalanceVisible = isBalanceVisible,
+                )
+            }
+        }
     }
 }
 
