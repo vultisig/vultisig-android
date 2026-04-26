@@ -720,6 +720,8 @@
     <string name="keysign_password_enter_your_password">Introduza a sua senha</string>
     <string name="migration_password_enter_your_password_to_unlock">Introduza a sua palavra-passe para desbloquear a sua Partilha de Servidor e iniciar a atualização.</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Existe um cofre com nome duplicado</string>
+    <string name="join_key_gen_vault_already_on_device">O cofre \"%1$s\" já está neste dispositivo</string>
+    <string name="join_key_gen_open_existing_vault">Abrir cofre</string>
     <string name="join_key_gen_unknown_tssaction">Ação Tss desconhecida</string>
     <string name="join_key_gen_mediator_discovery_timeout">Não foi possível encontrar o outro dispositivo na rede</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Aguarda a entrada de outros dispositivos</string>
