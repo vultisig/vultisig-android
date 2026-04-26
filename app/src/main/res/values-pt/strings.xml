@@ -815,7 +815,7 @@
     <string name="vault_backup_screen_donot_receive_email">Não recebeu um email?</string>
     <string name="onboarding_desc_page_5_part_2">separadamente num</string>
     <string name="onboarding_desc_page_5_part_3">Local diferente</string>
-    <string name="scan_qr_code_modal_annotation">Transfira o Vultisig para os seus outros dispositivos e selecione \'Escanear código QR\'</string>
+    <string name="scan_qr_code_modal_annotation">No seu outro dispositivo, abra a aplicação e toque em \'Escanear código QR\' para o ligar.</string>
     <string name="onboarding_desc_page_2_part_3">Para aumentar a segurança e a</string>
     <string name="onboarding_desc_page_2_part_4">Elimine o ponto único de falha</string>
     <string name="onboarding_desc_page_3_part_1">Cada dispositivo</string>
@@ -868,14 +868,13 @@
     <string name="fast_vault_password_screen_reenter_password_hint">Introduza a senha novamente</string>
     <string name="fast_vault_name_screen_next">Próximo</string>
     <string name="enter_email_screen_next">Próximo</string>
-    <string name="scan_qr_code_modal_next">Próximo</string>
+    <string name="scan_qr_code_modal_next">Iniciar leitura</string>
     <string name="peer_discovery_action_next_title">Próximo</string>
     <string name="home_page_no_chains_enabled">Sem cadeias ativadas</string>
     <string name="onboarding_desc_page_3_part_3">uma partilha de cofre</string>
     <string name="select_vault_type_fast_title">Configuração rápida num único dispositivo</string>
     <string name="select_vault_type_fast_desc_1">Apenas 1 dispositivo necessário</string>
-    <string name="scan_qr_code_modal_scan_the">Leia o</string>
-    <string name="scan_qr_code_modal_qr_code">Código QR</string>
+    <string name="scan_qr_code_modal_scan_the">Leia o QR nos seus outros dispositivos</string>
     <string name="tx_overview_screen_title">Concluído</string>
     <string name="fast_vault_password_screen_warning">A palavra-passe não pode ser redefinida ou recuperada</string>
     <string name="referral_top_bar_list">Referência</string>

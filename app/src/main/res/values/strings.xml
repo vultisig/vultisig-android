@@ -532,10 +532,9 @@
     <string name="peer_discovery_scan_with_n_device">Scan with %1$s device</string>
     <string name="peer_discovery_waiting_for_devices_action">Waiting for devices to connect…</string>
     <string name="peer_discovery_devices_n_of_n">Devices (%1$s/%2$s)</string>
-    <string name="scan_qr_code_modal_annotation">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
-    <string name="scan_qr_code_modal_next">Next</string>
-    <string name="scan_qr_code_modal_scan_the">Scan the</string>
-    <string name="scan_qr_code_modal_qr_code">QR code</string>
+    <string name="scan_qr_code_modal_annotation">On your other device, open the app and tap \"Scan QR\" to connect it.</string>
+    <string name="scan_qr_code_modal_next">Start scanning</string>
+    <string name="scan_qr_code_modal_scan_the">Scan the QR on your other devices</string>
     <string name="home_screen_scan_qr_code">Scan QR</string>
     <string name="select_vault_type_next">Next</string>
     <string name="select_vault_type_choose_setup">Choose Setup</string>
