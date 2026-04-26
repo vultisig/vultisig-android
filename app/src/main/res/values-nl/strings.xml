@@ -337,6 +337,7 @@
     <string name="form_token_selection_asset">Bezit</string>
     <string name="insufficient_native_token">Onvoldoende %1$s voor gaskosten</string>
     <string name="swap_error_amount_too_low">Swapbedrag te laag</string>
+    <string name="swap_error_amount_below_dust_threshold">Het bedrag is lager dan de dust-drempel. Verhoog het bedrag en probeer het opnieuw.</string>
     <string name="swap_error_insufficient_balance_and_fees">Onvoldoende %1$s saldo voor de swap en gaskosten. Vul %1$s aan of verlaag het swapbedrag</string>
     <string name="swap_error_insufficient_source_token">Onvoldoende %1$s saldo om te ruilen</string>
     <string name="swap_error_insufficient_gas_fees">Er is niet genoeg %1$s om de gaskosten te dekken. Vul de wallet aan.</string>
@@ -812,7 +813,7 @@
     <string name="vault_backup_screen_donot_receive_email">Geen email ontvangen?</string>
     <string name="onboarding_desc_page_5_part_2">Afzonderlijk in een</string>
     <string name="onboarding_desc_page_5_part_3">Andere locatie</string>
-    <string name="scan_qr_code_modal_annotation">Download Vultisig op je andere apparaat(en) en selecteer \'QR-code scannen\'</string>
+    <string name="scan_qr_code_modal_annotation">Open op je andere apparaat de app en tik op \'QR-code scannen\' om verbinding te maken.</string>
     <string name="onboarding_desc_page_2_part_3">om de beveiliging te verhogen en</string>
     <string name="onboarding_desc_page_2_part_4">Verwijder het single point of failure</string>
     <string name="onboarding_desc_page_3_part_1">Elk apparaat</string>
@@ -866,13 +867,12 @@
     <string name="fast_vault_name_screen_next">Volgende</string>
     <string name="enter_email_screen_next">Volgende</string>
     <string name="peer_discovery_action_next_title">Volgende</string>
-    <string name="scan_qr_code_modal_next">Volgende</string>
+    <string name="scan_qr_code_modal_next">Scannen starten</string>
     <string name="home_page_no_chains_enabled">Geen ketens ingeschakeld</string>
     <string name="onboarding_desc_page_3_part_3">één kluis delen</string>
     <string name="select_vault_type_fast_title">Snelle installatie van 1 apparaat</string>
     <string name="select_vault_type_fast_desc_1">Slechts 1 apparaat nodig</string>
-    <string name="scan_qr_code_modal_scan_the">Scan het</string>
-    <string name="scan_qr_code_modal_qr_code">QR-code</string>
+    <string name="scan_qr_code_modal_scan_the">Scan de QR op je andere apparaten</string>
     <string name="tx_overview_screen_title">Klaar</string>
     <string name="fast_vault_password_screen_warning">Wachtwoord kan niet worden gereset of hersteld</string>
     <string name="referral_top_bar_list">Verwijzing</string>

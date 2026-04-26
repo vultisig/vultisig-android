@@ -487,6 +487,8 @@ constructor(
                 UiText.StringResource(R.string.swap_error_small_insufficient_funds)
             is SwapException.RateLimitExceeded ->
                 UiText.StringResource(R.string.swap_error_rate_limit)
+            is SwapException.AmountBelowDustThreshold ->
+                UiText.StringResource(R.string.swap_error_amount_below_dust_threshold)
         }
 
     companion object {

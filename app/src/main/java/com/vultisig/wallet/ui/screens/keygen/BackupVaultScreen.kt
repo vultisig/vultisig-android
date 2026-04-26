@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,18 +60,20 @@ internal fun BackupVaultScreen(model: BackupVaultViewModel = hiltViewModel()) {
 @Composable
 internal fun BackupVaultScreen(title: String, isFastVault: Boolean, onBackupClick: () -> Unit) {
     var isNextEnabled by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+    LaunchedEffect(Unit) { scrollState.scrollTo(0) }
     V3Scaffold(
         onBackClick = {},
         content = {
             Column(
-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxSize().verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 UiSpacer(70.dp)
 
                 RiveAnimation(
                     animation = R.raw.riv_backup_vault_splash,
-                    modifier = Modifier.size(width = 340.dp, height = 240.dp),
+                    modifier = Modifier.size(width = 266.dp, height = 170.dp),
                     fit = Fit.COVER,
                 )
 

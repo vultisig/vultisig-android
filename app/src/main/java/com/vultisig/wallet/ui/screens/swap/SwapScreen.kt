@@ -71,6 +71,7 @@ import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -257,6 +258,8 @@ internal fun SwapScreen(
                                     fiatValue = state.srcFiatValue,
                                     onSelectNetworkClick = onSelectSrcNetworkClick,
                                     onSelectTokenClick = onSelectSrcToken,
+                                    chainTestTag = "SwapFormScreen.fromChain",
+                                    tokenTestTag = "SwapFormScreen.fromToken",
                                     shape =
                                         RoundedWithCutoutShape(
                                             cutoutPosition = CutoutPosition.Bottom,
@@ -286,7 +289,9 @@ internal fun SwapScreen(
                                                     keyboardType = KeyboardType.Number,
                                                     imeAction = ImeAction.Done,
                                                 ),
-                                            modifier = Modifier.fillMaxWidth(),
+                                            modifier =
+                                                Modifier.fillMaxWidth()
+                                                    .testTag("SwapFormScreen.fromAmount"),
                                         )
                                     },
                                 )
@@ -360,6 +365,8 @@ internal fun SwapScreen(
                                 fiatValue = state.estimatedDstFiatValue,
                                 onSelectNetworkClick = onSelectDstNetworkClick,
                                 onSelectTokenClick = onSelectDstToken,
+                                chainTestTag = "SwapFormScreen.toChain",
+                                tokenTestTag = "SwapFormScreen.toToken",
                                 shape =
                                     RoundedWithCutoutShape(
                                         cutoutPosition = CutoutPosition.Top,
@@ -620,7 +627,9 @@ internal fun SwapScreen(
                             onSwap()
                         },
                         modifier =
-                            Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 24.dp),
+                            Modifier.fillMaxWidth()
+                                .padding(vertical = 12.dp, horizontal = 24.dp)
+                                .testTag("SwapFormScreen.swapButton"),
                     )
                 }
             }
@@ -711,6 +720,8 @@ private fun TokenInput(
     shape: Shape,
     focused: Boolean,
     modifier: Modifier = Modifier,
+    chainTestTag: String? = null,
+    tokenTestTag: String? = null,
     @SuppressLint("ComposableLambdaParameterNaming") onDragStart: (Offset) -> Unit = {},
     onDrag: (Offset) -> Unit = {},
     onDragEnd: () -> Unit = {},
@@ -740,16 +751,21 @@ private fun TokenInput(
             val selectedChain = selectedToken?.model?.address?.chain
 
             if (selectedChain != null) {
-                ChainSelector(
-                    title = title,
-                    chain = selectedChain,
-                    onClick = onSelectNetworkClick,
-                    onDragStart = onDragStart,
-                    onDragCancel = onDragCancel,
-                    onDragEnd = onDragEnd,
-                    onDrag = onDrag,
-                    onLongPressStarted = onLongPressStarted,
-                )
+                Box(
+                    modifier =
+                        if (chainTestTag != null) Modifier.testTag(chainTestTag) else Modifier
+                ) {
+                    ChainSelector(
+                        title = title,
+                        chain = selectedChain,
+                        onClick = onSelectNetworkClick,
+                        onDragStart = onDragStart,
+                        onDragCancel = onDragCancel,
+                        onDragEnd = onDragEnd,
+                        onDrag = onDrag,
+                        onLongPressStarted = onLongPressStarted,
+                    )
+                }
             }
 
             Text(
@@ -765,7 +781,9 @@ private fun TokenInput(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            TokenChip(selectedToken = selectedToken, onSelectTokenClick = onSelectTokenClick)
+            Box(modifier = if (tokenTestTag != null) Modifier.testTag(tokenTestTag) else Modifier) {
+                TokenChip(selectedToken = selectedToken, onSelectTokenClick = onSelectTokenClick)
+            }
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),

@@ -338,6 +338,7 @@
     <string name="form_token_selection_asset">Vermögenswert</string>
     <string name="insufficient_native_token">Nicht genügend %1$s für Gasgebühren</string>
     <string name="swap_error_amount_too_low">Swap-Betrag zu niedrig</string>
+    <string name="swap_error_amount_below_dust_threshold">Der Betrag liegt unter dem Dust-Schwellenwert. Bitte erhöhen Sie den Betrag und versuchen Sie es erneut.</string>
     <string name="swap_error_insufficient_balance_and_fees">Unzureichendes %1$s-Guthaben für den Swap und Gasgebühren. Laden Sie %1$s auf oder reduzieren Sie den Swap-Betrag</string>
     <string name="swap_error_insufficient_source_token">Unzureichendes %1$s-Guthaben zum Tauschen</string>
     <string name="swap_error_insufficient_gas_fees">Nicht genügend %1$s für Gasgebühren. Bitte füllen Sie die Wallet auf.</string>
@@ -817,7 +818,7 @@
     <string name="vault_backup_screen_donot_receive_email">Keine E-Mail erhalten?</string>
     <string name="onboarding_desc_page_5_part_2">separat in einem</string>
     <string name="onboarding_desc_page_5_part_3">Anderer Standort</string>
-    <string name="scan_qr_code_modal_annotation">Laden Sie Vultisig auf Ihre anderen Geräte herunter und wählen Sie „QR-Code scannen“.</string>
+    <string name="scan_qr_code_modal_annotation">Öffnen Sie auf Ihrem anderen Gerät die App und tippen Sie auf „QR-Code scannen“, um es zu verbinden.</string>
     <string name="onboarding_desc_page_2_part_3">um die Sicherheit zu erhöhen und</string>
     <string name="onboarding_desc_page_2_part_4">Beseitigung des Single Point of Failure</string>
     <string name="onboarding_desc_page_3_part_1">Jedes Gerät</string>
@@ -870,14 +871,13 @@
     <string name="fast_vault_password_screen_reenter_password_hint">Passwort erneut eingeben</string>
     <string name="fast_vault_name_screen_next">Weiter</string>
     <string name="enter_email_screen_next">Weiter</string>
-    <string name="scan_qr_code_modal_next">Weiter</string>
+    <string name="scan_qr_code_modal_next">Scannen starten</string>
     <string name="peer_discovery_action_next_title">Weiter</string>
     <string name="home_page_no_chains_enabled">Keine Blockchains aktiviert</string>
     <string name="onboarding_desc_page_3_part_3">Ein Tresor freigeben</string>
     <string name="select_vault_type_fast_title">Schnelle Einrichtung mit nur einem Gerät</string>
     <string name="select_vault_type_fast_desc_1">Nur 1 Gerät erforderlich</string>
-    <string name="scan_qr_code_modal_scan_the">Scannen Sie den</string>
-    <string name="scan_qr_code_modal_qr_code">QR-Code</string>
+    <string name="scan_qr_code_modal_scan_the">Scannen Sie den QR auf Ihren anderen Geräten</string>
     <string name="tx_overview_screen_title">Fertig</string>
     <string name="fast_vault_password_screen_warning">Passwort kann nicht zurückgesetzt oder wiederhergestellt werden</string>
     <string name="referral_top_bar_list">Empfehlung</string>

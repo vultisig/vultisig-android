@@ -13,7 +13,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -56,7 +55,6 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -78,8 +76,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.R.drawable.vs_camera_frame
-import com.vultisig.wallet.R.drawable.vs_camera_frame_highlight
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
@@ -453,11 +449,6 @@ private fun ScanViewport(
                 )
     ) {
         content()
-
-        CenterFrame(
-            modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(40.dp),
-            isFrameHighlighted = isFrameHighlighted,
-        )
     }
 }
 
@@ -518,20 +509,6 @@ private fun QrCameraScreen(
             },
         )
     }
-}
-
-@Composable
-private fun CenterFrame(isFrameHighlighted: Boolean, modifier: Modifier = Modifier) {
-    Image(
-        modifier = modifier,
-        painter =
-            if (isFrameHighlighted) {
-                painterResource(id = vs_camera_frame_highlight)
-            } else {
-                painterResource(id = vs_camera_frame)
-            },
-        contentDescription = null,
-    )
 }
 
 fun createScanner() =
