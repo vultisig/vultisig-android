@@ -246,12 +246,12 @@ private fun TronPendingWithdrawalRow(
     withdrawal: TronPendingWithdrawalUiModel,
     isBalanceVisible: Boolean,
 ) {
-    val earliestExpiry = withdrawal.expiryEpochMs
+    val expiryMs = withdrawal.expiryEpochMs
     val nowMs by
-        produceState(initialValue = System.currentTimeMillis(), key1 = earliestExpiry) {
-            while (value < earliestExpiry) {
-                val delta = earliestExpiry - value
-                val interval = if (delta > 60 * 60 * 1_000L) 60_000L else 1_000L
+        produceState(initialValue = System.currentTimeMillis(), key1 = expiryMs) {
+            while (value < expiryMs) {
+                val delta = expiryMs - value
+                val interval = if (delta <= 60_000L) 1_000L else 60_000L
                 delay(interval)
                 value = System.currentTimeMillis()
             }
