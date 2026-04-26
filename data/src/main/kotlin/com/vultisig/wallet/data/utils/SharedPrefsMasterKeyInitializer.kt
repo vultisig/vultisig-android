@@ -15,6 +15,7 @@ import timber.log.Timber
  */
 object SharedPrefsMasterKeyInitializer {
 
+    /** Fires a background key pre-warm; safe to call from Application.onCreate. */
     @Suppress("UNUSED_PARAMETER")
     fun prewarm(context: Context) {
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {

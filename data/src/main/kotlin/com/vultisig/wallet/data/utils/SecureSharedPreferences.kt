@@ -44,6 +44,7 @@ internal fun buildSecurePrefsKey(): SecretKey {
         .generateKey()
 }
 
+/** Encrypts [plaintext] with AES-256-GCM and returns `Base64(IV || ciphertext)`. */
 private fun encryptRaw(secretKey: SecretKey, plaintext: String): String {
     val cipher = Cipher.getInstance("AES/GCM/NoPadding")
     cipher.init(Cipher.ENCRYPT_MODE, secretKey)
@@ -55,6 +56,7 @@ private fun encryptRaw(secretKey: SecretKey, plaintext: String): String {
     return Base64.encodeToString(out, Base64.NO_WRAP)
 }
 
+/** Decodes and decrypts a value previously produced by [encryptRaw]. */
 private fun decryptRaw(secretKey: SecretKey, encoded: String): String {
     val bytes = Base64.decode(encoded, Base64.NO_WRAP)
     val iv = bytes.copyOfRange(0, IV_LENGTH)
@@ -73,22 +75,27 @@ internal class EncryptingSharedPreferences(
     private val secretKey: SecretKey,
 ) : SharedPreferences {
 
+    /** Returns the decrypted plaintext for [encoded], or null if decryption fails. */
     private fun decryptOrNull(encoded: String) =
         runCatching { decryptRaw(secretKey, encoded) }.getOrNull()
 
+    /** Returns all key-value pairs with each stored value decrypted. */
     override fun getAll(): MutableMap<String, *> =
         prefs.all
             .mapValues { (_, v) -> (v as? String)?.let { decryptOrNull(it)?.typed() } }
             .toMutableMap()
 
+    /** Returns the decrypted string for [key], or [defValue] if absent or undecryptable. */
     override fun getString(key: String, defValue: String?): String? =
         prefs.getString(key, null)?.let {
             decryptOrNull(it)?.takeIf { d -> d.startsWith(P_STRING) }?.removePrefix(P_STRING)
         } ?: defValue
 
+    /** StringSet is not supported; always returns [defValues]. */
     override fun getStringSet(key: String, defValues: MutableSet<String>?): MutableSet<String>? =
         defValues
 
+    /** Returns the decrypted int for [key], or [defValue] if absent or undecryptable. */
     override fun getInt(key: String, defValue: Int): Int =
         prefs.getString(key, null)?.let {
             decryptOrNull(it)
@@ -97,6 +104,7 @@ internal class EncryptingSharedPreferences(
                 ?.toIntOrNull()
         } ?: defValue
 
+    /** Returns the decrypted long for [key], or [defValue] if absent or undecryptable. */
     override fun getLong(key: String, defValue: Long): Long =
         prefs.getString(key, null)?.let {
             decryptOrNull(it)
@@ -105,6 +113,7 @@ internal class EncryptingSharedPreferences(
                 ?.toLongOrNull()
         } ?: defValue
 
+    /** Returns the decrypted float for [key], or [defValue] if absent or undecryptable. */
     override fun getFloat(key: String, defValue: Float): Float =
         prefs.getString(key, null)?.let {
             decryptOrNull(it)
@@ -113,6 +122,7 @@ internal class EncryptingSharedPreferences(
                 ?.toFloatOrNull()
         } ?: defValue
 
+    /** Returns the decrypted boolean for [key], or [defValue] if absent or undecryptable. */
     override fun getBoolean(key: String, defValue: Boolean): Boolean =
         prefs.getString(key, null)?.let {
             decryptOrNull(it)
@@ -121,8 +131,10 @@ internal class EncryptingSharedPreferences(
                 ?.toBooleanStrictOrNull()
         } ?: defValue
 
+    /** Returns true if the underlying prefs contain an entry for [key]. */
     override fun contains(key: String): Boolean = prefs.contains(key)
 
+    /** Returns an [EncryptingEditor] that AES-256-GCM-encrypts values before writing. */
     override fun edit(): SharedPreferences.Editor = EncryptingEditor(prefs.edit(), secretKey)
 
     override fun registerOnSharedPreferenceChangeListener(

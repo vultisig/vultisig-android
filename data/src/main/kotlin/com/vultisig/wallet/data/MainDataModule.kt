@@ -56,6 +56,10 @@ internal interface MainDataModule {
         @Singleton
         fun provideCompressorStreamProvider(): CompressorStreamProvider = CompressorStreamFactory()
 
+        /**
+         * Provides the singleton [SharedPreferences] backed by AndroidKeyStore AES-256-GCM
+         * encryption.
+         */
         @Singleton
         @Provides
         fun provideEncryptedSharedPrefs(@ApplicationContext context: Context): SharedPreferences {
