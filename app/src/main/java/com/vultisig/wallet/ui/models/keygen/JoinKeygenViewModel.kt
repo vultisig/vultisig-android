@@ -68,7 +68,8 @@ internal sealed class JoinKeygenError(val message: UiText) {
 
     data object UnknownTss : JoinKeygenError(R.string.join_key_gen_unknown_tssaction.asUiText())
 
-    data object WrongResharePrefix : JoinKeygenError(R.string.join_keysign_wrong_reshare.asUiText())
+    data object WrongResharePrefix :
+        JoinKeygenError(R.string.join_keysign_wrong_reshare.asUiText())
 
     data object DiscoveryTimeout :
         JoinKeygenError(R.string.join_key_gen_mediator_discovery_timeout.asUiText())
@@ -133,10 +134,11 @@ constructor(
                             // If a vault with the same chain code is already on this device,
                             // skip the join and surface a clear "already on device" message
                             // instead of running keygen + failing on duplicate save.
-                            val alreadyJoinedVault = existingVaults.find {
-                                it.hexChainCode == message.hexChainCode &&
-                                    it.hexChainCode.isNotBlank()
-                            }
+                            val alreadyJoinedVault =
+                                existingVaults.find {
+                                    it.hexChainCode == message.hexChainCode &&
+                                        it.hexChainCode.isNotBlank()
+                                }
                             if (alreadyJoinedVault != null) {
                                 state.update {
                                     it.copy(
@@ -182,9 +184,8 @@ constructor(
                                     protoBuf.decodeFromByteArray<ReshareMessageProto>(bytes)
                                 )
 
-                            val existingVault = existingVaults.find {
-                                it.pubKeyECDSA == message.pubKeyECDSA
-                            }
+                            val existingVault =
+                                existingVaults.find { it.pubKeyECDSA == message.pubKeyECDSA }
 
                             if (
                                 existingVault != null &&
