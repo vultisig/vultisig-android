@@ -27,6 +27,7 @@ data class KeysignPayload(
     val signAmino: SignAmino? = null,
     val signDirect: SignDirectProto? = null,
     val signSolana: SignSolana? = null,
+    val signTon: SignTon? = null,
     val tronTransferContractPayload: TronTransferContractPayload? = null,
     val tronTriggerSmartContractPayload: TronTriggerSmartContractPayload? = null,
     val tronTransferAssetContractPayload: TronTransferAssetContractPayload? = null,

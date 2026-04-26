@@ -240,6 +240,8 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     )
                 } else null,
             skipBroadcast = keysignPayload.skipBroadcast,
+            // TODO: map keysignPayload.signTon to proto VSSignTon when commondata submodule exposes
+            // sign_ton
             tronTransferContractPayload = keysignPayload.tronTransferContractPayload,
             tronTransferAssetContractPayload = keysignPayload.tronTransferAssetContractPayload,
             tronTriggerSmartContractPayload = keysignPayload.tronTriggerSmartContractPayload,

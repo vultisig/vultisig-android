@@ -48,6 +48,9 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             signAmino = from.signAmino,
             signDirect = from.signDirect,
             signSolana = from.signSolana,
+            // TODO: map from proto VSSignTon/VSTonMessage when commondata submodule exposes
+            // sign_ton
+            signTon = null,
             swapPayload =
                 when {
                     from.oneinchSwapPayload != null ->
