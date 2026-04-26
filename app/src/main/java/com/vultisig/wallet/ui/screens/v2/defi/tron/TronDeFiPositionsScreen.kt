@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
@@ -200,12 +202,10 @@ private fun TronDeFiPositionsScreenContent(
                     }
 
                     if (pendingWithdrawals.isNotEmpty()) {
-                        item {
-                            TronPendingWithdrawalsCard(
-                                withdrawals = pendingWithdrawals,
-                                isBalanceVisible = state.isBalanceVisible,
-                            )
-                        }
+                        TronPendingWithdrawalsCard(
+                            withdrawals = pendingWithdrawals,
+                            isBalanceVisible = state.isBalanceVisible,
+                        )
                     }
                 }
             }
@@ -225,53 +225,38 @@ private fun TronDeFiPositionsScreenContent(
     }
 }
 
-@Composable
-private fun TronPendingWithdrawalsCard(
+private fun LazyListScope.TronPendingWithdrawalsCard(
     withdrawals: List<TronPendingWithdrawalUiModel>,
     isBalanceVisible: Boolean,
 ) {
-    val latestExpiry = remember(withdrawals) { withdrawals.maxOfOrNull { it.expiryEpochMs } ?: 0L }
-    val nowMs by
-        produceState(initialValue = System.currentTimeMillis(), key1 = latestExpiry) {
-            while (value < latestExpiry) {
-                val delta = latestExpiry - value
-                val interval = if (delta > 60 * 60 * 1_000L) 60_000L else 1_000L
-                delay(interval)
-                value = System.currentTimeMillis()
-            }
-        }
-
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    item(key = "tron-pending-withdrawals-header") {
         Text(
             text = stringResource(R.string.tron_defi_pending_withdrawals),
             style = Theme.brockmann.body.l.medium,
             color = Theme.v2.colors.text.primary,
         )
-
-        withdrawals.forEach { withdrawal ->
-            TronPendingWithdrawalRow(
-                withdrawal = withdrawal,
-                nowMs = nowMs,
-                isBalanceVisible = isBalanceVisible,
-            )
-        }
+    }
+    items(items = withdrawals, key = { it.expiryEpochMs }) { withdrawal ->
+        TronPendingWithdrawalRow(withdrawal = withdrawal, isBalanceVisible = isBalanceVisible)
     }
 }
 
 @Composable
 private fun TronPendingWithdrawalRow(
     withdrawal: TronPendingWithdrawalUiModel,
-    nowMs: Long,
     isBalanceVisible: Boolean,
 ) {
-    val countdown = countdownParts(withdrawal.expiryEpochMs, nowMs)
+    val expiryMs = withdrawal.expiryEpochMs
+    val nowMs by
+        produceState(initialValue = System.currentTimeMillis(), key1 = expiryMs) {
+            while (value < expiryMs) {
+                val delta = expiryMs - value
+                val interval = if (delta <= 60_000L) 1_000L else 60_000L
+                delay(interval)
+                value = System.currentTimeMillis()
+            }
+        }
+    val countdown = countdownParts(expiryMs, nowMs)
     val isClaimable = countdown == null
     val timeRemainingText =
         when {
@@ -287,7 +272,11 @@ private fun TronPendingWithdrawalRow(
         }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
