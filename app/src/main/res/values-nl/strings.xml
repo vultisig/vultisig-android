@@ -1040,6 +1040,7 @@
     <string name="key_import_chains_no_results">Geen ketens komen overeen met uw zoekopdracht</string>
 
     <string name="key_import_device_count_get_started">Aan de slag</string>
+    <string name="choose_device_count_a11y_description">Hoeveel apparaten hebt u? %1$d geselecteerd. Tik om een andere te kiezen.</string>
     <string name="vault_count_recommended">Aanbevolen</string>
 
     <string name="welcome_tip">Tip: U kunt een browser gebruiken als apparaat</string>
