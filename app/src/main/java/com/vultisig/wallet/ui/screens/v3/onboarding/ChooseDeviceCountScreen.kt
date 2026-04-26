@@ -59,10 +59,11 @@ private fun ChooseDeviceCountScreen(onEvent: (ChooseDeviceCountUiEvent) -> Unit)
                 val vmi = rememberViewModelInstance(file = riveFile)
                 var deviceIndex by remember { mutableIntStateOf(0) }
 
-                LaunchedEffect(Unit) {
+                LaunchedEffect(vmi) {
                     vmi.getNumberFlow("Index").collect { index ->
-                        deviceIndex = index.toInt().coerceIn(0, 3)
-                        onEvent(ChooseDeviceCountUiEvent.IndexChanged(index.toInt()))
+                        val clampedIndex = index.toInt().coerceIn(0, 3)
+                        deviceIndex = clampedIndex
+                        onEvent(ChooseDeviceCountUiEvent.IndexChanged(clampedIndex))
                     }
                 }
 
