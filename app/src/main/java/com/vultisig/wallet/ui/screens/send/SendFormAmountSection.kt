@@ -176,10 +176,8 @@ internal fun FoldableAmountWidget(
                         focusManager.clearFocus()
                         onSend()
                     },
-                    modifier =
-                        Modifier.padding(horizontal = 54.dp)
-                            .align(Alignment.Center)
-                            .testTag("SendFormScreen.amountField"),
+                    modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
+                    inputModifier = Modifier.testTag("SendFormScreen.amountField"),
                 )
 
                 if (!isCircleMode) {
