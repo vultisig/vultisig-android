@@ -42,6 +42,7 @@ import com.vultisig.wallet.ui.models.ImportFileState
 import com.vultisig.wallet.ui.models.ImportFileViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignPasswordUiModel
 import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordBottomSheet
+import com.vultisig.wallet.ui.screens.keysign.KeysignPasswordSheetContent
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.ActivityResultContractsGetContentWithMimeTypes
@@ -238,5 +239,14 @@ private fun ImportFilePreview() {
 @Preview(showBackground = true)
 @Composable
 private fun ImportFilePasswordPromptPreview() {
-    ImportFileScreen(uiModel = ImportFileState(showPasswordPrompt = true))
+    KeysignPasswordSheetContent(
+        title = stringResource(R.string.keysign_password_enter_your_password),
+        subtitle = stringResource(R.string.import_file_screen_enter_password_sub),
+        confirmButtonLabel = stringResource(R.string.fast_vault_password_screen_next),
+        state = KeysignPasswordUiModel(isPasswordVisible = false, passwordError = null),
+        passwordFieldState = TextFieldState(),
+        onPasswordVisibilityToggle = {},
+        onContinueClick = {},
+        onBackClick = {},
+    )
 }
