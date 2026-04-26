@@ -298,17 +298,19 @@ private fun TronPendingWithdrawalRow(
                 style = Theme.brockmann.body.m.medium,
                 color = Theme.v2.colors.text.primary,
             )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                withdrawal.resourceType?.let { TronResourceTypeBadge(it) }
-                if (!isClaimable) {
-                    Text(
-                        text = timeRemainingText,
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.secondary,
-                    )
+            if (withdrawal.resourceType != null || !isClaimable) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    withdrawal.resourceType?.let { TronResourceTypeBadge(it) }
+                    if (!isClaimable) {
+                        Text(
+                            text = timeRemainingText,
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.text.secondary,
+                        )
+                    }
                 }
             }
         }
