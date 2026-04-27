@@ -201,6 +201,7 @@ constructor(
                 parameter("amount", request.amount)
                 parameter("destination", request.address)
                 parameter("streaming_interval", request.interval)
+                request.streamingQuantity?.let { parameter("streaming_quantity", it) }
                 if (affiliateParams.isNotEmpty()) {
                     affiliateParams.forEach { (key, value) ->
                         when (key) {
