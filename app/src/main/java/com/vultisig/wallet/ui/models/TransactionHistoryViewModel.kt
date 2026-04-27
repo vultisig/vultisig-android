@@ -171,30 +171,26 @@ constructor(
     }
 
     fun toggleAssetSelection(asset: TransactionAssetUiModel) {
+        val newIds: Set<String>
+        val newList: List<TransactionAssetUiModel>
         if (asset.tokenId in selectedAssetIds.value) {
-            selectedAssetIds.update { it - asset.tokenId }
-            selectedAssetsList.update { it.filter { a -> a.tokenId != asset.tokenId } }
+            newIds = selectedAssetIds.value - asset.tokenId
+            newList = selectedAssetsList.value.filter { a -> a.tokenId != asset.tokenId }
         } else {
-            selectedAssetIds.update { it + asset.tokenId }
-            selectedAssetsList.update { it + asset }
+            newIds = selectedAssetIds.value + asset.tokenId
+            newList = selectedAssetsList.value + asset
         }
-        _uiState.update {
-            it.copy(
-                selectedAssetIds = selectedAssetIds.value,
-                selectedAssets = selectedAssetsList.value,
-            )
-        }
+        selectedAssetIds.value = newIds
+        selectedAssetsList.value = newList
+        _uiState.update { it.copy(selectedAssetIds = newIds, selectedAssets = newList) }
     }
 
     fun removeAssetFilter(assetId: String) {
-        selectedAssetIds.update { it - assetId }
-        selectedAssetsList.update { it.filter { a -> a.tokenId != assetId } }
-        _uiState.update {
-            it.copy(
-                selectedAssetIds = selectedAssetIds.value,
-                selectedAssets = selectedAssetsList.value,
-            )
-        }
+        val newIds = selectedAssetIds.value - assetId
+        val newList = selectedAssetsList.value.filter { a -> a.tokenId != assetId }
+        selectedAssetIds.value = newIds
+        selectedAssetsList.value = newList
+        _uiState.update { it.copy(selectedAssetIds = newIds, selectedAssets = newList) }
     }
 
     fun clearAllFilters() {
