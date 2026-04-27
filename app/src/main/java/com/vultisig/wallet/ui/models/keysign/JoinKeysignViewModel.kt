@@ -977,6 +977,7 @@ constructor(
                             signAmino = normalizedSignAmino,
                             signDirect = signDirect,
                             signSolana = signSolana,
+                            signTon = payload.signTon,
                         )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)

@@ -995,6 +995,10 @@
     <plurals name="solana_accounts_data">
         <item quantity="other">계정: %1$d | 데이터 길이: %2$d 바이트</item>
     </plurals>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">메시지</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">권장</string>
 
     <!-- Key Import / Feature Spotlight -->

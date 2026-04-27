@@ -1046,6 +1046,10 @@
     <string name="key_import_chains_no_results">Keine Blockchains entsprechen Ihrer Suche</string>
 
     <string name="key_import_device_count_get_started">Loslegen</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">Nachrichten</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">Empfohlen</string>
 
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>

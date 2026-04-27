@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.TonMessage
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.toHexString
@@ -35,21 +36,57 @@ object TonHelper {
 
         val publicKey = PublicKey(payload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.ED25519)
 
-        val transfer =
-            if (payload.coin.isNativeToken) {
-                buildNativeTransfer(payload, tonSpecific)
-            } else {
-                buildJettonTransfer(payload, tonSpecific)
-            }
+        val builder =
+            TheOpenNetwork.SigningInput.newBuilder()
+                .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
+                .setExpireAt(tonSpecific.expireAt.toInt())
+                .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
+                .setPublicKey(ByteString.copyFrom(publicKey.data()))
 
-        return TheOpenNetwork.SigningInput.newBuilder()
-            .addMessages(transfer)
-            .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
-            .setExpireAt(tonSpecific.expireAt.toInt())
-            .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
-            .setPublicKey(ByteString.copyFrom(publicKey.data()))
+        addTransfersTo(builder, payload, tonSpecific)
+
+        return builder.build().toByteArray()
+    }
+
+    private fun addTransfersTo(
+        builder: TheOpenNetwork.SigningInput.Builder,
+        payload: KeysignPayload,
+        tonSpecific: BlockChainSpecific.Ton,
+    ) {
+        val signTon = payload.signTon
+        if (signTon != null) {
+            signTon.validate()
+            signTon.messages.forEach { msg ->
+                builder.addMessages(buildTonConnectTransfer(msg, tonSpecific))
+            }
+        } else {
+            val transfer =
+                if (payload.coin.isNativeToken) {
+                    buildNativeTransfer(payload, tonSpecific)
+                } else {
+                    buildJettonTransfer(payload, tonSpecific)
+                }
+            builder.addMessages(transfer)
+        }
+    }
+
+    private fun buildTonConnectTransfer(
+        msg: TonMessage,
+        tonSpecific: BlockChainSpecific.Ton,
+    ): TheOpenNetwork.Transfer {
+        val toAddress = AnyAddress(msg.toAddress, CoinType.TON)
+        val mode = calculateSendMode(sendMaxAmount = false)
+
+        return TheOpenNetwork.Transfer.newBuilder()
+            .setDest(toAddress.description())
+            .setAmount(ByteString.copyFrom(msg.toAmount.toHexString().toHexByteArray()))
+            .setMode(mode)
+            .setBounceable(tonSpecific.bounceable)
+            .apply {
+                if (msg.payload.isNotEmpty()) setCustomPayload(msg.payload)
+                if (msg.stateInit.isNotEmpty()) setStateInit(msg.stateInit)
+            }
             .build()
-            .toByteArray()
     }
 
     private fun buildNativeTransfer(
@@ -141,25 +178,18 @@ object TonHelper {
             payload.blockChainSpecific as? BlockChainSpecific.Ton
                 ?: throw RuntimeException("Failed to get TON chain specific data")
 
-        val transfer =
-            if (payload.coin.isNativeToken) {
-                buildNativeTransfer(payload, tonSpecific)
-            } else {
-                buildJettonTransfer(payload, tonSpecific)
-            }
-
-        val signingInput =
+        val builder =
             TheOpenNetwork.SigningInput.newBuilder()
-                .addMessages(transfer)
                 .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
                 .setExpireAt(tonSpecific.expireAt.toInt())
                 .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
                 .setPublicKey(ByteString.copyFrom(dummyPublicKey.data()))
                 .setPrivateKey(ByteString.copyFrom(dummyPrivateKey.data()))
-                .build()
+
+        addTransfersTo(builder, payload, tonSpecific)
 
         val output =
-            AnySigner.sign(signingInput, CoinType.TON, TheOpenNetwork.SigningOutput.parser())
+            AnySigner.sign(builder.build(), CoinType.TON, TheOpenNetwork.SigningOutput.parser())
 
         return output.encoded
     }

@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
+import com.vultisig.wallet.data.models.payload.SignTon
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -54,6 +55,7 @@ internal data class TransactionDetailsUiModel(
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,
+    val signTon: SignTon? = null,
 )
 
 @Immutable

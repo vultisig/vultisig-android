@@ -19,7 +19,7 @@ class SignTonTest {
 
     @Test
     fun `validate passes for four messages`() {
-        val messages = List(4) { validMessage }
+        val messages = List(SignTon.MAX_MESSAGES) { validMessage }
         assertDoesNotThrow { SignTon(messages).validate() }
     }
 
@@ -29,8 +29,8 @@ class SignTonTest {
     }
 
     @Test
-    fun `validate throws when messages exceed four`() {
-        val messages = List(5) { validMessage }
+    fun `validate throws when messages exceed maximum`() {
+        val messages = List(SignTon.MAX_MESSAGES + 1) { validMessage }
         assertThrows(IllegalArgumentException::class.java) { SignTon(messages).validate() }
     }
 
@@ -44,5 +44,12 @@ class SignTonTest {
     fun `validate throws when toAmount is negative`() {
         val msg = validMessage.copy(toAmount = -1L)
         assertThrows(IllegalArgumentException::class.java) { SignTon(listOf(msg)).validate() }
+    }
+
+    @Test
+    fun `payload and stateInit default to empty strings`() {
+        val msg = TonMessage(toAddress = "EQAB", toAmount = 1L)
+        assert(msg.payload.isEmpty())
+        assert(msg.stateInit.isEmpty())
     }
 }

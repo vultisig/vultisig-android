@@ -28,12 +28,15 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.payload.SignTon
+import com.vultisig.wallet.data.models.payload.TonMessage
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.QrShareField
 import com.vultisig.wallet.data.usecases.QrShareInfo
+import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
@@ -105,6 +108,8 @@ class PreviewActivity : ComponentActivity() {
                     "choose_vault" -> SelectVaultTypeScreenPreview()
                     "content_row" -> ContentRowPreview()
                     "solana_display" -> SolanaDisplayPreview()
+                    "ton_display_single" -> TonDisplayPreview(messageCount = 1)
+                    "ton_display_multi" -> TonDisplayPreview(messageCount = 4)
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
                     "import_seedphrase" -> ImportSeedphrasePreview()
@@ -330,6 +335,52 @@ private fun SolanaInstructionMock(
             style = com.vultisig.wallet.ui.theme.Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,
         )
+    }
+}
+
+@Composable
+private fun TonDisplayPreview(messageCount: Int) {
+    val messages =
+        when (messageCount) {
+            1 ->
+                listOf(
+                    TonMessage(
+                        toAddress = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        toAmount = 1_500_000_000L,
+                    )
+                )
+            else ->
+                listOf(
+                    TonMessage(
+                        toAddress = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        toAmount = 1_500_000_000L,
+                        payload = "te6ccgEBAQEABgAACAA=",
+                    ),
+                    TonMessage(
+                        toAddress = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        toAmount = 250_000_000L,
+                        payload = "te6ccgEBAQEABgAACAA=",
+                        stateInit = "te6ccgEBAQEABwAA",
+                    ),
+                    TonMessage(
+                        toAddress = "EQAB9999999999ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        toAmount = 100_000L,
+                    ),
+                    TonMessage(
+                        toAddress = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        toAmount = 5_000_000_000L,
+                        stateInit = "te6ccgEBAQEABwAA",
+                    ),
+                )
+        }
+    androidx.compose.foundation.layout.Column(
+        modifier =
+            Modifier.padding(24.dp)
+                .fillMaxSize()
+                .background(Theme.v2.colors.backgrounds.primary)
+                .padding(16.dp)
+    ) {
+        SignTonDisplayView(signTon = SignTon(messages))
     }
 }
 

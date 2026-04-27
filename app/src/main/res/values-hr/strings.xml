@@ -1053,6 +1053,10 @@
     <string name="key_import_chains_no_results">Nijedan lanac ne odgovara vašem pretraživanju</string>
 
     <string name="key_import_device_count_get_started">Započni</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">Poruke</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">Preporučeno</string>
 
     <string name="welcome_tip">Savjet: Možete koristiti preglednik kao uređaj</string>

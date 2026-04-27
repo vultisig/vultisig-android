@@ -1,24 +1,24 @@
 package com.vultisig.wallet.data.models.payload
 
 /**
- * A single transfer message within a TON transaction.
+ * A single transfer message within a multi-message TON transaction.
  *
  * @property toAddress destination wallet address
  * @property toAmount amount in nanotons (must be positive)
- * @property comment optional transfer comment
- * @property stateInit optional base64-encoded state-init cell
- * @property payload optional base64-encoded custom payload cell
+ * @property payload optional base64-encoded custom payload cell (BoC)
+ * @property stateInit optional base64-encoded state-init cell (BoC), used for contract deployments
  */
 data class TonMessage(
     val toAddress: String,
     val toAmount: Long,
-    val comment: String = "",
-    val stateInit: String = "",
     val payload: String = "",
+    val stateInit: String = "",
 )
 
 /**
- * Signing payload for a TON transaction carrying one to four transfer messages.
+ * Signing payload for a TonConnect-originated TON transaction carrying one to four transfer
+ * messages. Mirrors the iOS `SignTon` value type and the on-the-wire `vultisig.keysign.v1.SignTon`
+ * proto.
  *
  * @property messages list of [TonMessage]s to include in the transaction
  */
@@ -29,11 +29,17 @@ data class SignTon(val messages: List<TonMessage>) {
      */
     fun validate() {
         require(messages.isNotEmpty()) { "SignTon must have at least one message" }
-        require(messages.size <= 4) { "SignTon supports at most 4 messages, got ${messages.size}" }
+        require(messages.size <= MAX_MESSAGES) {
+            "SignTon supports at most $MAX_MESSAGES messages, got ${messages.size}"
+        }
         messages.forEach { msg ->
             require(msg.toAmount > 0) {
                 "TonMessage toAmount must be positive, got ${msg.toAmount}"
             }
         }
+    }
+
+    companion object {
+        const val MAX_MESSAGES = 4
     }
 }

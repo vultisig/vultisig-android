@@ -11,7 +11,9 @@ import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SignTon
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.payload.TonMessage
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.proto.v1.CoinProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
@@ -48,9 +50,20 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             signAmino = from.signAmino,
             signDirect = from.signDirect,
             signSolana = from.signSolana,
-            // TODO: map from proto VSSignTon/VSTonMessage when commondata submodule exposes
-            // sign_ton
-            signTon = null,
+            signTon =
+                from.signTon?.let { proto ->
+                    SignTon(
+                        messages =
+                            proto.tonMessages.filterNotNull().map { msg ->
+                                TonMessage(
+                                    toAddress = msg.to,
+                                    toAmount = msg.amount.toLongOrNull() ?: 0L,
+                                    payload = msg.payload.orEmpty(),
+                                    stateInit = msg.stateInit.orEmpty(),
+                                )
+                            }
+                    )
+                },
             swapPayload =
                 when {
                     from.oneinchSwapPayload != null ->
