@@ -29,12 +29,14 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.CompressorStreamProvider
 import timber.log.Timber
 
+/** Hilt module that wires application-scoped data-layer dependencies. */
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface MainDataModule {
 
     companion object {
 
+        /** Provides the application-scoped [androidx.datastore.core.DataStore]. */
         @Provides
         @Singleton
         fun provideDataStore(@ApplicationContext context: Context) =
@@ -42,16 +44,20 @@ internal interface MainDataModule {
                 produceFile = { context.preferencesDataStoreFile("app_pref") }
             )
 
+        /** Provides the [IoDispatcher]-qualified [CoroutineDispatcher]. */
         @Provides @IoDispatcher fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
+        /** Provides the [MainDispatcher]-qualified [CoroutineDispatcher]. */
         @Provides
         @MainDispatcher
         fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
 
+        /** Provides the [DefaultDispatcher]-qualified [CoroutineDispatcher]. */
         @Provides
         @DefaultDispatcher
         fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
 
+        /** Provides the singleton [CompressorStreamProvider] for compression/decompression. */
         @Provides
         @Singleton
         fun provideCompressorStreamProvider(): CompressorStreamProvider = CompressorStreamFactory()
@@ -99,16 +105,20 @@ internal interface MainDataModule {
         }
     }
 
+    /** Binds [AppDataStoreImpl] as the [AppDataStore] implementation. */
     @Singleton @Binds fun bindAppDataStore(impl: AppDataStoreImpl): AppDataStore
 }
 
 private const val ENCRYPTED_PREFS_FILE = "token_encrypted_prefs"
 private const val SECURE_PREFS_FILE = "token_secure_prefs"
 
+/** Qualifier for the IO [CoroutineDispatcher]. */
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class IoDispatcher
 
+/** Qualifier for the main-thread [CoroutineDispatcher]. */
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class MainDispatcher
 
+/** Qualifier for the default [CoroutineDispatcher]. */
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class DefaultDispatcher
 
 /**

@@ -11,6 +11,7 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 private const val KEYSTORE = "AndroidKeyStore"
+/** Key alias used to identify the AES-256-GCM key in the AndroidKeyStore. */
 internal const val SECURE_PREFS_KEY_ALIAS = "vultisig_secure_prefs_key"
 private const val IV_LENGTH = 12
 private const val GCM_TAG_BITS = 128
@@ -162,6 +163,7 @@ internal class EncryptingSharedPreferences(
         }
 }
 
+/** [SharedPreferences.Editor] that AES-256-GCM-encrypts every value before writing to [editor]. */
 private class EncryptingEditor(
     private val editor: SharedPreferences.Editor,
     private val secretKey: SecretKey,
@@ -169,45 +171,55 @@ private class EncryptingEditor(
 
     private fun enc(plain: String) = encryptRaw(secretKey, plain)
 
+    /** Encrypts [value] and writes it under [key]; removes [key] when [value] is null. */
     override fun putString(key: String, value: String?): SharedPreferences.Editor {
         if (value != null) editor.putString(key, enc(P_STRING + value)) else editor.remove(key)
         return this
     }
 
+    /** Not supported; always throws [UnsupportedOperationException]. */
     override fun putStringSet(key: String, values: MutableSet<String>?): SharedPreferences.Editor =
         throw UnsupportedOperationException("String sets not supported by SecureSharedPreferences")
 
+    /** Encrypts [value] as a type-prefixed string and writes it under [key]. */
     override fun putInt(key: String, value: Int): SharedPreferences.Editor {
         editor.putString(key, enc(P_INT + value))
         return this
     }
 
+    /** Encrypts [value] as a type-prefixed string and writes it under [key]. */
     override fun putLong(key: String, value: Long): SharedPreferences.Editor {
         editor.putString(key, enc(P_LONG + value))
         return this
     }
 
+    /** Encrypts [value] as a type-prefixed string and writes it under [key]. */
     override fun putFloat(key: String, value: Float): SharedPreferences.Editor {
         editor.putString(key, enc(P_FLOAT + value))
         return this
     }
 
+    /** Encrypts [value] as a type-prefixed string and writes it under [key]. */
     override fun putBoolean(key: String, value: Boolean): SharedPreferences.Editor {
         editor.putString(key, enc(P_BOOL + value))
         return this
     }
 
+    /** Delegates removal of [key] to the underlying editor. */
     override fun remove(key: String): SharedPreferences.Editor {
         editor.remove(key)
         return this
     }
 
+    /** Delegates clear to the underlying editor. */
     override fun clear(): SharedPreferences.Editor {
         editor.clear()
         return this
     }
 
+    /** Commits all pending writes synchronously and returns success. */
     override fun commit(): Boolean = editor.commit()
 
+    /** Commits all pending writes asynchronously. */
     override fun apply() = editor.apply()
 }
