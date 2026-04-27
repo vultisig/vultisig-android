@@ -35,18 +35,26 @@ import timber.log.Timber
  */
 @Composable
 internal fun SecurityScannerBadget(status: TransactionScanStatus) {
-    Row(modifier = Modifier.height(20.dp), verticalAlignment = Alignment.CenterVertically) {
-        when (status) {
-            is TransactionScanStatus.Scanned ->
-                ScannedBadget(providerLogoId = status.result.provider)
-            is TransactionScanStatus.Scanning -> ScanningBadget()
-            is TransactionScanStatus.Error -> NotScannedBadget(providerLogoId = status.provider)
-            // [NotStarted] is the initial state; the badge stays empty until
-            // the scanner kicks off, which happens automatically on every
-            // verify-screen entry.
-            is TransactionScanStatus.NotStarted -> Unit
-        }
+    // [NotStarted] is the initial state; the badge stays absent until the
+    // scanner kicks off, which happens automatically on every verify-screen
+    // entry. Returning early avoids reserving a 20dp slot for an empty Row.
+    when (status) {
+        is TransactionScanStatus.Scanned ->
+            BadgeRow { ScannedBadget(providerLogoId = status.result.provider) }
+        is TransactionScanStatus.Scanning -> BadgeRow { ScanningBadget() }
+        is TransactionScanStatus.Error ->
+            BadgeRow { NotScannedBadget(providerLogoId = status.provider) }
+        is TransactionScanStatus.NotStarted -> Unit
     }
+}
+
+@Composable
+private fun BadgeRow(content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
+    Row(
+        modifier = Modifier.height(20.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        content = content,
+    )
 }
 
 @Composable

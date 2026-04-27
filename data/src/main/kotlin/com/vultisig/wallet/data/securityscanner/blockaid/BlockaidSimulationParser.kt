@@ -203,19 +203,27 @@ internal object BlockaidSimulationParser {
      * Blockaid encodes EVM `raw_value` as a hex string (e.g. "0x75652c52418a6").
      * `BigInteger.parse(_, 10)` would return null for hex-prefixed strings, so decode the prefix
      * explicitly. Accepts decimal as a fallback because Solana sometimes returns decimal strings.
+     *
+     * Hard length cap on the trimmed input bounds the work BigInteger does at parse time — a
+     * hostile or buggy response with a multi-megabyte `raw_value` would otherwise allocate a
+     * proportional BigInteger on the UI thread. [MAX_RAW_AMOUNT_LENGTH] = 80 is well above any
+     * legitimate u256 value (66 chars including `0x`) while still bounded.
      */
     internal fun parseRawAmount(raw: String): BigInteger? {
         val trimmed = raw.trim()
-        if (trimmed.isEmpty()) return null
-        return runCatching {
-                if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) {
-                    BigInteger(trimmed.drop(2), 16)
-                } else {
-                    BigInteger(trimmed)
-                }
+        if (trimmed.isEmpty() || trimmed.length > MAX_RAW_AMOUNT_LENGTH) return null
+        return try {
+            if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) {
+                BigInteger(trimmed.drop(2), 16)
+            } else {
+                BigInteger(trimmed)
             }
-            .getOrNull()
+        } catch (_: NumberFormatException) {
+            null
+        }
     }
+
+    private const val MAX_RAW_AMOUNT_LENGTH = 80
 
     private fun String?.equalsIgnoreCase(other: String?): Boolean {
         if (this == null && other == null) return true

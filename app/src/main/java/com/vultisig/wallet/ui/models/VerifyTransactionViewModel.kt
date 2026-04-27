@@ -64,7 +64,7 @@ internal data class TransactionDetailsUiModel(
     /**
      * Resolved hero content for the dApp signing screens.
      *
-     * Populated by [com.vultisig.wallet.data.usecases.BuildHeroContentUseCase] once the Blockaid
+     * Populated by [com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase] once the Blockaid
      * simulation completes. When non-null, screens render this in place of the legacy "function
      * name" text or the native-amount `VsOverviewToken`. When null, screens fall back to the
      * existing display logic (resolved native amount / decoded function name).

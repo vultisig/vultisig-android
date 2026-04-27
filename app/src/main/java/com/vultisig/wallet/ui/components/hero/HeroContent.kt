@@ -6,11 +6,14 @@ import androidx.compose.runtime.Immutable
  * Content for the dApp signing "hero" region.
  *
  * Drives the large, centered display above the transaction summary across the verify → sign → done
- * screens. The three shapes correspond to how much resolved information is available about the
+ * screens. The four shapes correspond to how much resolved information is available about the
  * action being signed:
- * - [Title] — function name only (decoded via 4byte), no resolved balance change. Used when
- *   Blockaid simulation failed or returned no diff. The optional [Title.caption] surfaces
- *   "Unverified function" so users see why the amount is missing.
+ * - [Title] — bare function name fallback. Used by the done screens before the simulation has
+ *   propagated. Carries no warning copy because at that point the signature is already on chain.
+ * - [Unverified] — explicit "Unverified function" hero (warning glyph + localized title +
+ *   review-details subtitle). Emitted by the use case when Blockaid simulation has loaded but
+ *   returned no balance change. The localized strings are resolved at the composable boundary so
+ *   the data type stays Android-resource-free.
  * - [Send] — resolved single-sided balance change, sourced from a Blockaid transfer simulation.
  * - [Swap] — resolved from-to balance change, sourced from a Blockaid swap simulation.
  *
@@ -24,9 +27,15 @@ sealed interface HeroContent {
     val title: String?
 
     @Immutable
-    data class Title(val text: String, val caption: String? = null) : HeroContent {
+    data class Title(val text: String) : HeroContent {
         override val title: String
             get() = text
+    }
+
+    @Immutable
+    data object Unverified : HeroContent {
+        override val title: String?
+            get() = null
     }
 
     @Immutable data class Send(override val title: String?, val coin: HeroCoinAmount) : HeroContent

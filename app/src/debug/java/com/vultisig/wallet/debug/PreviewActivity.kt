@@ -891,11 +891,7 @@ private fun blockaidHeroUnverifiedDetails(): TransactionDetailsUiModel {
         functionInputs = "[]",
         networkFeeFiatValue = "$0.95",
         networkFeeTokenValue = "0.00025 ETH",
-        heroContent =
-            HeroContent.Title(
-                text = "Unverified function",
-                caption = "Review the details below before signing",
-            ),
+        heroContent = HeroContent.Unverified,
     )
 }
 

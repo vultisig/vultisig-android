@@ -2,7 +2,6 @@
 
 package com.vultisig.wallet.ui.models.keysign
 
-import android.content.Context
 import android.net.nsd.NsdManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -95,7 +94,6 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
 import java.net.UnknownHostException
@@ -220,7 +218,6 @@ constructor(
     private val keysignViewModelFactory: KeysignViewModel.Factory,
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
-    @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -1087,16 +1084,11 @@ constructor(
             onError = { Timber.w(it, "Blockaid simulation failed during dApp signing") }
         ) {
             val result = withContext(Dispatchers.IO) { blockaidSimulationService.scan(payload) }
-            val unverifiedTitle = appContext.getString(R.string.dapp_hero_unverified_function_title)
-            val unverifiedSubtitle =
-                appContext.getString(R.string.dapp_hero_unverified_function_subtitle)
             val hero =
                 buildHeroContent(
                     simulation = result.simulation,
                     decodedFunctionName = decodedFunctionName,
                     didLoadSimulation = true,
-                    unverifiedFunctionTitle = unverifiedTitle,
-                    unverifiedFunctionSubtitle = unverifiedSubtitle,
                 )
             updateSendUiModel(verifyUiModel) { current ->
                 current.copy(transaction = current.transaction.copy(heroContent = hero))

@@ -180,9 +180,12 @@ internal fun BlockaidEvmSimulationResponseJson.toSecurityScannerResultOrNull(
             result = null,
             error = error,
         )
-    return runCatching { wrapped.toSecurityScannerResult(provider) }
-        .onFailure { Timber.w(it, "Blockaid EVM validation parse failed; hero falls back") }
-        .getOrNull()
+    return try {
+        wrapped.toSecurityScannerResult(provider)
+    } catch (e: SecurityScannerException) {
+        Timber.w(e, "Blockaid EVM validation parse failed; hero falls back")
+        null
+    }
 }
 
 /**
@@ -203,7 +206,10 @@ internal fun BlockaidSolanaSimulationResponseJson.toSecurityScannerResultOrNull(
             result = BlockaidTransactionScanResponseJson.BlockaidSolanaResultJson(validation),
             error = error,
         )
-    return runCatching { wrapped.toSolanaSecurityScannerResult(provider) }
-        .onFailure { Timber.w(it, "Blockaid Solana validation parse failed; hero falls back") }
-        .getOrNull()
+    return try {
+        wrapped.toSolanaSecurityScannerResult(provider)
+    } catch (e: SecurityScannerException) {
+        Timber.w(e, "Blockaid Solana validation parse failed; hero falls back")
+        null
+    }
 }

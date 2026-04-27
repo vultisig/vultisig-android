@@ -305,6 +305,101 @@ internal class BlockaidSimulationParserTest {
         assertNull(BlockaidSimulationParser.parseRawAmount("not-a-number"))
     }
 
+    @Test
+    fun `parseRawAmount rejects pathologically long input without parsing it`() {
+        // Defends against the parser allocating a multi-megabyte BigInteger
+        // when fed a hostile or malformed `raw_value`. Anything longer than
+        // a u256 hex literal (66 chars including 0x prefix) is rejected; the
+        // implementation caps at 80 to leave headroom for legitimate decimal
+        // representations.
+        val pathological = "0x" + "f".repeat(10_000)
+        assertNull(BlockaidSimulationParser.parseRawAmount(pathological))
+    }
+
+    @Test
+    fun `evm transfer with non-https logo url drops the logo to empty`() {
+        // Logo URLs come from untrusted Blockaid responses and flow into
+        // Coil. Anything other than https:// (e.g. http://, file://, ipfs://)
+        // is replaced with empty so the UI shows the chain-native fallback
+        // and Coil never gets a chance to follow a downgraded scheme.
+        val response = evmResponse(evmTransferJson(logoUrl = "http://logo/usdc.png"))
+
+        val transfer =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Transfer
+
+        assertEquals("", transfer.fromCoin.logo)
+    }
+
+    @Test
+    fun `evm transfer with bidi override codepoints in symbol strips them`() {
+        // U+202E (RTL OVERRIDE) and U+200B (ZERO WIDTH SPACE) embedded in a
+        // ticker would render as a different token visually than the bytes
+        // suggest. The sanitiser must strip them before the ticker is shown
+        // in the hero, otherwise a hostile response could disguise the asset
+        // the user is signing for.
+        val response = evmResponse(evmTransferJson(symbol = "U‮SDC​"))
+
+        val transfer =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Transfer
+
+        assertEquals("USDC", transfer.fromCoin.ticker)
+    }
+
+    @Test
+    fun `evm transfer with extreme decimals is clamped to the parser ceiling`() {
+        val response = evmResponse(evmTransferJson(decimals = 999_999))
+
+        val transfer =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Transfer
+
+        // 36 is the parser's hard upper bound; the wire said 999999.
+        assertEquals(36, transfer.fromCoin.decimals)
+    }
+
+    @Test
+    fun `evm transfer with negative decimals is clamped to zero`() {
+        val response = evmResponse(evmTransferJson(decimals = -5))
+
+        val transfer =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Transfer
+
+        assertEquals(0, transfer.fromCoin.decimals)
+    }
+
+    private fun evmTransferJson(
+        symbol: String = "USDC",
+        decimals: Int = 6,
+        logoUrl: String = "https://logo/usdc.png",
+    ): String {
+        // Quote and escape the variable strings via JsonPrimitive so embedded
+        // bidi/Unicode codepoints survive the JSON round-trip intact.
+        val symbolJson = kotlinx.serialization.json.JsonPrimitive(symbol).toString()
+        val logoJson = kotlinx.serialization.json.JsonPrimitive(logoUrl).toString()
+        return """{
+              "simulation": {
+                "account_summary": {
+                  "assets_diffs": [
+                    {
+                      "asset": {
+                        "type": "ERC20",
+                        "address": "0xA0b8...",
+                        "symbol": $symbolJson,
+                        "decimals": $decimals,
+                        "logo_url": $logoJson
+                      },
+                      "out": [{ "raw_value": "0x5f5e100" }]
+                    }
+                  ]
+                }
+              }
+            }"""
+            .trimIndent()
+    }
+
     // ---------- helpers ----------------------------------------------------
 
     private fun evmResponse(simulationJson: String): BlockaidEvmSimulationResponseJson =

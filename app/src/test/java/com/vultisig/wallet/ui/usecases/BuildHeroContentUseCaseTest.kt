@@ -6,15 +6,14 @@ import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationInfo
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test
 
 class BuildHeroContentUseCaseTest {
 
     private val build = BuildHeroContentUseCase()
-    private val unverifiedTitle = "Unverified function"
-    private val unverifiedSubtitle = "Review the details below before signing"
 
     @Test
     fun `transfer simulation maps to send hero with formatted amount`() {
@@ -33,13 +32,7 @@ class BuildHeroContentUseCaseTest {
             )
 
         val hero =
-            build(
-                simulation = sim,
-                decodedFunctionName = "Approve",
-                didLoadSimulation = true,
-                unverifiedFunctionTitle = unverifiedTitle,
-                unverifiedFunctionSubtitle = unverifiedSubtitle,
-            )
+            build(simulation = sim, decodedFunctionName = "Approve", didLoadSimulation = true)
 
         val send = hero as HeroContent.Send
         assertEquals("Approve", send.title)
@@ -74,13 +67,7 @@ class BuildHeroContentUseCaseTest {
             )
 
         val swap =
-            build(
-                simulation = sim,
-                decodedFunctionName = "Swap",
-                didLoadSimulation = true,
-                unverifiedFunctionTitle = unverifiedTitle,
-                unverifiedFunctionSubtitle = unverifiedSubtitle,
-            )
+            build(simulation = sim, decodedFunctionName = "Swap", didLoadSimulation = true)
                 as HeroContent.Swap
 
         assertEquals("Swap", swap.title)
@@ -89,35 +76,20 @@ class BuildHeroContentUseCaseTest {
     }
 
     @Test
-    fun `no simulation but loaded with function name renders unverified title with subtitle`() {
+    fun `no simulation but loaded with function name renders Unverified`() {
         // The decoded function name (e.g. "Pause") is intentionally NOT shown
         // as the hero title — it would read like the user's intended action.
-        // The hero shows a generic "Unverified function" instead, and the
+        // The hero shows the localized "Unverified function" instead, and the
         // decoded name lives in the function-signature row below.
         val hero =
-            build(
-                simulation = null,
-                decodedFunctionName = "Approve",
-                didLoadSimulation = true,
-                unverifiedFunctionTitle = unverifiedTitle,
-                unverifiedFunctionSubtitle = unverifiedSubtitle,
-            )
+            build(simulation = null, decodedFunctionName = "Approve", didLoadSimulation = true)
 
-        val title = hero as HeroContent.Title
-        assertEquals(unverifiedTitle, title.text)
-        assertEquals(unverifiedSubtitle, title.caption)
+        assertSame(HeroContent.Unverified, hero)
     }
 
     @Test
     fun `no simulation and no function name returns null`() {
-        val hero =
-            build(
-                simulation = null,
-                decodedFunctionName = null,
-                didLoadSimulation = true,
-                unverifiedFunctionTitle = unverifiedTitle,
-                unverifiedFunctionSubtitle = unverifiedSubtitle,
-            )
+        val hero = build(simulation = null, decodedFunctionName = null, didLoadSimulation = true)
 
         assertNull(hero)
     }
@@ -128,13 +100,7 @@ class BuildHeroContentUseCaseTest {
         // the simulation has even had a chance to come back. Caller should
         // render something benign (the existing title/native amount fallback).
         val hero =
-            build(
-                simulation = null,
-                decodedFunctionName = "Approve",
-                didLoadSimulation = false,
-                unverifiedFunctionTitle = unverifiedTitle,
-                unverifiedFunctionSubtitle = unverifiedSubtitle,
-            )
+            build(simulation = null, decodedFunctionName = "Approve", didLoadSimulation = false)
 
         assertNull(hero)
     }
@@ -145,13 +111,7 @@ class BuildHeroContentUseCaseTest {
         val sim = BlockaidSimulationInfo.Transfer(coin, BigInteger("1000000000000000000"))
 
         val hero =
-            build(
-                simulation = sim,
-                decodedFunctionName = null,
-                didLoadSimulation = true,
-                unverifiedFunctionTitle = unverifiedTitle,
-                unverifiedFunctionSubtitle = unverifiedSubtitle,
-            )
+            build(simulation = sim, decodedFunctionName = null, didLoadSimulation = true)
                 as HeroContent.Send
 
         assertEquals("1", hero.coin.amount)
@@ -164,21 +124,18 @@ class BuildHeroContentUseCaseTest {
         val sim = BlockaidSimulationInfo.Transfer(coin, BigInteger("1234567"))
 
         val hero =
-            build(
-                simulation = sim,
-                decodedFunctionName = null,
-                didLoadSimulation = true,
-                unverifiedFunctionTitle = unverifiedTitle,
-                unverifiedFunctionSubtitle = unverifiedSubtitle,
-            )
+            build(simulation = sim, decodedFunctionName = null, didLoadSimulation = true)
                 as HeroContent.Send
 
         assertEquals("1.234567", hero.coin.amount)
     }
 
     @Test
-    fun `sentinel large amount survives formatter without overflow`() {
-        // MAX_UINT256-style sentinel — must not throw or return scientific notation.
+    fun `MAX_UINT256 sentinel preserves all integer digits without scientific notation`() {
+        // Defends against the previous MathContext-based formatter which would
+        // round significant digits and clip the integer portion of huge values.
+        // movePointLeft + setScale guarantees integer digits survive untouched
+        // and toPlainString never falls back to exponent form.
         val coin = simCoin(decimals = 18, ticker = "USDC")
         val maxU256 =
             BigInteger(
@@ -187,15 +144,17 @@ class BuildHeroContentUseCaseTest {
         val sim = BlockaidSimulationInfo.Transfer(coin, maxU256)
 
         val hero =
-            build(
-                simulation = sim,
-                decodedFunctionName = "Approve",
-                didLoadSimulation = true,
-                unverifiedFunctionTitle = unverifiedTitle,
-                unverifiedFunctionSubtitle = unverifiedSubtitle,
-            )
+            build(simulation = sim, decodedFunctionName = "Approve", didLoadSimulation = true)
+                as HeroContent.Send
 
-        assertNotNull(hero)
+        // 2^256 - 1 divided by 1e18, in plain decimal form: 60 integer
+        // digits + 18 fractional digits, no exponent notation.
+        assertEquals(
+            "115792089237316195423570985008687907853269984665640564039457.584007913129639935",
+            hero.coin.amount,
+        )
+        assertFalse(hero.coin.amount.contains('E'), "amount must not use scientific notation")
+        assertFalse(hero.coin.amount.contains('e'), "amount must not use scientific notation")
     }
 
     private fun simCoin(decimals: Int, ticker: String): BlockaidSimulationCoin =

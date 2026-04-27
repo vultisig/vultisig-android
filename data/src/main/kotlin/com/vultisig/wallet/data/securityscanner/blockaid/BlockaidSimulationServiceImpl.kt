@@ -79,15 +79,20 @@ internal class BlockaidSimulationServiceImpl(private val rpcClient: BlockaidRpcC
 
         withContext(NonCancellable) {
             mutex.withLock {
-                inflight.remove(key)
+                // Capture our former owned entry so we can detect whether
+                // [invalidateAll] has run while our dispatch was in flight. If
+                // the entry is no longer ours we MUST NOT write to [cache] —
+                // doing so would resurrect data the caller meant to clear.
+                val ownedEntry = inflight.remove(key)
+                val stillOwns = ownedEntry === pending
                 // Empty results are cached: when the chain returns no diff or
                 // no risk, the verdict is stable for that calldata. Errors
                 // are NOT cached so the next screen can retry — on the same
                 // payload, a transient network error today shouldn't poison
                 // verify → done forever.
-                if (outcome.isSuccess) {
+                if (outcome.isSuccess && stillOwns) {
                     cache[key] = result
-                } else {
+                } else if (!outcome.isSuccess) {
                     outcome.exceptionOrNull()?.let {
                         if (it !is CancellationException) {
                             Timber.w(it, "Blockaid simulation scan failed for %s", key)

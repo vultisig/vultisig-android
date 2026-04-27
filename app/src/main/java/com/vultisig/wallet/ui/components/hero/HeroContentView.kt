@@ -42,7 +42,12 @@ internal fun HeroContentView(content: HeroContent, modifier: Modifier = Modifier
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         when (content) {
-            is HeroContent.Title -> TitleOnlyHero(content)
+            is HeroContent.Title -> TitleOnlyHero(text = content.text, caption = null)
+            HeroContent.Unverified ->
+                TitleOnlyHero(
+                    text = stringResource(R.string.dapp_hero_unverified_function_title),
+                    caption = stringResource(R.string.dapp_hero_unverified_function_subtitle),
+                )
             is HeroContent.Send -> SendHero(content)
             is HeroContent.Swap -> SwapHero(content)
         }
@@ -50,19 +55,21 @@ internal fun HeroContentView(content: HeroContent, modifier: Modifier = Modifier
 }
 
 /**
- * Renders a function-name-only hero — used when 4byte decoded the call but Blockaid simulation
- * returned no balance change.
+ * Renders a centered title-only hero with an optional explainer caption.
  *
- * The previous title-only treatment left users without a clear cue: the function name read like an
- * action verb and the tiny "Unverified function" caption blended into the card. This redesign
- * establishes a three-tier hierarchy:
- * 1. warning glyph in `alerts.warning` so the card visibly flags caution
- * 2. function name at title2 weight so the user can identify the call
- * 3. explainer copy below telling the user what could not be verified and where to look next
- *    ("Review details below")
+ * Two callers:
+ * - [HeroContent.Title] passes a bare function name and no caption — used as the loading-tick
+ *   fallback on done screens before simulation propagates.
+ * - [HeroContent.Unverified] passes the localized "Unverified function" + "Review the details below
+ *   before signing" pair — emitted by the use case when Blockaid simulation has loaded but returned
+ *   no balance change.
+ *
+ * Hierarchy: warning glyph → title at `title2` weight → explainer at `body.s.medium`. The glyph is
+ * always rendered because both states represent a missing balance change and should visually flag
+ * caution.
  */
 @Composable
-private fun TitleOnlyHero(content: HeroContent.Title) {
+private fun TitleOnlyHero(text: String, caption: String?) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -74,13 +81,13 @@ private fun TitleOnlyHero(content: HeroContent.Title) {
             tint = Theme.v2.colors.alerts.warning,
         )
         Text(
-            text = content.text,
+            text = text,
             style = Theme.brockmann.headings.title2,
             color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
-        content.caption?.let {
+        caption?.let {
             Text(
                 text = it,
                 style = Theme.brockmann.body.s.medium,
@@ -197,8 +204,10 @@ private fun ArrowDivider() {
             size = 12.dp,
             tint = Theme.v2.colors.text.tertiary,
         )
+        // Use the localized resource as-is; lowercasing translated strings
+        // mid-sentence breaks grammar in some locales (e.g. Russian, German).
         Text(
-            text = stringResource(id = R.string.swap_form_dst_token_title).lowercase(),
+            text = stringResource(id = R.string.swap_form_dst_token_title),
             style = Theme.brockmann.supplementary.captionSmall,
             color = Theme.v2.colors.text.tertiary,
         )
@@ -211,7 +220,13 @@ private fun ArrowDivider() {
 @Preview
 @Composable
 private fun PreviewHeroContentTitleOnly() {
-    HeroContentView(content = HeroContent.Title(text = "Approve", caption = "Unverified function"))
+    HeroContentView(content = HeroContent.Title(text = "Approve"))
+}
+
+@Preview
+@Composable
+private fun PreviewHeroContentUnverified() {
+    HeroContentView(content = HeroContent.Unverified)
 }
 
 @Preview

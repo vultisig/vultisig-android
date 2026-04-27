@@ -16,6 +16,7 @@ fun BigInteger.toHexString(): String {
  * a leading zero to guarantee an even digit count after the `0x` prefix.
  */
 fun BigInteger.toEvenLengthHexString(): String {
+    require(signum() >= 0) { "toEvenLengthHexString does not support negative values" }
     val hex = this.toString(16)
     val padded = if (hex.length % 2 == 1) "0$hex" else hex
     return padded.add0x()

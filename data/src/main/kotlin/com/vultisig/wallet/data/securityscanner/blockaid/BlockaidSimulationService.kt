@@ -10,8 +10,10 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
  * without a cache they would each re-hit Blockaid's API and risk showing inconsistent data after
  * the user already committed to signing.
  *
- * Implementations MUST coalesce concurrent calls for the same key, return cached successes
- * (including empty results), and re-throw on transient failures so the next screen can retry.
+ * Implementations MUST coalesce concurrent calls for the same key and cache successful scans
+ * (including empty results). Transient failures are NOT cached and are surfaced to the caller as
+ * [BlockaidKeysignScanResult.EMPTY] so the next screen entry triggers a fresh scan rather than
+ * propagating the failure into the signing flow.
  */
 interface BlockaidSimulationService {
 
