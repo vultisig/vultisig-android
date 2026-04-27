@@ -121,8 +121,8 @@
     <string name="keysign_screen_preparing_vault">PRIPREMA SEFA…</string>
     <string name="vault_settings_delete_vault_caution1">Ovaj sef će biti trajno uklonjen</string>
     <string name="vault_settings_delete_vault_caution2">Svjestan sam da mogu izgubiti sredstva</string>
-    <string name="vault_settings_delete_vault_caution3">Napravio sam sigurnosnu kopiju spremišta</string>
-    <string name="confirm_delete_permanent_delete_message">Trajno brišete svoje spremište</string>
+    <string name="vault_settings_delete_vault_caution3">Napravio sam sigurnosnu kopiju spremišta za kasniju obnovu</string>
+    <string name="confirm_delete_permanent_delete_message">Trajno brišete svoj udio spremišta iz ove aplikacije</string>
     <string name="confirm_delete_delete_vault">Izbriši sef</string>
     <string name="rename_vault_screen_vault_name">Ime sefa</string>
     <string name="faq_settings_q2">Koje su prednosti korištenja Vultisiga?</string>

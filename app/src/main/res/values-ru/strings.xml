@@ -158,13 +158,13 @@
     <string name="successfully_scanned_barcode">Штрихкод успешно отсканирован: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">Я понимаю, что хранилище будет удалено навсегда</string>
     <string name="vault_settings_delete_vault_caution2">Я понимаю, что могу потерять средства</string>
-    <string name="vault_settings_delete_vault_caution3">Я сделал резервную копию хранилища</string>
+    <string name="vault_settings_delete_vault_caution3">Я сделал резервную копию хранилища для последующего восстановления</string>
     <string name="vault_settings_delete_vault_name">Имя хранилища:</string>
     <string name="vault_settings_delete_vault_value">Стоимость хранилища:</string>
     <string name="vault_settings_delete_vault_id">Идентификатор устройства:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">Ключ ECDSA:</string>
     <string name="vault_settings_delete_vault_eddsa_key">Ключ EdDSA:</string>
-    <string name="confirm_delete_permanent_delete_message">Вы навсегда удаляете своё хранилище</string>
+    <string name="confirm_delete_permanent_delete_message">Вы навсегда удаляете свою долю хранилища из этого приложения</string>
     <string name="confirm_delete_delete_vault">Удалить хранилище</string>
     <string name="vault_accounts_account_assets">%1$s активы</string>
     <string name="s_of_s_vault">%1$s из %2$s хранилища</string>
