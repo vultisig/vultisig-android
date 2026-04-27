@@ -16,7 +16,7 @@ internal class BittensorStatusProvider @Inject constructor(private val bittensor
             when (bittensorApi.getTxStatus(txHash)?.success) {
                 true -> TransactionResult.Confirmed
                 false -> TransactionResult.Failed("Transaction failed on Bittensor")
-                null -> TransactionResult.NotFound
+                null -> TransactionResult.Pending
             }
         } catch (e: CancellationException) {
             throw e
