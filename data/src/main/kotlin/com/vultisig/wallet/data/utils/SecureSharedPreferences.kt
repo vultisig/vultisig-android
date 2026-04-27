@@ -21,34 +21,38 @@ private const val P_INT = "i:"
 private const val P_LONG = "l:"
 private const val P_FLOAT = "f:"
 
+private val secureKeyLock = Any()
+
 /**
  * Builds or retrieves the AES-256-GCM AndroidKeyStore key used to encrypt preference values.
  * StrongBox is not requested to avoid keystore-daemon stalls on certain Pixel/Samsung devices.
  */
-internal fun buildSecurePrefsKey(): SecretKey {
-    val ks = KeyStore.getInstance(KEYSTORE).apply { load(null) }
-    (ks.getEntry(SECURE_PREFS_KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.let {
-        return it.secretKey
+internal fun buildSecurePrefsKey(): SecretKey =
+    synchronized(secureKeyLock) {
+        val ks = KeyStore.getInstance(KEYSTORE).apply { load(null) }
+        (ks.getEntry(SECURE_PREFS_KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.let {
+            return@synchronized it.secretKey
+        }
+        val spec =
+            KeyGenParameterSpec.Builder(
+                    SECURE_PREFS_KEY_ALIAS,
+                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
+                )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .build()
+        KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
+            .apply { init(spec) }
+            .generateKey()
     }
-    val spec =
-        KeyGenParameterSpec.Builder(
-                SECURE_PREFS_KEY_ALIAS,
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
-            )
-            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setKeySize(256)
-            .build()
-    return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
-        .apply { init(spec) }
-        .generateKey()
-}
 
 /** Encrypts [plaintext] with AES-256-GCM and returns `Base64(IV || ciphertext)`. */
 private fun encryptRaw(secretKey: SecretKey, plaintext: String): String {
     val cipher = Cipher.getInstance("AES/GCM/NoPadding")
     cipher.init(Cipher.ENCRYPT_MODE, secretKey)
     val iv = cipher.iv
+    check(iv.size == IV_LENGTH) { "Unexpected GCM IV length: ${iv.size}" }
     val ct = cipher.doFinal(plaintext.toByteArray(Charsets.UTF_8))
     val out = ByteArray(IV_LENGTH + ct.size)
     iv.copyInto(out)
@@ -91,9 +95,9 @@ internal class EncryptingSharedPreferences(
             decryptOrNull(it)?.takeIf { d -> d.startsWith(P_STRING) }?.removePrefix(P_STRING)
         } ?: defValue
 
-    /** StringSet is not supported; always returns [defValues]. */
+    /** StringSet is not supported; always throws [UnsupportedOperationException]. */
     override fun getStringSet(key: String, defValues: MutableSet<String>?): MutableSet<String>? =
-        defValues
+        throw UnsupportedOperationException("String sets not supported by SecureSharedPreferences")
 
     /** Returns the decrypted int for [key], or [defValue] if absent or undecryptable. */
     override fun getInt(key: String, defValue: Int): Int =
@@ -168,10 +172,8 @@ private class EncryptingEditor(
         return this
     }
 
-    override fun putStringSet(key: String, values: MutableSet<String>?): SharedPreferences.Editor {
-        editor.remove(key)
-        return this
-    }
+    override fun putStringSet(key: String, values: MutableSet<String>?): SharedPreferences.Editor =
+        throw UnsupportedOperationException("String sets not supported by SecureSharedPreferences")
 
     override fun putInt(key: String, value: Int): SharedPreferences.Editor {
         editor.putString(key, enc(P_INT + value))

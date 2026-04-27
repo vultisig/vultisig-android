@@ -134,7 +134,11 @@ private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPr
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
-        } catch (e: Exception) {
+        } catch (e: GeneralSecurityException) {
+            Timber.e(e, "Cannot open legacy encrypted prefs for migration; discarding legacy data")
+            legacyFile.delete()
+            return
+        } catch (e: IOException) {
             Timber.e(e, "Cannot open legacy encrypted prefs for migration; discarding legacy data")
             legacyFile.delete()
             return
@@ -148,6 +152,12 @@ private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPr
             is Int -> editor.putInt(key, value)
             is Long -> editor.putLong(key, value)
             is Float -> editor.putFloat(key, value)
+            else ->
+                Timber.w(
+                    "Skipping legacy pref %s of unsupported type %s during migration",
+                    key,
+                    value?.javaClass?.simpleName,
+                )
         }
     }
     if (editor.commit()) {
