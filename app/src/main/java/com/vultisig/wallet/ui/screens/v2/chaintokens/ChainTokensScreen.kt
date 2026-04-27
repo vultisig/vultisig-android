@@ -273,7 +273,9 @@ internal fun ChainTokensScreen(
 
                     TopShineContainer(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         LazyColumn {
-                            itemsIndexed(items = uiModel.tokens) { index, token ->
+                            itemsIndexed(items = uiModel.tokens, key = { _, token -> token.id }) {
+                                index,
+                                token ->
                                 Column {
                                     ChainAccount(
                                         title = token.name,

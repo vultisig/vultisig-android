@@ -107,7 +107,7 @@ private fun SelectNetworkScreen(
                         UiSpacer(16.dp)
                     }
 
-                    itemsIndexed(networks) { index, item ->
+                    itemsIndexed(networks, key = { _, item -> item.chain.id }) { index, item ->
                         val isFirst = index == 0
                         val isLast = index == networks.size - 1
                         val rounding = 12.dp

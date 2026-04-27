@@ -106,7 +106,7 @@ private fun ReviewVaultDevicesScreen(
             UiSpacer(size = 32.dp)
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                itemsIndexed(uiState.devices) { index, device ->
+                itemsIndexed(uiState.devices, key = { _, device -> device }) { index, device ->
                     VaultDeviceItem(
                         label =
                             if (device.equals(uiState.localPartyId, ignoreCase = true)) {

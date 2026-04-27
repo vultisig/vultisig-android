@@ -56,7 +56,7 @@ private fun FaqSettingScreen(onBackClick: () -> Unit, state: FAQSettingUiModel) 
     ) {
         V2Container(type = ContainerType.SECONDARY) {
             LazyColumn(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)) {
-                itemsIndexed(state.questions) { index, faq ->
+                itemsIndexed(state.questions, key = { _, faq -> faq.question }) { index, faq ->
                     FAQSettingItem(faq = faq, isLastItem = index == state.questions.lastIndex)
                 }
             }
