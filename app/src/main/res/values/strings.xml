@@ -81,6 +81,12 @@
     <string name="tron_defi_countdown_days">%1$d days, %2$d hrs</string>
     <string name="tron_defi_countdown_hours">%1$d hrs, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">TRX coin not found in vault</string>
+    <string name="tron_freeze_screen_title">Freeze TRON</string>
+    <string name="tron_unfreeze_screen_title">Unfreeze TRON</string>
+    <string name="tron_resource_type">Resource Type</string>
+    <string name="tron_resource_bandwidth">Bandwidth</string>
+    <string name="tron_resource_energy">Energy</string>
+    <string name="tron_frozen_balances_error">Unable to load frozen balances. Pull to retry.</string>
     <string name="circle_defi_description">Deposit your USDC into a Circle account and earn yield. Securely within your Vultisig vault.</string>
     <string name="circle_defi_control_info">Funds remain fully under your vault\'s control. Circle accounts are self-custodial and yield is generated through secure off-chain treasuries.</string>
     <string name="usdc_deposit_title">USDC Deposit</string>
@@ -188,6 +194,7 @@
     <string name="send_error_insufficient_balance">Insufficient funds</string>
     <string name="send_error_msca_not_deployed">MSCA account not deployed yet, please try again</string>
     <string name="send_error_insufficient_native_balance_with_fees">Insufficient %1$s balance</string>
+    <string name="send_error_insufficient_frozen_balance">Amount exceeds frozen %1$s balance</string>
     <string name="settings_screen_language">Language</string>
     <string name="settings_screen_currency">Currency</string>
     <string name="settings_screen_share_the_app">Share the App</string>
@@ -435,6 +442,7 @@
     <string name="form_token_selection_asset">Asset</string>
     <string name="insufficient_native_token">Not enough %1$s to cover gas fees</string>
     <string name="swap_error_amount_too_low">Swap Amount too low</string>
+    <string name="swap_error_amount_below_dust_threshold">Amount is less than the dust threshold. Please increase the amount and try again.</string>
     <string name="swap_error_insufficient_balance_and_fees">Insufficient %1$s balance for the swap and gas fees. Top up %1$s or reduce swap amount</string>
     <string name="swap_error_insufficient_source_token">Insufficient %1$s balance to swap</string>
     <string name="swap_error_insufficient_gas_fees">Not enough %1$s to cover gas fees. Please fund the wallet.</string>
@@ -524,10 +532,9 @@
     <string name="peer_discovery_scan_with_n_device">Scan with %1$s device</string>
     <string name="peer_discovery_waiting_for_devices_action">Waiting for devices to connect…</string>
     <string name="peer_discovery_devices_n_of_n">Devices (%1$s/%2$s)</string>
-    <string name="scan_qr_code_modal_annotation">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
-    <string name="scan_qr_code_modal_next">Next</string>
-    <string name="scan_qr_code_modal_scan_the">Scan the</string>
-    <string name="scan_qr_code_modal_qr_code">QR code</string>
+    <string name="scan_qr_code_modal_annotation">On your other device, open the app and tap \"Scan QR\" to connect it.</string>
+    <string name="scan_qr_code_modal_next">Start scanning</string>
+    <string name="scan_qr_code_modal_scan_the">Scan the QR on your other devices</string>
     <string name="home_screen_scan_qr_code">Scan QR</string>
     <string name="select_vault_type_next">Next</string>
     <string name="select_vault_type_choose_setup">Choose Setup</string>
@@ -889,6 +896,8 @@
     <string name="import_file_import_your_vault_share">Import your vault share</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Supported file types: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Vault with duplicate name exists</string>
+    <string name="join_key_gen_vault_already_on_device">Vault \"%1$s\" is already on this device</string>
+    <string name="join_key_gen_open_existing_vault">Open vault</string>
     <string name="join_key_gen_unknown_tssaction">Unknown TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">Could not find the other device on your network</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Waiting for other devices to join</string>
@@ -1107,6 +1116,7 @@
     <string name="key_import_chains_get_started">Get started</string>
     <string name="key_import_chains_no_results">No chains match your search</string>
     <string name="key_import_device_count_get_started">Get started</string>
+    <string name="choose_device_count_a11y_description">How many devices do you have? %1$s selected. Tap to choose another.</string>
     <string name="key_import_error_title">Key Import Failed</string>
     <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
     <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>

@@ -94,8 +94,7 @@ data class PeerDiscoveryUiModel(
     val devices: List<String> = emptyList(),
     val selectedDevices: List<String> = emptyList(),
     val minimumDevices: Int = MIN_KEYGEN_DEVICES,
-    // we're trying to promote minimum of three devices
-    val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES + 1,
+    val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES,
     val showQrHelpModal: Boolean = false,
     val showDevicesHint: Boolean = true,
     val connectingToServer: ConnectingToServerUiModel? = null,
@@ -145,7 +144,7 @@ constructor(
         MutableStateFlow(
             PeerDiscoveryUiModel(
                 minimumDevices = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
-                minimumDevicesDisplayed = (args?.deviceCount?.plus(1)) ?: (MIN_KEYGEN_DEVICES + 1),
+                minimumDevicesDisplayed = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
                 enableNotification = false,
             )
         )
@@ -412,7 +411,7 @@ constructor(
                     state.update {
                         it.copy(
                             minimumDevices = existingVault.signers.size,
-                            minimumDevicesDisplayed = existingVault.signers.size + 1,
+                            minimumDevicesDisplayed = existingVault.signers.size,
                         )
                     }
                 }

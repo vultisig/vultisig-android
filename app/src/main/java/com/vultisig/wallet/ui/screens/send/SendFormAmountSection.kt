@@ -176,10 +176,8 @@ internal fun FoldableAmountWidget(
                         focusManager.clearFocus()
                         onSend()
                     },
-                    modifier =
-                        Modifier.padding(horizontal = 54.dp)
-                            .align(Alignment.Center)
-                            .testTag("SendFormScreen.amountField"),
+                    modifier = Modifier.padding(horizontal = 54.dp).align(Alignment.Center),
+                    inputModifier = Modifier.testTag("SendFormScreen.amountField"),
                 )
 
                 if (!isCircleMode) {
@@ -231,9 +229,11 @@ internal fun FoldableAmountWidget(
                 )
 
                 val ticker = state.selectedCoin?.title?.let { " $it" } ?: ""
+                val balanceText =
+                    state.tronBalanceAvailableOverride ?: state.selectedCoin?.balance ?: "0"
 
                 Text(
-                    text = (state.selectedCoin?.balance ?: "0") + ticker,
+                    text = balanceText + ticker,
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.secondary,
                     textAlign = TextAlign.End,

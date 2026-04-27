@@ -1,8 +1,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import java.math.BigInteger
-import org.json.JSONArray
-import org.json.JSONObject
 import vultisig.keysign.v1.CosmosCoin
 import vultisig.keysign.v1.WasmExecuteContractPayload
 import wallet.core.jni.Base64
@@ -67,31 +65,14 @@ object ThorchainFunctions {
         require(tokenContract.isNotEmpty()) { "tokenContract cannot be empty" }
         require(denom.isNotEmpty()) { "Denom cannot be empty" }
 
-        val depositMsg = JSONObject().apply { put(KEY_DEPOSIT, JSONObject()) }
-        val base64Msg = Base64.encode(depositMsg.toString().toByteArray(Charsets.UTF_8))
-
-        val fullPayload =
-            JSONObject().apply {
-                put(
-                    KEY_EXECUTE,
-                    JSONObject().apply {
-                        put(KEY_CONTRACT_ADDR, tokenContract)
-                        put(KEY_MSG, base64Msg)
-                        put(
-                            KEY_AFFILIATE,
-                            JSONArray().apply {
-                                put(VULTISIG_AFFILIATE_ADDRESS)
-                                put(10)
-                            },
-                        )
-                    },
-                )
-            }
+        val base64Msg = Base64.encode("""{"$KEY_DEPOSIT":{}}""".toByteArray(Charsets.UTF_8))
+        val executeMsg =
+            """{"$KEY_EXECUTE":{"$KEY_CONTRACT_ADDR":"$tokenContract","$KEY_MSG":"$base64Msg","$KEY_AFFILIATE":["$VULTISIG_AFFILIATE_ADDRESS",10]}}"""
 
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = stakingContract,
-            executeMsg = fullPayload.toString(),
+            executeMsg = executeMsg,
             coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
         )
     }
@@ -108,15 +89,10 @@ object ThorchainFunctions {
         require(slippage.isNotEmpty()) { "slippage cannot be empty" }
         require(denom.isNotEmpty()) { "denom cannot be empty" }
 
-        val executePayload =
-            JSONObject().apply {
-                put(KEY_WITHDRAW, JSONObject().apply { put(KEY_SLIPPAGE, slippage) })
-            }
-
         return WasmExecuteContractPayload(
             senderAddress = fromAddress,
             contractAddress = tokenContract,
-            executeMsg = executePayload.toString(),
+            executeMsg = """{"$KEY_WITHDRAW":{"$KEY_SLIPPAGE":"$slippage"}}""",
             coins = listOf(CosmosCoin(denom = denom, amount = amount.toString())),
         )
     }

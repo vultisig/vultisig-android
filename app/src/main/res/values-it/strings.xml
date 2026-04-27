@@ -182,6 +182,7 @@
     <string name="send_error_insufficient_balance">Fondi insufficienti</string>
     <string name="send_error_msca_not_deployed">Account MSCA non ancora distribuito, riprova</string>
     <string name="send_error_insufficient_native_balance_with_fees">Saldo %1$s insufficiente</string>
+    <string name="send_error_insufficient_frozen_balance">L\'importo supera il saldo %1$s congelato</string>
     <string name="verify_swap_agree_receive_amount">Accetto l\'importo minimo che riceverò</string>
     <string name="vault_settings_success_backup_file">file salvato in Download/%1$s</string>
     <string name="swap_form_estimated_fees_title">Commissione di cambio</string>
@@ -337,6 +338,7 @@
     <string name="form_token_selection_asset">Risorsa</string>
     <string name="insufficient_native_token">%1$s insufficienti per le commissioni del gas</string>
     <string name="swap_error_amount_too_low">Importo dello swap troppo basso</string>
+    <string name="swap_error_amount_below_dust_threshold">L\'importo è inferiore alla soglia di dust. Aumenta l\'importo e riprova.</string>
     <string name="swap_error_insufficient_balance_and_fees">Saldo %1$s insufficiente per lo swap e le commissioni del gas. Ricarica %1$s o riduci l\'importo dello swap</string>
     <string name="swap_error_insufficient_source_token">Saldo %1$s insufficiente per lo scambio</string>
     <string name="swap_error_insufficient_gas_fees">Non c\'è abbastanza %1$s per coprire le commissioni del gas. Si prega di finanziare il portafoglio.</string>
@@ -471,6 +473,12 @@
     <string name="tron_defi_countdown_days">%1$d giorni, %2$d h</string>
     <string name="tron_defi_countdown_hours">%1$d h, %2$d min</string>
     <string name="tron_defi_error_trx_not_in_vault">Moneta TRX non trovata nel vault</string>
+    <string name="tron_freeze_screen_title">Congela TRON</string>
+    <string name="tron_unfreeze_screen_title">Scongela TRON</string>
+    <string name="tron_frozen_balances_error">Impossibile caricare i saldi congelati. Trascina per riprovare.</string>
+    <string name="tron_resource_type">Tipo di risorsa</string>
+    <string name="tron_resource_bandwidth">Larghezza di Banda</string>
+    <string name="tron_resource_energy">Energia</string>
     <string name="deposit_form_operator_slippage_title">Slippage</string>
     <string name="slippage_required_error">Lo slippage è obbligatorio</string>
     <string name="slippage_invalid_error">Lo slippage deve essere compreso tra 1 e 100</string>
@@ -713,6 +721,8 @@
     <string name="keysign_password_enter_your_password">Inserisci la tua password</string>
     <string name="migration_password_enter_your_password_to_unlock">Inserisci la tua password per sbloccare la tua condivisione server e avviare l\'aggiornamento</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Esiste un Vault con nome duplicato</string>
+    <string name="join_key_gen_vault_already_on_device">Il Vault \"%1$s\" è già su questo dispositivo</string>
+    <string name="join_key_gen_open_existing_vault">Apri Vault</string>
     <string name="join_key_gen_unknown_tssaction">TssAction sconosciuta</string>
     <string name="join_key_gen_mediator_discovery_timeout">Impossibile trovare l\'altro dispositivo sulla rete</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">In attesa che altri dispositivi si uniscano</string>
@@ -808,7 +818,7 @@
     <string name="vault_backup_screen_donot_receive_email">Non hai ricevuto un\'email?</string>
     <string name="onboarding_desc_page_5_part_2">separatamente in un</string>
     <string name="onboarding_desc_page_5_part_3">Posizione diversa</string>
-    <string name="scan_qr_code_modal_annotation">Scarica Vultisig sugli altri tuoi dispositivi e seleziona \"Scansiona codice QR\".</string>
+    <string name="scan_qr_code_modal_annotation">Sull\'altro dispositivo, apri l\'app e tocca \"Scansiona codice QR\" per collegarlo.</string>
     <string name="onboarding_desc_page_2_part_3">per aumentare la sicurezza e</string>
     <string name="onboarding_desc_page_2_part_4">Rimuovi il singolo punto di errore</string>
     <string name="onboarding_desc_page_3_part_1">Ogni dispositivo</string>
@@ -861,14 +871,13 @@
     <string name="fast_vault_password_screen_reenter_password_hint">Reinserisci la password</string>
     <string name="fast_vault_name_screen_next">Avanti</string>
     <string name="enter_email_screen_next">Avanti</string>
-    <string name="scan_qr_code_modal_next">Avanti</string>
+    <string name="scan_qr_code_modal_next">Avvia scansione</string>
     <string name="peer_discovery_action_next_title">Avanti</string>
     <string name="home_page_no_chains_enabled">Nessuna catena abilitata</string>
     <string name="onboarding_desc_page_3_part_3">condivisione di un vault</string>
     <string name="select_vault_type_fast_title">Configurazione rapida su un solo dispositivo</string>
     <string name="select_vault_type_fast_desc_1">È necessario un solo dispositivo</string>
-    <string name="scan_qr_code_modal_scan_the">Scansiona il</string>
-    <string name="scan_qr_code_modal_qr_code">Codice QR</string>
+    <string name="scan_qr_code_modal_scan_the">Scansiona il QR sui tuoi altri dispositivi</string>
     <string name="tx_overview_screen_title">Fatto</string>
     <string name="fast_vault_password_screen_warning">La password non può essere reimpostata o recuperata</string>
     <string name="referral_top_bar_list">Referral</string>
@@ -1039,6 +1048,7 @@
     <string name="key_import_chains_no_results">Nessuna catena corrisponde alla tua ricerca</string>
 
     <string name="key_import_device_count_get_started">Inizia</string>
+    <string name="choose_device_count_a11y_description">Quanti dispositivi hai? Selezione attuale: %1$s. Tocca per sceglierne un altro.</string>
     <string name="vault_count_recommended">Consigliata</string>
 
     <string name="welcome_tip">Suggerimento: Puoi usare un browser come dispositivo</string>

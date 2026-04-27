@@ -81,6 +81,12 @@
     <string name="tron_defi_countdown_days">%1$d일 %2$d시간</string>
     <string name="tron_defi_countdown_hours">%1$d시간 %2$d분</string>
     <string name="tron_defi_error_trx_not_in_vault">볼트에서 TRX 코인을 찾을 수 없습니다</string>
+    <string name="tron_freeze_screen_title">TRON 동결</string>
+    <string name="tron_unfreeze_screen_title">TRON 동결 해제</string>
+    <string name="tron_frozen_balances_error">동결된 잔액을 불러올 수 없습니다. 당겨서 다시 시도하세요.</string>
+    <string name="tron_resource_type">리소스 유형</string>
+    <string name="tron_resource_bandwidth">대역폭</string>
+    <string name="tron_resource_energy">에너지</string>
     <string name="circle_defi_description">USDC를 Circle 계정에 예치하고 수익을 얻으세요. Vultisig 볼트 내에서 안전하게 관리됩니다.</string>
     <string name="circle_defi_control_info">자금은 완전히 볼트의 통제 하에 있습니다. Circle 계정은 자기 수탁형이며 수익은 안전한 오프체인 트레저리를 통해 생성됩니다.</string>
     <string name="usdc_deposit_title">USDC 예치</string>
@@ -187,6 +193,7 @@
     <string name="send_error_insufficient_balance">잔액 부족</string>
     <string name="send_error_msca_not_deployed">MSCA 계정이 아직 배포되지 않았습니다. 다시 시도해 주세요</string>
     <string name="send_error_insufficient_native_balance_with_fees">%1$s 잔액 부족</string>
+    <string name="send_error_insufficient_frozen_balance">금액이 동결된 %1$s 잔액을 초과합니다</string>
     <string name="settings_screen_language">언어</string>
     <string name="settings_screen_currency">통화</string>
     <string name="settings_screen_share_the_app">앱 공유</string>
@@ -426,6 +433,7 @@
     <string name="form_token_selection_asset">자산</string>
     <string name="insufficient_native_token">가스 수수료를 충당할 %1$s이(가) 부족합니다</string>
     <string name="swap_error_amount_too_low">스왑 금액이 너무 적습니다</string>
+    <string name="swap_error_amount_below_dust_threshold">금액이 더스트 한도보다 낮습니다. 금액을 늘린 후 다시 시도하세요.</string>
     <string name="swap_error_insufficient_balance_and_fees">스왑과 가스 수수료를 위한 %1$s 잔액이 부족합니다. %1$s을(를) 충전하거나 스왑 금액을 줄여주세요</string>
     <string name="swap_error_insufficient_source_token">스왑할 %1$s 잔액이 부족합니다</string>
     <string name="swap_error_insufficient_gas_fees">가스 수수료를 충당할 %1$s이(가) 부족합니다. 지갑에 자금을 충전해 주세요.</string>
@@ -516,10 +524,9 @@
     <string name="peer_discovery_scan_with_n_device">%1$s 기기로 스캔</string>
     <string name="peer_discovery_waiting_for_devices_action">기기 대기 중…</string>
     <string name="peer_discovery_devices_n_of_n">기기 (%1$s/%2$s)</string>
-    <string name="scan_qr_code_modal_annotation">다른 기기에서 Vultisig를 다운로드하고 \'QR 코드 스캔\'을 선택하세요</string>
-    <string name="scan_qr_code_modal_next">다음</string>
-    <string name="scan_qr_code_modal_scan_the">스캔하세요</string>
-    <string name="scan_qr_code_modal_qr_code">QR 코드</string>
+    <string name="scan_qr_code_modal_annotation">다른 기기에서 앱을 열고 \'QR 코드 스캔\'을 탭하여 연결하세요.</string>
+    <string name="scan_qr_code_modal_next">스캔 시작</string>
+    <string name="scan_qr_code_modal_scan_the">다른 기기에서 QR을 스캔하세요</string>
     <string name="home_screen_scan_qr_code">QR 스캔</string>
     <string name="select_vault_type_next">다음</string>
     <string name="select_vault_type_choose_setup">설정 선택</string>
@@ -871,6 +878,8 @@
     <string name="import_file_import_your_vault_share">볼트 공유 가져오기</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[지원 파일 형식: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">동일한 이름의 볼트가 존재합니다</string>
+    <string name="join_key_gen_vault_already_on_device">볼트 \"%1$s\"이(가) 이미 이 기기에 있습니다</string>
+    <string name="join_key_gen_open_existing_vault">볼트 열기</string>
     <string name="join_key_gen_unknown_tssaction">알 수 없는 TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">네트워크에서 다른 기기를 찾을 수 없습니다</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">다른 기기의 참여를 기다리는 중</string>
@@ -1063,6 +1072,7 @@
     <string name="key_import_chains_get_started">시작하기</string>
     <string name="key_import_chains_no_results">검색에 일치하는 체인이 없습니다</string>
     <string name="key_import_device_count_get_started">시작하기</string>
+    <string name="choose_device_count_a11y_description">기기를 몇 대 가지고 계신가요? 현재 선택: %1$s. 탭하여 다른 옵션을 선택하세요.</string>
 
     <string name="review_vault_devices_title">볼트 기기 확인</string>
     <string name="review_vault_devices_description">추가한 기기가 올바른지 확인하세요:</string>

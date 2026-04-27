@@ -5,8 +5,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.models.ResourceUsage
+import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin

@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
-import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
@@ -16,6 +15,7 @@ import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.TonApi
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.api.models.calculateResourceStats
+import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
@@ -64,9 +64,9 @@ import com.vultisig.wallet.data.models.TokenBalanceAndPrice
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.utils.SimpleCache
+import com.vultisig.wallet.data.utils.scaledFor
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -114,6 +114,8 @@ interface BalanceRepository {
     suspend fun getTcyAutoCompoundAmount(address: String): String?
 
     suspend fun invalidateBalance(address: String, coin: Coin)
+
+    suspend fun invalidateDeFiBalance(address: String, chain: Chain, vaultId: String)
 }
 
 internal class BalanceRepositoryImpl
@@ -165,6 +167,21 @@ constructor(
         )
     }
 
+    override suspend fun invalidateDeFiBalance(address: String, chain: Chain, vaultId: String) {
+        val key = deFiCacheKey(address, chain, vaultId) ?: return
+        val mutex = lockFor(key)
+        mutex.withLock { defiBalanceCache.remove(key) }
+    }
+
+    private fun deFiCacheKey(address: String, chain: Chain, vaultId: String): String? =
+        when (chain) {
+            ThorChain,
+            Ethereum -> address
+            MayaChain,
+            Chain.Tron -> "${chain.id}:$vaultId:$address"
+            else -> null
+        }
+
     override suspend fun getCachedTokenBalanceAndPrice(
         address: String,
         coin: Coin,
@@ -180,7 +197,7 @@ constructor(
         val fiatValue =
             if (tokenValue != null) {
                 FiatValue(
-                    tokenValue.decimal.multiply(priceValue).setScale(2, RoundingMode.DOWN),
+                    tokenValue.decimal.multiply(priceValue).scaledFor(currency),
                     currency.ticker,
                 )
             } else {
@@ -189,7 +206,7 @@ constructor(
 
         return TokenBalanceAndPrice(
             tokenBalance = TokenBalance(tokenValue = tokenValue, fiatValue = fiatValue),
-            price = FiatValue(priceValue.setScale(2, RoundingMode.DOWN), currency.ticker),
+            price = FiatValue(priceValue.scaledFor(currency), currency.ticker),
         )
     }
 
@@ -225,7 +242,7 @@ constructor(
             val fiatValue =
                 if (price != null) {
                     FiatValue(
-                        value = tokenValue.decimal.multiply(price).setScale(2, RoundingMode.DOWN),
+                        value = tokenValue.decimal.multiply(price).scaledFor(currency),
                         currency = currency.ticker,
                     )
                 } else {
@@ -236,7 +253,7 @@ constructor(
                 tokenBalance = TokenBalance(tokenValue = tokenValue, fiatValue = fiatValue),
                 price =
                     if (price != null) {
-                        FiatValue(price.setScale(2, RoundingMode.DOWN), currency.ticker)
+                        FiatValue(price.scaledFor(currency), currency.ticker)
                     } else {
                         null
                     },
@@ -266,7 +283,7 @@ constructor(
             val fiatValue =
                 if (price != null) {
                     FiatValue(
-                        tokenValue.decimal.multiply(price).setScale(2, RoundingMode.DOWN),
+                        tokenValue.decimal.multiply(price).scaledFor(currency),
                         currency.ticker,
                     )
                 } else {
@@ -293,18 +310,11 @@ constructor(
                             tokenValue = balance,
                             fiatValue =
                                 FiatValue(
-                                    value =
-                                        balance.decimal
-                                            .multiply(price)
-                                            .setScale(2, RoundingMode.DOWN),
+                                    value = balance.decimal.multiply(price).scaledFor(currency),
                                     currency = currency.ticker,
                                 ),
                         ),
-                    price =
-                        FiatValue(
-                            value = price.setScale(2, RoundingMode.DOWN),
-                            currency = currency.ticker,
-                        ),
+                    price = FiatValue(value = price.scaledFor(currency), currency = currency.ticker),
                 )
             }
         }
@@ -335,18 +345,14 @@ constructor(
 
         val fiatValue =
             FiatValue(
-                value = tokenValue.decimal.multiply(price).setScale(2, RoundingMode.DOWN),
+                value = tokenValue.decimal.multiply(price).scaledFor(currency),
                 currency = currency.ticker,
             )
 
         emit(
             TokenBalanceAndPrice(
                 tokenBalance = TokenBalance(tokenValue = tokenValue, fiatValue = fiatValue),
-                price =
-                    FiatValue(
-                        value = price.setScale(2, RoundingMode.DOWN),
-                        currency = currency.ticker,
-                    ),
+                price = FiatValue(value = price.scaledFor(currency), currency = currency.ticker),
             )
         )
     }
@@ -363,58 +369,24 @@ constructor(
         coin: Coin,
         vaultId: String,
     ): List<DeFiBalance> {
-        return when (coin.chain) {
-            ThorChain -> {
-                val mutex = lockFor(address)
-                mutex.withLock {
-                    defiBalanceCache.get(address)
-                        ?: run {
-                            val remote =
-                                thorchainDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
-                            defiBalanceCache.put(address, remote)
-                            remote
-                        }
-                }
+        val cacheKey =
+            deFiCacheKey(address, coin.chain, vaultId) ?: error("Not supported ${coin.chain}")
+        val service =
+            when (coin.chain) {
+                ThorChain -> thorchainDeFiBalanceService
+                Ethereum -> circleDeFiBalanceService
+                MayaChain -> mayaDeFiBalanceService
+                Chain.Tron -> tronDeFiBalanceService
+                else -> error("Not supported ${coin.chain}")
             }
-            Ethereum -> {
-                val mutex = lockFor(address)
-                mutex.withLock {
-                    defiBalanceCache.get(address)
-                        ?: run {
-                            val remote =
-                                circleDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
-                            defiBalanceCache.put(address, remote)
-                            remote
-                        }
+        val mutex = lockFor(cacheKey)
+        return mutex.withLock {
+            defiBalanceCache.get(cacheKey)
+                ?: run {
+                    val remote = service.getRemoteDeFiBalance(address, vaultId)
+                    defiBalanceCache.put(cacheKey, remote)
+                    remote
                 }
-            }
-            MayaChain -> {
-                val cacheKey = "${Chain.MayaChain.id}:$vaultId:$address"
-                val mutex = lockFor(cacheKey)
-                mutex.withLock {
-                    defiBalanceCache.get(cacheKey)
-                        ?: run {
-                            val remote =
-                                mayaDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
-                            defiBalanceCache.put(cacheKey, remote)
-                            remote
-                        }
-                }
-            }
-            Chain.Tron -> {
-                val cacheKey = "${Chain.Tron.id}:$vaultId:$address"
-                val mutex = lockFor(cacheKey)
-                mutex.withLock {
-                    defiBalanceCache.get(cacheKey)
-                        ?: run {
-                            val remote =
-                                tronDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
-                            defiBalanceCache.put(cacheKey, remote)
-                            remote
-                        }
-                }
-            }
-            else -> error("Not supported")
         }
     }
 

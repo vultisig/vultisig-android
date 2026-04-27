@@ -5,6 +5,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.CircleApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.blockchain.model.StakingDetails
@@ -38,7 +39,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -66,6 +67,7 @@ constructor(
     private val appCurrencyRepository: AppCurrencyRepository,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     @ApplicationContext private val context: Context,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -96,7 +98,7 @@ constructor(
         viewModelScope.launch {
             try {
                 val hideWarning =
-                    withContext(Dispatchers.IO) { scaCircleAccountRepository.getCloseWarning() }
+                    withContext(ioDispatcher) { scaCircleAccountRepository.getCloseWarning() }
                 _state.update { currentState ->
                     currentState.copy(
                         circleDefi = currentState.circleDefi.copy(closeWarning = hideWarning)
@@ -112,9 +114,7 @@ constructor(
         viewModelScope.launch {
             try {
                 val isVisible =
-                    withContext(Dispatchers.IO) {
-                        balanceVisibilityRepository.getVisibility(vaultId)
-                    }
+                    withContext(ioDispatcher) { balanceVisibilityRepository.getVisibility(vaultId) }
                 _state.update { it.copy(isBalanceVisible = isVisible) }
             } catch (t: Throwable) {
                 Timber.e(t)
@@ -135,7 +135,7 @@ constructor(
 
                 // Check account exists
                 val addressSca =
-                    withContext(Dispatchers.IO) { scaCircleAccountRepository.getAccount(vaultId) }
+                    withContext(ioDispatcher) { scaCircleAccountRepository.getAccount(vaultId) }
 
                 // If not cache or don't exists, check network for MSCA and fetch balance
                 if (addressSca == null) {
@@ -144,14 +144,13 @@ constructor(
                         mscaAddress = fetchedAddress
                         fetchUSDCBalanceFromNetwork(fetchedAddress)
                     } else {
+                        // Preserve `isAccountOpen` from current state: if `onCreateAccount`
+                        // raced ahead and already marked the account open, don't stomp it back
+                        // to false based on this now-stale "no account" finding.
                         _state.update { currentState ->
                             currentState.copy(
                                 isTotalAmountLoading = false,
-                                circleDefi =
-                                    currentState.circleDefi.copy(
-                                        isLoading = false,
-                                        isAccountOpen = false,
-                                    ),
+                                circleDefi = currentState.circleDefi.copy(isLoading = false),
                             )
                         }
                     }
@@ -163,7 +162,7 @@ constructor(
                         )
                     }
                     val cachePosition =
-                        withContext(Dispatchers.IO) {
+                        withContext(ioDispatcher) {
                             stakingDetailsRepository.getStakingDetailsByCoindId(
                                 vaultId,
                                 Coins.Ethereum.USDC.id,
@@ -197,7 +196,7 @@ constructor(
     fun onClickCloseWarning() {
         viewModelScope.launch {
             try {
-                withContext(Dispatchers.IO) { scaCircleAccountRepository.saveCloseWarning() }
+                withContext(ioDispatcher) { scaCircleAccountRepository.saveCloseWarning() }
                 _state.update { currentState ->
                     currentState.copy(
                         circleDefi = currentState.circleDefi.copy(closeWarning = true)
@@ -212,7 +211,7 @@ constructor(
     fun onCreateAccount() {
         viewModelScope.launch {
             val createdAddress =
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     runCatching {
                         val ethereumVaultAddress = getEvmVaultAddress()
                         circleApi.createScAccount(ethereumVaultAddress).also { newAddress ->
@@ -300,7 +299,7 @@ constructor(
     }
 
     private suspend fun fetchAssociatedMscaAccount(): String? {
-        return withContext(Dispatchers.IO) {
+        return withContext(ioDispatcher) {
             try {
                 val evmAddress = getEvmVaultAddress()
                 val mscaAddress = circleApi.getScAccount(evmAddress)
@@ -318,7 +317,7 @@ constructor(
     private suspend fun fetchUSDCBalanceFromNetwork(mscaAddress: String) {
         val api = evmApi.createEvmApi(Chain.Ethereum)
         val usdc = Coins.Ethereum.USDC.copy(address = mscaAddress)
-        val usdcDepositedBalance = withContext(Dispatchers.IO) { api.getBalance(usdc) }
+        val usdcDepositedBalance = withContext(ioDispatcher) { api.getBalance(usdc) }
 
         showUSDCPosition(usdcDepositedBalance, usdc)
 
@@ -335,7 +334,7 @@ constructor(
             )
 
         // Save position in  cache
-        withContext(Dispatchers.IO) {
+        withContext(ioDispatcher) {
             stakingDetailsRepository.saveStakingDetails(vaultId, usdcCircleStakingDetails)
         }
     }
@@ -343,8 +342,8 @@ constructor(
     private suspend fun showUSDCPosition(usdcDepositedBalance: BigInteger, usdc: Coin) =
         supervisorScope {
             val usdcFormattedBalance = usdcDepositedBalance.toValue(usdc.decimal)
-            val currency = async(Dispatchers.IO) { appCurrencyRepository.currency.first() }
-            val currencyFormat = async(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+            val currency = async(ioDispatcher) { appCurrencyRepository.currency.first() }
+            val currencyFormat = async(ioDispatcher) { appCurrencyRepository.getCurrencyFormat() }
 
             val usdcTokenPrice =
                 createFiatValue(

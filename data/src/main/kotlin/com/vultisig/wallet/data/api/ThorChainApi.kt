@@ -8,19 +8,41 @@ import com.vultisig.wallet.data.api.models.TcyStakerResponse
 import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
+import com.vultisig.wallet.data.api.models.cosmos.CosmosEnvelopedTxResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteError
-import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
+import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
+import com.vultisig.wallet.data.api.models.thorchain.BlockNumber
+import com.vultisig.wallet.data.api.models.thorchain.BondedNodesResponse
+import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
+import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
+import com.vultisig.wallet.data.api.models.thorchain.MidgardHealth
+import com.vultisig.wallet.data.api.models.thorchain.MidgardNetworkData
+import com.vultisig.wallet.data.api.models.thorchain.NodeDetailsResponse
+import com.vultisig.wallet.data.api.models.thorchain.RootData
+import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
+import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
+import com.vultisig.wallet.data.api.models.thorchain.TcyDistribution
+import com.vultisig.wallet.data.api.models.thorchain.TcyModuleBalanceResponse
+import com.vultisig.wallet.data.api.models.thorchain.TcyStakeResponse
+import com.vultisig.wallet.data.api.models.thorchain.TcyStakersResponse
+import com.vultisig.wallet.data.api.models.thorchain.TcyUserDistributionsResponse
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainStatusResponse
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainTransactionJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorNameResponseJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorOwnerData
+import com.vultisig.wallet.data.api.models.thorchain.ThorchainConstantsResponse
+import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
+import com.vultisig.wallet.data.chains.helpers.ThorChainAffiliateHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -35,14 +57,8 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import timber.log.Timber
 
@@ -52,15 +68,7 @@ interface ThorChainApi {
 
     suspend fun getAccountNumber(address: String): THORChainAccountValue
 
-    suspend fun getSwapQuotes(
-        address: String,
-        fromAsset: String,
-        toAsset: String,
-        amount: String,
-        interval: String,
-        referralCode: String,
-        bpsDiscount: Int,
-    ): THORChainSwapQuoteDeserialized
+    suspend fun getSwapQuotes(request: ThorChainSwapQuoteRequest): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
 
@@ -125,8 +133,6 @@ interface ThorChainApi {
     suspend fun fetchTcyModuleBalance(): TcyModuleBalanceResponse
 
     suspend fun fetchTcyStakers(): TcyStakersResponse
-
-    fun buildAffiliateParams(referralCode: String, discountBps: Int): Map<String, String>
 }
 
 internal class ThorChainApiImpl
@@ -140,69 +146,61 @@ constructor(
     override suspend fun getUnstakableTcyAmount(address: String): String? {
         return try {
             val response =
-                httpClient.get("https://thornode.thorchain.network/thorchain/tcy_staker/$address") {
-                    header(xClientID, xClientIDValue)
+                httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
+                    header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
                 }
             if (!response.status.isSuccess()) {
                 null
             } else {
-                response.body<TcyStakerResponse>().unstakable
+                response.bodyOrThrow<TcyStakerResponse>().unstakable
             }
         } catch (e: Exception) {
-            // Exception occurred while fetching or parsing TCY staker data
+            Timber.e(e, "Error fetching TCY staker data for %s", address)
             null
         }
     }
 
     override suspend fun getTcyAutoCompoundAmount(address: String): String? {
-        val url = "https://thornode.thorchain.network/cosmos/bank/v1beta1/balances/$address"
+        val url = "$THORNODE_BASE/cosmos/bank/v1beta1/balances/$address"
         val response = httpClient.get(url)
         return if (!response.status.isSuccess()) {
             null
         } else {
             val stakingTcyAmount =
                 response
-                    .body<ThorTcyBalancesResponseJson>()
+                    .bodyOrThrow<ThorTcyBalancesResponseJson>()
                     .balances
-                    .find { it.denom == "x/staking-tcy" }
+                    .find { it.denom == STAKING_TCY_DENOM }
                     ?.amount
             stakingTcyAmount
         }
     }
 
-    private val xClientID = "X-Client-ID"
-    private val xClientIDValue = "vultisig"
-
     override suspend fun getBalance(address: String): List<CosmosBalance> {
         val response =
-            httpClient.get(
-                "https://thornode.thorchain.network/cosmos/bank/v1beta1/balances/$address"
-            ) {
-                header(xClientID, xClientIDValue)
+            httpClient.get("$THORNODE_BASE/cosmos/bank/v1beta1/balances/$address") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
-        val resp = response.body<CosmosBalanceResponse>()
+        val resp = response.bodyOrThrow<CosmosBalanceResponse>()
         return resp.balances ?: emptyList()
     }
 
     override suspend fun getSwapQuotes(
-        address: String,
-        fromAsset: String,
-        toAsset: String,
-        amount: String,
-        interval: String,
-        referralCode: String,
-        bpsDiscount: Int,
+        request: ThorChainSwapQuoteRequest
     ): THORChainSwapQuoteDeserialized {
         val affiliateParams =
-            buildAffiliateParams(referralCode = referralCode, discountBps = bpsDiscount)
+            ThorChainAffiliateHelper.buildAffiliateParams(
+                referralCode = request.referralCode,
+                discountBps = request.bpsDiscount,
+            )
 
         val response =
-            httpClient.get("https://thornode.thorchain.network/thorchain/quote/swap") {
-                parameter("from_asset", fromAsset)
-                parameter("to_asset", toAsset)
-                parameter("amount", amount)
-                parameter("destination", address)
-                parameter("streaming_interval", interval)
+            httpClient.get("$THORNODE_BASE/thorchain/quote/swap") {
+                parameter("from_asset", request.fromAsset)
+                parameter("to_asset", request.toAsset)
+                parameter("amount", request.amount)
+                parameter("destination", request.address)
+                parameter("streaming_interval", request.interval)
                 if (affiliateParams.isNotEmpty()) {
                     affiliateParams.forEach { (key, value) ->
                         when (key) {
@@ -213,80 +211,40 @@ constructor(
                 }
             }
         return try {
-            json.decodeFromString(thorChainSwapQuoteResponseJsonSerializer, response.body<String>())
+            json.decodeFromString(
+                thorChainSwapQuoteResponseJsonSerializer,
+                response.bodyOrThrow<String>(),
+            )
         } catch (e: Exception) {
-            Timber.tag("THORChainService")
-                .e("Error deserializing THORChain swap quote: ${e.message}")
+            Timber.e(e, "Error deserializing THORChain swap quote")
             THORChainSwapQuoteDeserialized.Error(
                 THORChainSwapQuoteError(HttpStatusCode.fromValue(response.status.value).description)
             )
         }
     }
 
-    override fun buildAffiliateParams(referralCode: String, discountBps: Int): Map<String, String> {
-        val affiliateParams = mutableMapOf<String, String>()
-
-        // For ultimate clean referral, and return 0 bps affiliate
-        if (discountBps >= 50) {
-            affiliateParams["affiliate"] = THORChainSwaps.AFFILIATE_FEE_ADDRESS
-            affiliateParams["affiliate_bps"] = "0"
-
-            return affiliateParams
-        }
-
-        if (referralCode.isNotEmpty()) {
-            val affiliateFeeRateBp =
-                calculateBpsAfterDiscount(
-                    baseBps = THORChainSwaps.REFERRED_AFFILIATE_FEE_RATE_BP,
-                    discountBps = discountBps,
-                )
-
-            // Build nested affiliate with new thorchain structure
-            val affiliates = "$referralCode/${THORChainSwaps.AFFILIATE_FEE_ADDRESS}"
-            val affiliateBps = "${THORChainSwaps.REFERRED_USER_FEE_RATE_BP}/$affiliateFeeRateBp"
-
-            affiliateParams["affiliate"] = affiliates
-            affiliateParams["affiliate_bps"] = affiliateBps
-        } else {
-            val affiliateFeeRateBp =
-                calculateBpsAfterDiscount(
-                    baseBps = THORChainSwaps.AFFILIATE_FEE_RATE_BP,
-                    discountBps = discountBps,
-                )
-
-            affiliateParams["affiliate"] = THORChainSwaps.AFFILIATE_FEE_ADDRESS
-            affiliateParams["affiliate_bps"] = affiliateFeeRateBp.toString()
-        }
-
-        return affiliateParams
-    }
-
-    private fun calculateBpsAfterDiscount(baseBps: Int, discountBps: Int): Int {
-        return maxOf(0, baseBps - discountBps)
-    }
-
     override suspend fun getAccountNumber(address: String): THORChainAccountValue {
         val response =
-            httpClient.get("https://thornode.thorchain.network/auth/accounts/$address") {
-                header(xClientID, xClientIDValue)
+            httpClient.get("$THORNODE_BASE/auth/accounts/$address") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
-        return response.body<THORChainAccountResultJson>().result?.value
+        return response.bodyOrThrow<THORChainAccountResultJson>().result?.value
             ?: error("Field value is not found in the response")
     }
 
     override suspend fun getTHORChainNativeTransactionFee(): BigInteger {
         val response =
-            httpClient.get("https://thornode.thorchain.network/thorchain/network") {
-                header(xClientID, xClientIDValue)
+            httpClient.get("$THORNODE_BASE/thorchain/network") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
-        val content = response.body<NativeTxFeeRune>()
+        val content = response.bodyOrThrow<NativeTxFeeRune>()
         return content.value?.let { BigInteger(it) } ?: 0.toBigInteger()
     }
 
     override suspend fun getTHORChainReferralFees(): NativeTxFeeRune {
         return httpClient
-            .get("https://thornode.thorchain.network/thorchain/network") {
-                header(xClientID, xClientIDValue)
+            .get("$THORNODE_BASE/thorchain/network") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
             .bodyOrThrow<NativeTxFeeRune>()
     }
@@ -296,97 +254,346 @@ constructor(
             val response =
                 httpClient.post(Endpoints.THORCHAIN_BROADCAST_TX) {
                     contentType(ContentType.Application.Json)
-                    header(xClientID, xClientIDValue)
+                    header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
                     setBody(tx)
                 }
             val responseRawString = response.bodyAsText()
-            val result = response.body<CosmosTransactionBroadcastResponse>()
+            val result =
+                json.decodeFromString<CosmosTransactionBroadcastResponse>(responseRawString)
 
-            val txResponse = result.txResponse
-            if (txResponse?.code == 0 || txResponse?.code == 19) {
+            val txResponse =
+                result.txResponse ?: error("Error broadcasting transaction: $responseRawString")
+            if (
+                txResponse.code == COSMOS_TX_SUCCESS_CODE ||
+                    txResponse.code == ERR_TX_IN_MEMPOOL_CACHE
+            ) {
                 return txResponse.txHash
             }
-            throw Exception("Error broadcasting transaction: $responseRawString")
+            error("Error broadcasting transaction: $responseRawString")
         } catch (e: Exception) {
-            Timber.tag("THORChainService").e("Error broadcasting transaction: ${e.message}")
+            Timber.tag("THORChainService").e(e, "Error broadcasting transaction")
             throw e
         }
     }
 
     override suspend fun getNetworkChainId(): String =
         httpClient
-            .get("https://rpc.thorchain.network/status")
-            .body<JsonObject>()["result"]
-            ?.jsonObject
-            ?.get("node_info")
-            ?.jsonObject
-            ?.get("network")
-            ?.jsonPrimitive
-            ?.content ?: error("Could't find network field in response for THORChain chain id")
+            .get("$THORCHAIN_RPC_URL/status")
+            .bodyOrThrow<ThorChainStatusResponse>()
+            .result
+            .nodeInfo
+            .network
 
     override suspend fun resolveName(name: String, chain: String): String? =
         httpClient
-            .get("https://midgard.thorchain.network/v2/thorname/lookup/$name")
-            .body<ThorNameResponseJson>()
+            .get("$MIDGARD_URL/thorname/lookup/$name")
+            .bodyOrThrow<ThorNameResponseJson>()
             .entries
             .find { it.chain == chain }
             ?.address
 
     override suspend fun getTransactionDetail(tx: String): ThorChainTransactionJson {
-        val response =
-            httpClient.get("https://thornode.thorchain.network/cosmos/tx/v1beta1/txs/$tx")
+        val response = httpClient.get("$THORNODE_BASE/cosmos/tx/v1beta1/txs/$tx")
         if (!response.status.isSuccess()) {
-            // The  URL initially returns a 'not found' response but eventually
+            // The URL initially returns a 'not found' response but eventually
             // provides a successful response after some time
-            if (response.status.equals(HttpStatusCode.NotFound))
+            if (response.status == HttpStatusCode.NotFound)
                 return ThorChainTransactionJson(
                     code = null,
                     codeSpace = null,
                     rawLog = response.bodyAsText(),
                 )
-        } else
-            return ThorChainTransactionJson(
-                code = response.status.value,
-                codeSpace = HttpStatusCode.fromValue(response.status.value).description,
-                rawLog = response.bodyAsText(),
+            error(
+                "getTransactionDetail failed: status=${response.status}, body=${response.bodyAsText()}"
             )
-        return response.body()
+        }
+        val envelope = response.bodyOrThrow<CosmosEnvelopedTxResponse>()
+        return ThorChainTransactionJson(
+            code = envelope.txResponse.code,
+            codeSpace = envelope.txResponse.codeSpace,
+            rawLog = envelope.txResponse.rawLog ?: "",
+        )
     }
 
-    override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> {
-        val response =
-            httpClient.get("https://thornode.thorchain.network/thorchain/inbound_addresses") {
-                header(xClientID, xClientIDValue)
+    override suspend fun getTHORChainInboundAddresses(): List<THORChainInboundAddress> =
+        httpClient
+            .get("$THORNODE_BASE/thorchain/inbound_addresses") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
-        if (!response.status.isSuccess()) {
-            // Error getting THORChain inbound addresses
-            throw Exception("Error getting THORChain inbound addresses")
-        }
-        return response.body()
-    }
+            .bodyOrThrow()
 
     override suspend fun getPools(): List<ThorChainPoolJson> =
         httpClient
-            .get("$NNRLM_URL/pools") { header(xClientID, xClientIDValue) }
-            .throwIfUnsuccessful()
-            .body()
+            .get("$THORNODE_BASE/thorchain/pools") { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow()
 
     override suspend fun getConstants(): ThorchainConstantsResponse {
         val response =
             httpClient.get("$THORNODE_BASE/thorchain/constants") {
-                header(xClientID, xClientIDValue)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
         return response.bodyOrThrow<ThorchainConstantsResponse>()
     }
 
     @OptIn(ExperimentalEncodingApi::class)
     override suspend fun getRujiMergeBalances(address: String): List<MergeAccount> {
-        val accountBase64 = Base64.encode("Account:$address".toByteArray())
+        val accountBase64 = Base64.encode("$RUJI_ACCOUNT_PREFIX$address".toByteArray())
+        val query = RUJI_MERGE_QUERY.format(accountBase64)
 
-        val query =
+        val response =
+            httpClient
+                .post(RUJI_GRAPHQL_URL) {
+                    contentType(ContentType.Application.Json)
+                    setBody(buildJsonObject { put(GRAPHQL_QUERY_KEY, query) })
+                }
+                .bodyOrThrow<GraphQLResponse<RootData>>()
+
+        if (!response.errors.isNullOrEmpty()) {
+            throw Exception("Could not fetch balances: ${response.errors}")
+        }
+
+        return response.data?.node?.merge?.accounts ?: emptyList()
+    }
+
+    @OptIn(ExperimentalEncodingApi::class)
+    override suspend fun getRujiStakeBalance(address: String): RujiStakeBalances {
+        val accountBase64 = Base64.encode("$RUJI_ACCOUNT_PREFIX$address".toByteArray())
+        val query = RUJI_STAKE_QUERY.format(accountBase64)
+
+        val httpResponse =
+            httpClient.post(RUJI_GRAPHQL_URL) {
+                contentType(ContentType.Application.Json)
+                setBody(buildJsonObject { put(GRAPHQL_QUERY_KEY, query) })
+            }
+        if (!httpResponse.status.isSuccess()) {
+            throw Exception("Could not fetch balances: status ${httpResponse.status.value}")
+        }
+
+        val response = httpResponse.bodyOrThrow<GraphQLResponse<RootData>>()
+        if (!response.errors.isNullOrEmpty()) {
+            throw Exception("Could not fetch balances: ${response.errors}")
+        }
+
+        val stake = response.data?.node?.stakingV2?.firstOrNull() ?: return RujiStakeBalances()
+
+        val stakeAmount = stake.bonded.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val stakeTicker = stake.bonded.asset.metadata?.symbol ?: ""
+        val rewardsAmount = stake.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val rewardsTicker = stake.pendingRevenue?.asset?.metadata?.symbol ?: DEFAULT_REWARDS_TICKER
+        val apr =
+            runCatching { (stake.pool?.summary?.apr?.value ?: "0.0").toDouble() }.getOrDefault(0.0)
+
+        return RujiStakeBalances(
+            stakeAmount = stakeAmount,
+            stakeTicker = stakeTicker,
+            rewardsAmount = rewardsAmount,
+            rewardsTicker = rewardsTicker,
+            apr = apr,
+        )
+    }
+
+    override suspend fun existsReferralCode(code: String): Boolean {
+        val response =
+            httpClient.get("$THORNODE_BASE/thorchain/thorname/$code") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+
+        if (response.status == HttpStatusCode.NotFound) {
+            return false
+        }
+
+        if (
+            response.status == HttpStatusCode.InternalServerError &&
+                response.bodyAsText().contains(THORNAME_FETCH_FAILED_ERROR)
+        ) {
+            return false
+        }
+
+        val thorName = response.bodyOrThrow<ThorOwnerData>()
+
+        return thorName.aliases.any { alias ->
+            alias.chain.equals(THOR_CHAIN_NAME, ignoreCase = true) && alias.address.isNotBlank()
+        }
+    }
+
+    override suspend fun getReferralCodeInfo(code: String): ThorOwnerData {
+        val response =
+            httpClient.get("$THORNODE_BASE/thorchain/thorname/$code") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+        return response.bodyOrThrow<ThorOwnerData>()
+    }
+
+    override suspend fun getReferralCodesByAddress(address: String): List<String> {
+        val response =
+            httpClient.get("$MIDGARD_URL/thorname/rlookup/$address") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+        if (response.status.isSuccess()) {
+            return response.bodyOrThrow<List<String>>()
+        }
+        return emptyList()
+    }
+
+    override suspend fun getLastBlock(): Long {
+        val response =
+            httpClient.get("$THORNODE_BASE/thorchain/lastblock") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+        return response.bodyOrThrow<List<BlockNumber>>().firstOrNull()?.thorchain ?: 0L
+    }
+
+    override suspend fun getThorchainTokenPriceByContract(
+        contract: String
+    ): VaultRedemptionResponseJson {
+        // STATUS_QUERY_BASE64 is the base64-encoded CosmWasm smart query `{"status": {}}`.
+        val url = "$IBS_TEAM_URL/api/cosmwasm/wasm/v1/contract/$contract/smart/$STATUS_QUERY_BASE64"
+        return httpClient
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow<VaultRedemptionResponseJson>()
+    }
+
+    private suspend fun getThorchainDenomMetadata(denom: String): DenomMetadata? {
+        return try {
+            val encodedDenom = java.net.URLEncoder.encode(denom, Charsets.UTF_8.name())
+            val response =
+                httpClient
+                    .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
+                    .bodyOrThrow<MetadataResponse>()
+            response.metadata
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch denom metadata for %s", denom)
+            null
+        }
+    }
+
+    private suspend fun getFetchThorchainAllDenomMetadata(): List<DenomMetadata>? {
+        return try {
+            val response =
+                httpClient
+                    .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata?pagination.limit=1000")
+                    .bodyOrThrow<MetadatasResponse>()
+            response.metadatas
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch denom metadata list")
+            emptyList()
+        }
+    }
+
+    override suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata? =
+        getThorchainDenomMetadata(denom)
+            ?: getFetchThorchainAllDenomMetadata()?.find { it.base == denom }
+
+    override suspend fun getBondedNodes(address: String): BondedNodesResponse {
+        val url = "$MIDGARD_URL/bonds/$address"
+
+        return httpClient
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow<BondedNodesResponse>()
+    }
+
+    override suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse {
+        val url = "$THORNODE_BASE/thorchain/node/$nodeAddress"
+
+        return httpClient
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow<NodeDetailsResponse>()
+    }
+
+    override suspend fun getChurns(): List<ChurnEntry> {
+        val url = "$MIDGARD_URL/churns"
+        return httpClient
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow<List<ChurnEntry>>()
+    }
+
+    override suspend fun getChurnInterval(): Long {
+        val url = "$THORNODE_BASE/thorchain/mimir/key/CHURNINTERVAL"
+        return httpClient
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow<Long>()
+    }
+
+    override suspend fun getMidgardNetworkData(): MidgardNetworkData {
+        val url = "$MIDGARD_URL/network"
+
+        return httpClient
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow<MidgardNetworkData>()
+    }
+
+    override suspend fun getMidgardHealth(): MidgardHealth {
+        val url = "$MIDGARD_URL/health"
+
+        return httpClient
+            .get(url) { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow<MidgardHealth>()
+    }
+
+    override suspend fun fetchTcyStakedAmount(address: String): TcyStakeResponse {
+        val httpResponse =
+            httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+        return if (
+            httpResponse.status == HttpStatusCode.BadRequest &&
+                httpResponse.bodyAsText().contains(TCY_STAKER_NOT_FOUND_ERROR, ignoreCase = true)
+        ) {
+            TcyStakeResponse(address = address, amount = "0")
+        } else if (!httpResponse.status.isSuccess()) {
+            Timber.e("FetchTcyStakedAmount %s", httpResponse.status)
+            error("Error Fetching Tcy Staked: status=${httpResponse.status}")
+        } else {
+            httpResponse.bodyOrThrow<TcyStakeResponse>()
+        }
+    }
+
+    override suspend fun fetchTcyDistributions(limit: Int): List<TcyDistribution> {
+        return httpClient
+            .get("$THORNODE_BASE/thorchain/tcy_distributions") {
+                parameter("limit", limit)
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+            .bodyOrThrow<List<TcyDistribution>>()
+    }
+
+    override suspend fun fetchTcyUserDistributions(address: String): TcyUserDistributionsResponse {
+        return httpClient
+            .get("$MIDGARD_URL/tcy/distribution/$address") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+            .bodyOrThrow<TcyUserDistributionsResponse>()
+    }
+
+    override suspend fun fetchTcyModuleBalance(): TcyModuleBalanceResponse {
+        return httpClient
+            .get("$THORNODE_BASE/thorchain/balance/module/tcy_stake") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+            .bodyOrThrow<TcyModuleBalanceResponse>()
+    }
+
+    override suspend fun fetchTcyStakers(): TcyStakersResponse {
+        return httpClient
+            .get("$THORNODE_BASE/thorchain/tcy_stakers") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+            .bodyOrThrow<TcyStakersResponse>()
+    }
+
+    companion object {
+        private const val THORNODE_BASE = "https://gateway.liquify.com/chain/thorchain_api"
+        private const val MIDGARD_URL = "https://gateway.liquify.com/chain/thorchain_midgard/v2"
+        private const val THORCHAIN_RPC_URL = "https://gateway.liquify.com/chain/thorchain_rpc"
+        private const val IBS_TEAM_URL = "https://thorchain.ibs.team"
+        private const val X_CLIENT_ID_HEADER = "X-Client-ID"
+        private const val X_CLIENT_ID_VALUE = "vultisig"
+        private const val RUJI_GRAPHQL_URL = "https://api.vultisig.com/ruji/api/graphql"
+
+        private const val RUJI_MERGE_QUERY =
             """
         {
-          node(id:"$accountBase64") {
+          node(id:"%s") {
             ... on Account {
               merge {
                 accounts {
@@ -407,31 +614,11 @@ constructor(
           }
         }
         """
-                .trimIndent()
 
-        val response =
-            httpClient
-                .post("https://api.vultisig.com/ruji/api/graphql") {
-                    contentType(ContentType.Application.Json)
-                    setBody(buildJsonObject { put("query", query) })
-                }
-                .body<GraphQLResponse<RootData>>()
-
-        if (!response.errors.isNullOrEmpty()) {
-            throw Exception("Could not fetch balances: ${response.errors}")
-        }
-
-        return response.data?.node?.merge?.accounts ?: emptyList()
-    }
-
-    @OptIn(ExperimentalEncodingApi::class)
-    override suspend fun getRujiStakeBalance(address: String): RujiStakeBalances {
-        val accountBase64 = Base64.encode("Account:$address".toByteArray())
-
-        val query =
+        private const val RUJI_STAKE_QUERY =
             """
         {
-          node(id:"$accountBase64") {
+          node(id:"%s") {
             ... on Account {
               stakingV2 {
                 account
@@ -463,410 +650,19 @@ constructor(
           }
         }
         """
-                .trimIndent()
+        // Cosmos SDK success code (0) and ErrTxInMempoolCache (19): tx already accepted
+        // into mempool, treated as success.
+        // https://github.com/cosmos/cosmos-sdk/blob/v0.50.0/types/errors/errors.go#L79
+        private const val COSMOS_TX_SUCCESS_CODE = 0
+        private const val ERR_TX_IN_MEMPOOL_CACHE = 19
 
-        val httpResponse =
-            httpClient.post("https://api.vultisig.com/ruji/api/graphql") {
-                contentType(ContentType.Application.Json)
-                setBody(buildJsonObject { put("query", query) })
-            }
-        if (!httpResponse.status.isSuccess()) {
-            throw Exception("Could not fetch balances: status ${httpResponse.status.value}")
-        }
-
-        val response = httpResponse.body<GraphQLResponse<RootData>>()
-        if (!response.errors.isNullOrEmpty()) {
-            throw Exception("Could not fetch balances: ${response.errors}")
-        }
-
-        val stake = response.data?.node?.stakingV2?.firstOrNull() ?: return RujiStakeBalances()
-
-        val stakeAmount = stake.bonded.amount.toBigIntegerOrNull() ?: BigInteger.ZERO
-        val stakeTicker = stake.bonded.asset.metadata?.symbol ?: ""
-        val rewardsAmount = stake.pendingRevenue?.amount?.toBigIntegerOrNull() ?: BigInteger.ZERO
-        val rewardsTicker = stake.pendingRevenue?.asset?.metadata?.symbol ?: "USDC"
-        val apr =
-            runCatching { (stake.pool?.summary?.apr?.value ?: "0.0").toDouble() }.getOrDefault(0.0)
-
-        return RujiStakeBalances(
-            stakeAmount = stakeAmount,
-            stakeTicker = stakeTicker,
-            rewardsAmount = rewardsAmount,
-            rewardsTicker = rewardsTicker,
-            apr = apr,
-        )
+        private const val STAKING_TCY_DENOM = "x/staking-tcy"
+        private const val DEFAULT_REWARDS_TICKER = "USDC"
+        private const val THOR_CHAIN_NAME = "THOR"
+        private const val TCY_STAKER_NOT_FOUND_ERROR = "TCYStaker doesn't exist"
+        private const val THORNAME_FETCH_FAILED_ERROR = "fail to fetch THORName"
+        private const val STATUS_QUERY_BASE64 = "eyJzdGF0dXMiOiB7fX0="
+        private const val RUJI_ACCOUNT_PREFIX = "Account:"
+        private const val GRAPHQL_QUERY_KEY = "query"
     }
-
-    override suspend fun existsReferralCode(code: String): Boolean {
-        val response =
-            httpClient.get("$NNRLM_URL/thorname/$code") { header(xClientID, xClientIDValue) }
-
-        if (response.status == HttpStatusCode.NotFound) {
-            return false
-        }
-
-        val thorName = response.bodyOrThrow<ThorOwnerData>()
-
-        return thorName.aliases.any { alias ->
-            alias.chain.equals("THOR", ignoreCase = true) && alias.address.isNotBlank()
-        }
-    }
-
-    override suspend fun getReferralCodeInfo(code: String): ThorOwnerData {
-        val response =
-            httpClient.get("$NNRLM_URL/thorname/$code") { header(xClientID, xClientIDValue) }
-        return response.bodyOrThrow<ThorOwnerData>()
-    }
-
-    override suspend fun getReferralCodesByAddress(address: String): List<String> {
-        val response =
-            httpClient.get("$MIDGARD_URL/thorname/rlookup/$address") {
-                header(xClientID, xClientIDValue)
-            }
-        if (response.status.isSuccess()) {
-            return response.bodyOrThrow<List<String>>()
-        }
-        return emptyList()
-    }
-
-    override suspend fun getLastBlock(): Long {
-        val response = httpClient.get("$NNRLM_URL/lastblock") { header(xClientID, xClientIDValue) }
-        return response.bodyOrThrow<List<BlockNumber>>().firstOrNull()?.thorchain ?: 0L
-    }
-
-    override suspend fun getThorchainTokenPriceByContract(
-        contract: String
-    ): VaultRedemptionResponseJson {
-        val url =
-            "https://thorchain.ibs.team/api/cosmwasm/wasm/v1/contract/$contract/smart/eyJzdGF0dXMiOiB7fX0="
-        return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
-            .bodyOrThrow<VaultRedemptionResponseJson>()
-    }
-
-    suspend fun getThorchainDenomMetadata(denom: String): DenomMetadata? {
-        return try {
-            val encodedDenom = java.net.URLEncoder.encode(denom, Charsets.UTF_8.name())
-            val response =
-                httpClient
-                    .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
-                    .body<MetadataResponse>()
-            response.metadata
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to fetch denom metadata for $denom")
-            null
-        }
-    }
-
-    suspend fun getFetchThorchainAllDenomMetadata(): List<DenomMetadata>? {
-        return try {
-            val response =
-                httpClient
-                    .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata?pagination.limit=1000")
-                    .body<MetadatasResponse>()
-            response.metadatas
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to fetch denom metadata list")
-            emptyList()
-        }
-    }
-
-    override suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata? =
-        getThorchainDenomMetadata(denom)
-            ?: getFetchThorchainAllDenomMetadata()?.find { it.base == denom }
-
-    override suspend fun getBondedNodes(address: String): BondedNodesResponse {
-        val url = "$MIDGARD_URL/bonds/$address"
-
-        return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
-            .bodyOrThrow<BondedNodesResponse>()
-    }
-
-    override suspend fun getNodeDetails(nodeAddress: String): NodeDetailsResponse {
-        val url = "$THORNODE_BASE/thorchain/node/$nodeAddress"
-
-        return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
-            .bodyOrThrow<NodeDetailsResponse>()
-    }
-
-    override suspend fun getChurns(): List<ChurnEntry> {
-        val url = "$MIDGARD_URL/churns"
-        return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
-            .bodyOrThrow<List<ChurnEntry>>()
-    }
-
-    override suspend fun getChurnInterval(): Long {
-        val url = "$THORNODE_BASE/thorchain/mimir/key/CHURNINTERVAL"
-        return httpClient.get(url) { header(xClientID, xClientIDValue) }.bodyOrThrow<Long>()
-    }
-
-    override suspend fun getMidgardNetworkData(): MidgardNetworkData {
-        val url = "$MIDGARD_URL/network"
-
-        return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
-            .bodyOrThrow<MidgardNetworkData>()
-    }
-
-    override suspend fun getMidgardHealth(): MidgardHealth {
-        val url = "$MIDGARD_URL/health"
-
-        return httpClient
-            .get(url) { header(xClientID, xClientIDValue) }
-            .bodyOrThrow<MidgardHealth>()
-    }
-
-    override suspend fun fetchTcyStakedAmount(address: String): TcyStakeResponse {
-        val httpResponse =
-            httpClient.get("$THORNODE_BASE/thorchain/tcy_staker/$address") {
-                header(xClientID, xClientIDValue)
-            }
-        return if (
-            httpResponse.status.value == 400 &&
-                httpResponse.bodyAsText().contains("TCYStaker doesn't exist", ignoreCase = true)
-        ) {
-            TcyStakeResponse(address = address, amount = "0")
-        } else if (!httpResponse.status.isSuccess()) {
-            Timber.e("FetchTcyStakedAmount %s", "${httpResponse.status}")
-            error("Error Fetching Tcy Staked: ")
-        } else {
-            httpResponse.bodyOrThrow<TcyStakeResponse>()
-        }
-    }
-
-    override suspend fun fetchTcyDistributions(limit: Int): List<TcyDistribution> {
-        return httpClient
-            .get("$THORNODE_BASE/thorchain/tcy_distributions") {
-                parameter("limit", limit)
-                header(xClientID, xClientIDValue)
-            }
-            .bodyOrThrow<List<TcyDistribution>>()
-    }
-
-    override suspend fun fetchTcyUserDistributions(address: String): TcyUserDistributionsResponse {
-        return httpClient
-            .get("$MIDGARD_URL/tcy/distribution/$address") { header(xClientID, xClientIDValue) }
-            .bodyOrThrow<TcyUserDistributionsResponse>()
-    }
-
-    override suspend fun fetchTcyModuleBalance(): TcyModuleBalanceResponse {
-        return httpClient
-            .get("$THORNODE_BASE/thorchain/balance/module/tcy_stake") {
-                header(xClientID, xClientIDValue)
-            }
-            .bodyOrThrow<TcyModuleBalanceResponse>()
-    }
-
-    override suspend fun fetchTcyStakers(): TcyStakersResponse {
-        return httpClient
-            .get("$THORNODE_BASE/thorchain/tcy_stakers") { header(xClientID, xClientIDValue) }
-            .bodyOrThrow<TcyStakersResponse>()
-    }
-
-    companion object {
-        private const val NNRLM_URL = "https://thornode.thorchain.network/thorchain"
-        private const val THORNODE_BASE = "https://thornode.thorchain.network"
-        private const val MIDGARD_URL = "https://midgard.thorchain.network/v2"
-    }
-}
-
-@Serializable
-data class ThorOwnerData(
-    @SerialName("name") val name: String,
-    @SerialName("expire_block_height") val expireBlockHeight: Long,
-    @SerialName("owner") val owner: String,
-    @SerialName("preferred_asset") val preferredAsset: String,
-    @SerialName("preferred_asset_swap_threshold_rune") val preferredAssetSwapThresholdRune: String,
-    @SerialName("affiliate_collector_rune") val affiliateCollectorRune: String,
-    @SerialName("aliases") val aliases: List<Aliases> = emptyList(),
-) {
-    @Serializable data class Aliases(val chain: String, val address: String)
-}
-
-@Serializable
-private data class ThorNameEntryJson(
-    @SerialName("chain") val chain: String,
-    @SerialName("address") val address: String,
-)
-
-@Serializable
-private data class ThorNameResponseJson(
-    @SerialName("entries") val entries: List<ThorNameEntryJson>
-)
-
-@Serializable
-data class ThorChainTransactionJson(
-    @SerialName("code") val code: Int?,
-    @SerialName("codespace") val codeSpace: String?,
-    @SerialName("rawLog") val rawLog: String,
-)
-
-@Serializable
-data class THORChainInboundAddress(
-    @SerialName("chain") val chain: String,
-    @SerialName("address") val address: String,
-    @SerialName("halted") val halted: Boolean,
-    @SerialName("global_trading_paused") val globalTradingPaused: Boolean,
-    @SerialName("chain_trading_paused") val chainTradingPaused: Boolean,
-    @SerialName("chain_lp_actions_paused") val chainLPActionsPaused: Boolean,
-    @SerialName("gas_rate") val gasRate: String,
-    @SerialName("gas_rate_units") val gasRateUnits: String,
-)
-
-@Serializable
-data class ThorChainPoolJson(
-    // formatted as THOR.TCY
-    @SerialName("asset") val asset: String,
-    // asset price in usd with 8 decimals
-    @Contextual @SerialName("asset_tor_price") val assetTorPrice: BigInteger,
-)
-
-@Serializable data class RootData(val node: AccountNode?)
-
-@Serializable data class AccountNode(val merge: MergeInfo?, val stakingV2: List<StakingV2?>?)
-
-@Serializable data class MergeInfo(val accounts: List<MergeAccount>)
-
-@Serializable data class MergeAccount(val pool: Pool?, val size: Size?, val shares: String?)
-
-@Serializable data class Pool(val mergeAsset: MergeAsset?, val summary: Summary? = null)
-
-@Serializable data class MergeAsset(val metadata: Metadata?)
-
-@Serializable data class Metadata(val symbol: String?)
-
-@Serializable data class Size(val amount: String?)
-
-@Serializable
-data class StakingV2(
-    val account: String,
-    val bonded: Bonded,
-    val pendingRevenue: PendingRevenue?,
-    val pool: Pool?,
-)
-
-@Serializable data class Bonded(val amount: String, val asset: Asset)
-
-@Serializable data class PendingRevenue(val amount: String, val asset: Asset)
-
-@Serializable data class Asset(val metadata: Metadata? = null)
-
-@Serializable data class Summary(val apr: Apr? = null)
-
-@Serializable data class Apr(val value: String? = null)
-
-@Serializable data class BlockNumber(val thorchain: Long)
-
-data class RujiStakeBalances(
-    val stakeAmount: BigInteger = BigInteger.ZERO,
-    val stakeTicker: String = "",
-    val rewardsAmount: BigInteger = BigInteger.ZERO,
-    val rewardsTicker: String = "USDC",
-    val apr: Double = 0.0,
-)
-
-@Serializable
-data class VaultRedemptionResponseJson(@SerialName("data") val data: VaultRedemptionDataJson)
-
-@Serializable
-data class VaultRedemptionDataJson(
-    @SerialName("shares") val shares: String = "",
-    @SerialName("nav") val nav: String = "",
-    @SerialName("nav_per_share") val navPerShare: String = "",
-    @SerialName("liquid_bond_shares") val liquidBondShares: String = "",
-    @SerialName("liquid_bond_size") val liquidBondSize: String = "",
-)
-
-@Serializable
-data class BondedNodesResponse(
-    @SerialName("address") val address: String,
-    @SerialName("nodes") val nodes: List<BondedNode>,
-    @SerialName("totalBonded") val totalBonded: String,
-)
-
-@Serializable
-data class BondedNode(
-    @SerialName("address") val address: String,
-    @SerialName("bond") val bond: String,
-    @SerialName("status") val status: String,
-)
-
-@Serializable
-data class NodeDetailsResponse(
-    @SerialName("node_address") val nodeAddress: String,
-    @SerialName("status") val status: String,
-    @SerialName("current_award") val currentAward: String,
-    @SerialName("bond_providers") val bondProviders: BondProviders,
-)
-
-@Serializable
-data class BondProviders(
-    @SerialName("node_operator_fee") val nodeOperatorFee: String,
-    @SerialName("providers") val providers: List<BondProvider>,
-)
-
-@Serializable
-data class BondProvider(
-    @SerialName("bond_address") val bondAddress: String,
-    @SerialName("bond") val bond: String,
-)
-
-@Serializable
-data class ChurnEntry(
-    @SerialName("date") val date: String,
-    @SerialName("height") val height: String,
-)
-
-@Serializable
-data class MidgardNetworkData(
-    @SerialName("bondingAPY") val bondingAPY: String,
-    @SerialName("nextChurnHeight") val nextChurnHeight: String,
-)
-
-@Serializable
-data class MidgardHealth(val lastThorNode: HeightInfo) {
-    @Serializable
-    data class HeightInfo(
-        val height: Long,
-        val timestamp: Long, // seconds since epoch
-    )
-}
-
-// TCY Staking
-@Serializable data class TcyStakeResponse(val amount: String? = null, val address: String = "")
-
-@Serializable
-data class TcyDistribution(val block: String, val amount: String, val timestamp: String? = null)
-
-@Serializable
-data class TcyUserDistributionsResponse(
-    val distributions: List<TcyUserDistribution>,
-    val total: String? = null,
-) {
-    @Serializable data class TcyUserDistribution(val date: String, val amount: String)
-}
-
-@Serializable
-data class TcyModuleBalanceResponse(val coins: List<ModuleCoin> = emptyList()) {
-    @Serializable data class ModuleCoin(val denom: String, val amount: String)
-}
-
-@Serializable
-data class TcyStakersResponse(@SerialName("tcy_stakers") val tcyStakers: List<TcyStaker>) {
-    @Serializable data class TcyStaker(val address: String, val amount: String)
-}
-
-@Serializable
-data class ThorchainConstantsResponse(@SerialName("int_64_values") val int64Values: Int64Values) {
-    @Serializable
-    data class Int64Values(
-        @SerialName("MinRuneForTCYStakeDistribution")
-        val minRuneForTCYStakeDistribution: Long? = null,
-        @SerialName("MinTCYForTCYStakeDistribution")
-        val minTcyForTCYStakeDistribution: Long? = null,
-        @SerialName("TCYStakeSystemIncomeBps") val tcyStakeSystemIncomeBps: Long? = null,
-    )
 }

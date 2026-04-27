@@ -76,7 +76,7 @@ constructor(
     override suspend fun invoke(chain: Chain, tx: SignedTransactionResult) =
         when (chain) {
             ThorChain -> {
-                thorChainApi.broadcastTransaction(tx.rawTransaction)
+                thorChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
             }
 
             Bitcoin,
@@ -124,18 +124,18 @@ constructor(
             Akash,
             Chain.Qbtc -> {
                 val cosmosApi = cosmosApiFactory.createCosmosApi(chain)
-                cosmosApi.broadcastTransaction(tx.rawTransaction)
+                cosmosApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
             }
 
             MayaChain -> {
-                mayaChainApi.broadcastTransaction(tx.rawTransaction)
+                mayaChainApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
             }
 
             Polkadot ->
                 recoverIfAlreadyBroadcast(
                     tx = tx,
                     broadcast = {
-                        polkadotApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
+                        polkadotApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
                     },
                     verify = { hash ->
                         polkadotApi.getTxStatus(hash)?.data?.extrinsicHash?.isNotBlank() == true
@@ -143,7 +143,7 @@ constructor(
                 )
 
             Chain.Bittensor -> {
-                bittensorApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
+                bittensorApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
             }
 
             Sui ->
@@ -158,9 +158,7 @@ constructor(
             Ton ->
                 recoverIfAlreadyBroadcast(
                     tx = tx,
-                    broadcast = {
-                        tonApi.broadcastTransaction(tx.rawTransaction) ?: tx.transactionHash
-                    },
+                    broadcast = { tonApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx) },
                     verify = { hash -> tonApi.getTsStatus(hash).transactions.isNotEmpty() },
                 )
 
@@ -185,8 +183,9 @@ constructor(
                 recoverIfAlreadyBroadcast(
                     tx = tx,
                     broadcast = {
-                        cardanoApi.broadcastTransaction(chain.name, tx.rawTransaction)
-                            ?: tx.transactionHash
+                        cardanoApi
+                            .broadcastTransaction(chain.name, tx.rawTransaction)
+                            .orKnownHash(tx)
                     },
                     verify = { hash -> cardanoApi.getTxStatus(hash)?.txHash?.isNotBlank() == true },
                 )
@@ -215,4 +214,7 @@ constructor(
                 throw e
             }
         }
+
+    private fun String?.orKnownHash(tx: SignedTransactionResult): String? =
+        this ?: tx.transactionHash.takeIf { it.isNotBlank() }
 }
