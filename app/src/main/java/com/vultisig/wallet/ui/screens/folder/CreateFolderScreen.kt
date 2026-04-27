@@ -280,9 +280,11 @@ private fun CreateFolderScreen(
                 )
                 UiSpacer(size = 12.dp)
                 TopShineContainer {
+                    val checkedVaultsList =
+                        remember(state.checkedVaults) { state.checkedVaults.toList() }
                     LazyColumn {
                         itemsIndexed(
-                            state.checkedVaults.toList(),
+                            checkedVaultsList,
                             key = { _, vaultPair -> vaultPair.first.vault.id },
                         ) { index, vaultPair ->
                             val vault = vaultPair.first.vault
@@ -313,7 +315,7 @@ private fun CreateFolderScreen(
                                         )
                                     },
                                 )
-                                if (state.checkedVaults.toList().lastIndex != index) {
+                                if (checkedVaultsList.lastIndex != index) {
                                     FadingHorizontalDivider()
                                 }
                             }

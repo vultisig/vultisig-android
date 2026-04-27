@@ -36,7 +36,7 @@ constructor(private val navigator: Navigator<Destination>, savedStateHandle: Sav
     val uiState =
         MutableStateFlow(
             ReviewVaultDevicesUiState(
-                devices = args.devices.orEmpty(),
+                devices = args.devices.orEmpty().distinct(),
                 localPartyId = args.localPartyId.orEmpty(),
             )
         )
