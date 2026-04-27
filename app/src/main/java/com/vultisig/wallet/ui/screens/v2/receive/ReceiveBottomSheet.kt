@@ -72,7 +72,7 @@ private fun ReceiveContent(
 
         V2Container(type = ContainerType.SECONDARY) {
             LazyColumn(modifier = Modifier.padding()) {
-                itemsIndexed(uiState.chains) { index, chain ->
+                itemsIndexed(uiState.chains, key = { _, chain -> chain.ticker }) { index, chain ->
                     Column {
                         Row(
                             modifier =

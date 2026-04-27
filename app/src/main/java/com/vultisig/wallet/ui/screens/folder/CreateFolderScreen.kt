@@ -281,7 +281,10 @@ private fun CreateFolderScreen(
                 UiSpacer(size = 12.dp)
                 TopShineContainer {
                     LazyColumn {
-                        itemsIndexed(state.checkedVaults.toList()) { index, vaultPair ->
+                        itemsIndexed(
+                            state.checkedVaults.toList(),
+                            key = { _, vaultPair -> vaultPair.first.vault.id },
+                        ) { index, vaultPair ->
                             val vault = vaultPair.first.vault
                             val balance = vaultPair.first.balance
                             Column {
