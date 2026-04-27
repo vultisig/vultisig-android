@@ -141,10 +141,12 @@ internal class EncryptingSharedPreferences(
     /** Returns an [EncryptingEditor] that AES-256-GCM-encrypts values before writing. */
     override fun edit(): SharedPreferences.Editor = EncryptingEditor(prefs.edit(), secretKey)
 
+    /** Delegates listener registration to the underlying [prefs] instance. */
     override fun registerOnSharedPreferenceChangeListener(
         listener: SharedPreferences.OnSharedPreferenceChangeListener
     ) = prefs.registerOnSharedPreferenceChangeListener(listener)
 
+    /** Delegates listener unregistration to the underlying [prefs] instance. */
     override fun unregisterOnSharedPreferenceChangeListener(
         listener: SharedPreferences.OnSharedPreferenceChangeListener
     ) = prefs.unregisterOnSharedPreferenceChangeListener(listener)
