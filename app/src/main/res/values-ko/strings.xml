@@ -878,6 +878,8 @@
     <string name="import_file_import_your_vault_share">볼트 공유 가져오기</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[지원 파일 형식: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">동일한 이름의 볼트가 존재합니다</string>
+    <string name="join_key_gen_vault_already_on_device">볼트 \"%1$s\"이(가) 이미 이 기기에 있습니다</string>
+    <string name="join_key_gen_open_existing_vault">볼트 열기</string>
     <string name="join_key_gen_unknown_tssaction">알 수 없는 TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">네트워크에서 다른 기기를 찾을 수 없습니다</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">다른 기기의 참여를 기다리는 중</string>
@@ -1070,6 +1072,7 @@
     <string name="key_import_chains_get_started">시작하기</string>
     <string name="key_import_chains_no_results">검색에 일치하는 체인이 없습니다</string>
     <string name="key_import_device_count_get_started">시작하기</string>
+    <string name="choose_device_count_a11y_description">기기를 몇 대 가지고 계신가요? 현재 선택: %1$s. 탭하여 다른 옵션을 선택하세요.</string>
 
     <string name="review_vault_devices_title">볼트 기기 확인</string>
     <string name="review_vault_devices_description">추가한 기기가 올바른지 확인하세요:</string>

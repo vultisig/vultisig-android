@@ -718,6 +718,8 @@
     <string name="keysign_password_enter_your_password">Voer uw wachtwoord in</string>
     <string name="migration_password_enter_your_password_to_unlock">Voer uw wachtwoord in om uw servershare te ontgrendelen en de upgrade te starten</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Er bestaat een kluis met een dubbele naam</string>
+    <string name="join_key_gen_vault_already_on_device">Kluis \"%1$s\" staat al op dit apparaat</string>
+    <string name="join_key_gen_open_existing_vault">Kluis openen</string>
     <string name="join_key_gen_unknown_tssaction">Onbekende TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">Kan het andere apparaat niet vinden op het netwerk</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Wachten op andere apparaten om toe te treden</string>
@@ -1040,6 +1042,7 @@
     <string name="key_import_chains_no_results">Geen ketens komen overeen met uw zoekopdracht</string>
 
     <string name="key_import_device_count_get_started">Aan de slag</string>
+    <string name="choose_device_count_a11y_description">Hoeveel apparaten hebt u? %1$s geselecteerd. Tik om een andere te kiezen.</string>
     <string name="vault_count_recommended">Aanbevolen</string>
 
     <string name="welcome_tip">Tip: U kunt een browser gebruiken als apparaat</string>

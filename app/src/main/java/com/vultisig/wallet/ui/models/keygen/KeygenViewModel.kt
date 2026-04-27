@@ -687,7 +687,25 @@ constructor(
         } else {
             val shouldOverrideVault = isReshareMode || action == TssAction.Migrate
 
-            saveVault(vault, shouldOverrideVault)
+            try {
+                saveVault(vault, shouldOverrideVault)
+            } catch (e: DuplicateVaultException) {
+                // Defence in depth: if the join-time hexChainCode check missed (e.g. the QR
+                // carried an empty chain code), the duplicate is detected here by pubKeyECDSA.
+                // Treat it as already-joined and route to the existing vault instead of leaving
+                // the success screen stuck on a spinner.
+                val existingVault = vaultRepository.getByEcdsa(vault.pubKeyECDSA) ?: throw e
+                Timber.w(
+                    "saveVault: vault already exists, opening existing one (id=%s)",
+                    existingVault.id,
+                )
+                stopService()
+                navigator.route(
+                    route = Route.Home(openVaultId = existingVault.id),
+                    opts = NavigationOptions(clearBackStack = true),
+                )
+                return
+            }
 
             vaultDataStoreRepository.setBackupStatus(vaultId = vaultId, false)
         }

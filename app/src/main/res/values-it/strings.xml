@@ -721,6 +721,8 @@
     <string name="keysign_password_enter_your_password">Inserisci la tua password</string>
     <string name="migration_password_enter_your_password_to_unlock">Inserisci la tua password per sbloccare la tua condivisione server e avviare l\'aggiornamento</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Esiste un Vault con nome duplicato</string>
+    <string name="join_key_gen_vault_already_on_device">Il Vault \"%1$s\" è già su questo dispositivo</string>
+    <string name="join_key_gen_open_existing_vault">Apri Vault</string>
     <string name="join_key_gen_unknown_tssaction">TssAction sconosciuta</string>
     <string name="join_key_gen_mediator_discovery_timeout">Impossibile trovare l\'altro dispositivo sulla rete</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">In attesa che altri dispositivi si uniscano</string>
@@ -1046,6 +1048,7 @@
     <string name="key_import_chains_no_results">Nessuna catena corrisponde alla tua ricerca</string>
 
     <string name="key_import_device_count_get_started">Inizia</string>
+    <string name="choose_device_count_a11y_description">Quanti dispositivi hai? Selezione attuale: %1$s. Tocca per sceglierne un altro.</string>
     <string name="vault_count_recommended">Consigliata</string>
 
     <string name="welcome_tip">Suggerimento: Puoi usare un browser come dispositivo</string>

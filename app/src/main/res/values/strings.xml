@@ -896,6 +896,8 @@
     <string name="import_file_import_your_vault_share">Import your vault share</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Supported file types: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Vault with duplicate name exists</string>
+    <string name="join_key_gen_vault_already_on_device">Vault \"%1$s\" is already on this device</string>
+    <string name="join_key_gen_open_existing_vault">Open vault</string>
     <string name="join_key_gen_unknown_tssaction">Unknown TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">Could not find the other device on your network</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Waiting for other devices to join</string>
@@ -1114,6 +1116,7 @@
     <string name="key_import_chains_get_started">Get started</string>
     <string name="key_import_chains_no_results">No chains match your search</string>
     <string name="key_import_device_count_get_started">Get started</string>
+    <string name="choose_device_count_a11y_description">How many devices do you have? %1$s selected. Tap to choose another.</string>
     <string name="key_import_error_title">Key Import Failed</string>
     <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
     <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>

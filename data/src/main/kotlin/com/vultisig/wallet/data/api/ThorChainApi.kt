@@ -201,6 +201,7 @@ constructor(
                 parameter("amount", request.amount)
                 parameter("destination", request.address)
                 parameter("streaming_interval", request.interval)
+                request.streamingQuantity?.let { parameter("streaming_quantity", it) }
                 if (affiliateParams.isNotEmpty()) {
                     affiliateParams.forEach { (key, value) ->
                         when (key) {
@@ -582,9 +583,9 @@ constructor(
     }
 
     companion object {
-        private const val THORNODE_BASE = "https://thornode.thorchain.network"
-        private const val MIDGARD_URL = "https://midgard.thorchain.network/v2"
-        private const val THORCHAIN_RPC_URL = "https://rpc.thorchain.network"
+        private const val THORNODE_BASE = "https://gateway.liquify.com/chain/thorchain_api"
+        private const val MIDGARD_URL = "https://gateway.liquify.com/chain/thorchain_midgard/v2"
+        private const val THORCHAIN_RPC_URL = "https://gateway.liquify.com/chain/thorchain_rpc"
         private const val IBS_TEAM_URL = "https://thorchain.ibs.team"
         private const val X_CLIENT_ID_HEADER = "X-Client-ID"
         private const val X_CLIENT_ID_VALUE = "vultisig"

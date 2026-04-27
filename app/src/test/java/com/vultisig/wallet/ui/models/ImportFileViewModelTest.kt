@@ -96,6 +96,7 @@ internal class ImportFileViewModelTest {
                 vaultRepository = vaultRepository,
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 snackBarFlow = snackbarFlow,
+                defaultDispatcher = testDispatcher,
             )
         vm.uiModel.value =
             ImportFileState(fileName = fileName, fileContent = fileContent, isZip = false)
@@ -161,7 +162,10 @@ internal class ImportFileViewModelTest {
             Pair("qbtc1address", "qbtc-derived-pubkey")
         coEvery { vaultRepository.addTokenToVault(any(), any()) } returns Unit
 
-        createViewModel(fileName = "share1of2-test.bak").decryptVaultData()
+        val vm = createViewModel(fileName = "share1of2-test.bak")
+        vm.uiModel.value = vm.uiModel.value.copy(showPasswordPrompt = true)
+        vm.decryptVaultData()
+        vm.uiModel.first { !it.showPasswordPrompt }
 
         val tokenSlot = slot<Coin>()
         coVerify { vaultRepository.addTokenToVault("test-vault-id", capture(tokenSlot)) }

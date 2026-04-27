@@ -724,6 +724,8 @@
     <string name="keysign_password_enter_your_password">Введите пароль</string>
     <string name="migration_password_enter_your_password_to_unlock">Введите пароль, чтобы разблокировать общий сервер и начать обновление.</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Существует хранилище с дублирующимся именем</string>
+    <string name="join_key_gen_vault_already_on_device">Хранилище \"%1$s\" уже находится на этом устройстве</string>
+    <string name="join_key_gen_open_existing_vault">Открыть хранилище</string>
     <string name="join_key_gen_unknown_tssaction">Неизвестное действие TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">Не удалось найти другое устройство в сети</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Ожидание подключения других устройств</string>
@@ -1056,6 +1058,7 @@
     <string name="key_import_chains_no_results">Нет сетей, соответствующих запросу</string>
 
     <string name="key_import_device_count_get_started">Начать</string>
+    <string name="choose_device_count_a11y_description">Сколько у вас устройств? Выбрано: %1$s. Нажмите, чтобы выбрать другое.</string>
     <string name="vault_count_recommended">Рекомендуется</string>
 
     <string name="welcome_tip">Совет: Вы можете использовать браузер как устройство</string>
