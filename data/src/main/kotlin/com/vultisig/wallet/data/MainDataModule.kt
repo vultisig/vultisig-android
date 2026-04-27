@@ -133,7 +133,11 @@ private const val MIGRATION_DONE_KEY = "__migrated_from_encrypted_prefs"
  */
 @Suppress("DEPRECATION")
 private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPreferences) {
-    if (newPrefs.getBoolean(MIGRATION_DONE_KEY, false)) return
+    if (newPrefs.getBoolean(MIGRATION_DONE_KEY, false)) {
+        val legacyFile = File(context.filesDir.parent, "shared_prefs/$ENCRYPTED_PREFS_FILE.xml")
+        if (legacyFile.exists()) legacyFile.delete()
+        return
+    }
 
     val legacyFile = File(context.filesDir.parent, "shared_prefs/$ENCRYPTED_PREFS_FILE.xml")
     if (!legacyFile.exists()) return
@@ -188,8 +192,8 @@ private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPr
                 )
         }
     }
+    editor.putBoolean(MIGRATION_DONE_KEY, true)
     if (editor.commit()) {
-        newPrefs.edit().putBoolean(MIGRATION_DONE_KEY, true).apply()
         if (!legacyFile.delete()) {
             Timber.w("Failed to delete legacy encrypted prefs file at %s", legacyFile.absolutePath)
         }
