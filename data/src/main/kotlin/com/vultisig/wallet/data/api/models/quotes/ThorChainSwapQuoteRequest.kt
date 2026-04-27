@@ -8,4 +8,5 @@ data class ThorChainSwapQuoteRequest(
     val interval: String,
     val referralCode: String,
     val bpsDiscount: Int,
+    val streamingQuantity: Int? = null,
 )
