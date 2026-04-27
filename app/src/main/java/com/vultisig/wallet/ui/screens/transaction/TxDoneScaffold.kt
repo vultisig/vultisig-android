@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -133,21 +132,10 @@ private fun SuccessTransaction(
                 if (isTransactionPending) {
                     TransactionPending()
                 } else if (isTransactionFailed) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        RiveAnimation(
-                            animation = R.raw.riv_transaction_error,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Text(
-                            text = stringResource(R.string.transaction_failed),
-                            textAlign = TextAlign.Center,
-                            style =
-                                Theme.brockmann.body.l.medium.copy(
-                                    brush = Theme.v2.colors.gradients.primary
-                                ),
-                            modifier = Modifier.fillMaxWidth().offset(y = (-48).dp),
-                        )
-                    }
+                    RiveAnimation(
+                        animation = R.raw.riv_transaction_error,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 } else {
                     Image(
                         painter = painterResource(R.drawable.img_tx_overview_bg),
@@ -156,24 +144,25 @@ private fun SuccessTransaction(
                         modifier = Modifier.padding(horizontal = 48.dp).fillMaxWidth(),
                     )
                 }
-                if (isTransactionFailed.not()) {
-                    Text(
-                        text =
-                            stringResource(
-                                if (isTransactionPending) R.string.transaction_status_pending
-                                else R.string.tx_transaction_successful_screen_title
-                            ),
-                        textAlign = TextAlign.Center,
-                        style =
-                            Theme.brockmann.body.l.medium.copy(
-                                brush = Theme.v2.colors.gradients.primary
-                            ),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = 48.dp),
-                    )
-                }
+                Text(
+                    text =
+                        stringResource(
+                            when {
+                                isTransactionPending -> R.string.transaction_status_pending
+                                isTransactionFailed -> R.string.transaction_failed
+                                else -> R.string.tx_transaction_successful_screen_title
+                            }
+                        ),
+                    textAlign = TextAlign.Center,
+                    style =
+                        Theme.brockmann.body.l.medium.copy(
+                            brush = Theme.v2.colors.gradients.primary
+                        ),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 48.dp),
+                )
             }
         }
 
