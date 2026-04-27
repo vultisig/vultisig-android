@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -60,6 +61,15 @@ internal data class TransactionDetailsUiModel(
     val tokenDisplay: String? = null,
     val functionName: String? = null,
     val resolvedToken: ValuedToken? = null,
+    /**
+     * Resolved hero content for the dApp signing screens.
+     *
+     * Populated by [com.vultisig.wallet.data.usecases.BuildHeroContentUseCase] once the Blockaid
+     * simulation completes. When non-null, screens render this in place of the legacy "function
+     * name" text or the native-amount `VsOverviewToken`. When null, screens fall back to the
+     * existing display logic (resolved native amount / decoded function name).
+     */
+    val heroContent: HeroContent? = null,
 )
 
 @Immutable

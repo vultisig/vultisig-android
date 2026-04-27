@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.keysign
 
+import android.content.Context
 import android.net.nsd.NsdManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -59,6 +60,8 @@ import com.vultisig.wallet.data.repositories.evmFunctionName
 import com.vultisig.wallet.data.repositories.sentinelLabelFor
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidKeysignScanResult
+import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
@@ -87,10 +90,12 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
 import java.net.UnknownHostException
@@ -213,6 +218,9 @@ constructor(
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveProviderUseCase: ResolveProviderUseCase,
     private val keysignViewModelFactory: KeysignViewModel.Factory,
+    private val blockaidSimulationService: BlockaidSimulationService,
+    private val buildHeroContent: BuildHeroContentUseCase,
+    @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -1052,9 +1060,54 @@ constructor(
                         )
                     val uiModel = verifyUiModel.value
                     if (uiModel is VerifyUiModel.Send) {
+                        // Kick off the Blockaid simulation in parallel with the
+                        // existing security scan; the hero refresh and the badge
+                        // refresh happen independently so neither blocks the
+                        // other and the UI doesn't go through an "all loading
+                        // at once" state.
+                        loadBlockaidSimulation(payload, functionInfo?.functionName)
                         scanTransaction(transaction)
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Resolves the Blockaid hero for the current keysign payload and pushes the result into the
+     * shared [verifyUiModel].
+     *
+     * Runs on a background dispatcher; the cache + inflight coalescing inside
+     * [BlockaidSimulationService] makes calling this on every screen entry cheap. Failures degrade
+     * silently to the title-only fallback — the service swallows errors and returns
+     * [BlockaidKeysignScanResult.EMPTY].
+     */
+    private fun loadBlockaidSimulation(payload: KeysignPayload, decodedFunctionName: String?) {
+        viewModelScope.safeLaunch(
+            onError = { Timber.w(it, "Blockaid simulation failed during dApp signing") }
+        ) {
+            val result = withContext(Dispatchers.IO) { blockaidSimulationService.scan(payload) }
+            val unverifiedTitle = appContext.getString(R.string.dapp_hero_unverified_function_title)
+            val unverifiedSubtitle =
+                appContext.getString(R.string.dapp_hero_unverified_function_subtitle)
+            val hero =
+                buildHeroContent(
+                    simulation = result.simulation,
+                    decodedFunctionName = decodedFunctionName,
+                    didLoadSimulation = true,
+                    unverifiedFunctionTitle = unverifiedTitle,
+                    unverifiedFunctionSubtitle = unverifiedSubtitle,
+                )
+            updateSendUiModel(verifyUiModel) { current ->
+                current.copy(transaction = current.transaction.copy(heroContent = hero))
+            }
+            // Mirror the resolved hero into [transactionTypeUiModel] so the
+            // done screen's `KeysignViewModel` carries the same content forward
+            // — the cache covers the same lookup, but updating in place avoids
+            // a per-screen re-fetch and a flash of "loading" state on done.
+            (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
+                transactionTypeUiModel =
+                    TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))
             }
         }
     }

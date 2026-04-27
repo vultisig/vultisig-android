@@ -33,6 +33,8 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.hero.HeroContentView
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
@@ -73,27 +75,33 @@ internal fun SendTxOverviewScreen(
             )
         },
         tokenContent = {
-            // Title-only hero until Blockaid simulation is wired into mobile.
-            if (tx.functionName != null) {
-                Text(
-                    text = tx.functionName,
-                    style = Theme.brockmann.headings.title2,
-                    color = Theme.v2.colors.text.primary,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            } else {
-                VsOverviewToken(
-                    header =
-                        if (tx.type == UiTransactionInfoType.Send) {
-                            stringResource(R.string.tx_overview_screen_tx_send)
-                        } else {
-                            stringResource(R.string.tx_overview_screen_tx_deposit)
-                        },
-                    valuedToken = tx.token,
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                )
+            val hero = tx.heroContent
+            when {
+                hero != null -> {
+                    HeroContentView(content = hero, modifier = Modifier.fillMaxWidth())
+                }
+                tx.functionName != null -> {
+                    // Simulation hasn't loaded yet (or failed before reaching done).
+                    // Show the function name without the unverified caption — caption
+                    // would mislead users into thinking the chain itself is unverified.
+                    HeroContentView(
+                        content = HeroContent.Title(text = tx.functionName),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                else -> {
+                    VsOverviewToken(
+                        header =
+                            if (tx.type == UiTransactionInfoType.Send) {
+                                stringResource(R.string.tx_overview_screen_tx_send)
+                            } else {
+                                stringResource(R.string.tx_overview_screen_tx_deposit)
+                            },
+                        valuedToken = tx.token,
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         },
         detailContent = {
@@ -323,6 +331,10 @@ internal data class UiTransactionInfo(
     val tokenDisplay: String? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
+    /**
+     * Carried through from [com.vultisig.wallet.ui.models.TransactionDetailsUiModel.heroContent].
+     */
+    val heroContent: HeroContent? = null,
 )
 
 internal enum class UiTransactionInfoType {

@@ -418,6 +418,8 @@
     <string name="deposit_form_unstake_percentage_hint">Insira a percentagem para desbloquear</string>
     <string name="scan_qr_screen_title">Digitalize o código QR</string>
     <string name="verify_transaction_function_inputs_title">Entradas de função</string>
+    <string name="dapp_hero_unverified_function_title">Função não verificada</string>
+    <string name="dapp_hero_unverified_function_subtitle">Reveja os detalhes antes de assinar</string>
     <string name="send_shares_currency_hint">Insira cotas</string>
     <string name="send_error_max_shares">O valor não deve exceder o saldo</string>
     <string name="deposit_form_shares_title">Cotas (Saldo: %1$s)</string>

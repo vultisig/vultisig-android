@@ -35,23 +35,30 @@ import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.QrShareField
 import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.hero.HeroCoinAmount
+import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
 import com.vultisig.wallet.ui.models.keygen.VerifyPinState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
+import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
 import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
+import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
@@ -112,6 +119,16 @@ class PreviewActivity : ComponentActivity() {
                     "share_qr_keysign" -> ShareQrKeysignPreview()
                     "share_qr_keysign_swap" -> ShareQrKeysignSwapPreview()
                     "share_qr_keygen" -> ShareQrKeygenPreview()
+                    "blockaid_hero_send" -> BlockaidHeroVerifySendPreview()
+                    "blockaid_hero_swap" -> BlockaidHeroVerifySwapPreview()
+                    "blockaid_hero_unverified" -> BlockaidHeroVerifyUnverifiedPreview()
+                    "blockaid_hero_scanning" -> BlockaidHeroVerifyScanningPreview()
+                    "blockaid_hero_not_scanned" -> BlockaidHeroVerifyNotScannedPreview()
+                    "blockaid_hero_done_send" -> BlockaidHeroDoneSendPreview()
+                    "blockaid_hero_done_swap" -> BlockaidHeroDoneSwapPreview()
+                    "blockaid_hero_done_unverified" -> BlockaidHeroDoneUnverifiedPreview()
+                    "blockaid_popup_high" -> BlockaidPopupHighRiskPreview()
+                    "blockaid_popup_medium" -> BlockaidPopupMediumRiskPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -561,6 +578,376 @@ private fun ShareQrKeygenPreview() {
             )
     )
 }
+
+// -------------------------------------------------------------------------
+// Blockaid hero previews — issue #4095
+//
+// Each preview renders a full screen (verify or done) with mocked vault state
+// but the same `HeroContent` shape produced by the real flow. Token logos /
+// fiat balances are mocked; the hero shape (transfer / swap / unverified)
+// matches what the production parser produces from a real Blockaid response.
+// Used to capture screenshots for the PR before/after comparison.
+// -------------------------------------------------------------------------
+
+@Composable
+private fun BlockaidHeroVerifySendPreview() {
+    VerifySendScreen(
+        state = blockaidHeroSendState(),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun BlockaidHeroVerifySwapPreview() {
+    VerifySendScreen(
+        state = blockaidHeroSwapState(),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun BlockaidHeroVerifyUnverifiedPreview() {
+    VerifySendScreen(
+        state = blockaidHeroUnverifiedState(),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun BlockaidHeroVerifyScanningPreview() {
+    VerifySendScreen(
+        state = blockaidHeroSendState().copy(txScanStatus = TransactionScanStatus.Scanning),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun BlockaidHeroVerifyNotScannedPreview() {
+    VerifySendScreen(
+        state =
+            blockaidHeroSendState()
+                .copy(
+                    txScanStatus =
+                        TransactionScanStatus.Error(
+                            message = "chain not supported",
+                            provider = "blockaid",
+                        )
+                ),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun BlockaidHeroDoneSendPreview() {
+    TransactionDoneView(
+        showToolbar = true,
+        transactionHash = "0xabc123def456...",
+        approveTransactionHash = "",
+        transactionLink = "https://etherscan.io/tx/0xabc123",
+        approveTransactionLink = "",
+        onComplete = {},
+        onBack = {},
+        onUriClick = {},
+        transactionTypeUiModel = TransactionTypeUiModel.Send(blockaidHeroSendDetails()),
+    )
+}
+
+@Composable
+private fun BlockaidHeroDoneSwapPreview() {
+    TransactionDoneView(
+        showToolbar = true,
+        transactionHash = "0xabc123def456...",
+        approveTransactionHash = "",
+        transactionLink = "https://etherscan.io/tx/0xabc123",
+        approveTransactionLink = "",
+        onComplete = {},
+        onBack = {},
+        onUriClick = {},
+        transactionTypeUiModel = TransactionTypeUiModel.Send(blockaidHeroSwapDetails()),
+    )
+}
+
+@Composable
+private fun BlockaidPopupHighRiskPreview() {
+    BlockaidPopupOverlay(
+        title = "High risk transaction detected",
+        description =
+            "This transaction involves a malicious address. Interacting with it may compromise your assets. Proceed only if you are certain.",
+        iconRes = com.vultisig.wallet.R.drawable.ic_triangle_alert,
+        iconColor = Theme.v2.colors.alerts.error,
+    )
+}
+
+@Composable
+private fun BlockaidPopupMediumRiskPreview() {
+    BlockaidPopupOverlay(
+        title = "Medium risk transaction detected",
+        description =
+            "This transaction involves a malicious address. Interacting with it may compromise your assets. Proceed only if you are certain.",
+        iconRes = com.vultisig.wallet.R.drawable.alert,
+        iconColor = Theme.v2.colors.alerts.warning,
+    )
+}
+
+/**
+ * Renders the security scanner popup the way users actually see it: a modal sheet docked to the
+ * bottom of the screen, sitting on top of a scrim that partially obscures the verify screen behind.
+ * Mirrors Figma node 39852:64136 (high-risk variant) and 39852:64319 (medium-risk variant) where
+ * the sheet occupies only the bottom portion of the screen with the dApp transaction card still
+ * visible (and dimmed) above.
+ */
+@Composable
+private fun BlockaidPopupOverlay(
+    title: String,
+    description: String,
+    iconRes: Int,
+    iconColor: androidx.compose.ui.graphics.Color,
+) {
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.background)
+    ) {
+        // Stand-in for the verify screen visible behind the modal.
+        VerifySendScreen(
+            state = blockaidHeroSendState(),
+            isConsentsEnabled = true,
+            confirmTitle = "Sign",
+            onFastSignClick = {},
+            onConfirm = {},
+            onConsentAddress = {},
+            onConsentAmount = {},
+            onBackClick = {},
+            onConfirmScanning = {},
+            onDismissScanning = {},
+            hasToolbar = true,
+        )
+
+        // Scrim — Material's bottom-sheet scrim is black @ ~32% alpha.
+        androidx.compose.foundation.layout.Box(
+            modifier =
+                Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color(0x99000000))
+        )
+
+        // Sheet docked at the bottom with rounded top corners.
+        androidx.compose.foundation.layout.Box(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .align(androidx.compose.ui.Alignment.BottomCenter)
+                    .background(
+                        color = Theme.v2.colors.backgrounds.background,
+                        shape =
+                            androidx.compose.foundation.shape.RoundedCornerShape(
+                                topStart = 38.dp,
+                                topEnd = 38.dp,
+                            ),
+                    )
+        ) {
+            com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetContent(
+                contentStyle =
+                    com.vultisig.wallet.ui.components.securityscanner
+                        .SecurityScannerBottomSheetStyle(
+                            title = title,
+                            description = description,
+                            image = iconRes,
+                            imageColor = iconColor,
+                        ),
+                securityScannerProvider = "blockaid",
+                onDismissRequest = {},
+                onContinueAnyway = {},
+            )
+        }
+    }
+}
+
+@Composable
+private fun BlockaidHeroDoneUnverifiedPreview() {
+    TransactionDoneView(
+        showToolbar = true,
+        transactionHash = "0xabc123def456...",
+        approveTransactionHash = "",
+        transactionLink = "https://etherscan.io/tx/0xabc123",
+        approveTransactionLink = "",
+        onComplete = {},
+        onBack = {},
+        onUriClick = {},
+        transactionTypeUiModel = TransactionTypeUiModel.Send(blockaidHeroUnverifiedDetails()),
+    )
+}
+
+// ---- Fixtures ----
+
+private fun blockaidHeroSendDetails(): TransactionDetailsUiModel {
+    val ethCoin = Coins.Ethereum.ETH
+    return TransactionDetailsUiModel(
+        token = ValuedToken(token = ethCoin, value = "0", fiatValue = "$0.00"),
+        srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+        srcVaultName = "Honeypot Vault DKLS",
+        dstAddress = "0x9876543210FeDcBa9876543210FeDcBa98765432",
+        dstLabel = "Aave V3: Pool",
+        memo =
+            "0xa9059cbb000000000000000000000000fedcba98765432109876543210fedcba9876543200000000000000000000000000000000000000000000000000000000077359400",
+        functionName = "Approve",
+        functionSignature = "approve(address,uint256)",
+        functionInputs =
+            "[\n  {\"name\": \"spender\", \"value\": \"0x9876...432\"},\n  {\"name\": \"amount\", \"value\": \"125000000\"}\n]",
+        networkFeeFiatValue = "$1.84",
+        networkFeeTokenValue = "0.000482 ETH",
+        heroContent =
+            HeroContent.Send(
+                title = "Approve",
+                coin =
+                    HeroCoinAmount(
+                        amount = "125",
+                        ticker = "USDC",
+                        logo = "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+                    ),
+            ),
+    )
+}
+
+private fun blockaidHeroSwapDetails(): TransactionDetailsUiModel {
+    val ethCoin = Coins.Ethereum.ETH
+    return TransactionDetailsUiModel(
+        token = ValuedToken(token = ethCoin, value = "1.0", fiatValue = "$3,847.50"),
+        srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+        srcVaultName = "Honeypot Vault DKLS",
+        dstAddress = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+        dstLabel = "Uniswap V3: Router 2",
+        memo = "0x5ae401dc...",
+        functionName = "Multicall",
+        functionSignature = "multicall(uint256,bytes[])",
+        functionInputs = "[{\"name\": \"deadline\", \"value\": \"1730000000\"}]",
+        networkFeeFiatValue = "$4.15",
+        networkFeeTokenValue = "0.00108 ETH",
+        heroContent =
+            HeroContent.Swap(
+                title = "Multicall",
+                from = HeroCoinAmount(amount = "1", ticker = "ETH", logo = ""),
+                to =
+                    HeroCoinAmount(
+                        amount = "3,150.42",
+                        ticker = "USDC",
+                        logo = "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+                    ),
+            ),
+    )
+}
+
+private fun blockaidHeroUnverifiedDetails(): TransactionDetailsUiModel {
+    val ethCoin = Coins.Ethereum.ETH
+    return TransactionDetailsUiModel(
+        token = ValuedToken(token = ethCoin, value = "0", fiatValue = "$0.00"),
+        srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+        srcVaultName = "Honeypot Vault DKLS",
+        dstAddress = "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+        dstLabel = "Unknown Contract",
+        memo = "0xdeadbeef00000000000000000000000000000000",
+        functionName = "Pause",
+        functionSignature = "pause()",
+        functionInputs = "[]",
+        networkFeeFiatValue = "$0.95",
+        networkFeeTokenValue = "0.00025 ETH",
+        heroContent =
+            HeroContent.Title(
+                text = "Unverified function",
+                caption = "Review the details below before signing",
+            ),
+    )
+}
+
+private fun blockaidHeroSendState() =
+    VerifyTransactionUiModel(
+        transaction = blockaidHeroSendDetails(),
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = true,
+        txScanStatus =
+            TransactionScanStatus.Scanned(
+                SecurityScannerResult(
+                    provider = "blockaid",
+                    isSecure = true,
+                    riskLevel = SecurityRiskLevel.NONE,
+                    warnings = emptyList(),
+                    description = "Transaction is safe",
+                    recommendations = "",
+                )
+            ),
+    )
+
+private fun blockaidHeroSwapState() =
+    VerifyTransactionUiModel(
+        transaction = blockaidHeroSwapDetails(),
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = true,
+        txScanStatus =
+            TransactionScanStatus.Scanned(
+                SecurityScannerResult(
+                    provider = "blockaid",
+                    isSecure = true,
+                    riskLevel = SecurityRiskLevel.NONE,
+                    warnings = emptyList(),
+                    description = "Transaction is safe",
+                    recommendations = "",
+                )
+            ),
+    )
+
+private fun blockaidHeroUnverifiedState() =
+    VerifyTransactionUiModel(
+        transaction = blockaidHeroUnverifiedDetails(),
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = true,
+        // No security scanner result — this case maps to the title-only hero
+        // because Blockaid couldn't simulate (chain unsupported / 0x function
+        // body / network failure).
+        txScanStatus = TransactionScanStatus.NotStarted,
+    )
 
 @Composable
 private fun ShareQrPreview(info: QrShareInfo) {

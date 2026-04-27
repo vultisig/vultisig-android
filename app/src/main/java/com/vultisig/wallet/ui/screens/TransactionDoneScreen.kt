@@ -26,6 +26,8 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.hero.HeroContentView
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -69,20 +71,25 @@ internal fun TransactionDoneView(
                 ) {
                     if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
                         val transaction = transactionTypeUiModel.tx
-                        if (transaction.functionName != null) {
-                            Text(
-                                text = transaction.functionName,
-                                style = Theme.brockmann.headings.title3,
-                                color = Theme.v2.colors.text.primary,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        } else {
-                            VsOverviewToken(
-                                header = stringResource(R.string.tx_overview_screen_tx_send),
-                                valuedToken = transaction.token,
-                                shape = RoundedCornerShape(24.dp),
-                                modifier = Modifier.fillMaxWidth(),
-                            )
+                        val hero = transaction.heroContent
+                        when {
+                            hero != null -> {
+                                HeroContentView(content = hero, modifier = Modifier.fillMaxWidth())
+                            }
+                            transaction.functionName != null -> {
+                                HeroContentView(
+                                    content = HeroContent.Title(text = transaction.functionName),
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                            else -> {
+                                VsOverviewToken(
+                                    header = stringResource(R.string.tx_overview_screen_tx_send),
+                                    valuedToken = transaction.token,
+                                    shape = RoundedCornerShape(24.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
                         }
                     }
 

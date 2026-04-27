@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.send
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.ui.components.SignSolanaDisplayView
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
@@ -47,6 +49,8 @@ import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
+import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.hero.HeroContentView
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
@@ -183,34 +187,64 @@ internal fun VerifySendScreen(
 
                 SecurityScannerBadget(state.txScanStatus)
 
-                Column(
-                    modifier =
-                        Modifier.background(
-                                color = Theme.v2.colors.backgrounds.secondary,
-                                shape = RoundedCornerShape(16.dp),
-                            )
-                            .padding(all = 24.dp)
-                ) {
-                    // Title-only hero until Blockaid simulation is wired into mobile;
-                    // decode-derived amounts can mislead without a simulation backing them.
+                // Visually anchor the verify card to the badge above when Blockaid
+                // confirms the transaction is benign — Figma uses a thin success
+                // border around the card to reinforce the scanned state.
+                val isScannedBenign =
+                    (state.txScanStatus as? TransactionScanStatus.Scanned)?.result?.let { r ->
+                        r.isSecure &&
+                            (r.riskLevel == SecurityRiskLevel.NONE ||
+                                r.riskLevel == SecurityRiskLevel.LOW)
+                    } == true
+
+                val cardShape = RoundedCornerShape(16.dp)
+                val cardModifier =
+                    Modifier.background(
+                            color = Theme.v2.colors.backgrounds.secondary,
+                            shape = cardShape,
+                        )
+                        .let {
+                            if (isScannedBenign) {
+                                it.border(
+                                    width = 1.dp,
+                                    color = Theme.v2.colors.alerts.success,
+                                    shape = cardShape,
+                                )
+                            } else {
+                                it
+                            }
+                        }
+                        .padding(all = 24.dp)
+
+                Column(modifier = cardModifier) {
                     UiSpacer(12.dp)
 
-                    if (tx.functionName != null) {
-                        Text(
-                            text = tx.functionName,
-                            style = Theme.brockmann.headings.title3,
-                            color = Theme.v2.colors.text.primary,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    } else {
-                        VsOverviewToken(
-                            header = stringResource(R.string.verify_deposit_sending),
-                            valuedToken = tx.token,
-                            shape = RoundedCornerShape(0.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            withContainer = false,
-                        )
+                    // Hero is the dApp signing source of truth: a Blockaid simulation
+                    // that survives verify → sign → done. When absent we fall back to
+                    // the existing native-amount card so non-dApp sends are unchanged.
+                    val hero = tx.heroContent
+                    when {
+                        hero != null -> {
+                            HeroContentView(content = hero, modifier = Modifier.fillMaxWidth())
+                        }
+                        tx.functionName != null -> {
+                            // Pre-simulation tick: function name without a caption.
+                            // Switches to title+caption (HeroContent.Title) once the
+                            // simulation completes and didLoadSimulation flips true.
+                            HeroContentView(
+                                content = HeroContent.Title(text = tx.functionName),
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        else -> {
+                            VsOverviewToken(
+                                header = stringResource(R.string.verify_deposit_sending),
+                                valuedToken = tx.token,
+                                shape = RoundedCornerShape(0.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                                withContainer = false,
+                            )
+                        }
                     }
 
                     UiSpacer(12.dp)
