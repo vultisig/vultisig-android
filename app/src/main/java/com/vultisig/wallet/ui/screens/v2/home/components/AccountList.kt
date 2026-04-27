@@ -33,9 +33,7 @@ internal fun AccountList(
                         isBalanceVisible = isBalanceVisible,
                         showAddress = showAddress,
                         onClick = { onAccountClick(account) },
-                        onCopy = {
-                            snackbarState.show(addressCopiedMessage)
-                        },
+                        onCopy = { snackbarState.show(addressCopiedMessage) },
                     )
 
                     if (index != accounts.lastIndex) {
