@@ -32,11 +32,12 @@ internal class ReviewVaultDevicesViewModel
 constructor(private val navigator: Navigator<Destination>, savedStateHandle: SavedStateHandle) :
     ViewModel() {
     val args = savedStateHandle.toRoute<Route.ReviewVaultDevices>()
+    private val uniqueDevices = args.devices.orEmpty().distinct()
 
     val uiState =
         MutableStateFlow(
             ReviewVaultDevicesUiState(
-                devices = args.devices.orEmpty().distinct(),
+                devices = uniqueDevices,
                 localPartyId = args.localPartyId.orEmpty(),
             )
         )
@@ -61,7 +62,7 @@ constructor(private val navigator: Navigator<Destination>, savedStateHandle: Sav
                         action = args.action,
                         vaultName = args.vaultName,
                         password = args.password,
-                        deviceCount = args.devices?.distinct()?.size,
+                        deviceCount = uniqueDevices.size,
                     )
             )
         }
