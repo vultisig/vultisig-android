@@ -32,8 +32,10 @@ import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.data.utils.thorswapMultiplier
 import java.math.BigDecimal
+import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.datetime.Clock
+import timber.log.Timber
 
 interface SwapQuoteRepository {
 
@@ -264,47 +266,85 @@ constructor(
         }
         val thorTokenValue = (tokenValue.decimal * srcToken.thorswapMultiplier).toBigInteger()
 
-        val thorQuote =
+        val rapidRequest =
+            ThorChainSwapQuoteRequest(
+                address = dstAddress,
+                fromAsset = srcToken.swapAssetName(),
+                toAsset = dstToken.swapAssetName(),
+                amount = thorTokenValue.toString(),
+                interval = "0",
+                referralCode = referralCode,
+                bpsDiscount = bpsDiscount,
+            )
+
+        val rapidQuote =
             try {
-                thorChainApi.getSwapQuotes(
-                    ThorChainSwapQuoteRequest(
-                        address = dstAddress,
-                        fromAsset = srcToken.swapAssetName(),
-                        toAsset = dstToken.swapAssetName(),
-                        amount = thorTokenValue.toString(),
-                        interval = "0",
-                        referralCode = referralCode,
-                        bpsDiscount = bpsDiscount,
-                    )
-                )
+                thorChainApi.getSwapQuotes(rapidRequest)
             } catch (e: Exception) {
                 throw SwapException.handleSwapException(e.message ?: "Unknown error")
             }
 
-        when (thorQuote) {
-            is THORChainSwapQuoteDeserialized.Error -> {
-                throw SwapException.handleSwapException(thorQuote.error.message)
+        val rapidData =
+            when (rapidQuote) {
+                is THORChainSwapQuoteDeserialized.Error ->
+                    throw SwapException.handleSwapException(rapidQuote.error.message)
+
+                is THORChainSwapQuoteDeserialized.Result -> {
+                    rapidQuote.data.error?.let { throw SwapException.handleSwapException(it) }
+                    rapidQuote.data
+                }
             }
 
-            is THORChainSwapQuoteDeserialized.Result -> {
-                thorQuote.data.error?.let { throw SwapException.handleSwapException(it) }
-                val tokenFees = thorQuote.data.fees.total.convertToTokenValue(dstToken)
+        val feesTotal = rapidData.fees.total.toBigInteger()
+        val rapidExpectedOut = rapidData.expectedAmountOut.toBigInteger()
+        val grossOut = feesTotal + rapidExpectedOut
+        val rapidSlippageBps =
+            if (grossOut > BigInteger.ZERO)
+                feesTotal.multiply(BigInteger.valueOf(10000)).divide(grossOut).toInt()
+            else 0
 
-                val expectedDstTokenValue =
-                    thorQuote.data.expectedAmountOut.convertToTokenValue(dstToken)
-
-                val recommendedMinTokenValue =
-                    thorQuote.data.recommendedMinAmountIn.convertToTokenValue(srcToken)
-
-                return SwapQuote.ThorChain(
-                    expectedDstValue = expectedDstTokenValue,
-                    recommendedMinTokenValue = recommendedMinTokenValue,
-                    fees = tokenFees,
-                    data = thorQuote.data,
-                    expiredAt = Clock.System.now() + expiredAfter,
-                )
+        val finalData =
+            if (rapidSlippageBps > STREAMING_SLIPPAGE_THRESHOLD_BPS) {
+                try {
+                    val streamingQuote =
+                        thorChainApi.getSwapQuotes(
+                            rapidRequest.copy(
+                                interval = "1",
+                                streamingQuantity = rapidData.maxStreamingQuantity,
+                            )
+                        )
+                    when (streamingQuote) {
+                        is THORChainSwapQuoteDeserialized.Error -> rapidData
+                        is THORChainSwapQuoteDeserialized.Result -> {
+                            val streamingData = streamingQuote.data
+                            if (streamingData.error != null) {
+                                rapidData
+                            } else {
+                                val streamingOut = streamingData.expectedAmountOut.toBigInteger()
+                                if (streamingOut > rapidExpectedOut) streamingData else rapidData
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Timber.w(e, "Streaming quote fetch failed, falling back to rapid")
+                    rapidData
+                }
+            } else {
+                rapidData
             }
-        }
+
+        val tokenFees = finalData.fees.total.convertToTokenValue(dstToken)
+        val expectedDstTokenValue = finalData.expectedAmountOut.convertToTokenValue(dstToken)
+        val recommendedMinTokenValue =
+            finalData.recommendedMinAmountIn.convertToTokenValue(srcToken)
+
+        return SwapQuote.ThorChain(
+            expectedDstValue = expectedDstTokenValue,
+            recommendedMinTokenValue = recommendedMinTokenValue,
+            fees = tokenFees,
+            data = finalData,
+            expiredAt = Clock.System.now() + expiredAfter,
+        )
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -597,5 +637,6 @@ constructor(
     companion object {
         private const val SOLANA_DEFAULT_CONTRACT_ADDRESS =
             "So11111111111111111111111111111111111111112"
+        const val STREAMING_SLIPPAGE_THRESHOLD_BPS = 300
     }
 }
