@@ -64,6 +64,7 @@ private fun encryptRaw(secretKey: SecretKey, plaintext: String): String {
 /** Decodes and decrypts a value previously produced by [encryptRaw]. */
 private fun decryptRaw(secretKey: SecretKey, encoded: String): String {
     val bytes = Base64.decode(encoded, Base64.NO_WRAP)
+    require(bytes.size > IV_LENGTH) { "Encrypted payload too short: ${bytes.size}" }
     val iv = bytes.copyOfRange(0, IV_LENGTH)
     val ct = bytes.copyOfRange(IV_LENGTH, bytes.size)
     val cipher = Cipher.getInstance("AES/GCM/NoPadding")
