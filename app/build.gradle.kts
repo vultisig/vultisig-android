@@ -90,6 +90,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.window)
+    implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.appcompat)
     implementation(libs.firebase.messaging)
     implementation(libs.lifecycle.process)
