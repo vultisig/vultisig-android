@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.KyberSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.dstAmount
@@ -277,60 +278,82 @@ constructor(
                 bpsDiscount = bpsDiscount,
             )
 
-        val rapidQuote =
-            try {
-                thorChainApi.getSwapQuotes(rapidRequest)
-            } catch (e: Exception) {
-                throw SwapException.handleSwapException(e.message ?: "Unknown error")
-            }
-
-        val rapidData =
-            when (rapidQuote) {
+        // Fetch rapid quote; capture failure so we can fall back to streaming
+        var rapidData: THORChainSwapQuote? = null
+        var rapidError: SwapException? = null
+        try {
+            when (val quote = thorChainApi.getSwapQuotes(rapidRequest)) {
                 is THORChainSwapQuoteDeserialized.Error ->
-                    throw SwapException.handleSwapException(rapidQuote.error.message)
+                    rapidError = SwapException.handleSwapException(quote.error.message)
 
-                is THORChainSwapQuoteDeserialized.Result -> {
-                    rapidQuote.data.error?.let { throw SwapException.handleSwapException(it) }
-                    rapidQuote.data
-                }
+                is THORChainSwapQuoteDeserialized.Result ->
+                    if (quote.data.error != null)
+                        rapidError = SwapException.handleSwapException(quote.data.error!!)
+                    else rapidData = quote.data
             }
+        } catch (e: Exception) {
+            rapidError = SwapException.handleSwapException(e.message ?: "Unknown error")
+        }
 
-        val feesTotal = rapidData.fees.total.toBigInteger()
-        val rapidExpectedOut = rapidData.expectedAmountOut.toBigInteger()
-        val grossOut = feesTotal + rapidExpectedOut
-        val rapidSlippageBps =
-            if (grossOut > BigInteger.ZERO)
-                feesTotal.multiply(BigInteger.valueOf(10000)).divide(grossOut).toInt()
-            else 0
+        // Decide whether to try streaming: always when rapid failed, or when slippage is too high
+        val streamingQuantityHint: Int?
+        val needsStreaming: Boolean
 
-        val finalData =
-            if (rapidSlippageBps > STREAMING_SLIPPAGE_THRESHOLD_BPS) {
-                try {
-                    val streamingQuote =
-                        thorChainApi.getSwapQuotes(
-                            rapidRequest.copy(
-                                interval = "1",
-                                streamingQuantity = rapidData.maxStreamingQuantity,
+        if (rapidData == null) {
+            Timber.w("Rapid quote failed, trying streaming fallback")
+            needsStreaming = true
+            streamingQuantityHint = null
+        } else {
+            // local val so the compiler can smart-cast inside this block
+            val rd = rapidData
+            val feesTotal = rd.fees.total.toBigInteger()
+            val rapidExpectedOut = rd.expectedAmountOut.toBigInteger()
+            val grossOut = feesTotal + rapidExpectedOut
+            val rapidSlippageBps =
+                if (grossOut > BigInteger.ZERO)
+                    feesTotal.multiply(BigInteger.valueOf(10000)).divide(grossOut).toInt()
+                else 0
+            needsStreaming = rapidSlippageBps > STREAMING_SLIPPAGE_THRESHOLD_BPS
+            streamingQuantityHint = if (needsStreaming) rd.maxStreamingQuantity else null
+            if (needsStreaming) {
+                Timber.d(
+                    "Slippage %d bps is above threshold, fetching streaming quote",
+                    rapidSlippageBps,
+                )
+            }
+        }
+
+        // val copy so the compiler can smart-cast in the when expression below
+        val rapidSnapshot: THORChainSwapQuote? = rapidData
+
+        val finalData: THORChainSwapQuote =
+            if (needsStreaming) {
+                val streamingData: THORChainSwapQuote? =
+                    try {
+                        val quote =
+                            thorChainApi.getSwapQuotes(
+                                rapidRequest.copy(
+                                    interval = "1",
+                                    streamingQuantity = streamingQuantityHint,
+                                )
                             )
-                        )
-                    when (streamingQuote) {
-                        is THORChainSwapQuoteDeserialized.Error -> rapidData
-                        is THORChainSwapQuoteDeserialized.Result -> {
-                            val streamingData = streamingQuote.data
-                            if (streamingData.error != null) {
-                                rapidData
-                            } else {
-                                val streamingOut = streamingData.expectedAmountOut.toBigInteger()
-                                if (streamingOut > rapidExpectedOut) streamingData else rapidData
-                            }
+                        when (quote) {
+                            is THORChainSwapQuoteDeserialized.Error -> null
+                            is THORChainSwapQuoteDeserialized.Result ->
+                                quote.data.takeIf { it.error == null }
                         }
+                    } catch (e: Exception) {
+                        Timber.w(e, "Streaming quote fetch failed")
+                        null
                     }
-                } catch (e: Exception) {
-                    Timber.w(e, "Streaming quote fetch failed, falling back to rapid")
-                    rapidData
-                }
+
+                pickBestQuote(
+                    rapid = rapidSnapshot,
+                    streaming = streamingData,
+                    rapidError = rapidError,
+                )
             } else {
-                rapidData
+                requireNotNull(rapidSnapshot)
             }
 
         val tokenFees = finalData.fees.total.convertToTokenValue(dstToken)
@@ -466,6 +489,18 @@ constructor(
                     swapFeeTokenContract = swapFeeTokenContract,
                 ),
         )
+    }
+
+    private fun pickBestQuote(
+        rapid: THORChainSwapQuote?,
+        streaming: THORChainSwapQuote?,
+        rapidError: SwapException?,
+    ): THORChainSwapQuote {
+        if (streaming == null && rapid == null) throw requireNotNull(rapidError)
+        if (streaming == null) return requireNotNull(rapid)
+        if (rapid == null) return streaming
+        val streamingOut = streaming.expectedAmountOut.toBigInteger()
+        return if (streamingOut > rapid.expectedAmountOut.toBigInteger()) streaming else rapid
     }
 
     private fun String.convertToTokenValue(token: Coin): TokenValue =

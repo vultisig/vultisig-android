@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.Fees
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
@@ -16,6 +17,7 @@ import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class SwapQuoteRepositoryThorChainStreamingTest {
 
@@ -220,5 +222,68 @@ class SwapQuoteRepositoryThorChainStreamingTest {
 
         val thorResult = result as SwapQuote.ThorChain
         assertEquals("6000", thorResult.data.expectedAmountOut)
+    }
+
+    @Test
+    fun `rapid api error falls back to streaming quote`() = runTest {
+        val streamingData = thorQuote(expectedAmountOut = "8000", feesTotal = "200")
+
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "0" }) } returns
+            THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError("pool suspended"))
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "1" }) } returns
+            THORChainSwapQuoteDeserialized.Result(streamingData)
+
+        val result =
+            repository.getSwapQuote(
+                dstAddress = "TDst",
+                srcToken = btc,
+                dstToken = trx,
+                tokenValue = TokenValue(value = BigInteger("100000000"), token = btc),
+            )
+
+        // streaming fallback used, no streamingQuantity hint since rapid failed
+        coVerify(exactly = 1) {
+            thorChainApi.getSwapQuotes(match { it.interval == "1" && it.streamingQuantity == null })
+        }
+        val thorResult = result as SwapQuote.ThorChain
+        assertEquals("8000", thorResult.data.expectedAmountOut)
+    }
+
+    @Test
+    fun `rapid exception falls back to streaming quote`() = runTest {
+        val streamingData = thorQuote(expectedAmountOut = "7000", feesTotal = "300")
+
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "0" }) } throws
+            RuntimeException("connection timeout")
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "1" }) } returns
+            THORChainSwapQuoteDeserialized.Result(streamingData)
+
+        val result =
+            repository.getSwapQuote(
+                dstAddress = "TDst",
+                srcToken = btc,
+                dstToken = trx,
+                tokenValue = TokenValue(value = BigInteger("100000000"), token = btc),
+            )
+
+        val thorResult = result as SwapQuote.ThorChain
+        assertEquals("7000", thorResult.data.expectedAmountOut)
+    }
+
+    @Test
+    fun `both rapid and streaming fail throws rapid error`() = runTest {
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "0" }) } returns
+            THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError("pool suspended"))
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "1" }) } throws
+            RuntimeException("also failed")
+
+        assertThrows<SwapException> {
+            repository.getSwapQuote(
+                dstAddress = "TDst",
+                srcToken = btc,
+                dstToken = trx,
+                tokenValue = TokenValue(value = BigInteger("100000000"), token = btc),
+            )
+        }
     }
 }
