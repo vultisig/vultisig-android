@@ -155,7 +155,7 @@ internal fun <T> TokenSelectionList(
 
                             plusUiModel?.let { item { GridPlus(model = it) } }
 
-                            items(items) { item ->
+                            items(items, key = { it }) { item ->
                                 GridItem(
                                     uiModel = mapper(item),
                                     onCheckedChange = { onCheckChange(it, item) },
