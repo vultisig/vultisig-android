@@ -148,14 +148,14 @@ internal fun <T> TokenSelectionList(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(bottom = 60.dp),
                     ) {
-                        groups.forEach { (title, items, mapper, plusUiModel) ->
+                        groups.forEachIndexed { groupIndex, (title, items, mapper, plusUiModel) ->
                             title?.let {
                                 item(span = { GridItemSpan(maxLineSpan) }) { GridTitle(it) }
                             }
 
                             plusUiModel?.let { item { GridPlus(model = it) } }
 
-                            items(items, key = { it }) { item ->
+                            items(items, key = { "$groupIndex-${it.hashCode()}" }) { item ->
                                 GridItem(
                                     uiModel = mapper(item),
                                     onCheckedChange = { onCheckChange(it, item) },
