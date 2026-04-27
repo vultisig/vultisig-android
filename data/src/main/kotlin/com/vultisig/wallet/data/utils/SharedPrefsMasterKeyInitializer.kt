@@ -1,6 +1,5 @@
 package com.vultisig.wallet.data.utils
 
-import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -16,8 +15,7 @@ import timber.log.Timber
 object SharedPrefsMasterKeyInitializer {
 
     /** Fires a background key pre-warm; safe to call from Application.onCreate. */
-    @Suppress("UNUSED_PARAMETER")
-    fun prewarm(context: Context) {
+    fun prewarm() {
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             runCatching { buildSecurePrefsKey() }
                 .onFailure {

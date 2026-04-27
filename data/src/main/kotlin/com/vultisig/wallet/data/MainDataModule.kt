@@ -111,6 +111,7 @@ internal interface MainDataModule {
 
 private const val ENCRYPTED_PREFS_FILE = "token_encrypted_prefs"
 private const val SECURE_PREFS_FILE = "token_secure_prefs"
+private const val MIGRATION_DONE_KEY = "__migrated_from_encrypted_prefs"
 
 /** Qualifier for the IO [CoroutineDispatcher]. */
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class IoDispatcher
@@ -125,10 +126,15 @@ private const val SECURE_PREFS_FILE = "token_secure_prefs"
  * One-time migration: copies all entries from the legacy [EncryptedSharedPreferences] file to
  * [newPrefs], then deletes the legacy file. If the legacy file cannot be opened (e.g. the
  * AndroidKeyStore entry is corrupted), the legacy file is discarded rather than blocking startup.
- * The migration is idempotent — it is a no-op once the legacy file no longer exists.
+ *
+ * Idempotent: guarded by a marker key written to [newPrefs] after a successful commit, so a
+ * transient failure of [java.io.File.delete] on the legacy file does not cause re-migration on the
+ * next launch.
  */
 @Suppress("DEPRECATION")
 private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPreferences) {
+    if (newPrefs.getBoolean(MIGRATION_DONE_KEY, false)) return
+
     val legacyFile = File(context.filesDir.parent, "shared_prefs/$ENCRYPTED_PREFS_FILE.xml")
     if (!legacyFile.exists()) return
 
@@ -171,7 +177,10 @@ private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPr
         }
     }
     if (editor.commit()) {
-        legacyFile.delete()
+        newPrefs.edit().putBoolean(MIGRATION_DONE_KEY, true).apply()
+        if (!legacyFile.delete()) {
+            Timber.w("Failed to delete legacy encrypted prefs file at %s", legacyFile.absolutePath)
+        }
         Timber.i("Migrated encrypted prefs to secure format")
     } else {
         Timber.w("Failed to commit migrated prefs; legacy file retained for next attempt")

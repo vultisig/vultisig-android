@@ -84,6 +84,16 @@ internal class EncryptingSharedPreferences(
     private fun decryptOrNull(encoded: String) =
         runCatching { decryptRaw(secretKey, encoded) }.getOrNull()
 
+    /** Strips [prefix] and applies [parse] if this string starts with [prefix]; else null. */
+    private inline fun <T> String.readTypedFromDecrypted(
+        prefix: String,
+        parse: (String) -> T?,
+    ): T? = if (startsWith(prefix)) parse(removePrefix(prefix)) else null
+
+    /** Fetches, decrypts, and parses the value for [key] using the given [prefix] and [parse]. */
+    private inline fun <T> readTyped(key: String, prefix: String, parse: (String) -> T?): T? =
+        prefs.getString(key, null)?.let(::decryptOrNull)?.readTypedFromDecrypted(prefix, parse)
+
     /** Returns all key-value pairs with each stored value decrypted. */
     override fun getAll(): MutableMap<String, *> =
         prefs.all
@@ -92,9 +102,7 @@ internal class EncryptingSharedPreferences(
 
     /** Returns the decrypted string for [key], or [defValue] if absent or undecryptable. */
     override fun getString(key: String, defValue: String?): String? =
-        prefs.getString(key, null)?.let {
-            decryptOrNull(it)?.takeIf { d -> d.startsWith(P_STRING) }?.removePrefix(P_STRING)
-        } ?: defValue
+        readTyped(key, P_STRING) { it } ?: defValue
 
     /** StringSet is not supported; always throws [UnsupportedOperationException]. */
     override fun getStringSet(key: String, defValues: MutableSet<String>?): MutableSet<String>? =
@@ -102,39 +110,19 @@ internal class EncryptingSharedPreferences(
 
     /** Returns the decrypted int for [key], or [defValue] if absent or undecryptable. */
     override fun getInt(key: String, defValue: Int): Int =
-        prefs.getString(key, null)?.let {
-            decryptOrNull(it)
-                ?.takeIf { d -> d.startsWith(P_INT) }
-                ?.removePrefix(P_INT)
-                ?.toIntOrNull()
-        } ?: defValue
+        readTyped(key, P_INT, String::toIntOrNull) ?: defValue
 
     /** Returns the decrypted long for [key], or [defValue] if absent or undecryptable. */
     override fun getLong(key: String, defValue: Long): Long =
-        prefs.getString(key, null)?.let {
-            decryptOrNull(it)
-                ?.takeIf { d -> d.startsWith(P_LONG) }
-                ?.removePrefix(P_LONG)
-                ?.toLongOrNull()
-        } ?: defValue
+        readTyped(key, P_LONG, String::toLongOrNull) ?: defValue
 
     /** Returns the decrypted float for [key], or [defValue] if absent or undecryptable. */
     override fun getFloat(key: String, defValue: Float): Float =
-        prefs.getString(key, null)?.let {
-            decryptOrNull(it)
-                ?.takeIf { d -> d.startsWith(P_FLOAT) }
-                ?.removePrefix(P_FLOAT)
-                ?.toFloatOrNull()
-        } ?: defValue
+        readTyped(key, P_FLOAT, String::toFloatOrNull) ?: defValue
 
     /** Returns the decrypted boolean for [key], or [defValue] if absent or undecryptable. */
     override fun getBoolean(key: String, defValue: Boolean): Boolean =
-        prefs.getString(key, null)?.let {
-            decryptOrNull(it)
-                ?.takeIf { d -> d.startsWith(P_BOOL) }
-                ?.removePrefix(P_BOOL)
-                ?.toBooleanStrictOrNull()
-        } ?: defValue
+        readTyped(key, P_BOOL, String::toBooleanStrictOrNull) ?: defValue
 
     /** Returns true if the underlying prefs contain an entry for [key]. */
     override fun contains(key: String): Boolean = prefs.contains(key)
@@ -153,14 +141,11 @@ internal class EncryptingSharedPreferences(
     ) = prefs.unregisterOnSharedPreferenceChangeListener(listener)
 
     private fun String.typed(): Any? =
-        when {
-            startsWith(P_STRING) -> removePrefix(P_STRING)
-            startsWith(P_BOOL) -> removePrefix(P_BOOL).toBooleanStrictOrNull()
-            startsWith(P_INT) -> removePrefix(P_INT).toIntOrNull()
-            startsWith(P_LONG) -> removePrefix(P_LONG).toLongOrNull()
-            startsWith(P_FLOAT) -> removePrefix(P_FLOAT).toFloatOrNull()
-            else -> null
-        }
+        readTypedFromDecrypted(P_STRING) { it }
+            ?: readTypedFromDecrypted(P_BOOL, String::toBooleanStrictOrNull)
+            ?: readTypedFromDecrypted(P_INT, String::toIntOrNull)
+            ?: readTypedFromDecrypted(P_LONG, String::toLongOrNull)
+            ?: readTypedFromDecrypted(P_FLOAT, String::toFloatOrNull)
 }
 
 /** [SharedPreferences.Editor] that AES-256-GCM-encrypts every value before writing to [editor]. */
