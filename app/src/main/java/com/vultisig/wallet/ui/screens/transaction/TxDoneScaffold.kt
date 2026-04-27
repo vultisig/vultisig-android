@@ -45,8 +45,6 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
-import com.vultisig.wallet.ui.components.errors.ErrorState
-import com.vultisig.wallet.ui.components.errors.ErrorWaves
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
@@ -135,11 +133,21 @@ private fun SuccessTransaction(
                 if (isTransactionPending) {
                     TransactionPending()
                 } else if (isTransactionFailed) {
-                    ErrorWaves(
-                        title = stringResource(R.string.transaction_failed),
-                        errorState = ErrorState.CRITICAL,
-                        modifier = Modifier.offset(y = (20).dp),
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        RiveAnimation(
+                            animation = R.raw.riv_transaction_error,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Text(
+                            text = stringResource(R.string.transaction_failed),
+                            textAlign = TextAlign.Center,
+                            style =
+                                Theme.brockmann.body.l.medium.copy(
+                                    brush = Theme.v2.colors.gradients.primary
+                                ),
+                            modifier = Modifier.fillMaxWidth().offset(y = (-48).dp),
+                        )
+                    }
                 } else {
                     Image(
                         painter = painterResource(R.drawable.img_tx_overview_bg),
