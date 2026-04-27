@@ -160,8 +160,20 @@ private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPr
             return
         }
 
+    val legacyEntries =
+        try {
+            legacyPrefs.all
+        } catch (e: GeneralSecurityException) {
+            Timber.e(e, "Cannot decrypt legacy encrypted prefs; discarding legacy data")
+            legacyFile.delete()
+            return
+        } catch (e: IOException) {
+            Timber.e(e, "Cannot read legacy encrypted prefs; discarding legacy data")
+            legacyFile.delete()
+            return
+        }
     val editor = newPrefs.edit()
-    for ((key, value) in legacyPrefs.all) {
+    for ((key, value) in legacyEntries) {
         when (value) {
             is String -> editor.putString(key, value)
             is Boolean -> editor.putBoolean(key, value)
