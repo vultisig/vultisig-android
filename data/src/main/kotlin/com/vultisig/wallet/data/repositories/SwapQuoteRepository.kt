@@ -288,7 +288,7 @@ constructor(
 
                 is THORChainSwapQuoteDeserialized.Result ->
                     if (quote.data.error != null)
-                        rapidError = SwapException.handleSwapException(quote.data.error!!)
+                        rapidError = SwapException.handleSwapException(quote.data.error)
                     else rapidData = quote.data
             }
         } catch (e: Exception) {
