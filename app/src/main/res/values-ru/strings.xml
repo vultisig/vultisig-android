@@ -1058,6 +1058,7 @@
     <string name="key_import_chains_no_results">Нет сетей, соответствующих запросу</string>
 
     <string name="key_import_device_count_get_started">Начать</string>
+    <string name="choose_device_count_a11y_description">Сколько у вас устройств? Выбрано: %1$s. Нажмите, чтобы выбрать другое.</string>
     <string name="vault_count_recommended">Рекомендуется</string>
 
     <string name="welcome_tip">Совет: Вы можете использовать браузер как устройство</string>

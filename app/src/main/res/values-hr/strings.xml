@@ -1054,6 +1054,7 @@
     <string name="key_import_chains_no_results">Nijedan lanac ne odgovara vašem pretraživanju</string>
 
     <string name="key_import_device_count_get_started">Započni</string>
+    <string name="choose_device_count_a11y_description">Koliko uređaja imate? %1$s odabrano. Dodirnite za drugi odabir.</string>
     <string name="vault_count_recommended">Preporučeno</string>
 
     <string name="welcome_tip">Savjet: Možete koristiti preglednik kao uređaj</string>

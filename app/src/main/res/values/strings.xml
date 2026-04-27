@@ -1116,6 +1116,7 @@
     <string name="key_import_chains_get_started">Get started</string>
     <string name="key_import_chains_no_results">No chains match your search</string>
     <string name="key_import_device_count_get_started">Get started</string>
+    <string name="choose_device_count_a11y_description">How many devices do you have? %1$s selected. Tap to choose another.</string>
     <string name="key_import_error_title">Key Import Failed</string>
     <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
     <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>

@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.TronAccountJson
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.calculateResourceStats
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.VaultId
@@ -84,7 +85,12 @@ internal sealed interface TronDeFiUiState {
     ) : TronDeFiUiState
 }
 
-@Immutable data class TronPendingWithdrawalUiModel(val amountTrx: String, val expiryEpochMs: Long)
+@Immutable
+data class TronPendingWithdrawalUiModel(
+    val amountTrx: String,
+    val expiryEpochMs: Long,
+    val resourceType: TronResourceType?,
+)
 
 internal enum class TronAction(val defiType: DeFiNavActions) {
     FREEZE(DeFiNavActions.FREEZE_TRX),
@@ -203,9 +209,17 @@ constructor(
                 TronPendingWithdrawalUiModel(
                     amountTrx = amountSun.sunToTrx().toPlainString(),
                     expiryEpochMs = expireTimeMs,
+                    resourceType = entry.type.toTronResourceType(),
                 )
             }
             .sortedWith(compareBy { it.expiryEpochMs })
+
+    private fun String?.toTronResourceType(): TronResourceType? =
+        when (this) {
+            "BANDWIDTH" -> TronResourceType.BANDWIDTH
+            "ENERGY" -> TronResourceType.ENERGY
+            else -> null
+        }
 
     private suspend fun findTrxCoin(vaultId: VaultId) =
         vaultRepository.get(vaultId)?.coins?.find { it.chain == Chain.Tron && it.isNativeToken }
