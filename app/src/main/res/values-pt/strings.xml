@@ -129,8 +129,8 @@
     <string name="keysign_screen_signing_with_mldsa">ASSINANDO USANDO CHAVE MLDSA…</string>
     <string name="vault_settings_delete_vault_caution1">Estou ciente de que o cofre será excluído permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Estou ciente de que posso perder fundos</string>
-    <string name="vault_settings_delete_vault_caution3">Fiz um backup do cofre</string>
-    <string name="confirm_delete_permanent_delete_message">Você está excluindo permanentemente seu cofre</string>
+    <string name="vault_settings_delete_vault_caution3">Fiz um backup do cofre para restaurá-lo mais tarde</string>
+    <string name="confirm_delete_permanent_delete_message">Você está excluindo permanentemente sua parte do cofre deste aplicativo</string>
     <string name="confirm_delete_delete_vault">Deletar Cofre</string>
     <string name="rename_vault_screen_vault_name">Nome do Cofre</string>
     <string name="faq_settings_q1">O que é a Vultisig?</string>

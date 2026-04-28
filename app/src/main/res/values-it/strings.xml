@@ -121,8 +121,8 @@
     <string name="keysign_screen_preparing_vault">PREPARANDO LA CASSAFORTE…</string>
     <string name="vault_settings_delete_vault_caution1">Sono consapevole che il caveau sarà eliminato permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Sono consapevole che posso perdere fondi</string>
-    <string name="vault_settings_delete_vault_caution3">Ho fatto un backup del caveau</string>
-    <string name="confirm_delete_permanent_delete_message">Stai eliminando definitivamente il tuo caveau</string>
+    <string name="vault_settings_delete_vault_caution3">Ho fatto un backup del caveau per ripristinarlo in seguito</string>
+    <string name="confirm_delete_permanent_delete_message">Stai eliminando definitivamente la tua parte del caveau da questa app</string>
     <string name="confirm_delete_delete_vault">Elimina Cassaforte</string>
     <string name="rename_vault_screen_vault_name">Nome Cassaforte</string>
     <string name="faq_settings_q2">Quali sono i vantaggi dell\'utilizzo di Vultisig?</string>

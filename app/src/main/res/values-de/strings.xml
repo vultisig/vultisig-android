@@ -126,8 +126,8 @@
     <string name="keysign_screen_signing_with_mldsa">MIT MLDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
     <string name="vault_settings_delete_vault_caution1">Mir ist bewusst, dass der Tresor dauerhaft gelöscht wird</string>
     <string name="vault_settings_delete_vault_caution2">Mir ist bewusst, dass ich Geld verlieren kann</string>
-    <string name="vault_settings_delete_vault_caution3">Ich habe eine Sicherung des Tresors erstellt</string>
-    <string name="confirm_delete_permanent_delete_message">Sie löschen Ihren Tresor dauerhaft</string>
+    <string name="vault_settings_delete_vault_caution3">Ich habe eine Sicherung des Tresors für eine spätere Wiederherstellung erstellt</string>
+    <string name="confirm_delete_permanent_delete_message">Sie löschen Ihren Tresorteil dauerhaft aus dieser App</string>
     <string name="confirm_delete_delete_vault">Tresor löschen</string>
     <string name="rename_vault_screen_vault_name">Tresorname</string>
     <string name="faq_settings_q1">Was ist Vultisig?</string>

@@ -63,7 +63,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import java.math.BigInteger
-import java.util.Base64
+import java.util.*
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
@@ -210,7 +210,7 @@ constructor(
 
     private var pullTssMessagesJob: Job? = null
     private val signatures: MutableMap<String, KeysignResponse> = mutableMapOf()
-    private var featureFlag: FeatureFlagJson? = null
+    private var featureFlags: FeatureFlagJson? = null
 
     private var isNavigateToHome: Boolean = false
 
@@ -432,8 +432,8 @@ constructor(
         Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
         try {
-            featureFlag = featureFlagApi.getFeatureFlag()
-            val isEncryptionGcm = featureFlag?.isEncryptGcmEnabled == true
+            featureFlags = featureFlagApi.getFeatureFlags()
+            val isEncryptionGcm = featureFlags?.isEncryptGcmEnabled == true
 
             tssMessenger =
                 TssMessenger(
@@ -496,7 +496,7 @@ constructor(
             this.tssMessenger?.setMessageID(msgHash)
             Timber.d("signMessageWithRetry: msgHash: $msgHash")
 
-            val isEncryptionGcm = featureFlag?.isEncryptGcmEnabled == true
+            val isEncryptionGcm = featureFlags?.isEncryptGcmEnabled == true
             pullTssMessagesJob =
                 viewModelScope.launch {
                     pullTssMessages(
@@ -740,6 +740,7 @@ constructor(
             is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
             TransactionResult.NotFound ->
                 TransactionStatus.Failed("Confirmation taking longer than expected".asUiText())
+
             TransactionResult.Pending -> TransactionStatus.Pending
         }
 

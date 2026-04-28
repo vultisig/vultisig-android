@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -30,6 +31,7 @@ data class ChainToReceiveUiModel(
     val logo: Int,
     val ticker: String,
     val address: String,
+    val chain: Chain,
 )
 
 @HiltViewModel
@@ -61,6 +63,7 @@ constructor(
                                         .first { account -> account.token.isNativeToken }
                                         .token
                                         .ticker,
+                                chain = it.chain,
                             )
                         }
                         .filter {

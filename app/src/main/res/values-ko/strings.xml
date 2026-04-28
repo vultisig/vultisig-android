@@ -239,14 +239,14 @@
     <string name="successfully_scanned_barcode">바코드 스캔 성공: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">볼트가 영구적으로 삭제된다는 것을 알고 있습니다</string>
     <string name="vault_settings_delete_vault_caution2">자금을 잃을 수 있다는 것을 알고 있습니다</string>
-    <string name="vault_settings_delete_vault_caution3">볼트 백업을 완료했습니다</string>
+    <string name="vault_settings_delete_vault_caution3">나중에 복원할 수 있도록 볼트 백업을 완료했습니다</string>
     <string name="vault_settings_delete_vault_name">볼트 이름:</string>
     <string name="vault_settings_delete_vault_value">볼트 가치:</string>
     <string name="vault_settings_delete_vault_id">기기 ID:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA 키:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA 키:</string>
 
-    <string name="confirm_delete_permanent_delete_message">볼트를 영구적으로 삭제합니다</string>
+    <string name="confirm_delete_permanent_delete_message">이 앱에서 볼트 공유를 영구적으로 삭제합니다</string>
     <string name="confirm_delete_delete_vault">볼트 삭제</string>
     <string name="vault_accounts_account_assets">%1$s 자산</string>
     <string name="s_of_s_vault">%1$s-of-%2$s 볼트 설정</string>
