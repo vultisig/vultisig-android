@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainLiquidityProviderJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolStatsJson
+import com.vultisig.wallet.data.utils.NetworkException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -73,9 +74,10 @@ internal class GetThorChainLpPositionsUseCaseTest {
     }
 
     @Test
-    fun `swallows per-pool errors and continues`() = runTest {
+    fun `swallows per-pool network errors and continues`() = runTest {
         coEvery { api.getPoolStats(any()) } returns listOf(pool("BTC.BTC"), pool("ETH.ETH"))
-        coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } throws RuntimeException("boom")
+        coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } throws
+            NetworkException(httpStatusCode = 500, message = "boom")
         coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns lp(units = "5")
 
         val positions = useCase(runeAddress = RUNE_ADDR)

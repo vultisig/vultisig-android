@@ -3,9 +3,10 @@ package com.vultisig.wallet.data.usecases
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolStatsJson
 import com.vultisig.wallet.data.models.ThorChainLpPosition
+import com.vultisig.wallet.data.utils.NetworkException
+import java.io.IOException
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -48,9 +49,10 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainLpPositionsUse
             try {
                 thorChainApi.getLiquidityProvider(pool.asset, runeAddress)
                     ?: assetAddress?.let { thorChainApi.getLiquidityProvider(pool.asset, it) }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
+            } catch (e: IOException) {
+                Timber.w(e, "Failed to fetch LP position for pool %s", pool.asset)
+                null
+            } catch (e: NetworkException) {
                 Timber.w(e, "Failed to fetch LP position for pool %s", pool.asset)
                 null
             } ?: return null

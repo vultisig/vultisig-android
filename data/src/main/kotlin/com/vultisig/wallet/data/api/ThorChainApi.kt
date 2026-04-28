@@ -349,7 +349,7 @@ constructor(
             .get("$MIDGARD_URL/pools") {
                 header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
                 parameter("status", "available")
-                parameter("period", period ?: DEFAULT_LP_PERIOD)
+                parameter("period", period?.takeIf { it.isNotBlank() } ?: DEFAULT_LP_PERIOD)
             }
             .bodyOrThrow()
 
@@ -361,11 +361,8 @@ constructor(
             httpClient.get("$THORNODE_BASE/thorchain/pool/$asset/liquidity_provider/$address") {
                 header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
             }
-        return when {
-            response.status == HttpStatusCode.NotFound -> null
-            response.status.isSuccess() -> response.bodyOrThrow<ThorChainLiquidityProviderJson>()
-            else -> error("Error fetching LP position: status=${response.status}")
-        }
+        return if (response.status == HttpStatusCode.NotFound) null
+        else response.bodyOrThrow<ThorChainLiquidityProviderJson>()
     }
 
     override suspend fun getConstants(): ThorchainConstantsResponse {
