@@ -296,7 +296,7 @@ constructor(
             }
         ) {
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
-            val keygenCommittee = listOf(localPartyId) + state.value.selectedDevices
+            val keygenCommittee = (listOf(localPartyId) + state.value.selectedDevices).distinct()
             sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
 
             navigator.route(

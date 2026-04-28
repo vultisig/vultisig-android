@@ -96,6 +96,7 @@ internal class ImportFileViewModelTest {
                 vaultRepository = vaultRepository,
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 snackBarFlow = snackbarFlow,
+                defaultDispatcher = testDispatcher,
             )
         vm.uiModel.value =
             ImportFileState(fileName = fileName, fileContent = fileContent, isZip = false)

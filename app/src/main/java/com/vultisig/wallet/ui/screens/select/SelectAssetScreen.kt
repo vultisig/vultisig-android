@@ -88,7 +88,7 @@ private fun SelectAssetScreen(
                 }
             } else {
                 LazyColumn(contentPadding = PaddingValues(all = 16.dp)) {
-                    itemsIndexed(assets) { index, item ->
+                    itemsIndexed(assets, key = { _, item -> item.token.id }) { index, item ->
                         val isFirst = index == 0
                         val isLast = index == assets.size - 1
                         val rounding = 12.dp
