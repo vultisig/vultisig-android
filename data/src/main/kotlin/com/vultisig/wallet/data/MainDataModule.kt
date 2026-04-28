@@ -117,6 +117,8 @@ internal interface MainDataModule {
 
 private const val ENCRYPTED_PREFS_FILE = "token_encrypted_prefs"
 private const val SECURE_PREFS_FILE = "token_secure_prefs"
+// Stored in a separate file so a clear() on the main prefs cannot reset this sentinel.
+private const val MIGRATION_STATE_PREFS = "migration_state_prefs"
 private const val MIGRATION_DONE_KEY = "__migrated_from_encrypted_prefs"
 
 /** Qualifier for the IO [CoroutineDispatcher]. */
@@ -133,13 +135,15 @@ private const val MIGRATION_DONE_KEY = "__migrated_from_encrypted_prefs"
  * [newPrefs], then deletes the legacy file. If the legacy file cannot be opened (e.g. the
  * AndroidKeyStore entry is corrupted), the legacy file is discarded rather than blocking startup.
  *
- * Idempotent: [MIGRATION_DONE_KEY] is written atomically with the migrated values in the same
- * [SharedPreferences.Editor.commit] call, so there is no window in which the commit can succeed
- * without the marker being set. A transient [java.io.File.delete] failure on the legacy file is
- * handled by a best-effort delete on the next launch (early-return path).
+ * Idempotent: [MIGRATION_DONE_KEY] is written to a dedicated [MIGRATION_STATE_PREFS] file that is
+ * separate from [newPrefs], so a [SharedPreferences.Editor.clear] on [newPrefs] cannot reset the
+ * sentinel and trigger re-migration. A transient [java.io.File.delete] failure on the legacy file
+ * is handled by a best-effort delete on the next launch (early-return path).
  */
 private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPreferences) {
-    if (newPrefs.getBoolean(MIGRATION_DONE_KEY, false)) {
+    val migrationStatePrefs =
+        context.getSharedPreferences(MIGRATION_STATE_PREFS, Context.MODE_PRIVATE)
+    if (migrationStatePrefs.getBoolean(MIGRATION_DONE_KEY, false)) {
         val legacyFile = File(context.filesDir.parent, "shared_prefs/$ENCRYPTED_PREFS_FILE.xml")
         if (legacyFile.exists() && !legacyFile.delete()) {
             Timber.w("Failed to delete legacy encrypted prefs file at %s", legacyFile.absolutePath)
@@ -196,8 +200,8 @@ private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPr
                 )
         }
     }
-    editor.putBoolean(MIGRATION_DONE_KEY, true)
     if (editor.commit()) {
+        migrationStatePrefs.edit().putBoolean(MIGRATION_DONE_KEY, true).apply()
         if (!legacyFile.delete()) {
             Timber.w("Failed to delete legacy encrypted prefs file at %s", legacyFile.absolutePath)
         }
