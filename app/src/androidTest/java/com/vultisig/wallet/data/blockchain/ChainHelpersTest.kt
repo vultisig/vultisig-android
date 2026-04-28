@@ -152,7 +152,7 @@ class ChainHelpersTest {
                 decimals = 9,
                 priceProviderId = "the-open-network",
                 isNativeToken = true,
-                hexPublicKey = HEX_PUBLIC_KEY,
+                hexPublicKey = HEX_PUBLIC_KEY_EDDSA,
                 logo = "ton",
             )
         val blockchainSpecific =
