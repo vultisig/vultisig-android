@@ -13,8 +13,17 @@ interface FeatureFlagRepository {
 internal class FeatureFlagRepositoryImpl
 @Inject
 constructor(private val featureFlagApi: FeatureFlagApi) : FeatureFlagRepository {
-    override suspend fun getFeatureFlags(): FeatureFlagJson =
-        runCatching { featureFlagApi.getFeatureFlags() }
-            .onFailure { Timber.w(it, "Failed to load feature flags, using safe defaults") }
-            .getOrDefault(FeatureFlagJson())
+
+    companion object {
+        var tssBatchEnabledOverride: Boolean? = false
+    }
+
+    override suspend fun getFeatureFlags(): FeatureFlagJson {
+        val flags =
+            runCatching { featureFlagApi.getFeatureFlags() }
+                .onFailure { Timber.w(it, "Failed to load feature flags, using safe defaults") }
+                .getOrDefault(FeatureFlagJson())
+        val override = tssBatchEnabledOverride ?: return flags
+        return flags.copy(isTssBatchEnabled = override)
+    }
 }
