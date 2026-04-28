@@ -186,21 +186,41 @@ class ChainHelpersTest {
         val withPayloadHash =
             TonHelper.getPreSignedImageHash(
                 buildPayload(
-                    listOf(TonMessage(to = dest, amount = "50000000", payload = "te6ccgpayload"))
+                    listOf(
+                        TonMessage(
+                            to = dest,
+                            amount = "50000000",
+                            payload = "te6cckEBAQEAAgAAABGw7yzH",
+                        )
+                    )
                 )
             )
         val withStateInitHash =
             TonHelper.getPreSignedImageHash(
                 buildPayload(
-                    listOf(TonMessage(to = dest, amount = "50000000", stateInit = "te6ccinit"))
+                    listOf(
+                        TonMessage(
+                            to = dest,
+                            amount = "50000000",
+                            stateInit = "te6cckEBAQEAAgAAAEysuc0=",
+                        )
+                    )
                 )
             )
         val twoMessageHash =
             TonHelper.getPreSignedImageHash(
                 buildPayload(
                     listOf(
-                        TonMessage(to = dest, amount = "50000000", payload = "te6ccgpayload"),
-                        TonMessage(to = dest, amount = "100000000", stateInit = "te6ccinit"),
+                        TonMessage(
+                            to = dest,
+                            amount = "50000000",
+                            payload = "te6cckEBAQEAAgAAABGw7yzH",
+                        ),
+                        TonMessage(
+                            to = dest,
+                            amount = "100000000",
+                            stateInit = "te6cckEBAQEAAgAAAEysuc0=",
+                        ),
                     )
                 )
             )
