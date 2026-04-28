@@ -77,6 +77,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.serialization.json.Json
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -380,7 +381,7 @@ private fun TonDisplayPreview(messageCount: Int) {
                 .background(Theme.v2.colors.backgrounds.primary)
                 .padding(16.dp)
     ) {
-        SignTonDisplayView(signTon = SignTon(messages))
+        SignTonDisplayView(signTon = Json.encodeToString(SignTon(messages)))
     }
 }
 

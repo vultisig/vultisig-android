@@ -32,9 +32,17 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.payload.SignTon
 import com.vultisig.wallet.data.models.payload.TonMessage
 import com.vultisig.wallet.ui.theme.Theme
+import kotlinx.serialization.json.Json
 
 @Composable
-fun SignTonDisplayView(signTon: SignTon, modifier: Modifier = Modifier) {
+fun SignTonDisplayView(signTon: String, modifier: Modifier = Modifier) {
+    val messages =
+        remember(signTon) {
+            runCatching { Json.decodeFromString<SignTon>(signTon).messages }
+                .getOrDefault(emptyList())
+        }
+    if (messages.isEmpty()) return
+
     var isExpanded by remember { mutableStateOf(false) }
 
     Column(
@@ -47,7 +55,7 @@ fun SignTonDisplayView(signTon: SignTon, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
-                text = "${stringResource(R.string.sign_ton_messages)} (${signTon.messages.size})",
+                text = "${stringResource(R.string.sign_ton_messages)} (${messages.size})",
                 style = Theme.brockmann.button.medium.regular,
                 color = Theme.v2.colors.text.tertiary,
             )
@@ -75,7 +83,7 @@ fun SignTonDisplayView(signTon: SignTon, modifier: Modifier = Modifier) {
                         .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                signTon.messages.forEachIndexed { index, msg ->
+                messages.forEachIndexed { index, msg ->
                     TonMessageRow(message = msg, index = index)
                 }
             }
@@ -157,14 +165,16 @@ private fun formatNanotons(nano: Long): String {
 private fun PreviewSignTonDisplaySingle() {
     SignTonDisplayView(
         signTon =
-            SignTon(
-                messages =
-                    listOf(
-                        TonMessage(
-                            toAddress = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                            toAmount = 1_500_000_000L,
+            Json.encodeToString(
+                SignTon(
+                    messages =
+                        listOf(
+                            TonMessage(
+                                toAddress = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                                toAmount = 1_500_000_000L,
+                            )
                         )
-                    )
+                )
             )
     )
 }
@@ -174,30 +184,32 @@ private fun PreviewSignTonDisplaySingle() {
 private fun PreviewSignTonDisplayMulti() {
     SignTonDisplayView(
         signTon =
-            SignTon(
-                messages =
-                    listOf(
-                        TonMessage(
-                            toAddress = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                            toAmount = 1_500_000_000L,
-                            payload = "te6ccg...",
-                        ),
-                        TonMessage(
-                            toAddress = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                            toAmount = 250_000_000L,
-                            payload = "te6...",
-                            stateInit = "te6state...",
-                        ),
-                        TonMessage(
-                            toAddress = "EQAB9999999999ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                            toAmount = 100_000L,
-                        ),
-                        TonMessage(
-                            toAddress = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                            toAmount = 5_000_000_000L,
-                            stateInit = "te6stateinit...",
-                        ),
-                    )
+            Json.encodeToString(
+                SignTon(
+                    messages =
+                        listOf(
+                            TonMessage(
+                                toAddress = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                                toAmount = 1_500_000_000L,
+                                payload = "te6ccg...",
+                            ),
+                            TonMessage(
+                                toAddress = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                                toAmount = 250_000_000L,
+                                payload = "te6...",
+                                stateInit = "te6state...",
+                            ),
+                            TonMessage(
+                                toAddress = "EQAB9999999999ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                                toAmount = 100_000L,
+                            ),
+                            TonMessage(
+                                toAddress = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                                toAmount = 5_000_000_000L,
+                                stateInit = "te6stateinit...",
+                            ),
+                        )
+                )
             )
     )
 }

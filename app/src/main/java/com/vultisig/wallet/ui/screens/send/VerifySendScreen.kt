@@ -252,7 +252,7 @@ internal fun VerifySendScreen(
                         }
 
                     tx.signTon
-                        ?.takeIf { it.messages.isNotEmpty() }
+                        ?.takeIf { it.isNotEmpty() }
                         ?.let { signTon ->
                             VerifyCardDivider(0.dp)
 

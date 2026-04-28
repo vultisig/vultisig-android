@@ -8,12 +8,12 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.models.payload.TonMessage
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.toHexString
 import com.vultisig.wallet.data.utils.toUnit
 import tss.KeysignResponse
+import vultisig.keysign.v1.TonMessage
 import wallet.core.java.AnySigner
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
@@ -53,38 +53,45 @@ object TonHelper {
         payload: KeysignPayload,
         tonSpecific: BlockChainSpecific.Ton,
     ) {
-        val signTon = payload.signTon
-        if (signTon != null) {
-            signTon.validate()
-            signTon.messages.forEach { msg ->
+        payload.signTon?.let { signTon ->
+            val messages = signTon.tonMessages.filterNotNull()
+            require(messages.isNotEmpty()) { "SignTon must have at least one message" }
+            require(messages.size <= MAX_TON_MESSAGES) {
+                "SignTon supports at most $MAX_TON_MESSAGES messages, got ${messages.size}"
+            }
+            messages.forEach { msg ->
+                val amount = msg.amount.toLongOrNull() ?: 0L
+                require(amount > 0) { "TonMessage amount must be positive, got ${msg.amount}" }
                 builder.addMessages(buildTonConnectTransfer(msg, tonSpecific))
             }
-        } else {
-            val transfer =
-                if (payload.coin.isNativeToken) {
-                    buildNativeTransfer(payload, tonSpecific)
-                } else {
-                    buildJettonTransfer(payload, tonSpecific)
-                }
-            builder.addMessages(transfer)
         }
+            ?: run {
+                val transfer =
+                    if (payload.coin.isNativeToken) {
+                        buildNativeTransfer(payload, tonSpecific)
+                    } else {
+                        buildJettonTransfer(payload, tonSpecific)
+                    }
+                builder.addMessages(transfer)
+            }
     }
 
     private fun buildTonConnectTransfer(
         msg: TonMessage,
         tonSpecific: BlockChainSpecific.Ton,
     ): TheOpenNetwork.Transfer {
-        val toAddress = AnyAddress(msg.toAddress, CoinType.TON)
+        val toAddress = AnyAddress(msg.to, CoinType.TON)
+        val amount = msg.amount.toLongOrNull() ?: 0L
         val mode = calculateSendMode(sendMaxAmount = false)
 
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
-            .setAmount(ByteString.copyFrom(msg.toAmount.toHexString().toHexByteArray()))
+            .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
             .setMode(mode)
             .setBounceable(tonSpecific.bounceable)
             .apply {
-                if (msg.payload.isNotEmpty()) setCustomPayload(msg.payload)
-                if (msg.stateInit.isNotEmpty()) setStateInit(msg.stateInit)
+                msg.payload?.takeIf { it.isNotEmpty() }?.let { setCustomPayload(it) }
+                msg.stateInit?.takeIf { it.isNotEmpty() }?.let { setStateInit(it) }
             }
             .build()
     }
@@ -234,4 +241,6 @@ object TonHelper {
     }
 
     val RECOMMENDED_JETTONS_AMOUNT = CoinType.TON.toUnit("0.08".toBigDecimal()).toLong()
+
+    private const val MAX_TON_MESSAGES = 4
 }

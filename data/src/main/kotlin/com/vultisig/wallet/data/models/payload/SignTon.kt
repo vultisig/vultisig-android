@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.models.payload
 
+import kotlinx.serialization.Serializable
+
 /**
  * A single transfer message within a multi-message TON transaction.
  *
@@ -8,6 +10,7 @@ package com.vultisig.wallet.data.models.payload
  * @property payload optional base64-encoded custom payload cell (BoC)
  * @property stateInit optional base64-encoded state-init cell (BoC), used for contract deployments
  */
+@Serializable
 data class TonMessage(
     val toAddress: String,
     val toAmount: Long,
@@ -22,6 +25,7 @@ data class TonMessage(
  *
  * @property messages list of [TonMessage]s to include in the transaction
  */
+@Serializable
 data class SignTon(val messages: List<TonMessage>) {
     /**
      * Validates the payload, throwing [IllegalArgumentException] on any violation: the list must be

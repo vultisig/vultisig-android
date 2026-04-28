@@ -41,7 +41,9 @@ import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SignTon
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.payload.TonMessage
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.swapAssetComparisonName
@@ -959,7 +961,19 @@ constructor(
                             ?: ""
 
                     val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
-                    val signTon = payload.signTon?.tonMessages ?: emptyList()
+                    val signTon =
+                        payload.signTon?.let { proto ->
+                            val messages =
+                                proto.tonMessages.filterNotNull().map { msg ->
+                                    TonMessage(
+                                        toAddress = msg.to,
+                                        toAmount = msg.amount.toLongOrNull() ?: 0L,
+                                        payload = msg.payload.orEmpty(),
+                                        stateInit = msg.stateInit.orEmpty(),
+                                    )
+                                }
+                            json.encodeToString(SignTon(messages))
+                        }
                     val transaction =
                         Transaction(
                             id = UUID.randomUUID().toString(),

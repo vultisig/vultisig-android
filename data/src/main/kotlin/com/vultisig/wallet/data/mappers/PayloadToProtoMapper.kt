@@ -19,11 +19,9 @@ import vultisig.keysign.v1.OneInchSwapPayload
 import vultisig.keysign.v1.OneInchTransaction
 import vultisig.keysign.v1.PolkadotSpecific
 import vultisig.keysign.v1.RippleSpecific
-import vultisig.keysign.v1.SignTon as ProtoSignTon
 import vultisig.keysign.v1.SolanaSpecific
 import vultisig.keysign.v1.SuiSpecific
 import vultisig.keysign.v1.THORChainSpecific
-import vultisig.keysign.v1.TonMessage as ProtoTonMessage
 import vultisig.keysign.v1.TonSpecific
 import vultisig.keysign.v1.TronSpecific
 import vultisig.keysign.v1.UTXOSpecific
@@ -242,20 +240,6 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     )
                 } else null,
             skipBroadcast = keysignPayload.skipBroadcast,
-            signTon =
-                keysignPayload.signTon?.let { signTon ->
-                    ProtoSignTon(
-                        tonMessages =
-                            signTon.messages.map { msg ->
-                                ProtoTonMessage(
-                                    to = msg.toAddress,
-                                    amount = msg.toAmount.toString(),
-                                    payload = msg.payload.takeIf { it.isNotEmpty() },
-                                    stateInit = msg.stateInit.takeIf { it.isNotEmpty() },
-                                )
-                            }
-                    )
-                },
             tronTransferContractPayload = keysignPayload.tronTransferContractPayload,
             tronTransferAssetContractPayload = keysignPayload.tronTransferAssetContractPayload,
             tronTriggerSmartContractPayload = keysignPayload.tronTriggerSmartContractPayload,
