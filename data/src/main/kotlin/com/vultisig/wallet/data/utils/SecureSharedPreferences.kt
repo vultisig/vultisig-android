@@ -11,6 +11,7 @@ import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+import timber.log.Timber
 
 private const val KEYSTORE = "AndroidKeyStore"
 /** Key alias used to identify the AES-256-GCM key in the AndroidKeyStore. */
@@ -38,8 +39,12 @@ internal fun buildSecurePrefsKey(): SecretKey {
     }
     try {
         val ks = KeyStore.getInstance(KEYSTORE).apply { load(null) }
-        (ks.getEntry(SECURE_PREFS_KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.let {
-            return it.secretKey
+        val entry = ks.getEntry(SECURE_PREFS_KEY_ALIAS, null)
+        if (entry != null) {
+            return (entry as? KeyStore.SecretKeyEntry)?.secretKey
+                ?: error(
+                    "Alias $SECURE_PREFS_KEY_ALIAS holds unexpected entry type: ${entry::class.simpleName}"
+                )
         }
         val spec =
             KeyGenParameterSpec.Builder(
@@ -94,6 +99,7 @@ internal class EncryptingSharedPreferences(
         try {
             decryptRaw(secretKey, encoded)
         } catch (e: Exception) {
+            Timber.w(e, "Failed to decrypt pref value; returning null")
             null
         }
 
