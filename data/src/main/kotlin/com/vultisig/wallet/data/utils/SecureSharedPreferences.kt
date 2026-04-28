@@ -5,6 +5,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import java.security.KeyStore
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import javax.crypto.Cipher
@@ -156,7 +157,7 @@ internal class EncryptingSharedPreferences(
     override fun edit(): SharedPreferences.Editor = EncryptingEditor(prefs.edit(), secretKey)
 
     private val listenerWrappers =
-        HashMap<
+        ConcurrentHashMap<
             SharedPreferences.OnSharedPreferenceChangeListener,
             SharedPreferences.OnSharedPreferenceChangeListener,
         >()
