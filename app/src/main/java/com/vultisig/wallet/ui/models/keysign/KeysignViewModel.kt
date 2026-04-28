@@ -395,6 +395,9 @@ constructor(
 
             Timber.d("All messages signed, broadcasting transaction")
             if (customMessagePayload != null) {
+                require(messagesToSign.isNotEmpty()) {
+                    "messagesToSign must not be empty when extracting custom message"
+                }
                 val customMessageKey = messagesToSign.first()
                 val customMessageResp =
                     signatures[customMessageKey]
