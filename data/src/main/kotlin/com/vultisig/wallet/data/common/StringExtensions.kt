@@ -48,7 +48,7 @@ fun String.normalizeMessageFormat(): String {
                     onUnmappableCharacter(CodingErrorAction.REPORT)
                 }
             decoder
-                .decode(ByteBuffer.wrap(this.toHexBytes()))
+                .decode(ByteBuffer.wrap(hex.toHexBytes()))
                 .toString()
                 .replace("^\\p{C}+|\\p{C}+$".toRegex(), "")
         } else {

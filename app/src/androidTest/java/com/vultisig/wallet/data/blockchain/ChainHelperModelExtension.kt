@@ -82,15 +82,17 @@ fun KeysignPayload.toInternalKeySignPayload():
             this.signData?.signTon?.let { signTon ->
                 SignTon(
                     tonMessages =
-                        signTon.tonMessages.mapNotNull { msg ->
-                            msg?.let {
-                                TonMessage(
-                                    to = it.to,
-                                    amount = it.amount,
-                                    payload = it.payload,
-                                    stateInit = it.stateInit,
-                                )
-                            }
+                        signTon.tonMessages.map { msg ->
+                            val nonNull =
+                                requireNotNull(msg) {
+                                    "sign_ton.ton_messages must not contain null entries"
+                                }
+                            TonMessage(
+                                to = nonNull.to,
+                                amount = nonNull.amount,
+                                payload = nonNull.payload,
+                                stateInit = nonNull.stateInit,
+                            )
                         }
                 )
             },
