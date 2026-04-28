@@ -250,7 +250,10 @@ constructor(
                 sessionId = _sessionID,
                 encryptionKeyHex = _encryptionKeyHex,
                 messagesToSign = messagesToSign,
-                keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
+                keyType =
+                    _keysignPayload?.coin?.chain?.TssKeysignType
+                        ?: customMessagePayload?.chain?.let { Chain.fromRaw(it).TssKeysignType }
+                        ?: TssKeyType.ECDSA,
                 keysignPayload = _keysignPayload,
                 customMessagePayload = customMessagePayload,
                 transactionTypeUiModel = transactionTypeUiModel,
