@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.data.sources.AppDataStoreImpl
 import com.vultisig.wallet.data.utils.EncryptingSharedPreferences
 import com.vultisig.wallet.data.utils.SECURE_PREFS_KEY_ALIAS
+import com.vultisig.wallet.data.utils.SharedPrefsMasterKeyInitializer
 import com.vultisig.wallet.data.utils.buildSecurePrefsKey
 import dagger.Binds
 import dagger.Module
@@ -70,7 +71,12 @@ internal interface MainDataModule {
         @Provides
         fun provideEncryptedSharedPrefs(@ApplicationContext context: Context): SharedPreferences {
             fun create(): SharedPreferences {
-                val key = buildSecurePrefsKey()
+                // Use the prewarm result if it completed before Hilt arrived; otherwise fall back
+                // to a fresh keystore lookup.
+                val prewarm = SharedPrefsMasterKeyInitializer.prewarmResult
+                val key =
+                    if (prewarm.isCompleted) prewarm.getCompleted() ?: buildSecurePrefsKey()
+                    else buildSecurePrefsKey()
                 val rawPrefs = context.getSharedPreferences(SECURE_PREFS_FILE, Context.MODE_PRIVATE)
                 val prefs = EncryptingSharedPreferences(rawPrefs, key)
                 migrateFromEncryptedSharedPrefs(context, prefs)

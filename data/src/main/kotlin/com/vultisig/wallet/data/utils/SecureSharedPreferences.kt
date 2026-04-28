@@ -5,6 +5,8 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import java.security.KeyStore
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -22,17 +24,22 @@ private const val P_INT = "i:"
 private const val P_LONG = "l:"
 private const val P_FLOAT = "f:"
 
-private val secureKeyLock = Any()
+private val secureKeyLock = ReentrantLock()
 
 /**
  * Builds or retrieves the AES-256-GCM AndroidKeyStore key used to encrypt preference values.
  * StrongBox is not requested to avoid keystore-daemon stalls on certain Pixel/Samsung devices.
+ * Acquires [secureKeyLock] with a 3-second timeout so contended callers can fail fast instead of
+ * blocking indefinitely if the keystore daemon stalls.
  */
-internal fun buildSecurePrefsKey(): SecretKey =
-    synchronized(secureKeyLock) {
+internal fun buildSecurePrefsKey(): SecretKey {
+    if (!secureKeyLock.tryLock(3_000L, TimeUnit.MILLISECONDS)) {
+        error("Timed out waiting for secure prefs key lock after 3 s")
+    }
+    try {
         val ks = KeyStore.getInstance(KEYSTORE).apply { load(null) }
         (ks.getEntry(SECURE_PREFS_KEY_ALIAS, null) as? KeyStore.SecretKeyEntry)?.let {
-            return@synchronized it.secretKey
+            return it.secretKey
         }
         val spec =
             KeyGenParameterSpec.Builder(
@@ -43,10 +50,13 @@ internal fun buildSecurePrefsKey(): SecretKey =
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(256)
                 .build()
-        KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
+        return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
             .apply { init(spec) }
             .generateKey()
+    } finally {
+        secureKeyLock.unlock()
     }
+}
 
 /** Encrypts [plaintext] with AES-256-GCM and returns `Base64(IV || ciphertext)`. */
 private fun encryptRaw(secretKey: SecretKey, plaintext: String): String {
@@ -64,12 +74,10 @@ private fun encryptRaw(secretKey: SecretKey, plaintext: String): String {
 /** Decodes and decrypts a value previously produced by [encryptRaw]. */
 private fun decryptRaw(secretKey: SecretKey, encoded: String): String {
     val bytes = Base64.decode(encoded, Base64.NO_WRAP)
-    require(bytes.size > IV_LENGTH) { "Encrypted payload too short: ${bytes.size}" }
-    val iv = bytes.copyOfRange(0, IV_LENGTH)
-    val ct = bytes.copyOfRange(IV_LENGTH, bytes.size)
+    require(bytes.size >= IV_LENGTH + 16) { "Encrypted payload too short: ${bytes.size}" }
     val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-    cipher.init(Cipher.DECRYPT_MODE, secretKey, GCMParameterSpec(GCM_TAG_BITS, iv))
-    return String(cipher.doFinal(ct), Charsets.UTF_8)
+    cipher.init(Cipher.DECRYPT_MODE, secretKey, GCMParameterSpec(GCM_TAG_BITS, bytes, 0, IV_LENGTH))
+    return String(cipher.doFinal(bytes, IV_LENGTH, bytes.size - IV_LENGTH), Charsets.UTF_8)
 }
 
 /**
@@ -99,10 +107,16 @@ internal class EncryptingSharedPreferences(
     private inline fun <T> readTyped(key: String, prefix: String, parse: (String) -> T?): T? =
         prefs.getString(key, null)?.let(::decryptOrNull)?.readTypedFromDecrypted(prefix, parse)
 
-    /** Returns all key-value pairs with each stored value decrypted. */
+    /**
+     * Returns all key-value pairs with each stored value decrypted; entries that cannot be
+     * decrypted are omitted.
+     */
     override fun getAll(): MutableMap<String, *> =
         prefs.all
-            .mapValues { (_, v) -> (v as? String)?.let { decryptOrNull(it)?.typed() } }
+            .mapNotNull { (k, v) ->
+                (v as? String)?.let { decryptOrNull(it)?.typed() }?.let { k to it }
+            }
+            .toMap()
             .toMutableMap()
 
     /** Returns the decrypted string for [key], or [defValue] if absent or undecryptable. */
@@ -135,15 +149,36 @@ internal class EncryptingSharedPreferences(
     /** Returns an [EncryptingEditor] that AES-256-GCM-encrypts values before writing. */
     override fun edit(): SharedPreferences.Editor = EncryptingEditor(prefs.edit(), secretKey)
 
-    /** Delegates listener registration to the underlying [prefs] instance. */
+    private val listenerWrappers =
+        HashMap<
+            SharedPreferences.OnSharedPreferenceChangeListener,
+            SharedPreferences.OnSharedPreferenceChangeListener,
+        >()
+
+    /**
+     * Registers [listener], wrapping it so the callback receives this [EncryptingSharedPreferences]
+     * instance rather than the raw underlying prefs. Without wrapping, any callback that calls
+     * [SharedPreferences.getString] on the first argument would get the encrypted Base64 blob.
+     */
     override fun registerOnSharedPreferenceChangeListener(
         listener: SharedPreferences.OnSharedPreferenceChangeListener
-    ) = prefs.registerOnSharedPreferenceChangeListener(listener)
+    ) {
+        val wrapper =
+            SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                listener.onSharedPreferenceChanged(this@EncryptingSharedPreferences, key)
+            }
+        listenerWrappers[listener] = wrapper
+        prefs.registerOnSharedPreferenceChangeListener(wrapper)
+    }
 
-    /** Delegates listener unregistration to the underlying [prefs] instance. */
+    /** Unregisters the wrapper previously created for [listener]. */
     override fun unregisterOnSharedPreferenceChangeListener(
         listener: SharedPreferences.OnSharedPreferenceChangeListener
-    ) = prefs.unregisterOnSharedPreferenceChangeListener(listener)
+    ) {
+        listenerWrappers.remove(listener)?.let {
+            prefs.unregisterOnSharedPreferenceChangeListener(it)
+        }
+    }
 
     private fun String.typed(): Any? =
         readTypedFromDecrypted(P_STRING) { it }
