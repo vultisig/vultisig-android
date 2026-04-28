@@ -46,33 +46,25 @@ internal fun TronFreezePositionCard(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // Header: logo + title + amount
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                UiIcon(drawableResId = R.drawable.tron, size = 42.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            UiIcon(drawableResId = R.drawable.tron, size = 42.dp)
 
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = stringResource(R.string.tron_defi_tron_freeze),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.tertiary,
-                    )
-                    Text(
-                        text = if (isBalanceVisible) frozenTotalPrice else HIDE_BALANCE_CHARS,
-                        style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
-                    )
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = stringResource(R.string.tron_defi_tron_freeze),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                Text(
+                    text = if (isBalanceVisible) frozenTotalPrice else HIDE_BALANCE_CHARS,
+                    style = Theme.brockmann.headings.title1,
+                    color = Theme.v2.colors.text.primary,
+                )
             }
-
-            UiIcon(
-                drawableResId = R.drawable.circleinfo,
-                size = 20.dp,
-                modifier = Modifier.align(Alignment.TopEnd),
-                tint = Theme.v2.colors.text.tertiary,
-            )
         }
 
         HorizontalDivider(color = Theme.v2.colors.border.light, thickness = 1.dp)

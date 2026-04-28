@@ -19,6 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,7 +63,7 @@ private fun ConfirmDeleteScreen(
     onBackClick: () -> Unit,
 ) {
     V2Scaffold(
-        title = stringResource(R.string.vault_settings_delete_title),
+        title = stringResource(R.string.confirm_delete_delete_vault),
         onBackClick = onBackClick,
         bottomBar = {
             VsButton(
@@ -210,7 +211,7 @@ private fun DeleteVaultBanner() {
         UiSpacer(size = 14.dp)
 
         Text(
-            text = stringResource(R.string.vault_settings_delete_title),
+            text = stringResource(R.string.confirm_delete_delete_vault),
             style = Theme.brockmann.headings.title2,
             color = colors.alerts.error,
         )
@@ -221,6 +222,8 @@ private fun DeleteVaultBanner() {
             text = stringResource(R.string.confirm_delete_permanent_delete_message),
             style = Theme.brockmann.supplementary.footnote,
             color = colors.text.tertiary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp),
         )
     }
 }
@@ -229,7 +232,12 @@ private fun DeleteVaultBanner() {
 @Composable
 private fun ConfirmDeleteScreenPreview() {
     ConfirmDeleteScreen(
-        cautions = listOf(com.vultisig.wallet.R.string.confirm_delete_delete_vault),
+        cautions =
+            listOf(
+                R.string.vault_settings_delete_vault_caution1,
+                R.string.vault_settings_delete_vault_caution2,
+                R.string.vault_settings_delete_vault_caution3,
+            ),
         checkedCautionIndexes = listOf(0, 1),
         isDeleteButtonActive = false,
         vaultDeleteUiModel =
