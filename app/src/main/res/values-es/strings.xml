@@ -157,8 +157,8 @@
     <string name="successfully_scanned_barcode">Código de barras escaneado con éxito: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">Soy consciente de que la bóveda será eliminada permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Soy consciente de que puedo perder fondos.</string>
-    <string name="vault_settings_delete_vault_caution3">He hecho una copia de seguridad de la bóveda</string>
-    <string name="confirm_delete_permanent_delete_message">Estás eliminando permanentemente tu bóveda</string>
+    <string name="vault_settings_delete_vault_caution3">He hecho una copia de seguridad de la bóveda para restaurarla más tarde</string>
+    <string name="confirm_delete_permanent_delete_message">Estás eliminando permanentemente tu parte de la bóveda de esta aplicación</string>
     <string name="confirm_delete_delete_vault">Eliminar Bóveda</string>
     <string name="rename_vault_screen_vault_name">Nombre de la Bóveda</string>
     <string name="faq_settings_q1">¿Qué es Vultisig?</string>
