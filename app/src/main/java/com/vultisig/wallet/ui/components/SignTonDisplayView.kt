@@ -32,6 +32,11 @@ import com.vultisig.wallet.ui.theme.Theme
 import vultisig.keysign.v1.SignTon
 import vultisig.keysign.v1.TonMessage
 
+/**
+ * Displays a collapsible list of TON transfer messages for user review before signing.
+ *
+ * @param signTon proto carrying one to four [vultisig.keysign.v1.TonMessage]s to display
+ */
 @Composable
 fun SignTonDisplayView(signTon: SignTon, modifier: Modifier = Modifier) {
     val messages = signTon.tonMessages.filterNotNull()
