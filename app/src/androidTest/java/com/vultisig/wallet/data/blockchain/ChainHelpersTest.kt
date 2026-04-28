@@ -1,6 +1,11 @@
 package com.vultisig.wallet.data.blockchain
 
+import BlockchainSpecific
+import Coin
 import JsonReader
+import KeysignPayload
+import SignData
+import TonSpecific
 import TransactionData
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
@@ -27,8 +32,11 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import vultisig.keysign.v1.SignTon
+import vultisig.keysign.v1.TonMessage
 import wallet.core.jni.CoinType
 
 class ChainHelpersTest {
@@ -127,6 +135,84 @@ class ChainHelpersTest {
                 )
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
+    }
+
+    /**
+     * Regression: verifies that per-message `payload` and `stateInit` fields are actually wired
+     * into the WalletCore signing input. Different field values must produce different pre-image
+     * hashes, and multi-message signing must not crash or drop transfers.
+     */
+    @Test
+    fun tonConnectPayloadAndStateInitAreThreadedIntoSigningInput() {
+        val coin =
+            Coin(
+                chain = "Ton",
+                ticker = "TON",
+                address = "UQCc9iCgP_b5RMJcFE5XD8zStfjtNHLhDWfUqC5m1SjSer95",
+                decimals = 9,
+                priceProviderId = "the-open-network",
+                isNativeToken = true,
+                hexPublicKey = HEX_PUBLIC_KEY,
+                logo = "ton",
+            )
+        val blockchainSpecific =
+            BlockchainSpecific(
+                tonSpecific =
+                    TonSpecific(
+                        sendMaxAmount = false,
+                        sequenceNumber = 0L,
+                        expireAt = 1753579977L,
+                        bounceable = false,
+                    )
+            )
+        val dest = "UQDmLe6ticcY_uLZsfurdYONshNuCn8IS81KcJ8p6M6ISMcB"
+
+        fun buildPayload(msgs: List<TonMessage>) =
+            KeysignPayload(
+                    coin = coin,
+                    toAddress = "",
+                    toAmount = "0",
+                    blockchainSpecific = blockchainSpecific,
+                    signData = SignData(signTon = SignTon(tonMessages = msgs)),
+                    vaultPublicKeyEcdsa = HEX_PUBLIC_KEY,
+                    libType = "DKLS",
+                )
+                .toInternalKeySignPayload()
+
+        val baseHash =
+            TonHelper.getPreSignedImageHash(
+                buildPayload(listOf(TonMessage(to = dest, amount = "50000000")))
+            )
+        val withPayloadHash =
+            TonHelper.getPreSignedImageHash(
+                buildPayload(
+                    listOf(TonMessage(to = dest, amount = "50000000", payload = "te6ccgpayload"))
+                )
+            )
+        val withStateInitHash =
+            TonHelper.getPreSignedImageHash(
+                buildPayload(
+                    listOf(TonMessage(to = dest, amount = "50000000", stateInit = "te6ccinit"))
+                )
+            )
+        val twoMessageHash =
+            TonHelper.getPreSignedImageHash(
+                buildPayload(
+                    listOf(
+                        TonMessage(to = dest, amount = "50000000", payload = "te6ccgpayload"),
+                        TonMessage(to = dest, amount = "100000000", stateInit = "te6ccinit"),
+                    )
+                )
+            )
+
+        // Each variant must produce exactly one hash (TON uses a single pre-image)
+        assertEquals(1, baseHash.size)
+        assertEquals(1, twoMessageHash.size)
+        // Including payload or stateInit must change the signing hash
+        assertNotEquals(baseHash, withPayloadHash)
+        assertNotEquals(baseHash, withStateInitHash)
+        // A two-message payload must differ from a one-message payload
+        assertNotEquals(baseHash, twoMessageHash)
     }
 
     @Test

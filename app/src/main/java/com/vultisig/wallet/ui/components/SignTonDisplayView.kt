@@ -2,17 +2,16 @@ package com.vultisig.wallet.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,12 +35,12 @@ import kotlinx.serialization.json.Json
 
 @Composable
 fun SignTonDisplayView(signTon: String, modifier: Modifier = Modifier) {
-    val messages =
-        remember(signTon) {
-            runCatching { Json.decodeFromString<SignTon>(signTon).messages }
-                .getOrDefault(emptyList())
-        }
-    if (messages.isEmpty()) return
+    val decodeResult = remember(signTon) { runCatching { Json.decodeFromString<SignTon>(signTon) } }
+    val messages = decodeResult.getOrNull()?.messages.orEmpty()
+
+    // Skip rendering only when parsing succeeded but produced no messages (shouldn't happen in
+    // practice, since SignTon.validate() requires at least one).
+    if (decodeResult.isSuccess && messages.isEmpty()) return
 
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -51,8 +50,8 @@ fun SignTonDisplayView(signTon: String, modifier: Modifier = Modifier) {
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Absolute.SpaceBetween,
-            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth().clickable { isExpanded = !isExpanded },
         ) {
             Text(
                 text = "${stringResource(R.string.sign_ton_messages)} (${messages.size})",
@@ -60,31 +59,50 @@ fun SignTonDisplayView(signTon: String, modifier: Modifier = Modifier) {
                 color = Theme.v2.colors.text.tertiary,
             )
 
-            IconButton(onClick = { isExpanded = !isExpanded }, modifier = Modifier.size(10.dp)) {
-                UiIcon(
-                    drawableResId = R.drawable.chevron,
-                    tint = Theme.v2.colors.neutrals.n100,
-                    size = 8.dp,
-                    modifier = Modifier.graphicsLayer(rotationZ = if (isExpanded) 180f else 0f),
-                )
-            }
+            UiIcon(
+                drawableResId = R.drawable.chevron,
+                tint = Theme.v2.colors.neutrals.n100,
+                size = 8.dp,
+                modifier = Modifier.graphicsLayer(rotationZ = if (isExpanded) 180f else 0f),
+            )
         }
 
         AnimatedVisibility(visible = isExpanded) {
-            Column(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .heightIn(max = 400.dp)
-                        .background(
-                            color = Theme.v2.colors.variables.bordersLight,
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .padding(8.dp)
-                        .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                messages.forEachIndexed { index, msg ->
-                    TonMessageRow(message = msg, index = index)
+            if (decodeResult.isFailure) {
+                // Parsing failed — show the raw payload so the user can see what was received
+                // rather than silently hiding the entire TON section.
+                Text(
+                    text = signTon,
+                    color = Theme.v2.colors.text.primary,
+                    style = Theme.brockmann.button.medium.regular,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .heightIn(max = 400.dp)
+                            .background(
+                                color = Theme.v2.colors.variables.bordersLight,
+                                shape = RoundedCornerShape(12.dp),
+                            )
+                            .padding(8.dp)
+                            .verticalScroll(rememberScrollState()),
+                )
+            } else {
+                Column(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .heightIn(max = 400.dp)
+                            .background(
+                                color = Theme.v2.colors.variables.bordersLight,
+                                shape = RoundedCornerShape(12.dp),
+                            )
+                            .padding(8.dp)
+                            .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    messages.forEachIndexed { index, msg ->
+                        TonMessageRow(message = msg, index = index)
+                    }
                 }
             }
         }

@@ -963,16 +963,23 @@ constructor(
                     val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
                     val signTon =
                         payload.signTon?.let { proto ->
-                            val messages =
-                                proto.tonMessages.filterNotNull().map { msg ->
-                                    TonMessage(
-                                        toAddress = msg.to,
-                                        toAmount = msg.amount.toLongOrNull() ?: 0L,
-                                        payload = msg.payload.orEmpty(),
-                                        stateInit = msg.stateInit.orEmpty(),
+                            val mapped =
+                                SignTon(
+                                        messages =
+                                            proto.tonMessages.filterNotNull().map { msg ->
+                                                TonMessage(
+                                                    toAddress = msg.to,
+                                                    toAmount =
+                                                        requireNotNull(msg.amount.toLongOrNull()) {
+                                                            "Invalid TON amount: ${msg.amount}"
+                                                        },
+                                                    payload = msg.payload.orEmpty(),
+                                                    stateInit = msg.stateInit.orEmpty(),
+                                                )
+                                            }
                                     )
-                                }
-                            json.encodeToString(SignTon(messages))
+                                    .apply { validate() }
+                            json.encodeToString(mapped)
                         }
                     val transaction =
                         Transaction(
