@@ -15,7 +15,7 @@ internal class FeatureFlagRepositoryImpl
 constructor(private val featureFlagApi: FeatureFlagApi) : FeatureFlagRepository {
 
     companion object {
-        var tssBatchEnabledOverride: Boolean? = false
+        var tssBatchEnabledOverride: Boolean? = true
     }
 
     override suspend fun getFeatureFlags(): FeatureFlagJson {

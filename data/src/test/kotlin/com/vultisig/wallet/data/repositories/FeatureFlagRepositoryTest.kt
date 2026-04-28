@@ -4,9 +4,15 @@ import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class FeatureFlagRepositoryTest {
+
+    @BeforeEach
+    fun resetOverrides() {
+        FeatureFlagRepositoryImpl.tssBatchEnabledOverride = null
+    }
 
     @Test
     fun `repository returns fetched flags`() = runTest {
