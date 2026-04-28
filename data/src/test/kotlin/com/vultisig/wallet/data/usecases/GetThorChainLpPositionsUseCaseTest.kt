@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -83,6 +84,15 @@ internal class GetThorChainLpPositionsUseCaseTest {
         val positions = useCase(runeAddress = RUNE_ADDR)
 
         assertEquals(listOf("ETH.ETH"), positions.map { it.pool })
+    }
+
+    @Test
+    fun `propagates unexpected per-pool exceptions`() = runTest {
+        coEvery { api.getPoolStats(any()) } returns listOf(pool("BTC.BTC"))
+        coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } throws
+            IllegalStateException("unexpected")
+
+        assertFailsWith<IllegalStateException> { useCase(runeAddress = RUNE_ADDR) }
     }
 
     @Test
