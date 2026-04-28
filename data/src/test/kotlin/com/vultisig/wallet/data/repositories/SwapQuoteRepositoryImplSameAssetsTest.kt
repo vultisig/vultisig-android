@@ -4,6 +4,12 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.KyberQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.MayaQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.ThorChainQuoteSourceImpl
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
@@ -15,12 +21,12 @@ internal class SwapQuoteRepositoryImplSameAssetsTest {
 
     private val repo =
         SwapQuoteRepositoryImpl(
-            thorChainApi = mockk(relaxed = true),
-            mayaChainApi = mockk(relaxed = true),
-            oneInchApi = mockk(relaxed = true),
-            liFiChainApi = mockk(relaxed = true),
-            jupiterApi = mockk(relaxed = true),
-            kyberApi = mockk(relaxed = true),
+            thorChain = ThorChainQuoteSourceImpl(thorChainApi = mockk(relaxed = true)),
+            maya = MayaQuoteSourceImpl(mayaChainApi = mockk(relaxed = true)),
+            oneInch = OneInchQuoteSourceImpl(oneInchApi = mockk(relaxed = true)),
+            liFi = LiFiQuoteSourceImpl(liFiChainApi = mockk(relaxed = true)),
+            jupiter = JupiterQuoteSourceImpl(jupiterApi = mockk(relaxed = true)),
+            kyber = KyberQuoteSourceImpl(kyberApi = mockk(relaxed = true)),
         )
 
     private fun evmToken(contractAddress: String) =

@@ -9,6 +9,18 @@ import com.vultisig.wallet.data.repositories.order.AddressBookOrderRepository
 import com.vultisig.wallet.data.repositories.order.FolderOrderRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
+import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSource
+import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.KyberQuoteSource
+import com.vultisig.wallet.data.repositories.swap.KyberQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSource
+import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.MayaQuoteSource
+import com.vultisig.wallet.data.repositories.swap.MayaQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSource
+import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.ThorChainQuoteSource
+import com.vultisig.wallet.data.repositories.swap.ThorChainQuoteSourceImpl
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepositoryImpl
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
@@ -151,6 +163,20 @@ internal interface RepositoriesModule {
     @Binds
     @Singleton
     fun bindSwapQuoteRepository(impl: SwapQuoteRepositoryImpl): SwapQuoteRepository
+
+    @Binds
+    @Singleton
+    fun bindThorChainQuoteSource(impl: ThorChainQuoteSourceImpl): ThorChainQuoteSource
+
+    @Binds @Singleton fun bindMayaQuoteSource(impl: MayaQuoteSourceImpl): MayaQuoteSource
+
+    @Binds @Singleton fun bindOneInchQuoteSource(impl: OneInchQuoteSourceImpl): OneInchQuoteSource
+
+    @Binds @Singleton fun bindLiFiQuoteSource(impl: LiFiQuoteSourceImpl): LiFiQuoteSource
+
+    @Binds @Singleton fun bindJupiterQuoteSource(impl: JupiterQuoteSourceImpl): JupiterQuoteSource
+
+    @Binds @Singleton fun bindKyberQuoteSource(impl: KyberQuoteSourceImpl): KyberQuoteSource
 
     @Binds
     @Singleton

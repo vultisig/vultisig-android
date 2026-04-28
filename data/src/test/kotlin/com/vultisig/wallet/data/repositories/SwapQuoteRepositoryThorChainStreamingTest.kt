@@ -10,6 +10,12 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.KyberQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.MayaQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.ThorChainQuoteSourceImpl
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -25,12 +31,12 @@ class SwapQuoteRepositoryThorChainStreamingTest {
 
     private val repository =
         SwapQuoteRepositoryImpl(
-            thorChainApi = thorChainApi,
-            mayaChainApi = mockk(),
-            oneInchApi = mockk(),
-            liFiChainApi = mockk(),
-            jupiterApi = mockk(),
-            kyberApi = mockk(),
+            thorChain = ThorChainQuoteSourceImpl(thorChainApi = thorChainApi),
+            maya = MayaQuoteSourceImpl(mayaChainApi = mockk()),
+            oneInch = OneInchQuoteSourceImpl(oneInchApi = mockk()),
+            liFi = LiFiQuoteSourceImpl(liFiChainApi = mockk()),
+            jupiter = JupiterQuoteSourceImpl(jupiterApi = mockk()),
+            kyber = KyberQuoteSourceImpl(kyberApi = mockk()),
         )
 
     private val btc =

@@ -15,6 +15,12 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.KyberQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.MayaQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.ThorChainQuoteSourceImpl
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigInteger
@@ -32,12 +38,12 @@ class SwapQuoteRepositoryTest {
 
     private val repository =
         SwapQuoteRepositoryImpl(
-            thorChainApi = mockk(),
-            mayaChainApi = mockk(),
-            oneInchApi = mockk(),
-            liFiChainApi = liFiChainApi,
-            jupiterApi = mockk(),
-            kyberApi = kyberApi,
+            thorChain = ThorChainQuoteSourceImpl(thorChainApi = mockk()),
+            maya = MayaQuoteSourceImpl(mayaChainApi = mockk()),
+            oneInch = OneInchQuoteSourceImpl(oneInchApi = mockk()),
+            liFi = LiFiQuoteSourceImpl(liFiChainApi = liFiChainApi),
+            jupiter = JupiterQuoteSourceImpl(jupiterApi = mockk()),
+            kyber = KyberQuoteSourceImpl(kyberApi = kyberApi),
         )
 
     private fun coin(
