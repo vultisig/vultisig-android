@@ -332,7 +332,6 @@ constructor(
                     if (signatures.isEmpty()) {
                         error("Failed to sign transaction, signatures empty")
                     }
-                    calculateCustomMessageSignature(this.signatures.values.first())
                 }
 
                 TssKeyType.EDDSA -> {
@@ -395,6 +394,9 @@ constructor(
             }
 
             Timber.d("All messages signed, broadcasting transaction")
+            if (customMessagePayload != null) {
+                calculateCustomMessageSignature(signatures.values.first())
+            }
             if (!skipBroadcast()) {
                 broadcastTransaction()
                 checkThorChainTxResult()
