@@ -83,7 +83,11 @@ internal class EncryptingSharedPreferences(
 
     /** Returns the decrypted plaintext for [encoded], or null if decryption fails. */
     private fun decryptOrNull(encoded: String) =
-        runCatching { decryptRaw(secretKey, encoded) }.getOrNull()
+        try {
+            decryptRaw(secretKey, encoded)
+        } catch (e: Exception) {
+            null
+        }
 
     /** Strips [prefix] and applies [parse] if this string starts with [prefix]; else null. */
     private inline fun <T> String.readTypedFromDecrypted(
