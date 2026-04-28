@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlin.test.assertEquals
@@ -18,6 +19,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -138,15 +140,43 @@ internal class VaultRepositoryImplTest {
     }
 
     @Test
+    fun `getEnabledTokens emits empty list when vault is missing`() = runTest {
+        every { vaultDao.loadByIdAsFlow(MISSING_ID) } returns flowOf(null)
+
+        val tokens = repository.getEnabledTokens(MISSING_ID).first()
+
+        assertTrue(tokens.isEmpty())
+    }
+
+    @Test
+    fun `getEnabledTokens emits empty list when vault has no coins`() = runTest {
+        every { vaultDao.loadByIdAsFlow(VAULT_ID) } returns flowOf(fakeVaultData())
+
+        val tokens = repository.getEnabledTokens(VAULT_ID).first()
+
+        assertTrue(tokens.isEmpty())
+    }
+
+    @Test
     fun `getEnabledTokens emits coins stored in the vault`() = runTest {
         val coin = fakeCoinEntity(id = "ETH-Ethereum", chain = Chain.Ethereum.raw, ticker = "ETH")
-        coEvery { vaultDao.loadById(VAULT_ID) } returns fakeVaultData(coins = listOf(coin))
+        every { vaultDao.loadByIdAsFlow(VAULT_ID) } returns
+            flowOf(fakeVaultData(coins = listOf(coin)))
 
         val coins = repository.getEnabledTokens(VAULT_ID).first()
 
         assertEquals(1, coins.size)
         assertEquals(Chain.Ethereum, coins[0].chain)
         assertEquals("ETH", coins[0].ticker)
+    }
+
+    @Test
+    fun `getEnabledChains emits empty set when vault is missing`() = runTest {
+        every { vaultDao.loadByIdAsFlow(MISSING_ID) } returns flowOf(null)
+
+        val chains = repository.getEnabledChains(MISSING_ID).first()
+
+        assertTrue(chains.isEmpty())
     }
 
     @Test
@@ -165,7 +195,8 @@ internal class VaultRepositoryImplTest {
                 ticker = "USDC",
                 contractAddress = "0xusdc",
             )
-        coEvery { vaultDao.loadById(VAULT_ID) } returns fakeVaultData(coins = listOf(native, erc20))
+        every { vaultDao.loadByIdAsFlow(VAULT_ID) } returns
+            flowOf(fakeVaultData(coins = listOf(native, erc20)))
 
         val chains = repository.getEnabledChains(VAULT_ID).first()
 
@@ -353,5 +384,6 @@ internal class VaultRepositoryImplTest {
         const val VAULT_ID = "vault-id-1"
         const val VAULT_NAME = "Test Vault"
         const val ECDSA_KEY = "ecdsa-pub-key"
+        const val MISSING_ID = "vault-missing"
     }
 }

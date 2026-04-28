@@ -129,8 +129,8 @@
     <string name="keysign_screen_signing_with_mldsa">ASSINANDO USANDO CHAVE MLDSA…</string>
     <string name="vault_settings_delete_vault_caution1">Estou ciente de que o cofre será excluído permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Estou ciente de que posso perder fundos</string>
-    <string name="vault_settings_delete_vault_caution3">Fiz um backup do cofre</string>
-    <string name="confirm_delete_permanent_delete_message">Você está excluindo permanentemente seu cofre</string>
+    <string name="vault_settings_delete_vault_caution3">Fiz um backup do cofre para restaurá-lo mais tarde</string>
+    <string name="confirm_delete_permanent_delete_message">Você está excluindo permanentemente sua parte do cofre deste aplicativo</string>
     <string name="confirm_delete_delete_vault">Deletar Cofre</string>
     <string name="rename_vault_screen_vault_name">Nome do Cofre</string>
     <string name="faq_settings_q1">O que é a Vultisig?</string>
@@ -338,6 +338,7 @@
     <string name="form_token_selection_asset">Ativo</string>
     <string name="insufficient_native_token">%1$s insuficiente para taxas de gás</string>
     <string name="swap_error_amount_too_low">Valor de swap muito baixo</string>
+    <string name="swap_error_amount_below_dust_threshold">O valor é inferior ao limite de poeira. Aumente o valor e tente novamente.</string>
     <string name="swap_error_insufficient_balance_and_fees">Saldo de %1$s insuficiente para o swap e taxas de gás. Recarregue %1$s ou reduza o valor do swap</string>
     <string name="swap_error_insufficient_source_token">Saldo de %1$s insuficiente para trocar</string>
     <string name="swap_error_insufficient_gas_fees">Não há %1$s suficiente para cobrir as taxas de gás. Por favor, financie a carteira.</string>
@@ -719,6 +720,8 @@
     <string name="keysign_password_enter_your_password">Introduza a sua senha</string>
     <string name="migration_password_enter_your_password_to_unlock">Introduza a sua palavra-passe para desbloquear a sua Partilha de Servidor e iniciar a atualização.</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Existe um cofre com nome duplicado</string>
+    <string name="join_key_gen_vault_already_on_device">O cofre \"%1$s\" já está neste dispositivo</string>
+    <string name="join_key_gen_open_existing_vault">Abrir cofre</string>
     <string name="join_key_gen_unknown_tssaction">Ação Tss desconhecida</string>
     <string name="join_key_gen_mediator_discovery_timeout">Não foi possível encontrar o outro dispositivo na rede</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Aguarda a entrada de outros dispositivos</string>
@@ -814,7 +817,7 @@
     <string name="vault_backup_screen_donot_receive_email">Não recebeu um email?</string>
     <string name="onboarding_desc_page_5_part_2">separadamente num</string>
     <string name="onboarding_desc_page_5_part_3">Local diferente</string>
-    <string name="scan_qr_code_modal_annotation">Transfira o Vultisig para os seus outros dispositivos e selecione \'Escanear código QR\'</string>
+    <string name="scan_qr_code_modal_annotation">No seu outro dispositivo, abra a aplicação e toque em \'Escanear código QR\' para o ligar.</string>
     <string name="onboarding_desc_page_2_part_3">Para aumentar a segurança e a</string>
     <string name="onboarding_desc_page_2_part_4">Elimine o ponto único de falha</string>
     <string name="onboarding_desc_page_3_part_1">Cada dispositivo</string>
@@ -867,14 +870,13 @@
     <string name="fast_vault_password_screen_reenter_password_hint">Introduza a senha novamente</string>
     <string name="fast_vault_name_screen_next">Próximo</string>
     <string name="enter_email_screen_next">Próximo</string>
-    <string name="scan_qr_code_modal_next">Próximo</string>
+    <string name="scan_qr_code_modal_next">Iniciar leitura</string>
     <string name="peer_discovery_action_next_title">Próximo</string>
     <string name="home_page_no_chains_enabled">Sem cadeias ativadas</string>
     <string name="onboarding_desc_page_3_part_3">uma partilha de cofre</string>
     <string name="select_vault_type_fast_title">Configuração rápida num único dispositivo</string>
     <string name="select_vault_type_fast_desc_1">Apenas 1 dispositivo necessário</string>
-    <string name="scan_qr_code_modal_scan_the">Leia o</string>
-    <string name="scan_qr_code_modal_qr_code">Código QR</string>
+    <string name="scan_qr_code_modal_scan_the">Leia o QR nos seus outros dispositivos</string>
     <string name="tx_overview_screen_title">Concluído</string>
     <string name="fast_vault_password_screen_warning">A palavra-passe não pode ser redefinida ou recuperada</string>
     <string name="referral_top_bar_list">Referência</string>
@@ -1044,6 +1046,7 @@
     <string name="key_import_chains_no_results">Nenhuma cadeia corresponde à sua pesquisa</string>
 
     <string name="key_import_device_count_get_started">Começar</string>
+    <string name="choose_device_count_a11y_description">Quantos dispositivos tem? Seleção atual: %1$s. Toque para escolher outro.</string>
     <string name="vault_count_recommended">Recomendada</string>
 
     <string name="welcome_tip">Dica: Pode usar um browser como dispositivo</string>

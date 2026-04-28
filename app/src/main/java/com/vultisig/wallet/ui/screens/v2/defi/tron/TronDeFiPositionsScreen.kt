@@ -10,11 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -26,8 +27,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.models.ResourceUsage
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.clickOnce
@@ -71,7 +74,10 @@ internal fun TronDeFiPositionsScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(vaultId) { viewModel.setData(vaultId) }
+    LifecycleResumeEffect(vaultId) {
+        viewModel.setData(vaultId)
+        onPauseOrDispose {}
+    }
 
     TronDeFiPositionsScreenContent(
         state = state,
@@ -197,12 +203,10 @@ private fun TronDeFiPositionsScreenContent(
                     }
 
                     if (pendingWithdrawals.isNotEmpty()) {
-                        item {
-                            TronPendingWithdrawalsCard(
-                                withdrawals = pendingWithdrawals,
-                                isBalanceVisible = state.isBalanceVisible,
-                            )
-                        }
+                        TronPendingWithdrawalsCard(
+                            withdrawals = pendingWithdrawals,
+                            isBalanceVisible = state.isBalanceVisible,
+                        )
                     }
                 }
             }
@@ -222,53 +226,38 @@ private fun TronDeFiPositionsScreenContent(
     }
 }
 
-@Composable
-private fun TronPendingWithdrawalsCard(
+private fun LazyListScope.TronPendingWithdrawalsCard(
     withdrawals: List<TronPendingWithdrawalUiModel>,
     isBalanceVisible: Boolean,
 ) {
-    val latestExpiry = remember(withdrawals) { withdrawals.maxOfOrNull { it.expiryEpochMs } ?: 0L }
-    val nowMs by
-        produceState(initialValue = System.currentTimeMillis(), key1 = latestExpiry) {
-            while (value < latestExpiry) {
-                val delta = latestExpiry - value
-                val interval = if (delta > 60 * 60 * 1_000L) 60_000L else 1_000L
-                delay(interval)
-                value = System.currentTimeMillis()
-            }
-        }
-
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    item(key = "tron-pending-withdrawals-header") {
         Text(
             text = stringResource(R.string.tron_defi_pending_withdrawals),
             style = Theme.brockmann.body.l.medium,
             color = Theme.v2.colors.text.primary,
         )
-
-        withdrawals.forEach { withdrawal ->
-            TronPendingWithdrawalRow(
-                withdrawal = withdrawal,
-                nowMs = nowMs,
-                isBalanceVisible = isBalanceVisible,
-            )
-        }
+    }
+    items(items = withdrawals, key = { it.expiryEpochMs }) { withdrawal ->
+        TronPendingWithdrawalRow(withdrawal = withdrawal, isBalanceVisible = isBalanceVisible)
     }
 }
 
 @Composable
 private fun TronPendingWithdrawalRow(
     withdrawal: TronPendingWithdrawalUiModel,
-    nowMs: Long,
     isBalanceVisible: Boolean,
 ) {
-    val countdown = countdownParts(withdrawal.expiryEpochMs, nowMs)
+    val expiryMs = withdrawal.expiryEpochMs
+    val nowMs by
+        produceState(initialValue = System.currentTimeMillis(), key1 = expiryMs) {
+            while (value < expiryMs) {
+                val delta = expiryMs - value
+                val interval = if (delta <= 60_000L) 1_000L else 60_000L
+                delay(interval)
+                value = System.currentTimeMillis()
+            }
+        }
+    val countdown = countdownParts(expiryMs, nowMs)
     val isClaimable = countdown == null
     val timeRemainingText =
         when {
@@ -284,22 +273,34 @@ private fun TronPendingWithdrawalRow(
         }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
+                .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = if (isBalanceVisible) "${withdrawal.amountTrx} TRX" else HIDE_BALANCE_CHARS,
                 style = Theme.brockmann.body.m.medium,
                 color = Theme.v2.colors.text.primary,
             )
-            if (!isClaimable) {
-                Text(
-                    text = timeRemainingText,
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.secondary,
-                )
+            if (withdrawal.resourceType != null || !isClaimable) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    withdrawal.resourceType?.let { TronResourceTypeBadge(it) }
+                    if (!isClaimable) {
+                        Text(
+                            text = timeRemainingText,
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.text.secondary,
+                        )
+                    }
+                }
             }
         }
 
@@ -317,6 +318,40 @@ private fun TronPendingWithdrawalRow(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun TronResourceTypeBadge(resourceType: TronResourceType) {
+    val labelRes =
+        when (resourceType) {
+            TronResourceType.BANDWIDTH -> R.string.tron_resource_bandwidth
+            TronResourceType.ENERGY -> R.string.tron_resource_energy
+        }
+    val iconRes =
+        when (resourceType) {
+            TronResourceType.BANDWIDTH -> R.drawable.bandwidth
+            TronResourceType.ENERGY -> R.drawable.energy
+        }
+    val iconTint =
+        when (resourceType) {
+            TronResourceType.BANDWIDTH -> Theme.v2.colors.alerts.success
+            TronResourceType.ENERGY -> Theme.v2.colors.alerts.warning
+        }
+    Row(
+        modifier =
+            Modifier.clip(RoundedCornerShape(6.dp))
+                .background(Theme.v2.colors.backgrounds.surface2)
+                .padding(horizontal = 8.dp, vertical = 3.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        UiIcon(drawableResId = iconRes, size = 12.dp, tint = iconTint)
+        Text(
+            text = stringResource(labelRes),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.secondary,
+        )
     }
 }
 
@@ -376,10 +411,12 @@ private fun TronDeFiPositionsScreenPreview() {
                                 TronPendingWithdrawalUiModel(
                                     amountTrx = "50.000000",
                                     expiryEpochMs = System.currentTimeMillis() - 1_000L,
+                                    resourceType = TronResourceType.BANDWIDTH,
                                 ),
                                 TronPendingWithdrawalUiModel(
                                     amountTrx = "30.000000",
                                     expiryEpochMs = System.currentTimeMillis() + TWO_DAYS_MS,
+                                    resourceType = TronResourceType.ENERGY,
                                 ),
                             ),
                     )

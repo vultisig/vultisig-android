@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
-import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
+import com.vultisig.wallet.data.models.LOCAL_PARTY_ID_PREFIX
 import javax.inject.Inject
 import kotlin.random.Random
 

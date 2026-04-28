@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.DefaultDispatcher
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
@@ -38,7 +39,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -76,6 +77,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val snackBarFlow: SnackbarFlow,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.ImportVault>()
@@ -125,7 +127,7 @@ constructor(
     private suspend fun saveToDb(fileContent: String, password: String?): SaveResult =
         try {
             val vault =
-                withContext(Dispatchers.Default) { parseVaultFromString(fileContent, password) }
+                withContext(defaultDispatcher) { parseVaultFromString(fileContent, password) }
             insertVaultToDb(vault)
             SaveResult.Success
         } catch (e: DuplicateVaultException) {
@@ -193,6 +195,9 @@ constructor(
         vaultDataStoreRepository.setBackupStatus(adjustedVault.id, true)
         discoverToken(adjustedVault.id, null)
 
+        // MLDSA capability is sticky across hide/restore. Hiding QBTC from the chain list
+        // doesn't strip the key from the backup, so a restored vault always re-adds the QBTC
+        // token — the user may still hold funds there.
         if (adjustedVault.pubKeyMLDSA.isNotBlank()) {
             val qbtcToken = Coins.Qbtc.QBTC
             val (address, pubKey) =

@@ -157,8 +157,8 @@
     <string name="successfully_scanned_barcode">Código de barras escaneado con éxito: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">Soy consciente de que la bóveda será eliminada permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Soy consciente de que puedo perder fondos.</string>
-    <string name="vault_settings_delete_vault_caution3">He hecho una copia de seguridad de la bóveda</string>
-    <string name="confirm_delete_permanent_delete_message">Estás eliminando permanentemente tu bóveda</string>
+    <string name="vault_settings_delete_vault_caution3">He hecho una copia de seguridad de la bóveda para restaurarla más tarde</string>
+    <string name="confirm_delete_permanent_delete_message">Estás eliminando permanentemente tu parte de la bóveda de esta aplicación</string>
     <string name="confirm_delete_delete_vault">Eliminar Bóveda</string>
     <string name="rename_vault_screen_vault_name">Nombre de la Bóveda</string>
     <string name="faq_settings_q1">¿Qué es Vultisig?</string>
@@ -338,6 +338,7 @@
     <string name="form_token_selection_asset">Activo</string>
     <string name="insufficient_native_token">No hay suficiente %1$s para las comisiones de gas</string>
     <string name="swap_error_amount_too_low">El monto de intercambio es demasiado bajo</string>
+    <string name="swap_error_amount_below_dust_threshold">El monto es inferior al umbral de polvo. Aumenta el monto e inténtalo de nuevo.</string>
     <string name="swap_error_insufficient_balance_and_fees">Saldo de %1$s insuficiente para el intercambio y las comisiones de gas. Recargue %1$s o reduzca el monto del intercambio</string>
     <string name="swap_error_insufficient_source_token">Saldo de %1$s insuficiente para intercambiar</string>
     <string name="swap_error_insufficient_gas_fees">No hay suficiente %1$s para cubrir las comisiones de gas. Por favor, cargue la billetera.</string>
@@ -720,6 +721,8 @@
     <string name="keysign_password_enter_your_password">Ingrese su contraseña.</string>
     <string name="migration_password_enter_your_password_to_unlock">Ingrese su contraseña para desbloquear su servidor compartido e iniciar la actualización.</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Existe una bóveda con nombre duplicado</string>
+    <string name="join_key_gen_vault_already_on_device">La bóveda \"%1$s\" ya está en este dispositivo</string>
+    <string name="join_key_gen_open_existing_vault">Abrir bóveda</string>
     <string name="join_key_gen_unknown_tssaction">TssAction desconocido</string>
     <string name="join_key_gen_mediator_discovery_timeout">No se pudo encontrar el otro dispositivo en la red</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Esperando a que se unan otros dispositivos</string>
@@ -815,7 +818,7 @@
     <string name="vault_backup_screen_donot_receive_email">¿No recibiste un correo?</string>
     <string name="onboarding_desc_page_5_part_2">por separado en un</string>
     <string name="onboarding_desc_page_5_part_3">Otra ubicación</string>
-    <string name="scan_qr_code_modal_annotation">Descarga Vultisig en tus otros dispositivos y selecciona «Escanear código QR».</string>
+    <string name="scan_qr_code_modal_annotation">En tu otro dispositivo, abre la aplicación y toca «Escanear código QR» para conectarlo.</string>
     <string name="onboarding_desc_page_2_part_3">para aumentar la seguridad y</string>
     <string name="onboarding_desc_page_2_part_4">Elimina el único punto de fallo</string>
     <string name="onboarding_desc_page_3_part_1">Cada dispositivo</string>
@@ -868,14 +871,13 @@
     <string name="fast_vault_password_screen_reenter_password_hint">Vuelve a introducir la contraseña</string>
     <string name="fast_vault_name_screen_next">Siguiente</string>
     <string name="enter_email_screen_next">Siguiente</string>
-    <string name="scan_qr_code_modal_next">Siguiente</string>
+    <string name="scan_qr_code_modal_next">Iniciar escaneo</string>
     <string name="peer_discovery_action_next_title">Siguiente</string>
     <string name="home_page_no_chains_enabled">Sin cadenas habilitadas</string>
     <string name="onboarding_desc_page_3_part_3">Un acceso a la bóveda</string>
     <string name="select_vault_type_fast_title">Configuración rápida en un solo dispositivo</string>
     <string name="select_vault_type_fast_desc_1">Solo se necesita un dispositivo</string>
-    <string name="scan_qr_code_modal_scan_the">Escanear</string>
-    <string name="scan_qr_code_modal_qr_code">Código QR</string>
+    <string name="scan_qr_code_modal_scan_the">Escanea el QR en tus otros dispositivos</string>
     <string name="tx_overview_screen_title">Listo</string>
     <string name="fast_vault_password_screen_warning">La contraseña no se puede restablecer ni recuperar.</string>
     <string name="referral_top_bar_list">Referido</string>
@@ -1043,6 +1045,7 @@
     <string name="key_import_chains_no_results">Ninguna cadena coincide con tu búsqueda</string>
 
     <string name="key_import_device_count_get_started">Comenzar</string>
+    <string name="choose_device_count_a11y_description">¿Cuántos dispositivos tienes? Selección actual: %1$s. Toca para elegir otro.</string>
     <string name="vault_count_recommended">Recomendado</string>
 
     <string name="welcome_tip">Consejo: Puedes usar un navegador como dispositivo</string>

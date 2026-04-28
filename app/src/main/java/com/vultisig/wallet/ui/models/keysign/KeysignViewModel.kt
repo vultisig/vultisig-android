@@ -600,6 +600,16 @@ constructor(
                 explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
             runCatching { balanceRepository.invalidateBalance(payload.coin.address, payload.coin) }
                 .onFailure { Timber.e(it, "Failed to invalidate balance cache after broadcast") }
+            runCatching {
+                    balanceRepository.invalidateDeFiBalance(
+                        address = payload.coin.address,
+                        chain = chain,
+                        vaultId = vault.id,
+                    )
+                }
+                .onFailure {
+                    Timber.e(it, "Failed to invalidate DeFi balance cache after broadcast")
+                }
             saveTransactionHistory(txHash, chain)
             if (txStatusConfigurationProvider.supportTxStatus(chain)) {
                 startForegroundPolling(txHash, chain)

@@ -2,7 +2,8 @@ package com.vultisig.wallet.ui.utils
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import com.vultisig.wallet.ui.utils.UiText.DynamicString
 import com.vultisig.wallet.ui.utils.UiText.FormattedText
 import com.vultisig.wallet.ui.utils.UiText.PluralText
@@ -34,13 +35,11 @@ fun String.asUiText(): UiText = DynamicString(this)
 
 @Composable
 fun UiText.asString(): String {
-    val context = LocalContext.current
     return when (this) {
         is DynamicString -> text
-        is StringResource -> context.getString(resId)
-        is FormattedText -> context.getString(resId, *formatArgs.toTypedArray())
-        is PluralText ->
-            context.resources.getQuantityString(resId, quantity, *formatArgs.toTypedArray())
+        is StringResource -> stringResource(resId)
+        is FormattedText -> stringResource(resId, *formatArgs.toTypedArray())
+        is PluralText -> pluralStringResource(resId, quantity, *formatArgs.toTypedArray())
     }
 }
 
