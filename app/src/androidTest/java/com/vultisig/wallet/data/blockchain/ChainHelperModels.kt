@@ -1,6 +1,7 @@
 import com.vultisig.wallet.data.models.payload.SignDirect
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import vultisig.keysign.v1.SignTon
 
 @Serializable
 data class TransactionData(
@@ -199,6 +200,7 @@ data class IbcDenomTrace(
 @Serializable
 data class SignData(
     @SerialName("sign_solana") val signSolana: SignSolana? = null,
+    @SerialName("sign_ton") val signTon: SignTon? = null,
     @SerialName("sign_direct") val signDirect: SignDirect? = null,
     @SerialName("sign_amino") val signAmino: SignAmino? = null,
 )

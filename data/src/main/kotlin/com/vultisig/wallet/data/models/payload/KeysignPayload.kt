@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import java.math.BigInteger
 import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.SignSolana
+import vultisig.keysign.v1.SignTon
 import vultisig.keysign.v1.TronTransferAssetContractPayload
 import vultisig.keysign.v1.TronTransferContractPayload
 import vultisig.keysign.v1.TronTriggerSmartContractPayload

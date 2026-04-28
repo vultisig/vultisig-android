@@ -959,6 +959,7 @@ constructor(
                             ?: ""
 
                     val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
+                    val signTon = payload.signTon?.tonMessages ?: emptyList()
                     val transaction =
                         Transaction(
                             id = UUID.randomUUID().toString(),
@@ -977,7 +978,7 @@ constructor(
                             signAmino = normalizedSignAmino,
                             signDirect = signDirect,
                             signSolana = signSolana,
-                            signTon = payload.signTon,
+                            signTon = signTon,
                         )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)

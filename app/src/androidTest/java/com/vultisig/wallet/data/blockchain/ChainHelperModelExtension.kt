@@ -26,6 +26,8 @@ import vultisig.keysign.v1.CosmosFee
 import vultisig.keysign.v1.CosmosIbcDenomTrace
 import vultisig.keysign.v1.CosmosMsg
 import vultisig.keysign.v1.SignAmino
+import vultisig.keysign.v1.SignTon
+import vultisig.keysign.v1.TonMessage
 import vultisig.keysign.v1.TransactionType
 import vultisig.keysign.v1.TronTriggerSmartContractPayload
 
@@ -75,6 +77,22 @@ fun KeysignPayload.toInternalKeySignPayload():
         signSolana =
             this.signData?.signSolana?.let { signSolana ->
                 SignSolanaProto(rawTransactions = signSolana.rawTransactions)
+            },
+        signTon =
+            this.signData?.signTon?.let { signTon ->
+                SignTon(
+                    tonMessages =
+                        signTon.tonMessages.mapNotNull { msg ->
+                            msg?.let {
+                                TonMessage(
+                                    to = it.to,
+                                    amount = it.amount,
+                                    payload = it.payload,
+                                    stateInit = it.stateInit,
+                                )
+                            }
+                        }
+                )
             },
         memo = this.memo,
         vaultPublicKeyECDSA = this.vaultPublicKeyEcdsa,
