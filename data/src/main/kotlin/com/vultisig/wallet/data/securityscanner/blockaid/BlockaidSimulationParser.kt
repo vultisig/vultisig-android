@@ -45,15 +45,26 @@ internal object BlockaidSimulationParser {
             }
         if (all.isEmpty()) return null
 
-        // When Blockaid returns three diffs and one of them is native SOL, the
-        // SOL diff is filtered out as "likely the transaction fee" — matches the
-        // extension parser exactly. Filtering both `asset.type == "SOL"` and
-        // `assetType == "SOL"` because Blockaid is inconsistent about which
-        // field carries the marker.
+        // When Blockaid returns three diffs, one of them is the native SOL
+        // fee. Identify it by SHAPE (outgoing-only native SOL) rather than by
+        // position: a token→SOL swap legitimately emits two SOL diffs — the
+        // fee leg (outgoing only) and the swap-receive leg (incoming only) —
+        // so dropping whichever native-SOL entry happens to come first would
+        // silently lose the user's actual swap result.
+        // Both `asset.type == "SOL"` and `assetType == "SOL"` are checked
+        // because Blockaid is inconsistent about which field carries the
+        // marker.
         val relevant: List<BlockaidSolanaSimulationJson.AccountAssetDiff> =
             if (all.size == 3) {
-                val solIndex = all.indexOfFirst { it.asset.type == "SOL" || it.assetType == "SOL" }
-                if (solIndex >= 0) all.filterIndexed { idx, _ -> idx != solIndex } else all
+                val solFeeIndex =
+                    all.indexOfFirst {
+                        val isNative = it.asset.type == "SOL" || it.assetType == "SOL"
+                        val outgoingOnly =
+                            it.outgoing?.rawValue?.toRawValueString() != null &&
+                                it.incoming?.rawValue?.toRawValueString() == null
+                        isNative && outgoingOnly
+                    }
+                if (solFeeIndex >= 0) all.filterIndexed { idx, _ -> idx != solFeeIndex } else all
             } else {
                 all
             }
