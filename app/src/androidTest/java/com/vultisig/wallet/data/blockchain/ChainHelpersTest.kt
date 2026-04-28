@@ -190,7 +190,7 @@ class ChainHelpersTest {
                         TonMessage(
                             to = dest,
                             amount = "50000000",
-                            payload = "te6cckEBAQEAAgAAABGw7yzH",
+                            payload = "te6cckEBAQEADgAAGAAAAABIZWxsbw==",
                         )
                     )
                 )
@@ -202,7 +202,7 @@ class ChainHelpersTest {
                         TonMessage(
                             to = dest,
                             amount = "50000000",
-                            stateInit = "te6cckEBAQEAAgAAAEysuc0=",
+                            stateInit = "te6ccgECBgEAAWoAART/APSk",
                         )
                     )
                 )
@@ -214,12 +214,12 @@ class ChainHelpersTest {
                         TonMessage(
                             to = dest,
                             amount = "50000000",
-                            payload = "te6cckEBAQEAAgAAABGw7yzH",
+                            payload = "te6cckEBAQEADgAAGAAAAABIZWxsbw==",
                         ),
                         TonMessage(
                             to = dest,
                             amount = "100000000",
-                            stateInit = "te6cckEBAQEAAgAAAEysuc0=",
+                            stateInit = "te6ccgECBgEAAWoAART/APSk",
                         ),
                     )
                 )
