@@ -33,6 +33,13 @@ import com.vultisig.wallet.data.models.payload.TonMessage
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.serialization.json.Json
 
+/**
+ * Displays a collapsible list of TON transfer messages decoded from a JSON-encoded [SignTon].
+ *
+ * @param signTon JSON string produced by [kotlinx.serialization.json.Json.encodeToString] on a
+ *   [com.vultisig.wallet.data.models.payload.SignTon]. Falls back to showing the raw string when
+ *   parsing fails.
+ */
 @Composable
 fun SignTonDisplayView(signTon: String, modifier: Modifier = Modifier) {
     val decodeResult = remember(signTon) { runCatching { Json.decodeFromString<SignTon>(signTon) } }
