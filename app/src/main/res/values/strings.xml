@@ -532,10 +532,9 @@
     <string name="peer_discovery_scan_with_n_device">Scan with %1$s device</string>
     <string name="peer_discovery_waiting_for_devices_action">Waiting for devices to connect…</string>
     <string name="peer_discovery_devices_n_of_n">Devices (%1$s/%2$s)</string>
-    <string name="scan_qr_code_modal_annotation">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
-    <string name="scan_qr_code_modal_next">Next</string>
-    <string name="scan_qr_code_modal_scan_the">Scan the</string>
-    <string name="scan_qr_code_modal_qr_code">QR code</string>
+    <string name="scan_qr_code_modal_annotation">On your other device, open the app and tap \"Scan QR\" to connect it.</string>
+    <string name="scan_qr_code_modal_next">Start scanning</string>
+    <string name="scan_qr_code_modal_scan_the">Scan the QR on your other devices</string>
     <string name="home_screen_scan_qr_code">Scan QR</string>
     <string name="select_vault_type_next">Next</string>
     <string name="select_vault_type_choose_setup">Choose Setup</string>
@@ -897,6 +896,8 @@
     <string name="import_file_import_your_vault_share">Import your vault share</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Supported file types: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Vault with duplicate name exists</string>
+    <string name="join_key_gen_vault_already_on_device">Vault \"%1$s\" is already on this device</string>
+    <string name="join_key_gen_open_existing_vault">Open vault</string>
     <string name="join_key_gen_unknown_tssaction">Unknown TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">Could not find the other device on your network</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Waiting for other devices to join</string>
@@ -1119,6 +1120,7 @@
     <string name="key_import_chains_get_started">Get started</string>
     <string name="key_import_chains_no_results">No chains match your search</string>
     <string name="key_import_device_count_get_started">Get started</string>
+    <string name="choose_device_count_a11y_description">How many devices do you have? %1$s selected. Tap to choose another.</string>
     <string name="key_import_error_title">Key Import Failed</string>
     <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
     <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>

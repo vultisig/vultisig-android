@@ -18,6 +18,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -227,15 +228,16 @@ constructor(
     }
 
     private fun loadTransaction() {
-        viewModelScope.launch {
-            transaction =
-                runCatching { transactionRepository.getTransaction(transactionId) }
-                    .getOrElse {
-                        Timber.e(it, "Failed to load transaction")
-                        navigator.back()
-                        return@launch
-                    }
-            val tx = transaction ?: return@launch
+        viewModelScope.safeLaunch(
+            onError = {
+                Timber.e(it, "Failed to load transaction")
+                navigator.back()
+            }
+        ) {
+            val tx =
+                transactionRepository.getTransaction(transactionId)
+                    ?: error("Transaction not found: $transactionId")
+            transaction = tx
             val transactionUiModel = mapTransactionToUiModel(tx)
 
             val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }

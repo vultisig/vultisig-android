@@ -476,7 +476,7 @@ constructor(
                     keysignPayload.swapPayload != null ||
                         txType == Route.Keysign.Keysign.TxType.Swap
 
-                viewModelScope.launch {
+                viewModelScope.safeLaunch {
                     val isDeposit =
                         when (val specific = keysignPayload.blockChainSpecific) {
                             is BlockChainSpecific.MayaChain -> specific.isDeposit
@@ -521,10 +521,13 @@ constructor(
                         }
 
                         else -> {
-                            val transactionDetailsUiModel =
-                                mapTransactionToUiModel(
-                                    transactionRepository.getTransaction(transactionId)
-                                )
+                            val tx =
+                                transactionRepository.getTransaction(transactionId)
+                                    ?: run {
+                                        Timber.e("Transaction not found: %s", transactionId)
+                                        return@safeLaunch
+                                    }
+                            val transactionDetailsUiModel = mapTransactionToUiModel(tx)
                             transactionHistoryData.update {
                                 transactionHistoryDataMapper(transactionDetailsUiModel)
                             }

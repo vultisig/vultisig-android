@@ -721,6 +721,8 @@
     <string name="keysign_password_enter_your_password">Inserisci la tua password</string>
     <string name="migration_password_enter_your_password_to_unlock">Inserisci la tua password per sbloccare la tua condivisione server e avviare l\'aggiornamento</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Esiste un Vault con nome duplicato</string>
+    <string name="join_key_gen_vault_already_on_device">Il Vault \"%1$s\" è già su questo dispositivo</string>
+    <string name="join_key_gen_open_existing_vault">Apri Vault</string>
     <string name="join_key_gen_unknown_tssaction">TssAction sconosciuta</string>
     <string name="join_key_gen_mediator_discovery_timeout">Impossibile trovare l\'altro dispositivo sulla rete</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">In attesa che altri dispositivi si uniscano</string>
@@ -816,7 +818,7 @@
     <string name="vault_backup_screen_donot_receive_email">Non hai ricevuto un\'email?</string>
     <string name="onboarding_desc_page_5_part_2">separatamente in un</string>
     <string name="onboarding_desc_page_5_part_3">Posizione diversa</string>
-    <string name="scan_qr_code_modal_annotation">Scarica Vultisig sugli altri tuoi dispositivi e seleziona \"Scansiona codice QR\".</string>
+    <string name="scan_qr_code_modal_annotation">Sull\'altro dispositivo, apri l\'app e tocca \"Scansiona codice QR\" per collegarlo.</string>
     <string name="onboarding_desc_page_2_part_3">per aumentare la sicurezza e</string>
     <string name="onboarding_desc_page_2_part_4">Rimuovi il singolo punto di errore</string>
     <string name="onboarding_desc_page_3_part_1">Ogni dispositivo</string>
@@ -869,14 +871,13 @@
     <string name="fast_vault_password_screen_reenter_password_hint">Reinserisci la password</string>
     <string name="fast_vault_name_screen_next">Avanti</string>
     <string name="enter_email_screen_next">Avanti</string>
-    <string name="scan_qr_code_modal_next">Avanti</string>
+    <string name="scan_qr_code_modal_next">Avvia scansione</string>
     <string name="peer_discovery_action_next_title">Avanti</string>
     <string name="home_page_no_chains_enabled">Nessuna catena abilitata</string>
     <string name="onboarding_desc_page_3_part_3">condivisione di un vault</string>
     <string name="select_vault_type_fast_title">Configurazione rapida su un solo dispositivo</string>
     <string name="select_vault_type_fast_desc_1">È necessario un solo dispositivo</string>
-    <string name="scan_qr_code_modal_scan_the">Scansiona il</string>
-    <string name="scan_qr_code_modal_qr_code">Codice QR</string>
+    <string name="scan_qr_code_modal_scan_the">Scansiona il QR sui tuoi altri dispositivi</string>
     <string name="tx_overview_screen_title">Fatto</string>
     <string name="fast_vault_password_screen_warning">La password non può essere reimpostata o recuperata</string>
     <string name="referral_top_bar_list">Referral</string>
@@ -1047,6 +1048,7 @@
     <string name="key_import_chains_no_results">Nessuna catena corrisponde alla tua ricerca</string>
 
     <string name="key_import_device_count_get_started">Inizia</string>
+    <string name="choose_device_count_a11y_description">Quanti dispositivi hai? Selezione attuale: %1$s. Tocca per sceglierne un altro.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Messaggi</string>
     <string name="sign_ton_payload">Payload</string>
