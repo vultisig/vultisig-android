@@ -25,7 +25,8 @@ constructor(private val fourByteApi: FourByteApi, @param:PrettyJson private val 
         try {
             val hash = memo.stripHexPrefix().substring(0, 8)
             return EvmCommonSelectors.lookup(hash) ?: fourByteApi.decodeFunction(hash)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             return null
         }
     }
