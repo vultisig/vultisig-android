@@ -28,8 +28,6 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.data.models.payload.SignTon
-import com.vultisig.wallet.data.models.payload.TonMessage
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
@@ -77,7 +75,8 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
-import kotlinx.serialization.json.Json
+import vultisig.keysign.v1.SignTon
+import vultisig.keysign.v1.TonMessage
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -346,30 +345,30 @@ private fun TonDisplayPreview(messageCount: Int) {
             1 ->
                 listOf(
                     TonMessage(
-                        toAddress = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        toAmount = 1_500_000_000L,
+                        to = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "1500000000",
                     )
                 )
             else ->
                 listOf(
                     TonMessage(
-                        toAddress = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        toAmount = 1_500_000_000L,
+                        to = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "1500000000",
                         payload = "te6ccgEBAQEABgAACAA=",
                     ),
                     TonMessage(
-                        toAddress = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        toAmount = 250_000_000L,
+                        to = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "250000000",
                         payload = "te6ccgEBAQEABgAACAA=",
                         stateInit = "te6ccgEBAQEABwAA",
                     ),
                     TonMessage(
-                        toAddress = "EQAB9999999999ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        toAmount = 100_000L,
+                        to = "EQAB9999999999ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "100000",
                     ),
                     TonMessage(
-                        toAddress = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        toAmount = 5_000_000_000L,
+                        to = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "5000000000",
                         stateInit = "te6ccgEBAQEABwAA",
                     ),
                 )
@@ -381,7 +380,7 @@ private fun TonDisplayPreview(messageCount: Int) {
                 .background(Theme.v2.colors.backgrounds.primary)
                 .padding(16.dp)
     ) {
-        SignTonDisplayView(signTon = Json.encodeToString(SignTon(messages)))
+        SignTonDisplayView(signTon = SignTon(tonMessages = messages))
     }
 }
 

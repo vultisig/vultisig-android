@@ -28,26 +28,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.payload.SignTon
-import com.vultisig.wallet.data.models.payload.TonMessage
 import com.vultisig.wallet.ui.theme.Theme
-import kotlinx.serialization.json.Json
+import vultisig.keysign.v1.SignTon
+import vultisig.keysign.v1.TonMessage
 
-/**
- * Displays a collapsible list of TON transfer messages decoded from a JSON-encoded [SignTon].
- *
- * @param signTon JSON string produced by [kotlinx.serialization.json.Json.encodeToString] on a
- *   [com.vultisig.wallet.data.models.payload.SignTon]. Falls back to showing the raw string when
- *   parsing fails.
- */
 @Composable
-fun SignTonDisplayView(signTon: String, modifier: Modifier = Modifier) {
-    val decodeResult = remember(signTon) { runCatching { Json.decodeFromString<SignTon>(signTon) } }
-    val messages = decodeResult.getOrNull()?.messages.orEmpty()
-
-    // Skip rendering only when parsing succeeded but produced no messages (shouldn't happen in
-    // practice, since SignTon.validate() requires at least one).
-    if (decodeResult.isSuccess && messages.isEmpty()) return
+fun SignTonDisplayView(signTon: SignTon, modifier: Modifier = Modifier) {
+    val messages = signTon.tonMessages.filterNotNull()
+    if (messages.isEmpty()) return
 
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -75,41 +63,20 @@ fun SignTonDisplayView(signTon: String, modifier: Modifier = Modifier) {
         }
 
         AnimatedVisibility(visible = isExpanded) {
-            if (decodeResult.isFailure) {
-                // Parsing failed — show the raw payload so the user can see what was received
-                // rather than silently hiding the entire TON section.
-                Text(
-                    text = signTon,
-                    color = Theme.v2.colors.text.primary,
-                    style = Theme.brockmann.button.medium.regular,
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .heightIn(max = 400.dp)
-                            .background(
-                                color = Theme.v2.colors.variables.bordersLight,
-                                shape = RoundedCornerShape(12.dp),
-                            )
-                            .padding(8.dp)
-                            .verticalScroll(rememberScrollState()),
-                )
-            } else {
-                Column(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .heightIn(max = 400.dp)
-                            .background(
-                                color = Theme.v2.colors.variables.bordersLight,
-                                shape = RoundedCornerShape(12.dp),
-                            )
-                            .padding(8.dp)
-                            .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    messages.forEachIndexed { index, msg ->
-                        TonMessageRow(message = msg, index = index)
-                    }
+            Column(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .heightIn(max = 400.dp)
+                        .background(
+                            color = Theme.v2.colors.variables.bordersLight,
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .padding(8.dp)
+                        .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                messages.forEachIndexed { index, msg ->
+                    TonMessageRow(message = msg, index = index)
                 }
             }
         }
@@ -136,16 +103,16 @@ private fun TonMessageRow(message: TonMessage, index: Int) {
                 fontSize = 11.sp,
             )
 
-            if (message.payload.isNotEmpty()) {
+            if (!message.payload.isNullOrEmpty()) {
                 BadgeText(text = stringResource(R.string.sign_ton_payload))
             }
-            if (message.stateInit.isNotEmpty()) {
+            if (!message.stateInit.isNullOrEmpty()) {
                 BadgeText(text = stringResource(R.string.sign_ton_state_init))
             }
         }
 
         Text(
-            text = message.toAddress,
+            text = message.to,
             color = Theme.v2.colors.neutrals.n100,
             style = Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,
@@ -155,7 +122,7 @@ private fun TonMessageRow(message: TonMessage, index: Int) {
         )
 
         Text(
-            text = formatNanotons(message.toAmount),
+            text = formatNanotons(message.amount.toLongOrNull() ?: 0L),
             color = Theme.v2.colors.text.primary,
             style = Theme.brockmann.button.medium.medium,
             fontSize = 11.sp,
@@ -190,16 +157,14 @@ private fun formatNanotons(nano: Long): String {
 private fun PreviewSignTonDisplaySingle() {
     SignTonDisplayView(
         signTon =
-            Json.encodeToString(
-                SignTon(
-                    messages =
-                        listOf(
-                            TonMessage(
-                                toAddress = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                                toAmount = 1_500_000_000L,
-                            )
+            SignTon(
+                tonMessages =
+                    listOf(
+                        TonMessage(
+                            to = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                            amount = "1500000000",
                         )
-                )
+                    )
             )
     )
 }
@@ -209,32 +174,30 @@ private fun PreviewSignTonDisplaySingle() {
 private fun PreviewSignTonDisplayMulti() {
     SignTonDisplayView(
         signTon =
-            Json.encodeToString(
-                SignTon(
-                    messages =
-                        listOf(
-                            TonMessage(
-                                toAddress = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                                toAmount = 1_500_000_000L,
-                                payload = "te6ccg...",
-                            ),
-                            TonMessage(
-                                toAddress = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                                toAmount = 250_000_000L,
-                                payload = "te6...",
-                                stateInit = "te6state...",
-                            ),
-                            TonMessage(
-                                toAddress = "EQAB9999999999ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                                toAmount = 100_000L,
-                            ),
-                            TonMessage(
-                                toAddress = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                                toAmount = 5_000_000_000L,
-                                stateInit = "te6stateinit...",
-                            ),
-                        )
-                )
+            SignTon(
+                tonMessages =
+                    listOf(
+                        TonMessage(
+                            to = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                            amount = "1500000000",
+                            payload = "te6ccg...",
+                        ),
+                        TonMessage(
+                            to = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                            amount = "250000000",
+                            payload = "te6...",
+                            stateInit = "te6state...",
+                        ),
+                        TonMessage(
+                            to = "EQAB9999999999ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                            amount = "100000",
+                        ),
+                        TonMessage(
+                            to = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                            amount = "5000000000",
+                            stateInit = "te6stateinit...",
+                        ),
+                    )
             )
     )
 }

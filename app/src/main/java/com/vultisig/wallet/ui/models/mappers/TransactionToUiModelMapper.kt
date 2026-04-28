@@ -2,11 +2,9 @@ package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Transaction
-import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import javax.inject.Inject
-import kotlinx.serialization.json.Json
 
 internal interface TransactionToUiModelMapper :
     SuspendMapperFunc<Transaction, TransactionDetailsUiModel>
@@ -16,11 +14,9 @@ internal class TransactionToUiModelMapperImpl
 constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
-    @param:PrettyJson private val json: Json,
 ) : TransactionToUiModelMapper {
 
     override suspend fun invoke(from: Transaction): TransactionDetailsUiModel {
-
         return TransactionDetailsUiModel(
             token =
                 ValuedToken(

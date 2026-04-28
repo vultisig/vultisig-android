@@ -41,9 +41,7 @@ import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.models.payload.SignTon
 import com.vultisig.wallet.data.models.payload.SwapPayload
-import com.vultisig.wallet.data.models.payload.TonMessage
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.swapAssetComparisonName
@@ -964,26 +962,7 @@ constructor(
                             ?: ""
 
                     val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
-                    val signTon =
-                        payload.signTon?.let { proto ->
-                            val mapped =
-                                SignTon(
-                                        messages =
-                                            proto.tonMessages.filterNotNull().map { msg ->
-                                                TonMessage(
-                                                    toAddress = msg.to,
-                                                    toAmount =
-                                                        requireNotNull(msg.amount.toLongOrNull()) {
-                                                            "Invalid TON amount: ${msg.amount}"
-                                                        },
-                                                    payload = msg.payload.orEmpty(),
-                                                    stateInit = msg.stateInit.orEmpty(),
-                                                )
-                                            }
-                                    )
-                                    .apply { validate() }
-                            json.encodeToString(mapped)
-                        }
+                    val signTon = payload.signTon
                     val transaction =
                         Transaction(
                             id = UUID.randomUUID().toString(),
