@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
+import java.math.BigInteger
 import vultisig.keysign.v1.SignTon
 import vultisig.keysign.v1.TonMessage
 
@@ -127,7 +128,7 @@ private fun TonMessageRow(message: TonMessage, index: Int) {
         )
 
         Text(
-            text = formatNanotons(message.amount.toLongOrNull() ?: 0L),
+            text = formatNanotons(message.amount),
             color = Theme.v2.colors.text.primary,
             style = Theme.brockmann.button.medium.medium,
             fontSize = 11.sp,
@@ -151,9 +152,12 @@ private fun BadgeText(text: String) {
     )
 }
 
-private fun formatNanotons(nano: Long): String {
-    val whole = nano / 1_000_000_000L
-    val frac = (nano % 1_000_000_000L).toString().padStart(9, '0').trimEnd('0')
+private fun formatNanotons(raw: String): String {
+    val nano = raw.toBigIntegerOrNull() ?: return "Invalid TON amount"
+    if (nano.signum() < 0) return "Invalid TON amount"
+    val divisor = BigInteger.TEN.pow(9)
+    val whole = nano / divisor
+    val frac = (nano % divisor).toString().padStart(9, '0').trimEnd('0')
     return if (frac.isEmpty()) "$whole TON" else "$whole.$frac TON"
 }
 

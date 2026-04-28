@@ -250,7 +250,9 @@ constructor(
                 messagesToSign = messagesToSign,
                 keyType =
                     _keysignPayload?.coin?.chain?.TssKeysignType
-                        ?: customMessagePayload?.chain?.let { Chain.fromRaw(it).TssKeysignType }
+                        ?: customMessagePayload?.chain?.let { raw ->
+                            runCatching { Chain.fromRaw(raw).TssKeysignType }.getOrNull()
+                        }
                         ?: TssKeyType.ECDSA,
                 keysignPayload = _keysignPayload,
                 customMessagePayload = customMessagePayload,

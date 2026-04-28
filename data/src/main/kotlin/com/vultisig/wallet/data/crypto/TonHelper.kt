@@ -83,12 +83,21 @@ object TonHelper {
         val toAddress = AnyAddress(msg.to, CoinType.TON)
         val amount = msg.amount.toLongOrNull() ?: 0L
         val mode = calculateSendMode(sendMaxAmount = false)
+        // TonConnect addresses encode bounceability in the user-friendly prefix:
+        // EQ = bounceable, UQ = non-bounceable. Raw "workchain:hex" form has no flag,
+        // so fall back to the wallet's default.
+        val bounceable =
+            when {
+                msg.to.startsWith("EQ") -> true
+                msg.to.startsWith("UQ") -> false
+                else -> tonSpecific.bounceable
+            }
 
         return TheOpenNetwork.Transfer.newBuilder()
             .setDest(toAddress.description())
             .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
             .setMode(mode)
-            .setBounceable(tonSpecific.bounceable)
+            .setBounceable(bounceable)
             .apply {
                 msg.payload?.takeIf { it.isNotEmpty() }?.let { setCustomPayload(it) }
                 msg.stateInit?.takeIf { it.isNotEmpty() }?.let { setStateInit(it) }

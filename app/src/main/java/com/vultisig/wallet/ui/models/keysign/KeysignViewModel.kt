@@ -395,7 +395,11 @@ constructor(
 
             Timber.d("All messages signed, broadcasting transaction")
             if (customMessagePayload != null) {
-                calculateCustomMessageSignature(signatures.values.first())
+                val customMessageKey = messagesToSign.first()
+                val customMessageResp =
+                    signatures[customMessageKey]
+                        ?: error("No signature found for custom message $customMessageKey")
+                calculateCustomMessageSignature(customMessageResp)
             }
             if (!skipBroadcast()) {
                 broadcastTransaction()

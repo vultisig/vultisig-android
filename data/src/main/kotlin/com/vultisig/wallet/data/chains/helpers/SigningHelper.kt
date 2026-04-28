@@ -40,8 +40,10 @@ object SigningHelper {
                 messagePayload.message.toByteArray()
             }
         val isEddsa =
-            messagePayload.chain?.let { Chain.fromRaw(it).TssKeysignType == TssKeyType.EDDSA }
-                ?: false
+            messagePayload.chain?.let { raw ->
+                runCatching { Chain.fromRaw(raw).TssKeysignType == TssKeyType.EDDSA }
+                    .getOrDefault(false)
+            } ?: false
         // EdDSA chains (e.g. TON) deliver the precomputed digest directly; signing it again
         // through keccak256 would diverge from the initiator's hash list.
         val bytes = if (isEddsa) processedBytes else processedBytes.toKeccak256ByteArray()
