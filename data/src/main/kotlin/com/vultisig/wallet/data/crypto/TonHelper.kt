@@ -27,7 +27,7 @@ import wallet.core.jni.proto.TheOpenNetwork
 
 object TonHelper {
 
-    private fun getPreSignedInputData(payload: KeysignPayload): ByteArray {
+    fun getPreSignedInputData(payload: KeysignPayload): ByteArray {
         require(payload.coin.chain == Chain.Ton) { "Coin is not TON" }
 
         val tonSpecific =

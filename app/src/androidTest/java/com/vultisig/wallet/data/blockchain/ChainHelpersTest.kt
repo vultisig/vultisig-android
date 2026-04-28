@@ -32,12 +32,12 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import vultisig.keysign.v1.SignTon
 import vultisig.keysign.v1.TonMessage
 import wallet.core.jni.CoinType
+import wallet.core.jni.proto.TheOpenNetwork
 
 class ChainHelpersTest {
     private val json = Json {
@@ -138,9 +138,9 @@ class ChainHelpersTest {
     }
 
     /**
-     * Regression: verifies that per-message `payload` and `stateInit` fields are actually wired
-     * into the WalletCore signing input. Different field values must produce different pre-image
-     * hashes, and multi-message signing must not crash or drop transfers.
+     * Regression: verifies that per-message `payload` and `stateInit` fields are threaded into the
+     * WalletCore SigningInput, and that multi-message signing emits one Transfer per TonMessage in
+     * order. Mirrors iOS `TonSendTransactionTests.testTonConnectThreadsStateInitAndCustomPayload`.
      */
     @Test
     fun tonConnectPayloadAndStateInitAreThreadedIntoSigningInput() {
@@ -165,74 +165,46 @@ class ChainHelpersTest {
                         bounceable = false,
                     )
             )
-        val dest = "UQDmLe6ticcY_uLZsfurdYONshNuCn8IS81KcJ8p6M6ISMcB"
+        val destA = "UQDmLe6ticcY_uLZsfurdYONshNuCn8IS81KcJ8p6M6ISMcB"
+        val destB = "UQCc9iCgP_b5RMJcFE5XD8zStfjtNHLhDWfUqC5m1SjSer95"
+        val customPayload = "te6cckEBAQEAAgAAABGw7yzH"
+        val stateInit = "te6cckEBAQEAAgAAAEysuc0="
 
-        fun buildPayload(msgs: List<TonMessage>) =
+        val payload =
             KeysignPayload(
                     coin = coin,
                     toAddress = "",
                     toAmount = "0",
                     blockchainSpecific = blockchainSpecific,
-                    signData = SignData(signTon = SignTon(tonMessages = msgs)),
+                    signData =
+                        SignData(
+                            signTon =
+                                SignTon(
+                                    tonMessages =
+                                        listOf(
+                                            TonMessage(
+                                                to = destA,
+                                                amount = "10000000",
+                                                payload = customPayload,
+                                                stateInit = stateInit,
+                                            ),
+                                            TonMessage(to = destB, amount = "20000000"),
+                                        )
+                                )
+                        ),
                     vaultPublicKeyEcdsa = HEX_PUBLIC_KEY,
                     libType = "DKLS",
                 )
                 .toInternalKeySignPayload()
 
-        val baseHash =
-            TonHelper.getPreSignedImageHash(
-                buildPayload(listOf(TonMessage(to = dest, amount = "50000000")))
-            )
-        val withPayloadHash =
-            TonHelper.getPreSignedImageHash(
-                buildPayload(
-                    listOf(
-                        TonMessage(
-                            to = dest,
-                            amount = "50000000",
-                            payload = "te6cckEBAQEADgAAGAAAAABIZWxsbw==",
-                        )
-                    )
-                )
-            )
-        val withStateInitHash =
-            TonHelper.getPreSignedImageHash(
-                buildPayload(
-                    listOf(
-                        TonMessage(
-                            to = dest,
-                            amount = "50000000",
-                            stateInit = "te6ccgECBgEAAWoAART/APSk",
-                        )
-                    )
-                )
-            )
-        val twoMessageHash =
-            TonHelper.getPreSignedImageHash(
-                buildPayload(
-                    listOf(
-                        TonMessage(
-                            to = dest,
-                            amount = "50000000",
-                            payload = "te6cckEBAQEADgAAGAAAAABIZWxsbw==",
-                        ),
-                        TonMessage(
-                            to = dest,
-                            amount = "100000000",
-                            stateInit = "te6ccgECBgEAAWoAART/APSk",
-                        ),
-                    )
-                )
-            )
+        val inputData = TonHelper.getPreSignedInputData(payload)
+        val signingInput = TheOpenNetwork.SigningInput.parseFrom(inputData)
 
-        // Each variant must produce exactly one hash (TON uses a single pre-image)
-        assertEquals(1, baseHash.size)
-        assertEquals(1, twoMessageHash.size)
-        // Including payload or stateInit must change the signing hash
-        assertNotEquals(baseHash, withPayloadHash)
-        assertNotEquals(baseHash, withStateInitHash)
-        // A two-message payload must differ from a one-message payload
-        assertNotEquals(baseHash, twoMessageHash)
+        assertEquals(2, signingInput.messagesCount)
+        assertEquals(stateInit, signingInput.getMessages(0).stateInit)
+        assertEquals(customPayload, signingInput.getMessages(0).customPayload)
+        assertEquals("", signingInput.getMessages(1).stateInit)
+        assertEquals("", signingInput.getMessages(1).customPayload)
     }
 
     @Test
