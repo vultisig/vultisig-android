@@ -149,31 +149,29 @@ internal class BlockaidSimulationServiceImplTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `invalidateAll while leader is in-flight unblocks followers with EMPTY`() = runTest {
-        // Race: a leader is mid-scan, a follower is awaiting on the leader's
-        // deferred, and another caller wipes the cache. The follower must not
-        // hang — invalidateAll completes pending deferreds with EMPTY so
-        // awaiters resume immediately rather than waiting for the in-flight
-        // RPC to finish.
-        val rpc = FakeRpc(evmResponse = singleTransferEvmResponse(), evmDelayMillis = 100)
-        val service = BlockaidSimulationServiceImpl(rpc)
-        val payload = evmPayload(memo = "0xabc")
+    fun `invalidateAll while leader is in-flight returns EMPTY to leader and follower alike`() =
+        runTest {
+            // Race: a leader is mid-scan, a follower is awaiting on the leader's deferred, and
+            // another caller wipes the cache. Both the follower (woken by invalidateAll) AND the
+            // leader (whose dispatch eventually completes) must receive EMPTY — the caller asked
+            // for the cache to be cleared, so the leader's pending verdict is stale by the time
+            // the dispatch returns. Letting the leader still propagate the real result would
+            // re-poison whatever UI state triggered the invalidation (e.g. a vault switch).
+            val rpc = FakeRpc(evmResponse = singleTransferEvmResponse(), evmDelayMillis = 100)
+            val service = BlockaidSimulationServiceImpl(rpc)
+            val payload = evmPayload(memo = "0xabc")
 
-        val leader = async { service.scan(payload) }
-        runCurrent()
-        val follower = async { service.scan(payload) }
-        runCurrent()
+            val leader = async { service.scan(payload) }
+            runCurrent()
+            val follower = async { service.scan(payload) }
+            runCurrent()
 
-        service.invalidateAll()
-        // The follower must have been unblocked by invalidateAll synchronously
-        // — without advancing time we expect it to be already completed.
-        advanceUntilIdle()
+            service.invalidateAll()
+            advanceUntilIdle()
 
-        assertNull(follower.await().simulation)
-        // The leader still finishes its dispatch normally; only the follower
-        // path is short-circuited by invalidateAll.
-        assertNotNull(leader.await().simulation)
-    }
+            assertNull(follower.await().simulation)
+            assertNull(leader.await().simulation)
+        }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test

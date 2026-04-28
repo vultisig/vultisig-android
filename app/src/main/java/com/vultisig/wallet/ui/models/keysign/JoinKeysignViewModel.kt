@@ -245,6 +245,7 @@ constructor(
     private var messagesToSign: List<String> = emptyList()
 
     private var _jobWaitingForKeysignStart: Job? = null
+    private var blockaidSimulationJob: Job? = null
     private var isNavigateToHome: Boolean = false
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
@@ -1080,28 +1081,33 @@ constructor(
      * [BlockaidKeysignScanResult.EMPTY].
      */
     private fun loadBlockaidSimulation(payload: KeysignPayload, decodedFunctionName: String?) {
-        viewModelScope.safeLaunch(
-            onError = { Timber.w(it, "Blockaid simulation failed during dApp signing") }
-        ) {
-            val result = withContext(Dispatchers.IO) { blockaidSimulationService.scan(payload) }
-            val hero =
-                buildHeroContent(
-                    simulation = result.simulation,
-                    decodedFunctionName = decodedFunctionName,
-                    didLoadSimulation = true,
-                )
-            updateSendUiModel(verifyUiModel) { current ->
-                current.copy(transaction = current.transaction.copy(heroContent = hero))
+        // Cancel any in-flight scan before starting a new one. NSD can surface the same mediator
+        // service more than once (for example after a transient connectivity blip) and would
+        // otherwise launch concurrent coroutines that race to update the same StateFlow.
+        blockaidSimulationJob?.cancel()
+        blockaidSimulationJob =
+            viewModelScope.safeLaunch(
+                onError = { Timber.w(it, "Blockaid simulation failed during dApp signing") }
+            ) {
+                val result = withContext(Dispatchers.IO) { blockaidSimulationService.scan(payload) }
+                val hero =
+                    buildHeroContent(
+                        simulation = result.simulation,
+                        decodedFunctionName = decodedFunctionName,
+                        didLoadSimulation = true,
+                    )
+                updateSendUiModel(verifyUiModel) { current ->
+                    current.copy(transaction = current.transaction.copy(heroContent = hero))
+                }
+                // Mirror the resolved hero into [transactionTypeUiModel] so the
+                // done screen's `KeysignViewModel` carries the same content forward
+                // — the cache covers the same lookup, but updating in place avoids
+                // a per-screen re-fetch and a flash of "loading" state on done.
+                (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
+                    transactionTypeUiModel =
+                        TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))
+                }
             }
-            // Mirror the resolved hero into [transactionTypeUiModel] so the
-            // done screen's `KeysignViewModel` carries the same content forward
-            // — the cache covers the same lookup, but updating in place avoids
-            // a per-screen re-fetch and a flash of "loading" state on done.
-            (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
-                transactionTypeUiModel =
-                    TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))
-            }
-        }
     }
 
     private fun scanTransaction(transaction: Transaction) {

@@ -19,13 +19,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.theme.Theme
+import java.util.Locale
 
 /**
  * Renders a [HeroContent] inside the verify / done card.
@@ -79,6 +82,9 @@ private fun TitleOnlyHero(text: String, caption: String?) {
             drawableResId = R.drawable.ic_triangle_alert,
             size = 24.dp,
             tint = Theme.v2.colors.alerts.warning,
+            // Description duplicates the textual title that follows; TalkBack reads both so the
+            // user understands the warning state without relying on the glyph alone.
+            contentDescription = text,
         )
         Text(
             text = text,
@@ -131,7 +137,7 @@ private fun TitleAbove(title: String) {
 }
 
 @Composable
-private fun HeroCoinRow(coin: HeroCoinAmount, iconSize: androidx.compose.ui.unit.Dp) {
+private fun HeroCoinRow(coin: HeroCoinAmount, iconSize: Dp) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -141,17 +147,18 @@ private fun HeroCoinRow(coin: HeroCoinAmount, iconSize: androidx.compose.ui.unit
             TokenLogo(
                 logo = coin.logo,
                 title = coin.ticker,
-                // Border BEFORE clip so the stroke is fully painted before
-                // the circle mask cuts the bounds — reversing the order can
-                // shave a pixel off the outer edge on some densities.
+                // Clip first, then border. Modifier elements apply in order, so a clip placed
+                // AFTER border would mask off the outer half of the stroke; clipping first lets
+                // the border draw on top of the already-clipped circular surface and remain
+                // fully visible.
                 modifier =
                     Modifier.size(iconSize)
+                        .clip(CircleShape)
                         .border(
                             width = 1.dp,
                             color = Theme.v2.colors.border.light,
                             shape = CircleShape,
-                        )
-                        .clip(CircleShape),
+                        ),
                 errorLogoModifier =
                     Modifier.size(iconSize)
                         .clip(CircleShape)
@@ -169,7 +176,9 @@ private fun HeroCoinRow(coin: HeroCoinAmount, iconSize: androidx.compose.ui.unit
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = coin.ticker.take(3).uppercase(),
+                    // Locale-invariant uppercase: ticker symbols are ASCII identifiers, and the
+                    // default-locale variant would mis-fold ASCII `i` to `İ` on Turkish devices.
+                    text = coin.ticker.take(3).uppercase(Locale.ROOT),
                     style = Theme.brockmann.supplementary.captionSmall,
                     color = Theme.v2.colors.text.primary,
                 )
@@ -187,6 +196,10 @@ private fun HeroCoinRow(coin: HeroCoinAmount, iconSize: androidx.compose.ui.unit
             color = Theme.v2.colors.text.primary,
             textAlign = TextAlign.Center,
             maxLines = 1,
+            // Ellipsise rather than silently clip when the amount string overflows the row width
+            // (e.g. `MAX_UINT256` approvals divided by 1e18 produce ~60 integer digits). Without
+            // ellipsis the user has no cue that the displayed value is truncated.
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -204,10 +217,12 @@ private fun ArrowDivider() {
             size = 12.dp,
             tint = Theme.v2.colors.text.tertiary,
         )
-        // Use the localized resource as-is; lowercasing translated strings
-        // mid-sentence breaks grammar in some locales (e.g. Russian, German).
+        // Lowercase via [Locale.ROOT] (avoids the Turkish-i pitfall of the default-locale
+        // variant). The arrow-divider label (`To` / `Zu` / `В` / etc.) is a small caption shown
+        // mid-row between two horizontal lines; it reads correctly when rendered lowercase
+        // because the resource itself is the standalone capitalised label used elsewhere.
         Text(
-            text = stringResource(id = R.string.swap_form_dst_token_title),
+            text = stringResource(id = R.string.swap_form_dst_token_title).lowercase(Locale.ROOT),
             style = Theme.brockmann.supplementary.captionSmall,
             color = Theme.v2.colors.text.tertiary,
         )

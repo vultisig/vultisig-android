@@ -131,6 +131,57 @@ class BuildHeroContentUseCaseTest {
     }
 
     @Test
+    fun `zero amount formats to plain zero`() {
+        val coin = simCoin(decimals = 18, ticker = "ETH")
+        val sim = BlockaidSimulationInfo.Transfer(coin, BigInteger.ZERO)
+
+        val hero =
+            build(simulation = sim, decodedFunctionName = null, didLoadSimulation = true)
+                as HeroContent.Send
+
+        assertEquals("0", hero.coin.amount)
+    }
+
+    @Test
+    fun `single wei amount with eighteen decimals does not strip to zero`() {
+        val coin = simCoin(decimals = 18, ticker = "ETH")
+        val sim = BlockaidSimulationInfo.Transfer(coin, BigInteger.ONE)
+
+        val hero =
+            build(simulation = sim, decodedFunctionName = null, didLoadSimulation = true)
+                as HeroContent.Send
+
+        assertEquals("0.000000000000000001", hero.coin.amount)
+    }
+
+    @Test
+    fun `single base unit with twenty four decimals does not silently round to zero`() {
+        // Defends against the previous formatter that capped the scale at 18 fractional digits
+        // and silently rounded sub-18-decimal amounts to "0" for high-decimal tokens. The
+        // formatter now grows the scale to match the token's own decimals, preserving precision.
+        val coin = simCoin(decimals = 24, ticker = "FOO")
+        val sim = BlockaidSimulationInfo.Transfer(coin, BigInteger.ONE)
+
+        val hero =
+            build(simulation = sim, decodedFunctionName = null, didLoadSimulation = true)
+                as HeroContent.Send
+
+        assertEquals("0.000000000000000000000001", hero.coin.amount)
+    }
+
+    @Test
+    fun `decimals zero produces a plain integer`() {
+        val coin = simCoin(decimals = 0, ticker = "BTC")
+        val sim = BlockaidSimulationInfo.Transfer(coin, BigInteger("42"))
+
+        val hero =
+            build(simulation = sim, decodedFunctionName = null, didLoadSimulation = true)
+                as HeroContent.Send
+
+        assertEquals("42", hero.coin.amount)
+    }
+
+    @Test
     fun `MAX_UINT256 sentinel preserves all integer digits without scientific notation`() {
         // Defends against the previous MathContext-based formatter which would
         // round significant digits and clip the integer portion of huge values.

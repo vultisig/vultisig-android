@@ -70,22 +70,31 @@ class BuildHeroContentUseCase @Inject constructor() {
      * Uses [BigDecimal.movePointLeft] + [BigDecimal.setScale] rather than [BigDecimal.divide] with
      * a precision-bounded `MathContext`: the latter rounds significant digits, which can clip
      * integer digits for sentinel values like a `MAX_UINT256` approval. Scaling the fractional part
-     * instead preserves all integer digits and only rounds beyond [MAX_FRACTION_SCALE] decimal
-     * places.
+     * instead preserves all integer digits.
+     *
+     * Tokens with `decimals > MAX_FRACTION_SCALE` (e.g. 24-decimal pegged stables) would lose
+     * detail at the floor of the fractional range if we capped the scale at 18, displaying small
+     * but non-zero amounts as `"0"`. To prevent that, the actual scale used is `max(decimals,
+     * MAX_FRACTION_SCALE)`: never less than the token's full precision, so a 1-unit 24-decimal
+     * balance still renders as `0.000000000000000000000001`.
+     *
+     * `toPlainString()` is locale-invariant (always uses `.` as the decimal separator and never
+     * falls back to scientific notation), which is the right choice for raw on-chain amounts.
      */
-    private fun formatAmount(rawValue: BigInteger, decimals: Int): String =
-        rawValue
+    private fun formatAmount(rawValue: BigInteger, decimals: Int): String {
+        val scale = maxOf(decimals, MAX_FRACTION_SCALE)
+        return rawValue
             .toBigDecimal()
             .movePointLeft(decimals)
-            .setScale(MAX_FRACTION_SCALE, RoundingMode.HALF_UP)
+            .setScale(scale, RoundingMode.HALF_UP)
             .stripTrailingZeros()
             .toPlainString()
+    }
 
     private companion object {
-        // Eighteen fractional digits matches Ether wei-precision. Beyond that
-        // the hero has no use for sub-wei detail — Blockaid does not return
-        // values with finer granularity, and the row would not have room for
-        // them anyway.
+        // Eighteen fractional digits matches Ether wei-precision. Tokens with finer granularity
+        // are accommodated by [formatAmount] which raises the scale to the token's own decimals
+        // when needed; this constant just sets the floor.
         private const val MAX_FRACTION_SCALE = 18
     }
 }

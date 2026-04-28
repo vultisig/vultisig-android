@@ -160,7 +160,10 @@ fun SecurityScannerBottomSheetContent(
                 text = stringResource(R.string.security_scanner_continue_anyway),
                 color = Theme.v2.colors.text.tertiary,
                 style = Theme.brockmann.supplementary.caption,
-                modifier = Modifier.clickable { onContinueAnyway() }.padding(vertical = 8.dp),
+                // Padding BEFORE clickable so the 8dp top/bottom area is part of the touch
+                // target. With the order reversed the click region is limited to the text
+                // glyphs only, shrinking the tap zone well below the 48dp a11y guideline.
+                modifier = Modifier.padding(vertical = 8.dp).clickable { onContinueAnyway() },
             )
         }
     }

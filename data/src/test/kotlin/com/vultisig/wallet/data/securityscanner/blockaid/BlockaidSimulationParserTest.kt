@@ -283,7 +283,8 @@ internal class BlockaidSimulationParserTest {
 
         // Sentinel mint is used so downstream lookups treat native SOL like
         // wrapped SOL, matching the iOS / extension parser behaviour.
-        assertEquals(BlockaidSimulationParser.WRAPPED_SOL_MINT, transfer.fromCoin.address)
+        // Wrapped-SOL mint sentinel used by the parser for native SOL diffs.
+        assertEquals("So11111111111111111111111111111111111111112", transfer.fromCoin.address)
         assertEquals("SOL", transfer.fromCoin.ticker)
     }
 
@@ -368,6 +369,233 @@ internal class BlockaidSimulationParserTest {
                 as BlockaidSimulationInfo.Transfer
 
         assertEquals(0, transfer.fromCoin.decimals)
+    }
+
+    @Test
+    fun `evm multi-hop swap selects the user's terminal received token`() {
+        // Three diffs: ETH out (user pays), USDC intermediate (router leg with both in and
+        // out), DAI in (user receives). The parser must pick DAI as the destination, NOT the
+        // intermediate USDC leg — otherwise the hero shows a misleading "ETH → USDC" swap.
+        val response =
+            evmResponse(
+                """{
+                "simulation": {
+                  "account_summary": {
+                    "assets_diffs": [
+                      {
+                        "asset": {
+                          "type": "ETH",
+                          "address": null,
+                          "symbol": "ETH",
+                          "decimals": 18,
+                          "logo_url": "https://logo/eth.png"
+                        },
+                        "out": [{ "raw_value": "0xde0b6b3a7640000" }]
+                      },
+                      {
+                        "asset": {
+                          "type": "ERC20",
+                          "address": "0xUSDC",
+                          "symbol": "USDC",
+                          "decimals": 6,
+                          "logo_url": "https://logo/usdc.png"
+                        },
+                        "in": [{ "raw_value": "0x77359400" }],
+                        "out": [{ "raw_value": "0x77359400" }]
+                      },
+                      {
+                        "asset": {
+                          "type": "ERC20",
+                          "address": "0xDAI",
+                          "symbol": "DAI",
+                          "decimals": 18,
+                          "logo_url": "https://logo/dai.png"
+                        },
+                        "in": [{ "raw_value": "0x29a2241af62c0000" }]
+                      }
+                    ]
+                  }
+                }
+              }"""
+                    .trimIndent()
+            )
+
+        val swap =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Swap
+
+        assertEquals("ETH", swap.fromCoin.ticker)
+        assertEquals("DAI", swap.toCoin.ticker)
+    }
+
+    @Test
+    fun `evm same-asset swap with mixed-case symbol is collapsed`() {
+        // "USDC" out + "usdc" in with the same address must collapse to null (transfer noise),
+        // not emit a bogus swap. Without case-insensitive symbol comparison this would slip
+        // through.
+        val response =
+            evmResponse(
+                """{
+                "simulation": {
+                  "account_summary": {
+                    "assets_diffs": [
+                      {
+                        "asset": {
+                          "type": "ERC20",
+                          "address": "0xUSDC",
+                          "symbol": "USDC",
+                          "decimals": 6,
+                          "logo_url": "https://logo/usdc.png"
+                        },
+                        "out": [{ "raw_value": "0x5f5e100" }]
+                      },
+                      {
+                        "asset": {
+                          "type": "ERC20",
+                          "address": "0xUSDC",
+                          "symbol": "usdc",
+                          "decimals": 6,
+                          "logo_url": "https://logo/usdc.png"
+                        },
+                        "in": [{ "raw_value": "0x5f5e100" }]
+                      }
+                    ]
+                  }
+                }
+              }"""
+                    .trimIndent()
+            )
+
+        assertNull(BlockaidSimulationParser.parseEvm(response, Chain.Ethereum))
+    }
+
+    @Test
+    fun `evm same-asset native ETH using zero-sentinel address collapses with null variant`() {
+        // Defends against a hostile response that mixes native-ETH conventions: one diff carries
+        // `address: null` (the parser's preferred form) and the other carries the all-zeros
+        // sentinel. Both refer to native ETH and must collapse to a null result, not a swap.
+        val response =
+            evmResponse(
+                """{
+                "simulation": {
+                  "account_summary": {
+                    "assets_diffs": [
+                      {
+                        "asset": {
+                          "type": "ETH",
+                          "address": null,
+                          "symbol": "ETH",
+                          "decimals": 18,
+                          "logo_url": ""
+                        },
+                        "out": [{ "raw_value": "0xde0b6b3a7640000" }]
+                      },
+                      {
+                        "asset": {
+                          "type": "ETH",
+                          "address": "0x0000000000000000000000000000000000000000",
+                          "symbol": "ETH",
+                          "decimals": 18,
+                          "logo_url": ""
+                        },
+                        "in": [{ "raw_value": "0xde0b6b3a7640000" }]
+                      }
+                    ]
+                  }
+                }
+              }"""
+                    .trimIndent()
+            )
+
+        assertNull(BlockaidSimulationParser.parseEvm(response, Chain.Ethereum))
+    }
+
+    @Test
+    fun `evm transfer with zero-width joiner in symbol strips it`() {
+        // U+200D (ZERO WIDTH JOINER) is invisible but participates in emoji sequencing; in a
+        // ticker it is a layout-only artifact that must be stripped to keep visual identity
+        // matching the byte identity.
+        val response = evmResponse(evmTransferJson(symbol = "USD‌C"))
+
+        val transfer =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Transfer
+
+        assertEquals("USDC", transfer.fromCoin.ticker)
+    }
+
+    @Test
+    fun `evm transfer ticker truncation is codepoint-aware for emoji`() {
+        // "ABCDEFGHIJK" + 🦄 (U+1F984, two UTF-16 char units) = 11 ASCII + 1 emoji codepoint.
+        // The parser caps at 12 codepoints and must keep the emoji intact rather than splitting
+        // its surrogate pair (which would produce malformed UTF-16).
+        val response = evmResponse(evmTransferJson(symbol = "ABCDEFGHIJK🦄"))
+
+        val transfer =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Transfer
+
+        assertEquals("ABCDEFGHIJK🦄", transfer.fromCoin.ticker)
+    }
+
+    @Test
+    fun `evm transfer with logo url carrying userinfo is rejected`() {
+        // "https://attacker.com@trusted.example/logo.png" — a phishing primitive that bypasses
+        // pure-prefix scheme validation. The sanitiser must reject it.
+        val response =
+            evmResponse(evmTransferJson(logoUrl = "https://attacker.com@trusted.example/u.png"))
+
+        val transfer =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Transfer
+
+        assertEquals("", transfer.fromCoin.logo)
+    }
+
+    @Test
+    fun `solana multi-recipient send aggregates same-asset outgoing diffs`() {
+        // Two recipients, same asset, no incoming side. The parser must aggregate the amounts
+        // (100 + 50 = 150 USDC) instead of silently truncating to the first leg's 100 USDC.
+        val response =
+            solanaResponse(
+                """{
+                "result": {
+                  "simulation": {
+                    "account_summary": {
+                      "account_assets_diff": [
+                        {
+                          "asset": {
+                            "type": "TOKEN",
+                            "symbol": "USDC",
+                            "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                            "decimals": 6,
+                            "logo": "https://logo/usdc.png"
+                          },
+                          "out": { "raw_value": 100000000 }
+                        },
+                        {
+                          "asset": {
+                            "type": "TOKEN",
+                            "symbol": "USDC",
+                            "address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                            "decimals": 6,
+                            "logo": "https://logo/usdc.png"
+                          },
+                          "out": { "raw_value": 50000000 }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }"""
+                    .trimIndent()
+            )
+
+        val transfer =
+            BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Transfer
+
+        assertEquals("USDC", transfer.fromCoin.ticker)
+        assertEquals(BigInteger("150000000"), transfer.fromAmount)
     }
 
     private fun evmTransferJson(

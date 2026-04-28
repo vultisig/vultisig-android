@@ -21,7 +21,19 @@ internal class BlockaidSimulationCacheKeyTest {
 
         assertEquals("0xabcdef", key.normalizedMemo)
         assertEquals("0xrecipient", key.normalizedTo)
+        assertEquals("0xfrom", key.normalizedFrom)
         assertEquals(Chain.Ethereum, key.chain)
+    }
+
+    @Test
+    fun `evm key differs when signer differs but everything else matches`() {
+        val a = evmPayload(memo = "0xfeed", toAddress = "0xRouter", from = "0xVaultA")
+        val b = evmPayload(memo = "0xfeed", toAddress = "0xRouter", from = "0xVaultB")
+
+        // Two vaults running the same dApp call against the same router must not share a cache
+        // entry. The cache key includes the signer so that on a multi-vault device, switching
+        // vaults does not surface a stale verdict from the previous one.
+        assertTrue(BlockaidSimulationCacheKey.from(a) != BlockaidSimulationCacheKey.from(b))
     }
 
     @Test
@@ -72,6 +84,31 @@ internal class BlockaidSimulationCacheKeyTest {
     }
 
     @Test
+    fun `solana keys differ when signer differs`() {
+        val a = solanaPayload(rawTransactions = listOf("AAA=="), signer = "VaultA")
+        val b = solanaPayload(rawTransactions = listOf("AAA=="), signer = "VaultB")
+
+        assertTrue(BlockaidSimulationCacheKey.from(a) != BlockaidSimulationCacheKey.from(b))
+    }
+
+    @Test
+    fun `solana digest is 64 hex chars regardless of high-bit bytes in the SHA-256 output`() {
+        // Defends against a regression where Byte sign-extension in `%02x`.format(byte)
+        // would emit 8 hex chars for any byte with the high bit set, breaking the
+        // fixed-size invariant. Iterates many candidate inputs to cover the high-bit
+        // probability space.
+        repeat(64) { i ->
+            val payload = solanaPayload(rawTransactions = listOf("seed-$i"))
+            val key = BlockaidSimulationCacheKey.from(payload) as BlockaidSimulationCacheKey.Solana
+            assertEquals(64, key.transactionsDigest.length, "iteration $i")
+            assertTrue(
+                key.transactionsDigest.all { it in '0'..'9' || it in 'a'..'f' },
+                "iteration $i",
+            )
+        }
+    }
+
+    @Test
     fun `evm key lowercases EIP-55 checksummed to-address`() {
         // Defensive regression test: a real-world checksummed Ethereum address
         // must collapse to the lowercase form so two calls with different
@@ -113,11 +150,15 @@ internal class BlockaidSimulationCacheKeyTest {
 
     // ---------- helpers ----------------------------------------------------
 
-    private fun evmPayload(memo: String?, toAddress: String = "0xto"): KeysignPayload {
+    private fun evmPayload(
+        memo: String?,
+        toAddress: String = "0xto",
+        from: String = "0xfrom",
+    ): KeysignPayload {
         val coin =
             mockk<Coin>(relaxed = true) {
                 every { chain } returns Chain.Ethereum
-                every { address } returns "0xfrom"
+                every { address } returns from
             }
         return mockk<KeysignPayload>(relaxed = true) {
             every { this@mockk.coin } returns coin
@@ -127,11 +168,14 @@ internal class BlockaidSimulationCacheKeyTest {
         }
     }
 
-    private fun solanaPayload(rawTransactions: List<String>): KeysignPayload {
+    private fun solanaPayload(
+        rawTransactions: List<String>,
+        signer: String = "Sol1...",
+    ): KeysignPayload {
         val coin =
             mockk<Coin>(relaxed = true) {
                 every { chain } returns Chain.Solana
-                every { address } returns "Sol1..."
+                every { address } returns signer
             }
         val solana = SignSolana(rawTransactions = rawTransactions)
         return mockk<KeysignPayload>(relaxed = true) {
