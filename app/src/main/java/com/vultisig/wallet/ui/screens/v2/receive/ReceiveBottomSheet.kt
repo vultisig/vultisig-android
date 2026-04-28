@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
@@ -72,10 +73,7 @@ private fun ReceiveContent(
 
         V2Container(type = ContainerType.SECONDARY) {
             LazyColumn(modifier = Modifier.padding()) {
-                itemsIndexed(
-                    uiState.chains,
-                    key = { _, chain -> "${chain.name}:${chain.address}" },
-                ) { index, chain ->
+                itemsIndexed(uiState.chains, key = { _, chain -> chain.chain.id }) { index, chain ->
                     Column {
                         Row(
                             modifier =
@@ -136,12 +134,14 @@ private fun ReceiveContentPreview() {
                         logo = R.drawable.ethereum,
                         ticker = "ETH",
                         address = "0x1234",
+                        chain = Chain.Ethereum,
                     ),
                     ChainToReceiveUiModel(
                         name = "Bitcoin",
                         logo = R.drawable.bitcoin,
                         ticker = "BTC",
                         address = "0x1234",
+                        chain = Chain.Bitcoin,
                     ),
                 )
             ),
