@@ -24,7 +24,7 @@ constructor(private val fourByteApi: FourByteApi, @param:PrettyJson private val 
         if (memo.length < 8) return null
         try {
             val hash = memo.stripHexPrefix().substring(0, 8)
-            return fourByteApi.decodeFunction(hash)
+            return EvmCommonSelectors.lookup(hash) ?: fourByteApi.decodeFunction(hash)
         } catch (_: Exception) {
             return null
         }
