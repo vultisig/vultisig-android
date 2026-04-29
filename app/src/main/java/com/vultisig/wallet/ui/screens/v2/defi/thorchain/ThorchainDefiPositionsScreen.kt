@@ -39,10 +39,12 @@ import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.LpTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
+import com.vultisig.wallet.ui.screens.v2.defi.hasLpPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
@@ -72,6 +74,8 @@ internal fun ThorchainDefiPositionsScreen(
         onClickStake = { model.onNavigateToFunctions(it) },
         onClickUnstake = { model.onNavigateToFunctions(it) },
         onClickTransfer = { model.onClickTransfer() },
+        onClickAddLp = model::onClickAddLp,
+        onClickRemoveLp = model::onClickRemoveLp,
     )
 }
 
@@ -91,10 +95,12 @@ internal fun ThorchainDefiPositionScreenContent(
     onClickStake: (DeFiNavActions) -> Unit = {},
     onClickUnstake: (DeFiNavActions) -> Unit = {},
     onClickTransfer: () -> Unit = {},
+    onClickAddLp: (String) -> Unit = {},
+    onClickRemoveLp: (String) -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
 
-    val tabs = listOf(DeFiTab.BONDED, DeFiTab.STAKED)
+    val tabs = listOf(DeFiTab.BONDED, DeFiTab.STAKED, DeFiTab.LP)
 
     V2Scaffold(onBackClick = onBackClick) {
         Column(
@@ -145,6 +151,7 @@ internal fun ThorchainDefiPositionScreenContent(
                 PositionsSelectionDialog(
                     bondPositions = state.bondPositionsDialog,
                     stakePositions = state.stakingPositionsDialog,
+                    lpPositions = state.lpPositionsDialog,
                     selectedPositions = state.tempSelectedPositions,
                     searchTextFieldState = searchTextFieldState,
                     onPositionSelectionChange = onPositionSelectionChange,
@@ -183,7 +190,15 @@ internal fun ThorchainDefiPositionScreenContent(
                 }
 
                 DeFiTab.LP.displayNameRes -> {
-                    NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                    if (!state.selectedPositions.hasLpPositions(state.lpPositionsDialog)) {
+                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                    } else {
+                        LpTabContent(
+                            state = state.lp,
+                            onClickAdd = onClickAddLp,
+                            onClickRemove = onClickRemoveLp,
+                        )
+                    }
                 }
             }
 

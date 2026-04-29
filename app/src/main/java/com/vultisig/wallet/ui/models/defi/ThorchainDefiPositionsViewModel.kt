@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.defi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
@@ -11,14 +12,18 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.ThorChainLpPosition
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.DefiPositionsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
@@ -49,9 +54,9 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -104,6 +109,7 @@ internal data class LpPositionUiModel(
     val apr: String?,
     val position: String,
     val positionKey: String = "",
+    val canRemove: Boolean = true,
 )
 
 internal data class StakePositionUiModel(
@@ -156,6 +162,8 @@ constructor(
     private val defiPositionsRepository: DefiPositionsRepository,
     private val defaultStakingPositionService: DefaultStakingPositionService,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
+    private val getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase,
+    private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -181,8 +189,27 @@ constructor(
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
         loadBalanceVisibility()
+        loadLpPositionsForDialog()
         loadSavedPositions()
         loadTotalValue()
+    }
+
+    private fun loadLpPositionsForDialog() {
+        viewModelScope.launch {
+            try {
+                val pools =
+                    withContext(Dispatchers.IO) { thorChainApi.getPoolStats() }
+                        .filter { it.status.equals("available", ignoreCase = true) }
+                val dialogPositions =
+                    pools
+                        .map { pool -> pool.asset.toLpPositionDialogModel() }
+                        .sortedBy { it.ticker }
+                state.update { it.copy(lpPositionsDialog = dialogPositions) }
+            } catch (e: Throwable) {
+                if (e is CancellationException) throw e
+                Timber.e(e, "Failed to load THORChain LP pools for dialog")
+            }
+        }
     }
 
     private fun loadBalanceVisibility() {
@@ -302,6 +329,8 @@ constructor(
             launch { loadBondedNodes() }
 
             launch { loadStakingPositions() }
+
+            launch { loadLpPositions() }
         }
     }
 
@@ -718,59 +747,181 @@ constructor(
         state.update { currentState -> currentState.copy(selectedTab = tab.displayNameRes) }
     }
 
-    // Dummy Loading, remove after real LP logic
-    private fun loadLpPositions() {
+    private suspend fun loadLpPositions() {
+        val selectedKeys = state.value.selectedPositions.toSet()
+        val selectedPools = state.value.lpPositionsDialog.filter { it.positionKey in selectedKeys }
+
+        if (selectedPools.isEmpty()) {
+            state.update { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
+            return
+        }
+
+        // Show placeholder cards for each selected pool first — even pools where the user has no
+        // liquidity yet should be visible so the Add button is reachable.
+        val placeholders = selectedPools.map { it.toPlaceholderUiModel() }
+        state.update { it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholders)) }
+
+        try {
+            val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+            val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
+
+            if (runeCoin == null) {
+                Timber.e("Vault does not have RUNE coin for LP positions")
+                state.update {
+                    it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
+                }
+                return
+            }
+
+            val allPositions =
+                withContext(Dispatchers.IO) {
+                    getThorChainLpPositionsUseCase(runeAddress = runeCoin.address)
+                }
+            val positionsByPool = allPositions.associateBy { it.pool }
+
+            val currency = appCurrencyRepository.currency.first()
+            val currencyFormat =
+                withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+            val runePrice = priceFor(Coins.ThorChain.RUNE, currency)
+
+            val merged =
+                selectedPools.map { dialogPool ->
+                    val realPosition = positionsByPool[dialogPool.positionKey]
+                    if (realPosition != null) {
+                        realPosition.toUiModel(
+                            vault?.coins.orEmpty(),
+                            runePrice,
+                            currency,
+                            currencyFormat,
+                        )
+                    } else {
+                        dialogPool.toPlaceholderUiModel()
+                    }
+                }
+
+            state.update { it.copy(lp = LpTabUiModel(isLoading = false, positions = merged)) }
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to load THORChain LP positions")
+            state.update { it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders)) }
+        }
+    }
+
+    private fun PositionUiModelDialog.toPlaceholderUiModel(): LpPositionUiModel {
+        val parsed = parseThorChainPool(positionKey)
+        val assetTicker = parsed.ticker
+        return LpPositionUiModel(
+            titleLp = "$ticker Pool",
+            totalPriceLp = DEFAULT_ZERO_BALANCE,
+            icon = (logo as? Int) ?: parsed.chain?.logo ?: R.drawable.rune,
+            apr = null,
+            position = "0 ${Coins.ThorChain.RUNE.ticker} + 0 $assetTicker",
+            positionKey = positionKey,
+            canRemove = false,
+        )
+    }
+
+    private suspend fun ThorChainLpPosition.toUiModel(
+        vaultCoins: List<Coin>,
+        runePrice: BigDecimal,
+        currency: AppCurrency,
+        currencyFormat: java.text.NumberFormat,
+    ): LpPositionUiModel {
+        val parsed = parseThorChainPool(pool)
+        val assetTicker = parsed.ticker
+        val assetContractAddress = parsed.contractAddress
+        val assetChain = parsed.chain
+
+        val runeAmount =
+            CoinType.THORCHAIN.toValue(runeRedeemValue)
+                .setScale(POSITION_DISPLAY_SCALE, RoundingMode.DOWN)
+        val assetAmount =
+            CoinType.THORCHAIN.toValue(assetRedeemValue)
+                .setScale(POSITION_DISPLAY_SCALE, RoundingMode.DOWN)
+
+        val assetCoin =
+            vaultCoins.find { coin ->
+                coin.chain == assetChain &&
+                    coin.ticker.equals(assetTicker, ignoreCase = true) &&
+                    (assetContractAddress.isEmpty() ||
+                        coin.contractAddress.equals(assetContractAddress, ignoreCase = true))
+            }
+
+        val assetPrice =
+            assetCoin?.let { priceFor(it, currency) }
+                ?: assetChain?.let { priceForPoolAsset(it, assetContractAddress, currency) }
+                ?: BigDecimal.ZERO
+
+        val totalFiat =
+            runeAmount
+                .multiply(runePrice)
+                .add(assetAmount.multiply(assetPrice))
+                .setScale(2, RoundingMode.DOWN)
+
+        val icon =
+            (getCoinLogo(assetTicker.lowercase()) as? Int) ?: assetChain?.logo ?: R.drawable.rune
+
+        return LpPositionUiModel(
+            titleLp = "RUNE/$assetTicker Pool",
+            totalPriceLp = currencyFormat.format(totalFiat),
+            icon = icon,
+            apr = annualPercentageRate?.formatPercentage(),
+            position =
+                "${runeAmount.stripTrailingZeros().toPlainString()} ${Coins.ThorChain.RUNE.ticker} + " +
+                    "${assetAmount.stripTrailingZeros().toPlainString()} $assetTicker",
+            positionKey = pool,
+        )
+    }
+
+    private suspend fun priceFor(coin: Coin, currency: AppCurrency): BigDecimal =
+        try {
+            tokenPriceRepository.getCachedPrice(tokenId = coin.id, appCurrency = currency)
+                ?: tokenPriceRepository.getPriceByContactAddress(
+                    coin.chain.id,
+                    coin.contractAddress,
+                )
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to fetch price for ${coin.id}")
+            BigDecimal.ZERO
+        }
+
+    private suspend fun priceForPoolAsset(
+        chain: Chain,
+        contractAddress: String,
+        currency: AppCurrency,
+    ): BigDecimal =
+        try {
+            tokenPriceRepository.getPriceByContactAddress(chain.id, contractAddress)
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to fetch price for $chain $contractAddress")
+            BigDecimal.ZERO
+        }
+
+    fun onClickAddLp(poolId: String) {
         viewModelScope.launch {
-            // Create two dummy loading positions immediately
-            val loadingPositions =
-                listOf(
-                    LpPositionUiModel(
-                        titleLp = "Loading...",
-                        totalPriceLp = "$0.00",
-                        icon = R.drawable.ethereum,
-                        apr = null,
-                        position = "Loading position...",
-                    ),
-                    LpPositionUiModel(
-                        titleLp = "Loading...",
-                        totalPriceLp = "$0.00",
-                        apr = null,
-                        icon = R.drawable.bitcoin,
-                        position = "Loading position...",
-                    ),
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.ThorChain.id,
+                    depositType = DeFiNavActions.ADD_LP.type,
+                    poolId = poolId,
                 )
+            )
+        }
+    }
 
-            // Set loading state with dummy positions showing
-            state.update {
-                it.copy(lp = LpTabUiModel(isLoading = true, positions = loadingPositions))
-            }
-
-            // Simulate loading delay
-            delay(2000)
-
-            // Create actual LP positions
-            val actualPositions =
-                listOf(
-                    LpPositionUiModel(
-                        titleLp = "ETH/USDC",
-                        totalPriceLp = "$12,450.00",
-                        icon = R.drawable.ethereum,
-                        apr = "8.5%",
-                        position = "0.5 ETH / 1,500 USDC",
-                    ),
-                    LpPositionUiModel(
-                        titleLp = "BTC/USDT",
-                        totalPriceLp = "$45,200.00",
-                        icon = R.drawable.bitcoin,
-                        apr = "12.3%",
-                        position = "0.8 BTC / 35,000 USDT",
-                    ),
+    fun onClickRemoveLp(poolId: String) {
+        viewModelScope.launch {
+            navigator.route(
+                Route.Deposit(
+                    vaultId = vaultId,
+                    chainId = Chain.ThorChain.id,
+                    depositType = DeFiNavActions.REMOVE_LP.type,
+                    poolId = poolId,
                 )
-
-            // Update state with actual positions and remove loading state
-            state.update {
-                it.copy(lp = LpTabUiModel(isLoading = false, positions = actualPositions))
-            }
+            )
         }
     }
 
@@ -829,6 +980,8 @@ constructor(
             launch { loadBondedNodes() }
 
             launch { loadStakingPositions() }
+
+            launch { loadLpPositions() }
         }
     }
 
@@ -953,6 +1106,7 @@ constructor(
         internal const val DEFAULT_ZERO_BALANCE = "$0.00"
         private const val RUJI_SYMBOL = "RUJI"
         private const val RUJI_REWARDS_SYMBOL = "USDC"
+        private const val POSITION_DISPLAY_SCALE = 4
 
         private fun loadDefaultStakingPositions(): List<StakePositionUiModel> {
             val rujiCoin = Coins.ThorChain.RUJI
@@ -1029,4 +1183,16 @@ constructor(
 
 data class StakeDefaultValues(val stakeElements: List<StakingElement> = emptyList()) {
     data class StakingElement(val coin: Coin, val amount: BigInteger)
+}
+
+private fun String.toLpPositionDialogModel(): PositionUiModelDialog {
+    val parsed = parseThorChainPool(this)
+    val coinLogo = getCoinLogo(parsed.ticker.lowercase())
+    val logo: Int = (coinLogo as? Int) ?: parsed.chain?.logo ?: R.drawable.rune
+    return PositionUiModelDialog(
+        logo = logo,
+        ticker = "RUNE/${parsed.ticker}",
+        isSelected = false,
+        positionKey = this,
+    )
 }

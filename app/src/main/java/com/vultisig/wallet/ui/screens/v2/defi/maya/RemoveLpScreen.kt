@@ -124,11 +124,15 @@ internal fun RemoveLpScreenContent(
                     Text(
                         text =
                             if (state.removeLpCacaoDisplay.isEmpty())
-                                stringResource(R.string.remove_pool_zero_cacao)
+                                stringResource(
+                                    R.string.remove_pool_zero_amount,
+                                    state.removeLpTokenSymbol,
+                                )
                             else
                                 stringResource(
-                                    R.string.remove_pool_cacao_amount_format,
+                                    R.string.remove_pool_amount_format,
                                     state.removeLpCacaoDisplay,
+                                    state.removeLpTokenSymbol,
                                 ),
                         style = Theme.brockmann.headings.largeTitle,
                         color = Theme.v2.colors.text.primary,
@@ -274,6 +278,7 @@ private fun RemoveLpScreenContentPreview() {
                 DepositFormUiModel(
                     removeLpPercent = 0f,
                     removeLpCacaoDisplay = "5.000",
+                    removeLpTokenSymbol = "CACAO",
                     availableLpUnits = "1000000",
                     balance = UiText.DynamicString("24,000 CACAO"),
                     selectedPoolTotalLpUnits = 5_000_000L,

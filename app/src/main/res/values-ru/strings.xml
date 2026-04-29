@@ -516,14 +516,15 @@
     <string name="deposit_option_add_liquidity">Добавить ликвидность</string>
     <string name="deposit_option_remove_liquidity">Удалить ликвидность</string>
     <string name="add_pool_title">Добавить в пул</string>
+    <string name="add_lp_title">Добавить LP %1$s</string>
     <string name="add_pool_amount_label">Сумма</string>
     <string name="add_pool_gas_auto">Комиссия сети (авто)</string>
     <string name="max">Макс</string>
     <string name="token_fiat_toggle_token_label">Стоимость токена</string>
     <string name="token_fiat_toggle_fiat_label">Фиатная стоимость</string>
     <string name="remove_pool_title">Удалить пул</string>
+    <string name="remove_lp_title">Удалить LP %1$s</string>
     <string name="remove_pool_amount_label">Сумма</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">Стейкинг CACAO</string>
     <string name="unstake_cacao_title">Анстейкинг CACAO</string>
@@ -756,6 +757,7 @@
     <string name="banxa_continue">Продолжить в Banxa</string>
     <string name="defi_no_positions_selected">Позиции не выбраны</string>
     <string name="defi_no_positions_selected_desc">Вы отключили все позиции для этой сети. Включите хотя бы одну позицию для просмотра балансов и управления действиями.</string>
+    <string name="defi_manage_positions">Управлять позициями</string>
     <string name="manage_positions">Управление Позициями</string>
     <string name="bond_node_state_whitelisted">В Белом Списке</string>
     <string name="bond_node_state_standby">В Ожидании</string>

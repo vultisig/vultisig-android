@@ -761,14 +761,15 @@
     <string name="deposit_option_add_liquidity">添加流动性</string>
     <string name="deposit_option_remove_liquidity">移除流动性</string>
     <string name="add_pool_title">添加池</string>
+    <string name="add_lp_title">添加 %1$s LP</string>
     <string name="add_pool_amount_label">金额</string>
     <string name="add_pool_gas_auto">网络费用（自动）</string>
     <string name="max">最大</string>
     <string name="token_fiat_toggle_token_label">代币价值</string>
     <string name="token_fiat_toggle_fiat_label">法币价值</string>
     <string name="remove_pool_title">移除流动池</string>
+    <string name="remove_lp_title">移除 %1$s LP</string>
     <string name="remove_pool_amount_label">金额</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">质押 CACAO</string>
     <string name="unstake_cacao_title">解除质押 CACAO</string>
@@ -1085,6 +1086,7 @@
     <string name="banxa_continue">继续到 Banxa</string>
     <string name="defi_no_positions_selected">未选择任何仓位</string>
     <string name="defi_no_positions_selected_desc">您已禁用此链的所有仓位。请至少启用一个仓位以查看余额和管理操作。</string>
+    <string name="defi_manage_positions">管理仓位</string>
     <string name="manage_positions">管理仓位</string>
     <string name="bond_node_state_whitelisted">已列入白名单</string>
     <string name="bond_node_state_standby">待命</string>

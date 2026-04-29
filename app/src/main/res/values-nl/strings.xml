@@ -514,14 +514,15 @@
     <string name="deposit_option_add_liquidity">Liquiditeit toevoegen</string>
     <string name="deposit_option_remove_liquidity">Liquiditeit verwijderen</string>
     <string name="add_pool_title">Pool toevoegen</string>
+    <string name="add_lp_title">%1$s LP toevoegen</string>
     <string name="add_pool_amount_label">Bedrag</string>
     <string name="add_pool_gas_auto">Netwerkkosten (auto)</string>
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Tokenwaarde</string>
     <string name="token_fiat_toggle_fiat_label">Fiatwaarde</string>
     <string name="remove_pool_title">Pool verwijderen</string>
+    <string name="remove_lp_title">%1$s LP verwijderen</string>
     <string name="remove_pool_amount_label">Bedrag</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">CACAO staken</string>
     <string name="unstake_cacao_title">CACAO unstaken</string>
@@ -750,6 +751,7 @@
     <string name="banxa_continue">Doorgaan naar Banxa</string>
     <string name="defi_no_positions_selected">Geen posities geselecteerd</string>
     <string name="defi_no_positions_selected_desc">Je hebt alle posities voor deze keten uitgeschakeld. Schakel ten minste één positie in om saldi te bekijken en acties te beheren.</string>
+    <string name="defi_manage_positions">Posities beheren</string>
     <string name="manage_positions">Posities Beheren</string>
     <string name="bond_node_state_whitelisted">Op Whitelist</string>
     <string name="bond_node_state_standby">Stand-by</string>

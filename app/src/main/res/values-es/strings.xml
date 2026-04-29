@@ -517,14 +517,15 @@
     <string name="deposit_option_add_liquidity">Agregar liquidez</string>
     <string name="deposit_option_remove_liquidity">Retirar liquidez</string>
     <string name="add_pool_title">Agregar Pool</string>
+    <string name="add_lp_title">Agregar LP de %1$s</string>
     <string name="add_pool_amount_label">Importe</string>
     <string name="add_pool_gas_auto">Tarifa de red (auto)</string>
     <string name="max">Máx</string>
     <string name="token_fiat_toggle_token_label">Valor del token</string>
     <string name="token_fiat_toggle_fiat_label">Valor fiat</string>
     <string name="remove_pool_title">Eliminar Pool</string>
+    <string name="remove_lp_title">Eliminar LP de %1$s</string>
     <string name="remove_pool_amount_label">Cantidad</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">Apostar CACAO</string>
     <string name="unstake_cacao_title">Desapostar CACAO</string>
@@ -753,6 +754,7 @@
     <string name="banxa_continue">Continuar a Banxa</string>
     <string name="defi_no_positions_selected">No hay posiciones seleccionadas</string>
     <string name="defi_no_positions_selected_desc">Has deshabilitado todas las posiciones para esta cadena. Habilita al menos una posición para ver saldos y gestionar acciones.</string>
+    <string name="defi_manage_positions">Gestionar posiciones</string>
     <string name="manage_positions">Gestionar Posiciones</string>
     <string name="bond_node_state_whitelisted">En Lista Blanca</string>
     <string name="bond_node_state_standby">En Espera</string>
