@@ -107,7 +107,7 @@ internal class Pbkdf2AesEncryption @Inject constructor(private val legacyEncrypt
         private const val GCM_TAG_BITS = 128
         private const val GCM_TAG_BYTES = GCM_TAG_BITS / 8
         private const val KEY_LENGTH_BITS = 256
-        private const val PBKDF2_ITERATIONS = 600_000
+        internal const val PBKDF2_ITERATIONS = 600_000
         private const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
         private const val AES = "AES"
         private const val AES_GCM_NO_PADDING = "AES/GCM/NoPadding"

@@ -107,6 +107,32 @@ class RequestServerBackupUseCaseTest {
     }
 
     @Test
+    fun `invoke returns bad request error from repository`() = runTest {
+        val vault = mockk<Vault> { every { pubKeyECDSA } returns testPubKeyECDSA }
+        coEvery { vaultRepository.get(testVaultId) } returns vault
+        coEvery {
+            vultiSignerRepository.requestServerBackup(testPubKeyECDSA, testEmail, testPassword)
+        } returns ServerBackupResult.Error(ServerBackupResult.ErrorType.BAD_REQUEST)
+
+        val result = useCase(testVaultId, testEmail, testPassword)
+
+        assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.BAD_REQUEST), result)
+    }
+
+    @Test
+    fun `invoke returns unknown error from repository on server errors`() = runTest {
+        val vault = mockk<Vault> { every { pubKeyECDSA } returns testPubKeyECDSA }
+        coEvery { vaultRepository.get(testVaultId) } returns vault
+        coEvery {
+            vultiSignerRepository.requestServerBackup(testPubKeyECDSA, testEmail, testPassword)
+        } returns ServerBackupResult.Error(ServerBackupResult.ErrorType.UNKNOWN)
+
+        val result = useCase(testVaultId, testEmail, testPassword)
+
+        assertEquals(ServerBackupResult.Error(ServerBackupResult.ErrorType.UNKNOWN), result)
+    }
+
+    @Test
     fun `invoke passes correct public key from vault`() = runTest {
         val specificPubKey = "specific-ecdsa-key-456"
         val vault = mockk<Vault> { every { pubKeyECDSA } returns specificPubKey }
