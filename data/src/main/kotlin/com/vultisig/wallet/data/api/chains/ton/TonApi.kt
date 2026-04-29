@@ -18,20 +18,20 @@ interface TonApi {
 
     suspend fun broadcastTransaction(transaction: String): String?
 
-    suspend fun getSpecificTransactionInfo(address: String): BigInteger
+    suspend fun getSeqno(address: String): BigInteger
 
     suspend fun getWalletState(address: String): String
 
     suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson
 
-    suspend fun getEstimateFee(address: String, serializedBoc: String): BigInteger
+    suspend fun estimateFee(address: String, serializedBoc: String): BigInteger
 
     suspend fun getTsStatus(txHash: String): TonStatusResult
 }
 
 internal class TonApiImpl @Inject constructor(private val http: HttpClient) : TonApi {
 
-    private val baseUrl: String = "https://api.vultisig.com/ton"
+    private val baseUrl = "https://api.vultisig.com/ton"
 
     override suspend fun getBalance(address: String): BigInteger =
         getAddressInformation(address).balance
@@ -71,7 +71,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
         return Base64.getDecoder().decode(hash).toHexString()
     }
 
-    override suspend fun getSpecificTransactionInfo(address: String): BigInteger =
+    override suspend fun getSeqno(address: String): BigInteger =
         http
             .get("$baseUrl/v2/getExtendedAddressInformation") { parameter("address", address) }
             .bodyOrThrow<TonSpecificTransactionInfoResponseJson>()
@@ -93,7 +93,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             .bodyOrThrow<JettonWalletsJson>()
     }
 
-    override suspend fun getEstimateFee(address: String, serializedBoc: String): BigInteger {
+    override suspend fun estimateFee(address: String, serializedBoc: String): BigInteger {
         val feeResponse =
             http
                 .get("$baseUrl/v3/estimateFee") {

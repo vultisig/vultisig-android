@@ -520,9 +520,7 @@ constructor(
 
             TokenStandard.TON -> {
                 coroutineScope {
-                    val sequenceNumberDeferred = async {
-                        tonApi.getSpecificTransactionInfo(address)
-                    }
+                    val sequenceNumberDeferred = async { tonApi.getSeqno(address) }
                     val isBounceable = async {
                         if (dstAddress == null) return@async false
 
