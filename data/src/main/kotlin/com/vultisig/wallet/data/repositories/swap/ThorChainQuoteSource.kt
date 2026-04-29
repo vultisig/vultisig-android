@@ -5,35 +5,20 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.api.models.quotes.ThorChainSwapQuoteRequest
-import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
-import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.models.swapAssetName
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.datetime.Clock
 import timber.log.Timber
 
-data class ThorChainQuoteRequest(
-    val dstAddress: String,
-    val srcToken: Coin,
-    val dstToken: Coin,
-    val tokenValue: TokenValue,
-    val referralCode: String,
-    val bpsDiscount: Int,
-)
+internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi: ThorChainApi) :
+    SwapQuoteSource {
 
-interface ThorChainQuoteSource {
-    suspend fun fetch(request: ThorChainQuoteRequest): SwapQuote
-}
-
-internal class ThorChainQuoteSourceImpl
-@Inject
-constructor(private val thorChainApi: ThorChainApi) : ThorChainQuoteSource {
-
-    override suspend fun fetch(request: ThorChainQuoteRequest): SwapQuote {
+    override suspend fun fetch(request: SwapQuoteRequest): SwapQuoteResult {
         val srcToken = request.srcToken
         val dstToken = request.dstToken
         if (srcToken.swapAssetComparisonName() == dstToken.swapAssetComparisonName()) {
@@ -46,20 +31,22 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainQuoteSource {
                 fromAsset = srcToken.swapAssetName(),
                 toAsset = dstToken.swapAssetName(),
                 amount = srcToken.toThorTokenValue(request.tokenValue).toString(),
-                interval = "0",
+                interval = Interval.Rapid.wireValue,
                 referralCode = request.referralCode,
                 bpsDiscount = request.bpsDiscount,
             )
 
         val finalData = fetchWithStreamingFallback(rapidRequest)
 
-        return SwapQuote.ThorChain(
-            expectedDstValue = finalData.expectedAmountOut.convertToTokenValue(dstToken),
-            fees = finalData.fees.total.convertToTokenValue(dstToken),
-            recommendedMinTokenValue =
-                finalData.recommendedMinAmountIn.convertToTokenValue(srcToken),
-            data = finalData,
-            expiredAt = Clock.System.now() + expiredAfter,
+        return SwapQuoteResult.Native(
+            SwapQuote.ThorChain(
+                expectedDstValue = dstToken.convertToTokenValue(finalData.expectedAmountOut),
+                fees = dstToken.convertToTokenValue(finalData.fees.total),
+                recommendedMinTokenValue =
+                    srcToken.convertToTokenValue(finalData.recommendedMinAmountIn),
+                data = finalData,
+                expiredAt = Clock.System.now() + expiredAfter,
+            )
         )
     }
 
@@ -110,6 +97,8 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainQuoteSource {
                     }
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             RapidQuote.Failed(SwapException.handleSwapException(e.message ?: "Unknown error"))
         }
@@ -121,13 +110,18 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainQuoteSource {
         try {
             val response =
                 thorChainApi.getSwapQuotes(
-                    rapidRequest.copy(interval = "1", streamingQuantity = streamingQuantity)
+                    rapidRequest.copy(
+                        interval = Interval.Streaming.wireValue,
+                        streamingQuantity = streamingQuantity,
+                    )
                 )
             when (response) {
                 is THORChainSwapQuoteDeserialized.Error -> null
                 is THORChainSwapQuoteDeserialized.Result ->
                     response.data.takeIf { it.error == null }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.w(e, "Streaming quote fetch failed")
             null
@@ -138,8 +132,10 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainQuoteSource {
         streaming: THORChainSwapQuote?,
         rapidError: SwapException?,
     ): THORChainSwapQuote {
-        if (streaming == null && rapid == null) throw requireNotNull(rapidError)
-        if (streaming == null) return requireNotNull(rapid)
+        if (streaming == null && rapid == null) {
+            throw rapidError ?: error("rapid quote failed and streaming returned null")
+        }
+        if (streaming == null) return checkNotNull(rapid)
         if (rapid == null) return streaming
         val streamingOut = streaming.expectedAmountOut.toBigInteger()
         return if (streamingOut > rapid.expectedAmountOut.toBigInteger()) streaming else rapid
@@ -149,13 +145,20 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainQuoteSource {
         data class Success(val data: THORChainSwapQuote) : RapidQuote {
             val slippageBps: Int = computeSlippageBps(data)
 
-            fun needsStreaming(): Boolean = slippageBps > STREAMING_SLIPPAGE_THRESHOLD_BPS
+            fun needsStreaming(): Boolean =
+                slippageBps > STREAMING_SLIPPAGE_THRESHOLD_BPS && data.maxStreamingQuantity > 0
         }
 
         data class Failed(val error: SwapException) : RapidQuote
     }
 
-    companion object {
+    private enum class Interval(val wireValue: String) {
+        Rapid("0"),
+        Streaming("1"),
+    }
+
+    private companion object {
+        // 3% slippage cutoff above which we prefer a streaming swap over a rapid one.
         const val STREAMING_SLIPPAGE_THRESHOLD_BPS = 300
 
         private fun computeSlippageBps(quote: THORChainSwapQuote): Int {
@@ -163,7 +166,7 @@ constructor(private val thorChainApi: ThorChainApi) : ThorChainQuoteSource {
             val expectedOut = quote.expectedAmountOut.toBigInteger()
             val grossOut = feesTotal + expectedOut
             return if (grossOut > BigInteger.ZERO) {
-                feesTotal.multiply(BigInteger.valueOf(10000)).divide(grossOut).toInt()
+                feesTotal.multiply(BPS_DIVISOR).divide(grossOut).toInt()
             } else 0
         }
     }

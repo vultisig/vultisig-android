@@ -4,12 +4,9 @@ import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSourceImpl
-import com.vultisig.wallet.data.repositories.swap.KyberQuoteSourceImpl
-import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSourceImpl
-import com.vultisig.wallet.data.repositories.swap.MayaQuoteSourceImpl
-import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSourceImpl
-import com.vultisig.wallet.data.repositories.swap.ThorChainQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.MayaQuoteSource
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
+import com.vultisig.wallet.data.repositories.swap.ThorChainQuoteSource
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
@@ -19,15 +16,8 @@ import org.junit.jupiter.api.assertThrows
 
 internal class SwapQuoteRepositoryImplSameAssetsTest {
 
-    private val repo =
-        SwapQuoteRepositoryImpl(
-            thorChain = ThorChainQuoteSourceImpl(thorChainApi = mockk(relaxed = true)),
-            maya = MayaQuoteSourceImpl(mayaChainApi = mockk(relaxed = true)),
-            oneInch = OneInchQuoteSourceImpl(oneInchApi = mockk(relaxed = true)),
-            liFi = LiFiQuoteSourceImpl(liFiChainApi = mockk(relaxed = true)),
-            jupiter = JupiterQuoteSourceImpl(jupiterApi = mockk(relaxed = true)),
-            kyber = KyberQuoteSourceImpl(kyberApi = mockk(relaxed = true)),
-        )
+    private val thorChain = ThorChainQuoteSource(mockk())
+    private val maya = MayaQuoteSource(mockk())
 
     private fun evmToken(contractAddress: String) =
         Coin(
@@ -43,36 +33,58 @@ internal class SwapQuoteRepositoryImplSameAssetsTest {
         )
 
     @Test
-    fun `getSwapQuote throws SameAssets when EVM tokens share address case-insensitively`() =
-        runTest {
-            val checksummed = evmToken("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
-            val lowercased = evmToken("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
-            val tokenValue = TokenValue(value = BigInteger.ONE, token = checksummed)
+    fun `thorChain throws SameAssets when EVM tokens share address case-insensitively`() = runTest {
+        val checksummed = evmToken("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+        val lowercased = evmToken("0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
+        val tokenValue = TokenValue(value = BigInteger.ONE, token = checksummed)
 
-            val ex =
-                assertThrows<SwapException> {
-                    repo.getSwapQuote(
-                        dstAddress = "0xDest",
+        val ex =
+            assertThrows<SwapException> {
+                thorChain.fetch(
+                    SwapQuoteRequest(
                         srcToken = checksummed,
                         dstToken = lowercased,
                         tokenValue = tokenValue,
+                        dstAddress = "0xDest",
                     )
-                }
-            assertInstanceOf(SwapException.SameAssets::class.java, ex)
-        }
+                )
+            }
+        assertInstanceOf(SwapException.SameAssets::class.java, ex)
+    }
 
     @Test
-    fun `getSwapQuote throws SameAssets for identical EVM tokens`() = runTest {
+    fun `thorChain throws SameAssets for identical EVM tokens`() = runTest {
         val token = evmToken("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
         val tokenValue = TokenValue(value = BigInteger.ONE, token = token)
 
         val ex =
             assertThrows<SwapException> {
-                repo.getSwapQuote(
-                    dstAddress = "0xDest",
-                    srcToken = token,
-                    dstToken = token,
-                    tokenValue = tokenValue,
+                thorChain.fetch(
+                    SwapQuoteRequest(
+                        srcToken = token,
+                        dstToken = token,
+                        tokenValue = tokenValue,
+                        dstAddress = "0xDest",
+                    )
+                )
+            }
+        assertInstanceOf(SwapException.SameAssets::class.java, ex)
+    }
+
+    @Test
+    fun `maya throws SameAssets for identical EVM tokens`() = runTest {
+        val token = evmToken("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")
+        val tokenValue = TokenValue(value = BigInteger.ONE, token = token)
+
+        val ex =
+            assertThrows<SwapException> {
+                maya.fetch(
+                    SwapQuoteRequest(
+                        srcToken = token,
+                        dstToken = token,
+                        tokenValue = tokenValue,
+                        dstAddress = "0xDest",
+                    )
                 )
             }
         assertInstanceOf(SwapException.SameAssets::class.java, ex)

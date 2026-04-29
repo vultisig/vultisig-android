@@ -19,12 +19,11 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSourceImpl
-import com.vultisig.wallet.data.repositories.swap.KyberQuoteSourceImpl
-import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSourceImpl
-import com.vultisig.wallet.data.repositories.swap.MayaQuoteSourceImpl
-import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSourceImpl
-import com.vultisig.wallet.data.repositories.swap.ThorChainQuoteSourceImpl
+import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSource
+import com.vultisig.wallet.data.repositories.swap.MayaQuoteSource
+import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSource
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigInteger
@@ -39,15 +38,9 @@ class SwapQuoteRepositoryProvidersTest {
     private val mayaChainApi: MayaChainApi = mockk()
     private val jupiterApi: JupiterApi = mockk()
 
-    private val repository =
-        SwapQuoteRepositoryImpl(
-            thorChain = ThorChainQuoteSourceImpl(thorChainApi = mockk()),
-            maya = MayaQuoteSourceImpl(mayaChainApi = mayaChainApi),
-            oneInch = OneInchQuoteSourceImpl(oneInchApi = oneInchApi),
-            liFi = LiFiQuoteSourceImpl(liFiChainApi = mockk()),
-            jupiter = JupiterQuoteSourceImpl(jupiterApi = jupiterApi),
-            kyber = KyberQuoteSourceImpl(kyberApi = mockk()),
-        )
+    private val oneInchSource = OneInchQuoteSource(oneInchApi)
+    private val mayaSource = MayaQuoteSource(mayaChainApi)
+    private val jupiterSource = JupiterQuoteSource(jupiterApi)
 
     private fun coin(
         chain: Chain,
@@ -92,16 +85,17 @@ class SwapQuoteRepositoryProvidersTest {
             EVMSwapQuoteDeserialized.Result(expected)
 
         val result =
-            repository.getOneInchSwapQuote(
-                srcToken = coin(Chain.Ethereum, "ETH"),
-                dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
-                tokenValue =
-                    TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
-                isAffiliate = true,
-                bpsDiscount = 0,
-            )
+            oneInchSource.fetch(
+                SwapQuoteRequest(
+                    srcToken = coin(Chain.Ethereum, "ETH"),
+                    dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
+                    tokenValue =
+                        TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
+                    isAffiliate = true,
+                )
+            ) as SwapQuoteResult.Evm
 
-        assertEquals(expected, result)
+        assertEquals(expected, result.data)
     }
 
     @Test
@@ -110,13 +104,13 @@ class SwapQuoteRepositoryProvidersTest {
             EVMSwapQuoteDeserialized.Error("Insufficient liquidity")
 
         assertThrows<SwapException> {
-            repository.getOneInchSwapQuote(
-                srcToken = coin(Chain.Ethereum, "ETH"),
-                dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
-                tokenValue =
-                    TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
-                isAffiliate = false,
-                bpsDiscount = 0,
+            oneInchSource.fetch(
+                SwapQuoteRequest(
+                    srcToken = coin(Chain.Ethereum, "ETH"),
+                    dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
+                    tokenValue =
+                        TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
+                )
             )
         }
     }
@@ -127,13 +121,13 @@ class SwapQuoteRepositoryProvidersTest {
             EVMSwapQuoteDeserialized.Result(oneInchQuote(error = "Slippage too high"))
 
         assertThrows<SwapException> {
-            repository.getOneInchSwapQuote(
-                srcToken = coin(Chain.Ethereum, "ETH"),
-                dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
-                tokenValue =
-                    TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
-                isAffiliate = false,
-                bpsDiscount = 0,
+            oneInchSource.fetch(
+                SwapQuoteRequest(
+                    srcToken = coin(Chain.Ethereum, "ETH"),
+                    dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
+                    tokenValue =
+                        TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
+                )
             )
         }
     }
@@ -177,13 +171,16 @@ class SwapQuoteRepositoryProvidersTest {
         val srcToken = coin(Chain.Bitcoin, "BTC", decimal = 8)
         val dstToken = coin(Chain.Ethereum, "ETH", decimal = 18)
         val result =
-            repository.getMayaSwapQuote(
-                dstAddress = "0xDest",
-                srcToken = srcToken,
-                dstToken = dstToken,
-                tokenValue = TokenValue(value = BigInteger("100000000"), token = srcToken),
-                isAffiliate = true,
-            ) as SwapQuote.MayaChain
+            (mayaSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = srcToken,
+                        dstToken = dstToken,
+                        tokenValue = TokenValue(value = BigInteger("100000000"), token = srcToken),
+                        dstAddress = "0xDest",
+                        isAffiliate = true,
+                    )
+                ) as SwapQuoteResult.Native)
+                .quote as SwapQuote.MayaChain
 
         // Maya returns amounts in 1e8 (thorswapMultiplier). Converting back to 18-dp ETH:
         // 12000000000 / 1e8 = 120 ETH = 120 * 1e18 = 120000000000000000000
@@ -207,13 +204,15 @@ class SwapQuoteRepositoryProvidersTest {
         val tokenValue = TokenValue(value = BigInteger("777"), token = srcToken)
 
         val result =
-            repository.getMayaSwapQuote(
-                dstAddress = "0xDest",
-                srcToken = srcToken,
-                dstToken = dstToken,
-                tokenValue = tokenValue,
-                isAffiliate = false,
-            ) as SwapQuote.MayaChain
+            (mayaSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = srcToken,
+                        dstToken = dstToken,
+                        tokenValue = tokenValue,
+                        dstAddress = "0xDest",
+                    )
+                ) as SwapQuoteResult.Native)
+                .quote as SwapQuote.MayaChain
 
         // For MayaChain source the original tokenValue is returned untouched
         assertEquals(tokenValue, result.recommendedMinTokenValue)
@@ -228,12 +227,13 @@ class SwapQuoteRepositoryProvidersTest {
         val srcToken = coin(Chain.Bitcoin, "BTC")
         val dstToken = coin(Chain.Ethereum, "ETH", decimal = 18)
         assertThrows<SwapException> {
-            repository.getMayaSwapQuote(
-                dstAddress = "0xDest",
-                srcToken = srcToken,
-                dstToken = dstToken,
-                tokenValue = TokenValue(value = BigInteger("100000000"), token = srcToken),
-                isAffiliate = false,
+            mayaSource.fetch(
+                SwapQuoteRequest(
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    tokenValue = TokenValue(value = BigInteger("100000000"), token = srcToken),
+                    dstAddress = "0xDest",
+                )
             )
         }
     }
@@ -247,12 +247,13 @@ class SwapQuoteRepositoryProvidersTest {
         val srcToken = coin(Chain.Bitcoin, "BTC")
         val dstToken = coin(Chain.Ethereum, "ETH", decimal = 18)
         assertThrows<SwapException> {
-            repository.getMayaSwapQuote(
-                dstAddress = "0xDest",
-                srcToken = srcToken,
-                dstToken = dstToken,
-                tokenValue = TokenValue(value = BigInteger("100000000"), token = srcToken),
-                isAffiliate = false,
+            mayaSource.fetch(
+                SwapQuoteRequest(
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    tokenValue = TokenValue(value = BigInteger("100000000"), token = srcToken),
+                    dstAddress = "0xDest",
+                )
             )
         }
     }
@@ -293,14 +294,17 @@ class SwapQuoteRepositoryProvidersTest {
 
         // Native SOL → empty contract address triggers SOL default mint mapping
         val sol = coin(Chain.Solana, "SOL", contractAddress = "")
-        val usdc = coin(Chain.Solana, "USDC", contractAddress = "EPjFWdd5_USDC_MINT")
+        val usdc = coin(Chain.Solana, "USDC", contractAddress = USDC_MINT)
         val result =
-            repository.getJupiterSwapQuote(
-                srcAddress = "WALLET",
-                srcToken = sol,
-                dstToken = usdc,
-                tokenValue = TokenValue(value = BigInteger("1000"), token = sol),
-            )
+            (jupiterSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = sol,
+                        dstToken = usdc,
+                        tokenValue = TokenValue(value = BigInteger("1000"), token = sol),
+                        srcAddress = "WALLET",
+                    )
+                ) as SwapQuoteResult.Evm)
+                .data
 
         assertEquals("1500000", result.dstAmount)
         assertEquals("1234", result.tx.swapFee)
@@ -314,14 +318,17 @@ class SwapQuoteRepositoryProvidersTest {
             jupiterQuoteResponse(feeMint = "differentMint", feeAmount = "9999")
 
         val sol = coin(Chain.Solana, "SOL", contractAddress = "")
-        val usdc = coin(Chain.Solana, "USDC", contractAddress = "USDC_MINT")
+        val usdc = coin(Chain.Solana, "USDC", contractAddress = USDC_MINT)
         val result =
-            repository.getJupiterSwapQuote(
-                srcAddress = "WALLET",
-                srcToken = sol,
-                dstToken = usdc,
-                tokenValue = TokenValue(value = BigInteger("1000"), token = sol),
-            )
+            (jupiterSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = sol,
+                        dstToken = usdc,
+                        tokenValue = TokenValue(value = BigInteger("1000"), token = sol),
+                        srcAddress = "WALLET",
+                    )
+                ) as SwapQuoteResult.Evm)
+                .data
 
         assertEquals("0", result.tx.swapFee)
         // swapFeeTokenContract still falls back to first route's feeMint
@@ -334,18 +341,21 @@ class SwapQuoteRepositoryProvidersTest {
             RuntimeException("rate limited")
 
         val sol = coin(Chain.Solana, "SOL", contractAddress = "")
-        val usdc = coin(Chain.Solana, "USDC", contractAddress = "USDC_MINT")
+        val usdc = coin(Chain.Solana, "USDC", contractAddress = USDC_MINT)
         assertThrows<SwapException> {
-            repository.getJupiterSwapQuote(
-                srcAddress = "WALLET",
-                srcToken = sol,
-                dstToken = usdc,
-                tokenValue = TokenValue(value = BigInteger("1000"), token = sol),
+            jupiterSource.fetch(
+                SwapQuoteRequest(
+                    srcToken = sol,
+                    dstToken = usdc,
+                    tokenValue = TokenValue(value = BigInteger("1000"), token = sol),
+                    srcAddress = "WALLET",
+                )
             )
         }
     }
 
-    private companion object {
+    companion object {
         const val SOL_MINT = "So11111111111111111111111111111111111111112"
+        const val USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
     }
 }

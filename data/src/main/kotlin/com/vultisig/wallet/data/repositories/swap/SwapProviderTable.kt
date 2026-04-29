@@ -1,16 +1,23 @@
-package com.vultisig.wallet.data.repositories
+package com.vultisig.wallet.data.repositories.swap
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
+import javax.inject.Inject
 
 /**
- * Chain + ticker → set of supported [SwapProvider]s. Extracted from [SwapQuoteRepositoryImpl] so
- * the repository stays focused on quote fetching while routing rules live in one inspectable place.
+ * Routing table for swap providers. Maps a chain + ticker to the set of providers that can quote
+ * it, and resolves a single provider for a src/dst pair (applying cross-chain restrictions).
  */
-internal object SwapProviderTable {
+interface SwapProviderTable {
+    fun providersFor(coin: Coin): Set<SwapProvider>
 
-    private val THOR_ETH_TOKENS =
+    fun providerFor(srcToken: Coin, dstToken: Coin): SwapProvider?
+}
+
+internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
+
+    private val thorEthTokens =
         setOf(
             "ETH",
             "USDT",
@@ -31,11 +38,11 @@ internal object SwapProviderTable {
             "SNX",
             "YFI",
         )
-    private val THOR_BSC_TOKENS = setOf("BNB", "USDT", "USDC")
-    private val THOR_AVAX_TOKENS = setOf("AVAX", "USDC", "USDT", "SOL")
-    private val THOR_BASE_TOKENS = setOf("ETH", "CBBTC", "USDC", "VVV")
-    private val MAYA_ETH_TOKENS = setOf("ETH", "USDC", "LLD")
-    private val MAYA_ARB_TOKENS =
+    private val thorBscTokens = setOf("BNB", "USDT", "USDC")
+    private val thorAvaxTokens = setOf("AVAX", "USDC", "USDT", "SOL")
+    private val thorBaseTokens = setOf("ETH", "CBBTC", "USDC", "VVV")
+    private val mayaEthTokens = setOf("ETH", "USDC", "LLD")
+    private val mayaArbTokens =
         setOf(
             "ETH",
             "ARB",
@@ -52,7 +59,14 @@ internal object SwapProviderTable {
             "DAI",
         )
 
-    fun providersFor(coin: Coin): Set<SwapProvider> {
+    private val evmAggregators = setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
+    private val thorchainPlusEvmAggregators =
+        setOf(SwapProvider.THORCHAIN, SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
+
+    /** Providers that only quote same-chain swaps; filtered out for cross-chain pairs. */
+    private val sameChainOnly = setOf(SwapProvider.ONEINCH, SwapProvider.KYBER)
+
+    override fun providersFor(coin: Coin): Set<SwapProvider> {
         val ticker = coin.ticker.uppercase()
         return when (coin.chain) {
             Chain.MayaChain,
@@ -62,15 +76,13 @@ internal object SwapProviderTable {
             Chain.Ethereum -> ethereumProviders(ticker)
 
             Chain.BscChain ->
-                if (coin.ticker in THOR_BSC_TOKENS) THORCHAIN_PLUS_EVM_AGGREGATORS
-                else EVM_AGGREGATORS
+                if (ticker in thorBscTokens) thorchainPlusEvmAggregators else evmAggregators
 
             Chain.Avalanche ->
-                if (coin.ticker in THOR_AVAX_TOKENS) THORCHAIN_PLUS_EVM_AGGREGATORS
-                else EVM_AGGREGATORS
+                if (ticker in thorAvaxTokens) thorchainPlusEvmAggregators else evmAggregators
 
             Chain.Base ->
-                if (ticker in THOR_BASE_TOKENS) setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN)
+                if (ticker in thorBaseTokens) setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN)
                 else setOf(SwapProvider.LIFI)
 
             Chain.Optimism,
@@ -90,7 +102,7 @@ internal object SwapProviderTable {
             Chain.Zcash -> setOf(SwapProvider.MAYA)
 
             Chain.Arbitrum ->
-                if (ticker in MAYA_ARB_TOKENS) setOf(SwapProvider.LIFI, SwapProvider.MAYA)
+                if (ticker in mayaArbTokens) setOf(SwapProvider.LIFI, SwapProvider.MAYA)
                 else setOf(SwapProvider.LIFI)
 
             Chain.Blast,
@@ -122,9 +134,15 @@ internal object SwapProviderTable {
         }
     }
 
+    override fun providerFor(srcToken: Coin, dstToken: Coin): SwapProvider? {
+        val shared = providersFor(srcToken).intersect(providersFor(dstToken))
+        val crossChain = srcToken.chain != dstToken.chain
+        return shared.firstOrNull { provider -> !crossChain || provider !in sameChainOnly }
+    }
+
     private fun ethereumProviders(ticker: String): Set<SwapProvider> {
-        val isThor = ticker in THOR_ETH_TOKENS
-        val isMaya = ticker in MAYA_ETH_TOKENS
+        val isThor = ticker in thorEthTokens
+        val isMaya = ticker in mayaEthTokens
         return when {
             isThor && isMaya ->
                 setOf(
@@ -151,11 +169,7 @@ internal object SwapProviderTable {
                     SwapProvider.KYBER,
                 )
 
-            else -> EVM_AGGREGATORS
+            else -> evmAggregators
         }
     }
-
-    private val EVM_AGGREGATORS = setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
-    private val THORCHAIN_PLUS_EVM_AGGREGATORS =
-        setOf(SwapProvider.THORCHAIN, SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
 }

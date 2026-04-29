@@ -11,56 +11,46 @@ import com.vultisig.wallet.data.api.models.quotes.gasForChain
 import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.TokenValue
-import java.math.BigInteger
 import javax.inject.Inject
 
-data class KyberQuoteRequest(
-    val srcToken: Coin,
-    val dstToken: Coin,
-    val tokenValue: TokenValue,
-    val affiliateBps: Int,
-)
+internal class KyberQuoteSource @Inject constructor(private val kyberApi: KyberApi) :
+    SwapQuoteSource {
 
-interface KyberQuoteSource {
-    suspend fun fetch(request: KyberQuoteRequest): EVMSwapQuoteJson
-}
-
-internal class KyberQuoteSourceImpl @Inject constructor(private val kyberApi: KyberApi) :
-    KyberQuoteSource {
-
-    override suspend fun fetch(request: KyberQuoteRequest): EVMSwapQuoteJson {
-        val routeResponse =
-            kyberApi.getSwapQuote(
-                chain = request.srcToken.chain,
-                srcTokenContractAddress = request.srcToken.contractAddress,
-                dstTokenContractAddress = request.dstToken.contractAddress,
-                amount = request.tokenValue.value.toString(),
-                srcAddress = request.srcToken.address,
-                affiliateBps = request.affiliateBps,
-            )
-        return when (routeResponse) {
-            is KyberSwapQuoteDeserialized.Error ->
-                throw SwapException.handleSwapException(routeResponse.error.message)
-
-            is KyberSwapQuoteDeserialized.Result -> {
-                val routeSummary = routeResponse.result.data.routeSummary
-                val txResponse =
-                    kyberApi.getKyberSwapQuote(
-                        chain = request.srcToken.chain,
-                        routeSummary = routeSummary,
-                        from = request.srcToken.address,
-                        enableGasEstimation = true,
-                        affiliateBps = request.affiliateBps,
-                    )
-                buildTransaction(
-                    coin = request.srcToken,
-                    routeSummary = routeSummary,
-                    response = txResponse,
+    override suspend fun fetch(request: SwapQuoteRequest): SwapQuoteResult =
+        swapApiCall("Kyber") {
+            val routeResponse =
+                kyberApi.getSwapQuote(
+                    chain = request.srcToken.chain,
+                    srcTokenContractAddress = request.srcToken.contractAddress,
+                    dstTokenContractAddress = request.dstToken.contractAddress,
+                    amount = request.tokenValue.value.toString(),
+                    srcAddress = request.srcToken.address,
+                    affiliateBps = request.affiliateBps,
                 )
+            when (routeResponse) {
+                is KyberSwapQuoteDeserialized.Error ->
+                    throw SwapException.handleSwapException(routeResponse.error.message)
+
+                is KyberSwapQuoteDeserialized.Result -> {
+                    val routeSummary = routeResponse.result.data.routeSummary
+                    val txResponse =
+                        kyberApi.getKyberSwapQuote(
+                            chain = request.srcToken.chain,
+                            routeSummary = routeSummary,
+                            from = request.srcToken.address,
+                            enableGasEstimation = true,
+                            affiliateBps = request.affiliateBps,
+                        )
+                    SwapQuoteResult.Evm(
+                        buildTransaction(
+                            coin = request.srcToken,
+                            routeSummary = routeSummary,
+                            response = txResponse,
+                        )
+                    )
+                }
             }
         }
-    }
 
     private fun buildTransaction(
         coin: Coin,
@@ -93,9 +83,5 @@ internal class KyberQuoteSourceImpl @Inject constructor(private val kyberApi: Ky
             val absoluteFee = amountOut.toBigInteger() * fee.feeAmount.toBigInteger() / BPS_DIVISOR
             absoluteFee.toString()
         } else fee.feeAmount
-    }
-
-    private companion object {
-        val BPS_DIVISOR: BigInteger = BigInteger.valueOf(10000)
     }
 }
