@@ -27,6 +27,9 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
 import timber.log.Timber
 
@@ -37,8 +40,15 @@ internal data class QuoteFetchResult(
     val srcFiatValueText: String,
     val estimatedDstTokenValue: String,
     val estimatedDstFiatValue: String,
+    val estimatedDstFiat: FiatValue,
     val feeText: String,
     val swapFeeFiat: FiatValue,
+)
+
+internal data class QuoteCandidate(
+    val provider: SwapProvider,
+    val vultBPSDiscount: Int?,
+    val referral: String?,
 )
 
 internal class SwapQuoteManager
@@ -147,10 +157,63 @@ constructor(
             srcFiatValueText = srcFiatValueText,
             estimatedDstTokenValue = estimatedDstTokenValue,
             estimatedDstFiatValue = fiatValueToString(estimatedDstFiatValue),
+            estimatedDstFiat = estimatedDstFiatValue,
             feeText = fiatValueToString(fiatFees),
             swapFeeFiat = fiatFees,
         )
     }
+
+    suspend fun fetchBestQuote(
+        candidates: List<QuoteCandidate>,
+        src: SendSrc,
+        dst: SendSrc,
+        srcToken: Coin,
+        dstToken: Coin,
+        srcTokenValue: BigInteger,
+        tokenValue: TokenValue,
+        currency: AppCurrency,
+        amount: BigDecimal,
+    ): QuoteFetchResult {
+        require(candidates.isNotEmpty()) { "candidates must not be empty" }
+
+        val results: List<Result<QuoteFetchResult>> = coroutineScope {
+            candidates
+                .map { candidate ->
+                    async {
+                        runCatching {
+                                fetchQuote(
+                                    provider = candidate.provider,
+                                    src = src,
+                                    dst = dst,
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    srcTokenValue = srcTokenValue,
+                                    tokenValue = tokenValue,
+                                    currency = currency,
+                                    vultBPSDiscount = candidate.vultBPSDiscount,
+                                    referral = candidate.referral,
+                                    amount = amount,
+                                )
+                            }
+                            .onFailure { e ->
+                                if (e is CancellationException) throw e
+                                Timber.w(e, "Quote fetch failed for %s", candidate.provider)
+                            }
+                    }
+                }
+                .awaitAll()
+        }
+
+        val successes = results.mapNotNull { it.getOrNull() }
+        if (successes.isEmpty()) {
+            throw results.first { it.isFailure }.exceptionOrNull()!!
+        }
+
+        return successes.maxWith(compareBy { netOutputFiat(it) })
+    }
+
+    private fun netOutputFiat(result: QuoteFetchResult): BigDecimal =
+        result.estimatedDstFiat.value - result.swapFeeFiat.value
 
     private suspend fun fetchThorMayaQuote(
         provider: SwapProvider,

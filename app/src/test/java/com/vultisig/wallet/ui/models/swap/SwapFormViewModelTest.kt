@@ -23,10 +23,10 @@ import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
-import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.ui.models.findCurrentSrc
 import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
@@ -76,7 +76,7 @@ internal class SwapFormViewModelTest {
     private lateinit var navigator: Navigator<Destination>
     private lateinit var fiatValueToString: FiatValueToStringMapper
     private lateinit var convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase
-    private lateinit var resolveProvider: ResolveProviderUseCase
+    private lateinit var swapQuoteRepository: SwapQuoteRepository
     private lateinit var allowanceRepository: AllowanceRepository
     private lateinit var appCurrencyRepository: AppCurrencyRepository
     private lateinit var swapTransactionRepository: SwapTransactionRepository
@@ -111,7 +111,9 @@ internal class SwapFormViewModelTest {
                 TokenValue(value = secondArg(), token = firstArg())
             }
 
-        resolveProvider = mockk(relaxed = true)
+        swapQuoteRepository = mockk(relaxed = true)
+        every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+            listOf(SwapProvider.THORCHAIN)
         allowanceRepository = mockk(relaxed = true)
 
         appCurrencyRepository = mockk(relaxed = true)
@@ -173,7 +175,7 @@ internal class SwapFormViewModelTest {
             navigator = navigator,
             fiatValueToString = fiatValueToString,
             convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
-            resolveProvider = resolveProvider,
+            swapQuoteRepository = swapQuoteRepository,
             allowanceRepository = allowanceRepository,
             appCurrencyRepository = appCurrencyRepository,
             swapTransactionRepository = swapTransactionRepository,
@@ -537,11 +539,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees debounces amount changes`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -614,7 +615,7 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees shows error when provider is not found`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns null
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns emptyList()
 
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()
@@ -651,11 +652,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees with THORChain provider updates UI state correctly`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -693,11 +693,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees with THORChain sets provider name`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -731,11 +730,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees with MayaChain sets provider name`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.MAYA
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.MAYA)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -774,8 +772,19 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles SwapRouteNotAvailable`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } throws
-                SwapException.SwapRouteNotAvailable("No route")
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapException.SwapRouteNotAvailable("No route")
 
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()
@@ -792,11 +801,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles TimeOut exception`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -825,11 +833,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles NetworkConnection exception`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -858,11 +865,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles InsufficientFunds exception`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -895,11 +901,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles HighPriceImpact exception`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -932,8 +937,19 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees resets state on swap exception`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } throws
-                SwapException.SwapIsNotSupported("Not supported")
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapException.SwapIsNotSupported("Not supported")
 
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()
@@ -1055,11 +1071,10 @@ internal class SwapFormViewModelTest {
     fun `calculateFees validates balance for native token after successful quote`() =
         runTest(mainDispatcher) {
             // Source has very small balance — less than amount + fees
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1099,11 +1114,10 @@ internal class SwapFormViewModelTest {
                     vultBpsDiscountFiatValue = "$5.00",
                     tierType = null,
                 )
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1133,11 +1147,10 @@ internal class SwapFormViewModelTest {
     fun `calculateFees clears VULT BPS discount when not available`() =
         runTest(mainDispatcher) {
             coEvery { getDiscountBpsUseCase.invoke(any(), any()) } returns 0
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1170,11 +1183,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees sets expiredAt from quote`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1206,11 +1218,10 @@ internal class SwapFormViewModelTest {
     fun `collectTotalFee combines gas and swap fees`() =
         runTest(mainDispatcher) {
             coEvery { fiatValueToString(any()) } returns "$10.00"
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1242,11 +1253,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles SmallSwapAmount with recommended_min_amount_in`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1276,11 +1286,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles SmallSwapAmount with numeric message`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1312,11 +1321,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles SmallSwapAmount with non-numeric message`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1352,11 +1360,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles generic exception gracefully`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1680,6 +1687,7 @@ internal class SwapFormViewModelTest {
         srcFiatValueText: String = "$0.00",
         estimatedDstTokenValue: String = "95.0",
         estimatedDstFiatValue: String = "$95.00",
+        estimatedDstFiat: FiatValue = FiatValue(BigDecimal("95.00"), "USD"),
         feeText: String = "$0.00",
         swapFeeFiat: FiatValue = FiatValue(BigDecimal.ZERO, "USD"),
     ): QuoteFetchResult =
@@ -1690,6 +1698,7 @@ internal class SwapFormViewModelTest {
             srcFiatValueText = srcFiatValueText,
             estimatedDstTokenValue = estimatedDstTokenValue,
             estimatedDstFiatValue = estimatedDstFiatValue,
+            estimatedDstFiat = estimatedDstFiat,
             feeText = feeText,
             swapFeeFiat = swapFeeFiat,
         )

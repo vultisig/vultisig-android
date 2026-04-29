@@ -91,6 +91,8 @@ interface SwapQuoteRepository {
     ): EVMSwapQuoteJson
 
     fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider?
+
+    fun getEligibleProviders(srcToken: Coin, dstToken: Coin): List<SwapProvider>
 }
 
 internal class SwapQuoteRepositoryImpl
@@ -508,13 +510,15 @@ constructor(
             TokenValue(value = (it.movePointRight(token.decimal)).toBigInteger(), token = token)
         }
 
-    override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? {
-        return srcToken.swapProviders.intersect(dstToken.swapProviders).firstOrNull {
+    override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? =
+        getEligibleProviders(srcToken, dstToken).firstOrNull()
+
+    override fun getEligibleProviders(srcToken: Coin, dstToken: Coin): List<SwapProvider> =
+        srcToken.swapProviders.intersect(dstToken.swapProviders).filter {
             if (isCrossChainSwap(srcToken, dstToken))
                 it != SwapProvider.ONEINCH && it != SwapProvider.KYBER
             else true
         }
-    }
 
     private fun isCrossChainSwap(srcToken: Coin, dstToken: Coin) = srcToken.chain != dstToken.chain
 
