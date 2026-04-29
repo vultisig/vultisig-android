@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -148,14 +149,17 @@ internal fun <T> TokenSelectionList(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         contentPadding = PaddingValues(bottom = 60.dp),
                     ) {
-                        groups.forEach { (title, items, mapper, plusUiModel) ->
+                        groups.forEachIndexed { groupIndex, (title, items, mapper, plusUiModel) ->
                             title?.let {
                                 item(span = { GridItemSpan(maxLineSpan) }) { GridTitle(it) }
                             }
 
                             plusUiModel?.let { item { GridPlus(model = it) } }
 
-                            items(items) { item ->
+                            itemsIndexed(
+                                items,
+                                key = { itemIndex, _ -> "$groupIndex-$itemIndex" },
+                            ) { _, item ->
                                 GridItem(
                                     uiModel = mapper(item),
                                     onCheckedChange = { onCheckChange(it, item) },
