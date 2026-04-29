@@ -46,9 +46,8 @@ data class JettonWalletsJson(
     @SerialName("address_book") val addressBook: Map<String, AddressEntryJson> = emptyMap(),
 ) {
     fun getJettonsAddress(): String? {
-        val jettonAddress = jettonWallets.firstOrNull()?.address ?: ""
-        val address = addressBook[jettonAddress]
-        return address?.userFriendly
+        val jettonAddress = jettonWallets.firstOrNull()?.address ?: return null
+        return addressBook[jettonAddress]?.userFriendly
     }
 }
 
