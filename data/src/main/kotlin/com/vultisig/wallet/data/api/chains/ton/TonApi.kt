@@ -58,17 +58,17 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
                 }
                 .bodyOrThrow<TonBroadcastTransactionResponseJson>()
         if (response.error != null) {
-            if (response.error.contains("duplicate message")) {
+            // Returning null for duplicate-message lets the caller fall back to the
+            // already-known hash via orKnownHash; treating it as an error would surface
+            // a spurious failure on retried broadcasts.
+            if (response.error.lowercase().contains(DUPLICATE_MESSAGE_MARKER)) {
                 return null
             }
             error("Error broadcasting transaction: ${response.error}")
         }
-        if (response.result == null) {
-            return null
-        }
+        val hash = response.result?.hash ?: return null
         // The API returns a Base64-encoded hash that needs to be converted to hex format
-        val decodedBytes = Base64.getDecoder().decode(response.result.hash)
-        return decodedBytes.toHexString()
+        return Base64.getDecoder().decode(hash).toHexString()
     }
 
     override suspend fun getSpecificTransactionInfo(address: String): BigInteger =
@@ -79,7 +79,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             .accountState
             .seqno
             ?.content
-            ?.let { BigInteger(it) } ?: BigInteger.ZERO
+            ?.toBigIntegerOrNull() ?: BigInteger.ZERO
 
     override suspend fun getWalletState(address: String): String =
         getAddressInformation(address).status
@@ -103,12 +103,19 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
                 }
                 .bodyOrThrow<TonEstimateFeeJson>()
 
+        if (!feeResponse.ok || feeResponse.error != null) {
+            error("Can't calculate Fees: ${feeResponse.error ?: "code=${feeResponse.code}"}")
+        }
         return feeResponse.result?.sourceFees?.totalFee()?.toBigInteger()
-            ?: error("Can't calculate Fees")
+            ?: error("Can't calculate Fees: empty result")
     }
 
     override suspend fun getTsStatus(txHash: String): TonStatusResult =
         http
             .get("$baseUrl/v3/transactionsByMessage") { parameter("msg_hash", txHash) }
             .bodyOrThrow<TonStatusResult>()
+
+    private companion object {
+        const val DUPLICATE_MESSAGE_MARKER = "duplicate message"
+    }
 }
