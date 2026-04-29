@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.api.chains
 
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -52,20 +51,21 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
                 parameter("address", address)
                 parameter("use_v2", false)
             }
-            .body<TonAddressInfoResponseJson>()
+            .bodyOrThrow<TonAddressInfoResponseJson>()
 
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun broadcastTransaction(transaction: String): String? {
-        val body =
-            http.post("$baseUrl/v2/sendBocReturnHash") {
-                setBody(TonBroadcastTransactionRequestJson(transaction))
-            }
-        val response = body.body<TonBroadcastTransactionResponseJson>()
+        val response =
+            http
+                .post("$baseUrl/v2/sendBocReturnHash") {
+                    setBody(TonBroadcastTransactionRequestJson(transaction))
+                }
+                .bodyOrThrow<TonBroadcastTransactionResponseJson>()
         if (response.error != null) {
             if (response.error.contains("duplicate message")) {
                 return null
             }
-            throw Exception("Error broadcasting transaction: ${response.error}")
+            error("Error broadcasting transaction: ${response.error}")
         }
         if (response.result == null) {
             return null
@@ -78,7 +78,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
     override suspend fun getSpecificTransactionInfo(address: String): BigInteger =
         http
             .get("$baseUrl/v2/getExtendedAddressInformation") { parameter("address", address) }
-            .body<TonSpecificTransactionInfoResponseJson>()
+            .bodyOrThrow<TonSpecificTransactionInfoResponseJson>()
             .result
             .accountState
             .seqno
@@ -108,13 +108,13 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
                 .bodyOrThrow<TonEstimateFeeJson>()
 
         return feeResponse.result?.sourceFees?.totalFee()?.toBigInteger()
-            ?: throw Exception("Can't calculate Fees")
+            ?: error("Can't calculate Fees")
     }
 
-    override suspend fun getTsStatus(txHash: String): TonStatusResult {
-        val response = http.get("${baseUrl}/v3/transactionsByMessage?msg_hash=${txHash}")
-        return response.bodyOrThrow<TonStatusResult>()
-    }
+    override suspend fun getTsStatus(txHash: String): TonStatusResult =
+        http
+            .get("$baseUrl/v3/transactionsByMessage") { parameter("msg_hash", txHash) }
+            .bodyOrThrow<TonStatusResult>()
 }
 
 @Serializable
