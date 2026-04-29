@@ -174,7 +174,9 @@ constructor(
         currency: AppCurrency,
         amount: BigDecimal,
     ): QuoteFetchResult {
-        require(candidates.isNotEmpty()) { "candidates must not be empty" }
+        if (candidates.isEmpty()) {
+            throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
+        }
 
         val results: List<Result<QuoteFetchResult>> = coroutineScope {
             candidates
