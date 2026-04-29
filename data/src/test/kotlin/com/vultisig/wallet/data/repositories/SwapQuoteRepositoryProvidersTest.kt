@@ -111,7 +111,10 @@ class SwapQuoteRepositoryProvidersTest {
                         srcToken = coin(Chain.Ethereum, "ETH"),
                         dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
                         tokenValue =
-                            TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
+                            TokenValue(
+                                value = BigInteger("1000"),
+                                token = coin(Chain.Ethereum, "ETH"),
+                            ),
                     )
                 )
             }
@@ -130,7 +133,10 @@ class SwapQuoteRepositoryProvidersTest {
                         srcToken = coin(Chain.Ethereum, "ETH"),
                         dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
                         tokenValue =
-                            TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
+                            TokenValue(
+                                value = BigInteger("1000"),
+                                token = coin(Chain.Ethereum, "ETH"),
+                            ),
                     )
                 )
             }
