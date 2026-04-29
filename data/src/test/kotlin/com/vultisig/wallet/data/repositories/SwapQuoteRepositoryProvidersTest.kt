@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -104,14 +105,16 @@ class SwapQuoteRepositoryProvidersTest {
             EVMSwapQuoteDeserialized.Error("Insufficient liquidity")
 
         assertThrows<SwapException> {
-            oneInchSource.fetch(
-                SwapQuoteRequest(
-                    srcToken = coin(Chain.Ethereum, "ETH"),
-                    dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
-                    tokenValue =
-                        TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
+            runBlocking {
+                oneInchSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = coin(Chain.Ethereum, "ETH"),
+                        dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
+                        tokenValue =
+                            TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -121,14 +124,16 @@ class SwapQuoteRepositoryProvidersTest {
             EVMSwapQuoteDeserialized.Result(oneInchQuote(error = "Slippage too high"))
 
         assertThrows<SwapException> {
-            oneInchSource.fetch(
-                SwapQuoteRequest(
-                    srcToken = coin(Chain.Ethereum, "ETH"),
-                    dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
-                    tokenValue =
-                        TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
+            runBlocking {
+                oneInchSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = coin(Chain.Ethereum, "ETH"),
+                        dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
+                        tokenValue =
+                            TokenValue(value = BigInteger("1000"), token = coin(Chain.Ethereum, "ETH")),
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -227,14 +232,16 @@ class SwapQuoteRepositoryProvidersTest {
         val srcToken = coin(Chain.Bitcoin, "BTC")
         val dstToken = coin(Chain.Ethereum, "ETH", decimal = 18)
         assertThrows<SwapException> {
-            mayaSource.fetch(
-                SwapQuoteRequest(
-                    srcToken = srcToken,
-                    dstToken = dstToken,
-                    tokenValue = TokenValue(value = BigInteger("100000000"), token = srcToken),
-                    dstAddress = "0xDest",
+            runBlocking {
+                mayaSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = srcToken,
+                        dstToken = dstToken,
+                        tokenValue = TokenValue(value = BigInteger("100000000"), token = srcToken),
+                        dstAddress = "0xDest",
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -247,14 +254,16 @@ class SwapQuoteRepositoryProvidersTest {
         val srcToken = coin(Chain.Bitcoin, "BTC")
         val dstToken = coin(Chain.Ethereum, "ETH", decimal = 18)
         assertThrows<SwapException> {
-            mayaSource.fetch(
-                SwapQuoteRequest(
-                    srcToken = srcToken,
-                    dstToken = dstToken,
-                    tokenValue = TokenValue(value = BigInteger("100000000"), token = srcToken),
-                    dstAddress = "0xDest",
+            runBlocking {
+                mayaSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = srcToken,
+                        dstToken = dstToken,
+                        tokenValue = TokenValue(value = BigInteger("100000000"), token = srcToken),
+                        dstAddress = "0xDest",
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -343,14 +352,16 @@ class SwapQuoteRepositoryProvidersTest {
         val sol = coin(Chain.Solana, "SOL", contractAddress = "")
         val usdc = coin(Chain.Solana, "USDC", contractAddress = USDC_MINT)
         assertThrows<SwapException> {
-            jupiterSource.fetch(
-                SwapQuoteRequest(
-                    srcToken = sol,
-                    dstToken = usdc,
-                    tokenValue = TokenValue(value = BigInteger("1000"), token = sol),
-                    srcAddress = "WALLET",
+            runBlocking {
+                jupiterSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = sol,
+                        dstToken = usdc,
+                        tokenValue = TokenValue(value = BigInteger("1000"), token = sol),
+                        srcAddress = "WALLET",
+                    )
                 )
-            )
+            }
         }
     }
 

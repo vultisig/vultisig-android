@@ -20,6 +20,8 @@ internal class MayaQuoteSource @Inject constructor(private val mayaChainApi: May
             throw SwapException.SameAssets("Source and Target cannot be the same")
         }
 
+        require(request.dstAddress.isNotBlank()) { "dstAddress is required for Maya swap quotes" }
+
         val response =
             swapApiCall("Maya") {
                 mayaChainApi.getSwapQuotes(
