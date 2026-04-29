@@ -7,6 +7,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class Pbkdf2AesEncryptionTest {
 
@@ -121,17 +124,11 @@ class Pbkdf2AesEncryptionTest {
             ) {
                 "Fixture $name.json not found in test resources"
             }
-        val text = stream.bufferedReader().readText()
-        fun extract(key: String): String {
-            val m =
-                Regex(""""$key":\s*"([^"]+)"""").find(text)
-                    ?: error("Key '$key' not found in fixture $name.json")
-            return m.groupValues[1]
-        }
+        val json = Json.parseToJsonElement(stream.bufferedReader().readText()).jsonObject
         return Triple(
-            extract("password"),
-            extract("plaintext"),
-            Base64.getDecoder().decode(extract("ciphertextBase64")),
+            json["password"]!!.jsonPrimitive.content,
+            json["plaintext"]!!.jsonPrimitive.content,
+            Base64.getDecoder().decode(json["ciphertextBase64"]!!.jsonPrimitive.content),
         )
     }
 
@@ -203,19 +200,9 @@ class Pbkdf2AesEncryptionTest {
         assertNull(result)
     }
 
-    /**
-     * Verifies that decryption succeeds only when PBKDF2_ITERATIONS matches the 600,000 constant.
-     */
+    /** Verifies that the PBKDF2 iteration count is pinned to exactly 600,000. */
     @Test
     fun `usesExpectedIterationCount`() {
-        // This vector was produced with exactly 600,000 PBKDF2-HMAC-SHA256 iterations.
-        // Decryption succeeds only when the constant matches; any other count yields null.
-        val (pwd, expected, ciphertext) = loadFixture("ios")
-        val decrypted = pbkdf2AesNoLegacy.decrypt(ciphertext, pwd.toByteArray())
-        assertNotNull(
-            decrypted,
-            "Decryption failed — PBKDF2_ITERATIONS constant may not be 600,000",
-        )
-        assertEquals(expected, decrypted.toString(Charsets.UTF_8))
+        assertEquals(600_000, Pbkdf2AesEncryption.PBKDF2_ITERATIONS)
     }
 }
