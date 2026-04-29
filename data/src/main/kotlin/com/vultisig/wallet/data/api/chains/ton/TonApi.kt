@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.api.chains
+package com.vultisig.wallet.data.api.chains.ton
 
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient

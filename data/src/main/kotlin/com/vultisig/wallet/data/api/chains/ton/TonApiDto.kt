@@ -1,4 +1,4 @@
-package com.vultisig.wallet.data.api.chains
+package com.vultisig.wallet.data.api.chains.ton
 
 import java.math.BigInteger
 import kotlinx.serialization.Contextual
