@@ -31,8 +31,6 @@ interface TonApi {
 
 internal class TonApiImpl @Inject constructor(private val http: HttpClient) : TonApi {
 
-    private val baseUrl = "https://api.vultisig.com/ton"
-
     override suspend fun getBalance(address: String): BigInteger =
         getAddressInformation(address).balance
 
@@ -43,7 +41,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
 
     private suspend fun getAddressInformation(address: String): TonAddressInfoResponseJson =
         http
-            .get("$baseUrl/v3/addressInformation") {
+            .get("$BASE_URL/v3/addressInformation") {
                 parameter("address", address)
                 parameter("use_v2", false)
             }
@@ -53,7 +51,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
     override suspend fun broadcastTransaction(transaction: String): String? {
         val response =
             http
-                .post("$baseUrl/v2/sendBocReturnHash") {
+                .post("$BASE_URL/v2/sendBocReturnHash") {
                     setBody(TonBroadcastTransactionRequestJson(transaction))
                 }
                 .bodyOrThrow<TonBroadcastTransactionResponseJson>()
@@ -73,7 +71,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
 
     override suspend fun getSeqno(address: String): BigInteger =
         http
-            .get("$baseUrl/v2/getExtendedAddressInformation") { parameter("address", address) }
+            .get("$BASE_URL/v2/getExtendedAddressInformation") { parameter("address", address) }
             .bodyOrThrow<TonSpecificTransactionInfoResponseJson>()
             .result
             .accountState
@@ -86,7 +84,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
 
     override suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson {
         return http
-            .get("$baseUrl/v3/jetton/wallets") {
+            .get("$BASE_URL/v3/jetton/wallets") {
                 parameter("owner_address", address)
                 parameter("jetton_master_address", contract)
             }
@@ -96,7 +94,7 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
     override suspend fun estimateFee(address: String, serializedBoc: String): BigInteger {
         val feeResponse =
             http
-                .get("$baseUrl/v3/estimateFee") {
+                .get("$BASE_URL/v3/estimateFee") {
                     parameter("address", address)
                     parameter("body", serializedBoc)
                     parameter("ignore_chksig", true)
@@ -112,10 +110,11 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
 
     override suspend fun getTsStatus(txHash: String): TonStatusResult =
         http
-            .get("$baseUrl/v3/transactionsByMessage") { parameter("msg_hash", txHash) }
+            .get("$BASE_URL/v3/transactionsByMessage") { parameter("msg_hash", txHash) }
             .bodyOrThrow<TonStatusResult>()
 
     private companion object {
+        const val BASE_URL = "https://api.vultisig.com/ton"
         const val DUPLICATE_MESSAGE_MARKER = "duplicate message"
     }
 }
