@@ -6,9 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -16,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -32,7 +29,7 @@ internal fun SecurityScannerBadget(status: TransactionScanStatus) {
         when (status) {
             is TransactionScanStatus.Scanned -> {
                 ScanStatusContentWithLogo(
-                    image = Icons.Default.Check,
+                    image = painterResource(R.drawable.ic_check),
                     imageColor = Theme.v2.colors.alerts.success,
                     message = stringResource(R.string.security_scanner_transaction_scanned_by),
                     providerLogoId = status.result.provider,
@@ -57,7 +54,7 @@ internal fun SecurityScannerBadget(status: TransactionScanStatus) {
 
             is TransactionScanStatus.Error -> {
                 ScanStatusContentWithLogo(
-                    image = Icons.Default.Warning,
+                    image = painterResource(R.drawable.ic_warning),
                     imageColor = Theme.v2.colors.text.secondary,
                     message = stringResource(R.string.security_scanner_transaction_not_scanned),
                     providerLogoId = status.provider,
@@ -71,13 +68,13 @@ internal fun SecurityScannerBadget(status: TransactionScanStatus) {
 
 @Composable
 private fun ScanStatusContentWithLogo(
-    image: ImageVector,
+    image: Painter,
     imageColor: Color,
     message: String,
     providerLogoId: String,
 ) {
     Icon(
-        imageVector = image,
+        painter = image,
         contentDescription = null,
         tint = imageColor,
         modifier = Modifier.size(16.dp),

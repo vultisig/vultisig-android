@@ -122,6 +122,10 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindFeatureFlagRepository(impl: FeatureFlagRepositoryImpl): FeatureFlagRepository
+
+    @Binds
+    @Singleton
     fun bindLastOpenedVaultRepository(
         impl: LastOpenedVaultRepositoryImpl
     ): LastOpenedVaultRepository
