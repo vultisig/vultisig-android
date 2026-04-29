@@ -24,12 +24,9 @@ internal class JupiterQuoteSource @Inject constructor(private val jupiterApi: Ju
                 )
             }
 
-        val firstRoute =
-            quote.routePlan.firstOrNull()
-                ?: throw SwapException.handleSwapException("No swap route available")
-        val swapFee =
-            quote.routePlan.firstOrNull { it.swapInfo.feeMint == fromToken }?.swapInfo?.feeAmount
-                ?: "0"
+        quote.routePlan.firstOrNull()
+            ?: throw SwapException.handleSwapException("No swap route available")
+        val feeRoute = quote.routePlan.firstOrNull { it.swapInfo.feeMint == fromToken }
 
         return SwapQuoteResult.Evm(
             EVMSwapQuoteJson(
@@ -42,8 +39,8 @@ internal class JupiterQuoteSource @Inject constructor(private val jupiterApi: Ju
                         gas = 0,
                         value = "0",
                         gasPrice = "0",
-                        swapFee = swapFee,
-                        swapFeeTokenContract = firstRoute.swapInfo.feeMint.orEmpty(),
+                        swapFee = feeRoute?.swapInfo?.feeAmount ?: "0",
+                        swapFeeTokenContract = feeRoute?.swapInfo?.feeMint.orEmpty(),
                     ),
             )
         )

@@ -54,7 +54,6 @@ import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
-import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.isChainSupported
@@ -730,7 +729,8 @@ constructor(
                             return
                         }
                         val quote =
-                            (swapQuoteRepository.getQuote(
+                            swapQuoteRepository
+                                .getQuote(
                                     SwapProvider.THORCHAIN,
                                     SwapQuoteRequest(
                                         srcToken = srcToken,
@@ -738,8 +738,8 @@ constructor(
                                         tokenValue = srcTokenValue,
                                         dstAddress = swapPayload.data.toAddress,
                                     ),
-                                ) as SwapQuoteResult.Native)
-                                .quote
+                                )
+                                .expectNative(SwapProvider.THORCHAIN)
                         val swapTransactionUiModel = buildSwapUiModel(quote.fees, dstToken)
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
@@ -772,7 +772,8 @@ constructor(
                             return
                         }
                         val quote =
-                            (swapQuoteRepository.getQuote(
+                            swapQuoteRepository
+                                .getQuote(
                                     SwapProvider.MAYA,
                                     SwapQuoteRequest(
                                         srcToken = srcToken,
@@ -781,8 +782,8 @@ constructor(
                                         dstAddress = swapPayload.data.toAddress,
                                         isAffiliate = true,
                                     ),
-                                ) as SwapQuoteResult.Native)
-                                .quote
+                                )
+                                .expectNative(SwapProvider.MAYA)
                         val swapTransactionUiModel = buildSwapUiModel(quote.fees, dstToken)
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =

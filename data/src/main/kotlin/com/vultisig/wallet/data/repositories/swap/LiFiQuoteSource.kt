@@ -16,6 +16,8 @@ internal class LiFiQuoteSource @Inject constructor(private val liFiChainApi: LiF
     SwapQuoteSource {
 
     override suspend fun fetch(request: SwapQuoteRequest): SwapQuoteResult {
+        require(request.srcAddress.isNotBlank()) { "srcAddress is required for LiFi swap quotes" }
+        require(request.dstAddress.isNotBlank()) { "dstAddress is required for LiFi swap quotes" }
         val srcToken = request.srcToken
         val dstToken = request.dstToken
         val fromToken = srcToken.contractAddress.ifEmpty { srcToken.ticker }

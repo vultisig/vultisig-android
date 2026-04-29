@@ -346,8 +346,9 @@ class SwapQuoteRepositoryProvidersTest {
                 .data
 
         assertEquals("0", result.tx.swapFee)
-        // swapFeeTokenContract still falls back to first route's feeMint
-        assertEquals("differentMint", result.tx.swapFeeTokenContract)
+        // swapFeeTokenContract is empty when no matching feeMint route exists,
+        // so the zero amount is never paired with a non-empty token.
+        assertEquals("", result.tx.swapFeeTokenContract)
     }
 
     @Test

@@ -15,7 +15,6 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
-import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
@@ -176,7 +175,8 @@ constructor(
                         srcTokenValue,
                         SwapProvider.MAYA,
                     ) {
-                        (swapQuoteRepository.getQuote(
+                        swapQuoteRepository
+                            .getQuote(
                                 SwapProvider.MAYA,
                                 SwapQuoteRequest(
                                     srcToken = srcToken,
@@ -187,8 +187,8 @@ constructor(
                                     bpsDiscount = vultBPSDiscount ?: 0,
                                     referralCode = referral.orEmpty(),
                                 ),
-                            ) as SwapQuoteResult.Native)
-                            .quote
+                            )
+                            .expectNative(SwapProvider.MAYA)
                     }
                         as SwapQuote.MayaChain
                 mayaSwapQuote to mayaSwapQuote.recommendedMinTokenValue
@@ -200,7 +200,8 @@ constructor(
                         srcTokenValue,
                         SwapProvider.THORCHAIN,
                     ) {
-                        (swapQuoteRepository.getQuote(
+                        swapQuoteRepository
+                            .getQuote(
                                 SwapProvider.THORCHAIN,
                                 SwapQuoteRequest(
                                     srcToken = srcToken,
@@ -210,8 +211,8 @@ constructor(
                                     referralCode = referral.orEmpty(),
                                     bpsDiscount = vultBPSDiscount ?: 0,
                                 ),
-                            ) as SwapQuoteResult.Native)
-                            .quote
+                            )
+                            .expectNative(SwapProvider.THORCHAIN)
                     }
                         as SwapQuote.ThorChain
                 thorSwapQuote to thorSwapQuote.recommendedMinTokenValue
@@ -242,7 +243,8 @@ constructor(
         val swapQuote =
             getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.KYBER) {
                 val apiQuote =
-                    (swapQuoteRepository.getQuote(
+                    swapQuoteRepository
+                        .getQuote(
                             SwapProvider.KYBER,
                             SwapQuoteRequest(
                                 srcToken = srcToken,
@@ -251,8 +253,8 @@ constructor(
                                 affiliateBps =
                                     maxOf(0, KYBER_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)),
                             ),
-                        ) as SwapQuoteResult.Evm)
-                        .data
+                        )
+                        .expectEvm(SwapProvider.KYBER)
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val gasFees =
@@ -292,7 +294,8 @@ constructor(
         val swapQuote =
             getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.ONEINCH) {
                 val apiQuote =
-                    (swapQuoteRepository.getQuote(
+                    swapQuoteRepository
+                        .getQuote(
                             SwapProvider.ONEINCH,
                             SwapQuoteRequest(
                                 srcToken = srcToken,
@@ -301,8 +304,8 @@ constructor(
                                 isAffiliate = isAffiliate,
                                 bpsDiscount = vultBPSDiscount ?: 0,
                             ),
-                        ) as SwapQuoteResult.Evm)
-                        .data
+                        )
+                        .expectEvm(SwapProvider.ONEINCH)
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val tokenFees =
@@ -340,7 +343,8 @@ constructor(
             getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, provider) {
                 val apiQuote =
                     if (provider == SwapProvider.LIFI)
-                        (swapQuoteRepository.getQuote(
+                        swapQuoteRepository
+                            .getQuote(
                                 SwapProvider.LIFI,
                                 SwapQuoteRequest(
                                     srcToken = srcToken,
@@ -350,10 +354,11 @@ constructor(
                                     dstAddress = dst.address.address,
                                     bpsDiscount = vultBPSDiscount ?: 0,
                                 ),
-                            ) as SwapQuoteResult.Evm)
-                            .data
+                            )
+                            .expectEvm(SwapProvider.LIFI)
                     else
-                        (swapQuoteRepository.getQuote(
+                        swapQuoteRepository
+                            .getQuote(
                                 SwapProvider.JUPITER,
                                 SwapQuoteRequest(
                                     srcToken = srcToken,
@@ -361,8 +366,8 @@ constructor(
                                     tokenValue = tokenValue,
                                     srcAddress = src.address.address,
                                 ),
-                            ) as SwapQuoteResult.Evm)
-                            .data
+                            )
+                            .expectEvm(SwapProvider.JUPITER)
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val (feeAmount, feeCoin) =

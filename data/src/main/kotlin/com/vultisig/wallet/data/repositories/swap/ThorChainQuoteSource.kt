@@ -24,6 +24,9 @@ internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi
         if (srcToken.swapAssetComparisonName() == dstToken.swapAssetComparisonName()) {
             throw SwapException.SameAssets("Source and Target cannot be the same")
         }
+        require(request.dstAddress.isNotBlank()) {
+            "dstAddress is required for THORChain swap quotes"
+        }
 
         val rapidRequest =
             ThorChainSwapQuoteRequest(
