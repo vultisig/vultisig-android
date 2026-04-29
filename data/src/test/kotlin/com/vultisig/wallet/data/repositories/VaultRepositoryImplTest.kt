@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.Vault
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlin.test.assertEquals
@@ -18,6 +19,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -240,8 +242,8 @@ internal class VaultRepositoryImplTest {
     /** Verifies [getEnabledTokens] emits the coins that belong to the given vault. */
     @Test
     fun `getEnabledTokens emits coins belonging to vault`() = runTest {
-        coEvery { vaultDao.loadById("vault-1") } returns
-            makeVaultWithTokens(coins = listOf(makeEthCoin()))
+        every { vaultDao.loadByIdAsFlow("vault-1") } returns
+            flowOf(makeVaultWithTokens(coins = listOf(makeEthCoin())))
         coEvery { tokenRepository.getToken(any()) } returns null
 
         val tokens = repository.getEnabledTokens("vault-1").first()
@@ -252,8 +254,8 @@ internal class VaultRepositoryImplTest {
     /** Verifies [getEnabledChains] emits only chains that have a native-token coin enabled. */
     @Test
     fun `getEnabledChains emits only native-token chains`() = runTest {
-        coEvery { vaultDao.loadById("vault-1") } returns
-            makeVaultWithTokens(coins = listOf(makeEthCoin()))
+        every { vaultDao.loadByIdAsFlow("vault-1") } returns
+            flowOf(makeVaultWithTokens(coins = listOf(makeEthCoin())))
         coEvery { tokenRepository.getToken(any()) } returns null
 
         val chains = repository.getEnabledChains("vault-1").first()
