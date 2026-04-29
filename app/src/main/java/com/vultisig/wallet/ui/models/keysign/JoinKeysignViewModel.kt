@@ -248,7 +248,12 @@ constructor(
                 sessionId = _sessionID,
                 encryptionKeyHex = _encryptionKeyHex,
                 messagesToSign = messagesToSign,
-                keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
+                keyType =
+                    _keysignPayload?.coin?.chain?.TssKeysignType
+                        ?: customMessagePayload?.chain?.let { raw ->
+                            runCatching { Chain.fromRaw(raw).TssKeysignType }.getOrNull()
+                        }
+                        ?: TssKeyType.ECDSA,
                 keysignPayload = _keysignPayload,
                 customMessagePayload = customMessagePayload,
                 transactionTypeUiModel = transactionTypeUiModel,
@@ -959,6 +964,7 @@ constructor(
                             ?: ""
 
                     val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
+                    val signTon = payload.signTon
                     val transaction =
                         Transaction(
                             id = UUID.randomUUID().toString(),
@@ -977,6 +983,7 @@ constructor(
                             signAmino = normalizedSignAmino,
                             signDirect = signDirect,
                             signSolana = signSolana,
+                            signTon = signTon,
                         )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
