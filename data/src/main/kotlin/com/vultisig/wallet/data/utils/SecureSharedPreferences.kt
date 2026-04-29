@@ -150,11 +150,29 @@ internal class EncryptingSharedPreferences(
     override fun getBoolean(key: String, defValue: Boolean): Boolean =
         readTyped(key, P_BOOL, String::toBooleanStrictOrNull) ?: defValue
 
-    /** Returns true if the underlying prefs contain an entry for [key]. */
-    override fun contains(key: String): Boolean = prefs.contains(key)
+    /**
+     * Returns true only if [key] exists AND its value can be successfully decrypted. A raw entry
+     * that fails decryption (e.g. after key rotation) is treated as absent, preserving the
+     * documented [SharedPreferences] invariant that contains(k) implies getX(k, default) !=
+     * default.
+     */
+    override fun contains(key: String): Boolean {
+        if (!prefs.contains(key)) return false
+        return prefs.getString(key, null)?.let { decryptOrNull(it) } != null
+    }
 
     /** Returns an [EncryptingEditor] that AES-256-GCM-encrypts values before writing. */
     override fun edit(): SharedPreferences.Editor = EncryptingEditor(prefs.edit(), secretKey)
+
+    /**
+     * Performs a trial encryption with [secretKey] to detect key invalidation eagerly. Throws
+     * [java.security.InvalidKeyException] (a [java.security.GeneralSecurityException]) if the key
+     * has been permanently invalidated (e.g. after an OEM credential change), so the caller can
+     * trigger recovery before the first real read or write silently returns defaults.
+     */
+    internal fun selfTest() {
+        encryptRaw(secretKey, "probe")
+    }
 
     private val listenerWrappers =
         ConcurrentHashMap<
@@ -254,4 +272,80 @@ private class EncryptingEditor(
 
     /** Commits all pending writes asynchronously. */
     override fun apply() = editor.apply()
+}
+
+/**
+ * Non-persistent in-memory [SharedPreferences] used as a last-resort fallback when the
+ * AndroidKeyStore is irrecoverably broken. Values survive the current process only; the app boots
+ * in a degraded state rather than crashing.
+ */
+internal class InMemorySharedPreferences : SharedPreferences {
+    @Suppress("unchecked_cast") private val store = HashMap<String, Any?>()
+
+    @Synchronized override fun getAll(): MutableMap<String, *> = HashMap(store)
+
+    @Synchronized
+    override fun getString(key: String, defValue: String?) = store[key] as? String ?: defValue
+
+    override fun getStringSet(key: String, defValues: MutableSet<String>?) = defValues
+
+    @Synchronized override fun getInt(key: String, defValue: Int) = store[key] as? Int ?: defValue
+
+    @Synchronized
+    override fun getLong(key: String, defValue: Long) = store[key] as? Long ?: defValue
+
+    @Synchronized
+    override fun getFloat(key: String, defValue: Float) = store[key] as? Float ?: defValue
+
+    @Synchronized
+    override fun getBoolean(key: String, defValue: Boolean) = store[key] as? Boolean ?: defValue
+
+    @Synchronized override fun contains(key: String) = store.containsKey(key)
+
+    override fun edit(): SharedPreferences.Editor = InMemoryEditor(store)
+
+    override fun registerOnSharedPreferenceChangeListener(
+        listener: SharedPreferences.OnSharedPreferenceChangeListener
+    ) {}
+
+    override fun unregisterOnSharedPreferenceChangeListener(
+        listener: SharedPreferences.OnSharedPreferenceChangeListener
+    ) {}
+}
+
+private class InMemoryEditor(private val store: HashMap<String, Any?>) : SharedPreferences.Editor {
+    private val pending = HashMap<String, Any?>()
+    private var clearing = false
+
+    override fun putString(key: String, value: String?) = apply { pending[key] = value }
+
+    override fun putStringSet(key: String, values: MutableSet<String>?) = apply {
+        pending[key] = values
+    }
+
+    override fun putInt(key: String, value: Int) = apply { pending[key] = value }
+
+    override fun putLong(key: String, value: Long) = apply { pending[key] = value }
+
+    override fun putFloat(key: String, value: Float) = apply { pending[key] = value }
+
+    override fun putBoolean(key: String, value: Boolean) = apply { pending[key] = value }
+
+    override fun remove(key: String) = apply { pending[key] = null }
+
+    override fun clear() = apply { clearing = true }
+
+    override fun apply() {
+        commit()
+    }
+
+    override fun commit(): Boolean {
+        synchronized(store) {
+            if (clearing) store.clear()
+            for ((k, v) in pending) {
+                if (v == null) store.remove(k) else store[k] = v
+            }
+        }
+        return true
+    }
 }

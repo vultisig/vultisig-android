@@ -9,6 +9,7 @@ import androidx.security.crypto.MasterKey
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.data.sources.AppDataStoreImpl
 import com.vultisig.wallet.data.utils.EncryptingSharedPreferences
+import com.vultisig.wallet.data.utils.InMemorySharedPreferences
 import com.vultisig.wallet.data.utils.SECURE_PREFS_KEY_ALIAS
 import com.vultisig.wallet.data.utils.SharedPrefsMasterKeyInitializer
 import com.vultisig.wallet.data.utils.buildSecurePrefsKey
@@ -25,7 +26,10 @@ import java.security.KeyStore
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.CompressorStreamProvider
 import timber.log.Timber
@@ -79,7 +83,14 @@ internal interface MainDataModule {
                     else buildSecurePrefsKey()
                 val rawPrefs = context.getSharedPreferences(SECURE_PREFS_FILE, Context.MODE_PRIVATE)
                 val prefs = EncryptingSharedPreferences(rawPrefs, key)
-                migrateFromEncryptedSharedPrefs(context, prefs)
+                // Eagerly probe the key: KeyPermanentlyInvalidatedException (a
+                // GeneralSecurityException) surfaces here rather than silently returning defaults
+                // on every subsequent read.
+                prefs.selfTest()
+                // Run migration on IO to avoid blocking the calling thread (often main).
+                CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                    migrateFromEncryptedSharedPrefs(context, prefs)
+                }
                 return prefs
             }
 
@@ -98,7 +109,24 @@ internal interface MainDataModule {
                         keyStore.deleteEntry(SECURE_PREFS_KEY_ALIAS)
                     }
                     .onFailure { Timber.e(it, "Failed to delete secure prefs key during recovery") }
-                return create()
+                // Clear the migration sentinel so that if the legacy file is still present it can
+                // be re-imported into the freshly generated key on the next create() call.
+                runCatching {
+                        context
+                            .getSharedPreferences(MIGRATION_STATE_PREFS, Context.MODE_PRIVATE)
+                            .edit()
+                            .remove(MIGRATION_DONE_KEY)
+                            .commit()
+                    }
+                    .onFailure { Timber.w(it, "Failed to clear migration marker during recovery") }
+                // Guard the retry: if the keystore is irrecoverably broken, return a non-persistent
+                // in-memory fallback so the app boots in a degraded state rather than crashing.
+                return try {
+                    create()
+                } catch (e: Exception) {
+                    Timber.e(e, "SecureSharedPrefs recovery failed; using in-memory fallback")
+                    InMemorySharedPreferences()
+                }
             }
 
             return try {
@@ -167,11 +195,10 @@ private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPr
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
-        } catch (e: GeneralSecurityException) {
-            Timber.e(e, "Cannot open legacy encrypted prefs for migration; discarding legacy data")
-            legacyFile.delete()
-            return
-        } catch (e: IOException) {
+        } catch (e: Exception) {
+            // Broad catch is intentional: Tink on some OEM ROMs throws IllegalStateException,
+            // SecurityException, or NPE in addition to GeneralSecurityException / IOException.
+            // Losing legacy data is acceptable here; a startup crash is not.
             Timber.e(e, "Cannot open legacy encrypted prefs for migration; discarding legacy data")
             legacyFile.delete()
             return
@@ -201,7 +228,10 @@ private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPr
         }
     }
     if (editor.commit()) {
-        migrationStatePrefs.edit().putBoolean(MIGRATION_DONE_KEY, true).apply()
+        // Use commit() (not apply()) so the sentinel is guaranteed on disk before legacyFile is
+        // deleted. An apply() here would allow a process kill to leave the marker unflushed while
+        // the legacy file is gone, causing re-migration to overwrite values on the next launch.
+        migrationStatePrefs.edit().putBoolean(MIGRATION_DONE_KEY, true).commit()
         if (!legacyFile.delete()) {
             Timber.w("Failed to delete legacy encrypted prefs file at %s", legacyFile.absolutePath)
         }
