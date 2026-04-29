@@ -82,14 +82,13 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
     override suspend fun getWalletState(address: String): String =
         getAddressInformation(address).status
 
-    override suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson {
-        return http
+    override suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson =
+        http
             .get("$BASE_URL/v3/jetton/wallets") {
                 parameter("owner_address", address)
                 parameter("jetton_master_address", contract)
             }
             .bodyOrThrow<JettonWalletsJson>()
-    }
 
     override suspend fun estimateFee(address: String, serializedBoc: String): BigInteger {
         val feeResponse =
