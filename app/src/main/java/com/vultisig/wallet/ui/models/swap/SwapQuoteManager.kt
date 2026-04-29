@@ -446,20 +446,26 @@ constructor(
         fallbackFee: BigInteger,
     ): Pair<BigInteger, Coin> =
         try {
-            if (swapFeeTokenContract.isNotEmpty()) {
-                val chainId = srcNativeToken.chain.id
-                val amount = swapFeeRaw.toBigInteger()
-                val coinAndFiatValue =
-                    searchToken(chainId, swapFeeTokenContract) ?: error("Can't find token or price")
-                val newNativeAmount =
-                    convertTokenToTokenUseCase.convertTokenToToken(
-                        amount,
-                        coinAndFiatValue,
-                        srcNativeToken,
-                    )
-                Pair(newNativeAmount, srcNativeToken)
-            } else {
-                Pair(fallbackFee, srcNativeToken)
+            when {
+                swapFeeTokenContract.isEmpty() -> Pair(fallbackFee, srcNativeToken)
+                // 1inch / many DEX aggregators use this sentinel for the native chain
+                // token — the fee is already in src-native wei, no contract lookup needed.
+                swapFeeTokenContract.equals(NATIVE_TOKEN_SENTINEL, ignoreCase = true) ->
+                    Pair(swapFeeRaw.toBigIntegerOrNull() ?: fallbackFee, srcNativeToken)
+                else -> {
+                    val chainId = srcNativeToken.chain.id
+                    val amount = swapFeeRaw.toBigInteger()
+                    val coinAndFiatValue =
+                        searchToken(chainId, swapFeeTokenContract)
+                            ?: error("Can't find token or price")
+                    val newNativeAmount =
+                        convertTokenToTokenUseCase.convertTokenToToken(
+                            amount,
+                            coinAndFiatValue,
+                            srcNativeToken,
+                        )
+                    Pair(newNativeAmount, srcNativeToken)
+                }
             }
         } catch (t: Throwable) {
             if (t is CancellationException) throw t
@@ -559,6 +565,7 @@ constructor(
 
     companion object {
         private const val KYBER_AFFILIATE_FEE_BPS = 50
+        private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
     }
 }
 
