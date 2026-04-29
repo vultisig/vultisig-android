@@ -206,14 +206,17 @@ constructor(
 
         val successes = results.mapNotNull { it.getOrNull() }
         if (successes.isEmpty()) {
-            throw results.first { it.isFailure }.exceptionOrNull()!!
+            val failures = results.mapNotNull { it.exceptionOrNull() }
+            throw failures.firstOrNull { it is SwapException } ?: failures.first()
         }
 
-        return successes.maxWith(compareBy { netOutputFiat(it) })
+        // Rank on estimatedDstFiat alone — this represents the destination amount
+        // the user expects to receive. Subtracting swapFeeFiat would double-count
+        // for THOR/MAYA (their expectedAmountOut is already net of protocol fees)
+        // and mix apples-to-oranges since swapFeeFiat is gas for 1inch/Kyber but
+        // an integrator fee for LI.FI.
+        return successes.maxWith(compareBy { it.estimatedDstFiat.value })
     }
-
-    private fun netOutputFiat(result: QuoteFetchResult): BigDecimal =
-        result.estimatedDstFiat.value - result.swapFeeFiat.value
 
     private suspend fun fetchThorMayaQuote(
         provider: SwapProvider,
