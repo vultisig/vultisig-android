@@ -96,13 +96,17 @@ internal sealed class KeysignState {
 
     data class Error(val errorMessage: UiText) : KeysignState()
 
+    /** Emitted when no messages have been received from [missingPeers] for ~10 s. */
+    data class WaitingForPeer(val missingPeers: List<String>) : KeysignState()
+
     val isInProgress: Boolean
         get() =
             when (this) {
                 CreatingInstance,
                 KeysignECDSA,
                 KeysignEdDSA,
-                KeysignMLDSA -> true
+                KeysignMLDSA,
+                is WaitingForPeer -> true
                 is KeysignFinished,
                 is Error -> false
             }
@@ -119,6 +123,7 @@ internal val KeysignState.progress: Float
             is KeysignState.KeysignFinished -> 1f
             // Dead code: Error state is rendered by a separate branch in KeysignView
             is KeysignState.Error -> 0f
+            is KeysignState.WaitingForPeer -> 0.33f
         }
 
 internal sealed interface TransactionTypeUiModel {
@@ -324,6 +329,9 @@ constructor(
                             publicKeyOverride = ecdsaPublicKeyOverride,
                             sessionApi = sessionApi,
                             encryption = encryption,
+                            onWaitingForPeers = { missingPeers ->
+                                currentState.value = KeysignState.WaitingForPeer(missingPeers)
+                            },
                         )
 
                     dkls.keysignWithRetry()

@@ -48,6 +48,7 @@ class DKLSKeysign(
     val publicKeyOverride: String? = null,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
+    val onWaitingForPeers: ((List<String>) -> Unit)? = null,
 ) {
     val localPartyID: String = vault.localPartyID
     private val publicKeyECDSA: String = publicKeyOverride ?: vault.pubKeyECDSA
@@ -63,6 +64,7 @@ class DKLSKeysign(
         )
     private val cache = mutableMapOf<String, Any>()
     val signatures = mutableMapOf<String, KeysignResponse>()
+    private var receivedAnyMessageInCurrentAttempt = false
 
     private fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
@@ -212,19 +214,28 @@ class DKLSKeysign(
 
     private suspend fun pullInboundMessages(handle: Handle, messageID: String): Boolean {
         Timber.d("start pulling inbound messages")
+        receivedAnyMessageInCurrentAttempt = false
 
-        val start = System.nanoTime()
+        var lastMessageNano = System.nanoTime()
+        val heardFrom = mutableSetOf<String>()
+        var waitingNotified = false
+
         while (true) {
             try {
                 val msgs =
                     sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
 
                 if (msgs.isNotEmpty()) {
+                    msgs.forEach { heardFrom.add(it.from) }
+                    lastMessageNano = System.nanoTime()
+                    receivedAnyMessageInCurrentAttempt = true
                     if (processInboundMessage(handle, msgs, messageID)) {
                         return true
                     }
+                    heardFrom.clear()
+                    waitingNotified = false
                 } else {
-                    delay(100)
+                    delay(300)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -232,9 +243,23 @@ class DKLSKeysign(
                 Timber.e(e, "Failed to get messages")
             }
 
-            val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
-            if (elapsedTime > 60) {
-                error("timeout: failed to create vault within 60 seconds")
+            val elapsedSinceLastMessage = (System.nanoTime() - lastMessageNano) / 1_000_000_000.0
+
+            if (!waitingNotified && elapsedSinceLastMessage > 10) {
+                val missingPeers =
+                    keysignCommittee.filter { it != localPartyID && it !in heardFrom }
+                if (missingPeers.isNotEmpty()) {
+                    onWaitingForPeers?.invoke(missingPeers)
+                    waitingNotified = true
+                }
+            }
+
+            if (elapsedSinceLastMessage > 30) {
+                val missingPeers =
+                    keysignCommittee.filter { it != localPartyID && it !in heardFrom }
+                val peerList =
+                    if (missingPeers.isNotEmpty()) missingPeers.joinToString() else "unknown peers"
+                error("no messages from $peerList in 30s")
             }
         }
     }
@@ -366,7 +391,8 @@ class DKLSKeysign(
             }
         } catch (e: Exception) {
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
-            if (attempt < 3) {
+            val maxRetries = if (receivedAnyMessageInCurrentAttempt) 3 else 1
+            if (attempt < maxRetries) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)
             }
         }
