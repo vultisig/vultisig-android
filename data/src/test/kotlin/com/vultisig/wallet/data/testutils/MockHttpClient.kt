@@ -41,6 +41,23 @@ object MockHttpClient {
         HttpClient(MockEngine { throw exception }) { installDefaults() }
 
     /**
+     * Builds a production-shaped client whose transport throws the given [exception]. Each request
+     * invokes [onCall] before throwing — pass an `AtomicInteger.incrementAndGet()` lambda when you
+     * need a call counter. Used for non-IOException transport failures (e.g.
+     * [kotlin.coroutines.cancellation.CancellationException]) where the standard plugins must still
+     * be installed so the client matches the shape used in production.
+     */
+    fun throwing(exception: Throwable, onCall: () -> Unit = {}): HttpClient =
+        HttpClient(
+            MockEngine {
+                onCall()
+                throw exception
+            }
+        ) {
+            installDefaults()
+        }
+
+    /**
      * Builds a client that returns a server response with the given [status] and [body]. The
      * [HttpCallValidator] is still installed but won't fire (no transport error).
      */
@@ -57,6 +74,7 @@ object MockHttpClient {
      * sequentially within a single coroutine, so a plain mutable [Int] is sufficient.
      */
     fun respondingWithSequence(vararg responses: Pair<HttpStatusCode, String>): HttpClient {
+        require(responses.isNotEmpty()) { "respondingWithSequence requires at least one response" }
         var index = 0
         return HttpClient(
             MockEngine {

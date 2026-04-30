@@ -11,15 +11,18 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContr
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -126,6 +129,70 @@ internal class SettingsViewModelTest {
             val vm = createViewModel()
             vm.onSettingsItemClick(SettingsItem.VaultSetting)
             coVerify { navigator.route(Route.VaultSettings(VAULT_ID)) }
+        }
+
+    /** Verifies clicking PreventScreenshots when enabled calls setEnabled with false. */
+    @Test
+    fun `clicking PreventScreenshots when enabled calls setEnabled false`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.PreventScreenshots(isEnabled = true))
+            coVerify { preventScreenshotsRepository.setEnabled(false) }
+        }
+
+    /** Verifies clicking Currency navigates to CurrencyUnitSetting. */
+    @Test
+    fun `clicking Currency navigates to CurrencyUnitSetting`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.Currency(curr = "USD"))
+            coVerify { navigator.route(Route.CurrencyUnitSetting) }
+        }
+
+    /** Verifies clicking Language navigates to LanguageSetting. */
+    @Test
+    fun `clicking Language navigates to LanguageSetting`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.Language(lang = "en"))
+            coVerify { navigator.route(Route.LanguageSetting) }
+        }
+
+    /** Verifies clicking CheckForUpdates navigates to CheckForUpdateSetting. */
+    @Test
+    fun `clicking CheckForUpdates navigates to CheckForUpdateSetting`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.CheckForUpdates)
+            coVerify { navigator.route(Route.CheckForUpdateSetting) }
+        }
+
+    /** Verifies clicking Notifications navigates to NotificationSettings. */
+    @Test
+    fun `clicking Notifications navigates to NotificationSettings`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.Notifications)
+            coVerify { navigator.route(Route.NotificationSettings) }
+        }
+
+    /** Verifies clicking DiscountTiers navigates to DiscountTiers with vault id. */
+    @Test
+    fun `clicking DiscountTiers navigates to DiscountTiers with vault id`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.DiscountTiers)
+            coVerify { navigator.route(Route.DiscountTiers(VAULT_ID)) }
+        }
+
+    /** Verifies clicking Discord emits an OpenLink event with the Discord link. */
+    @Test
+    fun `clicking Discord emits OpenLink event with Discord link`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.Discord)
+            val event = vm.uiEvent.first()
+            assertEquals(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.DISCORD), event)
         }
 
     private companion object {

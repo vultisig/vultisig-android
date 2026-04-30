@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.transaction
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
+import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -14,10 +15,12 @@ import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlin.test.assertEquals
@@ -89,12 +92,15 @@ internal class AddressEntryViewModelTest {
             assertNotNull(vm.state.value.titleError)
         }
 
-    /** Verifies saveAddress with title over 100 chars sets titleError. */
+    /** Verifies saveAddress with title length over the production max sets titleError. */
     @Test
-    fun `saveAddress with title over 100 chars sets titleError`() =
+    fun `saveAddress with title over max length sets titleError`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            vm.titleTextFieldState.edit { replace(0, length, "A".repeat(101)) }
+            // OVER_MAX_LABEL exceeds the production constant LABEL_MAX_LENGTH
+            // (private in AddressEntryViewModel, currently 100). If that constant
+            // changes, update OVER_MAX_LABEL to keep this test meaningful.
+            vm.titleTextFieldState.edit { replace(0, length, "A".repeat(OVER_MAX_LABEL)) }
             vm.saveAddress()
             assertNotNull(vm.state.value.titleError)
         }
@@ -120,22 +126,28 @@ internal class AddressEntryViewModelTest {
             assertEquals("0xdeadbeef", vm.addressTextFieldState.text.toString())
         }
 
-    /** Verifies saveAddress with valid inputs calls addressBookRepository add. */
+    /**
+     * Verifies saveAddress with valid inputs persists an [AddressBookEntry] carrying the exact
+     * title/address typed, and navigates back on completion.
+     */
     @Test
-    fun `saveAddress with valid inputs calls addressBookRepository add`() =
+    fun `saveAddress with valid inputs persists entry and navigates back`() =
         runTest(testDispatcher) {
             every { chainAccountAddressRepository.isValid(any(), any()) } returns true
+            val capturedEntry = slot<AddressBookEntry>()
+            coEvery { addressBookRepository.add(capture(capturedEntry)) } returns Unit
             val vm = createViewModel()
             vm.titleTextFieldState.edit { replace(0, length, "Alice") }
-            vm.addressTextFieldState.edit {
-                replace(0, length, "0x1234567890123456789012345678901234567890")
-            }
+            vm.addressTextFieldState.edit { replace(0, length, ETH_ADDRESS) }
             vm.saveAddress()
             advanceUntilIdle()
             coVerify { addressBookRepository.add(any()) }
+            assertEquals("Alice", capturedEntry.captured.title)
+            assertEquals(ETH_ADDRESS, capturedEntry.captured.address)
+            coVerify { navigator.navigate(Destination.Back) }
         }
 
-    /** Verifies saveAddress passes the pre-selected chain to address validation. */
+    /** Verifies saveAddress passes the pre-selected Bitcoin chain to address validation. */
     @Test
     fun `saveAddress validates address against the pre-selected Bitcoin chain`() =
         runTest(testDispatcher) {
@@ -152,7 +164,124 @@ internal class AddressEntryViewModelTest {
             assertNull(vm.state.value.addressError)
         }
 
+    /** Verifies saveAddress passes the pre-selected Ethereum chain to address validation. */
+    @Test
+    fun `saveAddress validates address against the pre-selected Ethereum chain`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.AddressEntry>() } returns
+                Route.AddressEntry(chainId = "Ethereum", address = ETH_ADDRESS, vaultId = VAULT_ID)
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, any()) } returns true
+            val vm = createViewModel()
+            vm.titleTextFieldState.edit { replace(0, length, "Alice") }
+
+            vm.saveAddress()
+            advanceUntilIdle()
+
+            verify { chainAccountAddressRepository.isValid(Chain.Ethereum, ETH_ADDRESS) }
+            assertNull(vm.state.value.addressError)
+        }
+
+    /** Verifies saveAddress passes the pre-selected Solana chain to address validation. */
+    @Test
+    fun `saveAddress validates address against the pre-selected Solana chain`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.AddressEntry>() } returns
+                Route.AddressEntry(chainId = "Solana", address = SOL_ADDRESS, vaultId = VAULT_ID)
+            every { chainAccountAddressRepository.isValid(Chain.Solana, any()) } returns true
+            val vm = createViewModel()
+            vm.titleTextFieldState.edit { replace(0, length, "Alice") }
+
+            vm.saveAddress()
+            advanceUntilIdle()
+
+            verify { chainAccountAddressRepository.isValid(Chain.Solana, SOL_ADDRESS) }
+            assertNull(vm.state.value.addressError)
+        }
+
+    /**
+     * Verifies scanAddress wires through [RequestQrScanUseCase] and writes the scanned QR payload
+     * into the address text field via setOutputAddress.
+     */
+    @Test
+    fun `scanAddress populates address field from QR scan result`() =
+        runTest(testDispatcher) {
+            coEvery { requestQrScan() } returns ETH_ADDRESS
+            val vm = createViewModel()
+
+            vm.scanAddress()
+            advanceUntilIdle()
+
+            coVerify { requestQrScan() }
+            assertEquals(ETH_ADDRESS, vm.addressTextFieldState.text.toString())
+        }
+
+    /**
+     * Verifies scanAddress does NOT update the address field when the QR scan returns null (e.g.,
+     * user cancelled the scan).
+     */
+    @Test
+    fun `scanAddress leaves address empty when QR result is null`() =
+        runTest(testDispatcher) {
+            coEvery { requestQrScan() } returns null
+            val vm = createViewModel()
+
+            vm.scanAddress()
+            advanceUntilIdle()
+
+            coVerify { requestQrScan() }
+            assertEquals("", vm.addressTextFieldState.text.toString())
+        }
+
+    /**
+     * Verifies the address-book lookup path: when the route carries an existing (chainId, address)
+     * pair, the VM queries the repository and pre-populates the form via the edit branch.
+     */
+    @Test
+    fun `init with existing entry loads it from address book and prefills form`() =
+        runTest(testDispatcher) {
+            coEvery { addressBookRepository.entryExists("Ethereum", ETH_ADDRESS) } returns true
+            coEvery { addressBookRepository.getEntry("Ethereum", ETH_ADDRESS) } returns
+                AddressBookEntry(chain = Chain.Ethereum, address = ETH_ADDRESS, title = "Bob")
+            every { any<SavedStateHandle>().toRoute<Route.AddressEntry>() } returns
+                Route.AddressEntry(chainId = "Ethereum", address = ETH_ADDRESS, vaultId = VAULT_ID)
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            coVerify { addressBookRepository.entryExists("Ethereum", ETH_ADDRESS) }
+            coVerify { addressBookRepository.getEntry("Ethereum", ETH_ADDRESS) }
+            assertEquals("Bob", vm.titleTextFieldState.text.toString())
+            assertEquals(ETH_ADDRESS, vm.addressTextFieldState.text.toString())
+        }
+
+    /**
+     * Verifies the address-book lookup path: when the route carries an (chainId, address) pair for
+     * which no existing entry is found, the VM takes the create branch and only seeds the address
+     * text field (title remains empty for the user to fill in).
+     */
+    @Test
+    fun `init with non-existing entry takes create branch and seeds only the address`() =
+        runTest(testDispatcher) {
+            coEvery { addressBookRepository.entryExists("Ethereum", ETH_ADDRESS) } returns false
+            every { any<SavedStateHandle>().toRoute<Route.AddressEntry>() } returns
+                Route.AddressEntry(chainId = "Ethereum", address = ETH_ADDRESS, vaultId = VAULT_ID)
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            coVerify { addressBookRepository.entryExists("Ethereum", ETH_ADDRESS) }
+            coVerify(exactly = 0) { addressBookRepository.getEntry(any(), any()) }
+            assertEquals("", vm.titleTextFieldState.text.toString())
+            assertEquals(ETH_ADDRESS, vm.addressTextFieldState.text.toString())
+        }
+
     private companion object {
         const val VAULT_ID = "vault-1"
+        const val ETH_ADDRESS = "0x1234567890123456789012345678901234567890"
+        const val SOL_ADDRESS = "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM"
+
+        // Length that exceeds the private LABEL_MAX_LENGTH constant in AddressEntryViewModel.
+        // If the production constant changes, update this and the matching test name.
+        const val OVER_MAX_LABEL = 101
     }
 }

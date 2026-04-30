@@ -2,7 +2,7 @@
 
 package com.vultisig.wallet.ui.models.keygen
 
-import android.content.Context
+import android.util.Patterns
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.TssAction
@@ -28,7 +28,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -42,7 +44,6 @@ internal class EnterVaultInfoViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
-    private lateinit var context: Context
     private lateinit var navigator: Navigator<Destination>
     private lateinit var vaultRepository: VaultRepository
     private lateinit var isNameLengthValid: IsVaultNameValid
@@ -56,9 +57,17 @@ internal class EnterVaultInfoViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         mockkStatic("androidx.navigation.SavedStateHandleKt")
+        // android.util.Patterns.EMAIL_ADDRESS is null in JVM unit tests because the Android
+        // framework jar shipped to local tests stubs every static field as null. The VM's
+        // email-field observer calls Patterns.EMAIL_ADDRESS.matcher(...) during init, so we
+        // populate the final static field reflectively before any VM is constructed.
+        setStaticFinalField(
+            Patterns::class.java,
+            "EMAIL_ADDRESS",
+            java.util.regex.Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\$"),
+        )
         every { any<SavedStateHandle>().toRoute<Route.EnterVaultInfo>() } returns
             Route.EnterVaultInfo(count = 2, tssAction = TssAction.KEYGEN)
-        context = mockk(relaxed = true)
         navigator = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
         isNameLengthValid = mockk(relaxed = true)
@@ -66,7 +75,11 @@ internal class EnterVaultInfoViewModelTest {
         referralCodeSettingsRepository = mockk(relaxed = true)
         keyImportRepository = mockk(relaxed = true)
         checkServerVaultExists = mockk(relaxed = true)
+        // Function-type-interface mocks need explicit return-type stubs; relaxed mode auto-stubs
+        // to a generic Object that fails the implicit cast at the VM call site (e.g. the
+        // String return type on `generateUniqueName` invoked from VM init).
         every { isNameLengthValid(any()) } returns true
+        every { generateUniqueName(any(), any()) } returns "TestVault"
     }
 
     /** Cleans up mocks and resets test dispatcher after each test. */
@@ -85,9 +98,32 @@ internal class EnterVaultInfoViewModelTest {
             referralCodeSettingsRepository = referralCodeSettingsRepository,
             keyImportRepository = keyImportRepository,
             checkServerVaultExists = checkServerVaultExists,
-            context = context,
+            context = mockk(relaxed = true),
             savedStateHandle = SavedStateHandle(),
         )
+
+    /**
+     * Sets a `static final` field reflectively. Plain `Field.set` is rejected for final fields on
+     * modern JDKs, so route the write through `sun.misc.Unsafe.putObject` against the field's
+     * static base + offset. Avoids the `--add-opens` JVM flag a `Field.modifiers` hack would need.
+     */
+    private fun setStaticFinalField(clazz: Class<*>, fieldName: String, value: Any?) {
+        val field = clazz.getField(fieldName)
+        val unsafeClass = Class.forName("sun.misc.Unsafe")
+        val theUnsafe =
+            unsafeClass.getDeclaredField("theUnsafe").apply { isAccessible = true }.get(null)
+        val staticFieldBase =
+            unsafeClass
+                .getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
+                .invoke(theUnsafe, field)
+        val staticFieldOffset =
+            unsafeClass
+                .getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
+                .invoke(theUnsafe, field) as Long
+        unsafeClass
+            .getMethod("putObject", Any::class.java, java.lang.Long.TYPE, Any::class.java)
+            .invoke(theUnsafe, staticFieldBase, staticFieldOffset, value)
+    }
 
     /** Verifies the initial active step is Name. */
     @Test
@@ -132,8 +168,26 @@ internal class EnterVaultInfoViewModelTest {
     fun `dismissServerVaultWarning clears showServerVaultExistsWarning`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
+            vm.uiState.update { it.copy(showServerVaultExistsWarning = true) }
+            assertTrue(vm.uiState.value.showServerVaultExistsWarning)
             vm.dismissServerVaultWarning()
             assertFalse(vm.uiState.value.showServerVaultExistsWarning)
+        }
+
+    /**
+     * Verifies continueWithServerVaultWarning clears the warning flag and routes to peer discovery.
+     */
+    @Test
+    fun `continueWithServerVaultWarning navigates to PeerDiscovery and clears warning`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.EnterVaultInfo>() } returns
+                Route.EnterVaultInfo(count = 1, tssAction = TssAction.KeyImport)
+            val vm = createViewModel()
+            vm.uiState.update { it.copy(showServerVaultExistsWarning = true) }
+            vm.continueWithServerVaultWarning()
+            advanceUntilIdle()
+            assertFalse(vm.uiState.value.showServerVaultExistsWarning)
+            coVerify { navigator.route(any<Route.Keygen.PeerDiscovery>()) }
         }
 
     /** Verifies Back event from Name step navigates back. */

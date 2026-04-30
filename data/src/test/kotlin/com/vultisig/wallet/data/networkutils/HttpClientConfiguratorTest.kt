@@ -24,6 +24,9 @@ class HttpClientConfiguratorTest {
     private val jsonHeaders =
         headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
 
+    private fun configuredClient(engine: MockEngine): HttpClient =
+        HttpClient(engine) { configurator.configure(this) }
+
     /**
      * Verifies a safe GET request is retried three times on IOException before throwing
      * NetworkException.
@@ -31,18 +34,17 @@ class HttpClientConfiguratorTest {
     @Test
     fun `retryOnIOException forSafeMethod retriesThreeTimes`() = runTest {
         var callCount = 0
-        val client =
-            HttpClient(
+        configuredClient(
                 MockEngine {
                     callCount++
                     throw IOException("Connection failed")
                 }
-            ) {
-                configurator.configure(this)
+            )
+            .use { client ->
+                assertFailsWith<NetworkException> { client.get("http://localhost/test") }
+                // 1 original call + 3 retries
+                assertEquals(4, callCount)
             }
-        assertFailsWith<NetworkException> { client.get("http://localhost/test") }
-        // 1 original call + 3 retries
-        assertEquals(4, callCount)
     }
 
     /**
@@ -52,8 +54,7 @@ class HttpClientConfiguratorTest {
     @Test
     fun `retryOn500 forSafeMethod retriesThreeTimes`() = runTest {
         var callCount = 0
-        val client =
-            HttpClient(
+        configuredClient(
                 MockEngine {
                     if (++callCount == 4) {
                         respond("ok", HttpStatusCode.OK, jsonHeaders)
@@ -61,12 +62,12 @@ class HttpClientConfiguratorTest {
                         respond("error", HttpStatusCode.InternalServerError, jsonHeaders)
                     }
                 }
-            ) {
-                configurator.configure(this)
+            )
+            .use { client ->
+                val response = client.get("http://localhost/test")
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(4, callCount)
             }
-        val response = client.get("http://localhost/test")
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(4, callCount)
     }
 
     /**
@@ -76,8 +77,7 @@ class HttpClientConfiguratorTest {
     @Test
     fun `retryOn429 forSafeMethod retriesThreeTimes`() = runTest {
         var callCount = 0
-        val client =
-            HttpClient(
+        configuredClient(
                 MockEngine {
                     if (++callCount == 4) {
                         respond("ok", HttpStatusCode.OK, jsonHeaders)
@@ -85,12 +85,12 @@ class HttpClientConfiguratorTest {
                         respond("rate limited", HttpStatusCode.TooManyRequests, jsonHeaders)
                     }
                 }
-            ) {
-                configurator.configure(this)
+            )
+            .use { client ->
+                val response = client.get("http://localhost/test")
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(4, callCount)
             }
-        val response = client.get("http://localhost/test")
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(4, callCount)
     }
 
     /**
@@ -100,8 +100,7 @@ class HttpClientConfiguratorTest {
     @Test
     fun `retryOn408 forSafeMethod retriesThreeTimes`() = runTest {
         var callCount = 0
-        val client =
-            HttpClient(
+        configuredClient(
                 MockEngine {
                     if (++callCount == 4) {
                         respond("ok", HttpStatusCode.OK, jsonHeaders)
@@ -109,12 +108,12 @@ class HttpClientConfiguratorTest {
                         respond("timeout", HttpStatusCode.RequestTimeout, jsonHeaders)
                     }
                 }
-            ) {
-                configurator.configure(this)
+            )
+            .use { client ->
+                val response = client.get("http://localhost/test")
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(4, callCount)
             }
-        val response = client.get("http://localhost/test")
-        assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(4, callCount)
     }
 
     /**
@@ -124,18 +123,17 @@ class HttpClientConfiguratorTest {
     @Test
     fun `retryOn500 forPostMethod doesNotRetry`() = runTest {
         var callCount = 0
-        val client =
-            HttpClient(
+        configuredClient(
                 MockEngine {
                     callCount++
                     respond("error", HttpStatusCode.InternalServerError, jsonHeaders)
                 }
-            ) {
-                configurator.configure(this)
+            )
+            .use { client ->
+                val response = client.post("http://localhost/test")
+                assertEquals(HttpStatusCode.InternalServerError, response.status)
+                assertEquals(1, callCount)
             }
-        val response = client.post("http://localhost/test")
-        assertEquals(HttpStatusCode.InternalServerError, response.status)
-        assertEquals(1, callCount)
     }
 
     /**
@@ -146,17 +144,16 @@ class HttpClientConfiguratorTest {
     @Test
     fun `retryOnIOException forPostMethod alsoRetriesThreeTimes`() = runTest {
         var callCount = 0
-        val client =
-            HttpClient(
+        configuredClient(
                 MockEngine {
                     callCount++
                     throw IOException("Connection failed")
                 }
-            ) {
-                configurator.configure(this)
+            )
+            .use { client ->
+                assertFailsWith<NetworkException> { client.post("http://localhost/test") }
+                // 1 original call + 3 retries — the IOException retry policy is method-agnostic.
+                assertEquals(4, callCount)
             }
-        assertFailsWith<NetworkException> { client.post("http://localhost/test") }
-        // 1 original call + 3 retries — the IOException retry policy is method-agnostic.
-        assertEquals(4, callCount)
     }
 }

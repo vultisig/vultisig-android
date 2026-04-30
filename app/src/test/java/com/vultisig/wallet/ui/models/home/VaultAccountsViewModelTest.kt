@@ -6,7 +6,13 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
@@ -22,6 +28,7 @@ import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
+import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel
 import com.vultisig.wallet.ui.models.mappers.AddressToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -36,8 +43,11 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -244,4 +254,102 @@ internal class VaultAccountsViewModelTest {
             assertFalse(vm.uiState.value.isRefreshing)
             verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1", true) }
         }
+
+    /**
+     * Verifies that when `accountsRepository.loadAddresses` emits a non-empty list of `Address`
+     * during init, the mapped `AccountUiModel`s appear in `uiState.accounts` and preserve the
+     * underlying address/chain identity from the source `Address`.
+     */
+    @Test
+    fun `accounts from loadAddresses are surfaced in uiState`() =
+        runTest(testDispatcher) {
+            val testAddress = buildTestAddress(chain = Chain.Ethereum, address = "0xabc")
+            val mappedUiModel =
+                AccountUiModel(
+                    model = testAddress,
+                    chainName = Chain.Ethereum.raw,
+                    logo = 0,
+                    address = testAddress.address,
+                    nativeTokenAmount = "1.0",
+                    fiatAmount = "$10.00",
+                    assetsSize = testAddress.accounts.size,
+                    nativeTokenTicker = "ETH",
+                )
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddresses("vault-1", any()) } returns
+                flowOf(listOf(testAddress))
+            coEvery { addressToUiModelMapper(any()) } returns mappedUiModel
+            // fiatValueToStringMapper is a function-type interface; relaxed mocks return a generic
+            // Object that fails the implicit cast at the VM call site, so stub explicitly.
+            coEvery { fiatValueToStringMapper(any()) } returns "$10.00"
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val accounts = vm.uiState.value.accounts
+            assertTrue(
+                accounts.isNotEmpty(),
+                "accounts should be populated after loadAddresses emit",
+            )
+            val first = accounts.first()
+            assertEquals(testAddress.address, first.address)
+            assertEquals(Chain.Ethereum.raw, first.chainName)
+            assertNotNull(first.model)
+            assertEquals(testAddress.chain, first.model.chain)
+        }
+
+    /**
+     * Verifies that an exception thrown by `accountsRepository.loadAddresses` during the init load
+     * path is caught (via the `.catch` block in `loadAccounts`) so the ViewModel does not crash,
+     * `accounts` stays empty, and `isRefreshing` remains cleared. Per-chain failures are already
+     * swallowed inside `AccountsRepositoryImpl`, so the only externally observable error channel
+     * from a flow consumer's perspective is a whole-flow throwable; this test exercises that
+     * pathway from the init side (mirrors the refresh-side test above).
+     */
+    @Test
+    fun `init load swallows loadAddresses failure without crashing`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddresses("vault-1", any()) } returns
+                flow { throw RuntimeException("Per-chain balance load failed") }
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            // No crash, no spinner left running, and the list stays empty rather than being
+            // populated with stale or partial data.
+            assertFalse(vm.uiState.value.isRefreshing)
+            assertTrue(
+                vm.uiState.value.accounts.isEmpty(),
+                "accounts must remain empty when the upstream flow errors out",
+            )
+            verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1", any()) }
+        }
+
+    private fun buildTestAddress(chain: Chain, address: String): Address {
+        val nativeCoin =
+            Coin(
+                chain = chain,
+                ticker = chain.feeUnit,
+                logo = "",
+                address = address,
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+        val account =
+            Account(
+                token = nativeCoin,
+                tokenValue =
+                    TokenValue(value = BigInteger.ONE, unit = nativeCoin.ticker, decimals = 18),
+                fiatValue = FiatValue(value = BigDecimal.TEN, currency = "USD"),
+                price = FiatValue(value = BigDecimal.TEN, currency = "USD"),
+            )
+        return Address(chain = chain, address = address, accounts = listOf(account))
+    }
 }

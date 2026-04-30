@@ -5,11 +5,11 @@ package com.vultisig.wallet.ui.models.keygen
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
-import com.vultisig.wallet.data.api.FeatureFlagApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.LastOpenedVaultRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
@@ -60,7 +60,7 @@ internal class KeygenViewModelTest {
     private lateinit var deriveChainKey: DeriveChainKeyUseCase
     private lateinit var sessionApi: SessionApi
     private lateinit var encryption: Encryption
-    private lateinit var featureFlagApi: FeatureFlagApi
+    private lateinit var featureFlagRepository: FeatureFlagRepository
     private lateinit var referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
 
@@ -102,7 +102,7 @@ internal class KeygenViewModelTest {
         deriveChainKey = mockk(relaxed = true)
         sessionApi = mockk(relaxed = true)
         encryption = mockk(relaxed = true)
-        featureFlagApi = mockk(relaxed = true)
+        featureFlagRepository = mockk(relaxed = true)
         referralCodeSettingsRepository = mockk(relaxed = true)
         chainAccountAddressRepository = mockk(relaxed = true)
     }
@@ -130,7 +130,7 @@ internal class KeygenViewModelTest {
             deriveChainKey = deriveChainKey,
             sessionApi = sessionApi,
             encryption = encryption,
-            featureFlagApi = featureFlagApi,
+            featureFlagRepository = featureFlagRepository,
             referralCodeSettingsRepository = referralCodeSettingsRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
         )

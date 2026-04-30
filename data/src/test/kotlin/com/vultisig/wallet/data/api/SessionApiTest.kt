@@ -4,9 +4,8 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.testutils.MockHttpClient
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.mock.MockEngine
 import io.ktor.http.HttpStatusCode
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -90,20 +89,19 @@ class SessionApiTest {
 
     /**
      * Verifies checkCommittee rethrows CancellationException immediately without any retry delay.
+     * Uses the shared [MockHttpClient.throwing] helper so the client matches the production plugin
+     * set installed in every other test in this file.
      */
     @Test
     fun `withRelayRetry onCancellationException rethrowsImmediately noRetry`() = runTest {
-        var callCount = 0
+        val callCount = AtomicInteger(0)
         val client =
-            HttpClient(
-                MockEngine {
-                    callCount++
-                    throw CancellationException("cancelled")
-                }
-            ) {}
+            MockHttpClient.throwing(CancellationException("cancelled")) {
+                callCount.incrementAndGet()
+            }
         val api = SessionApiImpl(json = json, httpClient = client)
         assertFailsWith<CancellationException> { api.checkCommittee(serverUrl, sessionId) }
-        assertEquals(1, callCount)
+        assertEquals(1, callCount.get())
         assertEquals(0L, currentTime)
     }
 

@@ -24,6 +24,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -156,19 +157,63 @@ internal class VaultSettingsViewModelTest {
             assertFalse(vm.uiModel.value.isBiometricFastSignBottomSheetVisible)
         }
 
-    /** Verifies togglePasswordVisibility flips isPasswordVisible to true and back to false. */
+    /** Verifies togglePasswordVisibility flips isPasswordVisible by capturing the prior value. */
     @Test
     fun `togglePasswordVisibility flips isPasswordVisible`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            // The default value is false; flipping should show, flipping again should hide.
-            assertFalse(vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible)
+            val initial = vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible
 
             vm.togglePasswordVisibility()
-            assertTrue(vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible)
+            assertEquals(!initial, vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible)
 
             vm.togglePasswordVisibility()
-            assertFalse(vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible)
+            assertEquals(initial, vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible)
+        }
+
+    /** Verifies clicking Rename routes to Route.Rename with the current vault id. */
+    @Test
+    fun `clicking Rename routes to Rename screen with vault id`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(VaultSettingsItem.Rename)
+            coVerify { navigator.route(Route.Rename(VAULT_ID)) }
+        }
+
+    /** Verifies clicking Reshare routes to ReshareStartScreen with the current vault id. */
+    @Test
+    fun `clicking Reshare routes to ReshareStartScreen with vault id`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(VaultSettingsItem.Reshare(false))
+            coVerify { navigator.route(Route.ReshareStartScreen(VAULT_ID)) }
+        }
+
+    /** Verifies clicking Delete routes to ConfirmDelete with the current vault id. */
+    @Test
+    fun `clicking Delete routes to ConfirmDelete with vault id`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(VaultSettingsItem.Delete)
+            coVerify { navigator.route(Route.ConfirmDelete(VAULT_ID)) }
+        }
+
+    /** Verifies clicking Details routes to Details with the current vault id. */
+    @Test
+    fun `clicking Details routes to Details with vault id`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(VaultSettingsItem.Details)
+            coVerify { navigator.route(Route.Details(VAULT_ID)) }
+        }
+
+    /** Verifies clicking Sign routes to SignMessage with the current vault id. */
+    @Test
+    fun `clicking Sign routes to SignMessage with vault id`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(VaultSettingsItem.Sign)
+            coVerify { navigator.route(Route.SignMessage(VAULT_ID)) }
         }
 
     private companion object {

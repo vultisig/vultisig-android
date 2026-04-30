@@ -17,6 +17,7 @@ import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
+import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -34,6 +35,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -169,8 +171,13 @@ internal class VerifyTransactionViewModelTest {
             vm.checkConsentAddress(true)
             vm.checkConsentAmount(true)
             // joinKeySign goes through handleSigningFlowCommon which sets showScanningWarning when
-            // the scan status reports an unsafe transaction. Drive that path by emitting a Scanned
-            // status with isSecure=false via a SecurityScannerResult stub.
+            // the scan status reports an unsafe transaction. There is no public setter for
+            // txScanStatus on the VM today (it is set internally by scanTransaction()), so we drive
+            // the dependent state directly via uiState.update. This couples the test to the
+            // MutableStateFlow visibility, but driving the path through securityScannerService
+            // mocks would require stubbing the full chain (getSupportedChainsByFeature,
+            // isSecurityServiceEnabled, createSecurityScannerTransaction, scanTransaction) plus
+            // the chain-supported lookup, which is more brittle than this single mutation.
             val scanResult = mockk<SecurityScannerResult>()
             every { scanResult.isSecure } returns false
             vm.uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(scanResult)) }
@@ -213,22 +220,43 @@ internal class VerifyTransactionViewModelTest {
         }
 
     /**
-     * Verifies the mapper's output is propagated into uiState.transaction. We have to feed the
-     * repository a non-null Transaction so loadTransaction reaches the mapper.
+     * Verifies the mapper's output is propagated into uiState.transaction across the user-visible
+     * fields. We feed the repository a non-null Transaction so loadTransaction reaches the mapper,
+     * and assert that all relevant TransactionDetailsUiModel fields (addresses, fees, memo, token)
+     * survive the loadTransaction copy that only overrides the *VaultName / dstAddressBookTitle
+     * fields. Note: loadTransaction performs a withContext(Dispatchers.IO) hop for
+     * vaultRepository.getAll(), so we suspend on uiState.first { ... } to await the post-hop
+     * emission instead of relying on advanceUntilIdle (which only advances the test scheduler).
      */
     @Test
-    fun `transaction srcAddress and dstAddress reflect mapper output`() =
+    fun `transaction fields reflect mapper output (srcAddress, dstAddress, fee, memo, token)`() =
         runTest(testDispatcher) {
             val tx = mockk<Transaction>(relaxed = true)
-            val expected = TransactionDetailsUiModel(srcAddress = "0xSRC", dstAddress = "0xDST")
+            val expectedToken = ValuedToken.Empty.copy(value = "1.5", fiatValue = "$3000")
+            val expected =
+                TransactionDetailsUiModel(
+                    srcAddress = "0xSRC",
+                    dstAddress = "0xDST",
+                    networkFeeFiatValue = "$0.42",
+                    networkFeeTokenValue = "0.0001 ETH",
+                    memo = "hello memo",
+                    token = expectedToken,
+                )
             coEvery { transactionRepository.getTransaction(TX_ID) } returns tx
             coEvery { mapTransactionToUiModel(tx) } returns expected
 
             val vm = createViewModel()
-            advanceUntilIdle()
+            val state = vm.uiState.first { it.transaction.srcAddress.isNotEmpty() }
 
-            assertEquals("0xSRC", vm.uiState.value.transaction.srcAddress)
-            assertEquals("0xDST", vm.uiState.value.transaction.dstAddress)
+            val actual = state.transaction
+            assertEquals("0xSRC", actual.srcAddress)
+            assertEquals("0xDST", actual.dstAddress)
+            assertEquals("$0.42", actual.networkFeeFiatValue)
+            assertEquals("0.0001 ETH", actual.networkFeeTokenValue)
+            assertEquals("hello memo", actual.memo)
+            assertEquals(expectedToken, actual.token)
+            // Token symbol (ticker) round-trips through the ValuedToken's underlying Coin.
+            assertEquals("OM", actual.token.token.ticker)
         }
 
     private companion object {
