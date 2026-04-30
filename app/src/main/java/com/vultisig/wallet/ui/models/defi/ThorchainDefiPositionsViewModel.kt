@@ -3,7 +3,7 @@ package com.vultisig.wallet.ui.models.defi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolStatsJson
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.thorchain.DefaultStakingPositionService
 import com.vultisig.wallet.data.blockchain.thorchain.RujiStakingService
@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
 import com.vultisig.wallet.data.usecases.ThorchainBondUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.navigation.Destination
@@ -57,6 +58,7 @@ import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -84,6 +86,10 @@ internal data class ThorchainDefiPositionsUiModel(
     val bondPositionsDialog: List<PositionUiModelDialog> = defaultPositionsBondDialog(),
     val stakingPositionsDialog: List<PositionUiModelDialog> = defaultPositionsStakingDialog(),
     val lpPositionsDialog: List<PositionUiModelDialog> = emptyList(),
+    // Flips true once the available-pools fetch returns. Until then the LP tab should stay in
+    // loading state instead of flashing the empty/no-positions UI when the user has selected
+    // positions whose keys don't yet match the (empty) dialog list.
+    val lpDialogLoaded: Boolean = false,
     val selectedPositions: List<String> = defaultSelectedPositionsDialog(),
     val tempSelectedPositions: List<String> = defaultSelectedPositionsDialog(),
 )
@@ -163,7 +169,6 @@ constructor(
     private val defaultStakingPositionService: DefaultStakingPositionService,
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase,
-    private val thorChainApi: ThorChainApi,
 ) : ViewModel() {
 
     private lateinit var vaultId: String
@@ -186,30 +191,53 @@ constructor(
     val totalValueTCYStake: StateFlow<BigInteger> = _totalValueTCYStake
     val isLoadingTotalAmount: StateFlow<Boolean> = _isLoadingTotalAmount
 
+    // Cached "available" pool list shared by the Manage-Positions dialog and the LP tab loader so
+    // cold start makes a single getPoolStats call instead of two. `null` means "not loaded yet"
+    // (or "previous fetch failed and should be retried"); `emptyList()` would mean "loaded, none
+    // available", but Midgard never returns that in practice.
+    private val availablePools = MutableStateFlow<List<ThorChainPoolStatsJson>?>(null)
+
+    private var lpDialogJob: Job? = null
+    private var loadLpJob: Job? = null
+
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
         loadBalanceVisibility()
-        loadLpPositionsForDialog()
+        lpDialogJob?.cancel()
+        lpDialogJob = loadLpPositionsForDialog()
         loadSavedPositions()
         loadTotalValue()
     }
 
-    private fun loadLpPositionsForDialog() {
+    private fun loadLpPositionsForDialog(): Job =
         viewModelScope.launch {
             try {
                 val pools =
-                    withContext(Dispatchers.IO) { thorChainApi.getPoolStats() }
-                        .filter { it.status.equals("available", ignoreCase = true) }
+                    withContext(Dispatchers.IO) {
+                        getThorChainLpPositionsUseCase.fetchAvailablePools()
+                    }
+                availablePools.value = pools
                 val dialogPositions =
                     pools
                         .map { pool -> pool.asset.toLpPositionDialogModel() }
                         .sortedBy { it.ticker }
-                state.update { it.copy(lpPositionsDialog = dialogPositions) }
+                state.update { it.copy(lpPositionsDialog = dialogPositions, lpDialogLoaded = true) }
+                // The first LP load (kicked off by loadSavedPositions) may have run before the
+                // dialog data arrived, leaving the LP tab empty. Trigger a fresh load now that we
+                // know the available pool set so selected positions are re-evaluated.
+                reloadLpTab()
             } catch (e: Throwable) {
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load THORChain LP pools for dialog")
+                // Leave availablePools null so the next user interaction (e.g. opening Manage
+                // Positions or saving a selection) retries instead of soft-locking.
             }
         }
+
+    private fun ensureAvailablePoolsLoaded() {
+        if (availablePools.value != null) return
+        if (lpDialogJob?.isActive == true) return
+        lpDialogJob = loadLpPositionsForDialog()
     }
 
     private fun loadBalanceVisibility() {
@@ -330,7 +358,7 @@ constructor(
 
             launch { loadStakingPositions() }
 
-            launch { loadLpPositions() }
+            reloadLpTab()
         }
     }
 
@@ -747,11 +775,21 @@ constructor(
         state.update { currentState -> currentState.copy(selectedTab = tab.displayNameRes) }
     }
 
-    private suspend fun loadLpPositions() {
+    private fun reloadLpTab() {
         val selectedKeys = state.value.selectedPositions.toSet()
+        val pools = availablePools.value
+        // Dialog dataset hasn't loaded yet (or last fetch failed). Don't run with stale state —
+        // loadLpPositionsForDialog calls reloadLpTab again once it succeeds.
+        if (pools == null) {
+            state.update { it.copy(lp = it.lp.copy(isLoading = true)) }
+            ensureAvailablePoolsLoaded()
+            return
+        }
+
         val selectedPools = state.value.lpPositionsDialog.filter { it.positionKey in selectedKeys }
 
         if (selectedPools.isEmpty()) {
+            loadLpJob?.cancel()
             state.update { it.copy(lp = LpTabUiModel(isLoading = false, positions = emptyList())) }
             return
         }
@@ -761,50 +799,76 @@ constructor(
         val placeholders = selectedPools.map { it.toPlaceholderUiModel() }
         state.update { it.copy(lp = LpTabUiModel(isLoading = true, positions = placeholders)) }
 
-        try {
-            val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
-            val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
+        loadLpJob?.cancel()
+        loadLpJob =
+            viewModelScope.launch {
+                try {
+                    val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                    val runeCoin = vault?.coins?.find { it.chain.id == Chain.ThorChain.id }
 
-            if (runeCoin == null) {
-                Timber.e("Vault does not have RUNE coin for LP positions")
-                state.update {
-                    it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
-                }
-                return
-            }
+                    if (runeCoin == null) {
+                        Timber.e("Vault does not have RUNE coin for LP positions")
+                        state.update {
+                            it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
+                        }
+                        return@launch
+                    }
 
-            val allPositions =
-                withContext(Dispatchers.IO) {
-                    getThorChainLpPositionsUseCase(runeAddress = runeCoin.address)
-                }
-            val positionsByPool = allPositions.associateBy { it.pool }
+                    val assetAddressesByPool =
+                        selectedPools
+                            .mapNotNull { dialogPool ->
+                                val parsed = parseThorChainPool(dialogPool.positionKey)
+                                val assetChain = parsed.chain ?: return@mapNotNull null
+                                if (assetChain == Chain.ThorChain) return@mapNotNull null
+                                val assetCoin =
+                                    vault.coins.firstOrNull {
+                                        it.chain == assetChain && it.isNativeToken
+                                    } ?: vault.coins.firstOrNull { it.chain == assetChain }
+                                assetCoin?.address?.let { dialogPool.positionKey to it }
+                            }
+                            .toMap()
 
-            val currency = appCurrencyRepository.currency.first()
-            val currencyFormat =
-                withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
-            val runePrice = priceFor(Coins.ThorChain.RUNE, currency)
+                    val allPositions =
+                        withContext(Dispatchers.IO) {
+                            getThorChainLpPositionsUseCase(
+                                runeAddress = runeCoin.address,
+                                assetAddressesByPool = assetAddressesByPool,
+                                availablePools = pools,
+                            )
+                        }
+                    val positionsByPool = allPositions.associateBy { it.pool }
 
-            val merged =
-                selectedPools.map { dialogPool ->
-                    val realPosition = positionsByPool[dialogPool.positionKey]
-                    if (realPosition != null) {
-                        realPosition.toUiModel(
-                            vault?.coins.orEmpty(),
-                            runePrice,
-                            currency,
-                            currencyFormat,
-                        )
-                    } else {
-                        dialogPool.toPlaceholderUiModel()
+                    val currency = appCurrencyRepository.currency.first()
+                    val currencyFormat =
+                        withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                    val runePrice = priceFor(Coins.ThorChain.RUNE, currency)
+
+                    val merged =
+                        selectedPools.map { dialogPool ->
+                            val realPosition = positionsByPool[dialogPool.positionKey]
+                            if (realPosition != null) {
+                                realPosition.toUiModel(
+                                    vault.coins,
+                                    runePrice,
+                                    currency,
+                                    currencyFormat,
+                                )
+                            } else {
+                                dialogPool.toPlaceholderUiModel()
+                            }
+                        }
+
+                    state.update {
+                        it.copy(lp = LpTabUiModel(isLoading = false, positions = merged))
+                    }
+                } catch (e: Throwable) {
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "Failed to load THORChain LP positions")
+                    state.update {
+                        it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders))
                     }
                 }
-
-            state.update { it.copy(lp = LpTabUiModel(isLoading = false, positions = merged)) }
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            Timber.e(e, "Failed to load THORChain LP positions")
-            state.update { it.copy(lp = LpTabUiModel(isLoading = false, positions = placeholders)) }
-        }
+            }
     }
 
     private fun PositionUiModelDialog.toPlaceholderUiModel(): LpPositionUiModel {
@@ -813,7 +877,7 @@ constructor(
         return LpPositionUiModel(
             titleLp = "$ticker Pool",
             totalPriceLp = DEFAULT_ZERO_BALANCE,
-            icon = (logo as? Int) ?: parsed.chain?.logo ?: R.drawable.rune,
+            icon = (logo as? Int) ?: parsed.chain?.logo ?: R.drawable.ic_coins,
             apr = null,
             position = "0 ${Coins.ThorChain.RUNE.ticker} + 0 $assetTicker",
             positionKey = positionKey,
@@ -859,7 +923,9 @@ constructor(
                 .setScale(2, RoundingMode.DOWN)
 
         val icon =
-            (getCoinLogo(assetTicker.lowercase()) as? Int) ?: assetChain?.logo ?: R.drawable.rune
+            (getCoinLogo(assetTicker.lowercase()) as? Int)
+                ?: assetChain?.logo
+                ?: R.drawable.ic_coins
 
         return LpPositionUiModel(
             titleLp = "RUNE/$assetTicker Pool",
@@ -900,7 +966,7 @@ constructor(
         }
 
     fun onClickAddLp(poolId: String) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             navigator.route(
                 Route.Deposit(
                     vaultId = vaultId,
@@ -913,7 +979,7 @@ constructor(
     }
 
     fun onClickRemoveLp(poolId: String) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             navigator.route(
                 Route.Deposit(
                     vaultId = vaultId,
@@ -981,7 +1047,9 @@ constructor(
 
             launch { loadStakingPositions() }
 
-            launch { loadLpPositions() }
+            // If a previous getPoolStats fetch failed, retry now so the user isn't soft-locked.
+            ensureAvailablePoolsLoaded()
+            reloadLpTab()
         }
     }
 
@@ -1188,7 +1256,7 @@ data class StakeDefaultValues(val stakeElements: List<StakingElement> = emptyLis
 private fun String.toLpPositionDialogModel(): PositionUiModelDialog {
     val parsed = parseThorChainPool(this)
     val coinLogo = getCoinLogo(parsed.ticker.lowercase())
-    val logo: Int = (coinLogo as? Int) ?: parsed.chain?.logo ?: R.drawable.rune
+    val logo: Int = (coinLogo as? Int) ?: parsed.chain?.logo ?: R.drawable.ic_coins
     return PositionUiModelDialog(
         logo = logo,
         ticker = "RUNE/${parsed.ticker}",

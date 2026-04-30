@@ -190,14 +190,24 @@ internal fun ThorchainDefiPositionScreenContent(
                 }
 
                 DeFiTab.LP.displayNameRes -> {
-                    if (!state.selectedPositions.hasLpPositions(state.lpPositionsDialog)) {
-                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                    } else {
-                        LpTabContent(
-                            state = state.lp,
-                            onClickAdd = onClickAddLp,
-                            onClickRemove = onClickRemoveLp,
-                        )
+                    // Until the dialog dataset has loaded, treat the LP tab as still loading
+                    // rather than flashing the no-positions container — the lpPositionsDialog
+                    // list arrives asynchronously and "no match" is meaningless before then.
+                    when {
+                        !state.lpDialogLoaded ->
+                            LpTabContent(
+                                state = state.lp.copy(isLoading = true),
+                                onClickAdd = onClickAddLp,
+                                onClickRemove = onClickRemoveLp,
+                            )
+                        !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) ->
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        else ->
+                            LpTabContent(
+                                state = state.lp,
+                                onClickAdd = onClickAddLp,
+                                onClickRemove = onClickRemoveLp,
+                            )
                     }
                 }
             }

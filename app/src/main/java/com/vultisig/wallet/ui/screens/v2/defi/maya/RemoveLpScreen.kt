@@ -155,7 +155,7 @@ internal fun RemoveLpScreenContent(
             RemoveLpSlider(
                 percent = state.removeLpPercent,
                 onPercentChanged = onPercentChanged,
-                enabled = state.availableLpUnits != null && state.selectedPoolTotalLpUnits > 0L,
+                enabled = state.availableLpUnits != null && state.removeLpUnitsDivisor.signum() > 0,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -281,8 +281,8 @@ private fun RemoveLpScreenContentPreview() {
                     removeLpTokenSymbol = "CACAO",
                     availableLpUnits = "1000000",
                     balance = UiText.DynamicString("24,000 CACAO"),
-                    selectedPoolTotalLpUnits = 5_000_000L,
-                    selectedPoolCacaoDepth = 25_000_000L,
+                    removeLpUnitsDivisor = java.math.BigInteger.valueOf(5_000_000L),
+                    removeLpPoolDepth = java.math.BigInteger.valueOf(25_000_000L),
                 )
         )
     }

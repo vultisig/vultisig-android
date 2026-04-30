@@ -436,7 +436,7 @@ internal fun NoPositionsContainer(onManagePositionsClick: () -> Unit = {}) {
         content = stringResource(R.string.defi_no_positions_selected_desc),
         action = {
             VsButton(
-                label = stringResource(R.string.defi_manage_positions),
+                label = stringResource(R.string.manage_positions),
                 onClick = onManagePositionsClick,
                 state = VsButtonState.Enabled,
             )

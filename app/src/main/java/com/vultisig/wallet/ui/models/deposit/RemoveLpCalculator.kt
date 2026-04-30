@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.deposit
 
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.math.RoundingMode
 
 internal object RemoveLpCalculator {
@@ -24,11 +25,11 @@ internal object RemoveLpCalculator {
      */
     fun computeAmountDisplay(
         selectedUnits: Long,
-        poolDepth: Long,
-        totalPoolUnits: Long,
-        decimals: Int = CACAO_DECIMALS,
+        poolDepth: BigInteger,
+        totalPoolUnits: BigInteger,
+        decimals: Int,
     ): String? {
-        if (totalPoolUnits <= 0L) return null
+        if (totalPoolUnits.signum() <= 0) return null
         return selectedUnits
             .toBigDecimal()
             .multiply(poolDepth.toBigDecimal())

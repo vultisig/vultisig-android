@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.deposit
 
+import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import org.junit.jupiter.api.Test
@@ -11,8 +12,9 @@ internal class RemoveLpCalculatorTest {
         val result =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = 1_000L,
-                poolDepth = 10_000_000_000L,
-                totalPoolUnits = 0L,
+                poolDepth = BigInteger.valueOf(10_000_000_000L),
+                totalPoolUnits = BigInteger.ZERO,
+                decimals = RemoveLpCalculator.CACAO_DECIMALS,
             )
         assertNull(result)
     }
@@ -22,8 +24,9 @@ internal class RemoveLpCalculatorTest {
         val result =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = 1_000L,
-                poolDepth = 10_000_000_000L,
-                totalPoolUnits = -5L,
+                poolDepth = BigInteger.valueOf(10_000_000_000L),
+                totalPoolUnits = BigInteger.valueOf(-5L),
+                decimals = RemoveLpCalculator.CACAO_DECIMALS,
             )
         assertNull(result)
     }
@@ -33,8 +36,9 @@ internal class RemoveLpCalculatorTest {
         val result =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = 0L,
-                poolDepth = 10_000_000_000L,
-                totalPoolUnits = 1_000L,
+                poolDepth = BigInteger.valueOf(10_000_000_000L),
+                totalPoolUnits = BigInteger.valueOf(1_000L),
+                decimals = RemoveLpCalculator.CACAO_DECIMALS,
             )
         // 0 * depth / total, then scaled to 3 decimals
         assertEquals("0.000", result)
@@ -46,8 +50,9 @@ internal class RemoveLpCalculatorTest {
         val result =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = 1L,
-                poolDepth = 50_000_000_000L,
-                totalPoolUnits = 1L,
+                poolDepth = BigInteger.valueOf(50_000_000_000L),
+                totalPoolUnits = BigInteger.ONE,
+                decimals = RemoveLpCalculator.CACAO_DECIMALS,
             )
         assertEquals("5.000", result)
     }
@@ -60,8 +65,9 @@ internal class RemoveLpCalculatorTest {
         val result =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = 1L,
-                poolDepth = 1_000_000_000_000L,
-                totalPoolUnits = 3L,
+                poolDepth = BigInteger.valueOf(1_000_000_000_000L),
+                totalPoolUnits = BigInteger.valueOf(3L),
+                decimals = RemoveLpCalculator.CACAO_DECIMALS,
             )
         assertEquals("33.333", result)
     }
@@ -73,8 +79,9 @@ internal class RemoveLpCalculatorTest {
         val result =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = 1L,
-                poolDepth = 100_009_000_000L,
-                totalPoolUnits = 1L,
+                poolDepth = BigInteger.valueOf(100_009_000_000L),
+                totalPoolUnits = BigInteger.ONE,
+                decimals = RemoveLpCalculator.CACAO_DECIMALS,
             )
         assertEquals("10.000", result)
     }
@@ -85,8 +92,8 @@ internal class RemoveLpCalculatorTest {
         val result =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = 1L,
-                poolDepth = 500_000_000L,
-                totalPoolUnits = 1L,
+                poolDepth = BigInteger.valueOf(500_000_000L),
+                totalPoolUnits = BigInteger.ONE,
                 decimals = RemoveLpCalculator.RUNE_DECIMALS,
             )
         assertEquals("5.000", result)
@@ -99,10 +106,25 @@ internal class RemoveLpCalculatorTest {
         val result =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = 1L,
-                poolDepth = 10_000_000_000L,
-                totalPoolUnits = 2L,
+                poolDepth = BigInteger.valueOf(10_000_000_000L),
+                totalPoolUnits = BigInteger.valueOf(2L),
                 decimals = RemoveLpCalculator.RUNE_DECIMALS,
             )
         assertEquals("50.000", result)
+    }
+
+    @Test
+    fun `handles BigInteger inputs that exceed Long_MAX_VALUE`() {
+        // Whale RUNE position: redeem value > Long.MAX_VALUE so Long arithmetic would truncate.
+        val poolDepth = BigInteger("100000000000000000000") // 10^20, > Long.MAX_VALUE
+        val result =
+            RemoveLpCalculator.computeAmountDisplay(
+                selectedUnits = 1L,
+                poolDepth = poolDepth,
+                totalPoolUnits = BigInteger.ONE,
+                decimals = RemoveLpCalculator.RUNE_DECIMALS,
+            )
+        // 10^20 base units / 10^8 = 10^12 RUNE
+        assertEquals("1000000000000.000", result)
     }
 }

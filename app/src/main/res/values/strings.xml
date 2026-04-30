@@ -957,7 +957,6 @@
     <string name="banxa_continue">Continue to Banxa</string>
     <string name="defi_no_positions_selected">No positions selected</string>
     <string name="defi_no_positions_selected_desc">You\'ve disabled all positions for this chain. Enable at least one position to view balances and manage actions.</string>
-    <string name="defi_manage_positions">Manage Positions</string>
     <string name="manage_positions">Manage Positions</string>
     <string name="bond_node_state_whitelisted">Whitelisted</string>
     <string name="bond_node_state_standby">Standby</string>

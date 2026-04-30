@@ -68,6 +68,7 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
+import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.navigation.Destination
@@ -172,8 +173,14 @@ internal data class DepositFormUiModel(
     val bondableAssets: List<String> = emptyList(),
     val selectedBondAsset: String = "",
     val availableLpUnits: String? = null,
-    val selectedPoolTotalLpUnits: Long = 0L,
-    val selectedPoolCacaoDepth: Long = 0L,
+    // For Maya: total LP units in the pool. For THORChain remove-LP, this stores the user's own
+    // units (the calculator divides by it so that selectedUnits/userUnits gives the redeem
+    // fraction).
+    val removeLpUnitsDivisor: BigInteger = BigInteger.ZERO,
+    // For Maya: pool's CACAO depth (base units). For THORChain remove-LP, this stores the user's
+    // pre-computed RUNE redeem value (base units). Renamed from chain-specific names because the
+    // semantic differs between flows.
+    val removeLpPoolDepth: BigInteger = BigInteger.ZERO,
     val removeLpDecimals: Int = RemoveLpCalculator.CACAO_DECIMALS,
     val removeLpTokenSymbol: String = "CACAO",
     val totalGas: UiText = UiText.Empty,
@@ -465,8 +472,8 @@ constructor(
                 bondableAssets = emptyList(),
                 selectedBondAsset = "",
                 availableLpUnits = null,
-                selectedPoolTotalLpUnits = 0L,
-                selectedPoolCacaoDepth = 0L,
+                removeLpUnitsDivisor = BigInteger.ZERO,
+                removeLpPoolDepth = BigInteger.ZERO,
             )
         }
         assetsFieldState.clearText()
@@ -496,8 +503,9 @@ constructor(
                     bondableAssets = assets,
                     selectedBondAsset = firstAsset,
                     availableLpUnits = firstPool?.availableUnits,
-                    selectedPoolTotalLpUnits = firstPool?.totalPoolLpUnits ?: 0L,
-                    selectedPoolCacaoDepth = firstPool?.poolCacaoDepth ?: 0L,
+                    removeLpUnitsDivisor =
+                        firstPool?.totalPoolLpUnits?.toBigInteger() ?: BigInteger.ZERO,
+                    removeLpPoolDepth = firstPool?.poolCacaoDepth?.toBigInteger() ?: BigInteger.ZERO,
                 )
             }
             if (firstAsset.isNotEmpty()) {
@@ -513,8 +521,8 @@ constructor(
                     _state.update {
                         it.copy(
                             availableLpUnits = null,
-                            selectedPoolTotalLpUnits = 0L,
-                            selectedPoolCacaoDepth = 0L,
+                            removeLpUnitsDivisor = BigInteger.ZERO,
+                            removeLpPoolDepth = BigInteger.ZERO,
                             errorText = UiText.StringResource(R.string.dialog_default_error_body),
                         )
                     }
@@ -523,8 +531,8 @@ constructor(
         _state.update {
             it.copy(
                 availableLpUnits = null,
-                selectedPoolTotalLpUnits = 0L,
-                selectedPoolCacaoDepth = 0L,
+                removeLpUnitsDivisor = BigInteger.ZERO,
+                removeLpPoolDepth = BigInteger.ZERO,
                 removeLpPercent = 0f,
                 removeLpCacaoDisplay = "",
                 balance = R.string.share_balance_loading.asUiText(),
@@ -553,8 +561,8 @@ constructor(
                         _state.update {
                             it.copy(
                                 availableLpUnits = null,
-                                selectedPoolTotalLpUnits = 0L,
-                                selectedPoolCacaoDepth = 0L,
+                                removeLpUnitsDivisor = BigInteger.ZERO,
+                                removeLpPoolDepth = BigInteger.ZERO,
                                 errorText =
                                     UiText.StringResource(R.string.dialog_default_error_body),
                             )
@@ -568,16 +576,16 @@ constructor(
                         _state.update {
                             it.copy(
                                 availableLpUnits = null,
-                                selectedPoolTotalLpUnits = 0L,
-                                selectedPoolCacaoDepth = 0L,
+                                removeLpUnitsDivisor = BigInteger.ZERO,
+                                removeLpPoolDepth = BigInteger.ZERO,
                                 errorText =
                                     UiText.StringResource(R.string.dialog_default_error_body),
                             )
                         }
                         return@safeLaunch
                     }
-            val totalPoolUnits = pool.units.toLongOrNull() ?: 0L
-            val cacaoDepth = pool.cacaoDepth.toLongOrNull() ?: 0L
+            val totalPoolUnits = pool.units.toBigIntegerOrNull() ?: BigInteger.ZERO
+            val cacaoDepth = pool.cacaoDepth.toBigIntegerOrNull() ?: BigInteger.ZERO
             val userAvailableUnits = userLpUnits.toLongOrNull()
             val userCacao =
                 if (userAvailableUnits != null) {
@@ -598,8 +606,8 @@ constructor(
             _state.update {
                 it.copy(
                     availableLpUnits = userLpUnits,
-                    selectedPoolTotalLpUnits = totalPoolUnits,
-                    selectedPoolCacaoDepth = cacaoDepth,
+                    removeLpUnitsDivisor = totalPoolUnits,
+                    removeLpPoolDepth = cacaoDepth,
                     removeLpDecimals = RemoveLpCalculator.CACAO_DECIMALS,
                     removeLpTokenSymbol = "CACAO",
                     balance = balanceText,
@@ -616,8 +624,10 @@ constructor(
                     _state.update {
                         it.copy(
                             availableLpUnits = null,
-                            selectedPoolTotalLpUnits = 0L,
-                            selectedPoolCacaoDepth = 0L,
+                            removeLpUnitsDivisor = BigInteger.ZERO,
+                            removeLpPoolDepth = BigInteger.ZERO,
+                            removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
+                            removeLpTokenSymbol = Coins.ThorChain.RUNE.ticker,
                             errorText = UiText.StringResource(R.string.dialog_default_error_body),
                         )
                     }
@@ -626,8 +636,8 @@ constructor(
         _state.update {
             it.copy(
                 availableLpUnits = null,
-                selectedPoolTotalLpUnits = 0L,
-                selectedPoolCacaoDepth = 0L,
+                removeLpUnitsDivisor = BigInteger.ZERO,
+                removeLpPoolDepth = BigInteger.ZERO,
                 removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
                 removeLpTokenSymbol = Coins.ThorChain.RUNE.ticker,
                 removeLpPercent = 0f,
@@ -648,9 +658,18 @@ constructor(
                         }
                         return@safeLaunch
                     }
+            val currentVaultId = vaultId
+            val pairedAddress =
+                if (currentVaultId != null) {
+                    resolvePairedAddress(Chain.ThorChain, currentVaultId, poolId)
+                } else null
+            val assetAddressesByPool = pairedAddress?.let { mapOf(poolId to it) } ?: emptyMap()
             val position =
                 withContext(Dispatchers.IO) {
-                        getThorChainLpPositionsUseCase(runeAddress = userAddress)
+                        getThorChainLpPositionsUseCase(
+                            runeAddress = userAddress,
+                            assetAddressesByPool = assetAddressesByPool,
+                        )
                     }
                     .find { it.pool == poolId }
 
@@ -658,9 +677,10 @@ constructor(
                 _state.update {
                     it.copy(
                         availableLpUnits = null,
-                        selectedPoolTotalLpUnits = 0L,
-                        selectedPoolCacaoDepth = 0L,
+                        removeLpUnitsDivisor = BigInteger.ZERO,
+                        removeLpPoolDepth = BigInteger.ZERO,
                         balance = UiText.Empty,
+                        errorText = UiText.StringResource(R.string.dialog_default_error_body),
                     )
                 }
                 return@safeLaunch
@@ -669,16 +689,21 @@ constructor(
             // Use the pre-computed redeem value from the use case as `poolDepth` and the user's own
             // units as `totalPoolUnits`. With selectedUnits = percent * userUnits, the calculator
             // produces percent * runeRedeemValue, which is the symmetric RUNE half of withdrawal.
-            val userUnits = position.units.toLong()
-            val runeRedeemBase = position.runeRedeemValue.toLong()
+            // Keep BigInteger end-to-end for whale positions whose units exceed Long.MAX_VALUE.
+            val userUnits = position.units
+            val runeRedeemBase = position.runeRedeemValue
             val symbol = Coins.ThorChain.RUNE.ticker
+            val userUnitsLongOrNull =
+                runCatching { userUnits.longValueExact() }.getOrNull()?.takeIf { it > 0L }
             val userRune =
-                RemoveLpCalculator.computeAmountDisplay(
-                    selectedUnits = userUnits,
-                    poolDepth = runeRedeemBase,
-                    totalPoolUnits = userUnits,
-                    decimals = RemoveLpCalculator.RUNE_DECIMALS,
-                )
+                userUnitsLongOrNull?.let { userUnitsLong ->
+                    RemoveLpCalculator.computeAmountDisplay(
+                        selectedUnits = userUnitsLong,
+                        poolDepth = runeRedeemBase,
+                        totalPoolUnits = userUnits,
+                        decimals = RemoveLpCalculator.RUNE_DECIMALS,
+                    )
+                }
             val balanceText =
                 if (userRune != null) {
                     UiText.FormattedText(
@@ -689,8 +714,8 @@ constructor(
             _state.update {
                 it.copy(
                     availableLpUnits = userUnits.toString(),
-                    selectedPoolTotalLpUnits = userUnits,
-                    selectedPoolCacaoDepth = runeRedeemBase,
+                    removeLpUnitsDivisor = userUnits,
+                    removeLpPoolDepth = runeRedeemBase,
                     removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
                     removeLpTokenSymbol = symbol,
                     balance = balanceText,
@@ -706,8 +731,8 @@ constructor(
             it.copy(
                 selectedBondAsset = asset,
                 availableLpUnits = pool?.availableUnits,
-                selectedPoolTotalLpUnits = pool?.totalPoolLpUnits ?: 0L,
-                selectedPoolCacaoDepth = pool?.poolCacaoDepth ?: 0L,
+                removeLpUnitsDivisor = pool?.totalPoolLpUnits?.toBigInteger() ?: BigInteger.ZERO,
+                removeLpPoolDepth = pool?.poolCacaoDepth?.toBigInteger() ?: BigInteger.ZERO,
                 lpUnitsError = null,
             )
         }
@@ -727,8 +752,8 @@ constructor(
         val cacaoDisplay =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = selectedUnits,
-                poolDepth = s.selectedPoolCacaoDepth,
-                totalPoolUnits = s.selectedPoolTotalLpUnits,
+                poolDepth = s.removeLpPoolDepth,
+                totalPoolUnits = s.removeLpUnitsDivisor,
                 decimals = s.removeLpDecimals,
             ) ?: return
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(selectedUnits.toString())
@@ -1728,9 +1753,8 @@ constructor(
     ): String? {
         if (chain != Chain.ThorChain) return null
         val parsed =
-            com.vultisig.wallet.ui.models.defi.parseThorChainPool(poolId).takeIf {
-                it.chain != null && it.chain != Chain.ThorChain
-            } ?: return null
+            parseThorChainPool(poolId).takeIf { it.chain != null && it.chain != Chain.ThorChain }
+                ?: return null
         val assetChain = parsed.chain ?: return null
         return try {
             val vault = vaultRepository.get(vaultId) ?: return null

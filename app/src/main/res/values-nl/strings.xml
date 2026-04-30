@@ -751,7 +751,6 @@
     <string name="banxa_continue">Doorgaan naar Banxa</string>
     <string name="defi_no_positions_selected">Geen posities geselecteerd</string>
     <string name="defi_no_positions_selected_desc">Je hebt alle posities voor deze keten uitgeschakeld. Schakel ten minste één positie in om saldi te bekijken en acties te beheren.</string>
-    <string name="defi_manage_positions">Posities beheren</string>
     <string name="manage_positions">Posities Beheren</string>
     <string name="bond_node_state_whitelisted">Op Whitelist</string>
     <string name="bond_node_state_standby">Stand-by</string>

@@ -51,15 +51,27 @@ internal class GetThorChainLpPositionsUseCaseTest {
     }
 
     @Test
-    fun `falls back to assetAddress lookup when runeAddress has no position`() = runTest {
-        coEvery { api.getPoolStats(any()) } returns listOf(pool("BTC.BTC"))
+    fun `falls back to per-pool asset address when runeAddress has no position`() = runTest {
+        coEvery { api.getPoolStats(any()) } returns
+            listOf(pool("BTC.BTC"), pool("ETH.ETH"), pool("LTC.LTC"))
         coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } returns null
         coEvery { api.getLiquidityProvider("BTC.BTC", BTC_ADDR) } returns lp(units = "42")
+        coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns null
+        coEvery { api.getLiquidityProvider("ETH.ETH", ETH_ADDR) } returns lp(units = "7")
+        coEvery { api.getLiquidityProvider("LTC.LTC", RUNE_ADDR) } returns null
 
-        val positions = useCase(runeAddress = RUNE_ADDR, assetAddress = BTC_ADDR)
+        val positions =
+            useCase(
+                runeAddress = RUNE_ADDR,
+                assetAddressesByPool = mapOf("BTC.BTC" to BTC_ADDR, "ETH.ETH" to ETH_ADDR),
+            )
 
-        assertEquals(1, positions.size)
+        assertEquals(setOf("BTC.BTC", "ETH.ETH"), positions.map { it.pool }.toSet())
         coVerify { api.getLiquidityProvider("BTC.BTC", BTC_ADDR) }
+        coVerify { api.getLiquidityProvider("ETH.ETH", ETH_ADDR) }
+        // LTC has no fallback in the map; ensure we don't accidentally try BTC_ADDR for LTC.
+        coVerify(exactly = 0) { api.getLiquidityProvider("LTC.LTC", BTC_ADDR) }
+        coVerify(exactly = 0) { api.getLiquidityProvider("LTC.LTC", ETH_ADDR) }
     }
 
     @Test
@@ -127,5 +139,6 @@ internal class GetThorChainLpPositionsUseCaseTest {
     private companion object {
         const val RUNE_ADDR = "thor1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         const val BTC_ADDR = "bc1qxyz"
+        const val ETH_ADDR = "0xabc"
     }
 }

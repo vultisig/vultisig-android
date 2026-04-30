@@ -66,7 +66,10 @@ internal fun DepositScreen(
 
     val title: String
 
-    val chainName = remember(chainId) { Chain.fromRaw(chainId).raw }
+    val chainName =
+        remember(chainId) {
+            Chain.entries.firstOrNull { it.raw.equals(chainId, ignoreCase = true) }?.raw ?: chainId
+        }
     val defaultTitle =
         when (depositType) {
             DeFiNavActions.ADD_LP.type -> stringResource(R.string.add_lp_title, chainName)

@@ -937,7 +937,6 @@
     <string name="banxa_continue">Banxa로 이동</string>
     <string name="defi_no_positions_selected">선택된 포지션 없음</string>
     <string name="defi_no_positions_selected_desc">이 체인의 모든 포지션을 비활성화했습니다. 잔액을 확인하고 작업을 관리하려면 최소 하나의 포지션을 활성화하세요.</string>
-    <string name="defi_manage_positions">포지션 관리</string>
     <string name="manage_positions">포지션 관리</string>
     <string name="bond_node_state_whitelisted">화이트리스트</string>
     <string name="bond_node_state_standby">대기</string>

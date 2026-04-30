@@ -758,7 +758,6 @@
     <string name="banxa_continue">Nastavi na Banxu</string>
     <string name="defi_no_positions_selected">Nema odabranih pozicija</string>
     <string name="defi_no_positions_selected_desc">Onemogućili ste sve pozicije za ovaj lanac. Omogućite barem jednu poziciju za pregled stanja i upravljanje akcijama.</string>
-    <string name="defi_manage_positions">Upravljaj pozicijama</string>
     <string name="manage_positions">Upravljanje Pozicijama</string>
     <string name="bond_node_state_whitelisted">Na Bijeloj Listi</string>
     <string name="bond_node_state_standby">U Pripravnosti</string>

@@ -757,7 +757,6 @@
     <string name="banxa_continue">Продолжить в Banxa</string>
     <string name="defi_no_positions_selected">Позиции не выбраны</string>
     <string name="defi_no_positions_selected_desc">Вы отключили все позиции для этой сети. Включите хотя бы одну позицию для просмотра балансов и управления действиями.</string>
-    <string name="defi_manage_positions">Управлять позициями</string>
     <string name="manage_positions">Управление Позициями</string>
     <string name="bond_node_state_whitelisted">В Белом Списке</string>
     <string name="bond_node_state_standby">В Ожидании</string>
