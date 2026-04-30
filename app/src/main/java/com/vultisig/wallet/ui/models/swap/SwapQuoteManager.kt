@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
@@ -174,15 +175,20 @@ constructor(
                         srcTokenValue,
                         SwapProvider.MAYA,
                     ) {
-                        swapQuoteRepository.getMayaSwapQuote(
-                            dstAddress = dst.address.address,
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            tokenValue = tokenValue,
-                            isAffiliate = isAffiliate,
-                            bpsDiscount = vultBPSDiscount ?: 0,
-                            referralCode = referral.orEmpty(),
-                        )
+                        swapQuoteRepository
+                            .getQuote(
+                                SwapProvider.MAYA,
+                                SwapQuoteRequest(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                    dstAddress = dst.address.address,
+                                    isAffiliate = isAffiliate,
+                                    bpsDiscount = vultBPSDiscount ?: 0,
+                                    referralCode = referral.orEmpty(),
+                                ),
+                            )
+                            .expectNative(SwapProvider.MAYA)
                     }
                         as SwapQuote.MayaChain
                 mayaSwapQuote to mayaSwapQuote.recommendedMinTokenValue
@@ -194,14 +200,19 @@ constructor(
                         srcTokenValue,
                         SwapProvider.THORCHAIN,
                     ) {
-                        swapQuoteRepository.getSwapQuote(
-                            dstAddress = dst.address.address,
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            tokenValue = tokenValue,
-                            referralCode = referral.orEmpty(),
-                            bpsDiscount = vultBPSDiscount ?: 0,
-                        )
+                        swapQuoteRepository
+                            .getQuote(
+                                SwapProvider.THORCHAIN,
+                                SwapQuoteRequest(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                    dstAddress = dst.address.address,
+                                    referralCode = referral.orEmpty(),
+                                    bpsDiscount = vultBPSDiscount ?: 0,
+                                ),
+                            )
+                            .expectNative(SwapProvider.THORCHAIN)
                     }
                         as SwapQuote.ThorChain
                 thorSwapQuote to thorSwapQuote.recommendedMinTokenValue
@@ -232,12 +243,18 @@ constructor(
         val swapQuote =
             getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.KYBER) {
                 val apiQuote =
-                    swapQuoteRepository.getKyberSwapQuote(
-                        srcToken = srcToken,
-                        dstToken = dstToken,
-                        tokenValue = tokenValue,
-                        affiliateBps = maxOf(0, KYBER_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)),
-                    )
+                    swapQuoteRepository
+                        .getQuote(
+                            SwapProvider.KYBER,
+                            SwapQuoteRequest(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                tokenValue = tokenValue,
+                                affiliateBps =
+                                    maxOf(0, KYBER_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)),
+                            ),
+                        )
+                        .expectEvm(SwapProvider.KYBER)
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val gasFees =
@@ -277,13 +294,18 @@ constructor(
         val swapQuote =
             getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.ONEINCH) {
                 val apiQuote =
-                    swapQuoteRepository.getOneInchSwapQuote(
-                        srcToken = srcToken,
-                        dstToken = dstToken,
-                        tokenValue = tokenValue,
-                        isAffiliate = isAffiliate,
-                        bpsDiscount = vultBPSDiscount ?: 0,
-                    )
+                    swapQuoteRepository
+                        .getQuote(
+                            SwapProvider.ONEINCH,
+                            SwapQuoteRequest(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                tokenValue = tokenValue,
+                                isAffiliate = isAffiliate,
+                                bpsDiscount = vultBPSDiscount ?: 0,
+                            ),
+                        )
+                        .expectEvm(SwapProvider.ONEINCH)
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val tokenFees =
@@ -321,21 +343,31 @@ constructor(
             getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, provider) {
                 val apiQuote =
                     if (provider == SwapProvider.LIFI)
-                        swapQuoteRepository.getLiFiSwapQuote(
-                            srcAddress = src.address.address,
-                            dstAddress = dst.address.address,
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            tokenValue = tokenValue,
-                            bpsDiscount = vultBPSDiscount ?: 0,
-                        )
+                        swapQuoteRepository
+                            .getQuote(
+                                SwapProvider.LIFI,
+                                SwapQuoteRequest(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                    srcAddress = src.address.address,
+                                    dstAddress = dst.address.address,
+                                    bpsDiscount = vultBPSDiscount ?: 0,
+                                ),
+                            )
+                            .expectEvm(SwapProvider.LIFI)
                     else
-                        swapQuoteRepository.getJupiterSwapQuote(
-                            srcAddress = src.address.address,
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            tokenValue = tokenValue,
-                        )
+                        swapQuoteRepository
+                            .getQuote(
+                                SwapProvider.JUPITER,
+                                SwapQuoteRequest(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                    srcAddress = src.address.address,
+                                ),
+                            )
+                            .expectEvm(SwapProvider.JUPITER)
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val (feeAmount, feeCoin) =

@@ -3,20 +3,33 @@ package com.vultisig.wallet.data.repositories
 import com.vultisig.wallet.data.db.models.AddressBookOrderEntity
 import com.vultisig.wallet.data.db.models.FolderOrderEntity
 import com.vultisig.wallet.data.db.models.VaultOrderEntity
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.repositories.onboarding.OnboardingRepository
 import com.vultisig.wallet.data.repositories.onboarding.OnboardingRepositoryImpl
 import com.vultisig.wallet.data.repositories.order.AddressBookOrderRepository
 import com.vultisig.wallet.data.repositories.order.FolderOrderRepository
 import com.vultisig.wallet.data.repositories.order.OrderRepository
 import com.vultisig.wallet.data.repositories.order.VaultOrderRepository
+import com.vultisig.wallet.data.repositories.swap.JupiterQuoteSource
+import com.vultisig.wallet.data.repositories.swap.KyberQuoteSource
+import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSource
+import com.vultisig.wallet.data.repositories.swap.MayaQuoteSource
+import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSource
+import com.vultisig.wallet.data.repositories.swap.SwapProviderKey
+import com.vultisig.wallet.data.repositories.swap.SwapProviderTable
+import com.vultisig.wallet.data.repositories.swap.SwapProviderTableImpl
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteSource
+import com.vultisig.wallet.data.repositories.swap.ThorChainQuoteSource
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepository
 import com.vultisig.wallet.data.repositories.vault.TemporaryVaultRepositoryImpl
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepoImpl
 import dagger.Binds
 import dagger.Module
+import dagger.Reusable
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoMap
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
@@ -151,6 +164,44 @@ internal interface RepositoriesModule {
     @Binds
     @Singleton
     fun bindSwapQuoteRepository(impl: SwapQuoteRepositoryImpl): SwapQuoteRepository
+
+    @Binds @Reusable fun bindSwapProviderTable(impl: SwapProviderTableImpl): SwapProviderTable
+
+    @Binds
+    @IntoMap
+    @SwapProviderKey(SwapProvider.THORCHAIN)
+    @Reusable
+    fun bindThorChainQuoteSource(impl: ThorChainQuoteSource): SwapQuoteSource
+
+    @Binds
+    @IntoMap
+    @SwapProviderKey(SwapProvider.MAYA)
+    @Reusable
+    fun bindMayaQuoteSource(impl: MayaQuoteSource): SwapQuoteSource
+
+    @Binds
+    @IntoMap
+    @SwapProviderKey(SwapProvider.ONEINCH)
+    @Reusable
+    fun bindOneInchQuoteSource(impl: OneInchQuoteSource): SwapQuoteSource
+
+    @Binds
+    @IntoMap
+    @SwapProviderKey(SwapProvider.LIFI)
+    @Reusable
+    fun bindLiFiQuoteSource(impl: LiFiQuoteSource): SwapQuoteSource
+
+    @Binds
+    @IntoMap
+    @SwapProviderKey(SwapProvider.JUPITER)
+    @Reusable
+    fun bindJupiterQuoteSource(impl: JupiterQuoteSource): SwapQuoteSource
+
+    @Binds
+    @IntoMap
+    @SwapProviderKey(SwapProvider.KYBER)
+    @Reusable
+    fun bindKyberQuoteSource(impl: KyberQuoteSource): SwapQuoteSource
 
     @Binds
     @Singleton
