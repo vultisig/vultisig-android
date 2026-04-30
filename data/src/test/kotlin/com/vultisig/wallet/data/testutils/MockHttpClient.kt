@@ -26,6 +26,7 @@ import kotlinx.serialization.json.Json
  */
 object MockHttpClient {
 
+    /** Pre-built JSON content-type headers for use in mock engine responses. */
     val JSON_HEADERS = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
 
     private val json = Json {

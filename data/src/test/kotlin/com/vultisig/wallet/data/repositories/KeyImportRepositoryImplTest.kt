@@ -9,20 +9,24 @@ import kotlin.test.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
+/** Unit tests for [KeyImportRepositoryImpl]. */
 internal class KeyImportRepositoryImplTest {
 
     private lateinit var repository: KeyImportRepositoryImpl
 
+    /** Creates a fresh [KeyImportRepositoryImpl] instance before each test. */
     @BeforeEach
     fun setUp() {
         repository = KeyImportRepositoryImpl()
     }
 
+    /** Verifies get returns null before any data is stored. */
     @Test
     fun `get returns null initially`() {
         assertNull(repository.get())
     }
 
+    /** Verifies setMnemonic stores the mnemonic and leaves chainSettings empty. */
     @Test
     fun `setMnemonic then get returns data with mnemonic`() {
         repository.setMnemonic("word1 word2 word3")
@@ -33,6 +37,7 @@ internal class KeyImportRepositoryImplTest {
         assertTrue(data.chainSettings.isEmpty())
     }
 
+    /** Verifies setMnemonic replaces the previous mnemonic and clears chain settings. */
     @Test
     fun `setMnemonic overwrites previous mnemonic and discards chain settings`() {
         repository.setMnemonic("old mnemonic")
@@ -46,6 +51,7 @@ internal class KeyImportRepositoryImplTest {
         assertTrue(data.chainSettings.isEmpty())
     }
 
+    /** Verifies setChainSettings after setMnemonic preserves the stored mnemonic. */
     @Test
     fun `setChainSettings after setMnemonic preserves mnemonic`() {
         repository.setMnemonic("test mnemonic")
@@ -65,6 +71,9 @@ internal class KeyImportRepositoryImplTest {
         assertEquals(Chain.Ethereum, data.chainSettings[1].chain)
     }
 
+    /**
+     * Verifies setChainSettings without a prior setMnemonic initializes mnemonic to empty string.
+     */
     @Test
     fun `setChainSettings without prior setMnemonic creates data with empty mnemonic`() {
         val settings = listOf(ChainImportSetting(chain = Chain.Solana))
@@ -78,6 +87,7 @@ internal class KeyImportRepositoryImplTest {
         assertEquals(Chain.Solana, data.chainSettings[0].chain)
     }
 
+    /** Verifies setChainSettings stores the derivation path supplied in the setting. */
     @Test
     fun `setChainSettings preserves derivation path`() {
         val settings =
@@ -93,6 +103,7 @@ internal class KeyImportRepositoryImplTest {
         assertEquals(DerivationPath.Phantom, data.chainSettings[0].derivationPath)
     }
 
+    /** Verifies clear resets the repository so get returns null. */
     @Test
     fun `clear removes all data`() {
         repository.setMnemonic("test mnemonic")
@@ -103,6 +114,7 @@ internal class KeyImportRepositoryImplTest {
         assertNull(repository.get())
     }
 
+    /** Verifies clear followed by setChainSettings starts fresh with an empty mnemonic. */
     @Test
     fun `clear then setChainSettings creates fresh data with empty mnemonic`() {
         // Simulate stale data from a previous initiating session
@@ -120,6 +132,7 @@ internal class KeyImportRepositoryImplTest {
         assertEquals(Chain.Ethereum, data.chainSettings[0].chain)
     }
 
+    /** Verifies that skipping clear causes a stale mnemonic to persist into the new session. */
     @Test
     fun `setChainSettings on stale data without clear preserves old mnemonic`() {
         // This documents the bug that clear() prevents:
@@ -133,12 +146,14 @@ internal class KeyImportRepositoryImplTest {
         assertEquals("stale mnemonic", data.mnemonic)
     }
 
+    /** Verifies the default derivation path is DerivationPath.Default. */
     @Test
     fun `default derivation path is Default`() {
         val setting = ChainImportSetting(chain = Chain.Bitcoin)
         assertEquals(DerivationPath.Default, setting.derivationPath)
     }
 
+    /** Verifies toString does not expose the mnemonic value. */
     @Test
     fun `toString does not leak mnemonic`() {
         val mnemonic = "secret words here"
@@ -149,6 +164,7 @@ internal class KeyImportRepositoryImplTest {
         assertTrue("***" in str)
     }
 
+    /** Verifies Default derivation path round-trips for Bitcoin. */
     @Test
     fun `setChainSettings preserves Default derivation for Bitcoin`() {
         repository.setMnemonic("test")
@@ -164,6 +180,7 @@ internal class KeyImportRepositoryImplTest {
         assertEquals(DerivationPath.Default, data.chainSettings[0].derivationPath)
     }
 
+    /** Verifies Default derivation path round-trips for Ethereum. */
     @Test
     fun `setChainSettings preserves Default derivation for Ethereum`() {
         repository.setMnemonic("test")
@@ -179,6 +196,7 @@ internal class KeyImportRepositoryImplTest {
         assertEquals(DerivationPath.Default, data.chainSettings[0].derivationPath)
     }
 
+    /** Verifies Phantom derivation path round-trips for Solana. */
     @Test
     fun `setChainSettings preserves Phantom derivation for Solana round-trip`() {
         repository.setMnemonic("test")
@@ -197,6 +215,7 @@ internal class KeyImportRepositoryImplTest {
         assertEquals(DerivationPath.Phantom, data.chainSettings[0].derivationPath)
     }
 
+    /** Verifies Default derivation path round-trips for Cosmos (GaiaChain). */
     @Test
     fun `setChainSettings preserves Default derivation for Cosmos`() {
         repository.setMnemonic("test")
@@ -212,6 +231,7 @@ internal class KeyImportRepositoryImplTest {
         assertEquals(DerivationPath.Default, data.chainSettings[0].derivationPath)
     }
 
+    /** Verifies Default derivation path round-trips for Tron. */
     @Test
     fun `setChainSettings preserves Default derivation for Tron`() {
         repository.setMnemonic("test")
