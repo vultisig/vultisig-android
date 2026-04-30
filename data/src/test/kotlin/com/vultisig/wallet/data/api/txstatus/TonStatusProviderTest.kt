@@ -1,9 +1,9 @@
 package com.vultisig.wallet.data.api.txstatus
 
-import com.vultisig.wallet.data.api.chains.TonApi
-import com.vultisig.wallet.data.api.chains.TonStatusResult
-import com.vultisig.wallet.data.api.chains.TonTransactionDescriptionJson
-import com.vultisig.wallet.data.api.chains.TransactionJson
+import com.vultisig.wallet.data.api.chains.ton.TonApi
+import com.vultisig.wallet.data.api.chains.ton.TonStatusResult
+import com.vultisig.wallet.data.api.chains.ton.TonTransactionDescriptionJson
+import com.vultisig.wallet.data.api.chains.ton.TransactionJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import io.mockk.coEvery
