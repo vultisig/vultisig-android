@@ -1,7 +1,9 @@
 package com.vultisig.wallet.data.repositories
 
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
 internal class EvmCommonSelectorsTest {
@@ -100,6 +102,43 @@ internal class EvmCommonSelectorsTest {
     }
 
     @Test
+    fun `Uniswap V3 SwapRouter02 selectors resolve`() {
+        assertEquals(
+            "exactInputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+            EvmCommonSelectors.lookup("04e45aaf"),
+        )
+        assertEquals(
+            "exactInput((bytes,address,uint256,uint256))",
+            EvmCommonSelectors.lookup("b858183f"),
+        )
+        assertEquals(
+            "exactOutputSingle((address,address,uint24,address,uint256,uint256,uint160))",
+            EvmCommonSelectors.lookup("5023b4df"),
+        )
+        assertEquals(
+            "exactOutput((bytes,address,uint256,uint256))",
+            EvmCommonSelectors.lookup("09b81346"),
+        )
+    }
+
+    @Test
+    fun `Universal Router execute selector resolves`() {
+        assertEquals("execute(bytes,bytes[],uint256)", EvmCommonSelectors.lookup("3593564c"))
+    }
+
+    @Test
+    fun `EIP-2612 and DAI permit selectors resolve`() {
+        assertEquals(
+            "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)",
+            EvmCommonSelectors.lookup("d505accf"),
+        )
+        assertEquals(
+            "permit(address,address,uint256,uint256,bool,uint8,bytes32,bytes32)",
+            EvmCommonSelectors.lookup("8fcbaf0c"),
+        )
+    }
+
+    @Test
     fun `lookup is case-insensitive`() {
         assertEquals("approve(address,uint256)", EvmCommonSelectors.lookup("095EA7B3"))
     }
@@ -107,5 +146,31 @@ internal class EvmCommonSelectorsTest {
     @Test
     fun `unknown selector returns null`() {
         assertNull(EvmCommonSelectors.lookup("deadbeef"))
+    }
+
+    @Test
+    fun `every entry has 8 lowercase hex selector and parseable name(types) signature`() {
+        val hexKey = Regex("^[0-9a-f]{8}$")
+        val signature = Regex("^[a-zA-Z_][a-zA-Z0-9_]*\\(.*\\)$")
+
+        val entries = EvmCommonSelectors.entries
+        assertTrue(entries.isNotEmpty(), "table must not be empty")
+
+        for ((selector, sig) in entries) {
+            assertTrue(
+                hexKey.matches(selector),
+                "selector '$selector' must be 8 lowercase hex chars",
+            )
+            assertTrue(signature.matches(sig), "signature '$sig' must look like name(types)")
+            assertEquals(
+                sig.count { it == '(' },
+                sig.count { it == ')' },
+                "unbalanced parentheses in '$sig'",
+            )
+            assertNotNull(
+                EvmCommonSelectors.lookup(selector),
+                "lookup('$selector') must round-trip",
+            )
+        }
     }
 }

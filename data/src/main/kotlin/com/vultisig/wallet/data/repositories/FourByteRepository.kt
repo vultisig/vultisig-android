@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.utils.convertParameter
 import com.vultisig.wallet.data.utils.decodeGeneric
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.jsonArray
@@ -21,13 +22,15 @@ internal class FourByteRepositoryImpl
 constructor(private val fourByteApi: FourByteApi, @param:PrettyJson private val json: Json) :
     FourByteRepository {
     override suspend fun decodeFunction(memo: String): String? {
-        if (memo.length < 8) return null
-        try {
-            val hash = memo.stripHexPrefix().substring(0, 8)
-            return EvmCommonSelectors.lookup(hash) ?: fourByteApi.decodeFunction(hash)
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            return null
+        val hash = memo.stripHexPrefix()
+        if (hash.length < 8) return null
+        val selector = hash.substring(0, 8)
+        return try {
+            EvmCommonSelectors.lookup(selector) ?: fourByteApi.decodeFunction(selector)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
         }
     }
 

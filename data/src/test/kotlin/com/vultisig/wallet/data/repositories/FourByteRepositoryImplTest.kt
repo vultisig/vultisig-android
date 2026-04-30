@@ -8,6 +8,8 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.fail
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -44,5 +46,33 @@ internal class FourByteRepositoryImplTest {
     @Test
     fun `decodeFunction returns null for memo shorter than 4 bytes`() = runTest {
         assertNull(repository.decodeFunction("0x12"))
+    }
+
+    @Test
+    fun `decodeFunction returns null when 0x prefix leaves fewer than 8 hex chars`() = runTest {
+        // `0xabcdef` is 8 chars total but only 6 after the 0x prefix is stripped.
+        assertNull(repository.decodeFunction("0xabcdef"))
+        coVerify(exactly = 0) { fourByteApi.decodeFunction(any()) }
+    }
+
+    @Test
+    fun `decodeFunction returns null when API throws a non-cancellation exception`() = runTest {
+        val memo = "0xdeadbeef"
+        coEvery { fourByteApi.decodeFunction("deadbeef") } throws RuntimeException("boom")
+
+        assertNull(repository.decodeFunction(memo))
+    }
+
+    @Test
+    fun `decodeFunction rethrows CancellationException from the API`() = runTest {
+        val memo = "0xdeadbeef"
+        coEvery { fourByteApi.decodeFunction("deadbeef") } throws CancellationException("cancelled")
+
+        try {
+            repository.decodeFunction(memo)
+            fail("expected CancellationException to propagate")
+        } catch (_: CancellationException) {
+            // expected
+        }
     }
 }
