@@ -694,7 +694,7 @@ constructor(
             val runeRedeemBase = position.runeRedeemValue
             val symbol = Coins.ThorChain.RUNE.ticker
             val userUnitsLongOrNull =
-                runCatching { userUnits.longValueExact() }.getOrNull()?.takeIf { it > 0L }
+                userUnits.takeIf { it.signum() > 0 && it.bitLength() < Long.SIZE_BITS }?.toLong()
             val userRune =
                 userUnitsLongOrNull?.let { userUnitsLong ->
                     RemoveLpCalculator.computeAmountDisplay(
