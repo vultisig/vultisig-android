@@ -57,7 +57,7 @@ internal fun ThorchainDefiPositionsScreen(
 ) {
     val state by model.state.collectAsState()
 
-    LaunchedEffect(Unit) { model.setData(vaultId = vaultId) }
+    LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
 
     ThorchainDefiPositionScreenContent(
         state = state,

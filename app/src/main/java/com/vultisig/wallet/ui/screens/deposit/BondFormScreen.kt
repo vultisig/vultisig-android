@@ -611,20 +611,19 @@ private fun MayaBondFormContent(
                         val lpText = lpUnitsFieldState.text.toString()
                         val estimatedBondValue =
                             remember(lpText, state.removeLpUnitsDivisor, state.removeLpPoolDepth) {
-                                val lpLong = lpText.toLongOrNull() ?: 0L
+                                val lpUnits = lpText.toBigDecimalOrNull()
                                 if (
-                                    lpLong > 0L &&
+                                    lpUnits != null &&
+                                        lpUnits.signum() > 0 &&
                                         state.removeLpUnitsDivisor.signum() > 0 &&
                                         state.removeLpPoolDepth.signum() > 0
                                 ) {
                                     val ratio =
-                                        lpLong
-                                            .toBigDecimal()
-                                            .divide(
-                                                state.removeLpUnitsDivisor.toBigDecimal(),
-                                                10,
-                                                java.math.RoundingMode.HALF_UP,
-                                            )
+                                        lpUnits.divide(
+                                            state.removeLpUnitsDivisor.toBigDecimal(),
+                                            10,
+                                            java.math.RoundingMode.HALF_UP,
+                                        )
                                     val cacao =
                                         ratio
                                             .multiply(state.removeLpPoolDepth.toBigDecimal())

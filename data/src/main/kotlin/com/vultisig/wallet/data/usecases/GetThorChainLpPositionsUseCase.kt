@@ -46,7 +46,10 @@ internal class GetThorChainLpPositionsUseCaseImpl
 constructor(private val thorChainApi: ThorChainApi) : GetThorChainLpPositionsUseCase {
 
     override suspend fun fetchAvailablePools(period: String?): List<ThorChainPoolStatsJson> =
-        thorChainApi.getPoolStats(period).filter {
+        thorChainApi.getPoolStats(period).filterAvailable()
+
+    private fun List<ThorChainPoolStatsJson>.filterAvailable(): List<ThorChainPoolStatsJson> =
+        filter {
             it.status.equals(POOL_STATUS_AVAILABLE, ignoreCase = true)
         }
 
@@ -56,7 +59,7 @@ constructor(private val thorChainApi: ThorChainApi) : GetThorChainLpPositionsUse
         period: String?,
         availablePools: List<ThorChainPoolStatsJson>?,
     ): List<ThorChainLpPosition> {
-        val pools = availablePools ?: fetchAvailablePools(period)
+        val pools = availablePools?.filterAvailable() ?: fetchAvailablePools(period)
         return coroutineScope {
             pools
                 .map { pool ->

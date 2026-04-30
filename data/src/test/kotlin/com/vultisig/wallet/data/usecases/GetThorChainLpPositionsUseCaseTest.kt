@@ -87,6 +87,29 @@ internal class GetThorChainLpPositionsUseCaseTest {
     }
 
     @Test
+    fun `uses injected availablePools and skips getPoolStats`() = runTest {
+        val pools = listOf(pool("BTC.BTC"), pool("ETH.ETH"))
+        coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } returns lp(units = "1")
+        coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns null
+
+        val positions = useCase(runeAddress = RUNE_ADDR, availablePools = pools)
+
+        assertEquals(listOf("BTC.BTC"), positions.map { it.pool })
+        coVerify(exactly = 0) { api.getPoolStats(any()) }
+    }
+
+    @Test
+    fun `filters non-available pools from injected availablePools`() = runTest {
+        val pools = listOf(pool("BTC.BTC", status = "staged"), pool("ETH.ETH"))
+        coEvery { api.getLiquidityProvider("ETH.ETH", RUNE_ADDR) } returns lp(units = "1")
+
+        val positions = useCase(runeAddress = RUNE_ADDR, availablePools = pools)
+
+        assertEquals(listOf("ETH.ETH"), positions.map { it.pool })
+        coVerify(exactly = 0) { api.getLiquidityProvider("BTC.BTC", any()) }
+    }
+
+    @Test
     fun `swallows per-pool network errors and continues`() = runTest {
         coEvery { api.getPoolStats(any()) } returns listOf(pool("BTC.BTC"), pool("ETH.ETH"))
         coEvery { api.getLiquidityProvider("BTC.BTC", RUNE_ADDR) } throws

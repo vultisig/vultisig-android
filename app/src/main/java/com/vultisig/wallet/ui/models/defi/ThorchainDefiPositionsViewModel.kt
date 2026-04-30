@@ -994,6 +994,8 @@ constructor(
     fun setPositionSelectionDialogVisibility(show: Boolean) {
         viewModelScope.launch {
             if (show) {
+                // Retry a previously-failed getPoolStats so reopening the dialog isn't a soft-lock.
+                ensureAvailablePoolsLoaded()
                 state.update {
                     it.copy(
                         showPositionSelectionDialog = true,
