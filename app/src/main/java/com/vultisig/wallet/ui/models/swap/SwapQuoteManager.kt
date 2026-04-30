@@ -27,6 +27,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -207,7 +208,13 @@ constructor(
                                 }
                             }
                             .onFailure { e ->
-                                if (e is CancellationException) throw e
+                                // TimeoutCancellationException extends CancellationException
+                                // but is a transient per-provider failure — don't let it
+                                // cancel sibling fetches via awaitAll.
+                                if (
+                                    e is CancellationException && e !is TimeoutCancellationException
+                                )
+                                    throw e
                                 Timber.w(
                                     e,
                                     "Quote fetch failed provider=%s src=%s dst=%s amount=%s",

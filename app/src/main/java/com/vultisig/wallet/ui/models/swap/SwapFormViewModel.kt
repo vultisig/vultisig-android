@@ -30,6 +30,7 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.getTierType
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.findCurrentSrc
 import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -805,7 +806,7 @@ constructor(
 
     @OptIn(FlowPreview::class)
     private fun calculateFees() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             combine(selectedSrc.filterNotNull(), selectedDst.filterNotNull()) { src, dst ->
                     src to dst
                 }
