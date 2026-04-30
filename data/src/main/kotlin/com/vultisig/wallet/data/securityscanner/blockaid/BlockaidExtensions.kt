@@ -116,7 +116,8 @@ private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): Securit
             globalStatus.equals("error", ignoreCase = true)
     ) {
         val errorMessage = validation?.error ?: "Scanning failed"
-        throw SecurityScannerException("SecurityScanner $errorMessage , payload: $this")
+        Timber.w("SecurityScanner scan unavailable: $errorMessage")
+        return SecurityRiskLevel.MEDIUM
     }
 
     val isBenign =

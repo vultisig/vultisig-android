@@ -3,10 +3,10 @@ package com.vultisig.wallet.data.securityscanner
 import com.vultisig.wallet.data.models.Chain
 import timber.log.Timber
 
-internal suspend fun <T> runSecurityScan(
+internal suspend fun runSecurityScan(
     transaction: SecurityScannerTransaction,
-    block: suspend () -> T,
-): T {
+    block: suspend () -> SecurityScannerResult,
+): SecurityScannerResult {
     Timber.d("SecurityScanner: Scanning ${transaction.chain.name} transaction: $transaction")
     return try {
         val result = block()
@@ -15,7 +15,14 @@ internal suspend fun <T> runSecurityScan(
     } catch (t: Throwable) {
         val errorMessage = "SecurityScanner: Error scanning ${transaction.chain.name}"
         Timber.e(t, errorMessage)
-        throw SecurityScannerException(errorMessage, t, transaction.chain, transaction.toString())
+        SecurityScannerResult(
+            provider = "",
+            isSecure = false,
+            riskLevel = SecurityRiskLevel.MEDIUM,
+            warnings = emptyList(),
+            description = "Scan unavailable",
+            recommendations = "",
+        )
     }
 }
 
