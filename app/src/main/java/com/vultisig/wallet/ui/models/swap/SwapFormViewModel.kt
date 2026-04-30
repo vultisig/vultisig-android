@@ -55,6 +55,9 @@ import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -846,22 +849,27 @@ constructor(
                             referralCode.value
                                 ?: vaultId?.let { referralRepository.getExternalReferralBy(it) }
 
-                        val candidates =
-                            eligibleProviders.map { p ->
-                                val discount =
-                                    vaultId?.let { id ->
-                                        getDiscountBpsUseCase.invoke(id, p).takeIf { bps ->
-                                            bps != 0
-                                        }
+                        val candidates = coroutineScope {
+                            eligibleProviders
+                                .map { p ->
+                                    async {
+                                        val discount =
+                                            vaultId?.let { id ->
+                                                getDiscountBpsUseCase.invoke(id, p).takeIf { bps ->
+                                                    bps != 0
+                                                }
+                                            }
+                                        QuoteCandidate(
+                                            provider = p,
+                                            vultBPSDiscount = discount,
+                                            referral = baselineReferral,
+                                        )
                                     }
-                                QuoteCandidate(
-                                    provider = p,
-                                    vultBPSDiscount = discount,
-                                    referral = baselineReferral,
-                                )
-                            }
+                                }
+                                .awaitAll()
+                        }
 
-                        val quoteResult =
+                        val bestQuote =
                             swapQuoteManager.fetchBestQuote(
                                 candidates = candidates,
                                 src = src,
@@ -874,12 +882,12 @@ constructor(
                                 amount = amount,
                             )
 
+                        val quoteResult = bestQuote.result
                         val provider = quoteResult.provider
                         this@SwapFormViewModel.provider = provider
 
-                        val winner = candidates.first { it.provider == provider }
-                        val vultBPSDiscount = winner.vultBPSDiscount
-                        val referral = winner.referral
+                        val vultBPSDiscount = bestQuote.candidate.vultBPSDiscount
+                        val referral = bestQuote.candidate.referral
 
                         if (provider == SwapProvider.THORCHAIN) {
                             referral?.let { code ->

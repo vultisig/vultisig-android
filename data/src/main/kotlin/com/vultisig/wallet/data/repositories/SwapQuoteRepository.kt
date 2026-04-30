@@ -602,7 +602,7 @@ constructor(
                     }
 
                 Chain.BscChain ->
-                    if (ticker in thorBscTokens)
+                    if (ticker.uppercase() in thorBscTokens)
                         setOf(
                             SwapProvider.THORCHAIN,
                             SwapProvider.ONEINCH,
@@ -612,7 +612,7 @@ constructor(
                     else setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
 
                 Chain.Avalanche ->
-                    if (ticker in thorAvaxTokens)
+                    if (ticker.uppercase() in thorAvaxTokens)
                         setOf(
                             SwapProvider.THORCHAIN,
                             SwapProvider.ONEINCH,

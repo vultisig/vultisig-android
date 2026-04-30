@@ -1690,17 +1690,22 @@ internal class SwapFormViewModelTest {
         estimatedDstFiat: FiatValue = FiatValue(BigDecimal("95.00"), "USD"),
         feeText: String = "$0.00",
         swapFeeFiat: FiatValue = FiatValue(BigDecimal.ZERO, "USD"),
-    ): QuoteFetchResult =
-        QuoteFetchResult(
-            quote = quote,
-            provider = provider,
-            providerUiText = providerUiText,
-            srcFiatValueText = srcFiatValueText,
-            estimatedDstTokenValue = estimatedDstTokenValue,
-            estimatedDstFiatValue = estimatedDstFiatValue,
-            estimatedDstFiat = estimatedDstFiat,
-            feeText = feeText,
-            swapFeeFiat = swapFeeFiat,
+    ): BestQuote =
+        BestQuote(
+            candidate =
+                QuoteCandidate(provider = provider, vultBPSDiscount = null, referral = null),
+            result =
+                QuoteFetchResult(
+                    quote = quote,
+                    provider = provider,
+                    providerUiText = providerUiText,
+                    srcFiatValueText = srcFiatValueText,
+                    estimatedDstTokenValue = estimatedDstTokenValue,
+                    estimatedDstFiatValue = estimatedDstFiatValue,
+                    estimatedDstFiat = estimatedDstFiat,
+                    feeText = feeText,
+                    swapFeeFiat = swapFeeFiat,
+                ),
         )
 
     private fun createThorChainQuote(
