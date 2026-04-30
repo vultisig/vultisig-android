@@ -88,7 +88,7 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
     ) {
         withRelayRetry {
             val response = httpClient.post("$serverUrl/$sessionId") { setBody(localPartyId) }
-            if (response.status.value == 409 || response.status.value >= 500) {
+            if (response.status.value == 409) {
                 Timber.w("startSession: server returned %d, ignoring", response.status.value)
                 return@withRelayRetry
             }
