@@ -275,6 +275,27 @@ internal class AddressEntryViewModelTest {
             assertEquals(ETH_ADDRESS, vm.addressTextFieldState.text.toString())
         }
 
+    /**
+     * Verifies that an unsupported chainId in the route does not crash the VM and that calling
+     * [AddressEntryViewModel.saveAddress] sets an address error without invoking
+     * [ChainAccountAddressRepository.isValid] (address field is empty so the blank-address guard
+     * fires first).
+     */
+    @Test
+    fun `saveAddress with unsupported chainId does not invoke isValid and sets addressError`() =
+        runTest(testDispatcher) {
+            every { any<SavedStateHandle>().toRoute<Route.AddressEntry>() } returns
+                Route.AddressEntry(chainId = "UnknownChain", address = null, vaultId = VAULT_ID)
+            val vm = createViewModel()
+            vm.titleTextFieldState.edit { replace(0, length, "Alice") }
+
+            vm.saveAddress()
+            advanceUntilIdle()
+
+            verify(exactly = 0) { chainAccountAddressRepository.isValid(any(), any()) }
+            assertNotNull(vm.state.value.addressError)
+        }
+
     private companion object {
         const val VAULT_ID = "vault-1"
         const val ETH_ADDRESS = "0x1234567890123456789012345678901234567890"
