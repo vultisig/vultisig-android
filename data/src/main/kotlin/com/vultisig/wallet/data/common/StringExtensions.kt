@@ -7,6 +7,8 @@ import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
 import timber.log.Timber
 
+const val ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+
 fun String.toHexBytes(): ByteArray {
     return Numeric.hexStringToByteArray(this)
 }
@@ -82,10 +84,7 @@ fun String.remove0x(): String {
     return this
 }
 
-fun String.isNotEmptyContract(): Boolean {
-    val zeroAddress = "0x0000000000000000000000000000000000000000"
-    return isNotEmpty() && !equals(zeroAddress, ignoreCase = true)
-}
+fun String.isNotEmptyContract(): Boolean = isNotEmpty() && !equals(ZERO_ADDRESS, ignoreCase = true)
 
 fun String?.convertToBigIntegerOrZero(): BigInteger {
     val cleanedInput = this?.removePrefix("0x")
