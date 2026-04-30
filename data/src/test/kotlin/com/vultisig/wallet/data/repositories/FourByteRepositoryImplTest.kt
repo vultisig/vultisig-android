@@ -46,6 +46,7 @@ internal class FourByteRepositoryImplTest {
     @Test
     fun `decodeFunction returns null for memo shorter than 4 bytes`() = runTest {
         assertNull(repository.decodeFunction("0x12"))
+        coVerify(exactly = 0) { fourByteApi.decodeFunction(any()) }
     }
 
     @Test
