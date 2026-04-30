@@ -22,7 +22,6 @@ import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.chains.helpers.TerraHelper
 import com.vultisig.wallet.data.chains.helpers.TronHelper
 import com.vultisig.wallet.data.chains.helpers.UtxoHelper
-import com.vultisig.wallet.data.crypto.CardanoUtils
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
@@ -434,17 +433,9 @@ class ChainHelpersTest {
     @Test
     fun sendCardano() {
         val transactions: List<TransactionData> = loadTransactionData(CARDANO_JSON_FILE)
-
         transactions.forEach { transaction ->
-            val derivedAddress =
-                CardanoUtils.createEnterpriseAddress(transaction.keysignPayload.coin.hexPublicKey)
             val internalPayload = transaction.keysignPayload.toInternalKeySignPayload()
-            val payload =
-                internalPayload.copy(
-                    coin = internalPayload.coin.copy(address = derivedAddress),
-                    toAddress = derivedAddress,
-                )
-            val preImageHashes = CardanoHelper.getPreSignedImageHash(payload)
+            val preImageHashes = CardanoHelper.getPreSignedImageHash(internalPayload)
 
             assertEquals(1, preImageHashes.size)
             assertTrue(

@@ -23,6 +23,8 @@ import wallet.core.jni.proto.Solana
 internal const val SOLANA_PRIORITY_FEE_PRICE = 1000000L
 internal const val SOLANA_PRIORITY_FEE_LIMIT = 100000
 
+const val SOLANA_DEFAULT_CONTRACT_ADDRESS = "So11111111111111111111111111111111111111112"
+
 class SolanaHelper(private val vaultHexPublicKey: String) {
 
     private val coinType = CoinType.SOLANA
