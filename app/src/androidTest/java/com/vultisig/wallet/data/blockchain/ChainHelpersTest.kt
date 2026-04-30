@@ -1,6 +1,11 @@
 package com.vultisig.wallet.data.blockchain
 
+import BlockchainSpecific
+import Coin
 import JsonReader
+import KeysignPayload
+import SignData
+import TonSpecific
 import TransactionData
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
@@ -29,7 +34,10 @@ import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import vultisig.keysign.v1.SignTon
+import vultisig.keysign.v1.TonMessage
 import wallet.core.jni.CoinType
+import wallet.core.jni.proto.TheOpenNetwork
 
 class ChainHelpersTest {
     private val json = Json {
@@ -127,6 +135,76 @@ class ChainHelpersTest {
                 )
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
+    }
+
+    /**
+     * Regression: verifies that per-message `payload` and `stateInit` fields are threaded into the
+     * WalletCore SigningInput, and that multi-message signing emits one Transfer per TonMessage in
+     * order. Mirrors iOS `TonSendTransactionTests.testTonConnectThreadsStateInitAndCustomPayload`.
+     */
+    @Test
+    fun tonConnectPayloadAndStateInitAreThreadedIntoSigningInput() {
+        val coin =
+            Coin(
+                chain = "Ton",
+                ticker = "TON",
+                address = "UQCc9iCgP_b5RMJcFE5XD8zStfjtNHLhDWfUqC5m1SjSer95",
+                decimals = 9,
+                priceProviderId = "the-open-network",
+                isNativeToken = true,
+                hexPublicKey = HEX_PUBLIC_KEY_EDDSA,
+                logo = "ton",
+            )
+        val blockchainSpecific =
+            BlockchainSpecific(
+                tonSpecific =
+                    TonSpecific(
+                        sendMaxAmount = false,
+                        sequenceNumber = 0L,
+                        expireAt = 1753579977L,
+                        bounceable = false,
+                    )
+            )
+        val destA = "UQDmLe6ticcY_uLZsfurdYONshNuCn8IS81KcJ8p6M6ISMcB"
+        val destB = "UQCc9iCgP_b5RMJcFE5XD8zStfjtNHLhDWfUqC5m1SjSer95"
+        val customPayload = "te6cckEBAQEAAgAAABGw7yzH"
+        val stateInit = "te6cckEBAQEAAgAAAEysuc0="
+
+        val payload =
+            KeysignPayload(
+                    coin = coin,
+                    toAddress = "",
+                    toAmount = "0",
+                    blockchainSpecific = blockchainSpecific,
+                    signData =
+                        SignData(
+                            signTon =
+                                SignTon(
+                                    tonMessages =
+                                        listOf(
+                                            TonMessage(
+                                                to = destA,
+                                                amount = "10000000",
+                                                payload = customPayload,
+                                                stateInit = stateInit,
+                                            ),
+                                            TonMessage(to = destB, amount = "20000000"),
+                                        )
+                                )
+                        ),
+                    vaultPublicKeyEcdsa = HEX_PUBLIC_KEY,
+                    libType = "DKLS",
+                )
+                .toInternalKeySignPayload()
+
+        val inputData = TonHelper.getPreSignedInputData(payload)
+        val signingInput = TheOpenNetwork.SigningInput.parseFrom(inputData)
+
+        assertEquals(2, signingInput.messagesCount)
+        assertEquals(stateInit, signingInput.getMessages(0).stateInit)
+        assertEquals(customPayload, signingInput.getMessages(0).customPayload)
+        assertEquals("", signingInput.getMessages(1).stateInit)
+        assertEquals("", signingInput.getMessages(1).customPayload)
     }
 
     @Test

@@ -1059,6 +1059,10 @@
 
     <string name="key_import_device_count_get_started">Начать</string>
     <string name="choose_device_count_a11y_description">Сколько у вас устройств? Выбрано: %1$s. Нажмите, чтобы выбрать другое.</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">Сообщения</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">Рекомендуется</string>
 
     <string name="welcome_tip">Совет: Вы можете использовать браузер как устройство</string>

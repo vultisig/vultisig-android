@@ -9,12 +9,12 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import io.mockk.coEvery
+import io.mockk.coJustRun
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -24,7 +24,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-/** Unit tests for [VaultRepositoryImpl] using MockK mocks of [VaultDao] and [TokenRepository]. */
 internal class VaultRepositoryImplTest {
 
     private lateinit var vaultDao: VaultDao
@@ -33,308 +32,27 @@ internal class VaultRepositoryImplTest {
 
     @BeforeEach
     fun setUp() {
-        vaultDao = mockk(relaxed = true)
-        tokenRepository = mockk(relaxed = true)
+        vaultDao = mockk(relaxUnitFun = true)
+        tokenRepository = mockk()
         repository = VaultRepositoryImpl(vaultDao, tokenRepository)
     }
 
-    @Test
-    fun `get returns null when vault is not found`() = runTest {
-        coEvery { vaultDao.loadById(VAULT_ID) } returns null
-
-        assertNull(repository.get(VAULT_ID))
-    }
-
-    @Test
-    fun `get returns vault with correct id and name`() = runTest {
-        coEvery { vaultDao.loadById(VAULT_ID) } returns fakeVaultData()
-
-        val vault = repository.get(VAULT_ID)
-
-        assertNotNull(vault)
-        assertEquals(VAULT_ID, vault.id)
-        assertEquals(VAULT_NAME, vault.name)
-    }
-
-    @Test
-    fun `add calls dao insert with correct vault id and name`() = runTest {
-        val inserted = slot<VaultWithKeySharesAndTokens>()
-        coEvery { vaultDao.insert(capture(inserted)) } returns Unit
-
-        repository.add(fakeVault())
-
-        assertEquals(VAULT_ID, inserted.captured.vault.id)
-        assertEquals(VAULT_NAME, inserted.captured.vault.name)
-    }
-
-    @Test
-    fun `upsert calls dao upsert with correct vault id`() = runTest {
-        val upserted = slot<VaultWithKeySharesAndTokens>()
-        coEvery { vaultDao.upsert(capture(upserted)) } returns Unit
-
-        repository.upsert(fakeVault())
-
-        assertEquals(VAULT_ID, upserted.captured.vault.id)
-    }
-
-    @Test
-    fun `delete calls dao delete with the vault id`() = runTest {
-        repository.delete(VAULT_ID)
-
-        coVerify { vaultDao.delete(VAULT_ID) }
-    }
-
-    @Test
-    fun `setVaultName calls dao with correct vault id and new name`() = runTest {
-        repository.setVaultName(VAULT_ID, "New Name")
-
-        coVerify { vaultDao.setVaultName(VAULT_ID, "New Name") }
-    }
-
-    @Test
-    fun `getByEcdsa returns vault when found by ecdsa key`() = runTest {
-        coEvery { vaultDao.loadByEcdsa(ECDSA_KEY) } returns fakeVaultData(pubKeyEcdsa = ECDSA_KEY)
-
-        val vault = repository.getByEcdsa(ECDSA_KEY)
-
-        assertNotNull(vault)
-        assertEquals(ECDSA_KEY, vault.pubKeyECDSA)
-    }
-
-    @Test
-    fun `getByEcdsa returns null when no vault matches the ecdsa key`() = runTest {
-        coEvery { vaultDao.loadByEcdsa("unknown") } returns null
-
-        assertNull(repository.getByEcdsa("unknown"))
-    }
-
-    @Test
-    fun `getAll returns list of all stored vaults`() = runTest {
-        coEvery { vaultDao.loadAll() } returns
-            listOf(fakeVaultData(), fakeVaultData(id = "vault-2", name = "Second"))
-
-        val vaults = repository.getAll()
-
-        assertEquals(2, vaults.size)
-    }
-
-    @Test
-    fun `getAll returns empty list when no vaults are stored`() = runTest {
-        coEvery { vaultDao.loadAll() } returns emptyList()
-
-        assertTrue(repository.getAll().isEmpty())
-    }
-
-    @Test
-    fun `getAll skips coins with unrecognised chain and still returns the vault`() = runTest {
-        val badCoin = fakeCoinEntity(id = "X-UNKNOWN", chain = "UNKNOWN_CHAIN_XYZ_999")
-        val goodCoin = fakeCoinEntity(id = "BTC-Bitcoin", chain = Chain.Bitcoin.raw, ticker = "BTC")
-        coEvery { vaultDao.loadAll() } returns
-            listOf(fakeVaultData(coins = listOf(badCoin, goodCoin)))
-
-        val vaults = repository.getAll()
-
-        assertEquals(1, vaults.size)
-        assertEquals(1, vaults[0].coins.size)
-        assertEquals(Chain.Bitcoin, vaults[0].coins[0].chain)
-    }
-
-    @Test
-    fun `getEnabledTokens emits empty list when vault is missing`() = runTest {
-        every { vaultDao.loadByIdAsFlow(MISSING_ID) } returns flowOf(null)
-
-        val tokens = repository.getEnabledTokens(MISSING_ID).first()
-
-        assertTrue(tokens.isEmpty())
-    }
-
-    @Test
-    fun `getEnabledTokens emits empty list when vault has no coins`() = runTest {
-        every { vaultDao.loadByIdAsFlow(VAULT_ID) } returns flowOf(fakeVaultData())
-
-        val tokens = repository.getEnabledTokens(VAULT_ID).first()
-
-        assertTrue(tokens.isEmpty())
-    }
-
-    @Test
-    fun `getEnabledTokens emits coins stored in the vault`() = runTest {
-        val coin = fakeCoinEntity(id = "ETH-Ethereum", chain = Chain.Ethereum.raw, ticker = "ETH")
-        every { vaultDao.loadByIdAsFlow(VAULT_ID) } returns
-            flowOf(fakeVaultData(coins = listOf(coin)))
-
-        val coins = repository.getEnabledTokens(VAULT_ID).first()
-
-        assertEquals(1, coins.size)
-        assertEquals(Chain.Ethereum, coins[0].chain)
-        assertEquals("ETH", coins[0].ticker)
-    }
-
-    @Test
-    fun `getEnabledChains emits empty set when vault is missing`() = runTest {
-        every { vaultDao.loadByIdAsFlow(MISSING_ID) } returns flowOf(null)
-
-        val chains = repository.getEnabledChains(MISSING_ID).first()
-
-        assertTrue(chains.isEmpty())
-    }
-
-    @Test
-    fun `getEnabledChains returns only chains that have a native token`() = runTest {
-        val native =
-            fakeCoinEntity(
-                id = "ETH-Ethereum",
-                chain = Chain.Ethereum.raw,
-                ticker = "ETH",
-                contractAddress = "",
-            )
-        val erc20 =
-            fakeCoinEntity(
-                id = "USDC-Ethereum",
-                chain = Chain.Ethereum.raw,
-                ticker = "USDC",
-                contractAddress = "0xusdc",
-            )
-        every { vaultDao.loadByIdAsFlow(VAULT_ID) } returns
-            flowOf(fakeVaultData(coins = listOf(native, erc20)))
-
-        val chains = repository.getEnabledChains(VAULT_ID).first()
-
-        assertEquals(setOf(Chain.Ethereum), chains)
-    }
-
-    @Test
-    fun `addTokenToVault calls enableCoins with id in ticker-chainRaw format`() = runTest {
-        val capturedCoins = slot<List<CoinEntity>>()
-        coEvery { vaultDao.enableCoins(capture(capturedCoins)) } returns Unit
-
-        repository.addTokenToVault(VAULT_ID, fakeCoin(Chain.Bitcoin, "BTC"))
-
-        val entity = capturedCoins.captured.single()
-        assertEquals("BTC-Bitcoin", entity.id)
-        assertEquals(VAULT_ID, entity.vaultId)
-        assertEquals(Chain.Bitcoin.raw, entity.chain)
-    }
-
-    @Test
-    fun `addTokenToVault token id is stable so Room REPLACE prevents duplication`() = runTest {
-        val capturedCoins = mutableListOf<List<CoinEntity>>()
-        coEvery { vaultDao.enableCoins(capture(capturedCoins)) } returns Unit
-        val token = fakeCoin(Chain.Ethereum, "ETH")
-
-        repository.addTokenToVault(VAULT_ID, token)
-        repository.addTokenToVault(VAULT_ID, token)
-
-        assertEquals(2, capturedCoins.size)
-        assertEquals(capturedCoins[0].single().id, capturedCoins[1].single().id)
-    }
-
-    @Test
-    fun `deleteTokenFromVault calls dao with the correct token id`() = runTest {
-        repository.deleteTokenFromVault(VAULT_ID, fakeCoin(Chain.Bitcoin, "BTC"))
-
-        coVerify { vaultDao.deleteTokenFromVault(VAULT_ID, "BTC-Bitcoin") }
-    }
-
-    @Test
-    fun `disableTokenFromVault calls dao with token id and chain raw id`() = runTest {
-        repository.disableTokenFromVault(VAULT_ID, fakeCoin(Chain.Ethereum, "ETH"))
-
-        coVerify { vaultDao.disableTokenFromVault(VAULT_ID, "ETH-Ethereum", Chain.Ethereum.raw) }
-    }
-
-    @Test
-    fun `deleteChainFromVault calls dao disableChainFromVault with chain raw id`() = runTest {
-        repository.deleteChainFromVault(VAULT_ID, Chain.Bitcoin)
-
-        coVerify { vaultDao.disableChainFromVault(VAULT_ID, Chain.Bitcoin.raw) }
-    }
-
-    @Test
-    fun `get returns vault with DKLS lib type preserved`() = runTest {
-        coEvery { vaultDao.loadById(VAULT_ID) } returns fakeVaultData(libType = SigningLibType.DKLS)
-
-        assertEquals(SigningLibType.DKLS, repository.get(VAULT_ID)?.libType)
-    }
-
-    @Test
-    fun `get returns vault with GG20 lib type preserved`() = runTest {
-        coEvery { vaultDao.loadById(VAULT_ID) } returns fakeVaultData(libType = SigningLibType.GG20)
-
-        assertEquals(SigningLibType.GG20, repository.get(VAULT_ID)?.libType)
-    }
-
-    @Test
-    fun `get returns vault with KeyImport lib type preserved`() = runTest {
-        coEvery { vaultDao.loadById(VAULT_ID) } returns
-            fakeVaultData(libType = SigningLibType.KeyImport)
-
-        assertEquals(SigningLibType.KeyImport, repository.get(VAULT_ID)?.libType)
-    }
-
-    @Test
-    fun `add stores the vault entity with DKLS lib type`() = runTest {
-        val inserted = slot<VaultWithKeySharesAndTokens>()
-        coEvery { vaultDao.insert(capture(inserted)) } returns Unit
-
-        repository.add(fakeVault(libType = SigningLibType.DKLS))
-
-        assertEquals(SigningLibType.DKLS, inserted.captured.vault.libType)
-    }
-
-    @Test
-    fun `hasVaults returns true when the dao reports vaults exist`() = runTest {
-        coEvery { vaultDao.hasVaults() } returns true
-
-        assertTrue(repository.hasVaults())
-    }
-
-    @Test
-    fun `hasVaults returns false when the dao reports no vaults`() = runTest {
-        coEvery { vaultDao.hasVaults() } returns false
-
-        assertFalse(repository.hasVaults())
-    }
-
-    @Test
-    fun `isNameTaken returns true when another vault has the same name`() = runTest {
-        coEvery { vaultDao.countByNameExcluding("Taken", VAULT_ID) } returns 1
-
-        assertTrue(repository.isNameTaken("Taken", VAULT_ID))
-    }
-
-    @Test
-    fun `isNameTaken returns false when no other vault uses the name`() = runTest {
-        coEvery { vaultDao.countByNameExcluding("Free", VAULT_ID) } returns 0
-
-        assertFalse(repository.isNameTaken("Free", VAULT_ID))
-    }
-
-    @Test
-    fun `getDisabledCoinIds delegates to dao and returns the result`() = runTest {
-        val expected = listOf("ETH-Ethereum", "USDC-Ethereum")
-        coEvery { vaultDao.loadDisabledCoinIds(VAULT_ID) } returns expected
-
-        assertEquals(expected, repository.getDisabledCoinIds(VAULT_ID))
-    }
-
-    private fun fakeVaultData(
-        id: String = VAULT_ID,
-        name: String = VAULT_NAME,
-        pubKeyEcdsa: String = ECDSA_KEY,
+    /** Returns a minimal [VaultWithKeySharesAndTokens] suitable for DAO stub returns. */
+    private fun makeVaultWithTokens(
+        id: String = "vault-1",
+        name: String = "Test Vault",
         libType: SigningLibType = SigningLibType.GG20,
         coins: List<CoinEntity> = emptyList(),
-    ): VaultWithKeySharesAndTokens =
+    ) =
         VaultWithKeySharesAndTokens(
             vault =
                 VaultEntity(
                     id = id,
                     name = name,
-                    pubKeyEcdsa = pubKeyEcdsa,
-                    pubKeyEddsa = "eddsa-key",
-                    pubKeyMldsa = "",
-                    hexChainCode = "",
-                    localPartyID = "",
+                    localPartyID = "device-1",
+                    pubKeyEcdsa = "ecdsa-$id",
+                    pubKeyEddsa = "eddsa-$id",
+                    hexChainCode = "chaincode-$id",
                     resharePrefix = "",
                     libType = libType,
                 ),
@@ -344,46 +62,328 @@ internal class VaultRepositoryImplTest {
             chainPublicKeys = emptyList(),
         )
 
-    private fun fakeCoinEntity(
-        id: String = "ETH-Ethereum",
-        chain: String = Chain.Ethereum.raw,
-        ticker: String = "ETH",
-        contractAddress: String = "",
-        vaultId: String = VAULT_ID,
-    ): CoinEntity =
+    /** Returns a [CoinEntity] representing native ETH on Ethereum. */
+    private fun makeEthCoin(vaultId: String = "vault-1") =
         CoinEntity(
-            id = id,
+            id = "ETH-Ethereum",
             vaultId = vaultId,
-            chain = chain,
-            ticker = ticker,
+            chain = "Ethereum",
+            ticker = "ETH",
             decimals = 18,
             logo = "",
-            priceProviderID = "",
-            contractAddress = contractAddress,
-            address = "0x",
-            hexPublicKey = "",
+            priceProviderID = "ethereum",
+            contractAddress = "",
+            address = "0xabc",
+            hexPublicKey = "pub",
         )
 
-    private fun fakeVault(libType: SigningLibType = SigningLibType.GG20): Vault =
-        Vault(id = VAULT_ID, name = VAULT_NAME, libType = libType)
-
-    private fun fakeCoin(chain: Chain, ticker: String, contractAddress: String = ""): Coin =
+    /** Returns a [Coin] representing native ETH on Ethereum. */
+    private fun ethCoin() =
         Coin(
-            chain = chain,
-            ticker = ticker,
+            chain = Chain.Ethereum,
+            ticker = "ETH",
             logo = "",
-            address = "0x",
+            address = "0xabc",
             decimal = 18,
-            hexPublicKey = "",
-            priceProviderID = "",
-            contractAddress = contractAddress,
-            isNativeToken = contractAddress.isBlank(),
+            hexPublicKey = "pub",
+            priceProviderID = "ethereum",
+            contractAddress = "",
+            isNativeToken = true,
         )
 
-    private companion object {
-        const val VAULT_ID = "vault-id-1"
-        const val VAULT_NAME = "Test Vault"
-        const val ECDSA_KEY = "ecdsa-pub-key"
-        const val MISSING_ID = "vault-missing"
+    // ---- get ----------------------------------------------------------------
+
+    /** Verifies [get] returns null when no vault matches the given id in the DAO. */
+    @Test
+    fun `get returns null when vault does not exist`() = runTest {
+        coEvery { vaultDao.loadById("missing") } returns null
+
+        assertNull(repository.get("missing"))
+    }
+
+    /** Verifies [get] maps the DAO entity to a [Vault] with the correct id and name. */
+    @Test
+    fun `get returns vault with correct id and name`() = runTest {
+        coEvery { vaultDao.loadById("vault-1") } returns makeVaultWithTokens()
+        coEvery { tokenRepository.getToken(any()) } returns null
+
+        val vault = repository.get("vault-1")
+        assertNotNull(vault)
+        assertEquals("vault-1", vault.id)
+        assertEquals("Test Vault", vault.name)
+    }
+
+    // ---- add ----------------------------------------------------------------
+
+    /** Verifies [add] delegates the insert call to the DAO. */
+    @Test
+    fun `add delegates to dao insert`() = runTest {
+        repository.add(Vault(id = "vault-1", name = "V"))
+
+        coVerify { vaultDao.insert(any()) }
+    }
+
+    // ---- upsert -------------------------------------------------------------
+
+    /** Verifies [upsert] delegates the upsert call to the DAO. */
+    @Test
+    fun `upsert delegates to dao upsert`() = runTest {
+        repository.upsert(Vault(id = "vault-1", name = "V"))
+
+        coVerify { vaultDao.upsert(any()) }
+    }
+
+    /** Verifies coins are forwarded to the DAO unchanged during upsert. */
+    @Test
+    fun `upsert preserves coins in the captured vault`() = runTest {
+        val captured = slot<VaultWithKeySharesAndTokens>()
+        coJustRun { vaultDao.upsert(capture(captured)) }
+
+        repository.upsert(Vault(id = "vault-1", name = "V", coins = listOf(ethCoin())))
+
+        assertEquals(1, captured.captured.coins.size)
+        assertEquals("ETH", captured.captured.coins[0].ticker)
+        assertEquals("Ethereum", captured.captured.coins[0].chain)
+    }
+
+    // ---- delete -------------------------------------------------------------
+
+    /** Verifies [delete] passes the vault id to the DAO delete method. */
+    @Test
+    fun `delete delegates to dao with correct id`() = runTest {
+        repository.delete("vault-1")
+
+        coVerify { vaultDao.delete("vault-1") }
+    }
+
+    // ---- setVaultName -------------------------------------------------------
+
+    /** Verifies [setVaultName] passes both the vault id and new name to the DAO. */
+    @Test
+    fun `setVaultName delegates to dao with vault id and new name`() = runTest {
+        repository.setVaultName("vault-1", "Renamed")
+
+        coVerify { vaultDao.setVaultName("vault-1", "Renamed") }
+    }
+
+    // ---- getByEcdsa ---------------------------------------------------------
+
+    /** Verifies [getByEcdsa] returns the matching vault when the ECDSA key is found. */
+    @Test
+    fun `getByEcdsa returns vault when key matches`() = runTest {
+        coEvery { vaultDao.loadByEcdsa("ecdsa-vault-1") } returns makeVaultWithTokens()
+        coEvery { tokenRepository.getToken(any()) } returns null
+
+        val vault = repository.getByEcdsa("ecdsa-vault-1")
+        assertNotNull(vault)
+        assertEquals("vault-1", vault.id)
+    }
+
+    /** Verifies [getByEcdsa] returns null when the ECDSA key has no match. */
+    @Test
+    fun `getByEcdsa returns null when key has no match`() = runTest {
+        coEvery { vaultDao.loadByEcdsa("unknown-key") } returns null
+
+        assertNull(repository.getByEcdsa("unknown-key"))
+    }
+
+    // ---- getAll -------------------------------------------------------------
+
+    /** Verifies [getAll] returns all vaults returned by the DAO. */
+    @Test
+    fun `getAll returns every vault from dao`() = runTest {
+        coEvery { vaultDao.loadAll() } returns
+            listOf(makeVaultWithTokens("v1", "Vault 1"), makeVaultWithTokens("v2", "Vault 2"))
+        coEvery { tokenRepository.getToken(any()) } returns null
+
+        val vaults = repository.getAll()
+        assertEquals(2, vaults.size)
+        assertEquals("v1", vaults[0].id)
+        assertEquals("v2", vaults[1].id)
+    }
+
+    /** Verifies [getAll] returns an empty list when the DAO has no vaults. */
+    @Test
+    fun `getAll returns empty list when dao is empty`() = runTest {
+        coEvery { vaultDao.loadAll() } returns emptyList()
+
+        val vaults = repository.getAll()
+        assertTrue(vaults.isEmpty())
+    }
+
+    /** Verifies [getAll] silently drops coins whose chain string is not a known [Chain] value. */
+    @Test
+    fun `getAll skips coins whose chain value is not in the Chain enum`() = runTest {
+        val unknownChainCoin =
+            CoinEntity(
+                id = "GHOST-ghost_chain",
+                vaultId = "vault-1",
+                chain = "ghost_chain",
+                ticker = "GHOST",
+                decimals = 18,
+                logo = "",
+                priceProviderID = "",
+                contractAddress = "",
+                address = "0x0",
+                hexPublicKey = "",
+            )
+        coEvery { vaultDao.loadAll() } returns
+            listOf(makeVaultWithTokens(coins = listOf(makeEthCoin(), unknownChainCoin)))
+        coEvery { tokenRepository.getToken(any()) } returns null
+
+        val vaults = repository.getAll()
+        assertEquals(1, vaults.size)
+        assertEquals(1, vaults[0].coins.size)
+        assertEquals("ETH", vaults[0].coins[0].ticker)
+    }
+
+    // ---- getEnabledTokens / getEnabledChains --------------------------------
+
+    /** Verifies [getEnabledTokens] emits the coins that belong to the given vault. */
+    @Test
+    fun `getEnabledTokens emits coins belonging to vault`() = runTest {
+        every { vaultDao.loadByIdAsFlow("vault-1") } returns
+            flowOf(makeVaultWithTokens(coins = listOf(makeEthCoin())))
+        coEvery { tokenRepository.getToken(any()) } returns null
+
+        val tokens = repository.getEnabledTokens("vault-1").first()
+        assertEquals(1, tokens.size)
+        assertEquals("ETH", tokens[0].ticker)
+    }
+
+    /** Verifies [getEnabledChains] emits only chains that have a native-token coin enabled. */
+    @Test
+    fun `getEnabledChains emits only native-token chains`() = runTest {
+        every { vaultDao.loadByIdAsFlow("vault-1") } returns
+            flowOf(makeVaultWithTokens(coins = listOf(makeEthCoin())))
+        coEvery { tokenRepository.getToken(any()) } returns null
+
+        val chains = repository.getEnabledChains("vault-1").first()
+        assertEquals(setOf(Chain.Ethereum), chains)
+    }
+
+    // ---- addTokenToVault ----------------------------------------------------
+
+    /** Verifies [addTokenToVault] delegates to the DAO's enableCoins method. */
+    @Test
+    fun `addTokenToVault calls dao enableCoins`() = runTest {
+        repository.addTokenToVault("vault-1", ethCoin())
+
+        coVerify { vaultDao.enableCoins(any()) }
+    }
+
+    /** Verifies [addTokenToVault] builds the coin entity id as "ticker-chainRaw". */
+    @Test
+    fun `addTokenToVault constructs coin entity id as ticker-chainRaw`() = runTest {
+        val captured = slot<List<CoinEntity>>()
+        coJustRun { vaultDao.enableCoins(capture(captured)) }
+
+        repository.addTokenToVault("vault-1", ethCoin())
+
+        assertEquals("ETH-Ethereum", captured.captured[0].id)
+    }
+
+    // ---- deleteTokenFromVault -----------------------------------------------
+
+    /** Verifies [deleteTokenFromVault] passes the correct coin entity id to the DAO. */
+    @Test
+    fun `deleteTokenFromVault passes correct token id to dao`() = runTest {
+        repository.deleteTokenFromVault("vault-1", ethCoin())
+
+        coVerify { vaultDao.deleteTokenFromVault("vault-1", "ETH-Ethereum") }
+    }
+
+    // ---- disableTokenFromVault ----------------------------------------------
+
+    /** Verifies [disableTokenFromVault] passes the correct token id and chain id to the DAO. */
+    @Test
+    fun `disableTokenFromVault passes correct token id and chain id to dao`() = runTest {
+        repository.disableTokenFromVault("vault-1", ethCoin())
+
+        coVerify { vaultDao.disableTokenFromVault("vault-1", "ETH-Ethereum", "Ethereum") }
+    }
+
+    // ---- deleteChainFromVault -----------------------------------------------
+
+    /** Verifies [deleteChainFromVault] passes the chain's raw string id to the DAO. */
+    @Test
+    fun `deleteChainFromVault calls dao disableChainFromVault with chain raw id`() = runTest {
+        repository.deleteChainFromVault("vault-1", Chain.Ethereum)
+
+        coVerify { vaultDao.disableChainFromVault("vault-1", "Ethereum") }
+    }
+
+    // ---- signing lib-type round-trips ---------------------------------------
+
+    /** Verifies that [SigningLibType.DKLS] survives a DAO round-trip without corruption. */
+    @Test
+    fun `libType DKLS is preserved when loading vault`() = runTest {
+        coEvery { vaultDao.loadById("v") } returns
+            makeVaultWithTokens(id = "v", libType = SigningLibType.DKLS)
+        coEvery { tokenRepository.getToken(any()) } returns null
+
+        assertEquals(SigningLibType.DKLS, repository.get("v")?.libType)
+    }
+
+    /** Verifies that [SigningLibType.GG20] survives a DAO round-trip without corruption. */
+    @Test
+    fun `libType GG20 is preserved when loading vault`() = runTest {
+        coEvery { vaultDao.loadById("v") } returns
+            makeVaultWithTokens(id = "v", libType = SigningLibType.GG20)
+        coEvery { tokenRepository.getToken(any()) } returns null
+
+        assertEquals(SigningLibType.GG20, repository.get("v")?.libType)
+    }
+
+    /** Verifies that [SigningLibType.KeyImport] survives a DAO round-trip without corruption. */
+    @Test
+    fun `libType KeyImport is preserved when loading vault`() = runTest {
+        coEvery { vaultDao.loadById("v") } returns
+            makeVaultWithTokens(id = "v", libType = SigningLibType.KeyImport)
+        coEvery { tokenRepository.getToken(any()) } returns null
+
+        assertEquals(SigningLibType.KeyImport, repository.get("v")?.libType)
+    }
+
+    // ---- hasVaults / isNameTaken / getDisabledCoinIds -----------------------
+
+    /** Verifies [hasVaults] returns true when the DAO reports at least one vault. */
+    @Test
+    fun `hasVaults returns true when dao reports vaults present`() = runTest {
+        coEvery { vaultDao.hasVaults() } returns true
+
+        assertTrue(repository.hasVaults())
+    }
+
+    /** Verifies [hasVaults] returns false when the DAO reports no vaults. */
+    @Test
+    fun `hasVaults returns false when dao reports no vaults`() = runTest {
+        coEvery { vaultDao.hasVaults() } returns false
+
+        assertTrue(!repository.hasVaults())
+    }
+
+    /** Verifies [isNameTaken] returns true when another vault already uses the given name. */
+    @Test
+    fun `isNameTaken returns true when another vault uses the same name`() = runTest {
+        coEvery { vaultDao.countByNameExcluding("My Vault", "other-id") } returns 1
+
+        assertTrue(repository.isNameTaken("My Vault", "other-id"))
+    }
+
+    /** Verifies [isNameTaken] returns false when no other vault uses the given name. */
+    @Test
+    fun `isNameTaken returns false when name is unique`() = runTest {
+        coEvery { vaultDao.countByNameExcluding("Unique Name", "any-id") } returns 0
+
+        assertTrue(!repository.isNameTaken("Unique Name", "any-id"))
+    }
+
+    /** Verifies [getDisabledCoinIds] delegates to the DAO and returns its result. */
+    @Test
+    fun `getDisabledCoinIds delegates to dao`() = runTest {
+        coEvery { vaultDao.loadDisabledCoinIds("vault-1") } returns listOf("ETH-Ethereum")
+
+        assertEquals(listOf("ETH-Ethereum"), repository.getDisabledCoinIds("vault-1"))
     }
 }

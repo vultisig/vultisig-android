@@ -18,6 +18,8 @@ typealias SignDirectProto = vultisig.keysign.v1.SignDirect
 
 typealias SignSolanaProto = vultisig.keysign.v1.SignSolana
 
+typealias SignTonProto = vultisig.keysign.v1.SignTon
+
 typealias KeygenMessageProto = vultisig.keygen.v1.KeygenMessage
 
 typealias ReshareMessageProto = vultisig.keygen.v1.ReshareMessage

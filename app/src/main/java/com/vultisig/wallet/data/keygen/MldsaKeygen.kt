@@ -59,6 +59,7 @@ class MldsaKeygen(
     private val cache = mutableMapOf<String, Any>()
     var setupMessage: ByteArray = byteArrayOf()
     var keyshare: MldsaKeyshare? = null
+    private var activeMessageId: String? = null
 
     @Throws(Exception::class)
     private fun getMldsaSetupMessage(): ByteArray {
@@ -145,7 +146,8 @@ class MldsaKeygen(
         val start = System.nanoTime()
         while (true) {
             try {
-                val msgs = sessionApi.getTssMessages(mediatorURL, sessionID, localPartyId)
+                val msgs =
+                    sessionApi.getTssMessages(mediatorURL, sessionID, localPartyId, activeMessageId)
 
                 if (msgs.isNotEmpty()) {
                     if (processInboundMessage(handle, msgs)) {
@@ -209,12 +211,24 @@ class MldsaKeygen(
 
     @Throws(Exception::class)
     private suspend fun deleteMessageFromServer(hash: String) {
-        sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyId, hash, null)
+        sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyId, hash, activeMessageId)
     }
 
     @Throws(Exception::class)
-    suspend fun mldsaKeygenWithRetry(attempt: Int) {
-        try {
+    internal suspend fun mldsaKeygenWithRetry(
+        attempt: Int,
+        routing: KeygenRouting = KeygenRouting.from(),
+    ) {
+        activeMessageId = routing.exchangeMessageId
+        messenger.setMessageID(activeMessageId)
+        runKeygenWithRetry(
+            attempt = attempt,
+            retry = { nextAttempt, cause ->
+                Timber.e("Failed to generate MLDSA key, error: ${cause.localizedMessage}")
+                Timber.e("mldsa keygen retry, attempt: $attempt")
+                mldsaKeygenWithRetry(nextAttempt, routing)
+            },
+        ) {
             this.cache.clear()
             val handler = Handle()
             try {
@@ -231,12 +245,12 @@ class MldsaKeygen(
                                     Numeric.hexStringToByteArray(encryptionKeyHex),
                                 )
                             ),
-                        messageId = null,
+                        messageId = routing.setupMessageId,
                     )
                 } else {
                     keygenSetupMsg =
                         sessionApi
-                            .getSetupMessage(mediatorURL, sessionID, null)
+                            .getSetupMessage(mediatorURL, sessionID, routing.setupMessageId)
                             .let {
                                 encryption.decrypt(
                                     Base64.decode(it),
@@ -287,16 +301,6 @@ class MldsaKeygen(
             } finally {
                 mldsa_keygen_session_free(handler)
                 handler.delete()
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.e("Failed to generate MLDSA key, error: ${e.localizedMessage}")
-            if (attempt < 3) {
-                Timber.e("mldsa keygen retry, attempt: $attempt")
-                mldsaKeygenWithRetry(attempt + 1)
-            } else {
-                throw e
             }
         }
     }

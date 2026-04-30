@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.models.signer.BatchKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
@@ -36,6 +37,7 @@ import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.models.proto.v1.SingleKeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
@@ -126,6 +128,7 @@ constructor(
     private val generateServerPartyId: GenerateServerPartyId,
     private val secretSettingsRepository: SecretSettingsRepository,
     private val vultiSignerRepository: VultiSignerRepository,
+    private val featureFlagRepository: FeatureFlagRepository,
     private val qrHelperModalRepository: QrHelperModalRepository,
     private val vaultRepository: VaultRepository,
     private val keyImportRepository: KeyImportRepository,
@@ -661,18 +664,39 @@ constructor(
                 }
 
                 TssAction.KEYGEN -> {
-                    vultiSignerRepository.joinKeygen(
-                        JoinKeygenRequestJson(
-                            vaultName = vaultName,
-                            sessionId = sessionId,
-                            hexEncryptionKey = encryptionKeyHex,
-                            hexChainCode = hexChainCode,
-                            localPartyId = generateServerPartyId(),
-                            encryptionPassword = password,
-                            email = email,
-                            libType = libType.toJson(),
+                    val featureFlags = featureFlagRepository.getFeatureFlags()
+                    if (featureFlags.isTssBatchEnabled) {
+                        vultiSignerRepository.joinBatchKeygen(
+                            BatchKeygenRequestJson(
+                                vaultName = vaultName,
+                                sessionId = sessionId,
+                                hexEncryptionKey = encryptionKeyHex,
+                                hexChainCode = hexChainCode,
+                                localPartyId = generateServerPartyId(),
+                                encryptionPassword = password,
+                                email = email,
+                                libType = libType.toJson(),
+                                protocols =
+                                    listOf(
+                                        BatchKeygenRequestJson.PROTOCOL_ECDSA,
+                                        BatchKeygenRequestJson.PROTOCOL_EDDSA,
+                                    ),
+                            )
                         )
-                    )
+                    } else {
+                        vultiSignerRepository.joinKeygen(
+                            JoinKeygenRequestJson(
+                                vaultName = vaultName,
+                                sessionId = sessionId,
+                                hexEncryptionKey = encryptionKeyHex,
+                                hexChainCode = hexChainCode,
+                                localPartyId = generateServerPartyId(),
+                                encryptionPassword = password,
+                                email = email,
+                                libType = libType.toJson(),
+                            )
+                        )
+                    }
                 }
 
                 TssAction.Migrate -> {

@@ -161,73 +161,91 @@ internal class KeyImportRepositoryImplTest {
 
     @Test
     fun `setChainSettings preserves Default derivation for Bitcoin`() {
-        val settings =
+        repository.setMnemonic("test")
+        repository.setChainSettings(
             listOf(
                 ChainImportSetting(
                     chain = com.vultisig.wallet.data.models.Chain.Bitcoin,
                     derivationPath = DerivationPath.Default,
                 )
             )
-
-        repository.setMnemonic("test")
-        repository.setChainSettings(settings)
+        )
 
         val data = repository.get()
         assertNotNull(data)
+        assertEquals(com.vultisig.wallet.data.models.Chain.Bitcoin, data.chainSettings[0].chain)
         assertEquals(DerivationPath.Default, data.chainSettings[0].derivationPath)
     }
 
     @Test
     fun `setChainSettings preserves Default derivation for Ethereum`() {
-        val settings =
+        repository.setMnemonic("test")
+        repository.setChainSettings(
             listOf(
                 ChainImportSetting(
                     chain = com.vultisig.wallet.data.models.Chain.Ethereum,
                     derivationPath = DerivationPath.Default,
                 )
             )
-
-        repository.setMnemonic("test")
-        repository.setChainSettings(settings)
+        )
 
         val data = repository.get()
         assertNotNull(data)
+        assertEquals(com.vultisig.wallet.data.models.Chain.Ethereum, data.chainSettings[0].chain)
         assertEquals(DerivationPath.Default, data.chainSettings[0].derivationPath)
     }
 
     @Test
-    fun `setChainSettings preserves Default derivation for Cosmos GaiaChain`() {
-        val settings =
+    fun `setChainSettings preserves Phantom derivation for Solana round-trip`() {
+        repository.setMnemonic("test")
+        repository.setChainSettings(
+            listOf(
+                ChainImportSetting(
+                    chain = com.vultisig.wallet.data.models.Chain.Solana,
+                    derivationPath = DerivationPath.Phantom,
+                )
+            )
+        )
+
+        val data = repository.get()
+        assertNotNull(data)
+        assertEquals(com.vultisig.wallet.data.models.Chain.Solana, data.chainSettings[0].chain)
+        assertEquals(DerivationPath.Phantom, data.chainSettings[0].derivationPath)
+    }
+
+    @Test
+    fun `setChainSettings preserves Default derivation for Cosmos`() {
+        repository.setMnemonic("test")
+        repository.setChainSettings(
             listOf(
                 ChainImportSetting(
                     chain = com.vultisig.wallet.data.models.Chain.GaiaChain,
                     derivationPath = DerivationPath.Default,
                 )
             )
-
-        repository.setMnemonic("test")
-        repository.setChainSettings(settings)
+        )
 
         val data = repository.get()
         assertNotNull(data)
+        assertEquals(com.vultisig.wallet.data.models.Chain.GaiaChain, data.chainSettings[0].chain)
         assertEquals(DerivationPath.Default, data.chainSettings[0].derivationPath)
     }
 
     @Test
     fun `setChainSettings preserves Default derivation for Tron`() {
-        val settings =
+        repository.setMnemonic("test")
+        repository.setChainSettings(
             listOf(
                 ChainImportSetting(
                     chain = com.vultisig.wallet.data.models.Chain.Tron,
                     derivationPath = DerivationPath.Default,
                 )
             )
-
-        repository.setMnemonic("test")
-        repository.setChainSettings(settings)
+        )
 
         val data = repository.get()
         assertNotNull(data)
+        assertEquals(com.vultisig.wallet.data.models.Chain.Tron, data.chainSettings[0].chain)
         assertEquals(DerivationPath.Default, data.chainSettings[0].derivationPath)
     }
 }
