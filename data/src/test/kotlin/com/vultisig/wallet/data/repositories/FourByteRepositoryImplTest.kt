@@ -69,6 +69,7 @@ internal class FourByteRepositoryImplTest {
         coEvery { fourByteApi.decodeFunction("deadbeef") } throws RuntimeException("boom")
 
         assertNull(repository.decodeFunction(memo))
+        coVerify(exactly = 1) { fourByteApi.decodeFunction("deadbeef") }
     }
 
     @Test
@@ -82,5 +83,6 @@ internal class FourByteRepositoryImplTest {
         } catch (_: CancellationException) {
             // expected
         }
+        coVerify(exactly = 1) { fourByteApi.decodeFunction("deadbeef") }
     }
 }
