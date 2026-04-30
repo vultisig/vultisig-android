@@ -28,6 +28,7 @@ internal suspend fun runSecurityScan(
     }
 }
 
+/** Returns true if any [SecurityScannerSupport] entry in this list covers the given [chain]. */
 fun List<SecurityScannerSupport>.isChainSupported(chain: Chain): Boolean {
     return any { support -> support.feature.any { feature -> chain in feature.chains } }
 }

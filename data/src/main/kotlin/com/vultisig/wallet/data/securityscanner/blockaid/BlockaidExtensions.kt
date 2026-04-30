@@ -9,6 +9,7 @@ import timber.log.Timber
 
 // Solana has different payload, for simplicity, avoid confusion and any potential bug
 // we'll keep it separated. Other chains such as SUI and BTC shared the same EVM payload
+/** Maps a Blockaid Solana scan response to a [SecurityScannerResult] for the given [provider]. */
 fun BlockaidTransactionScanResponseJson.toSolanaSecurityScannerResult(
     provider: String
 ): SecurityScannerResult {
@@ -59,6 +60,9 @@ fun BlockaidTransactionScanResponseJson.toSolanaSecurityScannerResult(
     }
 }
 
+/**
+ * Maps a Blockaid EVM/BTC/SUI scan response to a [SecurityScannerResult] for the given [provider].
+ */
 fun BlockaidTransactionScanResponseJson.toSecurityScannerResult(
     provider: String
 ): SecurityScannerResult {
