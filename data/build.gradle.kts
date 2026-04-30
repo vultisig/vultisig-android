@@ -37,11 +37,6 @@ android {
         proto { srcDir("${project.rootProject.rootDir}/commondata/proto") }
     }
     tasks.withType<Test> { useJUnitPlatform() }
-    packaging {
-        resources {
-            excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
-        }
-    }
 }
 
 kotlin { jvmToolchain(21) }
