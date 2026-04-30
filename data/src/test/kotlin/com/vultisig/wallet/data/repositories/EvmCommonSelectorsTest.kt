@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
@@ -167,9 +166,10 @@ internal class EvmCommonSelectorsTest {
                 sig.count { it == ')' },
                 "unbalanced parentheses in '$sig'",
             )
-            assertNotNull(
+            assertEquals(
+                sig,
                 EvmCommonSelectors.lookup(selector),
-                "lookup('$selector') must round-trip",
+                "lookup('$selector') must round-trip to the same signature",
             )
         }
     }

@@ -56,6 +56,13 @@ internal class FourByteRepositoryImplTest {
     }
 
     @Test
+    fun `decodeFunction returns null for non-hex selector without hitting the API`() = runTest {
+        // `0xZZZZZZZZ` has 8 chars after the prefix but is not valid hex.
+        assertNull(repository.decodeFunction("0xZZZZZZZZ"))
+        coVerify(exactly = 0) { fourByteApi.decodeFunction(any()) }
+    }
+
+    @Test
     fun `decodeFunction returns null when API throws a non-cancellation exception`() = runTest {
         val memo = "0xdeadbeef"
         coEvery { fourByteApi.decodeFunction("deadbeef") } throws RuntimeException("boom")

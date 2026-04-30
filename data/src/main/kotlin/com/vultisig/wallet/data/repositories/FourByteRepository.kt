@@ -25,6 +25,7 @@ constructor(private val fourByteApi: FourByteApi, @param:PrettyJson private val 
         val hash = memo.stripHexPrefix()
         if (hash.length < 8) return null
         val selector = hash.substring(0, 8)
+        if (!HEX_SELECTOR.matches(selector)) return null
         return try {
             EvmCommonSelectors.lookup(selector) ?: fourByteApi.decodeFunction(selector)
         } catch (e: CancellationException) {
@@ -48,5 +49,9 @@ constructor(private val fourByteApi: FourByteApi, @param:PrettyJson private val 
         val inputs = root["inputs"]?.jsonArray.orEmpty()
         val transformed = inputs.map { input -> convertParameter(input.jsonObject) }
         return json.encodeToString(JsonArray(transformed))
+    }
+
+    private companion object {
+        private val HEX_SELECTOR = Regex("^[0-9a-fA-F]{8}$")
     }
 }
