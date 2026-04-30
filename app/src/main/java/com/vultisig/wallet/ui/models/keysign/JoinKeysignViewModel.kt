@@ -53,6 +53,7 @@ import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.isChainSupported
@@ -248,7 +249,12 @@ constructor(
                 sessionId = _sessionID,
                 encryptionKeyHex = _encryptionKeyHex,
                 messagesToSign = messagesToSign,
-                keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
+                keyType =
+                    _keysignPayload?.coin?.chain?.TssKeysignType
+                        ?: customMessagePayload?.chain?.let { raw ->
+                            runCatching { Chain.fromRaw(raw).TssKeysignType }.getOrNull()
+                        }
+                        ?: TssKeyType.ECDSA,
                 keysignPayload = _keysignPayload,
                 customMessagePayload = customMessagePayload,
                 transactionTypeUiModel = transactionTypeUiModel,
@@ -723,12 +729,17 @@ constructor(
                             return
                         }
                         val quote =
-                            swapQuoteRepository.getSwapQuote(
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                dstAddress = swapPayload.data.toAddress,
-                                tokenValue = srcTokenValue,
-                            )
+                            swapQuoteRepository
+                                .getQuote(
+                                    SwapProvider.THORCHAIN,
+                                    SwapQuoteRequest(
+                                        srcToken = srcToken,
+                                        dstToken = dstToken,
+                                        tokenValue = srcTokenValue,
+                                        dstAddress = swapPayload.data.toAddress,
+                                    ),
+                                )
+                                .expectNative(SwapProvider.THORCHAIN)
                         val swapTransactionUiModel = buildSwapUiModel(quote.fees, dstToken)
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
@@ -761,13 +772,18 @@ constructor(
                             return
                         }
                         val quote =
-                            swapQuoteRepository.getMayaSwapQuote(
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                dstAddress = swapPayload.data.toAddress,
-                                tokenValue = srcTokenValue,
-                                isAffiliate = true,
-                            )
+                            swapQuoteRepository
+                                .getQuote(
+                                    SwapProvider.MAYA,
+                                    SwapQuoteRequest(
+                                        srcToken = srcToken,
+                                        dstToken = dstToken,
+                                        tokenValue = srcTokenValue,
+                                        dstAddress = swapPayload.data.toAddress,
+                                        isAffiliate = true,
+                                    ),
+                                )
+                                .expectNative(SwapProvider.MAYA)
                         val swapTransactionUiModel = buildSwapUiModel(quote.fees, dstToken)
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
@@ -959,6 +975,7 @@ constructor(
                             ?: ""
 
                     val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
+                    val signTon = payload.signTon
                     val transaction =
                         Transaction(
                             id = UUID.randomUUID().toString(),
@@ -977,6 +994,7 @@ constructor(
                             signAmino = normalizedSignAmino,
                             signDirect = signDirect,
                             signSolana = signSolana,
+                            signTon = signTon,
                         )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)

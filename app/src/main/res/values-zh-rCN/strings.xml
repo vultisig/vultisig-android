@@ -1375,6 +1375,10 @@
 
     <string name="key_import_device_count_get_started">开始</string>
     <string name="choose_device_count_a11y_description">您有多少台设备？当前选择：%1$s。点击以选择其他。</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">消息</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">推荐</string>
 
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>

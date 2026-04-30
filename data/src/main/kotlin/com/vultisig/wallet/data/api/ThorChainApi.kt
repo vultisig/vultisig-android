@@ -31,7 +31,9 @@ import com.vultisig.wallet.data.api.models.thorchain.TcyModuleBalanceResponse
 import com.vultisig.wallet.data.api.models.thorchain.TcyStakeResponse
 import com.vultisig.wallet.data.api.models.thorchain.TcyStakersResponse
 import com.vultisig.wallet.data.api.models.thorchain.TcyUserDistributionsResponse
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainLiquidityProviderJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolStatsJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainStatusResponse
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainTransactionJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorNameResponseJson
@@ -87,6 +89,21 @@ interface ThorChainApi {
     suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
 
     suspend fun getPools(): List<ThorChainPoolJson>
+
+    /**
+     * Midgard pool statistics including LUVI-based APR. Pass [period] (e.g. "7d", "30d", "100d") to
+     * control the APR window; defaults to 30d to match thorchain.org.
+     */
+    suspend fun getPoolStats(period: String? = null): List<ThorChainPoolStatsJson>
+
+    /**
+     * Liquidity-provider position for a single pool/address pair on thornode. Returns null if the
+     * address has no position in the pool (thornode replies 404).
+     */
+    suspend fun getLiquidityProvider(
+        asset: String,
+        address: String,
+    ): ThorChainLiquidityProviderJson?
 
     suspend fun getConstants(): ThorchainConstantsResponse
 
@@ -327,6 +344,27 @@ constructor(
         httpClient
             .get("$THORNODE_BASE/thorchain/pools") { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow()
+
+    override suspend fun getPoolStats(period: String?): List<ThorChainPoolStatsJson> =
+        httpClient
+            .get("$MIDGARD_URL/pools") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+                parameter("status", "available")
+                parameter("period", period?.takeIf { it.isNotBlank() } ?: DEFAULT_LP_PERIOD)
+            }
+            .bodyOrThrow()
+
+    override suspend fun getLiquidityProvider(
+        asset: String,
+        address: String,
+    ): ThorChainLiquidityProviderJson? {
+        val response =
+            httpClient.get("$THORNODE_BASE/thorchain/pool/$asset/liquidity_provider/$address") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+        return if (response.status == HttpStatusCode.NotFound) null
+        else response.bodyOrThrow<ThorChainLiquidityProviderJson>()
+    }
 
     override suspend fun getConstants(): ThorchainConstantsResponse {
         val response =
@@ -585,6 +623,7 @@ constructor(
     companion object {
         private const val THORNODE_BASE = "https://gateway.liquify.com/chain/thorchain_api"
         private const val MIDGARD_URL = "https://gateway.liquify.com/chain/thorchain_midgard/v2"
+        private const val DEFAULT_LP_PERIOD = "30d"
         private const val THORCHAIN_RPC_URL = "https://gateway.liquify.com/chain/thorchain_rpc"
         private const val IBS_TEAM_URL = "https://thorchain.ibs.team"
         private const val X_CLIENT_ID_HEADER = "X-Client-ID"

@@ -30,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.SignSolanaDisplayView
+import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -248,6 +249,14 @@ internal fun VerifySendScreen(
                             SignSolanaDisplayView(
                                 signSolana = SignSolana(rawTransactions = listOf(it))
                             )
+                        }
+
+                    tx.signTon
+                        ?.takeIf { it.tonMessages.isNotEmpty() }
+                        ?.let { signTon ->
+                            VerifyCardDivider(0.dp)
+
+                            SignTonDisplayView(signTon = signTon)
                         }
 
                     if (state.functionSignature != null) {

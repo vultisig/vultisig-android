@@ -332,7 +332,6 @@ constructor(
                     if (signatures.isEmpty()) {
                         error("Failed to sign transaction, signatures empty")
                     }
-                    calculateCustomMessageSignature(this.signatures.values.first())
                 }
 
                 TssKeyType.EDDSA -> {
@@ -395,6 +394,16 @@ constructor(
             }
 
             Timber.d("All messages signed, broadcasting transaction")
+            if (customMessagePayload != null) {
+                require(messagesToSign.isNotEmpty()) {
+                    "messagesToSign must not be empty when extracting custom message"
+                }
+                val customMessageKey = messagesToSign.first()
+                val customMessageResp =
+                    signatures[customMessageKey]
+                        ?: error("No signature found for custom message $customMessageKey")
+                calculateCustomMessageSignature(customMessageResp)
+            }
             if (!skipBroadcast()) {
                 broadcastTransaction()
                 checkThorChainTxResult()

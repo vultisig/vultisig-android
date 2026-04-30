@@ -14,7 +14,7 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
-import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.models.ZkGasFee
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite

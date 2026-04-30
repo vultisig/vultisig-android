@@ -1048,6 +1048,10 @@
 
     <string name="key_import_device_count_get_started">Loslegen</string>
     <string name="choose_device_count_a11y_description">Wie viele Geräte haben Sie? %1$s ausgewählt. Tippen, um eine andere Auswahl zu treffen.</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">Nachrichten</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">Empfohlen</string>
 
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>

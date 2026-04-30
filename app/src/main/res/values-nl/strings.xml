@@ -1043,6 +1043,10 @@
 
     <string name="key_import_device_count_get_started">Aan de slag</string>
     <string name="choose_device_count_a11y_description">Hoeveel apparaten hebt u? %1$s geselecteerd. Tik om een andere te kiezen.</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">Berichten</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">Aanbevolen</string>
 
     <string name="welcome_tip">Tip: U kunt een browser gebruiken als apparaat</string>
