@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.securityscanner
 
 import com.vultisig.wallet.data.models.Chain
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 internal suspend fun runSecurityScan(
@@ -13,6 +14,7 @@ internal suspend fun runSecurityScan(
         Timber.d("SecurityScanner: Result for ${transaction.chain.name} transaction: $result")
         result
     } catch (t: Throwable) {
+        if (t is CancellationException) throw t
         val errorMessage = "SecurityScanner: Error scanning ${transaction.chain.name}"
         Timber.e(t, errorMessage)
         SecurityScannerResult(
