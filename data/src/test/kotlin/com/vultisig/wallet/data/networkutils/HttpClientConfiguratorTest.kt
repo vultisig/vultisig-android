@@ -11,7 +11,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import java.io.IOException
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
@@ -31,11 +30,11 @@ class HttpClientConfiguratorTest {
      */
     @Test
     fun `retryOnIOException forSafeMethod retriesThreeTimes`() = runTest {
-        val callCount = AtomicInteger(0)
+        var callCount = 0
         val client =
             HttpClient(
                 MockEngine {
-                    callCount.incrementAndGet()
+                    callCount++
                     throw IOException("Connection failed")
                 }
             ) {
@@ -43,7 +42,7 @@ class HttpClientConfiguratorTest {
             }
         assertFailsWith<NetworkException> { client.get("http://localhost/test") }
         // 1 original call + 3 retries
-        assertEquals(4, callCount.get())
+        assertEquals(4, callCount)
     }
 
     /**
@@ -52,11 +51,11 @@ class HttpClientConfiguratorTest {
      */
     @Test
     fun `retryOn500 forSafeMethod retriesThreeTimes`() = runTest {
-        val callCount = AtomicInteger(0)
+        var callCount = 0
         val client =
             HttpClient(
                 MockEngine {
-                    if (callCount.incrementAndGet() == 4) {
+                    if (++callCount == 4) {
                         respond("ok", HttpStatusCode.OK, jsonHeaders)
                     } else {
                         respond("error", HttpStatusCode.InternalServerError, jsonHeaders)
@@ -67,7 +66,7 @@ class HttpClientConfiguratorTest {
             }
         val response = client.get("http://localhost/test")
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(4, callCount.get())
+        assertEquals(4, callCount)
     }
 
     /**
@@ -76,11 +75,11 @@ class HttpClientConfiguratorTest {
      */
     @Test
     fun `retryOn429 forSafeMethod retriesThreeTimes`() = runTest {
-        val callCount = AtomicInteger(0)
+        var callCount = 0
         val client =
             HttpClient(
                 MockEngine {
-                    if (callCount.incrementAndGet() == 4) {
+                    if (++callCount == 4) {
                         respond("ok", HttpStatusCode.OK, jsonHeaders)
                     } else {
                         respond("rate limited", HttpStatusCode.TooManyRequests, jsonHeaders)
@@ -91,7 +90,7 @@ class HttpClientConfiguratorTest {
             }
         val response = client.get("http://localhost/test")
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(4, callCount.get())
+        assertEquals(4, callCount)
     }
 
     /**
@@ -100,11 +99,11 @@ class HttpClientConfiguratorTest {
      */
     @Test
     fun `retryOn408 forSafeMethod retriesThreeTimes`() = runTest {
-        val callCount = AtomicInteger(0)
+        var callCount = 0
         val client =
             HttpClient(
                 MockEngine {
-                    if (callCount.incrementAndGet() == 4) {
+                    if (++callCount == 4) {
                         respond("ok", HttpStatusCode.OK, jsonHeaders)
                     } else {
                         respond("timeout", HttpStatusCode.RequestTimeout, jsonHeaders)
@@ -115,7 +114,7 @@ class HttpClientConfiguratorTest {
             }
         val response = client.get("http://localhost/test")
         assertEquals(HttpStatusCode.OK, response.status)
-        assertEquals(4, callCount.get())
+        assertEquals(4, callCount)
     }
 
     /**
@@ -124,11 +123,11 @@ class HttpClientConfiguratorTest {
      */
     @Test
     fun `retryOn500 forPostMethod doesNotRetry`() = runTest {
-        val callCount = AtomicInteger(0)
+        var callCount = 0
         val client =
             HttpClient(
                 MockEngine {
-                    callCount.incrementAndGet()
+                    callCount++
                     respond("error", HttpStatusCode.InternalServerError, jsonHeaders)
                 }
             ) {
@@ -136,6 +135,28 @@ class HttpClientConfiguratorTest {
             }
         val response = client.post("http://localhost/test")
         assertEquals(HttpStatusCode.InternalServerError, response.status)
-        assertEquals(1, callCount.get())
+        assertEquals(1, callCount)
+    }
+
+    /**
+     * Pins the documented behavior that [retryOnException] applies to every HTTP method, including
+     * unsafe ones like POST. This is intentional — transport-level retries on IOException are safe
+     * because the request never made it onto the wire.
+     */
+    @Test
+    fun `retryOnIOException forPostMethod alsoRetriesThreeTimes`() = runTest {
+        var callCount = 0
+        val client =
+            HttpClient(
+                MockEngine {
+                    callCount++
+                    throw IOException("Connection failed")
+                }
+            ) {
+                configurator.configure(this)
+            }
+        assertFailsWith<NetworkException> { client.post("http://localhost/test") }
+        // 1 original call + 3 retries — the IOException retry policy is method-agnostic.
+        assertEquals(4, callCount)
     }
 }

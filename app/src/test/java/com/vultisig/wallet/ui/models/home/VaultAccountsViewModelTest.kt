@@ -29,12 +29,14 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +46,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -107,6 +110,10 @@ internal class VaultAccountsViewModelTest {
         every { cryptoConnectionTypeRepository.activeCryptoConnectionFlow } returns
             MutableStateFlow(CryptoConnectionType.Wallet)
         every { lastOpenedVaultRepository.lastOpenedVaultId } returns emptyFlow()
+        // Function-type-interface mocks need explicit return-type stubs; relaxed mode auto-stubs
+        // to a generic Object that fails the implicit cast at the VM call site.
+        coEvery { isGlobalBackupReminderRequired() } returns false
+        coEvery { enableTokenUseCase(any(), any()) } returns null
     }
 
     /** Cleans up mocks and resets test dispatcher after each test. */
@@ -192,7 +199,7 @@ internal class VaultAccountsViewModelTest {
     fun `cryptoConnectionType defaults to Wallet`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            assertTrue(vm.uiState.value.cryptoConnectionType == CryptoConnectionType.Wallet)
+            assertEquals(CryptoConnectionType.Wallet, vm.uiState.value.cryptoConnectionType)
         }
 
     /** Verifies refreshData re-invokes accountsRepository with isRefresh=true. */
@@ -203,23 +210,38 @@ internal class VaultAccountsViewModelTest {
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
 
             val vm = createViewModel()
-            vm.refreshData()
+            advanceUntilIdle()
+            // Drop any loadAddresses calls made during init; only count the refresh call.
+            clearMocks(accountsRepository, answers = false)
 
-            verify { accountsRepository.loadAddresses("vault-1", true) }
+            vm.refreshData()
+            advanceUntilIdle()
+
+            verify(exactly = 1) { accountsRepository.loadAddresses("vault-1", true) }
         }
 
-    /** Verifies isRefreshing resets to false when account load errors during refresh. */
+    /**
+     * Verifies refreshData drives `loadAddresses` to completion via the .catch block when the
+     * underlying flow throws, leaving `isRefreshing` cleared. The verify guards against a no-op
+     * implementation passing the assertion vacuously (default `isRefreshing` is already false).
+     */
     @Test
-    fun `isRefreshing resets to false after error during refresh`() =
+    fun `isRefreshing is cleared after error during refresh`() =
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
-            every { accountsRepository.loadAddresses(any(), any()) } returns
+            every { accountsRepository.loadAddresses("vault-1", true) } returns
                 flow { throw RuntimeException("Balance load failed") }
 
             val vm = createViewModel()
+            advanceUntilIdle()
+            // Sanity: init must not leave the spinner running.
+            assertFalse(vm.uiState.value.isRefreshing)
+
             vm.refreshData()
+            advanceUntilIdle()
 
             assertFalse(vm.uiState.value.isRefreshing)
+            verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1", true) }
         }
 }

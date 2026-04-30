@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.utils.HttpException
@@ -48,11 +50,11 @@ class SessionApiTest {
         // no exception — warning logged
     }
 
-    /** Verifies markLocalPartyComplete throws on HTTP 400 client error. */
+    /** Verifies markLocalPartyComplete throws an HttpException on HTTP 400 client error. */
     @Test
     fun `markLocalPartyComplete throws on 400 client error`() = runTest {
         val api = createApi(HttpStatusCode.BadRequest)
-        assertFailsWith<Exception> {
+        assertFailsWith<HttpException> {
             api.markLocalPartyComplete(serverUrl, sessionId, localPartyId)
         }
     }

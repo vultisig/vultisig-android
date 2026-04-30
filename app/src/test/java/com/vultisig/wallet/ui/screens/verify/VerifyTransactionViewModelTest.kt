@@ -4,14 +4,18 @@ package com.vultisig.wallet.ui.screens.verify
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
+import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -32,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -71,6 +76,10 @@ internal class VerifyTransactionViewModelTest {
         securityScannerService = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
         addressBookRepository = mockk(relaxed = true)
+        // Function-type-interface mocks need explicit return-type stubs; relaxed mode auto-stubs
+        // to a generic Object that fails the implicit cast at the VM call site.
+        coEvery { isVaultHasFastSignById(any()) } returns false
+        coEvery { mapTransactionToUiModel(any()) } returns TransactionDetailsUiModel()
     }
 
     /** Cleans up mocks and resets test dispatcher after each test. */
@@ -150,13 +159,26 @@ internal class VerifyTransactionViewModelTest {
             assertNull(vm.uiState.value.errorText)
         }
 
-    /** Verifies dismissScanningWarning sets showScanningWarning to false after it was true. */
+    /** Verifies dismissScanningWarning clears showScanningWarning after a flagged scan. */
     @Test
-    fun `dismissScanningWarning sets showScanningWarning to false`() =
+    fun `dismissScanningWarning clears showScanningWarning after a flagged scan`() =
         runTest(testDispatcher) {
+            // Stub a transaction so loadTransaction succeeds and the scan plumbing runs.
+            coEvery { transactionRepository.getTransaction(TX_ID) } returns mockk(relaxed = true)
             val vm = createViewModel()
-            vm.uiState.update { it.copy(showScanningWarning = true) }
+            vm.checkConsentAddress(true)
+            vm.checkConsentAmount(true)
+            // joinKeySign goes through handleSigningFlowCommon which sets showScanningWarning when
+            // the scan status reports an unsafe transaction. Drive that path by emitting a Scanned
+            // status with isSecure=false via a SecurityScannerResult stub.
+            val scanResult = mockk<SecurityScannerResult>()
+            every { scanResult.isSecure } returns false
+            vm.uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(scanResult)) }
+            vm.joinKeySign()
+            assertTrue(vm.uiState.value.showScanningWarning)
+
             vm.dismissScanningWarning()
+
             assertFalse(vm.uiState.value.showScanningWarning)
         }
 
@@ -165,28 +187,46 @@ internal class VerifyTransactionViewModelTest {
     fun `hasFastSign is true when isVaultHasFastSignById returns true`() =
         runTest(testDispatcher) {
             coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+
             val vm = createViewModel()
+            advanceUntilIdle()
+
             assertTrue(vm.uiState.value.hasFastSign)
         }
 
-    /** Verifies joinKeySign calls launchKeysign when both consents are given. */
+    /**
+     * Verifies joinKeySign forwards the QR_CODE init type and the route ids to launchKeysign when
+     * both consents are given.
+     */
     @Test
-    fun `joinKeySign calls launchKeysign when both consents are given`() =
+    fun `joinKeySign launches QR keysign with vault and tx ids when consents are given`() =
         runTest(testDispatcher) {
+            coEvery { transactionRepository.getTransaction(TX_ID) } returns mockk(relaxed = true)
             val vm = createViewModel()
             vm.checkConsentAddress(true)
             vm.checkConsentAmount(true)
+
             vm.joinKeySign()
-            coVerify { launchKeysign(any(), any(), any(), any(), any()) }
+
+            assertNull(vm.uiState.value.errorText)
+            coVerify { launchKeysign(KeysignInitType.QR_CODE, TX_ID, any(), any(), VAULT_ID) }
         }
 
-    /** Verifies uiState.transaction reflects srcAddress and dstAddress returned by the mapper. */
+    /**
+     * Verifies the mapper's output is propagated into uiState.transaction. We have to feed the
+     * repository a non-null Transaction so loadTransaction reaches the mapper.
+     */
     @Test
     fun `transaction srcAddress and dstAddress reflect mapper output`() =
         runTest(testDispatcher) {
+            val tx = mockk<Transaction>(relaxed = true)
             val expected = TransactionDetailsUiModel(srcAddress = "0xSRC", dstAddress = "0xDST")
-            coEvery { mapTransactionToUiModel(any()) } returns expected
+            coEvery { transactionRepository.getTransaction(TX_ID) } returns tx
+            coEvery { mapTransactionToUiModel(tx) } returns expected
+
             val vm = createViewModel()
+            advanceUntilIdle()
+
             assertEquals("0xSRC", vm.uiState.value.transaction.srcAddress)
             assertEquals("0xDST", vm.uiState.value.transaction.dstAddress)
         }

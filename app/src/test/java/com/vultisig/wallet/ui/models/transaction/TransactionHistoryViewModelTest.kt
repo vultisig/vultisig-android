@@ -26,6 +26,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -70,12 +71,17 @@ internal class TransactionHistoryViewModelTest {
             navigator = navigator,
         )
 
-    /** Verifies selectTab updates selectedTab and sets isLoading. */
+    /** Verifies selectTab updates selectedTab and re-enters the loading state. */
     @Test
     fun `selectTab updates selectedTab and sets isLoading`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
+            // Let the initial transaction observer drain and flip isLoading off, so the test
+            // unambiguously asserts that selectTab is what flips it back on.
+            advanceUntilIdle()
+
             vm.selectTab(TransactionHistoryTab.SWAP)
+
             assertEquals(TransactionHistoryTab.SWAP, vm.uiState.value.selectedTab)
             assertTrue(vm.uiState.value.isLoading)
         }

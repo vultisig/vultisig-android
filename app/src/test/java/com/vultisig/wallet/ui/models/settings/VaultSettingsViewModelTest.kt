@@ -5,6 +5,8 @@ package com.vultisig.wallet.ui.models.settings
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -16,6 +18,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsItem
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsViewModel
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -63,6 +66,9 @@ internal class VaultSettingsViewModelTest {
         vaultDataStoreRepository = mockk(relaxed = true)
         vultiSignerRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
+        // Function-type-interface mocks need an explicit Boolean stub; otherwise relaxed mode
+        // returns a generic Object that fails the implicit cast inside the VM.
+        coEvery { isVaultHasFastSignById(any()) } returns false
     }
 
     /** Cleans up mocks and resets test dispatcher after each test. */
@@ -113,32 +119,56 @@ internal class VaultSettingsViewModelTest {
             coVerify { navigator.navigate(Destination.Back) }
         }
 
-    /** Verifies onDismissBackupVaultBottomSheet hides the sheet. */
+    /** Verifies onDismissBackupVaultBottomSheet hides the sheet after it was opened. */
     @Test
-    fun `onDismissBackupVaultBottomSheet hides the sheet`() =
+    fun `onDismissBackupVaultBottomSheet hides the sheet after it was opened`() =
         runTest(testDispatcher) {
+            // hasFastSign requires both: isVaultHasFastSignById = true AND vault has 2 signers.
+            coEvery { isVaultHasFastSignById(VAULT_ID) } returns true
+            coEvery { vaultRepository.get(VAULT_ID) } returns
+                Vault(
+                    id = VAULT_ID,
+                    name = "Test",
+                    libType = SigningLibType.DKLS,
+                    signers = listOf("p1", "p2"),
+                )
             val vm = createViewModel()
+
+            vm.onSettingsItemClick(VaultSettingsItem.BackupVaultShare)
+            assertTrue(vm.uiModel.value.isBackupVaultBottomSheetVisible)
+
             vm.onDismissBackupVaultBottomSheet()
             assertFalse(vm.uiModel.value.isBackupVaultBottomSheetVisible)
         }
 
-    /** Verifies onDismissBiometricFastSignBottomSheet hides biometric sheet. */
+    /** Verifies onDismissBiometricFastSignBottomSheet hides biometric sheet after it was opened. */
     @Test
-    fun `onDismissBiometricFastSignBottomSheet hides biometric sheet`() =
+    fun `onDismissBiometricFastSignBottomSheet hides biometric sheet after it was opened`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
+
+            vm.onSettingsItemClick(
+                VaultSettingsItem.BiometricFastSign(isEnabled = false, isBiometricEnabled = false)
+            )
+            assertTrue(vm.uiModel.value.isBiometricFastSignBottomSheetVisible)
+
             vm.onDismissBiometricFastSignBottomSheet()
             assertFalse(vm.uiModel.value.isBiometricFastSignBottomSheetVisible)
         }
 
-    /** Verifies togglePasswordVisibility toggles isPasswordVisible. */
+    /** Verifies togglePasswordVisibility flips isPasswordVisible to true and back to false. */
     @Test
-    fun `togglePasswordVisibility toggles isPasswordVisible`() =
+    fun `togglePasswordVisibility flips isPasswordVisible`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            val before = vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible
+            // The default value is false; flipping should show, flipping again should hide.
+            assertFalse(vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible)
+
             vm.togglePasswordVisibility()
-            assertTrue(vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible != before)
+            assertTrue(vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible)
+
+            vm.togglePasswordVisibility()
+            assertFalse(vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible)
         }
 
     private companion object {

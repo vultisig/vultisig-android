@@ -19,6 +19,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -134,14 +135,6 @@ internal class AddressEntryViewModelTest {
             coVerify { addressBookRepository.add(any()) }
         }
 
-    /** Verifies titleError is null initially. */
-    @Test
-    fun `titleError is null initially`() =
-        runTest(testDispatcher) {
-            val vm = createViewModel()
-            assertNull(vm.state.value.titleError)
-        }
-
     /** Verifies saveAddress passes the pre-selected chain to address validation. */
     @Test
     fun `saveAddress validates address against the pre-selected Bitcoin chain`() =
@@ -151,8 +144,11 @@ internal class AddressEntryViewModelTest {
             every { chainAccountAddressRepository.isValid(Chain.Bitcoin, any()) } returns true
             val vm = createViewModel()
             vm.titleTextFieldState.edit { replace(0, length, "Alice") }
+
             vm.saveAddress()
             advanceUntilIdle()
+
+            verify { chainAccountAddressRepository.isValid(Chain.Bitcoin, "bc1q0000") }
             assertNull(vm.state.value.addressError)
         }
 

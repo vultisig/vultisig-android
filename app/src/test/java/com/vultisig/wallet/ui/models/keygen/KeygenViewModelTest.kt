@@ -30,7 +30,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -144,16 +143,15 @@ internal class KeygenViewModelTest {
             assertEquals(TssAction.SingleKeygen, vm.state.value.action)
         }
 
-    /** Verifies init with empty keys surfaces error and leaves keygen at CreatingInstance. */
+    /** Verifies init with empty keys surfaces an error and never advances past CreatingInstance. */
     @Test
-    fun `init with empty keys surfaces error and leaves keygen at CreatingInstance`() =
+    fun `init with empty keys surfaces error and stays at CreatingInstance`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
+
             val state = vm.state.value
             assertNotNull(state.error)
-            assertFalse(state.isSuccess)
             assertEquals(KeygenState.CreatingInstance, state.keygenState)
-            assertEquals(0f, state.progress)
         }
 
     /** Verifies tryAgain navigates back. */

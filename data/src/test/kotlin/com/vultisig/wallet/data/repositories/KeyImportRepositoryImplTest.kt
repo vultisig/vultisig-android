@@ -1,6 +1,8 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.models.Chain
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -34,9 +36,7 @@ internal class KeyImportRepositoryImplTest {
     @Test
     fun `setMnemonic overwrites previous mnemonic and discards chain settings`() {
         repository.setMnemonic("old mnemonic")
-        repository.setChainSettings(
-            listOf(ChainImportSetting(chain = com.vultisig.wallet.data.models.Chain.Bitcoin))
-        )
+        repository.setChainSettings(listOf(ChainImportSetting(chain = Chain.Bitcoin)))
 
         repository.setMnemonic("new mnemonic")
 
@@ -51,8 +51,8 @@ internal class KeyImportRepositoryImplTest {
         repository.setMnemonic("test mnemonic")
         val settings =
             listOf(
-                ChainImportSetting(chain = com.vultisig.wallet.data.models.Chain.Bitcoin),
-                ChainImportSetting(chain = com.vultisig.wallet.data.models.Chain.Ethereum),
+                ChainImportSetting(chain = Chain.Bitcoin),
+                ChainImportSetting(chain = Chain.Ethereum),
             )
 
         repository.setChainSettings(settings)
@@ -61,14 +61,13 @@ internal class KeyImportRepositoryImplTest {
         assertNotNull(data)
         assertEquals("test mnemonic", data.mnemonic)
         assertEquals(2, data.chainSettings.size)
-        assertEquals(com.vultisig.wallet.data.models.Chain.Bitcoin, data.chainSettings[0].chain)
-        assertEquals(com.vultisig.wallet.data.models.Chain.Ethereum, data.chainSettings[1].chain)
+        assertEquals(Chain.Bitcoin, data.chainSettings[0].chain)
+        assertEquals(Chain.Ethereum, data.chainSettings[1].chain)
     }
 
     @Test
     fun `setChainSettings without prior setMnemonic creates data with empty mnemonic`() {
-        val settings =
-            listOf(ChainImportSetting(chain = com.vultisig.wallet.data.models.Chain.Solana))
+        val settings = listOf(ChainImportSetting(chain = Chain.Solana))
 
         repository.setChainSettings(settings)
 
@@ -76,17 +75,14 @@ internal class KeyImportRepositoryImplTest {
         assertNotNull(data)
         assertEquals("", data.mnemonic)
         assertEquals(1, data.chainSettings.size)
-        assertEquals(com.vultisig.wallet.data.models.Chain.Solana, data.chainSettings[0].chain)
+        assertEquals(Chain.Solana, data.chainSettings[0].chain)
     }
 
     @Test
     fun `setChainSettings preserves derivation path`() {
         val settings =
             listOf(
-                ChainImportSetting(
-                    chain = com.vultisig.wallet.data.models.Chain.Solana,
-                    derivationPath = DerivationPath.Phantom,
-                )
+                ChainImportSetting(chain = Chain.Solana, derivationPath = DerivationPath.Phantom)
             )
 
         repository.setMnemonic("test")
@@ -100,9 +96,7 @@ internal class KeyImportRepositoryImplTest {
     @Test
     fun `clear removes all data`() {
         repository.setMnemonic("test mnemonic")
-        repository.setChainSettings(
-            listOf(ChainImportSetting(chain = com.vultisig.wallet.data.models.Chain.Bitcoin))
-        )
+        repository.setChainSettings(listOf(ChainImportSetting(chain = Chain.Bitcoin)))
 
         repository.clear()
 
@@ -113,21 +107,17 @@ internal class KeyImportRepositoryImplTest {
     fun `clear then setChainSettings creates fresh data with empty mnemonic`() {
         // Simulate stale data from a previous initiating session
         repository.setMnemonic("stale mnemonic from previous session")
-        repository.setChainSettings(
-            listOf(ChainImportSetting(chain = com.vultisig.wallet.data.models.Chain.Bitcoin))
-        )
+        repository.setChainSettings(listOf(ChainImportSetting(chain = Chain.Bitcoin)))
 
         // Simulate non-initiating device joining: clear then set chains
         repository.clear()
-        repository.setChainSettings(
-            listOf(ChainImportSetting(chain = com.vultisig.wallet.data.models.Chain.Ethereum))
-        )
+        repository.setChainSettings(listOf(ChainImportSetting(chain = Chain.Ethereum)))
 
         val data = repository.get()
         assertNotNull(data)
         assertEquals("", data.mnemonic)
         assertEquals(1, data.chainSettings.size)
-        assertEquals(com.vultisig.wallet.data.models.Chain.Ethereum, data.chainSettings[0].chain)
+        assertEquals(Chain.Ethereum, data.chainSettings[0].chain)
     }
 
     @Test
@@ -136,9 +126,7 @@ internal class KeyImportRepositoryImplTest {
         // Without clear(), a stale mnemonic leaks into the joining device's session.
         repository.setMnemonic("stale mnemonic")
 
-        repository.setChainSettings(
-            listOf(ChainImportSetting(chain = com.vultisig.wallet.data.models.Chain.Ethereum))
-        )
+        repository.setChainSettings(listOf(ChainImportSetting(chain = Chain.Ethereum)))
 
         val data = repository.get()
         assertNotNull(data)
@@ -147,15 +135,17 @@ internal class KeyImportRepositoryImplTest {
 
     @Test
     fun `default derivation path is Default`() {
-        val setting = ChainImportSetting(chain = com.vultisig.wallet.data.models.Chain.Bitcoin)
+        val setting = ChainImportSetting(chain = Chain.Bitcoin)
         assertEquals(DerivationPath.Default, setting.derivationPath)
     }
 
     @Test
     fun `toString does not leak mnemonic`() {
-        val data = KeyImportData(mnemonic = "secret words here")
+        val mnemonic = "secret words here"
+        val data = KeyImportData(mnemonic = mnemonic)
         val str = data.toString()
-        assertTrue("secret" !in str)
+        assertFalse(mnemonic in str)
+        assertFalse("secret" in str)
         assertTrue("***" in str)
     }
 
@@ -164,10 +154,7 @@ internal class KeyImportRepositoryImplTest {
         repository.setMnemonic("test")
         repository.setChainSettings(
             listOf(
-                ChainImportSetting(
-                    chain = com.vultisig.wallet.data.models.Chain.Bitcoin,
-                    derivationPath = DerivationPath.Default,
-                )
+                ChainImportSetting(chain = Chain.Bitcoin, derivationPath = DerivationPath.Default)
             )
         )
 
@@ -182,10 +169,7 @@ internal class KeyImportRepositoryImplTest {
         repository.setMnemonic("test")
         repository.setChainSettings(
             listOf(
-                ChainImportSetting(
-                    chain = com.vultisig.wallet.data.models.Chain.Ethereum,
-                    derivationPath = DerivationPath.Default,
-                )
+                ChainImportSetting(chain = Chain.Ethereum, derivationPath = DerivationPath.Default)
             )
         )
 
@@ -218,10 +202,7 @@ internal class KeyImportRepositoryImplTest {
         repository.setMnemonic("test")
         repository.setChainSettings(
             listOf(
-                ChainImportSetting(
-                    chain = com.vultisig.wallet.data.models.Chain.GaiaChain,
-                    derivationPath = DerivationPath.Default,
-                )
+                ChainImportSetting(chain = Chain.GaiaChain, derivationPath = DerivationPath.Default)
             )
         )
 
@@ -235,12 +216,7 @@ internal class KeyImportRepositoryImplTest {
     fun `setChainSettings preserves Default derivation for Tron`() {
         repository.setMnemonic("test")
         repository.setChainSettings(
-            listOf(
-                ChainImportSetting(
-                    chain = com.vultisig.wallet.data.models.Chain.Tron,
-                    derivationPath = DerivationPath.Default,
-                )
-            )
+            listOf(ChainImportSetting(chain = Chain.Tron, derivationPath = DerivationPath.Default))
         )
 
         val data = repository.get()
