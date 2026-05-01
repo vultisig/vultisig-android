@@ -66,6 +66,9 @@ class SchnorrKeysign(
     private val heardFromThisAttempt = mutableSetOf<String>()
     private val heardFromEver = mutableSetOf<String>()
 
+    /**
+     * Returns the raw keyshare string for [publicKeyEdDSA] from the vault, or null if not found.
+     */
     fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
             if (ks.pubKey == publicKeyEdDSA) {
@@ -75,6 +78,7 @@ class SchnorrKeysign(
         return null
     }
 
+    /** Decodes and returns the Base64-encoded keyshare bytes for [publicKeyEdDSA]. */
     @Throws(Exception::class)
     fun getKeyshareBytes(): ByteArray {
         val localKeyshare =
@@ -82,6 +86,7 @@ class SchnorrKeysign(
         return Base64.decode(localKeyshare)
     }
 
+    /** Extracts the key ID from the local Schnorr keyshare (needed for setup messages). */
     @Throws(Exception::class)
     fun getKeyshareID(): ByteArray {
         val buf = tss_buffer()
@@ -103,6 +108,7 @@ class SchnorrKeysign(
         }
     }
 
+    /** Builds the keysign setup message that the initiating device distributes to the committee. */
     @Throws(Exception::class)
     fun getKeysignSetupMessage(message: String): ByteArray {
         val buf = tss_buffer()
@@ -138,6 +144,7 @@ class SchnorrKeysign(
         }
     }
 
+    /** Returns the receiver party ID for the outbound [message] at [idx], or empty if none. */
     fun getOutboundMessageReceiver(handle: Handle, message: go_slice, idx: Long): ByteArray {
         val bufReceiver = tss_buffer()
         try {
@@ -153,6 +160,7 @@ class SchnorrKeysign(
         }
     }
 
+    /** Reads the next pending outbound message from [handle]; empty payload means none remain. */
     fun getSchnorrOutboundMessage(handle: Handle): Pair<schnorr_lib_error, ByteArray> {
         val buf = tss_buffer()
         try {
@@ -167,6 +175,9 @@ class SchnorrKeysign(
         }
     }
 
+    /**
+     * Drains all pending outbound messages from [handle] and routes each to the appropriate peers.
+     */
     fun processSchnorrOutboundMessage(handle: Handle) {
         while (true) {
             val (result, outboundMessage) = getSchnorrOutboundMessage(handle)
@@ -192,6 +203,13 @@ class SchnorrKeysign(
         }
     }
 
+    /**
+     * Polls the mediator for inbound messages until the protocol completes or 60 s of silence
+     * elapses. Notifies [onWaitingForPeers] after 10 s of silence and [onPeersResumed] when
+     * messages resume.
+     *
+     * @return `true` when the signing protocol has finished successfully.
+     */
     suspend fun pullInboundMessages(handle: Handle, messageID: String): Boolean {
         Timber.d("start pulling inbound messages")
 
@@ -245,6 +263,11 @@ class SchnorrKeysign(
         }
     }
 
+    /**
+     * Decrypts and applies each inbound message to the session.
+     *
+     * @return `true` when the native library signals that signing is complete.
+     */
     suspend fun processInboundMessage(
         handle: Handle,
         msgs: List<Message>,
@@ -286,6 +309,12 @@ class SchnorrKeysign(
         sessionApi.deleteTssMessage(mediatorURL, sessionID, localPartyID, hash, messageID)
     }
 
+    /**
+     * Signs a single message hash, uploading or downloading the setup message as needed.
+     *
+     * @param attempt Current attempt index (0-based); retries up to 1 time if no peer was ever
+     *   heard from, or 3 times otherwise.
+     */
     suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
         val msgHash = messageToSign.md5()
         val localMessenger =
@@ -382,6 +411,7 @@ class SchnorrKeysign(
         }
     }
 
+    /** Extracts the raw 64-byte Schnorr signature from the completed session. */
     @Throws(Exception::class)
     fun signSessionFinish(handle: Handle): ByteArray {
         val buf = tss_buffer()
