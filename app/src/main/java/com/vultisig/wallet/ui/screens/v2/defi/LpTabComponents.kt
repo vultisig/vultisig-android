@@ -164,7 +164,7 @@ internal fun LpWidget(
                 contentColor = Theme.v2.colors.text.primary,
                 onClick = onClickRemove,
                 modifier = Modifier.weight(1f),
-                enabled = true,
+                enabled = state.canRemove,
                 iconCircleColor = Theme.v2.colors.text.tertiary,
             )
 

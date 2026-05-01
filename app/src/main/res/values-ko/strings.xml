@@ -698,14 +698,15 @@
     <string name="deposit_option_add_liquidity">유동성 추가</string>
     <string name="deposit_option_remove_liquidity">유동성 제거</string>
     <string name="add_pool_title">풀 추가</string>
+    <string name="add_lp_title">%1$s LP 추가</string>
     <string name="add_pool_amount_label">금액</string>
     <string name="add_pool_gas_auto">가스 (자동)</string>
     <string name="max">최대</string>
     <string name="token_fiat_toggle_token_label">토큰 가치</string>
     <string name="token_fiat_toggle_fiat_label">법정화폐 가치</string>
     <string name="remove_pool_title">풀 제거</string>
+    <string name="remove_lp_title">%1$s LP 제거</string>
     <string name="remove_pool_amount_label">금액</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">CACAO 스테이킹</string>
     <string name="unstake_cacao_title">CACAO 언스테이킹</string>
