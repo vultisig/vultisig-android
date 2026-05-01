@@ -517,14 +517,15 @@
     <string name="deposit_option_add_liquidity">Liquidität hinzufügen</string>
     <string name="deposit_option_remove_liquidity">Liquidität entfernen</string>
     <string name="add_pool_title">Pool hinzufügen</string>
+    <string name="add_lp_title">%1$s LP hinzufügen</string>
     <string name="add_pool_amount_label">Betrag</string>
     <string name="add_pool_gas_auto">Netzwerkgebühr (auto)</string>
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Token-Wert</string>
     <string name="token_fiat_toggle_fiat_label">Fiat-Wert</string>
     <string name="remove_pool_title">Pool entfernen</string>
+    <string name="remove_lp_title">%1$s LP entfernen</string>
     <string name="remove_pool_amount_label">Menge</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">CACAO staken</string>
     <string name="unstake_cacao_title">CACAO entstaken</string>
