@@ -155,7 +155,7 @@
     <string name="keysign_screen_signing_with_mldsa">Ondertekenen met MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign voltooid!</string>
     <string name="keysign_screen_error_please_try_again">Fout! Probeer het opnieuw. %1$s</string>
-    <string name="keysign_screen_waiting_for_peer">Waiting for %1$s…</string>
+    <string name="keysign_screen_waiting_for_peer">Wachten op %1$s…</string>
     <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">Ik ben me ervan bewust dat de kluis permanent zal worden verwijderd</string>
     <string name="vault_settings_delete_vault_caution2">Ik ben me ervan bewust dat ik geld kan verliezen</string>

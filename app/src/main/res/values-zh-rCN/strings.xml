@@ -282,7 +282,7 @@
     <string name="keysign_screen_signing_with_mldsa">使用 MLDSA 签名…</string>
     <string name="keysign_screen_keysign_finished">密钥签名完成！</string>
     <string name="keysign_screen_error_please_try_again">错误！请重试。%1$s</string>
-    <string name="keysign_screen_waiting_for_peer">Waiting for %1$s…</string>
+    <string name="keysign_screen_waiting_for_peer">正在等待 %1$s…</string>
 
     <!-- Camera Bind Error -->
     <string name="successfully_scanned_barcode">成功扫描条形码：%1$s</string>

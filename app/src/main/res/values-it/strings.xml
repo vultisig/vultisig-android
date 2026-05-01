@@ -187,7 +187,7 @@
     <string name="vault_settings_success_backup_file">file salvato in Download/%1$s</string>
     <string name="swap_form_estimated_fees_title">Commissione di cambio</string>
     <string name="keysign_screen_error_please_try_again">Errore! Riprova. %1$s</string>
-    <string name="keysign_screen_waiting_for_peer">Waiting for %1$s…</string>
+    <string name="keysign_screen_waiting_for_peer">In attesa di %1$s…</string>
     <string name="join_keysign_discovering_session_id">Individuazione dell\'ID sessione</string>
     <string name="join_keysign_discovery_service">Scoprire il servizio</string>
     <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>

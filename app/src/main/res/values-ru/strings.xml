@@ -155,7 +155,7 @@
     <string name="keysign_screen_signing_with_mldsa">Подписание с использованием MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Подписание ключа завершено!</string>
     <string name="keysign_screen_error_please_try_again">Ошибка! Пожалуйста, попробуйте снова. %1$s</string>
-    <string name="keysign_screen_waiting_for_peer">Waiting for %1$s…</string>
+    <string name="keysign_screen_waiting_for_peer">Ожидание %1$s…</string>
     <string name="successfully_scanned_barcode">Штрихкод успешно отсканирован: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">Я понимаю, что хранилище будет удалено навсегда</string>
     <string name="vault_settings_delete_vault_caution2">Я понимаю, что могу потерять средства</string>
