@@ -271,14 +271,6 @@ internal fun VerifySendScreen(
                             )
                         }
 
-                    if (tx.tokenDisplay != null) {
-                        VerifyCardDivider(0.dp)
-
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_amount_title),
-                            subtitle = tx.tokenDisplay,
-                        )
-                    }
                     if (tx.functionSignature != null || tx.functionInputs != null) {
                         VerifyCardDivider(0.dp)
                         TransactionDetailsSection(
@@ -390,7 +382,7 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Absolute.SpaceBetween,
+            horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(

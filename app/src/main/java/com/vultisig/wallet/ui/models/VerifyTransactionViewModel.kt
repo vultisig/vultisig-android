@@ -57,9 +57,7 @@ internal data class TransactionDetailsUiModel(
     val signSolana: String? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
-    val tokenDisplay: String? = null,
     val functionName: String? = null,
-    val resolvedToken: ValuedToken? = null,
 )
 
 @Immutable

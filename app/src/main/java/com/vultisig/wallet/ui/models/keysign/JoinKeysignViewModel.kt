@@ -48,15 +48,11 @@ import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.ContractCallExtractor
 import com.vultisig.wallet.data.repositories.FourByteRepository
-import com.vultisig.wallet.data.repositories.MAX_UINT256
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.repositories.evmFunctionName
-import com.vultisig.wallet.data.repositories.sentinelLabelFor
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.isChainSupported
@@ -176,9 +172,7 @@ internal sealed class VerifyUiModel {
 internal data class FunctionInfo(
     val signature: String,
     val inputs: String,
-    val tokenDisplay: String? = null,
     val functionName: String? = null,
-    val resolvedToken: ValuedToken? = null,
 )
 
 @HiltViewModel
@@ -939,12 +933,7 @@ constructor(
                                 selectedToken = payload.coin,
                             )
                         )
-                    // 4byte lookup + ABI decode + BigInteger math. Run on IO to match the
-                    // surrounding pattern and avoid blocking the caller dispatcher.
-                    val functionInfo =
-                        withContext(Dispatchers.IO) {
-                            getTransactionFunctionInfo(payload.memo, chain, payload.toAddress)
-                        }
+                    val functionInfo = getTransactionFunctionInfo(payload.memo, chain)
                     val normalizedSignAminoJson =
                         kotlinx.serialization.json.buildJsonArray {
                             payload.signAmino?.msgs?.forEach { cosmosMsg ->
@@ -1040,9 +1029,7 @@ constructor(
                             dstAddressBookTitle = dstAddressBookTitle,
                             functionSignature = functionInfo?.signature,
                             functionInputs = functionInfo?.inputs,
-                            tokenDisplay = functionInfo?.tokenDisplay,
                             functionName = functionInfo?.functionName,
-                            resolvedToken = functionInfo?.resolvedToken,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)
@@ -1322,63 +1309,45 @@ constructor(
         super.onCleared()
     }
 
-    private suspend fun getTransactionFunctionInfo(
-        memo: String?,
-        chain: Chain,
-        toAddress: String?,
-    ): FunctionInfo? {
+    /**
+     * Decode the function signature and pretty-formatted args from EVM calldata.
+     *
+     * The function name is split on camelCase boundaries and title-cased so it reads as a label
+     * (e.g. `supplyWithPermit` → `"Supply With Permit"`). Caller renders the name as a small-text
+     * heading; the resolved-amount hero is layered on by Blockaid simulation in #4306.
+     *
+     * 4byte HTTP + JNI ABI decode + JSON encode are bounced onto IO so the caller's dispatcher
+     * (typically the main / unconfined coroutine that runs `keysignVerify`) is never blocked.
+     */
+    private suspend fun getTransactionFunctionInfo(memo: String?, chain: Chain): FunctionInfo? {
         if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty()) return null
-
-        val functionSignature = fourByteRepository.decodeFunction(memo) ?: return null
-        val functionInputs =
-            fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
-
-        val funcName = functionSignature.evmFunctionName()
-        val resolvedToken =
-            funcName?.let { name ->
-                resolveContractCall(
-                    funcName = name,
-                    argsJson = functionInputs,
-                    signature = functionSignature,
-                    toAddress = toAddress,
-                    chain = chain,
-                )
-            }
-
-        return FunctionInfo(
-            signature = functionSignature,
-            inputs = functionInputs,
-            tokenDisplay = resolvedToken?.let { "${it.value} ${it.token.ticker}" },
-            functionName = funcName?.replaceFirstChar { it.titlecase(Locale.ROOT) },
-            resolvedToken = resolvedToken,
-        )
-    }
-
-    private suspend fun resolveContractCall(
-        funcName: String,
-        signature: String,
-        argsJson: String,
-        toAddress: String?,
-        chain: Chain,
-    ): ValuedToken? {
-        val pair = ContractCallExtractor.extract(signature, argsJson, toAddress) ?: return null
-
-        // Vault first (user has added it), then built-in tokens registry.
-        val coin =
-            _currentVault.coins.firstOrNull {
-                it.chain == chain && it.contractAddress.equals(pair.tokenAddress, ignoreCase = true)
-            } ?: tokenRepository.getBuiltInTokenByContract(chain, pair.tokenAddress) ?: return null
-
-        val raw = runCatching { BigInteger(pair.rawAmount) }.getOrNull() ?: return null
-
-        // MAX_UINT256 is a sentinel. For approvals → "Unlimited". For withdraw/repay
-        // the exact amount depends on on-chain state, so return null (skip display).
-        if (raw == MAX_UINT256) {
-            val label = sentinelLabelFor(funcName) ?: return null
-            return ValuedToken(token = coin, value = label, fiatValue = "")
+        return withContext(Dispatchers.IO) {
+            val functionSignature =
+                fourByteRepository.decodeFunction(memo) ?: return@withContext null
+            val functionInputs =
+                fourByteRepository.decodeFunctionArgs(functionSignature, memo)
+                    ?: return@withContext null
+            FunctionInfo(
+                signature = functionSignature,
+                inputs = functionInputs,
+                functionName = prettifyEvmFunctionName(functionSignature),
+            )
         }
+    }
+}
 
-        val amount = mapTokenValueToDecimalUiString(TokenValue(raw, coin))
-        return ValuedToken(token = coin, value = amount, fiatValue = "")
+/**
+ * Extract the function name from an ABI signature like `"withdraw(address,uint256,address)"` and
+ * format it for display: split on camelCase boundaries and title-case each word.
+ *
+ * Returns null if the signature has no `(` or is empty before it.
+ */
+internal fun prettifyEvmFunctionName(signature: String): String? {
+    val rawName =
+        signature.substringBefore('(').trim().takeIf {
+            it.isNotEmpty() && it.length < signature.length
+        } ?: return null
+    return rawName.replace(Regex("(?<=[a-z])(?=[A-Z])"), " ").split(' ').joinToString(" ") { word ->
+        word.replaceFirstChar { it.titlecase(Locale.ROOT) }
     }
 }

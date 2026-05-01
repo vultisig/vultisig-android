@@ -73,7 +73,8 @@ internal fun SendTxOverviewScreen(
             )
         },
         tokenContent = {
-            // Title-only hero until Blockaid simulation is wired into mobile.
+            // Title-only hero for EVM contract calls. The Blockaid hero (which will replace this
+            // for resolved calls) is layered on in #4306.
             if (tx.functionName != null) {
                 Text(
                     text = tx.functionName,
@@ -140,26 +141,15 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
-                if (tx.tokenDisplay != null) {
-                    VerifyCardDivider(size = 1.dp)
-
-                    TextDetails(
-                        title = stringResource(R.string.deposit_screen_amount_title),
-                        subtitle = tx.tokenDisplay,
-                    )
-                }
-
-                // Skip the native "Amount" row when a decoded function/token/display
-                // already represents the intent — otherwise a misleading "0 ETH" surfaces
-                // for contract calls that send no native value.
+                // Skip the native "Amount" row for EVM contract calls — the function name above
+                // is the action, and a "0 ETH" amount underneath would mislead. Plain sends still
+                // render the native amount here.
                 if (
                     tx.functionName == null &&
-                        tx.resolvedToken == null &&
-                        tx.tokenDisplay == null &&
                         tx.token.value.isNotEmpty() &&
                         try {
                             tx.token.value.toBigInteger() > BigInteger.ZERO
-                        } catch (_: Exception) {
+                        } catch (_: NumberFormatException) {
                             false
                         }
                 ) {
@@ -319,8 +309,6 @@ internal data class UiTransactionInfo(
     val networkFeeFiatValue: String,
     val signMethod: String = "",
     val functionName: String? = null,
-    val resolvedToken: ValuedToken? = null,
-    val tokenDisplay: String? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
 )

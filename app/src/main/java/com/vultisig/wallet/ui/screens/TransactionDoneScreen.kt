@@ -257,13 +257,6 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                 value = transaction.memo,
             )
 
-        if (transaction.tokenDisplay != null) {
-            UiHorizontalDivider()
-            OtherField(
-                title = stringResource(R.string.verify_transaction_amount_title),
-                value = transaction.tokenDisplay,
-            )
-        }
         if (transaction.functionSignature != null) {
             UiHorizontalDivider()
             OtherField(
@@ -279,15 +272,9 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
             )
         }
 
-        // Native amount fallback. Suppressed when a resolved contract-call token was
-        // rendered upstream OR when the decoded call already provided its own display
-        // (e.g. "Unlimited USDC" for an approve MAX) — otherwise the screen shows the
-        // same amount twice, with the native row being the misleading one.
-        if (
-            transaction.functionName == null &&
-                transaction.resolvedToken == null &&
-                transaction.tokenDisplay == null
-        ) {
+        // Native amount + fiat — suppressed for EVM contract calls because the function name
+        // above is the action and the native value is typically zero.
+        if (transaction.functionName == null) {
             OtherField(
                 title = stringResource(R.string.verify_transaction_amount_title),
                 value = transaction.token.value,

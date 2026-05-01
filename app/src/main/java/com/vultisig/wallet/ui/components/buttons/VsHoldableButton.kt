@@ -34,7 +34,6 @@ import kotlinx.coroutines.flow.collectLatest
 fun VsHoldableButton(
     modifier: Modifier = Modifier,
     label: String? = null,
-    holdDuration: Long = LocalViewConfiguration.current.longPressTimeoutMillis,
     enabled: VsButtonState = VsButtonState.Enabled,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -55,15 +54,18 @@ fun VsHoldableButton(
 
     val progress = remember { Animatable(0f) }
     val interactionSource = remember { MutableInteractionSource() }
+    // The animation duration is fixed to the platform long-press timeout so the visual fill
+    // completes exactly when [combinedClickable]'s onLongClick fires. A configurable duration
+    // is a footgun: any value other than the platform timeout desyncs the bar from the gesture
+    // detector. Add a typed variant if a longer hold is ever required.
+    val holdDurationMillis = LocalViewConfiguration.current.longPressTimeoutMillis.toInt()
 
-    // Keep the progress fill aligned with the platform long-press timeout so the
-    // visual confirmation completes when onLongClick actually fires.
-    LaunchedEffect(interactionSource, holdDuration) {
+    LaunchedEffect(interactionSource, holdDurationMillis) {
         interactionSource.interactions.collectLatest { interaction ->
             when (interaction) {
                 is PressInteraction.Press -> {
                     progress.snapTo(0f)
-                    progress.animateTo(1f, tween(holdDuration.toInt(), easing = LinearEasing))
+                    progress.animateTo(1f, tween(holdDurationMillis, easing = LinearEasing))
                 }
                 is PressInteraction.Release,
                 is PressInteraction.Cancel -> {
