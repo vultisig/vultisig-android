@@ -49,6 +49,9 @@ internal fun KeysignView(
     showSaveToAddressBook: Boolean,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+        if (state.isInProgress) {
+            KeepScreenOn()
+        }
         when (state) {
             is KeysignState.KeysignFinished -> {
                 when (transactionTypeUiModel) {
@@ -106,20 +109,7 @@ internal fun KeysignView(
                 )
             }
 
-            is KeysignState.WaitingForPeer -> {
-                KeepScreenOn()
-                VsSigningProgressIndicator(
-                    text =
-                        stringResource(
-                            R.string.keysign_screen_waiting_for_peer,
-                            state.missingPeers.joinToString(", "),
-                        )
-                )
-            }
-
             else -> {
-                KeepScreenOn()
-
                 KeysignRiveProgress(progress = state.progress)
             }
         }

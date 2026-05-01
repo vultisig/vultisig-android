@@ -55,6 +55,8 @@ class MldsaKeysign(
     private val isInitiateDevice: Boolean,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
+    private val onWaitingForPeers: ((List<String>) -> Unit)? = null,
+    private val onPeersResumed: (() -> Unit)? = null,
 ) {
     private val localPartyID: String = vault.localPartyID
     private val publicKeyMldsa: String = vault.pubKeyMLDSA
@@ -62,6 +64,8 @@ class MldsaKeysign(
     private var messenger: TssMessenger? = null
     /** Deduplicates already-applied inbound messages by composite key. */
     private val appliedMessages = mutableSetOf<String>()
+    private val heardFromThisAttempt = mutableSetOf<String>()
+    private val heardFromEver = mutableSetOf<String>()
 
     val signatures = mutableMapOf<String, KeysignResponse>()
 
@@ -261,19 +265,27 @@ class MldsaKeysign(
     }
 
     /**
-     * Polls the mediator for inbound messages until the protocol completes or [INBOUND_TIMEOUT_MS]
-     * elapses.
+     * Polls the mediator for inbound messages until the protocol completes or 60 s of silence
+     * elapses. Notifies [onWaitingForPeers] after 10 s of silence and [onPeersResumed] when
+     * messages resume.
      *
      * @return `true` when the signing protocol has finished successfully.
      */
     private suspend fun pollInbound(handle: Handle, messageID: String): Boolean {
-        val deadline = System.currentTimeMillis() + INBOUND_TIMEOUT_MS
+        heardFromThisAttempt.clear()
+        var lastMessageNano = System.nanoTime()
+        var waitingNotified = false
 
-        while (System.currentTimeMillis() < deadline) {
+        while (true) {
             try {
                 val msgs =
                     sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
                 if (msgs.isNotEmpty()) {
+                    if (waitingNotified) {
+                        waitingNotified = false
+                        onPeersResumed?.invoke()
+                    }
+                    lastMessageNano = System.nanoTime()
                     if (applyInboundMessages(handle, msgs, messageID)) return true
                 } else {
                     delay(POLL_INTERVAL_MS)
@@ -284,8 +296,28 @@ class MldsaKeysign(
                 Timber.e(e, "Failed to get messages")
                 delay(POLL_INTERVAL_MS)
             }
+
+            val silenceSecs = (System.nanoTime() - lastMessageNano) / 1_000_000_000.0
+            if (!waitingNotified && silenceSecs > 10) {
+                waitingNotified = true
+                val missingPeers =
+                    keysignCommittee.filter { it != localPartyID && it !in heardFromThisAttempt }
+                if (missingPeers.isNotEmpty()) {
+                    onWaitingForPeers?.invoke(missingPeers)
+                }
+            }
+            if (silenceSecs > 60) {
+                val missingPeers =
+                    keysignCommittee.filter { it != localPartyID && it !in heardFromThisAttempt }
+                val msg =
+                    if (missingPeers.isEmpty()) {
+                        "keysign timed out: all peers responded but protocol did not complete within 60s"
+                    } else {
+                        "no messages from ${missingPeers.joinToString()} in 60s"
+                    }
+                error(msg)
+            }
         }
-        error("timeout: MLDSA keysign did not finish within ${INBOUND_TIMEOUT_MS / 1000}s")
     }
 
     /**
@@ -303,6 +335,8 @@ class MldsaKeysign(
             if (!appliedMessages.add(cacheKey)) continue
 
             Timber.d("Got message from: %s, to: %s, key: %s", msg.from, msg.to, cacheKey)
+            heardFromThisAttempt.add(msg.from)
+            heardFromEver.add(msg.from)
 
             val decrypted =
                 encryption.decrypt(
@@ -414,7 +448,6 @@ class MldsaKeysign(
         internal const val FINISH_RETRY_DELAY_MS = 1000L
 
         private const val MAX_PROTOCOL_RETRIES = 3
-        private const val INBOUND_TIMEOUT_MS = 60_000L
         private const val POLL_INTERVAL_MS = 100L
     }
 }

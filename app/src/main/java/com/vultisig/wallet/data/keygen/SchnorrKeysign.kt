@@ -46,6 +46,8 @@ class SchnorrKeysign(
     val publicKeyOverride: String? = null,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
+    private val onWaitingForPeers: ((List<String>) -> Unit)? = null,
+    private val onPeersResumed: (() -> Unit)? = null,
 ) {
     val localPartyID: String = vault.localPartyID
     val publicKeyEdDSA: String = publicKeyOverride ?: vault.pubKeyEDDSA
@@ -53,6 +55,8 @@ class SchnorrKeysign(
     val cache = mutableMapOf<String, Any>()
     val signatures = mutableMapOf<String, KeysignResponse>()
     var keyshare: ByteArray = byteArrayOf()
+    private val heardFromThisAttempt = mutableSetOf<String>()
+    private val heardFromEver = mutableSetOf<String>()
 
     fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
@@ -183,13 +187,20 @@ class SchnorrKeysign(
     suspend fun pullInboundMessages(handle: Handle, messageID: String): Boolean {
         Timber.d("start pulling inbound messages")
 
-        val start = System.nanoTime()
+        heardFromThisAttempt.clear()
+        var lastMessageNano = System.nanoTime()
+        var waitingNotified = false
         while (true) {
             try {
                 val msgs =
                     sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
 
                 if (msgs.isNotEmpty()) {
+                    if (waitingNotified) {
+                        waitingNotified = false
+                        onPeersResumed?.invoke()
+                    }
+                    lastMessageNano = System.nanoTime()
                     if (processInboundMessage(handle, msgs, messageID)) {
                         return true
                     }
@@ -203,9 +214,25 @@ class SchnorrKeysign(
                 delay(100)
             }
 
-            val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
-            if (elapsedTime > 60) {
-                error("timeout: Schnorr keysign did not finish within 60 seconds")
+            val silenceSecs = (System.nanoTime() - lastMessageNano) / 1_000_000_000.0
+            if (!waitingNotified && silenceSecs > 10) {
+                waitingNotified = true
+                val missingPeers =
+                    keysignCommittee.filter { it != localPartyID && it !in heardFromThisAttempt }
+                if (missingPeers.isNotEmpty()) {
+                    onWaitingForPeers?.invoke(missingPeers)
+                }
+            }
+            if (silenceSecs > 60) {
+                val missingPeers =
+                    keysignCommittee.filter { it != localPartyID && it !in heardFromThisAttempt }
+                val msg =
+                    if (missingPeers.isEmpty()) {
+                        "keysign timed out: all peers responded but protocol did not complete within 60s"
+                    } else {
+                        "no messages from ${missingPeers.joinToString()} in 60s"
+                    }
+                error(msg)
             }
         }
     }
@@ -223,6 +250,8 @@ class SchnorrKeysign(
                 continue
             }
             println("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
+            heardFromThisAttempt.add(msg.from)
+            heardFromEver.add(msg.from)
             val decryptedBody =
                 encryption.decrypt(
                     Base64.decode(msg.body),
@@ -338,7 +367,8 @@ class SchnorrKeysign(
             }
         } catch (e: Exception) {
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
-            if (attempt < 3) {
+            val maxRetries = if (heardFromEver.isEmpty()) 1 else 3
+            if (attempt < maxRetries) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)
             }
         }

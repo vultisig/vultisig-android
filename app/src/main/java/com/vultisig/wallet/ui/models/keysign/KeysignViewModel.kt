@@ -332,6 +332,7 @@ constructor(
                             onWaitingForPeers = { peers ->
                                 currentState.value = KeysignState.WaitingForPeer(peers)
                             },
+                            onPeersResumed = { currentState.value = KeysignState.KeysignECDSA },
                         )
 
                     dkls.keysignWithRetry()
@@ -357,6 +358,10 @@ constructor(
                             publicKeyOverride = eddsaPublicKeyOverride,
                             sessionApi = sessionApi,
                             encryption = encryption,
+                            onWaitingForPeers = { peers ->
+                                currentState.value = KeysignState.WaitingForPeer(peers)
+                            },
+                            onPeersResumed = { currentState.value = KeysignState.KeysignEdDSA },
                         )
 
                     schnorr.keysignWithRetry()
@@ -389,6 +394,10 @@ constructor(
                             isInitiateDevice = isInitiatingDevice,
                             sessionApi = sessionApi,
                             encryption = encryption,
+                            onWaitingForPeers = { peers ->
+                                currentState.value = KeysignState.WaitingForPeer(peers)
+                            },
+                            onPeersResumed = { currentState.value = KeysignState.KeysignMLDSA },
                         )
 
                     mldsa.keysignWithRetry()

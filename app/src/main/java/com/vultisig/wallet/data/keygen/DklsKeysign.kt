@@ -41,6 +41,7 @@ import tss.KeysignResponse
  *
  * @param onWaitingForPeers Invoked when no inbound messages have arrived for ~10 s; receives the
  *   silent peer IDs.
+ * @param onPeersResumed Invoked when messages resume after [onWaitingForPeers] was called.
  */
 class DKLSKeysign(
     val keysignCommittee: List<String>,
@@ -55,6 +56,7 @@ class DKLSKeysign(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
     val onWaitingForPeers: ((List<String>) -> Unit)? = null,
+    val onPeersResumed: (() -> Unit)? = null,
 ) {
     /** The local party ID derived from the vault. */
     val localPartyID: String = vault.localPartyID
@@ -74,6 +76,7 @@ class DKLSKeysign(
     /** Collects signatures keyed by the signed message hex string. */
     val signatures = mutableMapOf<String, KeysignResponse>()
     private val heardFromThisAttempt = mutableSetOf<String>()
+    private val heardFromEver = mutableSetOf<String>()
 
     private fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
@@ -225,8 +228,7 @@ class DKLSKeysign(
         Timber.d("start pulling inbound messages")
 
         heardFromThisAttempt.clear()
-        val start = System.nanoTime()
-        var lastMessageNano = start
+        var lastMessageNano = System.nanoTime()
         var waitingNotified = false
         while (true) {
             try {
@@ -234,13 +236,16 @@ class DKLSKeysign(
                     sessionApi.getTssMessages(mediatorURL, sessionID, localPartyID, messageID)
 
                 if (msgs.isNotEmpty()) {
+                    if (waitingNotified) {
+                        waitingNotified = false
+                        onPeersResumed?.invoke()
+                    }
                     lastMessageNano = System.nanoTime()
-                    waitingNotified = false
                     if (processInboundMessage(handle, msgs, messageID)) {
                         return true
                     }
                 } else {
-                    delay(300)
+                    delay(100)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -258,11 +263,16 @@ class DKLSKeysign(
                 }
             }
 
-            val elapsedTime = (System.nanoTime() - start) / 1_000_000_000.0
-            if (elapsedTime > 30) {
+            if (silenceSecs > 60) {
                 val missingPeers =
                     keysignCommittee.filter { it != localPartyID && it !in heardFromThisAttempt }
-                error("no messages from $missingPeers in 30s")
+                val msg =
+                    if (missingPeers.isEmpty()) {
+                        "keysign timed out: all peers responded but protocol did not complete within 60s"
+                    } else {
+                        "no messages from ${missingPeers.joinToString()} in 60s"
+                    }
+                error(msg)
             }
         }
     }
@@ -281,6 +291,7 @@ class DKLSKeysign(
             }
             println("Got message from: ${msg.from}, to: ${msg.to}, key: $key")
             heardFromThisAttempt.add(msg.from)
+            heardFromEver.add(msg.from)
             val decryptedBody =
                 encryption.decrypt(
                     Base64.decode(msg.body),
@@ -395,8 +406,8 @@ class DKLSKeysign(
             }
         } catch (e: Exception) {
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
-            val maxAttempts = if (heardFromThisAttempt.isEmpty()) 1 else 3
-            if (attempt < maxAttempts) {
+            val maxRetries = if (heardFromEver.isEmpty()) 1 else 3
+            if (attempt < maxRetries) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)
             }
         }
