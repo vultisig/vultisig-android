@@ -36,6 +36,12 @@ import kotlinx.coroutines.delay
 import timber.log.Timber
 import tss.KeysignResponse
 
+/**
+ * Performs DKLS keysigning for one or more messages.
+ *
+ * @param onWaitingForPeers Invoked when no inbound messages have arrived for ~10 s; receives the
+ *   silent peer IDs.
+ */
 class DKLSKeysign(
     val keysignCommittee: List<String>,
     val mediatorURL: String,
@@ -48,9 +54,9 @@ class DKLSKeysign(
     val publicKeyOverride: String? = null,
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
-    /** Invoked when no inbound messages have arrived for ~10 s; receives the silent peer IDs. */
     val onWaitingForPeers: ((List<String>) -> Unit)? = null,
 ) {
+    /** The local party ID derived from the vault. */
     val localPartyID: String = vault.localPartyID
     private val publicKeyECDSA: String = publicKeyOverride ?: vault.pubKeyECDSA
     private var messenger: TssMessenger =
@@ -64,6 +70,8 @@ class DKLSKeysign(
             isEncryptionGCM = true,
         )
     private val cache = mutableMapOf<String, Any>()
+
+    /** Collects signatures keyed by the signed message hex string. */
     val signatures = mutableMapOf<String, KeysignResponse>()
     private val heardFromThisAttempt = mutableSetOf<String>()
 
@@ -408,6 +416,7 @@ class DKLSKeysign(
         }
     }
 
+    /** Signs all [messageToSign] entries, retrying each on failure. */
     suspend fun keysignWithRetry() {
         for (msg in messageToSign) {
             keysignOneMessageWithRetry(0, msg)
