@@ -4,6 +4,10 @@ import com.vultisig.wallet.data.models.Chain
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
+/**
+ * Executes [block] as a security scan for [transaction], returning a scan-unavailable MEDIUM result
+ * on any non-cancellation failure instead of propagating the exception.
+ */
 internal suspend fun runSecurityScan(
     transaction: SecurityScannerTransaction,
     block: suspend () -> SecurityScannerResult,

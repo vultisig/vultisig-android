@@ -106,11 +106,6 @@ internal fun KeysignView(
                 )
             }
 
-            is KeysignState.WaitingForPeer -> {
-                KeepScreenOn()
-                KeysignLoadingScreen(text = "Waiting for ${state.missingPeers.joinToString()}…")
-            }
-
             else -> {
                 KeepScreenOn()
 

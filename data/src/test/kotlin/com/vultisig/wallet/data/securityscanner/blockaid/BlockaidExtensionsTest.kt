@@ -7,6 +7,9 @@ import org.junit.jupiter.api.Test
 
 class BlockaidExtensionsTest {
 
+    /**
+     * Verifies that a validation-status Error response maps to non-secure MEDIUM without throwing.
+     */
     @Test
     fun `toSecurityScannerResult does not throw when validation status is Error`() {
         val response = simulationErrorResponse("Simulation Error: execution reverted")
@@ -17,6 +20,7 @@ class BlockaidExtensionsTest {
         assertEquals(SecurityRiskLevel.MEDIUM, result.riskLevel)
     }
 
+    /** Verifies that an Error resultType alone maps to non-secure MEDIUM without throwing. */
     @Test
     fun `toSecurityScannerResult returns MEDIUM when only resultType is Error`() {
         val response =
@@ -44,6 +48,7 @@ class BlockaidExtensionsTest {
         assertEquals(SecurityRiskLevel.MEDIUM, result.riskLevel)
     }
 
+    /** Verifies that a global status Error maps to non-secure MEDIUM without throwing. */
     @Test
     fun `toSecurityScannerResult returns MEDIUM when global status is Error`() {
         val response =

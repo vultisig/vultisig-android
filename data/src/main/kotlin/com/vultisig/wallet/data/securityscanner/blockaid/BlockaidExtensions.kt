@@ -95,6 +95,7 @@ fun BlockaidTransactionScanResponseJson.toSecurityScannerResult(
     )
 }
 
+/** Maps a Blockaid Solana validation result to the corresponding [SecurityRiskLevel]. */
 private fun BlockaidTransactionScanResponseJson.BlockaidSolanaResultJson
     .toSolanaValidationRiskLevel(): SecurityRiskLevel {
     val resultType = validation.resultType
@@ -107,6 +108,10 @@ private fun BlockaidTransactionScanResponseJson.BlockaidSolanaResultJson
     return resultType.toWarningType()
 }
 
+/**
+ * Derives [SecurityRiskLevel] from the scan response, returning [SecurityRiskLevel.MEDIUM] and
+ * logging a warning for any error status instead of throwing.
+ */
 private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): SecurityRiskLevel {
     val hasFeatures = validation?.features?.isEmpty() == false
     val classification = validation?.classification
@@ -135,6 +140,7 @@ private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): Securit
     return label.toWarningType()
 }
 
+/** Maps a Blockaid classification string to the corresponding [SecurityRiskLevel]. */
 private fun String?.toWarningType(): SecurityRiskLevel {
     return when (this?.lowercase()) {
         "benign",
@@ -151,6 +157,7 @@ private fun String?.toWarningType(): SecurityRiskLevel {
     }
 }
 
+/** Returns a human-readable recommendation string for the given Blockaid classification. */
 private fun String.toRecommendations(): String {
     return when (this.lowercase()) {
         "malicious" -> "This transaction is flagged as malicious. Do not proceed."
