@@ -58,6 +58,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
@@ -217,6 +218,7 @@ constructor(
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
     private val getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase,
+    private val getThorChainLpPositionUseCase: GetThorChainLpPositionUseCase,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -663,15 +665,14 @@ constructor(
                 if (currentVaultId != null) {
                     resolvePairedAddress(Chain.ThorChain, currentVaultId, poolId)
                 } else null
-            val assetAddressesByPool = pairedAddress?.let { mapOf(poolId to it) } ?: emptyMap()
             val position =
                 withContext(Dispatchers.IO) {
-                        getThorChainLpPositionsUseCase(
-                            runeAddress = userAddress,
-                            assetAddressesByPool = assetAddressesByPool,
-                        )
-                    }
-                    .find { it.pool == poolId }
+                    getThorChainLpPositionUseCase(
+                        poolId = poolId,
+                        runeAddress = userAddress,
+                        assetAddress = pairedAddress,
+                    )
+                }
 
             if (position == null || position.units <= BigInteger.ZERO) {
                 _state.update {
