@@ -35,6 +35,13 @@ import kotlinx.coroutines.delay
 import timber.log.Timber
 import tss.KeysignResponse
 
+/**
+ * Schnorr (EdDSA) multi-party keysign via the DKLS Schnorr library.
+ *
+ * @param onWaitingForPeers Invoked when no inbound messages have arrived for ~10 s; receives the
+ *   silent peer IDs.
+ * @param onPeersResumed Invoked when messages resume after [onWaitingForPeers] was called.
+ */
 class SchnorrKeysign(
     val keysignCommittee: List<String>,
     val mediatorURL: String,
@@ -53,6 +60,7 @@ class SchnorrKeysign(
     val publicKeyEdDSA: String = publicKeyOverride ?: vault.pubKeyEDDSA
     var messenger: TssMessenger? = null
     val cache = mutableMapOf<String, Any>()
+    /** Collects signatures keyed by the signed message hex string. */
     val signatures = mutableMapOf<String, KeysignResponse>()
     var keyshare: ByteArray = byteArrayOf()
     private val heardFromThisAttempt = mutableSetOf<String>()
@@ -388,6 +396,7 @@ class SchnorrKeysign(
         }
     }
 
+    /** Signs all [messageToSign] entries, retrying each on failure. */
     suspend fun keysignWithRetry() {
         for (msg in messageToSign) {
             keysignOneMessageWithRetry(0, msg)

@@ -67,6 +67,7 @@ class MldsaKeysign(
     private val heardFromThisAttempt = mutableSetOf<String>()
     private val heardFromEver = mutableSetOf<String>()
 
+    /** Collects signatures keyed by the signed message hex string. */
     val signatures = mutableMapOf<String, KeysignResponse>()
 
     /** Signs all [messageToSign] hashes sequentially, retrying each on failure. */
