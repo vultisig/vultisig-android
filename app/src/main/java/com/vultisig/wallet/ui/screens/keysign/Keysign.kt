@@ -106,6 +106,17 @@ internal fun KeysignView(
                 )
             }
 
+            is KeysignState.WaitingForPeer -> {
+                KeepScreenOn()
+                VsSigningProgressIndicator(
+                    text =
+                        stringResource(
+                            R.string.keysign_screen_waiting_for_peer,
+                            state.missingPeers.joinToString(", "),
+                        )
+                )
+            }
+
             else -> {
                 KeepScreenOn()
 
