@@ -1355,18 +1355,22 @@ constructor(
     }
 }
 
+/** camelCase + acronym→word boundary, e.g. `supplyWithPermit` and `WBTCSwap`. */
+private val EVM_FUNCTION_NAME_BOUNDARY = Regex("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
+
 /**
- * Extract the function name from an ABI signature like `"withdraw(address,uint256,address)"` and
- * format it for display: split on camelCase boundaries and title-case each word.
+ * Extract a display-friendly function name from an ABI signature.
+ * - `supplyWithPermit(...)` → `"Supply With Permit"`
+ * - `WBTCSwap(...)` → `"WBTC Swap"`
  *
- * Returns null if the signature has no `(` or is empty before it.
+ * Digit-prefixed names like `ERC20transferFrom` are left as-is — splitting on digits produces
+ * uglier output than it fixes for the long tail of selectors. Returns null when the signature has
+ * no `(` or is empty before it.
  */
 internal fun prettifyEvmFunctionName(signature: String): String? {
-    val rawName =
-        signature.substringBefore('(').trim().takeIf {
-            it.isNotEmpty() && it.length < signature.length
-        } ?: return null
-    return rawName.replace(Regex("(?<=[a-z])(?=[A-Z])"), " ").split(' ').joinToString(" ") { word ->
-        word.replaceFirstChar { it.titlecase(Locale.ROOT) }
+    val rawName = signature.substringBefore('(', missingDelimiterValue = "").trim()
+    if (rawName.isEmpty()) return null
+    return rawName.replace(EVM_FUNCTION_NAME_BOUNDARY, " ").split(' ').joinToString(" ") {
+        it.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) }
     }
 }
