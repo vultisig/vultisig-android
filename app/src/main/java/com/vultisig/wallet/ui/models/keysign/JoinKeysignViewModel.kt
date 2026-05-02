@@ -172,7 +172,7 @@ internal sealed class VerifyUiModel {
 
 internal data class FunctionInfo(
     val signature: String,
-    val inputs: String,
+    val inputs: String?,
     val functionName: String? = null,
 )
 
@@ -1334,6 +1334,10 @@ constructor(
      * (e.g. `supplyWithPermit` → `"Supply With Permit"`). Caller renders the name as a small-text
      * heading; the resolved-amount hero is layered on by Blockaid simulation in #4306.
      *
+     * Args decoding is best-effort. When it fails (malformed ABI, unsupported tuple shape, etc.)
+     * the signature + function name still surface so the user sees *what* is being called, just
+     * without the pretty-printed inputs row.
+     *
      * 4byte HTTP + JNI ABI decode + JSON encode are bounced onto IO so the caller's dispatcher
      * (typically the main / unconfined coroutine that runs `keysignVerify`) is never blocked.
      */
@@ -1342,12 +1346,9 @@ constructor(
         return withContext(Dispatchers.IO) {
             val functionSignature =
                 fourByteRepository.decodeFunction(memo) ?: return@withContext null
-            val functionInputs =
-                fourByteRepository.decodeFunctionArgs(functionSignature, memo)
-                    ?: return@withContext null
             FunctionInfo(
                 signature = functionSignature,
-                inputs = functionInputs,
+                inputs = fourByteRepository.decodeFunctionArgs(functionSignature, memo),
                 functionName = prettifyEvmFunctionName(functionSignature),
             )
         }

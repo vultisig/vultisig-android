@@ -78,7 +78,7 @@ internal fun SendTxOverviewScreen(
             if (tx.functionName != null) {
                 Text(
                     text = tx.functionName,
-                    style = Theme.brockmann.headings.title2,
+                    style = Theme.brockmann.headings.title3,
                     color = Theme.v2.colors.text.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),

@@ -134,7 +134,7 @@ private fun VsHoldableButtonPreview() {
 private fun VsHoldableButtonDisabledPreview() {
     VsHoldableButton(
         label = "Hold (Disabled)",
-        enabled = VsButtonState.Enabled,
+        enabled = VsButtonState.Disabled,
         onLongClick = {},
         onClick = {},
         modifier = Modifier.fillMaxWidth(),

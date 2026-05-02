@@ -3,18 +3,19 @@ package com.vultisig.wallet.ui.screens.send
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -400,7 +401,19 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
                 color = Theme.v2.colors.text.tertiary,
             )
 
-            IconButton(onClick = { isExpanded = !isExpanded }, modifier = Modifier.size(16.dp)) {
+            // Lightweight 16dp clickable container so the chevron renders at its intended size.
+            // [IconButton] enforces a 40dp minimum touch target which fights the explicit
+            // size modifier and blows the row out of the design.
+            Box(
+                modifier =
+                    Modifier.size(16.dp).clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) {
+                        isExpanded = !isExpanded
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
                 UiIcon(
                     drawableResId = R.drawable.chevron,
                     tint = Theme.v2.colors.text.tertiary,
@@ -411,17 +424,18 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
         }
 
         AnimatedVisibility(visible = isExpanded) {
+            // Inner column intentionally lets content size naturally; the outer scaffold's
+            // verticalScroll handles long JSON. A nested verticalScroll here trapped the
+            // last lines of long signatures / inputs out of reach.
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier =
                     Modifier.fillMaxWidth()
-                        .heightIn(max = 300.dp)
                         .background(
                             color = Theme.v2.colors.variables.bordersLight,
                             shape = RoundedCornerShape(12.dp),
                         )
-                        .padding(12.dp)
-                        .verticalScroll(rememberScrollState()),
+                        .padding(12.dp),
             ) {
                 functionSignature?.let {
                     VerifyCardJsonDetails(
