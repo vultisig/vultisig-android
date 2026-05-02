@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.OneInchToCoinsUseCase
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -103,6 +104,7 @@ internal class TokenRepositoryImplTest {
                     .getTokensWithBalance(Chain.ThorChain, ADDRESS, setOf("x/ruji", "tcy"))
 
             assertEquals(setOf("x/ruji", "tcy"), coins.map { it.contractAddress }.toSet())
+            coVerify(exactly = 0) { thorApi.getDenomMetaFromLCD("btc/btc") }
         }
 
     @Test
