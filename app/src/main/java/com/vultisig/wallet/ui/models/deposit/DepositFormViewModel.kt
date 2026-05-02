@@ -539,83 +539,86 @@ constructor(
                 balance = R.string.share_balance_loading.asUiText(),
             )
         }
-        viewModelScope.safeLaunch {
-            val userAddress =
-                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
-                    ?.address
-                    ?: run {
-                        _state.update {
-                            it.copy(
-                                errorText =
-                                    UiText.StringResource(R.string.dialog_default_error_body)
-                            )
+        loadLpJob?.cancel()
+        loadLpJob =
+            viewModelScope.safeLaunch {
+                val userAddress =
+                    withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                        ?.address
+                        ?: run {
+                            _state.update {
+                                it.copy(
+                                    errorText =
+                                        UiText.StringResource(R.string.dialog_default_error_body)
+                                )
+                            }
+                            return@safeLaunch
                         }
-                        return@safeLaunch
+                val memberDetails =
+                    withContext(Dispatchers.IO) {
+                        mayachainBondRepository.getMemberDetails(userAddress)
                     }
-            val memberDetails =
-                withContext(Dispatchers.IO) {
-                    mayachainBondRepository.getMemberDetails(userAddress)
+                val userLpUnits =
+                    memberDetails.pools.find { it.pool == poolId }?.liquidityUnits
+                        ?: run {
+                            _state.update {
+                                it.copy(
+                                    availableLpUnits = null,
+                                    removeLpUnitsDivisor = BigInteger.ZERO,
+                                    removeLpPoolDepth = BigInteger.ZERO,
+                                    errorText =
+                                        UiText.StringResource(R.string.dialog_default_error_body),
+                                )
+                            }
+                            return@safeLaunch
+                        }
+                val poolStats =
+                    withContext(Dispatchers.IO) { mayachainBondRepository.getLpPoolStats() }
+                val pool =
+                    poolStats.find { it.asset == poolId }
+                        ?: run {
+                            _state.update {
+                                it.copy(
+                                    availableLpUnits = null,
+                                    removeLpUnitsDivisor = BigInteger.ZERO,
+                                    removeLpPoolDepth = BigInteger.ZERO,
+                                    errorText =
+                                        UiText.StringResource(R.string.dialog_default_error_body),
+                                )
+                            }
+                            return@safeLaunch
+                        }
+                val totalPoolUnits = pool.units.toBigIntegerOrNull() ?: BigInteger.ZERO
+                val cacaoDepth = pool.cacaoDepth.toBigIntegerOrNull() ?: BigInteger.ZERO
+                val userAvailableUnits = userLpUnits.toLongOrNull()
+                val userCacao =
+                    if (userAvailableUnits != null) {
+                        RemoveLpCalculator.computeAmountDisplay(
+                            selectedUnits = userAvailableUnits,
+                            poolDepth = cacaoDepth,
+                            totalPoolUnits = totalPoolUnits,
+                            decimals = RemoveLpCalculator.CACAO_DECIMALS,
+                        )
+                    } else null
+                val balanceText =
+                    if (userCacao != null) {
+                        UiText.FormattedText(
+                            R.string.remove_pool_amount_format,
+                            listOf(userCacao, "CACAO"),
+                        )
+                    } else UiText.Empty
+                _state.update {
+                    it.copy(
+                        availableLpUnits = userLpUnits,
+                        removeLpUnitsDivisor = totalPoolUnits,
+                        removeLpPoolDepth = cacaoDepth,
+                        removeLpDecimals = RemoveLpCalculator.CACAO_DECIMALS,
+                        removeLpTokenSymbol = "CACAO",
+                        balance = balanceText,
+                    )
                 }
-            val userLpUnits =
-                memberDetails.pools.find { it.pool == poolId }?.liquidityUnits
-                    ?: run {
-                        _state.update {
-                            it.copy(
-                                availableLpUnits = null,
-                                removeLpUnitsDivisor = BigInteger.ZERO,
-                                removeLpPoolDepth = BigInteger.ZERO,
-                                errorText =
-                                    UiText.StringResource(R.string.dialog_default_error_body),
-                            )
-                        }
-                        return@safeLaunch
-                    }
-            val poolStats = withContext(Dispatchers.IO) { mayachainBondRepository.getLpPoolStats() }
-            val pool =
-                poolStats.find { it.asset == poolId }
-                    ?: run {
-                        _state.update {
-                            it.copy(
-                                availableLpUnits = null,
-                                removeLpUnitsDivisor = BigInteger.ZERO,
-                                removeLpPoolDepth = BigInteger.ZERO,
-                                errorText =
-                                    UiText.StringResource(R.string.dialog_default_error_body),
-                            )
-                        }
-                        return@safeLaunch
-                    }
-            val totalPoolUnits = pool.units.toBigIntegerOrNull() ?: BigInteger.ZERO
-            val cacaoDepth = pool.cacaoDepth.toBigIntegerOrNull() ?: BigInteger.ZERO
-            val userAvailableUnits = userLpUnits.toLongOrNull()
-            val userCacao =
-                if (userAvailableUnits != null) {
-                    RemoveLpCalculator.computeAmountDisplay(
-                        selectedUnits = userAvailableUnits,
-                        poolDepth = cacaoDepth,
-                        totalPoolUnits = totalPoolUnits,
-                        decimals = RemoveLpCalculator.CACAO_DECIMALS,
-                    )
-                } else null
-            val balanceText =
-                if (userCacao != null) {
-                    UiText.FormattedText(
-                        R.string.remove_pool_amount_format,
-                        listOf(userCacao, "CACAO"),
-                    )
-                } else UiText.Empty
-            _state.update {
-                it.copy(
-                    availableLpUnits = userLpUnits,
-                    removeLpUnitsDivisor = totalPoolUnits,
-                    removeLpPoolDepth = cacaoDepth,
-                    removeLpDecimals = RemoveLpCalculator.CACAO_DECIMALS,
-                    removeLpTokenSymbol = "CACAO",
-                    balance = balanceText,
-                )
+                setRemoveLpPercent(state.value.removeLpPercent)
             }
-            setRemoveLpPercent(state.value.removeLpPercent)
-        }
     }
 
     private fun loadThorChainRemoveLpData() {
