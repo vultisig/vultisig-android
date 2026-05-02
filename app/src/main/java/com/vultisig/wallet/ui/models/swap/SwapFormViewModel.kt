@@ -646,9 +646,10 @@ constructor(
         selectedSrcId.value = selectedDstId.value
         selectedDstId.value = bufId
 
-        val buffer = selectedSrc.value
-        selectedSrc.value = selectedDst.value
-        selectedDst.value = buffer
+        // collectSelectedTokens() observes the IDs above and resolves both StateFlows.
+        // Under Main.immediate it runs on this same call stack, so an additional manual
+        // swap of selectedSrc/selectedDst here reads the already-updated values and
+        // reverts the flip — leaving src and dst pointing at the same token.
 
         if (
             newSrcAmount != null &&
