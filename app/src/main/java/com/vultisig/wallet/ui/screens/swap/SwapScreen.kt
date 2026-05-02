@@ -393,157 +393,166 @@ internal fun SwapScreen(
                         }
                     }
 
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                    ) {
-                        val placeHolderModifier = Modifier.height(16.dp).width(80.dp)
-                        FormDetails2(
-                            title = stringResource(R.string.swap_screen_provider_title),
-                            value = state.provider.asString(),
-                        )
-
-                        FormDetails2(
-                            modifier =
-                                Modifier.clickable(
-                                    onClick = { isFeeDetailsExpanded = !isFeeDetailsExpanded }
-                                ),
-                            title = stringResource(R.string.swap_form_total_fees_title),
-                            valueComposable =
-                                if (state.isLoading) {
-                                    { UiPlaceholderLoader(placeHolderModifier) }
-                                } else {
-                                    {
-                                        Row {
-                                            Text(
-                                                text = state.totalFee,
-                                                color = Theme.v2.colors.text.secondary,
-                                                style = Theme.brockmann.supplementary.caption,
-                                                textAlign = TextAlign.End,
-                                            )
-
-                                            UiSpacer(size = 8.dp)
-                                            UiIcon(
-                                                drawableResId = R.drawable.ic_caret_down,
-                                                tint = Theme.v2.colors.text.primary,
-                                                size = 16.dp,
-                                                modifier = Modifier.rotate(rotationAngle),
-                                            )
-                                        }
-                                    }
-                                },
-                        )
-
-                        AnimatedVisibility(
-                            visible = isFeeDetailsExpanded && state.isLoading.not()
+                    AnimatedVisibility(visible = error == null || state.isLoading) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp),
                         ) {
-                            Row(modifier = Modifier.height(IntrinsicSize.Max)) {
-                                Box(
-                                    modifier =
-                                        Modifier.width(1.5.dp)
-                                            .fillMaxHeight()
-                                            .background(
-                                                color = Theme.v2.colors.border.primaryAccent4,
-                                                shape = CircleShape,
-                                            )
-                                )
+                            val placeHolderModifier = Modifier.height(16.dp).width(80.dp)
+                            FormDetails2(
+                                title = stringResource(R.string.swap_screen_provider_title),
+                                value = state.provider.asString(),
+                            )
 
-                                UiSpacer(size = 8.dp)
+                            FormDetails2(
+                                modifier =
+                                    Modifier.clickable(
+                                        onClick = { isFeeDetailsExpanded = !isFeeDetailsExpanded }
+                                    ),
+                                title = stringResource(R.string.swap_form_total_fees_title),
+                                valueComposable =
+                                    if (state.isLoading) {
+                                        { UiPlaceholderLoader(placeHolderModifier) }
+                                    } else {
+                                        {
+                                            Row {
+                                                Text(
+                                                    text = state.totalFee,
+                                                    color = Theme.v2.colors.text.secondary,
+                                                    style = Theme.brockmann.supplementary.caption,
+                                                    textAlign = TextAlign.End,
+                                                )
 
-                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    FormDetails2(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        title =
-                                            buildAnnotatedString {
-                                                append(stringResource(R.string.swap_form_gas_title))
-                                            },
-                                        value =
-                                            buildAnnotatedString {
-                                                withStyle(
-                                                    style =
-                                                        SpanStyle(
-                                                            color = Theme.v2.colors.neutrals.n100
-                                                        )
-                                                ) {
-                                                    append(state.networkFee)
-                                                }
-                                                append(" ")
-                                                withStyle(
-                                                    style =
-                                                        SpanStyle(
-                                                            color = Theme.v2.colors.neutrals.n400
-                                                        )
-                                                ) {
-                                                    append(
-                                                        if (state.networkFeeFiat.isNotEmpty())
-                                                            "(~${state.networkFeeFiat})"
-                                                        else ""
-                                                    )
-                                                }
-                                            },
-                                        placeholder =
-                                            if (state.isLoading) {
-                                                { UiPlaceholderLoader(placeHolderModifier) }
-                                            } else null,
-                                    )
-
-                                    FormDetails2(
-                                        title =
-                                            stringResource(R.string.swap_form_estimated_fees_title),
-                                        value = state.fee,
-                                        placeholder =
-                                            if (state.isLoading) {
-                                                { UiPlaceholderLoader(placeHolderModifier) }
-                                            } else null,
-                                    )
-
-                                    if (state.vultBpsDiscount != null) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                        ) {
-                                            VultDiscountTier(
-                                                vultBpsDiscount = state.vultBpsDiscount,
-                                                tierType = state.tierType,
-                                            )
-
-                                            Text(
-                                                text = "-${state.vultBpsDiscountFiatValue}",
-                                                color = Theme.v2.colors.text.secondary,
-                                                style = Theme.brockmann.supplementary.caption,
-                                            )
+                                                UiSpacer(size = 8.dp)
+                                                UiIcon(
+                                                    drawableResId = R.drawable.ic_caret_down,
+                                                    tint = Theme.v2.colors.text.primary,
+                                                    size = 16.dp,
+                                                    modifier = Modifier.rotate(rotationAngle),
+                                                )
+                                            }
                                         }
-                                    }
+                                    },
+                            )
 
-                                    if (state.referralBpsDiscount != null) {
-                                        Row(
+                            AnimatedVisibility(
+                                visible = isFeeDetailsExpanded && state.isLoading.not()
+                            ) {
+                                Row(modifier = Modifier.height(IntrinsicSize.Max)) {
+                                    Box(
+                                        modifier =
+                                            Modifier.width(1.5.dp)
+                                                .fillMaxHeight()
+                                                .background(
+                                                    color = Theme.v2.colors.border.primaryAccent4,
+                                                    shape = CircleShape,
+                                                )
+                                    )
+
+                                    UiSpacer(size = 8.dp)
+
+                                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                        FormDetails2(
                                             modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            UiIcon(
-                                                drawableResId = R.drawable.referral_code,
-                                                size = 16.dp,
-                                                tint = Theme.v2.colors.border.primaryAccent4,
-                                            )
-                                            UiSpacer(size = 4.dp)
+                                            title =
+                                                buildAnnotatedString {
+                                                    append(
+                                                        stringResource(R.string.swap_form_gas_title)
+                                                    )
+                                                },
+                                            value =
+                                                buildAnnotatedString {
+                                                    withStyle(
+                                                        style =
+                                                            SpanStyle(
+                                                                color =
+                                                                    Theme.v2.colors.neutrals.n100
+                                                            )
+                                                    ) {
+                                                        append(state.networkFee)
+                                                    }
+                                                    append(" ")
+                                                    withStyle(
+                                                        style =
+                                                            SpanStyle(
+                                                                color =
+                                                                    Theme.v2.colors.neutrals.n400
+                                                            )
+                                                    ) {
+                                                        append(
+                                                            if (state.networkFeeFiat.isNotEmpty())
+                                                                "(~${state.networkFeeFiat})"
+                                                            else ""
+                                                        )
+                                                    }
+                                                },
+                                            placeholder =
+                                                if (state.isLoading) {
+                                                    { UiPlaceholderLoader(placeHolderModifier) }
+                                                } else null,
+                                        )
 
-                                            Text(
-                                                text =
-                                                    stringResource(
-                                                        R.string.swap_form_referral_discount_bps,
-                                                        state.referralBpsDiscount,
-                                                    ),
-                                                color = Theme.v2.colors.text.tertiary,
-                                                style = Theme.brockmann.supplementary.caption,
-                                            )
+                                        FormDetails2(
+                                            title =
+                                                stringResource(
+                                                    R.string.swap_form_estimated_fees_title
+                                                ),
+                                            value = state.fee,
+                                            placeholder =
+                                                if (state.isLoading) {
+                                                    { UiPlaceholderLoader(placeHolderModifier) }
+                                                } else null,
+                                        )
 
-                                            UiSpacer(weight = 1f)
+                                        if (state.vultBpsDiscount != null) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                            ) {
+                                                VultDiscountTier(
+                                                    vultBpsDiscount = state.vultBpsDiscount,
+                                                    tierType = state.tierType,
+                                                )
 
-                                            Text(
-                                                text = "-${state.referralBpsDiscountFiatValue}",
-                                                color = Theme.v2.colors.text.secondary,
-                                                style = Theme.brockmann.supplementary.caption,
-                                            )
+                                                Text(
+                                                    text = "-${state.vultBpsDiscountFiatValue}",
+                                                    color = Theme.v2.colors.text.secondary,
+                                                    style = Theme.brockmann.supplementary.caption,
+                                                )
+                                            }
+                                        }
+
+                                        if (state.referralBpsDiscount != null) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                UiIcon(
+                                                    drawableResId = R.drawable.referral_code,
+                                                    size = 16.dp,
+                                                    tint = Theme.v2.colors.border.primaryAccent4,
+                                                )
+                                                UiSpacer(size = 4.dp)
+
+                                                Text(
+                                                    text =
+                                                        stringResource(
+                                                            R.string
+                                                                .swap_form_referral_discount_bps,
+                                                            state.referralBpsDiscount,
+                                                        ),
+                                                    color = Theme.v2.colors.text.tertiary,
+                                                    style = Theme.brockmann.supplementary.caption,
+                                                )
+
+                                                UiSpacer(weight = 1f)
+
+                                                Text(
+                                                    text = "-${state.referralBpsDiscountFiatValue}",
+                                                    color = Theme.v2.colors.text.secondary,
+                                                    style = Theme.brockmann.supplementary.caption,
+                                                )
+                                            }
                                         }
                                     }
                                 }
