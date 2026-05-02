@@ -537,6 +537,7 @@ constructor(
                 removeLpPercent = 0f,
                 removeLpCacaoDisplay = "",
                 balance = R.string.share_balance_loading.asUiText(),
+                errorText = null,
             )
         }
         loadLpJob?.cancel()
@@ -647,6 +648,7 @@ constructor(
                 removeLpPercent = 0f,
                 removeLpCacaoDisplay = "",
                 balance = R.string.share_balance_loading.asUiText(),
+                errorText = null,
             )
         }
         loadLpJob?.cancel()
