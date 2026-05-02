@@ -9,6 +9,7 @@ import timber.log.Timber
 
 // Solana has different payload, for simplicity, avoid confusion and any potential bug
 // we'll keep it separated. Other chains such as SUI and BTC shared the same EVM payload
+/** Maps a Blockaid Solana scan response to a [SecurityScannerResult] for the given [provider]. */
 fun BlockaidTransactionScanResponseJson.toSolanaSecurityScannerResult(
     provider: String
 ): SecurityScannerResult {
@@ -59,6 +60,9 @@ fun BlockaidTransactionScanResponseJson.toSolanaSecurityScannerResult(
     }
 }
 
+/**
+ * Maps a Blockaid EVM/BTC/SUI scan response to a [SecurityScannerResult] for the given [provider].
+ */
 fun BlockaidTransactionScanResponseJson.toSecurityScannerResult(
     provider: String
 ): SecurityScannerResult {
@@ -91,6 +95,7 @@ fun BlockaidTransactionScanResponseJson.toSecurityScannerResult(
     )
 }
 
+/** Maps a Blockaid Solana validation result to the corresponding [SecurityRiskLevel]. */
 private fun BlockaidTransactionScanResponseJson.BlockaidSolanaResultJson
     .toSolanaValidationRiskLevel(): SecurityRiskLevel {
     val resultType = validation.resultType
@@ -103,6 +108,10 @@ private fun BlockaidTransactionScanResponseJson.BlockaidSolanaResultJson
     return resultType.toWarningType()
 }
 
+/**
+ * Derives [SecurityRiskLevel] from the scan response, returning [SecurityRiskLevel.MEDIUM] and
+ * logging a warning for any error status instead of throwing.
+ */
 private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): SecurityRiskLevel {
     val hasFeatures = validation?.features?.isEmpty() == false
     val classification = validation?.classification
@@ -116,7 +125,8 @@ private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): Securit
             globalStatus.equals("error", ignoreCase = true)
     ) {
         val errorMessage = validation?.error ?: "Scanning failed"
-        throw SecurityScannerException("SecurityScanner $errorMessage , payload: $this")
+        Timber.w("SecurityScanner scan unavailable: %s", errorMessage)
+        return SecurityRiskLevel.MEDIUM
     }
 
     val isBenign =
@@ -130,6 +140,7 @@ private fun BlockaidTransactionScanResponseJson.toValidationRiskLevel(): Securit
     return label.toWarningType()
 }
 
+/** Maps a Blockaid classification string to the corresponding [SecurityRiskLevel]. */
 private fun String?.toWarningType(): SecurityRiskLevel {
     return when (this?.lowercase()) {
         "benign",
@@ -146,6 +157,7 @@ private fun String?.toWarningType(): SecurityRiskLevel {
     }
 }
 
+/** Returns a human-readable recommendation string for the given Blockaid classification. */
 private fun String.toRecommendations(): String {
     return when (this.lowercase()) {
         "malicious" -> "This transaction is flagged as malicious. Do not proceed."

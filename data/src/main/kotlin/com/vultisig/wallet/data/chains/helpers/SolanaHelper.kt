@@ -23,6 +23,8 @@ import wallet.core.jni.proto.Solana
 internal const val SOLANA_PRIORITY_FEE_PRICE = 1000000L
 internal const val SOLANA_PRIORITY_FEE_LIMIT = 100000
 
+const val SOLANA_DEFAULT_CONTRACT_ADDRESS = "So11111111111111111111111111111111111111112"
+
 class SolanaHelper(private val vaultHexPublicKey: String) {
 
     private val coinType = CoinType.SOLANA
@@ -88,6 +90,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                         .setAmount(keysignPayload.toAmount.toLong())
                         .setDecimals(keysignPayload.coin.decimal)
                         .setTokenProgramIdValue(if (solanaSpecific.programId == true) 1 else 0)
+                keysignPayload.memo?.let { transfer.setMemo(it) }
 
                 return input.setTokenTransferTransaction(transfer.build()).build().toByteArray()
             } else {
@@ -107,6 +110,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                         .setAmount(keysignPayload.toAmount.toLong())
                         .setDecimals(keysignPayload.coin.decimal)
                         .setTokenProgramIdValue(if (solanaSpecific.programId == true) 1 else 0)
+                keysignPayload.memo?.let { transferTokenMessage.setMemo(it) }
 
                 return input
                     .setCreateAndTransferTokenTransaction(transferTokenMessage.build())

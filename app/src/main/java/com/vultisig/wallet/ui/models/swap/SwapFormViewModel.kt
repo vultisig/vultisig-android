@@ -25,12 +25,12 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
+import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.getTierType
-import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
-import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.findCurrentSrc
 import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
@@ -56,6 +56,9 @@ import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -108,7 +111,7 @@ constructor(
     private val navigator: Navigator<Destination>,
     private val fiatValueToString: FiatValueToStringMapper,
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
-    private val resolveProvider: ResolveProviderUseCase,
+    private val swapQuoteRepository: SwapQuoteRepository,
     private val allowanceRepository: AllowanceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
@@ -803,7 +806,7 @@ constructor(
 
     @OptIn(FlowPreview::class)
     private fun calculateFees() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             combine(selectedSrc.filterNotNull(), selectedDst.filterNotNull()) { src, dst ->
                     src to dst
                 }
@@ -833,23 +836,59 @@ constructor(
 
                         val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
 
-                        val provider =
-                            resolveProvider(SwapSelectionContext(srcToken, dstToken, tokenValue))
-                                ?: throw SwapException.SwapIsNotSupported(
-                                    "Swap is not supported for this pair"
-                                )
-                        this@SwapFormViewModel.provider = provider
+                        val eligibleProviders =
+                            swapQuoteRepository.getEligibleProviders(srcToken, dstToken)
+                        if (eligibleProviders.isEmpty()) {
+                            throw SwapException.SwapIsNotSupported(
+                                "Swap is not supported for this pair"
+                            )
+                        }
 
                         val currency = appCurrencyRepository.currency.first()
 
-                        val vultBPSDiscount =
-                            vaultId?.let { id ->
-                                getDiscountBpsUseCase.invoke(id, provider).takeIf { it != 0 }
-                            }
-
-                        val referral =
+                        val baselineReferral =
                             referralCode.value
                                 ?: vaultId?.let { referralRepository.getExternalReferralBy(it) }
+
+                        val candidates = coroutineScope {
+                            eligibleProviders
+                                .map { p ->
+                                    async {
+                                        val discount =
+                                            vaultId?.let { id ->
+                                                getDiscountBpsUseCase.invoke(id, p).takeIf { bps ->
+                                                    bps != 0
+                                                }
+                                            }
+                                        QuoteCandidate(
+                                            provider = p,
+                                            vultBPSDiscount = discount,
+                                            referral = baselineReferral,
+                                        )
+                                    }
+                                }
+                                .awaitAll()
+                        }
+
+                        val bestQuote =
+                            swapQuoteManager.fetchBestQuote(
+                                candidates = candidates,
+                                src = src,
+                                dst = dst,
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                srcTokenValue = srcTokenValue,
+                                tokenValue = tokenValue,
+                                currency = currency,
+                                amount = amount,
+                            )
+
+                        val quoteResult = bestQuote.result
+                        val provider = quoteResult.provider
+                        this@SwapFormViewModel.provider = provider
+
+                        val vultBPSDiscount = bestQuote.candidate.vultBPSDiscount
+                        val referral = bestQuote.candidate.referral
 
                         if (provider == SwapProvider.THORCHAIN) {
                             referral?.let { code ->
@@ -892,21 +931,6 @@ constructor(
                                 tierType = vultResult.tierType,
                             )
                         }
-
-                        val quoteResult =
-                            swapQuoteManager.fetchQuote(
-                                provider = provider,
-                                src = src,
-                                dst = dst,
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                srcTokenValue = srcTokenValue,
-                                tokenValue = tokenValue,
-                                currency = currency,
-                                vultBPSDiscount = vultBPSDiscount,
-                                referral = referral,
-                                amount = amount,
-                            )
 
                         this@SwapFormViewModel.quote = quoteResult.quote
                         swapFeeFiat.value = quoteResult.swapFeeFiat

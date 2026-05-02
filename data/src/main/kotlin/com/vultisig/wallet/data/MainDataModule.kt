@@ -8,7 +8,11 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.data.sources.AppDataStoreImpl
-import com.vultisig.wallet.data.utils.buildMasterKey
+import com.vultisig.wallet.data.utils.EncryptingSharedPreferences
+import com.vultisig.wallet.data.utils.InMemorySharedPreferences
+import com.vultisig.wallet.data.utils.SECURE_PREFS_KEY_ALIAS
+import com.vultisig.wallet.data.utils.SharedPrefsMasterKeyInitializer
+import com.vultisig.wallet.data.utils.buildSecurePrefsKey
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -22,17 +26,22 @@ import java.security.KeyStore
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.CompressorStreamProvider
 import timber.log.Timber
 
+/** Hilt module that wires application-scoped data-layer dependencies. */
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface MainDataModule {
 
     companion object {
 
+        /** Provides the application-scoped [androidx.datastore.core.DataStore]. */
         @Provides
         @Singleton
         fun provideDataStore(@ApplicationContext context: Context) =
@@ -40,49 +49,84 @@ internal interface MainDataModule {
                 produceFile = { context.preferencesDataStoreFile("app_pref") }
             )
 
+        /** Provides the [IoDispatcher]-qualified [CoroutineDispatcher]. */
         @Provides @IoDispatcher fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
+        /** Provides the [MainDispatcher]-qualified [CoroutineDispatcher]. */
         @Provides
         @MainDispatcher
         fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
 
+        /** Provides the [DefaultDispatcher]-qualified [CoroutineDispatcher]. */
         @Provides
         @DefaultDispatcher
         fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
 
+        /** Provides the singleton [CompressorStreamProvider] for compression/decompression. */
         @Provides
         @Singleton
         fun provideCompressorStreamProvider(): CompressorStreamProvider = CompressorStreamFactory()
 
+        /**
+         * Provides the singleton [SharedPreferences] backed by AndroidKeyStore AES-256-GCM
+         * encryption.
+         */
         @Singleton
         @Provides
         fun provideEncryptedSharedPrefs(@ApplicationContext context: Context): SharedPreferences {
-            fun create(): SharedPreferences =
-                EncryptedSharedPreferences.create(
-                    context,
-                    ENCRYPTED_PREFS_FILE,
-                    buildMasterKey(context),
-                    EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                    EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
-                )
+            fun create(): SharedPreferences {
+                // Use the prewarm result if it completed before Hilt arrived; otherwise fall back
+                // to a fresh keystore lookup.
+                val prewarm = SharedPrefsMasterKeyInitializer.prewarmResult
+                val key =
+                    if (prewarm.isCompleted) prewarm.getCompleted() ?: buildSecurePrefsKey()
+                    else buildSecurePrefsKey()
+                val rawPrefs = context.getSharedPreferences(SECURE_PREFS_FILE, Context.MODE_PRIVATE)
+                val prefs = EncryptingSharedPreferences(rawPrefs, key)
+                // Eagerly probe the key: KeyPermanentlyInvalidatedException (a
+                // GeneralSecurityException) surfaces here rather than silently returning defaults
+                // on every subsequent read.
+                prefs.selfTest()
+                // Run migration on IO to avoid blocking the calling thread (often main).
+                CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                    migrateFromEncryptedSharedPrefs(context, prefs)
+                }
+                return prefs
+            }
 
             fun recoverAndRetry(cause: Exception): SharedPreferences {
-                Timber.e(cause, "EncryptedSharedPrefs init failed, attempting recovery")
-                val prefsFile =
-                    File(context.filesDir.parent, "shared_prefs/$ENCRYPTED_PREFS_FILE.xml")
+                Timber.e(cause, "SecureSharedPrefs init failed, attempting recovery")
+                val prefsFile = File(context.filesDir.parent, "shared_prefs/$SECURE_PREFS_FILE.xml")
                 if (prefsFile.exists() && !prefsFile.delete()) {
                     Timber.w(
-                        "Failed to delete corrupted encrypted prefs file at %s",
+                        "Failed to delete corrupted secure prefs file at %s",
                         prefsFile.absolutePath,
                     )
                 }
                 runCatching {
                         val keyStore = KeyStore.getInstance("AndroidKeyStore")
                         keyStore.load(null)
-                        keyStore.deleteEntry(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+                        keyStore.deleteEntry(SECURE_PREFS_KEY_ALIAS)
                     }
-                    .onFailure { Timber.e(it, "Failed to delete master key entry during recovery") }
-                return create()
+                    .onFailure { Timber.e(it, "Failed to delete secure prefs key during recovery") }
+                // Clear the migration sentinel so that if the legacy file is still present it can
+                // be re-imported into the freshly generated key on the next create() call.
+                runCatching {
+                        context
+                            .getSharedPreferences(MIGRATION_STATE_PREFS, Context.MODE_PRIVATE)
+                            .edit()
+                            .remove(MIGRATION_DONE_KEY)
+                            .commit()
+                    }
+                    .onFailure { Timber.w(it, "Failed to clear migration marker during recovery") }
+                // Guard the retry: if the keystore is irrecoverably broken, return a non-persistent
+                // in-memory fallback so the app boots in a degraded state rather than crashing.
+                return try {
+                    create()
+                } catch (e: Exception) {
+                    Timber.e(e, "SecureSharedPrefs recovery failed; using in-memory fallback")
+                    InMemorySharedPreferences()
+                }
             }
 
             return try {
@@ -95,13 +139,104 @@ internal interface MainDataModule {
         }
     }
 
+    /** Binds [AppDataStoreImpl] as the [AppDataStore] implementation. */
     @Singleton @Binds fun bindAppDataStore(impl: AppDataStoreImpl): AppDataStore
 }
 
 private const val ENCRYPTED_PREFS_FILE = "token_encrypted_prefs"
+private const val SECURE_PREFS_FILE = "token_secure_prefs"
+// Stored in a separate file so a clear() on the main prefs cannot reset this sentinel.
+private const val MIGRATION_STATE_PREFS = "migration_state_prefs"
+private const val MIGRATION_DONE_KEY = "__migrated_from_encrypted_prefs"
 
+/** Qualifier for the IO [CoroutineDispatcher]. */
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class IoDispatcher
 
+/** Qualifier for the main-thread [CoroutineDispatcher]. */
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class MainDispatcher
 
+/** Qualifier for the default [CoroutineDispatcher]. */
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class DefaultDispatcher
+
+/**
+ * One-time migration: copies all entries from the legacy [EncryptedSharedPreferences] file to
+ * [newPrefs], then deletes the legacy file. If the legacy file cannot be opened (e.g. the
+ * AndroidKeyStore entry is corrupted), the legacy file is discarded rather than blocking startup.
+ *
+ * Idempotent: [MIGRATION_DONE_KEY] is written to a dedicated [MIGRATION_STATE_PREFS] file that is
+ * separate from [newPrefs], so a [SharedPreferences.Editor.clear] on [newPrefs] cannot reset the
+ * sentinel and trigger re-migration. A transient [java.io.File.delete] failure on the legacy file
+ * is handled by a best-effort delete on the next launch (early-return path).
+ */
+private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPreferences) {
+    val migrationStatePrefs =
+        context.getSharedPreferences(MIGRATION_STATE_PREFS, Context.MODE_PRIVATE)
+    if (migrationStatePrefs.getBoolean(MIGRATION_DONE_KEY, false)) {
+        val legacyFile = File(context.filesDir.parent, "shared_prefs/$ENCRYPTED_PREFS_FILE.xml")
+        if (legacyFile.exists() && !legacyFile.delete()) {
+            Timber.w("Failed to delete legacy encrypted prefs file at %s", legacyFile.absolutePath)
+        }
+        return
+    }
+
+    val legacyFile = File(context.filesDir.parent, "shared_prefs/$ENCRYPTED_PREFS_FILE.xml")
+    if (!legacyFile.exists()) return
+
+    @Suppress("DEPRECATION")
+    val legacyPrefs =
+        try {
+            EncryptedSharedPreferences.create(
+                context,
+                ENCRYPTED_PREFS_FILE,
+                MasterKey.Builder(context, MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+                    .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                    .setRequestStrongBoxBacked(false)
+                    .build(),
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
+            )
+        } catch (e: Exception) {
+            // Broad catch is intentional: Tink on some OEM ROMs throws IllegalStateException,
+            // SecurityException, or NPE in addition to GeneralSecurityException / IOException.
+            // Losing legacy data is acceptable here; a startup crash is not.
+            Timber.e(e, "Cannot open legacy encrypted prefs for migration; discarding legacy data")
+            legacyFile.delete()
+            return
+        }
+
+    val legacyEntries =
+        try {
+            legacyPrefs.all
+        } catch (e: Exception) {
+            Timber.e(e, "Cannot read legacy encrypted prefs; discarding legacy data")
+            legacyFile.delete()
+            return
+        }
+    val editor = newPrefs.edit()
+    for ((key, value) in legacyEntries) {
+        when (value) {
+            is String -> editor.putString(key, value)
+            is Boolean -> editor.putBoolean(key, value)
+            is Int -> editor.putInt(key, value)
+            is Long -> editor.putLong(key, value)
+            is Float -> editor.putFloat(key, value)
+            else ->
+                Timber.w(
+                    "Skipping legacy pref of unsupported type %s during migration",
+                    value?.javaClass?.simpleName,
+                )
+        }
+    }
+    if (editor.commit()) {
+        // Use commit() (not apply()) so the sentinel is guaranteed on disk before legacyFile is
+        // deleted. An apply() here would allow a process kill to leave the marker unflushed while
+        // the legacy file is gone, causing re-migration to overwrite values on the next launch.
+        migrationStatePrefs.edit().putBoolean(MIGRATION_DONE_KEY, true).commit()
+        if (!legacyFile.delete()) {
+            Timber.w("Failed to delete legacy encrypted prefs file at %s", legacyFile.absolutePath)
+        }
+        Timber.i("Migrated encrypted prefs to secure format")
+    } else {
+        Timber.w("Failed to commit migrated prefs; legacy file retained for next attempt")
+    }
+}

@@ -34,17 +34,33 @@ internal fun JoinKeygenScreen(model: JoinKeygenViewModel = hiltViewModel()) {
 
     val state by model.state.collectAsState()
     val error = state.error
-    if (error == null) {
-        JoinKeygenScreen(state = state)
-    } else {
-        ErrorView(
-            title = error.message.asString(),
-            buttonUiModel =
-                ErrorViewButtonUiModel(
-                    text = stringResource(R.string.scan_qr_code_error_button),
-                    onClick = model::navigateBack,
-                ),
-        )
+    val alreadyJoined = state.alreadyJoined
+    when {
+        alreadyJoined != null ->
+            ErrorView(
+                title =
+                    stringResource(
+                        R.string.join_key_gen_vault_already_on_device,
+                        alreadyJoined.vaultName,
+                    ),
+                buttonUiModel =
+                    ErrorViewButtonUiModel(
+                        text = stringResource(R.string.join_key_gen_open_existing_vault),
+                        onClick = model::openExistingVault,
+                    ),
+            )
+
+        error != null ->
+            ErrorView(
+                title = error.message.asString(),
+                buttonUiModel =
+                    ErrorViewButtonUiModel(
+                        text = stringResource(R.string.scan_qr_code_error_button),
+                        onClick = model::navigateBack,
+                    ),
+            )
+
+        else -> JoinKeygenScreen(state = state)
     }
 }
 

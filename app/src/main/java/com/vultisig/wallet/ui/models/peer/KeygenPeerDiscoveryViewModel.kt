@@ -19,6 +19,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.models.signer.BatchKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
@@ -36,6 +37,7 @@ import com.vultisig.wallet.data.models.proto.v1.KeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.ReshareMessageProto
 import com.vultisig.wallet.data.models.proto.v1.SingleKeygenMessageProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
@@ -94,8 +96,7 @@ data class PeerDiscoveryUiModel(
     val devices: List<String> = emptyList(),
     val selectedDevices: List<String> = emptyList(),
     val minimumDevices: Int = MIN_KEYGEN_DEVICES,
-    // we're trying to promote minimum of three devices
-    val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES + 1,
+    val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES,
     val showQrHelpModal: Boolean = false,
     val showDevicesHint: Boolean = true,
     val connectingToServer: ConnectingToServerUiModel? = null,
@@ -127,6 +128,7 @@ constructor(
     private val generateServerPartyId: GenerateServerPartyId,
     private val secretSettingsRepository: SecretSettingsRepository,
     private val vultiSignerRepository: VultiSignerRepository,
+    private val featureFlagRepository: FeatureFlagRepository,
     private val qrHelperModalRepository: QrHelperModalRepository,
     private val vaultRepository: VaultRepository,
     private val keyImportRepository: KeyImportRepository,
@@ -145,7 +147,7 @@ constructor(
         MutableStateFlow(
             PeerDiscoveryUiModel(
                 minimumDevices = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
-                minimumDevicesDisplayed = (args?.deviceCount?.plus(1)) ?: (MIN_KEYGEN_DEVICES + 1),
+                minimumDevicesDisplayed = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
                 enableNotification = false,
             )
         )
@@ -294,7 +296,7 @@ constructor(
             }
         ) {
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
-            val keygenCommittee = listOf(localPartyId) + state.value.selectedDevices
+            val keygenCommittee = (listOf(localPartyId) + state.value.selectedDevices).distinct()
             sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
 
             navigator.route(
@@ -412,7 +414,7 @@ constructor(
                     state.update {
                         it.copy(
                             minimumDevices = existingVault.signers.size,
-                            minimumDevicesDisplayed = existingVault.signers.size + 1,
+                            minimumDevicesDisplayed = existingVault.signers.size,
                         )
                     }
                 }
@@ -662,18 +664,39 @@ constructor(
                 }
 
                 TssAction.KEYGEN -> {
-                    vultiSignerRepository.joinKeygen(
-                        JoinKeygenRequestJson(
-                            vaultName = vaultName,
-                            sessionId = sessionId,
-                            hexEncryptionKey = encryptionKeyHex,
-                            hexChainCode = hexChainCode,
-                            localPartyId = generateServerPartyId(),
-                            encryptionPassword = password,
-                            email = email,
-                            libType = libType.toJson(),
+                    val featureFlags = featureFlagRepository.getFeatureFlags()
+                    if (featureFlags.isTssBatchEnabled) {
+                        vultiSignerRepository.joinBatchKeygen(
+                            BatchKeygenRequestJson(
+                                vaultName = vaultName,
+                                sessionId = sessionId,
+                                hexEncryptionKey = encryptionKeyHex,
+                                hexChainCode = hexChainCode,
+                                localPartyId = generateServerPartyId(),
+                                encryptionPassword = password,
+                                email = email,
+                                libType = libType.toJson(),
+                                protocols =
+                                    listOf(
+                                        BatchKeygenRequestJson.PROTOCOL_ECDSA,
+                                        BatchKeygenRequestJson.PROTOCOL_EDDSA,
+                                    ),
+                            )
                         )
-                    )
+                    } else {
+                        vultiSignerRepository.joinKeygen(
+                            JoinKeygenRequestJson(
+                                vaultName = vaultName,
+                                sessionId = sessionId,
+                                hexEncryptionKey = encryptionKeyHex,
+                                hexChainCode = hexChainCode,
+                                localPartyId = generateServerPartyId(),
+                                encryptionPassword = password,
+                                email = email,
+                                libType = libType.toJson(),
+                            )
+                        )
+                    }
                 }
 
                 TssAction.Migrate -> {

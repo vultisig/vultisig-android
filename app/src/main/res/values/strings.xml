@@ -240,14 +240,14 @@
     <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">I am aware that the vault will be deleted permanently</string>
     <string name="vault_settings_delete_vault_caution2">I am aware that I can lose funds</string>
-    <string name="vault_settings_delete_vault_caution3">I have made a vault backup</string>
+    <string name="vault_settings_delete_vault_caution3">I have made a vault backup to restore later</string>
     <string name="vault_settings_delete_vault_name">Vault Name:</string>
     <string name="vault_settings_delete_vault_value">Vault Value:</string>
     <string name="vault_settings_delete_vault_id">Device ID:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Key:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA Key:</string>
 
-    <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault</string>
+    <string name="confirm_delete_permanent_delete_message">You are permanently deleting your vault share from this app</string>
     <string name="confirm_delete_delete_vault">Delete Vault</string>
     <string name="vault_accounts_account_assets">%1$s Assets</string>
     <string name="s_of_s_vault">%1$s-of-%2$s Vault Setup</string>
@@ -428,7 +428,7 @@
     <string name="eth_gas_settings_gas_limit_title">Gas Limit</string>
     <string name="vault_details_screen_vault_part">Vault Share</string>
     <string name="vault_details_screen_vault_type">Vault Type</string>
-    <string name="vault_settings_delete_vault_part">Vault Share:</string>
+    <string name="vault_settings_delete_vault_part">Vault Part:</string>
     <string name="vault_password_hint_too_long">Hint is too long</string>
     <string name="vault_details_screen_vault_part_desc">Share %1$s of %2$s</string>
     <string name="do_not_remind_me_again">Don\'t remind me again</string>
@@ -532,10 +532,9 @@
     <string name="peer_discovery_scan_with_n_device">Scan with %1$s device</string>
     <string name="peer_discovery_waiting_for_devices_action">Waiting for devices to connect…</string>
     <string name="peer_discovery_devices_n_of_n">Devices (%1$s/%2$s)</string>
-    <string name="scan_qr_code_modal_annotation">Download Vultisig on your other device(s) and select \'Scan QR code\'</string>
-    <string name="scan_qr_code_modal_next">Next</string>
-    <string name="scan_qr_code_modal_scan_the">Scan the</string>
-    <string name="scan_qr_code_modal_qr_code">QR code</string>
+    <string name="scan_qr_code_modal_annotation">On your other device, open the app and tap \"Scan QR\" to connect it.</string>
+    <string name="scan_qr_code_modal_next">Start scanning</string>
+    <string name="scan_qr_code_modal_scan_the">Scan the QR on your other devices</string>
     <string name="home_screen_scan_qr_code">Scan QR</string>
     <string name="select_vault_type_next">Next</string>
     <string name="select_vault_type_choose_setup">Choose Setup</string>
@@ -707,15 +706,17 @@
     <string name="deposit_option_add_liquidity">Add Liquidity</string>
     <string name="deposit_option_remove_liquidity">Remove Liquidity</string>
     <string name="add_pool_title">Add Pool</string>
+    <string name="add_lp_title">Add %1$s LP</string>
     <string name="add_pool_amount_label">Amount</string>
     <string name="add_pool_gas_auto">Gas (auto)</string>
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Token value</string>
     <string name="token_fiat_toggle_fiat_label">Fiat value</string>
     <string name="remove_pool_title">Remove Pool</string>
+    <string name="remove_lp_title">Remove %1$s LP</string>
     <string name="remove_pool_amount_label">Amount</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
-    <string name="remove_pool_cacao_amount_format" translatable="false">%1$s CACAO</string>
+    <string name="remove_pool_zero_amount" translatable="false">0 %1$s</string>
+    <string name="remove_pool_amount_format" translatable="false">%1$s %2$s</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">Stake CACAO</string>
     <string name="unstake_cacao_title">Unstake CACAO</string>
@@ -897,6 +898,8 @@
     <string name="import_file_import_your_vault_share">Import your vault share</string>
     <string name="import_file_supported_file_types_dat_bak_vult"><![CDATA[Supported file types: .dat & .bak & .vult]]></string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Vault with duplicate name exists</string>
+    <string name="join_key_gen_vault_already_on_device">Vault \"%1$s\" is already on this device</string>
+    <string name="join_key_gen_open_existing_vault">Open vault</string>
     <string name="join_key_gen_unknown_tssaction">Unknown TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">Could not find the other device on your network</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Waiting for other devices to join</string>
@@ -1115,6 +1118,11 @@
     <string name="key_import_chains_get_started">Get started</string>
     <string name="key_import_chains_no_results">No chains match your search</string>
     <string name="key_import_device_count_get_started">Get started</string>
+    <string name="choose_device_count_a11y_description">How many devices do you have? %1$s selected. Tap to choose another.</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">Messages</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="key_import_error_title">Key Import Failed</string>
     <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
     <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>

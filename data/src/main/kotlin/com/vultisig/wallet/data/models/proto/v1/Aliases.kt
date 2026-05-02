@@ -18,6 +18,8 @@ typealias SignDirectProto = vultisig.keysign.v1.SignDirect
 
 typealias SignSolanaProto = vultisig.keysign.v1.SignSolana
 
+typealias SignTonProto = vultisig.keysign.v1.SignTon
+
 typealias KeygenMessageProto = vultisig.keygen.v1.KeygenMessage
 
 typealias ReshareMessageProto = vultisig.keygen.v1.ReshareMessage
@@ -29,6 +31,8 @@ typealias VaultProto = Vault
 typealias VaultContainerProto = vultisig.vault.v1.VaultContainer
 
 typealias KeyShareProto = Vault.KeyShare
+
+typealias ChainPublicKeyProto = Vault.ChainPublicKey
 
 fun LibType.toSigningLibType() =
     when (this) {

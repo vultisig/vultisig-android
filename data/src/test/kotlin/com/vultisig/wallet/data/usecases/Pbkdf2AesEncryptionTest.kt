@@ -2,10 +2,14 @@ package com.vultisig.wallet.data.usecases
 
 import java.util.Base64
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 class Pbkdf2AesEncryptionTest {
 
@@ -106,5 +110,99 @@ class Pbkdf2AesEncryptionTest {
 
         val decrypted = pbkdf2AesNoLegacy.decrypt(tooShort, password.toByteArray())
         assertNull(decrypted)
+    }
+
+    // ── cross-platform vectors ────────────────────────────────────────────────
+
+    /**
+     * Loads a fixture from ios-backup-vectors/ and returns (password, plaintext, ciphertextBytes).
+     */
+    private fun loadFixture(name: String): Triple<String, String, ByteArray> {
+        val stream =
+            checkNotNull(
+                javaClass.classLoader?.getResourceAsStream("ios-backup-vectors/$name.json")
+            ) {
+                "Fixture $name.json not found in test resources"
+            }
+        val json = Json.parseToJsonElement(stream.bufferedReader().readText()).jsonObject
+        return Triple(
+            json["password"]!!.jsonPrimitive.content,
+            json["plaintext"]!!.jsonPrimitive.content,
+            Base64.getDecoder().decode(json["ciphertextBase64"]!!.jsonPrimitive.content),
+        )
+    }
+
+    /** Verifies that ciphertext produced by the iOS client decrypts to the expected plaintext. */
+    @Test
+    fun `decrypt_iosClientVector_returnsExpectedPlaintext`() {
+        val (pwd, expected, ciphertext) = loadFixture("ios")
+        val decrypted = pbkdf2AesNoLegacy.decrypt(ciphertext, pwd.toByteArray())
+        assertNotNull(decrypted)
+        assertEquals(expected, decrypted.toString(Charsets.UTF_8))
+    }
+
+    /**
+     * Verifies that ciphertext produced by the Extension client decrypts to the expected plaintext.
+     */
+    @Test
+    fun `decrypt_extensionClientVector_returnsExpectedPlaintext`() {
+        val (pwd, expected, ciphertext) = loadFixture("extension")
+        val decrypted = pbkdf2AesNoLegacy.decrypt(ciphertext, pwd.toByteArray())
+        assertNotNull(decrypted)
+        assertEquals(expected, decrypted.toString(Charsets.UTF_8))
+    }
+
+    /** Verifies that ciphertext produced by the Web client decrypts to the expected plaintext. */
+    @Test
+    fun `decrypt_webClientVector_returnsExpectedPlaintext`() {
+        val (pwd, expected, ciphertext) = loadFixture("web")
+        val decrypted = pbkdf2AesNoLegacy.decrypt(ciphertext, pwd.toByteArray())
+        assertNotNull(decrypted)
+        assertEquals(expected, decrypted.toString(Charsets.UTF_8))
+    }
+
+    /** Verifies that the same salt and password always derive the same key (PBKDF2 determinism). */
+    @Test
+    fun `encrypt_sameSaltAndPassword_producesDeterministicKey`() {
+        // deriveKey is private; verify determinism by decrypting a pre-computed vector twice.
+        // If the same salt+password always yields the same key both calls must succeed and
+        // return the same plaintext.
+        val (pwd, expected, ciphertext) = loadFixture("ios")
+        val first = pbkdf2AesNoLegacy.decrypt(ciphertext, pwd.toByteArray())
+        val second = pbkdf2AesNoLegacy.decrypt(ciphertext, pwd.toByteArray())
+        assertNotNull(first)
+        assertNotNull(second)
+        assertEquals(expected, first.toString(Charsets.UTF_8))
+        assertContentEquals(first, second)
+    }
+
+    /**
+     * Verifies that 100 encryptions of the same input produce 100 distinct ciphertexts (random
+     * salt).
+     */
+    @Test
+    fun `encrypt_differentSalts_producesDifferentCiphertexts`() {
+        val data = originalInput.toByteArray(Charsets.UTF_8)
+        val pw = password.toByteArray()
+        val outputs = (1..100).map { pbkdf2AesNoLegacy.encrypt(data, pw).toList() }
+        assertEquals(100, outputs.distinct().size, "All 100 encryptions must be distinct")
+    }
+
+    /** Verifies that a payload with a valid header but corrupt GCM tag is rejected with null. */
+    @Test
+    fun `rejectsMalformedGcmTag_returnsNull`() {
+        val magic = byteArrayOf(0x56, 0x4C, 0x54, 0x02)
+        val salt = ByteArray(16) { it.toByte() }
+        val iv = ByteArray(12) { it.toByte() }
+        // 16 bytes of garbage — valid header size but GCM tag will not authenticate
+        val payload = magic + salt + iv + ByteArray(16)
+        val result = pbkdf2AesNoLegacy.decrypt(payload, password.toByteArray())
+        assertNull(result)
+    }
+
+    /** Verifies that the PBKDF2 iteration count is pinned to exactly 600,000. */
+    @Test
+    fun `usesExpectedIterationCount`() {
+        assertEquals(600_000, Pbkdf2AesEncryption.PBKDF2_ITERATIONS)
     }
 }
