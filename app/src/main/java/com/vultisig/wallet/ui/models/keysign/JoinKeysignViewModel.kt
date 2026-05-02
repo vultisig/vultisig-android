@@ -875,7 +875,14 @@ constructor(
                                 ValuedToken(
                                     token = payload.coin,
                                     value = mapTokenValueToDecimalUiString(tokenValue),
-                                    fiatValue = "",
+                                    fiatValue =
+                                        fiatValueToStringMapper(
+                                            convertTokenValueToFiat(
+                                                payload.coin,
+                                                tokenValue,
+                                                currency,
+                                            )
+                                        ),
                                 ),
                             srcAddress = payload.coin.address,
                             dstAddress = payload.toAddress,
