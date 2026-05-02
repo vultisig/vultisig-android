@@ -80,9 +80,6 @@ internal class DepositFormViewModelTest {
     private val tokenRepository: TokenRepository = mockk(relaxed = true)
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl = mockk(relaxed = true)
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase = mockk(relaxed = true)
-    private val getThorChainLpPositionsUseCase:
-        com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase =
-        mockk(relaxed = true)
     private val getThorChainLpPositionUseCase:
         com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase =
         mockk(relaxed = true)
@@ -122,7 +119,6 @@ internal class DepositFormViewModelTest {
             tokenRepository = tokenRepository,
             gasFeeToEstimate = gasFeeToEstimate,
             requestAddressBookEntry = requestAddressBookEntry,
-            getThorChainLpPositionsUseCase = getThorChainLpPositionsUseCase,
             getThorChainLpPositionUseCase = getThorChainLpPositionUseCase,
         )
 

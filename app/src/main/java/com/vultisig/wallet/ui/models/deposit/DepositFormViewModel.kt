@@ -59,7 +59,6 @@ import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
-import com.vultisig.wallet.data.usecases.GetThorChainLpPositionsUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
@@ -217,7 +216,6 @@ constructor(
     private val tokenRepository: TokenRepository,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
-    private val getThorChainLpPositionsUseCase: GetThorChainLpPositionsUseCase,
     private val getThorChainLpPositionUseCase: GetThorChainLpPositionUseCase,
 ) : ViewModel() {
 
@@ -275,6 +273,7 @@ constructor(
     private val secureAssetNodeValue = MutableStateFlow<String?>(null)
     private var addressJob: Job? = null
     private var whitelistJob: Job? = null
+    private var loadLpJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
@@ -647,83 +646,90 @@ constructor(
                 balance = R.string.share_balance_loading.asUiText(),
             )
         }
-        viewModelScope.safeLaunch {
-            val userAddress =
-                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
-                    ?.address
-                    ?: run {
-                        _state.update {
-                            it.copy(
-                                errorText =
-                                    UiText.StringResource(R.string.dialog_default_error_body)
-                            )
+        loadLpJob?.cancel()
+        loadLpJob =
+            viewModelScope.safeLaunch {
+                val userAddress =
+                    withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                        ?.address
+                        ?: run {
+                            _state.update {
+                                it.copy(
+                                    errorText =
+                                        UiText.StringResource(R.string.dialog_default_error_body)
+                                )
+                            }
+                            return@safeLaunch
                         }
-                        return@safeLaunch
+                val currentVaultId = vaultId
+                val pairedAddress =
+                    if (currentVaultId != null) {
+                        resolvePairedAddress(Chain.ThorChain, currentVaultId, poolId)
+                    } else null
+                val position =
+                    withContext(Dispatchers.IO) {
+                        getThorChainLpPositionUseCase(
+                            poolId = poolId,
+                            runeAddress = userAddress,
+                            assetAddress = pairedAddress,
+                        )
                     }
-            val currentVaultId = vaultId
-            val pairedAddress =
-                if (currentVaultId != null) {
-                    resolvePairedAddress(Chain.ThorChain, currentVaultId, poolId)
-                } else null
-            val position =
-                withContext(Dispatchers.IO) {
-                    getThorChainLpPositionUseCase(
-                        poolId = poolId,
-                        runeAddress = userAddress,
-                        assetAddress = pairedAddress,
-                    )
+
+                if (position == null || position.units <= BigInteger.ZERO) {
+                    _state.update {
+                        it.copy(
+                            availableLpUnits = null,
+                            removeLpUnitsDivisor = BigInteger.ZERO,
+                            removeLpPoolDepth = BigInteger.ZERO,
+                            balance = UiText.Empty,
+                            errorText = UiText.StringResource(R.string.dialog_default_error_body),
+                        )
+                    }
+                    return@safeLaunch
                 }
 
-            if (position == null || position.units <= BigInteger.ZERO) {
+                // Use the pre-computed redeem value from the use case as `poolDepth` and the user's
+                // own
+                // units as `totalPoolUnits`. With selectedUnits = percent * userUnits, the
+                // calculator
+                // produces percent * runeRedeemValue, which is the symmetric RUNE half of
+                // withdrawal.
+                // Keep BigInteger end-to-end for whale positions whose units exceed Long.MAX_VALUE.
+                val userUnits = position.units
+                val runeRedeemBase = position.runeRedeemValue
+                val symbol = Coins.ThorChain.RUNE.ticker
+                val userUnitsLongOrNull =
+                    userUnits
+                        .takeIf { it.signum() > 0 && it.bitLength() < Long.SIZE_BITS }
+                        ?.toLong()
+                val userRune =
+                    userUnitsLongOrNull?.let { userUnitsLong ->
+                        RemoveLpCalculator.computeAmountDisplay(
+                            selectedUnits = userUnitsLong,
+                            poolDepth = runeRedeemBase,
+                            totalPoolUnits = userUnits,
+                            decimals = RemoveLpCalculator.RUNE_DECIMALS,
+                        )
+                    }
+                val balanceText =
+                    if (userRune != null) {
+                        UiText.FormattedText(
+                            R.string.remove_pool_amount_format,
+                            listOf(userRune, symbol),
+                        )
+                    } else UiText.Empty
                 _state.update {
                     it.copy(
-                        availableLpUnits = null,
-                        removeLpUnitsDivisor = BigInteger.ZERO,
-                        removeLpPoolDepth = BigInteger.ZERO,
-                        balance = UiText.Empty,
-                        errorText = UiText.StringResource(R.string.dialog_default_error_body),
+                        availableLpUnits = userUnits.toString(),
+                        removeLpUnitsDivisor = userUnits,
+                        removeLpPoolDepth = runeRedeemBase,
+                        removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
+                        removeLpTokenSymbol = symbol,
+                        balance = balanceText,
                     )
                 }
-                return@safeLaunch
+                setRemoveLpPercent(state.value.removeLpPercent)
             }
-
-            // Use the pre-computed redeem value from the use case as `poolDepth` and the user's own
-            // units as `totalPoolUnits`. With selectedUnits = percent * userUnits, the calculator
-            // produces percent * runeRedeemValue, which is the symmetric RUNE half of withdrawal.
-            // Keep BigInteger end-to-end for whale positions whose units exceed Long.MAX_VALUE.
-            val userUnits = position.units
-            val runeRedeemBase = position.runeRedeemValue
-            val symbol = Coins.ThorChain.RUNE.ticker
-            val userUnitsLongOrNull =
-                userUnits.takeIf { it.signum() > 0 && it.bitLength() < Long.SIZE_BITS }?.toLong()
-            val userRune =
-                userUnitsLongOrNull?.let { userUnitsLong ->
-                    RemoveLpCalculator.computeAmountDisplay(
-                        selectedUnits = userUnitsLong,
-                        poolDepth = runeRedeemBase,
-                        totalPoolUnits = userUnits,
-                        decimals = RemoveLpCalculator.RUNE_DECIMALS,
-                    )
-                }
-            val balanceText =
-                if (userRune != null) {
-                    UiText.FormattedText(
-                        R.string.remove_pool_amount_format,
-                        listOf(userRune, symbol),
-                    )
-                } else UiText.Empty
-            _state.update {
-                it.copy(
-                    availableLpUnits = userUnits.toString(),
-                    removeLpUnitsDivisor = userUnits,
-                    removeLpPoolDepth = runeRedeemBase,
-                    removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
-                    removeLpTokenSymbol = symbol,
-                    balance = balanceText,
-                )
-            }
-            setRemoveLpPercent(state.value.removeLpPercent)
-        }
     }
 
     fun selectBondAsset(asset: String) {

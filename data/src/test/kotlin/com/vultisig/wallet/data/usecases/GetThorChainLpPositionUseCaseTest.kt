@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.utils.NetworkException
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import java.io.IOException
 import java.math.BigInteger
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
@@ -26,20 +27,23 @@ internal class GetThorChainLpPositionUseCaseTest {
     }
 
     @Test
-    fun `returns position from rune-side lookup without touching pool stats`() = runTest {
-        coEvery { api.getLiquidityProvider(POOL, RUNE_ADDR) } returns
-            lp(units = "1000", runeRedeem = "1500", assetRedeem = "2500")
+    fun `returns position from rune-side lookup without touching pool stats or asset side`() =
+        runTest {
+            coEvery { api.getLiquidityProvider(POOL, RUNE_ADDR) } returns
+                lp(units = "1000", runeRedeem = "1500", assetRedeem = "2500")
 
-        val position = useCase(poolId = POOL, runeAddress = RUNE_ADDR)
+            val position =
+                useCase(poolId = POOL, runeAddress = RUNE_ADDR, assetAddress = ASSET_ADDR)
 
-        assertEquals(POOL, position?.pool)
-        assertEquals(BigInteger("1000"), position?.units)
-        assertEquals(BigInteger("1500"), position?.runeRedeemValue)
-        assertEquals(BigInteger("2500"), position?.assetRedeemValue)
-        assertNull(position?.annualPercentageRate)
-        coVerify(exactly = 0) { api.getPoolStats(any()) }
-        coVerify(exactly = 0) { api.getLiquidityProvider(neq(POOL), any()) }
-    }
+            assertEquals(POOL, position?.pool)
+            assertEquals(BigInteger("1000"), position?.units)
+            assertEquals(BigInteger("1500"), position?.runeRedeemValue)
+            assertEquals(BigInteger("2500"), position?.assetRedeemValue)
+            assertNull(position?.annualPercentageRate)
+            coVerify(exactly = 0) { api.getPoolStats(any()) }
+            coVerify(exactly = 1) { api.getLiquidityProvider(POOL, RUNE_ADDR) }
+            coVerify(exactly = 0) { api.getLiquidityProvider(POOL, ASSET_ADDR) }
+        }
 
     @Test
     fun `falls back to asset address when rune-side has no record`() = runTest {
@@ -48,8 +52,19 @@ internal class GetThorChainLpPositionUseCaseTest {
 
         val position = useCase(poolId = POOL, runeAddress = RUNE_ADDR, assetAddress = ASSET_ADDR)
 
+        assertEquals(POOL, position?.pool)
         assertEquals(BigInteger("42"), position?.units)
         coVerify { api.getLiquidityProvider(POOL, ASSET_ADDR) }
+    }
+
+    @Test
+    fun `falls back to asset address when rune-side reports zero units`() = runTest {
+        coEvery { api.getLiquidityProvider(POOL, RUNE_ADDR) } returns lp(units = "0")
+        coEvery { api.getLiquidityProvider(POOL, ASSET_ADDR) } returns lp(units = "99")
+
+        val position = useCase(poolId = POOL, runeAddress = RUNE_ADDR, assetAddress = ASSET_ADDR)
+
+        assertEquals(BigInteger("99"), position?.units)
     }
 
     @Test
@@ -63,10 +78,11 @@ internal class GetThorChainLpPositionUseCaseTest {
     }
 
     @Test
-    fun `returns null when units are zero`() = runTest {
+    fun `returns null when units are zero on both sides`() = runTest {
         coEvery { api.getLiquidityProvider(POOL, RUNE_ADDR) } returns lp(units = "0")
+        coEvery { api.getLiquidityProvider(POOL, ASSET_ADDR) } returns lp(units = "0")
 
-        val position = useCase(poolId = POOL, runeAddress = RUNE_ADDR)
+        val position = useCase(poolId = POOL, runeAddress = RUNE_ADDR, assetAddress = ASSET_ADDR)
 
         assertNull(position)
     }
@@ -82,9 +98,38 @@ internal class GetThorChainLpPositionUseCaseTest {
     }
 
     @Test
+    fun `ignores blank asset address`() = runTest {
+        coEvery { api.getLiquidityProvider(POOL, RUNE_ADDR) } returns null
+
+        val position = useCase(poolId = POOL, runeAddress = RUNE_ADDR, assetAddress = "  ")
+
+        assertNull(position)
+        coVerify(exactly = 1) { api.getLiquidityProvider(POOL, any()) }
+    }
+
+    @Test
+    fun `returns null on malformed redeem amounts`() = runTest {
+        coEvery { api.getLiquidityProvider(POOL, RUNE_ADDR) } returns
+            lp(units = "1000", runeRedeem = "not-a-number", assetRedeem = "2500")
+
+        val position = useCase(poolId = POOL, runeAddress = RUNE_ADDR)
+
+        assertNull(position)
+    }
+
+    @Test
     fun `swallows network errors and returns null`() = runTest {
         coEvery { api.getLiquidityProvider(POOL, RUNE_ADDR) } throws
             NetworkException(httpStatusCode = 500, message = "boom")
+
+        val position = useCase(poolId = POOL, runeAddress = RUNE_ADDR)
+
+        assertNull(position)
+    }
+
+    @Test
+    fun `swallows io errors and returns null`() = runTest {
+        coEvery { api.getLiquidityProvider(POOL, RUNE_ADDR) } throws IOException("network down")
 
         val position = useCase(poolId = POOL, runeAddress = RUNE_ADDR)
 
