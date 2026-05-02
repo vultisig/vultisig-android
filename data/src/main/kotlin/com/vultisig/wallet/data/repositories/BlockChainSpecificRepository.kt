@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.MIN_ERC20_DEPOSIT_GAS_LIMIT
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
@@ -195,7 +196,15 @@ constructor(
 
                     val nonce = evmApi.getNonce(address)
 
-                    val gasLimitFee = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
+                    val gasLimitFee =
+                        gasLimit
+                            ?: max(defaultGasLimit, estimateGasLimit).let { base ->
+                                if (isDeposit && !token.isNativeToken) {
+                                    max(base, MIN_ERC20_DEPOSIT_GAS_LIMIT)
+                                } else {
+                                    base
+                                }
+                            }
                     val fees =
                         if (isSwap) {
                             feeServiceComposite.calculateDefaultFees(

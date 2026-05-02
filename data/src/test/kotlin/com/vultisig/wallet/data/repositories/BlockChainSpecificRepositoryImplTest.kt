@@ -112,6 +112,121 @@ internal class BlockChainSpecificRepositoryImplTest {
     }
 
     @Test
+    fun `ERC20 deposit gas limit is floored to safety minimum`() = runTest {
+        // Plain `transfer()` estimate (50000 * 1.5 = 75000) and the default
+        // 150k token-transfer limit are both below the router-deposit safety floor (200k).
+        // Confirms that a non-native deposit lands at the 200k floor so router calls
+        // like THORChain `depositWithExpiry` aren't sent under-gassed (issue #4152).
+        val destination = "0xrouter"
+        val coin =
+            evmCoin(chain = Chain.Ethereum, isNativeToken = false, contractAddress = "0xusdt")
+        val result =
+            repository(
+                    evmApi =
+                        evmApi(erc20GasByRecipient = mapOf(destination to BigInteger("50000"))),
+                    evmFeeService =
+                        evmFeeService(
+                            feesByRecipient =
+                                mapOf(destination to (BigInteger("111") to BigInteger("22")))
+                        ),
+                )
+                .getSpecific(
+                    chain = Chain.Ethereum,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    dstAddress = destination,
+                    tokenAmountValue = BigInteger("300000"),
+                    memo = "+:ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7:thor1...",
+                )
+
+        assertEthereumSpecific(
+            result = result,
+            gasLimit = BigInteger("200000"),
+            maxFeePerGas = BigInteger("111"),
+            priorityFee = BigInteger("22"),
+        )
+    }
+
+    @Test
+    fun `ERC20 deposit keeps higher estimate when above safety floor`() = runTest {
+        // Estimate (300000 * 1.5 = 450000) is above the 200k floor, so the floor must not
+        // clamp it down — we still want the higher estimated value.
+        val destination = "0xrouter"
+        val coin =
+            evmCoin(chain = Chain.Ethereum, isNativeToken = false, contractAddress = "0xusdt")
+        val result =
+            repository(
+                    evmApi =
+                        evmApi(erc20GasByRecipient = mapOf(destination to BigInteger("300000"))),
+                    evmFeeService =
+                        evmFeeService(
+                            feesByRecipient =
+                                mapOf(destination to (BigInteger("111") to BigInteger("22")))
+                        ),
+                )
+                .getSpecific(
+                    chain = Chain.Ethereum,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    dstAddress = destination,
+                    tokenAmountValue = BigInteger("300000"),
+                )
+
+        assertEthereumSpecific(
+            result = result,
+            gasLimit = BigInteger("450000"),
+            maxFeePerGas = BigInteger("111"),
+            priorityFee = BigInteger("22"),
+        )
+    }
+
+    @Test
+    fun `native ETH deposit is not affected by ERC20 deposit floor`() = runTest {
+        // The floor only applies to non-native tokens — native ETH deposits keep the
+        // exact estimate from `eth_estimateGas` since the call typically isn't a router
+        // contract interaction with the same gas profile.
+        val destination = "0xinbound"
+        val coin = evmCoin(chain = Chain.Ethereum, isNativeToken = true)
+        val result =
+            repository(
+                    evmApi =
+                        evmApi(nativeGasByRecipient = mapOf(destination to BigInteger("80000"))),
+                    evmFeeService =
+                        evmFeeService(
+                            feesByRecipient =
+                                mapOf(destination to (BigInteger("111") to BigInteger("22")))
+                        ),
+                )
+                .getSpecific(
+                    chain = Chain.Ethereum,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    dstAddress = destination,
+                    tokenAmountValue = BigInteger.TEN,
+                    memo = "+:ETH.ETH:thor1...",
+                )
+
+        assertEthereumSpecific(
+            result = result,
+            gasLimit = BigInteger("80000"),
+            maxFeePerGas = BigInteger("111"),
+            priorityFee = BigInteger("22"),
+        )
+    }
+
+    @Test
     fun `zkSync estimation uses destination address in returned dto`() = runTest {
         val destination = "0xzkrecipient"
         val coin = evmCoin(chain = Chain.ZkSync, isNativeToken = true)

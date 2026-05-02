@@ -233,6 +233,11 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
 
         val DEFAULT_ARBITRUM_TRANSFER = "160000".toBigInteger()
         val DEFAULT_MANTLE_SWAP_LIMIT = "3000000000".toBigInteger()
+
+        // Floor for non-native ERC-20 deposits that go through a router contract
+        // (e.g. THORChain `depositWithExpiry`). Estimating against `transfer()` underestimates
+        // the real call, and a USDT deposit at 120k reverts with no reason string. See #4152.
+        val MIN_ERC20_DEPOSIT_GAS_LIMIT = "200000".toBigInteger()
     }
 }
 
