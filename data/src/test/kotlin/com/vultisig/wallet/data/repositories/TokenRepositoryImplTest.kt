@@ -69,6 +69,65 @@ internal class TokenRepositoryImplTest {
         assertTrue(coins.isEmpty())
     }
 
+    @Test
+    fun `getTokensWithBalance for ThorChain with empty enabledDenoms returns all non-excluded denoms`() =
+        runTest {
+            val thorApi: ThorChainApi = mockk(relaxed = true)
+            coEvery { thorApi.getBalance(ADDRESS) } returns
+                listOf(
+                    CosmosBalance(denom = "x/ruji", amount = "100"),
+                    CosmosBalance(denom = "tcy", amount = "200"),
+                )
+            coEvery { thorApi.getDenomMetaFromLCD(any()) } returns null
+
+            val coins =
+                newRepository(thorApi).getTokensWithBalance(Chain.ThorChain, ADDRESS, emptySet())
+
+            assertEquals(setOf("x/ruji", "tcy"), coins.map { it.contractAddress }.toSet())
+        }
+
+    @Test
+    fun `getTokensWithBalance for ThorChain with non-empty enabledDenoms filters to only matching denoms`() =
+        runTest {
+            val thorApi: ThorChainApi = mockk(relaxed = true)
+            coEvery { thorApi.getBalance(ADDRESS) } returns
+                listOf(
+                    CosmosBalance(denom = "x/ruji", amount = "100"),
+                    CosmosBalance(denom = "tcy", amount = "200"),
+                    CosmosBalance(denom = "btc/btc", amount = "50"),
+                )
+            coEvery { thorApi.getDenomMetaFromLCD(any()) } returns null
+
+            val coins =
+                newRepository(thorApi)
+                    .getTokensWithBalance(Chain.ThorChain, ADDRESS, setOf("x/ruji", "tcy"))
+
+            assertEquals(setOf("x/ruji", "tcy"), coins.map { it.contractAddress }.toSet())
+        }
+
+    @Test
+    fun `getTokensWithBalance for ThorChain enabledDenoms does not override defi-only filter`() =
+        runTest {
+            val thorApi: ThorChainApi = mockk(relaxed = true)
+            coEvery { thorApi.getBalance(ADDRESS) } returns
+                listOf(
+                    CosmosBalance(denom = "x/staking-ruji", amount = "100"),
+                    CosmosBalance(denom = "x/ruji", amount = "200"),
+                )
+            coEvery { thorApi.getDenomMetaFromLCD(any()) } returns null
+
+            val coins =
+                newRepository(thorApi)
+                    .getTokensWithBalance(
+                        Chain.ThorChain,
+                        ADDRESS,
+                        setOf("x/staking-ruji", "x/ruji"),
+                    )
+
+            assertTrue(coins.none { it.contractAddress == "x/staking-ruji" })
+            assertEquals(listOf("x/ruji"), coins.map { it.contractAddress })
+        }
+
     private fun newRepository(thorApi: ThorChainApi): TokenRepositoryImpl =
         TokenRepositoryImpl(
             oneInchApi = mockk<OneInchApi>(relaxed = true),
