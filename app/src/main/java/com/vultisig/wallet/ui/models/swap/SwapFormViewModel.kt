@@ -713,6 +713,12 @@ constructor(
 
         if (maxUsableTokenAmount <= BigInteger.ZERO) {
             srcAmountState.setTextAndPlaceCursorAtEnd("0")
+            showError(
+                UiText.FormattedText(
+                    R.string.swap_error_insufficient_balance_and_fees,
+                    listOf(srcToken.ticker),
+                )
+            )
             return
         }
 
