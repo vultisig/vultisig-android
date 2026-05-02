@@ -55,14 +55,17 @@ internal fun SendTxOverviewScreen(
     onBack: () -> Unit = {},
     onAddToAddressBook: () -> Unit,
     tx: UiTransactionInfo,
+    isTransactionDetailVisible: Boolean,
+    onTransactionDetailVisibleChange: (Boolean) -> Unit,
 ) {
-
     TxDoneScaffold(
         transactionHash = transactionHash,
         transactionLink = transactionLink,
         transactionStatus = transactionStatus,
         showToolbar = showToolbar,
         onBack = onBack,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
         bottomBarContent = {
             VsButton(
                 label = stringResource(R.string.transaction_done_title),
@@ -88,6 +91,10 @@ internal fun SendTxOverviewScreen(
         },
         detailContent = {
             Column {
+                TransactionStatusRow(transactionStatus)
+
+                VerifyCardDivider(size = 1.dp)
+
                 VerifyCardDetails(
                     title = stringResource(R.string.tx_overview_screen_tx_from),
                     subtitle = tx.fromLabel ?: tx.from,
@@ -259,7 +266,18 @@ internal fun TxDetails(
 
 @Preview
 @Composable
-private fun PreviewSendTxOverviewScreen() {
+private fun PreviewSendTxOverviewScreenCollapsed() {
+    PreviewSendTxOverviewScreen(isTransactionDetailVisible = false)
+}
+
+@Preview
+@Composable
+private fun PreviewSendTxOverviewScreenExpanded() {
+    PreviewSendTxOverviewScreen(isTransactionDetailVisible = true)
+}
+
+@Composable
+private fun PreviewSendTxOverviewScreen(isTransactionDetailVisible: Boolean) {
     SendTxOverviewScreen(
         transactionHash = "",
         transactionLink = "",
@@ -279,6 +297,8 @@ private fun PreviewSendTxOverviewScreen() {
                 .toUiTransactionInfo(),
         showSaveToAddressBook = true,
         transactionStatus = TransactionStatus.Broadcasted,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = {},
     )
 }
 

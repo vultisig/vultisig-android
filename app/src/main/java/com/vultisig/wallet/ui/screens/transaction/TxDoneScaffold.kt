@@ -24,11 +24,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -61,6 +58,8 @@ internal fun TxDoneScaffold(
     transactionHash: String,
     transactionLink: String,
     transactionStatus: TransactionStatus,
+    isTransactionDetailVisible: Boolean,
+    onTransactionDetailVisibleChange: (Boolean) -> Unit,
     onBack: () -> Unit = {},
     tokenContent: @Composable () -> Unit,
     detailContent: @Composable () -> Unit,
@@ -95,6 +94,8 @@ internal fun TxDoneScaffold(
                 snackbarHostState = snackbarHostState,
                 context = context,
                 detailContent = detailContent,
+                isTransactionDetailVisible = isTransactionDetailVisible,
+                onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
             )
         },
         bottomBar = { bottomBarContent() },
@@ -112,9 +113,9 @@ private fun SuccessTransaction(
     snackbarHostState: SnackbarHostState,
     context: Context,
     detailContent: @Composable (() -> Unit),
+    isTransactionDetailVisible: Boolean,
+    onTransactionDetailVisibleChange: (Boolean) -> Unit,
 ) {
-
-    var isTransactionDetailVisible by remember { mutableStateOf(false) }
 
     Column(
         modifier =
@@ -205,7 +206,7 @@ private fun SuccessTransaction(
                 Details(
                     title = stringResource(R.string.tx_done_transaction_details),
                     modifier =
-                        Modifier.clickable(onClick = { isTransactionDetailVisible = true })
+                        Modifier.clickable(onClick = { onTransactionDetailVisibleChange(true) })
                             .padding(vertical = 12.dp),
                     titleColor = Theme.v2.colors.text.secondary,
                     content = {
@@ -229,6 +230,31 @@ private fun TransactionPending(modifier: Modifier = Modifier) {
     RiveAnimation(animation = R.raw.riv_transaction_pending, modifier = modifier.fillMaxWidth())
 }
 
+@Composable
+internal fun TransactionStatusRow(status: TransactionStatus, modifier: Modifier = Modifier) {
+    val (label, color) =
+        when (status) {
+            TransactionStatus.Confirmed ->
+                stringResource(R.string.transaction_status_confirmed_label) to
+                    Theme.v2.colors.alerts.success
+
+            is TransactionStatus.Failed ->
+                stringResource(R.string.transaction_status_failed_label) to
+                    Theme.v2.colors.alerts.error
+
+            TransactionStatus.Broadcasted,
+            TransactionStatus.Pending ->
+                stringResource(R.string.transaction_status_in_progress_label) to
+                    Theme.v2.colors.text.secondary
+        }
+    Details(
+        title = stringResource(R.string.transaction_history_detail_status),
+        modifier = modifier.padding(vertical = 12.dp),
+    ) {
+        Text(text = label, style = Theme.brockmann.body.s.medium, color = color)
+    }
+}
+
 @Preview
 @Composable
 private fun SuccessTransactionPreview() {
@@ -249,8 +275,14 @@ private fun SuccessTransactionPreview() {
             snackbarHostState = remember { SnackbarHostState() },
             transactionStatus = TransactionStatus.Failed(UiText.Empty),
             context = LocalContext.current,
+            isTransactionDetailVisible = true,
+            onTransactionDetailVisibleChange = {},
             detailContent = {
                 Column {
+                    TransactionStatusRow(TransactionStatus.Failed(UiText.Empty))
+
+                    VerifyCardDivider(size = 1.dp)
+
                     TextDetails(
                         title = stringResource(R.string.tx_overview_screen_tx_from),
                         subtitle = "tx.from",
