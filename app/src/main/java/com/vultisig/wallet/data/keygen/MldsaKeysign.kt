@@ -117,7 +117,8 @@ class MldsaKeysign(
             throw e
         } catch (e: Exception) {
             Timber.e(e, "Failed to sign message (%s)", messageToSign)
-            if (attempt < MAX_PROTOCOL_RETRIES) {
+            val maxRetries = if (heardFromEver.isEmpty()) 1 else MAX_PROTOCOL_RETRIES
+            if (attempt < maxRetries) {
                 keysignOneMessage(attempt + 1, messageToSign)
             } else {
                 throw e

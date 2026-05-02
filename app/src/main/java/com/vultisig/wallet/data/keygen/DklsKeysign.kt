@@ -404,11 +404,15 @@ class DKLSKeysign(
                 keySignVerify.markLocalPartyKeysignComplete(msgHash, resp)
                 signatures[messageToSign] = resp
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             println("Failed to sign message ($messageToSign), error: ${e.localizedMessage}")
             val maxRetries = if (heardFromEver.isEmpty()) 1 else 3
             if (attempt < maxRetries) {
                 keysignOneMessageWithRetry(attempt + 1, messageToSign)
+            } else {
+                throw e
             }
         }
     }
