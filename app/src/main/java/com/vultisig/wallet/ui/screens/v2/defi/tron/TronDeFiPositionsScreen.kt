@@ -14,12 +14,17 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -73,6 +78,13 @@ internal fun TronDeFiPositionsScreen(
     viewModel: TronDeFiPositionsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state is TronDeFiUiState.Loading) {
+        if (isRefreshing && state !is TronDeFiUiState.Loading) {
+            isRefreshing = false
+        }
+    }
 
     LifecycleResumeEffect(vaultId) {
         viewModel.setData(vaultId)
@@ -81,6 +93,11 @@ internal fun TronDeFiPositionsScreen(
 
     TronDeFiPositionsScreenContent(
         state = state,
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.refresh()
+        },
         onTabSelected = viewModel::onTabSelected,
         onEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(true) },
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
@@ -91,9 +108,12 @@ internal fun TronDeFiPositionsScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TronDeFiPositionsScreenContent(
     state: TronDeFiUiState,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
     onTabSelected: (DeFiTab) -> Unit = {},
     onEditPositionClick: () -> Unit = {},
     onCancelEditPositionClick: () -> Unit = {},
@@ -102,126 +122,136 @@ private fun TronDeFiPositionsScreenContent(
     onClickFreeze: () -> Unit = {},
     onClickUnfreeze: () -> Unit = {},
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            when (state) {
-                TronDeFiUiState.Loading -> {
-                    item {
-                        TronDeFiBanner(isLoading = true, totalValue = "", isBalanceVisible = true)
-                    }
-                }
-                is TronDeFiUiState.Error -> {
-                    item {
-                        TronDeFiBanner(isLoading = false, totalValue = "", isBalanceVisible = true)
-                    }
-                    item {
-                        Text(
-                            text = state.error.asString(),
-                            style = Theme.brockmann.body.m.medium,
-                            color = Theme.v2.colors.alerts.error,
-                        )
-                    }
-                }
-                is TronDeFiUiState.Success -> {
-                    val tronData = state.tronData
-
-                    item {
-                        TronDeFiBanner(
-                            isLoading = false,
-                            totalValue = tronData.totalAmountPrice,
-                            isBalanceVisible = state.isBalanceVisible,
-                        )
-                    }
-
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            VsTabGroup(
-                                index =
-                                    TRON_DEFI_TABS.indexOfFirst { it == state.selectedTab }
-                                        .coerceAtLeast(0)
-                            ) {
-                                TRON_DEFI_TABS.forEach { tab ->
-                                    tab {
-                                        VsTab(
-                                            label = stringResource(tab.displayNameRes),
-                                            onClick = { onTabSelected(tab) },
-                                        )
-                                    }
-                                }
-                            }
-
-                            V2Container(
-                                type = ContainerType.SECONDARY,
-                                cornerType = CornerType.Circular,
-                                modifier = Modifier.clickOnce(onClick = onEditPositionClick),
-                            ) {
-                                UiIcon(
-                                    drawableResId = R.drawable.edit_chain,
-                                    size = 16.dp,
-                                    modifier = Modifier.padding(all = 12.dp),
-                                    tint = Theme.v2.colors.primary.accent4,
-                                )
-                            }
-                        }
-                    }
-
-                    item {
-                        ResourceTwoCardsRow(
-                            resourceUsage =
-                                ResourceUsage(
-                                    availableBandwidth = tronData.availableBandwidth,
-                                    totalBandwidth = tronData.totalBandwidth,
-                                    availableEnergy = tronData.availableEnergy,
-                                    totalEnergy = tronData.totalEnergy,
-                                )
-                        )
-                    }
-
-                    val isTronSelected = state.selectedPositions.contains("TRON")
-                    val pendingWithdrawals = tronData.pendingWithdrawals
-                    if (isTronSelected) {
+    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                when (state) {
+                    TronDeFiUiState.Loading -> {
                         item {
-                            TronFreezePositionCard(
-                                frozenTotalPrice = tronData.frozenTotalPrice,
-                                frozenTotalTrx = tronData.frozenTotalTrx,
-                                isBalanceVisible = state.isBalanceVisible,
-                                isUnfreezeEnabled = tronData.hasFrozenBalance,
-                                onClickFreeze = onClickFreeze,
-                                onClickUnfreeze = onClickUnfreeze,
+                            TronDeFiBanner(
+                                isLoading = true,
+                                totalValue = "",
+                                isBalanceVisible = true,
                             )
                         }
-                    } else if (pendingWithdrawals.isEmpty()) {
-                        item { NoPositionsContainer() }
                     }
+                    is TronDeFiUiState.Error -> {
+                        item {
+                            TronDeFiBanner(
+                                isLoading = false,
+                                totalValue = "",
+                                isBalanceVisible = true,
+                            )
+                        }
+                        item {
+                            Text(
+                                text = state.error.asString(),
+                                style = Theme.brockmann.body.m.medium,
+                                color = Theme.v2.colors.alerts.error,
+                            )
+                        }
+                    }
+                    is TronDeFiUiState.Success -> {
+                        val tronData = state.tronData
 
-                    if (pendingWithdrawals.isNotEmpty()) {
-                        TronPendingWithdrawalsCard(
-                            withdrawals = pendingWithdrawals,
-                            isBalanceVisible = state.isBalanceVisible,
-                        )
+                        item {
+                            TronDeFiBanner(
+                                isLoading = false,
+                                totalValue = tronData.totalAmountPrice,
+                                isBalanceVisible = state.isBalanceVisible,
+                            )
+                        }
+
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                VsTabGroup(
+                                    index =
+                                        TRON_DEFI_TABS.indexOfFirst { it == state.selectedTab }
+                                            .coerceAtLeast(0)
+                                ) {
+                                    TRON_DEFI_TABS.forEach { tab ->
+                                        tab {
+                                            VsTab(
+                                                label = stringResource(tab.displayNameRes),
+                                                onClick = { onTabSelected(tab) },
+                                            )
+                                        }
+                                    }
+                                }
+
+                                V2Container(
+                                    type = ContainerType.SECONDARY,
+                                    cornerType = CornerType.Circular,
+                                    modifier = Modifier.clickOnce(onClick = onEditPositionClick),
+                                ) {
+                                    UiIcon(
+                                        drawableResId = R.drawable.edit_chain,
+                                        size = 16.dp,
+                                        modifier = Modifier.padding(all = 12.dp),
+                                        tint = Theme.v2.colors.primary.accent4,
+                                    )
+                                }
+                            }
+                        }
+
+                        item {
+                            ResourceTwoCardsRow(
+                                resourceUsage =
+                                    ResourceUsage(
+                                        availableBandwidth = tronData.availableBandwidth,
+                                        totalBandwidth = tronData.totalBandwidth,
+                                        availableEnergy = tronData.availableEnergy,
+                                        totalEnergy = tronData.totalEnergy,
+                                    )
+                            )
+                        }
+
+                        val isTronSelected = state.selectedPositions.contains("TRON")
+                        val pendingWithdrawals = tronData.pendingWithdrawals
+                        if (isTronSelected) {
+                            item {
+                                TronFreezePositionCard(
+                                    frozenTotalPrice = tronData.frozenTotalPrice,
+                                    frozenTotalTrx = tronData.frozenTotalTrx,
+                                    isBalanceVisible = state.isBalanceVisible,
+                                    isUnfreezeEnabled = tronData.hasFrozenBalance,
+                                    onClickFreeze = onClickFreeze,
+                                    onClickUnfreeze = onClickUnfreeze,
+                                )
+                            }
+                        } else if (pendingWithdrawals.isEmpty()) {
+                            item { NoPositionsContainer() }
+                        }
+
+                        if (pendingWithdrawals.isNotEmpty()) {
+                            TronPendingWithdrawalsCard(
+                                withdrawals = pendingWithdrawals,
+                                isBalanceVisible = state.isBalanceVisible,
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        if (state is TronDeFiUiState.Success && state.showPositionSelectionDialog) {
-            val searchTextFieldState = remember { TextFieldState() }
-            PositionsSelectionDialog(
-                stakePositions = state.stakePositionsDialog,
-                selectedPositions = state.tempSelectedPositions,
-                searchTextFieldState = searchTextFieldState,
-                onPositionSelectionChange = onPositionSelectionChange,
-                onDoneClick = onDonePositionClick,
-                onCancelClick = onCancelEditPositionClick,
-            )
+            if (state is TronDeFiUiState.Success && state.showPositionSelectionDialog) {
+                val searchTextFieldState = remember { TextFieldState() }
+                PositionsSelectionDialog(
+                    stakePositions = state.stakePositionsDialog,
+                    selectedPositions = state.tempSelectedPositions,
+                    searchTextFieldState = searchTextFieldState,
+                    onPositionSelectionChange = onPositionSelectionChange,
+                    onDoneClick = onDonePositionClick,
+                    onCancelClick = onCancelEditPositionClick,
+                )
+            }
         }
     }
 }

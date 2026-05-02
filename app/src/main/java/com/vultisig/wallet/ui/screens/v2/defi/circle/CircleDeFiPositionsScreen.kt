@@ -5,6 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -23,11 +26,23 @@ internal fun CircleDeFiPositionsScreen(
     viewModel: CircleDeFiPositionsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.isTotalAmountLoading) {
+        if (isRefreshing && !state.isTotalAmountLoading) {
+            isRefreshing = false
+        }
+    }
 
     LaunchedEffect(Unit) { viewModel.setData(vaultId) }
 
     CircleDefiPositionScreenContent(
         state = state,
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.setData(vaultId)
+        },
         tabs = listOf(DeFiTab.DEPOSITED),
         onBackClick = viewModel::onBackClick,
         onTabSelected = viewModel::onTabSelected,
@@ -41,6 +56,8 @@ internal fun CircleDeFiPositionsScreen(
 @Composable
 internal fun CircleDefiPositionScreenContent(
     state: DefiUiModel,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
     tabs: List<DeFiTab> = listOf(DeFiTab.DEPOSITED),
     onBackClick: () -> Unit,
     onTabSelected: (DeFiTab) -> Unit = {},
@@ -52,6 +69,8 @@ internal fun CircleDefiPositionScreenContent(
 ) {
     BaseDeFiPositionsScreenContent(
         state = state,
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
         tabs = tabs,
         bannerTitle = stringResource(R.string.circle_usdc_account),
         bannerImage = R.drawable.circle_defi_banner,
