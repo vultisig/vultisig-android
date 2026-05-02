@@ -30,6 +30,9 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * Base scaffold for DeFi position screens with balance banner, tab navigation, and pull-to-refresh.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BaseDeFiPositionsScreenContent(
@@ -103,6 +106,7 @@ fun BaseDeFiPositionsScreenContent(
     }
 }
 
+/** Tabs available in DeFi position screens. */
 enum class DeFiTab(@androidx.annotation.StringRes val displayNameRes: Int) {
     DEPOSITED(R.string.defi_tab_deposited),
     STAKED(R.string.defi_tab_staked),

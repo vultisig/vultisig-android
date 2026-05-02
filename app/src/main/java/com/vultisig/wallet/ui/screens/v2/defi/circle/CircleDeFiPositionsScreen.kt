@@ -20,6 +20,9 @@ import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * Entry point for the Circle USDC DeFi positions screen; wires ViewModel state and pull-to-refresh.
+ */
 @Composable
 internal fun CircleDeFiPositionsScreen(
     vaultId: VaultId,
@@ -53,6 +56,7 @@ internal fun CircleDeFiPositionsScreen(
     )
 }
 
+/** Stateless content for the Circle DeFi positions screen with pull-to-refresh support. */
 @Composable
 internal fun CircleDefiPositionScreenContent(
     state: DefiUiModel,

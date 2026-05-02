@@ -57,6 +57,9 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions.ADD_LP
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions.REMOVE_LP
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * Entry point for the Mayachain DeFi positions screen; wires ViewModel state and pull-to-refresh.
+ */
 @Composable
 internal fun MayachainDefiPositionsScreen(
     vaultId: VaultId,
@@ -119,6 +122,7 @@ internal fun MayachainDefiPositionsScreen(
 
 private val MAYA_DEFI_TABS = listOf(DeFiTab.BONDED, DeFiTab.STAKED, DeFiTab.LP)
 
+/** Stateless content for the Mayachain DeFi positions screen with pull-to-refresh support. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun MayachainDefiPositionsScreenContent(

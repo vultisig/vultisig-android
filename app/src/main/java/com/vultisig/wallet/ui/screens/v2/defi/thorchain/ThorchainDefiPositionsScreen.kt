@@ -56,6 +56,9 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * Entry point for the THORChain DeFi positions screen; wires ViewModel state and pull-to-refresh.
+ */
 @Composable
 internal fun ThorchainDefiPositionsScreen(
     vaultId: VaultId,
@@ -97,6 +100,7 @@ internal fun ThorchainDefiPositionsScreen(
     )
 }
 
+/** Stateless content for the THORChain DeFi positions screen with pull-to-refresh support. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ThorchainDefiPositionScreenContent(

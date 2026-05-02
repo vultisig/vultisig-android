@@ -72,6 +72,7 @@ private fun countdownParts(expiryEpochMs: Long, nowMs: Long): CountdownParts? {
     )
 }
 
+/** Entry point for the TRON DeFi positions screen; wires ViewModel state and pull-to-refresh. */
 @Composable
 internal fun TronDeFiPositionsScreen(
     vaultId: VaultId,
