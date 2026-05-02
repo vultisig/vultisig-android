@@ -318,6 +318,7 @@ private fun PreviewChainCoinScreen1() {
                 tokens =
                     listOf(
                         ChainTokenUiModel(
+                            id = "usdt-1",
                             name = "USDT",
                             balance = "0.000",
                             fiatBalance = "$0.000000",
@@ -325,6 +326,7 @@ private fun PreviewChainCoinScreen1() {
                             chainLogo = R.drawable.ethereum,
                         ),
                         ChainTokenUiModel(
+                            id = "usdt-2",
                             name = "USDT",
                             balance = "0.000",
                             fiatBalance = "$0.000000",
