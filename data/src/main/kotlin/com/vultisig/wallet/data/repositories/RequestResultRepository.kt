@@ -18,6 +18,11 @@ import kotlinx.coroutines.sync.withLock
  * Concurrent waiters on the same id share a single rendezvous — a single [respond] resolves all of
  * them with the same value. A [respond] published with no current waiter buffers the value for the
  * next [request]; a subsequent [respond] on the same id replaces the buffered value.
+ *
+ * A `null` return from [request] means [respond] was called with a `null` payload. JVM erasure
+ * leaves the type parameter `T` unenforced inside this call, so a wrong-type payload propagates to
+ * the call site where Kotlin's `CHECKCAST` raises `ClassCastException` — callers must match `T` to
+ * the type their producer publishes via [respond].
  */
 interface RequestResultRepository {
 
