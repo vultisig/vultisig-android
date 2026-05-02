@@ -121,8 +121,8 @@
     <string name="keysign_screen_preparing_vault">PRIPREMA SEFA…</string>
     <string name="vault_settings_delete_vault_caution1">Ovaj sef će biti trajno uklonjen</string>
     <string name="vault_settings_delete_vault_caution2">Svjestan sam da mogu izgubiti sredstva</string>
-    <string name="vault_settings_delete_vault_caution3">Napravio sam sigurnosnu kopiju spremišta</string>
-    <string name="confirm_delete_permanent_delete_message">Trajno brišete svoje spremište</string>
+    <string name="vault_settings_delete_vault_caution3">Napravio sam sigurnosnu kopiju spremišta za kasniju obnovu</string>
+    <string name="confirm_delete_permanent_delete_message">Trajno brišete svoj udio spremišta iz ove aplikacije</string>
     <string name="confirm_delete_delete_vault">Izbriši sef</string>
     <string name="rename_vault_screen_vault_name">Ime sefa</string>
     <string name="faq_settings_q2">Koje su prednosti korištenja Vultisiga?</string>
@@ -518,14 +518,15 @@
     <string name="deposit_option_add_liquidity">Dodaj likvidnost</string>
     <string name="deposit_option_remove_liquidity">Ukloni likvidnost</string>
     <string name="add_pool_title">Dodaj Pool</string>
+    <string name="add_lp_title">Dodaj %1$s LP</string>
     <string name="add_pool_amount_label">Iznos</string>
     <string name="add_pool_gas_auto">Mrežna naknada (automatski)</string>
     <string name="max">Maks</string>
     <string name="token_fiat_toggle_token_label">Vrijednost tokena</string>
     <string name="token_fiat_toggle_fiat_label">Fiat vrijednost</string>
     <string name="remove_pool_title">Ukloni Pool</string>
+    <string name="remove_lp_title">Ukloni %1$s LP</string>
     <string name="remove_pool_amount_label">Iznos</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">Uloži CACAO</string>
     <string name="unstake_cacao_title">Povuci CACAO</string>
@@ -725,6 +726,8 @@
     <string name="keysign_password_enter_your_password">Unesite svoju lozinku</string>
     <string name="migration_password_enter_your_password_to_unlock">Unesite svoju lozinku za otključavanje dijeljenog poslužitelja i početak nadogradnje</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Trezor s dupliciranim nazivom postoji</string>
+    <string name="join_key_gen_vault_already_on_device">Trezor \"%1$s\" već se nalazi na ovom uređaju</string>
+    <string name="join_key_gen_open_existing_vault">Otvori trezor</string>
     <string name="join_key_gen_unknown_tssaction">Nepoznata TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">Drugi uređaj nije pronađen na mreži</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Čekanje da se drugi uređaji pridruže</string>
@@ -1052,6 +1055,11 @@
     <string name="key_import_chains_no_results">Nijedan lanac ne odgovara vašem pretraživanju</string>
 
     <string name="key_import_device_count_get_started">Započni</string>
+    <string name="choose_device_count_a11y_description">Koliko uređaja imate? %1$s odabrano. Dodirnite za drugi odabir.</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">Poruke</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">Preporučeno</string>
 
     <string name="welcome_tip">Savjet: Možete koristiti preglednik kao uređaj</string>

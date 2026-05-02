@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -110,7 +111,7 @@ internal fun ChainTokensScreen(
 ) {
     val snackbarState = rememberVsSnackbarState()
     val uriHandler = VsUriHandler()
-    val context = LocalContext.current
+    val addressCopiedMessage = stringResource(R.string.address_copied, uiModel.chainName)
 
     var isAddressBottomSheetVisible by remember { mutableStateOf(false) }
 
@@ -177,9 +178,7 @@ internal fun ChainTokensScreen(
                 CopiableAddress(
                     address = uiModel.chainAddress,
                     onAddressCopied = {
-                        snackbarState.show(
-                            context.getString(R.string.address_copied, uiModel.chainName)
-                        )
+                        snackbarState.show(addressCopiedMessage)
                         onShowReviewPopUp()
                     },
                     modifier =
@@ -273,7 +272,9 @@ internal fun ChainTokensScreen(
 
                     TopShineContainer(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         LazyColumn {
-                            itemsIndexed(items = uiModel.tokens) { index, token ->
+                            itemsIndexed(items = uiModel.tokens, key = { _, token -> token.id }) {
+                                index,
+                                token ->
                                 Column {
                                     ChainAccount(
                                         title = token.name,

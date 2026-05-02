@@ -147,8 +147,6 @@ constructor(
     private val vaultId: String = savedStateHandle.toRoute<Route.TransactionHistory>().vaultId
 
     private val currentTime = MutableStateFlow(System.currentTimeMillis())
-    private val selectedAssetIds = MutableStateFlow<Set<String>>(emptySet())
-    private val selectedAssetsList = MutableStateFlow<List<TransactionAssetUiModel>>(emptyList())
 
     val assetSearchTextFieldState = TextFieldState()
 
@@ -171,35 +169,27 @@ constructor(
     }
 
     fun toggleAssetSelection(asset: TransactionAssetUiModel) {
-        if (asset.tokenId in selectedAssetIds.value) {
-            selectedAssetIds.update { it - asset.tokenId }
-            selectedAssetsList.update { it.filter { a -> a.tokenId != asset.tokenId } }
-        } else {
-            selectedAssetIds.update { it + asset.tokenId }
-            selectedAssetsList.update { it + asset }
-        }
-        _uiState.update {
-            it.copy(
-                selectedAssetIds = selectedAssetIds.value,
-                selectedAssets = selectedAssetsList.value,
-            )
+        _uiState.update { state ->
+            val wasSelected = asset.tokenId in state.selectedAssetIds
+            val newIds =
+                if (wasSelected) state.selectedAssetIds - asset.tokenId
+                else state.selectedAssetIds + asset.tokenId
+            val newList =
+                if (wasSelected) state.selectedAssets.filter { a -> a.tokenId != asset.tokenId }
+                else state.selectedAssets + asset
+            state.copy(selectedAssetIds = newIds, selectedAssets = newList)
         }
     }
 
     fun removeAssetFilter(assetId: String) {
-        selectedAssetIds.update { it - assetId }
-        selectedAssetsList.update { it.filter { a -> a.tokenId != assetId } }
-        _uiState.update {
-            it.copy(
-                selectedAssetIds = selectedAssetIds.value,
-                selectedAssets = selectedAssetsList.value,
-            )
+        _uiState.update { state ->
+            val newIds = state.selectedAssetIds - assetId
+            val newList = state.selectedAssets.filter { a -> a.tokenId != assetId }
+            state.copy(selectedAssetIds = newIds, selectedAssets = newList)
         }
     }
 
     fun clearAllFilters() {
-        selectedAssetIds.update { emptySet() }
-        selectedAssetsList.update { emptyList() }
         _uiState.update { it.copy(selectedAssetIds = emptySet(), selectedAssets = emptyList()) }
     }
 
@@ -208,8 +198,6 @@ constructor(
     }
 
     fun closeSearch() {
-        selectedAssetIds.update { emptySet() }
-        selectedAssetsList.update { emptyList() }
         _uiState.update {
             it.copy(
                 isAssetSearchSheetVisible = false,
@@ -273,7 +261,8 @@ constructor(
                 .combine(currentTime) { entities, now ->
                     entities.mapNotNull { it.toUiModel(now) }.groupByDate(now)
                 }
-                .combine(selectedAssetIds) { groups, ids ->
+                .combine(_uiState.map { it.selectedAssetIds }.distinctUntilChanged()) { groups, ids
+                    ->
                     if (ids.isEmpty()) groups
                     else
                         groups.mapNotNull { group ->

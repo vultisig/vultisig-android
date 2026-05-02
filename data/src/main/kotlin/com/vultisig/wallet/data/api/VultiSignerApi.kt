@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.signer.BatchKeygenRequestJson
 import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
@@ -21,6 +22,8 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 internal interface VultiSignerApi {
 
     suspend fun joinKeygen(request: JoinKeygenRequestJson)
+
+    suspend fun joinBatchKeygen(request: BatchKeygenRequestJson)
 
     suspend fun createMldsa(request: CreateMldsaVaultRequestJson)
 
@@ -50,6 +53,10 @@ internal class VultiSignerApiImpl @Inject constructor(private val http: HttpClie
 
     override suspend fun joinKeygen(request: JoinKeygenRequestJson) {
         http.post("$URL/create") { setBody(request) }.throwIfUnsuccessful()
+    }
+
+    override suspend fun joinBatchKeygen(request: BatchKeygenRequestJson) {
+        http.post("$URL/batch/keygen") { setBody(request) }.throwIfUnsuccessful()
     }
 
     override suspend fun createMldsa(request: CreateMldsaVaultRequestJson) {

@@ -31,7 +31,9 @@ import com.vultisig.wallet.data.api.models.thorchain.TcyModuleBalanceResponse
 import com.vultisig.wallet.data.api.models.thorchain.TcyStakeResponse
 import com.vultisig.wallet.data.api.models.thorchain.TcyStakersResponse
 import com.vultisig.wallet.data.api.models.thorchain.TcyUserDistributionsResponse
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainLiquidityProviderJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
+import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolStatsJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainStatusResponse
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainTransactionJson
 import com.vultisig.wallet.data.api.models.thorchain.ThorNameResponseJson
@@ -40,6 +42,7 @@ import com.vultisig.wallet.data.api.models.thorchain.ThorchainConstantsResponse
 import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
 import com.vultisig.wallet.data.chains.helpers.ThorChainAffiliateHelper
 import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
@@ -55,6 +58,7 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.json.Json
@@ -87,6 +91,21 @@ interface ThorChainApi {
     suspend fun getDenomMetaFromLCD(denom: String): DenomMetadata?
 
     suspend fun getPools(): List<ThorChainPoolJson>
+
+    /**
+     * Midgard pool statistics including LUVI-based APR. Pass [period] (e.g. "7d", "30d", "100d") to
+     * control the APR window; defaults to 30d to match thorchain.org.
+     */
+    suspend fun getPoolStats(period: String? = null): List<ThorChainPoolStatsJson>
+
+    /**
+     * Liquidity-provider position for a single pool/address pair on thornode. Returns null if the
+     * address has no position in the pool (thornode replies 404).
+     */
+    suspend fun getLiquidityProvider(
+        asset: String,
+        address: String,
+    ): ThorChainLiquidityProviderJson?
 
     suspend fun getConstants(): ThorchainConstantsResponse
 
@@ -201,6 +220,7 @@ constructor(
                 parameter("amount", request.amount)
                 parameter("destination", request.address)
                 parameter("streaming_interval", request.interval)
+                request.streamingQuantity?.let { parameter("streaming_quantity", it) }
                 if (affiliateParams.isNotEmpty()) {
                     affiliateParams.forEach { (key, value) ->
                         when (key) {
@@ -326,6 +346,27 @@ constructor(
         httpClient
             .get("$THORNODE_BASE/thorchain/pools") { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow()
+
+    override suspend fun getPoolStats(period: String?): List<ThorChainPoolStatsJson> =
+        httpClient
+            .get("$MIDGARD_URL/pools") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+                parameter("status", "available")
+                parameter("period", period?.takeIf { it.isNotBlank() } ?: DEFAULT_LP_PERIOD)
+            }
+            .bodyOrThrow()
+
+    override suspend fun getLiquidityProvider(
+        asset: String,
+        address: String,
+    ): ThorChainLiquidityProviderJson? {
+        val response =
+            httpClient.get("$THORNODE_BASE/thorchain/pool/$asset/liquidity_provider/$address") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+        return if (response.status == HttpStatusCode.NotFound) null
+        else response.bodyOrThrow<ThorChainLiquidityProviderJson>()
+    }
 
     override suspend fun getConstants(): ThorchainConstantsResponse {
         val response =
@@ -461,6 +502,15 @@ constructor(
                     .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
                     .bodyOrThrow<MetadataResponse>()
             response.metadata
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: NetworkException) {
+            if (e.httpStatusCode == HttpStatusCode.NotFound.value) {
+                Timber.d("No denom metadata for %s (expected for non-standard denoms)", denom)
+            } else {
+                Timber.e(e, "Failed to fetch denom metadata for %s", denom)
+            }
+            null
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch denom metadata for %s", denom)
             null
@@ -582,9 +632,10 @@ constructor(
     }
 
     companion object {
-        private const val THORNODE_BASE = "https://thornode.thorchain.network"
-        private const val MIDGARD_URL = "https://midgard.thorchain.network/v2"
-        private const val THORCHAIN_RPC_URL = "https://rpc.thorchain.network"
+        private const val THORNODE_BASE = "https://gateway.liquify.com/chain/thorchain_api"
+        private const val MIDGARD_URL = "https://gateway.liquify.com/chain/thorchain_midgard/v2"
+        private const val DEFAULT_LP_PERIOD = "30d"
+        private const val THORCHAIN_RPC_URL = "https://gateway.liquify.com/chain/thorchain_rpc"
         private const val IBS_TEAM_URL = "https://thorchain.ibs.team"
         private const val X_CLIENT_ID_HEADER = "X-Client-ID"
         private const val X_CLIENT_ID_VALUE = "vultisig"

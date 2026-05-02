@@ -8,17 +8,9 @@ internal interface ResolveProviderUseCase : suspend (SwapSelectionContext) -> Sw
 internal class ResolveProviderUseCaseImpl
 @Inject
 constructor(
-    defaultSwapProviderSelectionStrategy: DefaultSwapProviderSelectionStrategy,
-    kyberSwapProviderSelectionStrategy: KyberSwapProviderSelectionStrategy,
+    private val defaultSwapProviderSelectionStrategy: DefaultSwapProviderSelectionStrategy
 ) : ResolveProviderUseCase {
 
-    private val swapProviderSelectionStrategies =
-        listOf(defaultSwapProviderSelectionStrategy, kyberSwapProviderSelectionStrategy)
-
-    override suspend fun invoke(context: SwapSelectionContext): SwapProvider? {
-
-        return swapProviderSelectionStrategies
-            .maxBy(SwapProviderSelectionStrategy::priority)
-            .selectProvider(context)
-    }
+    override suspend fun invoke(context: SwapSelectionContext): SwapProvider? =
+        defaultSwapProviderSelectionStrategy.selectProvider(context)
 }

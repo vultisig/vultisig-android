@@ -158,13 +158,13 @@
     <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">Ik ben me ervan bewust dat de kluis permanent zal worden verwijderd</string>
     <string name="vault_settings_delete_vault_caution2">Ik ben me ervan bewust dat ik geld kan verliezen</string>
-    <string name="vault_settings_delete_vault_caution3">Ik heb een kluisback-up gemaakt</string>
+    <string name="vault_settings_delete_vault_caution3">Ik heb een kluisback-up gemaakt om later te kunnen herstellen</string>
     <string name="vault_settings_delete_vault_name">Kluisnaam:</string>
     <string name="vault_settings_delete_vault_value">Kluiswaarde:</string>
     <string name="vault_settings_delete_vault_id">Apparaat-ID:</string>
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA-sleutel:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA-sleutel:</string>
-    <string name="confirm_delete_permanent_delete_message">U verwijdert uw kluis permanent</string>
+    <string name="confirm_delete_permanent_delete_message">U verwijdert uw kluisgedeelte permanent uit deze app</string>
     <string name="confirm_delete_delete_vault">Kluis verwijderen</string>
     <string name="vault_accounts_account_assets">%1$s activa</string>
     <string name="s_of_s_vault">%1$s van %2$s kluis</string>
@@ -514,14 +514,15 @@
     <string name="deposit_option_add_liquidity">Liquiditeit toevoegen</string>
     <string name="deposit_option_remove_liquidity">Liquiditeit verwijderen</string>
     <string name="add_pool_title">Pool toevoegen</string>
+    <string name="add_lp_title">%1$s LP toevoegen</string>
     <string name="add_pool_amount_label">Bedrag</string>
     <string name="add_pool_gas_auto">Netwerkkosten (auto)</string>
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Tokenwaarde</string>
     <string name="token_fiat_toggle_fiat_label">Fiatwaarde</string>
     <string name="remove_pool_title">Pool verwijderen</string>
+    <string name="remove_lp_title">%1$s LP verwijderen</string>
     <string name="remove_pool_amount_label">Bedrag</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">CACAO staken</string>
     <string name="unstake_cacao_title">CACAO unstaken</string>
@@ -718,6 +719,8 @@
     <string name="keysign_password_enter_your_password">Voer uw wachtwoord in</string>
     <string name="migration_password_enter_your_password_to_unlock">Voer uw wachtwoord in om uw servershare te ontgrendelen en de upgrade te starten</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Er bestaat een kluis met een dubbele naam</string>
+    <string name="join_key_gen_vault_already_on_device">Kluis \"%1$s\" staat al op dit apparaat</string>
+    <string name="join_key_gen_open_existing_vault">Kluis openen</string>
     <string name="join_key_gen_unknown_tssaction">Onbekende TssAction</string>
     <string name="join_key_gen_mediator_discovery_timeout">Kan het andere apparaat niet vinden op het netwerk</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Wachten op andere apparaten om toe te treden</string>
@@ -1040,6 +1043,11 @@
     <string name="key_import_chains_no_results">Geen ketens komen overeen met uw zoekopdracht</string>
 
     <string name="key_import_device_count_get_started">Aan de slag</string>
+    <string name="choose_device_count_a11y_description">Hoeveel apparaten hebt u? %1$s geselecteerd. Tik om een andere te kiezen.</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">Berichten</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">Aanbevolen</string>
 
     <string name="welcome_tip">Tip: U kunt een browser gebruiken als apparaat</string>

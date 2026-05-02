@@ -289,7 +289,7 @@
     <!-- Vault Settings Delete -->
     <string name="vault_settings_delete_vault_caution1">我知道保险库将被永久删除</string>
     <string name="vault_settings_delete_vault_caution2">我知道我可能会失去资金</string>
-    <string name="vault_settings_delete_vault_caution3">我已经备份了保险库</string>
+    <string name="vault_settings_delete_vault_caution3">我已经备份了保险库以便日后恢复</string>
     <string name="vault_settings_delete_vault_name">保险库名称：</string>
     <string name="vault_settings_delete_vault_value">保险库价值：</string>
     <string name="vault_settings_delete_vault_id">设备 ID：</string>
@@ -297,7 +297,7 @@
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA 密钥：</string>
 
     <!-- Confirm Delete -->
-    <string name="confirm_delete_permanent_delete_message">您正在永久删除您的保险库</string>
+    <string name="confirm_delete_permanent_delete_message">您正在从此应用永久删除您的保险库份额</string>
     <string name="confirm_delete_delete_vault">删除保险库</string>
 
     <!-- Vault Accounts -->
@@ -761,14 +761,15 @@
     <string name="deposit_option_add_liquidity">添加流动性</string>
     <string name="deposit_option_remove_liquidity">移除流动性</string>
     <string name="add_pool_title">添加池</string>
+    <string name="add_lp_title">添加 %1$s LP</string>
     <string name="add_pool_amount_label">金额</string>
     <string name="add_pool_gas_auto">网络费用（自动）</string>
     <string name="max">最大</string>
     <string name="token_fiat_toggle_token_label">代币价值</string>
     <string name="token_fiat_toggle_fiat_label">法币价值</string>
     <string name="remove_pool_title">移除流动池</string>
+    <string name="remove_lp_title">移除 %1$s LP</string>
     <string name="remove_pool_amount_label">金额</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">质押 CACAO</string>
     <string name="unstake_cacao_title">解除质押 CACAO</string>
@@ -884,6 +885,8 @@
 
     <!-- Keygen & Keysign -->
     <string name="join_key_gen_vault_with_duplicate_name_exists">存在重复名称的保险库</string>
+    <string name="join_key_gen_vault_already_on_device">保险库 \"%1$s\" 已在此设备上</string>
+    <string name="join_key_gen_open_existing_vault">打开保险库</string>
     <string name="join_key_gen_unknown_tssaction">未知的 TSS 操作</string>
     <string name="join_key_gen_mediator_discovery_timeout">无法在您的网络中找到其他设备</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">等待其他设备加入</string>
@@ -1372,6 +1375,11 @@
     <string name="key_import_chains_no_results">没有与您的搜索匹配的链</string>
 
     <string name="key_import_device_count_get_started">开始</string>
+    <string name="choose_device_count_a11y_description">您有多少台设备？当前选择：%1$s。点击以选择其他。</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">消息</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">推荐</string>
 
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>

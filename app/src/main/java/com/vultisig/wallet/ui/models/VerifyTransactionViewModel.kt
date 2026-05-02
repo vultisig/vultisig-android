@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import vultisig.keysign.v1.SignTon
 
 @Immutable
 internal data class TransactionDetailsUiModel(
@@ -55,6 +56,7 @@ internal data class TransactionDetailsUiModel(
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,
+    val signTon: SignTon? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
     val functionName: String? = null,
