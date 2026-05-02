@@ -78,7 +78,7 @@ internal fun TxDoneScaffold(
         topBar = {
             if (showToolbar) {
                 V2Topbar(
-                    title = stringResource(R.string.tx_overview_screen_title),
+                    title = stringResource(R.string.transaction_complete_screen_title),
                     onBackClick = onBack,
                 )
             }
