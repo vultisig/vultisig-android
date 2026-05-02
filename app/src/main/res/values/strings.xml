@@ -237,7 +237,6 @@
     <string name="keysign_screen_signing_with_mldsa">Signing with MLDSA…</string>
     <string name="keysign_screen_keysign_finished">Keysign Finished!</string>
     <string name="keysign_screen_error_please_try_again">Error! Please try again. %1$s</string>
-    <string name="keysign_screen_waiting_for_peer">Waiting for %1$s…</string>
     <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">I am aware that the vault will be deleted permanently</string>
     <string name="vault_settings_delete_vault_caution2">I am aware that I can lose funds</string>

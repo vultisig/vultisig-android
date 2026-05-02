@@ -66,6 +66,7 @@ class MldsaKeysign(
     private val appliedMessages = mutableSetOf<String>()
     private val heardFromThisAttempt = mutableSetOf<String>()
     private val heardFromEver = mutableSetOf<String>()
+    private var waitingNotified = false
 
     /** Collects signatures keyed by the signed message hex string. */
     val signatures = mutableMapOf<String, KeysignResponse>()
@@ -83,6 +84,10 @@ class MldsaKeysign(
      * messages via the mediator until the signature is produced.
      */
     private suspend fun keysignOneMessage(attempt: Int, messageToSign: String) {
+        if (attempt == 0) {
+            heardFromEver.clear()
+            waitingNotified = false
+        }
         appliedMessages.clear()
         val msgHash = messageToSign.md5()
 
@@ -276,7 +281,6 @@ class MldsaKeysign(
     private suspend fun pollInbound(handle: Handle, messageID: String): Boolean {
         heardFromThisAttempt.clear()
         var lastMessageNano = System.nanoTime()
-        var waitingNotified = false
 
         while (true) {
             try {

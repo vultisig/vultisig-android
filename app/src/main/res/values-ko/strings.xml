@@ -236,7 +236,6 @@
     <string name="keysign_screen_signing_with_mldsa">MLDSA로 서명 중…</string>
     <string name="keysign_screen_keysign_finished">서명 완료!</string>
     <string name="keysign_screen_error_please_try_again">오류! 다시 시도해 주세요. %1$s</string>
-    <string name="keysign_screen_waiting_for_peer">%1$s 대기 중…</string>
     <string name="successfully_scanned_barcode">바코드 스캔 성공: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">볼트가 영구적으로 삭제된다는 것을 알고 있습니다</string>
     <string name="vault_settings_delete_vault_caution2">자금을 잃을 수 있다는 것을 알고 있습니다</string>

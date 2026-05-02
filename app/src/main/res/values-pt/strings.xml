@@ -187,7 +187,6 @@
     <string name="vault_settings_success_backup_file">arquivo salvo em Downloads/%1$s</string>
     <string name="swap_form_estimated_fees_title">Taxa de swap</string>
     <string name="keysign_screen_error_please_try_again">Erro! Por favor, tente novamente. %1$s</string>
-    <string name="keysign_screen_waiting_for_peer">Aguardando %1$s…</string>
     <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>
     <string name="join_keysign_discovery_service">Descobrindo o Serviço</string>
     <string name="vault_settings_delete_subtitle">Exclua seu cofre permanentemente.</string>

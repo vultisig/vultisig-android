@@ -187,7 +187,6 @@
     <string name="vault_settings_success_backup_file">Datei gespeichert in Downloads/%1$s</string>
     <string name="swap_form_estimated_fees_title">Swap Gebühr</string>
     <string name="keysign_screen_error_please_try_again">Fehler! Bitte versuchen Sie es erneut. %1$s</string>
-    <string name="keysign_screen_waiting_for_peer">Warte auf %1$s…</string>
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_keysign_discovery_service">Service entdecken</string>
     <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>

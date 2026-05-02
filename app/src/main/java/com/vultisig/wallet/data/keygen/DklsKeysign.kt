@@ -77,6 +77,7 @@ class DKLSKeysign(
     val signatures = mutableMapOf<String, KeysignResponse>()
     private val heardFromThisAttempt = mutableSetOf<String>()
     private val heardFromEver = mutableSetOf<String>()
+    private var waitingNotified = false
 
     private fun getKeyshareString(): String? {
         for (ks in vault.keyshares) {
@@ -229,7 +230,6 @@ class DKLSKeysign(
 
         heardFromThisAttempt.clear()
         var lastMessageNano = System.nanoTime()
-        var waitingNotified = false
         while (true) {
             try {
                 val msgs =
@@ -319,6 +319,10 @@ class DKLSKeysign(
     }
 
     private suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
+        if (attempt == 0) {
+            heardFromEver.clear()
+            waitingNotified = false
+        }
         val msgHash = messageToSign.md5()
         val localMessenger =
             TssMessenger(

@@ -70,6 +70,7 @@ class SchnorrKeysign(
     var keyshare: ByteArray = byteArrayOf()
     private val heardFromThisAttempt = mutableSetOf<String>()
     private val heardFromEver = mutableSetOf<String>()
+    private var waitingNotified = false
 
     /**
      * Returns the raw keyshare string for [publicKeyEdDSA] from the vault, or null if not found.
@@ -220,7 +221,6 @@ class SchnorrKeysign(
 
         heardFromThisAttempt.clear()
         var lastMessageNano = System.nanoTime()
-        var waitingNotified = false
         while (true) {
             try {
                 val msgs =
@@ -321,6 +321,10 @@ class SchnorrKeysign(
      *   heard from, or 3 times otherwise.
      */
     suspend fun keysignOneMessageWithRetry(attempt: Int, messageToSign: String) {
+        if (attempt == 0) {
+            heardFromEver.clear()
+            waitingNotified = false
+        }
         val msgHash = messageToSign.md5()
         val localMessenger =
             TssMessenger(

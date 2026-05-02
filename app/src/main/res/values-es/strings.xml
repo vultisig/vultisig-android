@@ -154,7 +154,6 @@
     <string name="keysign_screen_signing_with_mldsa">FIRMANDO USANDO CLAVE MLDSA…</string>
     <string name="keysign_screen_keysign_finished">¡Keysign terminado!</string>
     <string name="keysign_screen_error_please_try_again">Error! Por favor, inténtalo de nuevo. %1$s</string>
-    <string name="keysign_screen_waiting_for_peer">Esperando a %1$s…</string>
     <string name="successfully_scanned_barcode">Código de barras escaneado con éxito: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">Soy consciente de que la bóveda será eliminada permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Soy consciente de que puedo perder fondos.</string>

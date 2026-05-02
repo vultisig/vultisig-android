@@ -96,8 +96,11 @@ internal sealed class KeysignState {
      * Emitted when a keysign peer has been silent for ~10 s.
      *
      * @property missingPeers Party IDs that have not sent any messages in the current attempt.
+     * @property signingProgress Rive progress value at the time silence was detected (0.33 for
+     *   ECDSA, 0.66 for EdDSA/MLDSA); used to avoid animating the progress indicator backward.
      */
-    data class WaitingForPeer(val missingPeers: List<String>) : KeysignState()
+    data class WaitingForPeer(val missingPeers: List<String>, val signingProgress: Float = 0.33f) :
+        KeysignState()
 
     data class KeysignFinished(val transactionStatus: TransactionStatus) : KeysignState()
 
@@ -124,7 +127,7 @@ internal val KeysignState.progress: Float
             is KeysignState.KeysignEdDSA -> 0.66f
             // EdDSA and MLDSA are mutually exclusive signing paths, so both map to 66%
             is KeysignState.KeysignMLDSA -> 0.66f
-            is KeysignState.WaitingForPeer -> 0.33f
+            is KeysignState.WaitingForPeer -> this.signingProgress
             is KeysignState.KeysignFinished -> 1f
             // Dead code: Error state is rendered by a separate branch in KeysignView
             is KeysignState.Error -> 0f
@@ -363,7 +366,7 @@ constructor(
                             sessionApi = sessionApi,
                             encryption = encryption,
                             onWaitingForPeers = { peers ->
-                                currentState.value = KeysignState.WaitingForPeer(peers)
+                                currentState.value = KeysignState.WaitingForPeer(peers, 0.66f)
                             },
                             onPeersResumed = { currentState.value = KeysignState.KeysignEdDSA },
                         )
@@ -399,7 +402,7 @@ constructor(
                             sessionApi = sessionApi,
                             encryption = encryption,
                             onWaitingForPeers = { peers ->
-                                currentState.value = KeysignState.WaitingForPeer(peers)
+                                currentState.value = KeysignState.WaitingForPeer(peers, 0.66f)
                             },
                             onPeersResumed = { currentState.value = KeysignState.KeysignMLDSA },
                         )
