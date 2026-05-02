@@ -713,12 +713,13 @@ constructor(
 
         if (maxUsableTokenAmount <= BigInteger.ZERO) {
             srcAmountState.setTextAndPlaceCursorAtEnd("0")
-            showError(
-                UiText.FormattedText(
-                    R.string.swap_error_insufficient_balance_and_fees,
-                    listOf(srcToken.ticker),
-                )
-            )
+            val errorRes =
+                if (srcToken.isNativeToken) {
+                    R.string.swap_error_insufficient_balance_and_fees
+                } else {
+                    R.string.swap_error_insufficient_source_token
+                }
+            showError(UiText.FormattedText(errorRes, listOf(srcToken.ticker)))
             return
         }
 
