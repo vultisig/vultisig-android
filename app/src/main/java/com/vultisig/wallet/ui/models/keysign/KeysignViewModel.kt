@@ -92,7 +92,11 @@ internal sealed class KeysignState {
 
     data object KeysignMLDSA : KeysignState()
 
-    /** Emitted when a keysign peer has been silent for ~10 s. */
+    /**
+     * Emitted when a keysign peer has been silent for ~10 s.
+     *
+     * @property missingPeers Party IDs that have not sent any messages in the current attempt.
+     */
     data class WaitingForPeer(val missingPeers: List<String>) : KeysignState()
 
     data class KeysignFinished(val transactionStatus: TransactionStatus) : KeysignState()

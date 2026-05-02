@@ -56,12 +56,17 @@ class SchnorrKeysign(
     private val onWaitingForPeers: ((List<String>) -> Unit)? = null,
     private val onPeersResumed: (() -> Unit)? = null,
 ) {
+    /** The local party ID for this node in the signing session. */
     val localPartyID: String = vault.localPartyID
+    /** The EdDSA public key used to look up the signing keyshare. */
     val publicKeyEdDSA: String = publicKeyOverride ?: vault.pubKeyEDDSA
+    /** Messenger used to route outbound protocol messages to peers. */
     var messenger: TssMessenger? = null
+    /** Deduplicates already-applied inbound messages by composite key. */
     val cache = mutableMapOf<String, Any>()
     /** Collects signatures keyed by the signed message hex string. */
     val signatures = mutableMapOf<String, KeysignResponse>()
+    /** Holds the raw keyshare bytes loaded for the current signing session. */
     var keyshare: ByteArray = byteArrayOf()
     private val heardFromThisAttempt = mutableSetOf<String>()
     private val heardFromEver = mutableSetOf<String>()
