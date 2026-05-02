@@ -871,6 +871,8 @@ constructor(
     }
 
     fun selectDepositOption(option: DepositOption) {
+        // Stop any in-flight Remove LP fetch so it can't write stale state into the new option.
+        loadLpJob?.cancel()
         viewModelScope.launch {
             resetTextFields()
             _state.update { it.copy(depositOption = option) }
