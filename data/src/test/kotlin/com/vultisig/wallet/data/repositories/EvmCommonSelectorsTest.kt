@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.common.toKeccak256ByteArray
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -98,6 +99,7 @@ internal class EvmCommonSelectorsTest {
             EvmCommonSelectors.lookup("c04b8d59"),
         )
         assertEquals("multicall(bytes[])", EvmCommonSelectors.lookup("ac9650d8"))
+        assertEquals("multicall(uint256,bytes[])", EvmCommonSelectors.lookup("5ae401dc"))
     }
 
     @Test
@@ -148,7 +150,7 @@ internal class EvmCommonSelectorsTest {
     }
 
     @Test
-    fun `every entry has 8 lowercase hex selector and parseable name(types) signature`() {
+    fun `every entry's selector matches keccak256 of its signature`() {
         val hexKey = Regex("^[0-9a-f]{8}$")
         val signature = Regex("^[a-zA-Z_][a-zA-Z0-9_]*\\(.*\\)$")
 
@@ -166,10 +168,16 @@ internal class EvmCommonSelectorsTest {
                 sig.count { it == ')' },
                 "unbalanced parentheses in '$sig'",
             )
+
+            val computed =
+                sig.toByteArray(Charsets.UTF_8)
+                    .toKeccak256ByteArray()
+                    .copyOfRange(0, 4)
+                    .joinToString("") { "%02x".format(it) }
             assertEquals(
-                sig,
-                EvmCommonSelectors.lookup(selector),
-                "lookup('$selector') must round-trip to the same signature",
+                computed,
+                selector,
+                "selector '$selector' must equal keccak256('$sig').take(4)",
             )
         }
     }

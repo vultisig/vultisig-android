@@ -56,6 +56,9 @@ internal object EvmCommonSelectors {
             "3593564c" to "execute(bytes,bytes[],uint256)",
             // Generic compose pattern — used by Uniswap V3, Aave V3, ENS, and many other contracts
             "ac9650d8" to "multicall(bytes[])",
+            // Deadline-carrying multicall — wraps most current Uniswap UI swaps via SwapRouter02,
+            // Universal Router, and Uniswap V4 PositionManager
+            "5ae401dc" to "multicall(uint256,bytes[])",
             // Aave V3 / Spark / Radiant pool. `withdraw`, `borrow`, `repay` share signatures with
             // Aave V2; only `supply` is the V3 rename of V2
             // `deposit(address,uint256,address,uint16)`.
