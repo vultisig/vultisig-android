@@ -99,6 +99,7 @@ internal fun CircleDefiPositionScreenContent(
     )
 }
 
+/** Tab content composable showing the Circle USDC deposit total and deposit/withdraw actions. */
 @Composable
 private fun CircleContentDepositTab(
     state: DefiUiModel.CircleDeFi,
@@ -152,6 +153,7 @@ private fun CircleContentDepositTab(
     }
 }
 
+/** Preview for [CircleDefiPositionScreenContent]. */
 @Preview(showBackground = true)
 @Composable
 private fun CircleDeFiPositionsScreenPreview() {
@@ -162,6 +164,7 @@ private fun CircleDeFiPositionsScreenPreview() {
     )
 }
 
+/** Preview for [CircleDefiPositionScreenContent] with sample data. */
 @Preview(showBackground = true)
 @Composable
 private fun CircleDefiPositionScreenContentPreview() {
@@ -182,6 +185,7 @@ private fun CircleDefiPositionScreenContentPreview() {
     )
 }
 
+/** Preview for [CircleDefiPositionScreenContent] in loading state. */
 @Preview(showBackground = true)
 @Composable
 private fun CircleDefiPositionScreenContentLoadingPreview() {
@@ -202,6 +206,7 @@ private fun CircleDefiPositionScreenContentLoadingPreview() {
     )
 }
 
+/** Preview for [CircleDefiPositionScreenContent] with hidden balance. */
 @Preview(showBackground = true)
 @Composable
 private fun CircleDefiPositionScreenContentHiddenBalancePreview() {

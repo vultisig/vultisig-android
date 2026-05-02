@@ -249,6 +249,7 @@ internal fun ThorchainDefiPositionScreenContent(
     }
 }
 
+/** Preview for [ThorchainDefiPositionScreenContent] with empty state. */
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - Empty")
 private fun ThorchainDefiPositionsScreenPreviewEmpty() {
@@ -262,6 +263,7 @@ private fun ThorchainDefiPositionsScreenPreviewEmpty() {
     )
 }
 
+/** Preview for [ThorchainDefiPositionScreenContent] with sample data. */
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - With Data")
 private fun ThorchainDefiPositionsScreenPreviewWithData() {
@@ -316,6 +318,7 @@ private fun ThorchainDefiPositionsScreenPreviewWithData() {
     )
 }
 
+/** Preview for [ThorchainDefiPositionScreenContent] in loading state. */
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - Loading")
 private fun ThorchainDefiPositionsScreenPreviewLoading() {

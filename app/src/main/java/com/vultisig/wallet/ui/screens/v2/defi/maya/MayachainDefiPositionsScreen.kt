@@ -266,6 +266,7 @@ internal fun MayachainDefiPositionsScreenContent(
     }
 }
 
+/** Preview for [MayachainDefiPositionsScreenContent] on the bonded tab. */
 @Preview(showBackground = true)
 @Composable
 private fun MayachainDefiPositionsScreenBondedTabPreview() {
@@ -274,6 +275,7 @@ private fun MayachainDefiPositionsScreenBondedTabPreview() {
     )
 }
 
+/** Preview for [MayachainDefiPositionsScreenContent] on the staked tab. */
 @Preview(showBackground = true)
 @Composable
 private fun MayachainDefiPositionsScreenStakedTabPreview() {
@@ -282,6 +284,7 @@ private fun MayachainDefiPositionsScreenStakedTabPreview() {
     )
 }
 
+/** Preview for [MayachainDefiPositionsScreenContent] on the LP tab. */
 @Preview(showBackground = true)
 @Composable
 private fun MayachainDefiPositionsScreenLpTabPreview() {

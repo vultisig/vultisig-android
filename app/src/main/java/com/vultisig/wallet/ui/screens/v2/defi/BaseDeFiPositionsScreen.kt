@@ -114,6 +114,7 @@ enum class DeFiTab(@androidx.annotation.StringRes val displayNameRes: Int) {
     LP(R.string.defi_tab_lp),
 }
 
+/** Preview for [BaseDeFiPositionsScreenContent]. */
 @Preview(showBackground = true)
 @Composable
 private fun BaseDeFiPositionsScreenContentPreview() {
@@ -135,6 +136,7 @@ private fun BaseDeFiPositionsScreenContentPreview() {
     )
 }
 
+/** Preview for [BaseDeFiPositionsScreenContent] in loading state. */
 @Preview(showBackground = true)
 @Composable
 private fun BaseDeFiPositionsScreenContentLoadingPreview() {
@@ -156,6 +158,7 @@ private fun BaseDeFiPositionsScreenContentLoadingPreview() {
     )
 }
 
+/** Preview for [BaseDeFiPositionsScreenContent] with hidden balance. */
 @Preview(showBackground = true)
 @Composable
 private fun BaseDeFiPositionsScreenContentHiddenBalancePreview() {

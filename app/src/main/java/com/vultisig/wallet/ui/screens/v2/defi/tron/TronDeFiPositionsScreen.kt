@@ -62,6 +62,7 @@ private const val TWO_DAYS_MS = 2 * 24 * 60 * 60 * 1_000L
 
 private data class CountdownParts(val days: Long, val hours: Long, val minutes: Long)
 
+/** Returns the days/hours/minutes remaining until [expiryEpochMs], or null if already expired. */
 private fun countdownParts(expiryEpochMs: Long, nowMs: Long): CountdownParts? {
     if (expiryEpochMs <= nowMs) return null
     val remaining = expiryEpochMs - nowMs
@@ -109,6 +110,7 @@ internal fun TronDeFiPositionsScreen(
     )
 }
 
+/** Stateless content for the TRON DeFi positions screen with pull-to-refresh support. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TronDeFiPositionsScreenContent(
@@ -257,6 +259,7 @@ private fun TronDeFiPositionsScreenContent(
     }
 }
 
+/** Lazy list section for pending TRON withdrawals: header text followed by individual rows. */
 private fun LazyListScope.TronPendingWithdrawalsCard(
     withdrawals: List<TronPendingWithdrawalUiModel>,
     isBalanceVisible: Boolean,
@@ -273,6 +276,7 @@ private fun LazyListScope.TronPendingWithdrawalsCard(
     }
 }
 
+/** Row displaying a single pending TRX withdrawal with a live countdown or claimable badge. */
 @Composable
 private fun TronPendingWithdrawalRow(
     withdrawal: TronPendingWithdrawalUiModel,
@@ -352,6 +356,7 @@ private fun TronPendingWithdrawalRow(
     }
 }
 
+/** Pill badge showing the TRX resource type (bandwidth or energy) with icon and label. */
 @Composable
 private fun TronResourceTypeBadge(resourceType: TronResourceType) {
     val labelRes =
@@ -386,12 +391,14 @@ private fun TronResourceTypeBadge(resourceType: TronResourceType) {
     }
 }
 
+/** Preview for [TronDeFiPositionsScreenContent] in loading state. */
 @Preview(showBackground = true)
 @Composable
 private fun TronDeFiPositionsScreenLoadingPreview() {
     TronDeFiPositionsScreenContent(state = TronDeFiUiState.Loading)
 }
 
+/** Preview for [TronDeFiPositionsScreenContent] in error state. */
 @Preview(showBackground = true)
 @Composable
 private fun TronDeFiPositionsScreenErrorPreview() {
@@ -403,6 +410,7 @@ private fun TronDeFiPositionsScreenErrorPreview() {
     )
 }
 
+/** Preview for [TronDeFiPositionsScreenContent] with no positions. */
 @Preview(showBackground = true)
 @Composable
 private fun TronDeFiPositionsScreenNoPositionsPreview() {
@@ -421,6 +429,7 @@ private fun TronDeFiPositionsScreenNoPositionsPreview() {
     )
 }
 
+/** Preview for [TronDeFiPositionsScreenContent] with sample freeze and withdrawal data. */
 @Preview(showBackground = true)
 @Composable
 private fun TronDeFiPositionsScreenPreview() {
