@@ -24,13 +24,13 @@ import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -140,7 +140,7 @@ internal class KeygenViewModelTest {
     fun `state action matches the route arg`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            assertEquals(TssAction.SingleKeygen, vm.state.value.action)
+            vm.state.value.action shouldBe TssAction.SingleKeygen
         }
 
     /** Verifies init with empty keys surfaces an error and never advances past CreatingInstance. */
@@ -150,8 +150,8 @@ internal class KeygenViewModelTest {
             val vm = createViewModel()
 
             val state = vm.state.value
-            assertNotNull(state.error)
-            assertEquals(KeygenState.CreatingInstance, state.keygenState)
+            state.error.shouldNotBeNull()
+            state.keygenState shouldBe KeygenState.CreatingInstance
         }
 
     /** Verifies tryAgain navigates back. */

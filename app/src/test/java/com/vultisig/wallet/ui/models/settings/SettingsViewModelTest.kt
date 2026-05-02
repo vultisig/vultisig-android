@@ -12,14 +12,14 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -89,7 +89,7 @@ internal class SettingsViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.onSettingsItemClick(SettingsItem.ShareTheApp)
-            assertTrue(vm.state.value.showShareBottomSheet)
+            vm.state.value.showShareBottomSheet.shouldBeTrue()
         }
 
     /** Verifies onDismissShareLinkBottomSheet hides share bottom sheet. */
@@ -99,7 +99,7 @@ internal class SettingsViewModelTest {
             val vm = createViewModel()
             vm.onSettingsItemClick(SettingsItem.ShareTheApp)
             vm.onDismissShareLinkBottomSheet()
-            assertFalse(vm.state.value.showShareBottomSheet)
+            vm.state.value.showShareBottomSheet.shouldBeFalse()
         }
 
     /** Verifies onDismissReferralBottomSheet hides referral sheet after it was opened. */
@@ -108,9 +108,9 @@ internal class SettingsViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.onClickReferralCode()
-            assertTrue(vm.state.value.hasToShowReferralCodeSheet)
+            vm.state.value.hasToShowReferralCodeSheet.shouldBeTrue()
             vm.onDismissReferralBottomSheet()
-            assertFalse(vm.state.value.hasToShowReferralCodeSheet)
+            vm.state.value.hasToShowReferralCodeSheet.shouldBeFalse()
         }
 
     /** Verifies clicking PreventScreenshots calls setEnabled with toggled value. */
@@ -192,7 +192,7 @@ internal class SettingsViewModelTest {
             val vm = createViewModel()
             vm.onSettingsItemClick(SettingsItem.Discord)
             val event = vm.uiEvent.first()
-            assertEquals(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.DISCORD), event)
+            event shouldBe SettingsUiEvent.OpenLink(VsAuxiliaryLinks.DISCORD)
         }
 
     private companion object {

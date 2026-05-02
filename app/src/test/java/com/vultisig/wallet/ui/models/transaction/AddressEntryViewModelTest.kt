@@ -15,6 +15,9 @@ import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -23,9 +26,6 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkStatic
 import io.mockk.verify
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -89,7 +89,7 @@ internal class AddressEntryViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.saveAddress()
-            assertNotNull(vm.state.value.titleError)
+            vm.state.value.titleError.shouldNotBeNull()
         }
 
     /** Verifies saveAddress with title length over the production max sets titleError. */
@@ -102,7 +102,7 @@ internal class AddressEntryViewModelTest {
             // changes, update OVER_MAX_LABEL to keep this test meaningful.
             vm.titleTextFieldState.edit { replace(0, length, "A".repeat(OVER_MAX_LABEL)) }
             vm.saveAddress()
-            assertNotNull(vm.state.value.titleError)
+            vm.state.value.titleError.shouldNotBeNull()
         }
 
     /** Verifies saveAddress with invalid address sets addressError. */
@@ -114,7 +114,7 @@ internal class AddressEntryViewModelTest {
             vm.addressTextFieldState.edit { replace(0, length, "invalid-address") }
             every { chainAccountAddressRepository.isValid(any(), any()) } returns false
             vm.saveAddress()
-            assertNotNull(vm.state.value.addressError)
+            vm.state.value.addressError.shouldNotBeNull()
         }
 
     /** Verifies setOutputAddress sets the address field text. */
@@ -123,7 +123,16 @@ internal class AddressEntryViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.setOutputAddress("0xdeadbeef")
-            assertEquals("0xdeadbeef", vm.addressTextFieldState.text.toString())
+            vm.addressTextFieldState.text.toString() shouldBe "0xdeadbeef"
+        }
+
+    /** Verifies setOutputAddress trims surrounding whitespace. */
+    @Test
+    fun `setOutputAddress trims surrounding whitespace`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.setOutputAddress("   $ETH_ADDRESS   ")
+            vm.addressTextFieldState.text.toString() shouldBe ETH_ADDRESS
         }
 
     /**
@@ -142,8 +151,8 @@ internal class AddressEntryViewModelTest {
             vm.saveAddress()
             advanceUntilIdle()
             coVerify { addressBookRepository.add(any()) }
-            assertEquals("Alice", capturedEntry.captured.title)
-            assertEquals(ETH_ADDRESS, capturedEntry.captured.address)
+            capturedEntry.captured.title shouldBe "Alice"
+            capturedEntry.captured.address shouldBe ETH_ADDRESS
             coVerify { navigator.navigate(Destination.Back) }
         }
 
@@ -161,7 +170,7 @@ internal class AddressEntryViewModelTest {
             advanceUntilIdle()
 
             verify { chainAccountAddressRepository.isValid(Chain.Bitcoin, "bc1q0000") }
-            assertNull(vm.state.value.addressError)
+            vm.state.value.addressError.shouldBeNull()
         }
 
     /** Verifies saveAddress passes the pre-selected Ethereum chain to address validation. */
@@ -178,7 +187,7 @@ internal class AddressEntryViewModelTest {
             advanceUntilIdle()
 
             verify { chainAccountAddressRepository.isValid(Chain.Ethereum, ETH_ADDRESS) }
-            assertNull(vm.state.value.addressError)
+            vm.state.value.addressError.shouldBeNull()
         }
 
     /** Verifies saveAddress passes the pre-selected Solana chain to address validation. */
@@ -195,7 +204,7 @@ internal class AddressEntryViewModelTest {
             advanceUntilIdle()
 
             verify { chainAccountAddressRepository.isValid(Chain.Solana, SOL_ADDRESS) }
-            assertNull(vm.state.value.addressError)
+            vm.state.value.addressError.shouldBeNull()
         }
 
     /**
@@ -212,7 +221,7 @@ internal class AddressEntryViewModelTest {
             advanceUntilIdle()
 
             coVerify { requestQrScan() }
-            assertEquals(ETH_ADDRESS, vm.addressTextFieldState.text.toString())
+            vm.addressTextFieldState.text.toString() shouldBe ETH_ADDRESS
         }
 
     /**
@@ -229,7 +238,7 @@ internal class AddressEntryViewModelTest {
             advanceUntilIdle()
 
             coVerify { requestQrScan() }
-            assertEquals("", vm.addressTextFieldState.text.toString())
+            vm.addressTextFieldState.text.toString() shouldBe ""
         }
 
     /**
@@ -250,8 +259,8 @@ internal class AddressEntryViewModelTest {
 
             coVerify { addressBookRepository.entryExists("Ethereum", ETH_ADDRESS) }
             coVerify { addressBookRepository.getEntry("Ethereum", ETH_ADDRESS) }
-            assertEquals("Bob", vm.titleTextFieldState.text.toString())
-            assertEquals(ETH_ADDRESS, vm.addressTextFieldState.text.toString())
+            vm.titleTextFieldState.text.toString() shouldBe "Bob"
+            vm.addressTextFieldState.text.toString() shouldBe ETH_ADDRESS
         }
 
     /**
@@ -271,8 +280,8 @@ internal class AddressEntryViewModelTest {
 
             coVerify { addressBookRepository.entryExists("Ethereum", ETH_ADDRESS) }
             coVerify(exactly = 0) { addressBookRepository.getEntry(any(), any()) }
-            assertEquals("", vm.titleTextFieldState.text.toString())
-            assertEquals(ETH_ADDRESS, vm.addressTextFieldState.text.toString())
+            vm.titleTextFieldState.text.toString() shouldBe ""
+            vm.addressTextFieldState.text.toString() shouldBe ETH_ADDRESS
         }
 
     /**
@@ -293,7 +302,7 @@ internal class AddressEntryViewModelTest {
             advanceUntilIdle()
 
             verify(exactly = 0) { chainAccountAddressRepository.isValid(any(), any()) }
-            assertNotNull(vm.state.value.addressError)
+            vm.state.value.addressError.shouldNotBeNull()
         }
 
     private companion object {

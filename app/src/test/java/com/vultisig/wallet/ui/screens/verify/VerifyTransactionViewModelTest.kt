@@ -4,16 +4,19 @@ package com.vultisig.wallet.ui.screens.verify
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.SecurityScannerFeaturesType
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
+import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
-import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -22,21 +25,20 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -111,7 +113,7 @@ internal class VerifyTransactionViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.checkConsentAddress(true)
-            assertTrue(vm.uiState.value.consentAddress)
+            vm.uiState.value.consentAddress.shouldBeTrue()
         }
 
     /** Verifies checkConsentAmount sets consentAmount true. */
@@ -120,7 +122,7 @@ internal class VerifyTransactionViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.checkConsentAmount(true)
-            assertTrue(vm.uiState.value.consentAmount)
+            vm.uiState.value.consentAmount.shouldBeTrue()
         }
 
     /** Verifies hasAllConsents is false when only address consent is given. */
@@ -129,7 +131,7 @@ internal class VerifyTransactionViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.checkConsentAddress(true)
-            assertFalse(vm.uiState.value.hasAllConsents)
+            vm.uiState.value.hasAllConsents.shouldBeFalse()
         }
 
     /** Verifies hasAllConsents is true when both consents are given. */
@@ -139,7 +141,7 @@ internal class VerifyTransactionViewModelTest {
             val vm = createViewModel()
             vm.checkConsentAddress(true)
             vm.checkConsentAmount(true)
-            assertTrue(vm.uiState.value.hasAllConsents)
+            vm.uiState.value.hasAllConsents.shouldBeTrue()
         }
 
     /** Verifies joinKeySign sets errorText when consents not checked. */
@@ -148,7 +150,7 @@ internal class VerifyTransactionViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.joinKeySign()
-            assertNotNull(vm.uiState.value.errorText)
+            vm.uiState.value.errorText.shouldNotBeNull()
         }
 
     /** Verifies dismissError clears errorText. */
@@ -158,35 +160,58 @@ internal class VerifyTransactionViewModelTest {
             val vm = createViewModel()
             vm.joinKeySign()
             vm.dismissError()
-            assertNull(vm.uiState.value.errorText)
+            vm.uiState.value.errorText.shouldBeNull()
         }
 
-    /** Verifies dismissScanningWarning clears showScanningWarning after a flagged scan. */
+    /**
+     * Verifies dismissScanningWarning clears showScanningWarning after a flagged scan.
+     *
+     * Stubs securityScannerService so the full scanTransaction() pipeline runs and produces a
+     * Scanned(unsafe) status: getSupportedChainsByFeature returns a list containing Ethereum,
+     * isSecurityServiceEnabled returns true, scanTransaction returns an unsafe result. Then
+     * joinKeySign triggers showScanningWarning via handleSigningFlowCommon.
+     */
     @Test
     fun `dismissScanningWarning clears showScanningWarning after a flagged scan`() =
         runTest(testDispatcher) {
-            // Stub a transaction so loadTransaction succeeds and the scan plumbing runs.
-            coEvery { transactionRepository.getTransaction(TX_ID) } returns mockk(relaxed = true)
-            val vm = createViewModel()
-            vm.checkConsentAddress(true)
-            vm.checkConsentAmount(true)
-            // joinKeySign goes through handleSigningFlowCommon which sets showScanningWarning when
-            // the scan status reports an unsafe transaction. There is no public setter for
-            // txScanStatus on the VM today (it is set internally by scanTransaction()), so we drive
-            // the dependent state directly via uiState.update. This couples the test to the
-            // MutableStateFlow visibility, but driving the path through securityScannerService
-            // mocks would require stubbing the full chain (getSupportedChainsByFeature,
-            // isSecurityServiceEnabled, createSecurityScannerTransaction, scanTransaction) plus
-            // the chain-supported lookup, which is more brittle than this single mutation.
+            // Build a transaction whose chain is Ethereum so the support check passes.
+            val coin = mockk<Coin>(relaxed = true)
+            every { coin.chain } returns Chain.Ethereum
+            val tx = mockk<Transaction>(relaxed = true)
+            every { tx.token } returns coin
+            coEvery { transactionRepository.getTransaction(TX_ID) } returns tx
+
+            // Stub the security scanner so scanning runs and returns an unsafe result.
+            val support =
+                SecurityScannerSupport(
+                    provider = "test",
+                    feature =
+                        listOf(
+                            SecurityScannerSupport.Feature(
+                                chains = listOf(Chain.Ethereum),
+                                featureType = SecurityScannerFeaturesType.TRANSACTION_SCAN,
+                            )
+                        ),
+                )
+            every { securityScannerService.getSupportedChainsByFeature() } returns listOf(support)
+            coEvery { securityScannerService.isSecurityServiceEnabled() } returns true
+            coEvery { securityScannerService.createSecurityScannerTransaction(any()) } returns
+                mockk(relaxed = true)
             val scanResult = mockk<SecurityScannerResult>()
             every { scanResult.isSecure } returns false
-            vm.uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(scanResult)) }
+            coEvery { securityScannerService.scanTransaction(any()) } returns scanResult
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.checkConsentAddress(true)
+            vm.checkConsentAmount(true)
             vm.joinKeySign()
-            assertTrue(vm.uiState.value.showScanningWarning)
+            vm.uiState.value.showScanningWarning.shouldBeTrue()
 
             vm.dismissScanningWarning()
 
-            assertFalse(vm.uiState.value.showScanningWarning)
+            vm.uiState.value.showScanningWarning.shouldBeFalse()
         }
 
     /** Verifies hasFastSign is true when isVaultHasFastSignById returns true. */
@@ -198,7 +223,7 @@ internal class VerifyTransactionViewModelTest {
             val vm = createViewModel()
             advanceUntilIdle()
 
-            assertTrue(vm.uiState.value.hasFastSign)
+            vm.uiState.value.hasFastSign.shouldBeTrue()
         }
 
     /**
@@ -215,7 +240,7 @@ internal class VerifyTransactionViewModelTest {
 
             vm.joinKeySign()
 
-            assertNull(vm.uiState.value.errorText)
+            vm.uiState.value.errorText.shouldBeNull()
             coVerify { launchKeysign(KeysignInitType.QR_CODE, TX_ID, any(), any(), VAULT_ID) }
         }
 
@@ -249,14 +274,14 @@ internal class VerifyTransactionViewModelTest {
             val state = vm.uiState.first { it.transaction.srcAddress.isNotEmpty() }
 
             val actual = state.transaction
-            assertEquals("0xSRC", actual.srcAddress)
-            assertEquals("0xDST", actual.dstAddress)
-            assertEquals("$0.42", actual.networkFeeFiatValue)
-            assertEquals("0.0001 ETH", actual.networkFeeTokenValue)
-            assertEquals("hello memo", actual.memo)
-            assertEquals(expectedToken, actual.token)
+            actual.srcAddress shouldBe "0xSRC"
+            actual.dstAddress shouldBe "0xDST"
+            actual.networkFeeFiatValue shouldBe "$0.42"
+            actual.networkFeeTokenValue shouldBe "0.0001 ETH"
+            actual.memo shouldBe "hello memo"
+            actual.token shouldBe expectedToken
             // Token symbol (ticker) round-trips through the ValuedToken's underlying Coin.
-            assertEquals("OM", actual.token.token.ticker)
+            actual.token.token.ticker shouldBe "OM"
         }
 
     private companion object {

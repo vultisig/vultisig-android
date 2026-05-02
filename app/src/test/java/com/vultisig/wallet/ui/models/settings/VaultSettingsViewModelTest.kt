@@ -18,15 +18,15 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsItem
 import com.vultisig.wallet.ui.screens.vault_settings.VaultSettingsViewModel
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -98,7 +98,7 @@ internal class VaultSettingsViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.onSettingsItemClick(VaultSettingsItem.Advanced)
-            assertTrue(vm.uiModel.value.isAdvanceSetting)
+            vm.uiModel.value.isAdvanceSetting.shouldBeTrue()
         }
 
     /** Verifies onBackClick when isAdvanceSetting is true resets it to false. */
@@ -108,7 +108,7 @@ internal class VaultSettingsViewModelTest {
             val vm = createViewModel()
             vm.onSettingsItemClick(VaultSettingsItem.Advanced)
             vm.onBackClick()
-            assertFalse(vm.uiModel.value.isAdvanceSetting)
+            vm.uiModel.value.isAdvanceSetting.shouldBeFalse()
         }
 
     /** Verifies onBackClick when not in advanced mode navigates back. */
@@ -136,10 +136,10 @@ internal class VaultSettingsViewModelTest {
             val vm = createViewModel()
 
             vm.onSettingsItemClick(VaultSettingsItem.BackupVaultShare)
-            assertTrue(vm.uiModel.value.isBackupVaultBottomSheetVisible)
+            vm.uiModel.value.isBackupVaultBottomSheetVisible.shouldBeTrue()
 
             vm.onDismissBackupVaultBottomSheet()
-            assertFalse(vm.uiModel.value.isBackupVaultBottomSheetVisible)
+            vm.uiModel.value.isBackupVaultBottomSheetVisible.shouldBeFalse()
         }
 
     /** Verifies onDismissBiometricFastSignBottomSheet hides biometric sheet after it was opened. */
@@ -151,10 +151,10 @@ internal class VaultSettingsViewModelTest {
             vm.onSettingsItemClick(
                 VaultSettingsItem.BiometricFastSign(isEnabled = false, isBiometricEnabled = false)
             )
-            assertTrue(vm.uiModel.value.isBiometricFastSignBottomSheetVisible)
+            vm.uiModel.value.isBiometricFastSignBottomSheetVisible.shouldBeTrue()
 
             vm.onDismissBiometricFastSignBottomSheet()
-            assertFalse(vm.uiModel.value.isBiometricFastSignBottomSheetVisible)
+            vm.uiModel.value.isBiometricFastSignBottomSheetVisible.shouldBeFalse()
         }
 
     /** Verifies togglePasswordVisibility flips isPasswordVisible by capturing the prior value. */
@@ -165,10 +165,10 @@ internal class VaultSettingsViewModelTest {
             val initial = vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible
 
             vm.togglePasswordVisibility()
-            assertEquals(!initial, vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible)
+            vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible shouldBe !initial
 
             vm.togglePasswordVisibility()
-            assertEquals(initial, vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible)
+            vm.uiModel.value.biometricsEnableUiModel.isPasswordVisible shouldBe initial
         }
 
     /** Verifies clicking Rename routes to Route.Rename with the current vault id. */

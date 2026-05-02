@@ -14,17 +14,17 @@ import com.vultisig.wallet.ui.models.TransactionStatusUiModel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import java.util.concurrent.TimeUnit
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -103,8 +103,8 @@ internal class TransactionHistoryViewModelTest {
         vm.selectTab(TransactionHistoryTab.SWAP)
         testScope.runCurrent()
 
-        assertEquals(TransactionHistoryTab.SWAP, vm.uiState.value.selectedTab)
-        assertTrue(vm.uiState.value.isLoading)
+        vm.uiState.value.selectedTab shouldBe TransactionHistoryTab.SWAP
+        vm.uiState.value.isLoading.shouldBeTrue()
     }
 
     /** Verifies openSearch sets isAssetSearchSheetVisible to true. */
@@ -112,7 +112,7 @@ internal class TransactionHistoryViewModelTest {
     fun `openSearch sets isAssetSearchSheetVisible to true`() {
         val vm = createViewModel()
         vm.openSearch()
-        assertTrue(vm.uiState.value.isAssetSearchSheetVisible)
+        vm.uiState.value.isAssetSearchSheetVisible.shouldBeTrue()
     }
 
     /** Verifies confirmAssetSearch closes the asset search sheet. */
@@ -121,7 +121,7 @@ internal class TransactionHistoryViewModelTest {
         val vm = createViewModel()
         vm.openSearch()
         vm.confirmAssetSearch()
-        assertFalse(vm.uiState.value.isAssetSearchSheetVisible)
+        vm.uiState.value.isAssetSearchSheetVisible.shouldBeFalse()
     }
 
     /** Verifies openDetail sets selectedItem. */
@@ -130,8 +130,8 @@ internal class TransactionHistoryViewModelTest {
         val vm = createViewModel()
         val item = sendItem()
         vm.openDetail(item)
-        assertNotNull(vm.uiState.value.selectedItem)
-        assertEquals(item, vm.uiState.value.selectedItem)
+        vm.uiState.value.selectedItem.shouldNotBeNull()
+        vm.uiState.value.selectedItem shouldBe item
     }
 
     /** Verifies dismissDetail clears selectedItem. */
@@ -140,7 +140,7 @@ internal class TransactionHistoryViewModelTest {
         val vm = createViewModel()
         vm.openDetail(sendItem())
         vm.dismissDetail()
-        assertNull(vm.uiState.value.selectedItem)
+        vm.uiState.value.selectedItem.shouldBeNull()
     }
 
     /** Verifies toggleAssetSelection adds asset to selectedAssetIds. */
@@ -149,7 +149,7 @@ internal class TransactionHistoryViewModelTest {
         val vm = createViewModel()
         val asset = TransactionAssetUiModel("ETH", "Ethereum", "")
         vm.toggleAssetSelection(asset)
-        assertTrue(vm.uiState.value.selectedAssetIds.contains("Ethereum:ETH"))
+        vm.uiState.value.selectedAssetIds.contains("Ethereum:ETH").shouldBeTrue()
     }
 
     /** Verifies clearAllFilters resets selectedAssets and ids. */
@@ -158,8 +158,8 @@ internal class TransactionHistoryViewModelTest {
         val vm = createViewModel()
         vm.toggleAssetSelection(TransactionAssetUiModel("ETH", "Ethereum", ""))
         vm.clearAllFilters()
-        assertTrue(vm.uiState.value.selectedAssetIds.isEmpty())
-        assertTrue(vm.uiState.value.selectedAssets.isEmpty())
+        vm.uiState.value.selectedAssetIds.isEmpty().shouldBeTrue()
+        vm.uiState.value.selectedAssets.isEmpty().shouldBeTrue()
     }
 
     /**
@@ -175,9 +175,9 @@ internal class TransactionHistoryViewModelTest {
         vm.toggleAssetSelection(asset)
         vm.confirmAssetSearch()
 
-        assertFalse(vm.uiState.value.isAssetSearchSheetVisible)
-        assertTrue(vm.uiState.value.selectedAssetIds.contains(asset.tokenId))
-        assertEquals(listOf(asset), vm.uiState.value.selectedAssets)
+        vm.uiState.value.isAssetSearchSheetVisible.shouldBeFalse()
+        vm.uiState.value.selectedAssetIds.contains(asset.tokenId).shouldBeTrue()
+        vm.uiState.value.selectedAssets shouldBe listOf(asset)
     }
 
     /**
@@ -193,9 +193,9 @@ internal class TransactionHistoryViewModelTest {
         vm.openDetail(item)
 
         val selected = vm.uiState.value.selectedItem
-        assertNotNull(selected)
-        assertEquals(fullHash, selected.txHash)
-        assertEquals(fullHash, selected.id)
+        selected.shouldNotBeNull()
+        selected.txHash shouldBe fullHash
+        selected.id shouldBe fullHash
     }
 
     /**
@@ -210,8 +210,8 @@ internal class TransactionHistoryViewModelTest {
         val vm = createViewModel()
         testScope.runCurrent()
 
-        assertTrue(vm.uiState.value.groups.isEmpty())
-        assertFalse(vm.uiState.value.isLoading)
+        vm.uiState.value.groups.isEmpty().shouldBeTrue()
+        vm.uiState.value.isLoading.shouldBeFalse()
     }
 
     /**

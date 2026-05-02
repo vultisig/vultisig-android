@@ -36,6 +36,10 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.coEvery
 import io.mockk.every
@@ -45,10 +49,6 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import java.math.BigDecimal
 import java.math.BigInteger
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -164,7 +164,7 @@ internal class VaultAccountsViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.dismissBackupReminder()
-            assertFalse(vm.uiState.value.showMonthlyBackupReminder)
+            vm.uiState.value.showMonthlyBackupReminder.shouldBeFalse()
         }
 
     /** Verifies tempRemoveBanner sets isBannerVisible to false. */
@@ -173,7 +173,7 @@ internal class VaultAccountsViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.tempRemoveBanner()
-            assertFalse(vm.uiState.value.isBannerVisible)
+            vm.uiState.value.isBannerVisible.shouldBeFalse()
         }
 
     /** Verifies onNotificationPermissionResult true sets showNotificationVaultSheet. */
@@ -182,7 +182,7 @@ internal class VaultAccountsViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.onNotificationPermissionResult(true)
-            assertTrue(vm.uiState.value.showNotificationVaultSheet)
+            vm.uiState.value.showNotificationVaultSheet.shouldBeTrue()
         }
 
     /** Verifies onNotificationPermissionResult false does not show vault sheet. */
@@ -191,7 +191,7 @@ internal class VaultAccountsViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.onNotificationPermissionResult(false)
-            assertFalse(vm.uiState.value.showNotificationVaultSheet)
+            vm.uiState.value.showNotificationVaultSheet.shouldBeFalse()
         }
 
     /** Verifies onNotificationVaultSheetDismiss hides the vault sheet. */
@@ -201,7 +201,7 @@ internal class VaultAccountsViewModelTest {
             val vm = createViewModel()
             vm.onNotificationPermissionResult(true)
             vm.onNotificationVaultSheetDismiss()
-            assertFalse(vm.uiState.value.showNotificationVaultSheet)
+            vm.uiState.value.showNotificationVaultSheet.shouldBeFalse()
         }
 
     /** Verifies cryptoConnectionType defaults to Wallet. */
@@ -209,7 +209,7 @@ internal class VaultAccountsViewModelTest {
     fun `cryptoConnectionType defaults to Wallet`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            assertEquals(CryptoConnectionType.Wallet, vm.uiState.value.cryptoConnectionType)
+            vm.uiState.value.cryptoConnectionType shouldBe CryptoConnectionType.Wallet
         }
 
     /** Verifies refreshData re-invokes accountsRepository with isRefresh=true. */
@@ -246,12 +246,12 @@ internal class VaultAccountsViewModelTest {
             val vm = createViewModel()
             advanceUntilIdle()
             // Sanity: init must not leave the spinner running.
-            assertFalse(vm.uiState.value.isRefreshing)
+            vm.uiState.value.isRefreshing.shouldBeFalse()
 
             vm.refreshData()
             advanceUntilIdle()
 
-            assertFalse(vm.uiState.value.isRefreshing)
+            vm.uiState.value.isRefreshing.shouldBeFalse()
             verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1", true) }
         }
 
@@ -289,15 +289,12 @@ internal class VaultAccountsViewModelTest {
             advanceUntilIdle()
 
             val accounts = vm.uiState.value.accounts
-            assertTrue(
-                accounts.isNotEmpty(),
-                "accounts should be populated after loadAddresses emit",
-            )
+            accounts.isNotEmpty().shouldBeTrue()
             val first = accounts.first()
-            assertEquals(testAddress.address, first.address)
-            assertEquals(Chain.Ethereum.raw, first.chainName)
-            assertNotNull(first.model)
-            assertEquals(testAddress.chain, first.model.chain)
+            first.address shouldBe testAddress.address
+            first.chainName shouldBe Chain.Ethereum.raw
+            first.model.shouldNotBeNull()
+            first.model.chain shouldBe testAddress.chain
         }
 
     /**
@@ -321,11 +318,8 @@ internal class VaultAccountsViewModelTest {
 
             // No crash, no spinner left running, and the list stays empty rather than being
             // populated with stale or partial data.
-            assertFalse(vm.uiState.value.isRefreshing)
-            assertTrue(
-                vm.uiState.value.accounts.isEmpty(),
-                "accounts must remain empty when the upstream flow errors out",
-            )
+            vm.uiState.value.isRefreshing.shouldBeFalse()
+            vm.uiState.value.accounts.isEmpty().shouldBeTrue()
             verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1", any()) }
         }
 

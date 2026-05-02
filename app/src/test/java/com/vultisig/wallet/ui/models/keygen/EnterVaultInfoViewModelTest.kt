@@ -2,7 +2,6 @@
 
 package com.vultisig.wallet.ui.models.keygen
 
-import android.util.Patterns
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.TssAction
@@ -11,6 +10,7 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContr
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CheckServerVaultExistsUseCase
 import com.vultisig.wallet.data.usecases.GenerateUniqueName
+import com.vultisig.wallet.data.usecases.IsEmailValid
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.models.v3.onboarding.EnterVaultInfoEvent
 import com.vultisig.wallet.ui.models.v3.onboarding.EnterVaultInfoViewModel
@@ -18,14 +18,14 @@ import com.vultisig.wallet.ui.models.v3.onboarding.StepType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.update
@@ -47,6 +47,7 @@ internal class EnterVaultInfoViewModelTest {
     private lateinit var navigator: Navigator<Destination>
     private lateinit var vaultRepository: VaultRepository
     private lateinit var isNameLengthValid: IsVaultNameValid
+    private lateinit var isEmailValid: IsEmailValid
     private lateinit var generateUniqueName: GenerateUniqueName
     private lateinit var referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract
     private lateinit var keyImportRepository: KeyImportRepository
@@ -57,20 +58,12 @@ internal class EnterVaultInfoViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         mockkStatic("androidx.navigation.SavedStateHandleKt")
-        // android.util.Patterns.EMAIL_ADDRESS is null in JVM unit tests because the Android
-        // framework jar shipped to local tests stubs every static field as null. The VM's
-        // email-field observer calls Patterns.EMAIL_ADDRESS.matcher(...) during init, so we
-        // populate the final static field reflectively before any VM is constructed.
-        setStaticFinalField(
-            Patterns::class.java,
-            "EMAIL_ADDRESS",
-            java.util.regex.Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\$"),
-        )
         every { any<SavedStateHandle>().toRoute<Route.EnterVaultInfo>() } returns
             Route.EnterVaultInfo(count = 2, tssAction = TssAction.KEYGEN)
         navigator = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
         isNameLengthValid = mockk(relaxed = true)
+        isEmailValid = mockk(relaxed = true)
         generateUniqueName = mockk(relaxed = true)
         referralCodeSettingsRepository = mockk(relaxed = true)
         keyImportRepository = mockk(relaxed = true)
@@ -79,6 +72,7 @@ internal class EnterVaultInfoViewModelTest {
         // to a generic Object that fails the implicit cast at the VM call site (e.g. the
         // String return type on `generateUniqueName` invoked from VM init).
         every { isNameLengthValid(any()) } returns true
+        every { isEmailValid(any()) } returns true
         every { generateUniqueName(any(), any()) } returns "TestVault"
     }
 
@@ -94,6 +88,7 @@ internal class EnterVaultInfoViewModelTest {
             navigator = navigator,
             vaultRepository = vaultRepository,
             isNameLengthValid = isNameLengthValid,
+            isEmailValid = isEmailValid,
             generateUniqueName = generateUniqueName,
             referralCodeSettingsRepository = referralCodeSettingsRepository,
             keyImportRepository = keyImportRepository,
@@ -102,35 +97,12 @@ internal class EnterVaultInfoViewModelTest {
             savedStateHandle = SavedStateHandle(),
         )
 
-    /**
-     * Sets a `static final` field reflectively. Plain `Field.set` is rejected for final fields on
-     * modern JDKs, so route the write through `sun.misc.Unsafe.putObject` against the field's
-     * static base + offset. Avoids the `--add-opens` JVM flag a `Field.modifiers` hack would need.
-     */
-    private fun setStaticFinalField(clazz: Class<*>, fieldName: String, value: Any?) {
-        val field = clazz.getField(fieldName)
-        val unsafeClass = Class.forName("sun.misc.Unsafe")
-        val theUnsafe =
-            unsafeClass.getDeclaredField("theUnsafe").apply { isAccessible = true }.get(null)
-        val staticFieldBase =
-            unsafeClass
-                .getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
-                .invoke(theUnsafe, field)
-        val staticFieldOffset =
-            unsafeClass
-                .getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
-                .invoke(theUnsafe, field) as Long
-        unsafeClass
-            .getMethod("putObject", Any::class.java, java.lang.Long.TYPE, Any::class.java)
-            .invoke(theUnsafe, staticFieldBase, staticFieldOffset, value)
-    }
-
     /** Verifies the initial active step is Name. */
     @Test
     fun `initial active step is Name`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            assertEquals(StepType.Name, vm.uiState.value.activeStep)
+            vm.uiState.value.activeStep shouldBe StepType.Name
         }
 
     /** Verifies ShowMoreInfo event sets isMoreInfoVisible to true. */
@@ -139,7 +111,7 @@ internal class EnterVaultInfoViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.onEvent(EnterVaultInfoEvent.ShowMoreInfo)
-            assertTrue(vm.uiState.value.isMoreInfoVisible)
+            vm.uiState.value.isMoreInfoVisible.shouldBeTrue()
         }
 
     /** Verifies HideMoreInfo event sets isMoreInfoVisible to false. */
@@ -149,7 +121,7 @@ internal class EnterVaultInfoViewModelTest {
             val vm = createViewModel()
             vm.onEvent(EnterVaultInfoEvent.ShowMoreInfo)
             vm.onEvent(EnterVaultInfoEvent.HideMoreInfo)
-            assertFalse(vm.uiState.value.isMoreInfoVisible)
+            vm.uiState.value.isMoreInfoVisible.shouldBeFalse()
         }
 
     /** Verifies TogglePasswordVisibility event toggles isPasswordVisible. */
@@ -158,9 +130,9 @@ internal class EnterVaultInfoViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.onEvent(EnterVaultInfoEvent.TogglePasswordVisibility)
-            assertTrue(vm.uiState.value.isPasswordVisible)
+            vm.uiState.value.isPasswordVisible.shouldBeTrue()
             vm.onEvent(EnterVaultInfoEvent.TogglePasswordVisibility)
-            assertFalse(vm.uiState.value.isPasswordVisible)
+            vm.uiState.value.isPasswordVisible.shouldBeFalse()
         }
 
     /** Verifies dismissServerVaultWarning clears showServerVaultExistsWarning. */
@@ -169,9 +141,9 @@ internal class EnterVaultInfoViewModelTest {
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.uiState.update { it.copy(showServerVaultExistsWarning = true) }
-            assertTrue(vm.uiState.value.showServerVaultExistsWarning)
+            vm.uiState.value.showServerVaultExistsWarning.shouldBeTrue()
             vm.dismissServerVaultWarning()
-            assertFalse(vm.uiState.value.showServerVaultExistsWarning)
+            vm.uiState.value.showServerVaultExistsWarning.shouldBeFalse()
         }
 
     /**
@@ -186,7 +158,7 @@ internal class EnterVaultInfoViewModelTest {
             vm.uiState.update { it.copy(showServerVaultExistsWarning = true) }
             vm.continueWithServerVaultWarning()
             advanceUntilIdle()
-            assertFalse(vm.uiState.value.showServerVaultExistsWarning)
+            vm.uiState.value.showServerVaultExistsWarning.shouldBeFalse()
             coVerify { navigator.route(any<Route.Keygen.PeerDiscovery>()) }
         }
 
@@ -211,7 +183,7 @@ internal class EnterVaultInfoViewModelTest {
             every { isNameLengthValid(any()) } returns false
             val vm = createViewModel()
             vm.onEvent(EnterVaultInfoEvent.Next)
-            assertEquals(StepType.Name, vm.uiState.value.activeStep)
+            vm.uiState.value.activeStep shouldBe StepType.Name
         }
 
     /** Verifies Next event advances from Name to Email when device count is 1 (3-step flow). */
@@ -222,7 +194,7 @@ internal class EnterVaultInfoViewModelTest {
                 Route.EnterVaultInfo(count = 1, tssAction = TssAction.KEYGEN)
             val vm = createViewModel()
             vm.onEvent(EnterVaultInfoEvent.Next)
-            assertEquals(StepType.Email, vm.uiState.value.activeStep)
+            vm.uiState.value.activeStep shouldBe StepType.Email
         }
 
     /** Verifies a secure vault (count=2) only exposes the Name step with no email or password. */
@@ -230,9 +202,9 @@ internal class EnterVaultInfoViewModelTest {
     fun `secure vault with count 2 exposes only the Name step`() =
         runTest(testDispatcher) {
             val vm = createViewModel() // count=2 from setUp
-            assertEquals(1, vm.uiState.value.stepAndStates.size)
-            assertTrue(vm.uiState.value.stepAndStates.containsKey(StepType.Name))
-            assertFalse(vm.uiState.value.stepAndStates.containsKey(StepType.Email))
+            vm.uiState.value.stepAndStates.size shouldBe 1
+            vm.uiState.value.stepAndStates.containsKey(StepType.Name).shouldBeTrue()
+            vm.uiState.value.stepAndStates.containsKey(StepType.Email).shouldBeFalse()
         }
 
     /** Verifies a non-secure vault (count=1) exposes Name, Email, and Password steps. */
@@ -242,8 +214,8 @@ internal class EnterVaultInfoViewModelTest {
             every { any<SavedStateHandle>().toRoute<Route.EnterVaultInfo>() } returns
                 Route.EnterVaultInfo(count = 1, tssAction = TssAction.KEYGEN)
             val vm = createViewModel()
-            assertEquals(3, vm.uiState.value.stepAndStates.size)
-            assertTrue(vm.uiState.value.stepAndStates.containsKey(StepType.Email))
-            assertTrue(vm.uiState.value.stepAndStates.containsKey(StepType.Password))
+            vm.uiState.value.stepAndStates.size shouldBe 3
+            vm.uiState.value.stepAndStates.containsKey(StepType.Email).shouldBeTrue()
+            vm.uiState.value.stepAndStates.containsKey(StepType.Password).shouldBeTrue()
         }
 }
