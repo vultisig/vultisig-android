@@ -231,10 +231,9 @@ constructor(
                 }
             }
         return try {
-            json.decodeFromString(
-                thorChainSwapQuoteResponseJsonSerializer,
-                response.bodyOrThrow<String>(),
-            )
+            json.decodeFromString(thorChainSwapQuoteResponseJsonSerializer, response.bodyAsText())
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "Error deserializing THORChain swap quote")
             THORChainSwapQuoteDeserialized.Error(
