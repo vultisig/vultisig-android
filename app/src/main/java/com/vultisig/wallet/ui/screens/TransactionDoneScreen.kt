@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
@@ -65,6 +67,25 @@ internal fun TransactionDoneView(
                     modifier = Modifier.padding(all = 12.dp).fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
+                    if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
+                        val transaction = transactionTypeUiModel.tx
+                        if (transaction.functionName != null) {
+                            Text(
+                                text = transaction.functionName,
+                                style = Theme.brockmann.headings.title3,
+                                color = Theme.v2.colors.text.primary,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        } else {
+                            VsOverviewToken(
+                                header = stringResource(R.string.tx_overview_screen_tx_send),
+                                valuedToken = transaction.token,
+                                shape = RoundedCornerShape(24.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+
                     if (transactionTypeUiModel !is TransactionTypeUiModel.SignMessage) {
                         if (approveTransactionHash.isNotEmpty()) {
                             TxLinkAndHash(
@@ -236,15 +257,34 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                 value = transaction.memo,
             )
 
-        OtherField(
-            title = stringResource(R.string.verify_transaction_amount_title),
-            value = transaction.token.value,
-        )
+        // OtherField has its own bottom divider; an explicit one stacks and orphans when memo is
+        // absent.
+        if (transaction.functionSignature != null) {
+            OtherField(
+                title = stringResource(R.string.deposit_screen_title),
+                value = transaction.functionSignature,
+            )
+        }
+        if (transaction.functionInputs != null) {
+            OtherField(
+                title = stringResource(R.string.verify_transaction_function_inputs_title),
+                value = transaction.functionInputs,
+            )
+        }
 
-        OtherField(
-            title = stringResource(R.string.verify_transaction_value),
-            value = transaction.token.fiatValue,
-        )
+        // Native amount + fiat — suppressed for EVM contract calls because the function name
+        // above is the action and the native value is typically zero.
+        if (transaction.functionName == null) {
+            OtherField(
+                title = stringResource(R.string.verify_transaction_amount_title),
+                value = transaction.token.value,
+            )
+
+            OtherField(
+                title = stringResource(R.string.verify_transaction_value),
+                value = transaction.token.fiatValue,
+            )
+        }
 
         FormDetails(
             modifier = Modifier.padding(vertical = 12.dp).fillMaxWidth(),

@@ -28,6 +28,11 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.Clock
 import timber.log.Timber
 
@@ -38,9 +43,18 @@ internal data class QuoteFetchResult(
     val srcFiatValueText: String,
     val estimatedDstTokenValue: String,
     val estimatedDstFiatValue: String,
+    val estimatedDstFiat: FiatValue,
     val feeText: String,
     val swapFeeFiat: FiatValue,
 )
+
+internal data class QuoteCandidate(
+    val provider: SwapProvider,
+    val vultBPSDiscount: Int?,
+    val referral: String?,
+)
+
+internal data class BestQuote(val candidate: QuoteCandidate, val result: QuoteFetchResult)
 
 internal class SwapQuoteManager
 @Inject
@@ -148,9 +162,86 @@ constructor(
             srcFiatValueText = srcFiatValueText,
             estimatedDstTokenValue = estimatedDstTokenValue,
             estimatedDstFiatValue = fiatValueToString(estimatedDstFiatValue),
+            estimatedDstFiat = estimatedDstFiatValue,
             feeText = fiatValueToString(fiatFees),
             swapFeeFiat = fiatFees,
         )
+    }
+
+    internal suspend fun fetchBestQuote(
+        candidates: List<QuoteCandidate>,
+        src: SendSrc,
+        dst: SendSrc,
+        srcToken: Coin,
+        dstToken: Coin,
+        srcTokenValue: BigInteger,
+        tokenValue: TokenValue,
+        currency: AppCurrency,
+        amount: BigDecimal,
+    ): BestQuote {
+        if (candidates.isEmpty()) {
+            throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
+        }
+
+        val results: List<Result<BestQuote>> = coroutineScope {
+            candidates
+                .map { candidate ->
+                    async {
+                        runCatching {
+                                withTimeout(QUOTE_FETCH_TIMEOUT_MS) {
+                                    BestQuote(
+                                        candidate = candidate,
+                                        result =
+                                            fetchQuote(
+                                                provider = candidate.provider,
+                                                src = src,
+                                                dst = dst,
+                                                srcToken = srcToken,
+                                                dstToken = dstToken,
+                                                srcTokenValue = srcTokenValue,
+                                                tokenValue = tokenValue,
+                                                currency = currency,
+                                                vultBPSDiscount = candidate.vultBPSDiscount,
+                                                referral = candidate.referral,
+                                                amount = amount,
+                                            ),
+                                    )
+                                }
+                            }
+                            .onFailure { e ->
+                                // TimeoutCancellationException extends CancellationException
+                                // but is a transient per-provider failure — don't let it
+                                // cancel sibling fetches via awaitAll.
+                                if (
+                                    e is CancellationException && e !is TimeoutCancellationException
+                                )
+                                    throw e
+                                Timber.w(
+                                    e,
+                                    "Quote fetch failed provider=%s src=%s dst=%s amount=%s",
+                                    candidate.provider,
+                                    srcToken.id,
+                                    dstToken.id,
+                                    srcTokenValue,
+                                )
+                            }
+                    }
+                }
+                .awaitAll()
+        }
+
+        val successes = results.mapNotNull { it.getOrNull() }
+        if (successes.isEmpty()) {
+            val failures = results.mapNotNull { it.exceptionOrNull() }
+            throw failures.firstOrNull { it is SwapException } ?: failures.first()
+        }
+
+        // Rank on estimatedDstFiat alone — this represents the destination amount
+        // the user expects to receive. Subtracting swapFeeFiat would double-count
+        // for THOR/MAYA (their expectedAmountOut is already net of protocol fees)
+        // and mix apples-to-oranges since swapFeeFiat is gas for 1inch/Kyber but
+        // an integrator fee for LI.FI.
+        return successes.maxBy { it.result.estimatedDstFiat.value }
     }
 
     private suspend fun fetchThorMayaQuote(
@@ -412,20 +503,26 @@ constructor(
         fallbackFee: BigInteger,
     ): Pair<BigInteger, Coin> =
         try {
-            if (swapFeeTokenContract.isNotEmpty()) {
-                val chainId = srcNativeToken.chain.id
-                val amount = swapFeeRaw.toBigInteger()
-                val coinAndFiatValue =
-                    searchToken(chainId, swapFeeTokenContract) ?: error("Can't find token or price")
-                val newNativeAmount =
-                    convertTokenToTokenUseCase.convertTokenToToken(
-                        amount,
-                        coinAndFiatValue,
-                        srcNativeToken,
-                    )
-                Pair(newNativeAmount, srcNativeToken)
-            } else {
-                Pair(fallbackFee, srcNativeToken)
+            when {
+                swapFeeTokenContract.isEmpty() -> Pair(fallbackFee, srcNativeToken)
+                // Kyber / LI.FI / Jupiter use this sentinel for the native chain token —
+                // the fee is already in src-native wei, no contract lookup needed.
+                swapFeeTokenContract.equals(NATIVE_TOKEN_SENTINEL, ignoreCase = true) ->
+                    Pair(swapFeeRaw.toBigIntegerOrNull() ?: fallbackFee, srcNativeToken)
+                else -> {
+                    val chainId = srcNativeToken.chain.id
+                    val amount = swapFeeRaw.toBigInteger()
+                    val coinAndFiatValue =
+                        searchToken(chainId, swapFeeTokenContract)
+                            ?: error("Can't find token or price")
+                    val newNativeAmount =
+                        convertTokenToTokenUseCase.convertTokenToToken(
+                            amount,
+                            coinAndFiatValue,
+                            srcNativeToken,
+                        )
+                    Pair(newNativeAmount, srcNativeToken)
+                }
             }
         } catch (t: Throwable) {
             if (t is CancellationException) throw t
@@ -525,6 +622,8 @@ constructor(
 
     companion object {
         private const val KYBER_AFFILIATE_FEE_BPS = 50
+        private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        private const val QUOTE_FETCH_TIMEOUT_MS = 15_000L
     }
 }
 

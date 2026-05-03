@@ -646,7 +646,6 @@
     <string name="security_scanner_transaction_scanning">Scanning…</string>
     <string name="security_scanner_transaction_not_scanned">Transaction not scanned by</string>
 
-    <string name="tx_overview_screen_title">Done</string>
     <string name="tx_transaction_successful_screen_title">Transaction successful</string>
     <string name="tx_overview_screen_tx_hash">Transaction Hash</string>
     <string name="tx_overview_screen_tx_from">From</string>
@@ -706,15 +705,17 @@
     <string name="deposit_option_add_liquidity">Add Liquidity</string>
     <string name="deposit_option_remove_liquidity">Remove Liquidity</string>
     <string name="add_pool_title">Add Pool</string>
+    <string name="add_lp_title">Add %1$s LP</string>
     <string name="add_pool_amount_label">Amount</string>
     <string name="add_pool_gas_auto">Gas (auto)</string>
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Token value</string>
     <string name="token_fiat_toggle_fiat_label">Fiat value</string>
     <string name="remove_pool_title">Remove Pool</string>
+    <string name="remove_lp_title">Remove %1$s LP</string>
     <string name="remove_pool_amount_label">Amount</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
-    <string name="remove_pool_cacao_amount_format" translatable="false">%1$s CACAO</string>
+    <string name="remove_pool_zero_amount" translatable="false">0 %1$s</string>
+    <string name="remove_pool_amount_format" translatable="false">%1$s %2$s</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">Stake CACAO</string>
     <string name="unstake_cacao_title">Unstake CACAO</string>

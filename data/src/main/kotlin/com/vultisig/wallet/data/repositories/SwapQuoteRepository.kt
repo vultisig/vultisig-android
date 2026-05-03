@@ -13,6 +13,8 @@ interface SwapQuoteRepository {
     suspend fun getQuote(provider: SwapProvider, request: SwapQuoteRequest): SwapQuoteResult
 
     fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider?
+
+    fun getEligibleProviders(srcToken: Coin, dstToken: Coin): List<SwapProvider>
 }
 
 internal class SwapQuoteRepositoryImpl
@@ -32,4 +34,7 @@ constructor(
 
     override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? =
         providerTable.providerFor(srcToken, dstToken)
+
+    override fun getEligibleProviders(srcToken: Coin, dstToken: Coin): List<SwapProvider> =
+        providerTable.eligibleProvidersFor(srcToken, dstToken)
 }

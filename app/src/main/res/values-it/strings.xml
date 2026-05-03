@@ -517,14 +517,15 @@
     <string name="deposit_option_add_liquidity">Aggiungi liquidità</string>
     <string name="deposit_option_remove_liquidity">Rimuovi liquidità</string>
     <string name="add_pool_title">Aggiungi Pool</string>
+    <string name="add_lp_title">Aggiungi LP %1$s</string>
     <string name="add_pool_amount_label">Importo</string>
     <string name="add_pool_gas_auto">Commissione di rete (automatica)</string>
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Valore token</string>
     <string name="token_fiat_toggle_fiat_label">Valore fiat</string>
     <string name="remove_pool_title">Rimuovi Pool</string>
+    <string name="remove_lp_title">Rimuovi LP %1$s</string>
     <string name="remove_pool_amount_label">Quantità</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">Puntare CACAO</string>
     <string name="unstake_cacao_title">Rimuovi puntata CACAO</string>
@@ -878,7 +879,6 @@
     <string name="select_vault_type_fast_title">Configurazione rapida su un solo dispositivo</string>
     <string name="select_vault_type_fast_desc_1">È necessario un solo dispositivo</string>
     <string name="scan_qr_code_modal_scan_the">Scansiona il QR sui tuoi altri dispositivi</string>
-    <string name="tx_overview_screen_title">Fatto</string>
     <string name="fast_vault_password_screen_warning">La password non può essere reimpostata o recuperata</string>
     <string name="referral_top_bar_list">Referral</string>
     <string name="onboarding_desc_page_1_part_3">il tuo nuovo</string>

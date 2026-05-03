@@ -514,14 +514,15 @@
     <string name="deposit_option_add_liquidity">Liquiditeit toevoegen</string>
     <string name="deposit_option_remove_liquidity">Liquiditeit verwijderen</string>
     <string name="add_pool_title">Pool toevoegen</string>
+    <string name="add_lp_title">%1$s LP toevoegen</string>
     <string name="add_pool_amount_label">Bedrag</string>
     <string name="add_pool_gas_auto">Netwerkkosten (auto)</string>
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Tokenwaarde</string>
     <string name="token_fiat_toggle_fiat_label">Fiatwaarde</string>
     <string name="remove_pool_title">Pool verwijderen</string>
+    <string name="remove_lp_title">%1$s LP verwijderen</string>
     <string name="remove_pool_amount_label">Bedrag</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">CACAO staken</string>
     <string name="unstake_cacao_title">CACAO unstaken</string>
@@ -875,7 +876,6 @@
     <string name="select_vault_type_fast_title">Snelle installatie van 1 apparaat</string>
     <string name="select_vault_type_fast_desc_1">Slechts 1 apparaat nodig</string>
     <string name="scan_qr_code_modal_scan_the">Scan de QR op je andere apparaten</string>
-    <string name="tx_overview_screen_title">Klaar</string>
     <string name="fast_vault_password_screen_warning">Wachtwoord kan niet worden gereset of hersteld</string>
     <string name="referral_top_bar_list">Verwijzing</string>
     <string name="onboarding_desc_page_1_part_3">Je nieuwe</string>

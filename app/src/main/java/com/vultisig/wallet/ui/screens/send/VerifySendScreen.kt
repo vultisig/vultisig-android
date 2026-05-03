@@ -1,8 +1,12 @@
 package com.vultisig.wallet.ui.screens.send
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,9 +20,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -33,8 +42,10 @@ import com.vultisig.wallet.ui.components.SignSolanaDisplayView
 import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsCheckField
+import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
@@ -46,7 +57,6 @@ import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
-import com.vultisig.wallet.ui.screens.swap.SwapToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
@@ -183,15 +193,27 @@ internal fun VerifySendScreen(
                             )
                             .padding(all = 24.dp)
                 ) {
-                    Text(
-                        text = stringResource(R.string.verify_deposit_sending),
-                        style = Theme.brockmann.headings.subtitle,
-                        color = Theme.v2.colors.text.secondary,
-                    )
+                    // Title-only hero until Blockaid simulation is wired into mobile;
+                    // decode-derived amounts can mislead without a simulation backing them.
+                    UiSpacer(12.dp)
 
-                    UiSpacer(24.dp)
-
-                    SwapToken(valuedToken = tx.token)
+                    if (tx.functionName != null) {
+                        Text(
+                            text = tx.functionName,
+                            style = Theme.brockmann.headings.title3,
+                            color = Theme.v2.colors.text.primary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    } else {
+                        VsOverviewToken(
+                            header = stringResource(R.string.verify_deposit_sending),
+                            valuedToken = tx.token,
+                            shape = RoundedCornerShape(0.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            withContainer = false,
+                        )
+                    }
 
                     UiSpacer(12.dp)
 
@@ -259,21 +281,11 @@ internal fun VerifySendScreen(
                             SignTonDisplayView(signTon = signTon)
                         }
 
-                    if (state.functionSignature != null) {
+                    if (tx.functionSignature != null || tx.functionInputs != null) {
                         VerifyCardDivider(0.dp)
-
-                        VerifyCardJsonDetails(
-                            title = stringResource(R.string.deposit_screen_title),
-                            subtitle = state.functionSignature,
-                        )
-                    }
-                    if (state.functionInputs != null) {
-                        VerifyCardDivider(0.dp)
-
-                        VerifyCardJsonDetails(
-                            title =
-                                stringResource(R.string.verify_transaction_function_inputs_title),
-                            subtitle = state.functionInputs,
+                        TransactionDetailsSection(
+                            functionSignature = tx.functionSignature,
+                            functionInputs = tx.functionInputs,
                         )
                     }
 
@@ -371,6 +383,79 @@ internal fun AddressField(title: String, address: String, divider: Boolean = tru
 }
 
 @Composable
+private fun TransactionDetailsSection(functionSignature: String?, functionInputs: String?) {
+    var isExpanded by rememberSaveable { mutableStateOf(false) }
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(
+                text = stringResource(R.string.tx_done_transaction_details),
+                style = Theme.brockmann.supplementary.footnote,
+                color = Theme.v2.colors.text.tertiary,
+            )
+
+            // Lightweight 16dp clickable container so the chevron renders at its intended size.
+            // [IconButton] enforces a 40dp minimum touch target which fights the explicit
+            // size modifier and blows the row out of the design.
+            Box(
+                modifier =
+                    Modifier.size(16.dp).clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) {
+                        isExpanded = !isExpanded
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.chevron,
+                    tint = Theme.v2.colors.text.tertiary,
+                    size = 8.dp,
+                    modifier = Modifier.graphicsLayer(rotationZ = if (isExpanded) 180f else 0f),
+                )
+            }
+        }
+
+        AnimatedVisibility(visible = isExpanded) {
+            // Inner column intentionally lets content size naturally; the outer scaffold's
+            // verticalScroll handles long JSON. A nested verticalScroll here trapped the
+            // last lines of long signatures / inputs out of reach.
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .background(
+                            color = Theme.v2.colors.variables.bordersLight,
+                            shape = RoundedCornerShape(12.dp),
+                        )
+                        .padding(12.dp),
+            ) {
+                functionSignature?.let {
+                    VerifyCardJsonDetails(
+                        title = stringResource(R.string.deposit_screen_title),
+                        subtitle = it,
+                    )
+                }
+
+                functionInputs?.let {
+                    VerifyCardJsonDetails(
+                        title = stringResource(R.string.verify_transaction_function_inputs_title),
+                        subtitle = it,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 internal fun OtherField(title: String, value: String, divider: Boolean = true) {
     Column {
         Row(
@@ -413,15 +498,15 @@ private fun PreviewVerifySendScreen() {
                         memo = "some memo",
                         signAmino =
                             """
-                     {
-                        "type": "osmosis/smartaccount/add-authenticator",
-                        "value": {
-                            "authenticator_type": "AllOf",
-                            "data": "W3sidHlwZSI6IlNpZ25hdHVyZVZlcmlmaWNhdGlvbiIsImNvbmZpZyI6IkF3ZTJjZEZtM1hqM0VVWEg0WTBpWDhGVTNGMElKNnV3R3F3TktsenVLSmFwIn0seyJ0eXBlIjoiQ29zbXdhc21BdXRoZW50aWNhdG9yVjEiLCJjb25maWciOiJleUpqYjI1MGNtRmpkQ0k2SUNKdmMyMXZNVEI0Y1hZNGNteHdhMlpzZVhkdE9USnJOWGRrYlhCc2VuazNhMmgwWVhOc09XTXlZekE0Y0hOdGRteDFOVFF6YXpjeU5ITjVPVFJyTnpRaUxDQWljR0Z5WVcxeklqb2dJbVY1U25OaFZ6RndaRU5KTmtscVZYZE5SRUYzVFVSQmQwMUVRV2xNUTBwNVdsaE9iR1JHT1hkYVdFcHdZakpSYVU5cFNtdFpXR3RwVEVOS01HRlhNV3hZTW5od1lsZHNNRWxxY0RkSmJWWjFXa05KTmtscVJUTk9hbU40VG5wUk0wMUVXWGROUkVGM1RVUkJkMDFFUVdsbVdEQTlJbjA9In0seyJ0eXBlIjoiQW55T2YiLCJjb25maWciOiJXM3NpZEhsd1pTSTZJazFsYzNOaFoyVkdhV3gwWlhJaUxDSmpiMjVtYVdjaU9pSmxlVXBCWkVoc2QxcFRTVFpKYVRsMll6SXhkbU15YkhwTWJrSjJZako0ZEZsWE5XaGFNbFo1VEc1WmVGbHRWakJaVkVWMVZGaE9ibFV6WkdoalJWWTBXVmRPTUZGWE1YWmtWelV3VTFjMGFXWlJQVDBpZlN4N0luUjVjR1VpT2lKTlpYTnpZV2RsUm1sc2RHVnlJaXdpWTI5dVptbG5Jam9pWlhsS1FXUkliSGRhVTBrMlNXazVkbU15TVhaak1teDZURzVDZG1JeWVIUlpWelZvV2pKV2VVeHVXWGhaYlZZd1dWUkZkVlJZVG01Vk0wSnpZVmhTVTJJelZqQmFWazR6V1ZoQ1JtVkhSbXBrUlVaMFlqTldkV1JGYkhWSmJqQTlJbjBzZXlKMGVYQmxJam9pVFdWemMyRm5aVVpwYkhSbGNpSXNJbU52Ym1acFp5STZJbVY1U2tGa1NHeDNXbE5KTmtscE9YWmpNakYyWXpKc2VreHVRblppTW5oMFdWYzFhRm95Vm5sTWJsbDRXVzFXTUZsVVJYVlVXRTV1VlROa2FHTkZWalJaVjA0d1VWY3hkbVJYTlRCVU0xWXdTVzR3UFNKOUxIc2lkSGx3WlNJNklrMWxjM05oWjJWR2FXeDBaWElpTENKamIyNW1hV2NpT2lKbGVVcEJaRWhzZDFwVFNUWkphVGwyWXpJeGRtTXliSHBNYmtKMllqSjRkRmxYTldoYU1sWjVURzVaZUZsdFZqQlpWRVYxVkZoT2JsVXpRbk5oV0ZKVFlqTldNRnBXVGpOWldFSkdaVWRHYW1SRlJuUmlNMVoxWkVVNU1XUkRTamtpZlN4N0luUjVjR1VpT2lKTlpYTnpZV2RsUm1sc2RHVnlJaXdpWTI5dVptbG5Jam9pWlhsS1FXUkliSGRhVTBrMlNXazVkbU15TVhaak1teDZURzFPZG1KdFRteGlibEo1V1ZoU2JGcEhlSEJqV0Zad1drZHNNR1ZUTlRKTlYwcHNaRWRGZUV4ck1YcGFNV1J3WkVkb2EyTnRSak5WUnpsNllWaFNjR0l5TkdsbVVUMDlJbjBzZXlKMGVYQmxJam9pVFdWemMyRm5aVVpwYkhSbGNpSXNJbU52Ym1acFp5STZJbVY1U2tGa1NHeDNXbE5KTmtscE9YWmpNakYyWXpKc2VreHVXbWhpU0U1c1pFaENlVnBYV1hWa2FrWnBXbGhTYUUxVE5VNWpNbVJVV2xoU1YxbFhlSEJhUjBZd1lqTktWRnBZVWxGamJWWnRXbGhLYkdKdFRteEpiakE5SW4xZCJ9XQ==",
-                            "sender": "osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxf3l5h"
-                        }
-                     }
-                """
+                            {
+                               "type": "osmosis/smartaccount/add-authenticator",
+                               "value": {
+                                   "authenticator_type": "AllOf",
+                                   "data": "W3sidHlwZSI6IlNpZ25hdHVyZVZlcmlmaWNhdGlvbiIsImNvbmZpZyI6IkF3ZTJjZEZtM1hqM0VVWEg0WTBpWDhGVTNGMElKNnV3R3F3TktsenVLSmFwIn0seyJ0eXBlIjoiQ29zbXdhc21BdXRoZW50aWNhdG9yVjEiLCJjb25maWciOiJleUpqYjI1MGNtRmpkQ0k2SUNKdmMyMXZNVEI0Y1hZNGNteHdhMlpzZVhkdE9USnJOWGRrYlhCc2VuazNhMmgwWVhOc09XTXlZekE0Y0hOdGRteDFOVFF6YXpjeU5ITjVPVFJyTnpRaUxDQWljR0Z5WVcxeklqb2dJbVY1U25OaFZ6RndaRU5KTmtscVZYZE5SRUYzVFVSQmQwMUVRV2xNUTBwNVdsaE9iR1JHT1hkYVdFcHdZakpSYVU5cFNtdFpXR3RwVEVOS01HRlhNV3hZTW5od1lsZHNNRWxxY0RkSmJWWjFXa05KTmtscVJUTk9hbU40VG5wUk0wMUVXWGROUkVGM1RVUkJkMDFFUVdsbVdEQTlJbjA9In0seyJ0eXBlIjoiQW55T2YiLCJjb25maWciOiJXM3NpZEhsd1pTSTZJazFsYzNOaFoyVkdhV3gwWlhJaUxDSmpiMjVtYVdjaU9pSmxlVXBCWkVoc2QxcFRTVFpKYVRsMll6SXhkbU15YkhwTWJrSjJZako0ZEZsWE5XaGFNbFo1VEc1WmVGbHRWakJaVkVWMVZGaE9ibFV6WkdoalJWWTBXVmRPTUZGWE1YWmtWelV3VTFjMGFXWlJQVDBpZlN4N0luUjVjR1VpT2lKTlpYTnpZV2RsUm1sc2RHVnlJaXdpWTI5dVptbG5Jam9pWlhsS1FXUkliSGRhVTBrMlNXazVkbU15TVhaak1teDZURzVDZG1JeWVIUlpWelZvV2pKV2VVeHVXWGhaYlZZd1dWUkZkVlJZVG01Vk0wSnpZVmhTVTJJelZqQmFWazR6V1ZoQ1JtVkhSbXBrUlVaMFlqTldkV1JGYkhWSmJqQTlJbjBzZXlKMGVYQmxJam9pVFdWemMyRm5aVVpwYkhSbGNpSXNJbU52Ym1acFp5STZJbVY1U2tGa1NHeDNXbE5KTmtscE9YWmpNakYyWXpKc2VreHVRblppTW5oMFdWYzFhRm95Vm5sTWJsbDRXVzFXTUZsVVJYVlVXRTV1VlROa2FHTkZWalJaVjA0d1VWY3hkbVJYTlRCVU0xWXdTVzR3UFNKOUxIc2lkSGx3WlNJNklrMWxjM05oWjJWR2FXeDBaWElpTENKamIyNW1hV2NpT2lKbGVVcEJaRWhzZDFwVFNUWkphVGwyWXpJeGRtTXliSHBNYmtKMllqSjRkRmxYTldoYU1sWjVURzVaZUZsdFZqQlpWRVYxVkZoT2JsVXpRbk5oV0ZKVFlqTldNRnBXVGpOWldFSkdaVWRHYW1SRlJuUmlNMVoxWkVVNU1XUkRTamtpZlN4N0luUjVjR1VpT2lKTlpYTnpZV2RsUm1sc2RHVnlJaXdpWTI5dVptbG5Jam9pWlhsS1FXUkliSGRhVTBrMlNXazVkbU15TVhaak1teDZURzFPZG1KdFRteGlibEo1V1ZoU2JGcEhlSEJqV0Zad1drZHNNR1ZUTlRKTlYwcHNaRWRGZUV4ck1YcGFNV1J3WkVkb2EyTnRSak5WUnpsNllWaFNjR0l5TkdsbVVUMDlJbjBzZXlKMGVYQmxJam9pVFdWemMyRm5aVVpwYkhSbGNpSXNJbU52Ym1acFp5STZJbVY1U2tGa1NHeDNXbE5KTmtscE9YWmpNakYyWXpKc2VreHVXbWhpU0U1c1pFaENlVnBYV1hWa2FrWnBXbGhTYUUxVE5VNWpNbVJVV2xoU1YxbFhlSEJhUjBZd1lqTktWRnBZVWxGamJWWnRXbGhLYkdKdFRteEpiakE5SW4xZCJ9XQ==",
+                                   "sender": "osmo1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqxf3l5h"
+                               }
+                            }
+                            """
                                 .trimIndent(),
                     )
             ),

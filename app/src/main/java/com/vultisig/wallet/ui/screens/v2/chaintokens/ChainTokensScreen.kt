@@ -318,17 +318,27 @@ private fun PreviewChainCoinScreen1() {
                 tokens =
                     listOf(
                         ChainTokenUiModel(
+                            id = "usdt-1",
                             name = "USDT",
-                            balance = "0.000",
-                            fiatBalance = "$0.000000",
+                            balance = "1,250.42",
+                            fiatBalance = "$1,250.42",
                             tokenLogo = R.drawable.usdt,
                             chainLogo = R.drawable.ethereum,
                         ),
                         ChainTokenUiModel(
-                            name = "USDT",
-                            balance = "0.000",
-                            fiatBalance = "$0.000000",
-                            tokenLogo = R.drawable.usdt,
+                            id = "eth-1",
+                            name = "ETH",
+                            balance = "0.875",
+                            fiatBalance = "$2,840.10",
+                            tokenLogo = R.drawable.ethereum,
+                            chainLogo = R.drawable.ethereum,
+                        ),
+                        ChainTokenUiModel(
+                            id = "dai-1",
+                            name = "DAI",
+                            balance = "320.00",
+                            fiatBalance = "$320.00",
+                            tokenLogo = R.drawable.dai,
                             chainLogo = R.drawable.ethereum,
                         ),
                     ),

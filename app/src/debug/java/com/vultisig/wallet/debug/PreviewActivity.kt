@@ -407,6 +407,8 @@ private fun SendTxDonePreview() {
                 networkFeeTokenValue = "0.0024 ETH",
                 networkFeeFiatValue = "$6.15",
             ),
+        isTransactionDetailVisible = false,
+        onTransactionDetailVisibleChange = {},
     )
 }
 

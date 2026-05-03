@@ -761,14 +761,15 @@
     <string name="deposit_option_add_liquidity">添加流动性</string>
     <string name="deposit_option_remove_liquidity">移除流动性</string>
     <string name="add_pool_title">添加池</string>
+    <string name="add_lp_title">添加 %1$s LP</string>
     <string name="add_pool_amount_label">金额</string>
     <string name="add_pool_gas_auto">网络费用（自动）</string>
     <string name="max">最大</string>
     <string name="token_fiat_toggle_token_label">代币价值</string>
     <string name="token_fiat_toggle_fiat_label">法币价值</string>
     <string name="remove_pool_title">移除流动池</string>
+    <string name="remove_lp_title">移除 %1$s LP</string>
     <string name="remove_pool_amount_label">金额</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">质押 CACAO</string>
     <string name="unstake_cacao_title">解除质押 CACAO</string>
@@ -1209,7 +1210,6 @@
     <string name="select_vault_type_fast_title">快速单设备设置</string>
     <string name="select_vault_type_fast_desc_1">仅需一台设备</string>
     <string name="scan_qr_code_modal_scan_the">在其他设备上扫描二维码</string>
-    <string name="tx_overview_screen_title">完成</string>
     <string name="fast_vault_password_screen_warning">密码无法重置或恢复</string>
     <string name="referral_top_bar_list">推荐</string>
     <string name="onboarding_desc_page_1_part_3">您的新</string>

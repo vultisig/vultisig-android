@@ -16,6 +16,9 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 memo = this.tx.memo ?: "",
                 networkFeeFiatValue = this.tx.networkFeeFiatValue,
                 networkFeeTokenValue = this.tx.networkFeeTokenValue,
+                functionName = this.tx.functionName,
+                functionSignature = this.tx.functionSignature,
+                functionInputs = this.tx.functionInputs,
             )
         }
         is TransactionTypeUiModel.Deposit -> {

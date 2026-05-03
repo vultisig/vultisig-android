@@ -42,6 +42,7 @@ import com.vultisig.wallet.data.api.models.thorchain.ThorchainConstantsResponse
 import com.vultisig.wallet.data.api.models.thorchain.VaultRedemptionResponseJson
 import com.vultisig.wallet.data.chains.helpers.ThorChainAffiliateHelper
 import com.vultisig.wallet.data.common.Endpoints
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
@@ -57,6 +58,7 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.json.Json
@@ -229,10 +231,9 @@ constructor(
                 }
             }
         return try {
-            json.decodeFromString(
-                thorChainSwapQuoteResponseJsonSerializer,
-                response.bodyOrThrow<String>(),
-            )
+            json.decodeFromString(thorChainSwapQuoteResponseJsonSerializer, response.bodyAsText())
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "Error deserializing THORChain swap quote")
             THORChainSwapQuoteDeserialized.Error(
@@ -500,6 +501,15 @@ constructor(
                     .get("$THORNODE_BASE/cosmos/bank/v1beta1/denoms_metadata/$encodedDenom")
                     .bodyOrThrow<MetadataResponse>()
             response.metadata
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: NetworkException) {
+            if (e.httpStatusCode == HttpStatusCode.NotFound.value) {
+                Timber.d("No denom metadata for %s (expected for non-standard denoms)", denom)
+            } else {
+                Timber.e(e, "Failed to fetch denom metadata for %s", denom)
+            }
+            null
         } catch (e: Exception) {
             Timber.e(e, "Failed to fetch denom metadata for %s", denom)
             null
