@@ -39,7 +39,9 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -72,6 +74,7 @@ constructor(
 
     private lateinit var vaultId: String
     private var mscaAddress: String? = null
+    private var loadJob: Job? = null
 
     private val _state =
         MutableStateFlow(
@@ -99,9 +102,9 @@ constructor(
     }
 
     /** Triggers a user-initiated pull-to-refresh; resets [isRefreshing] when complete. */
-    fun refresh(vaultId: String) {
+    fun refresh() {
         _isRefreshing.value = true
-        setData(vaultId)
+        loadCirclePositions()
     }
 
     private fun loadAccountStatus() {
@@ -133,68 +136,74 @@ constructor(
     }
 
     private fun loadCirclePositions() {
-        viewModelScope.launch {
-            try {
-                // Initial UI
-                _state.update { currentState ->
-                    currentState.copy(
-                        isTotalAmountLoading = true,
-                        circleDefi = currentState.circleDefi.copy(isLoading = true),
-                    )
-                }
-
-                // Check account exists
-                val addressSca =
-                    withContext(ioDispatcher) { scaCircleAccountRepository.getAccount(vaultId) }
-
-                // If not cache or don't exists, check network for MSCA and fetch balance
-                if (addressSca == null) {
-                    val fetchedAddress = fetchAssociatedMscaAccount()
-                    if (fetchedAddress != null) {
-                        mscaAddress = fetchedAddress
-                        fetchUSDCBalanceFromNetwork(fetchedAddress)
-                    } else {
-                        // Preserve `isAccountOpen` from current state: if `onCreateAccount`
-                        // raced ahead and already marked the account open, don't stomp it back
-                        // to false based on this now-stale "no account" finding.
-                        _state.update { currentState ->
-                            currentState.copy(
-                                isTotalAmountLoading = false,
-                                circleDefi = currentState.circleDefi.copy(isLoading = false),
-                            )
-                        }
-                    }
-                } else { // If account exists, show cache, then fetch and update from network
-                    mscaAddress = addressSca
+        loadJob?.cancel()
+        loadJob =
+            viewModelScope.launch {
+                try {
+                    // Initial UI
                     _state.update { currentState ->
                         currentState.copy(
-                            circleDefi = currentState.circleDefi.copy(isAccountOpen = true)
+                            isTotalAmountLoading = true,
+                            circleDefi = currentState.circleDefi.copy(isLoading = true),
                         )
                     }
-                    val cachePosition =
-                        withContext(ioDispatcher) {
-                            stakingDetailsRepository.getStakingDetailsByCoindId(
-                                vaultId,
-                                Coins.Ethereum.USDC.id,
+
+                    // Check account exists
+                    val addressSca =
+                        withContext(ioDispatcher) { scaCircleAccountRepository.getAccount(vaultId) }
+
+                    // If not cache or don't exists, check network for MSCA and fetch balance
+                    if (addressSca == null) {
+                        val fetchedAddress = fetchAssociatedMscaAccount()
+                        if (fetchedAddress != null) {
+                            mscaAddress = fetchedAddress
+                            fetchUSDCBalanceFromNetwork(fetchedAddress)
+                        } else {
+                            // Preserve `isAccountOpen` from current state: if `onCreateAccount`
+                            // raced ahead and already marked the account open, don't stomp it back
+                            // to false based on this now-stale "no account" finding.
+                            _state.update { currentState ->
+                                currentState.copy(
+                                    isTotalAmountLoading = false,
+                                    circleDefi = currentState.circleDefi.copy(isLoading = false),
+                                )
+                            }
+                        }
+                    } else { // If account exists, show cache, then fetch and update from network
+                        mscaAddress = addressSca
+                        _state.update { currentState ->
+                            currentState.copy(
+                                circleDefi = currentState.circleDefi.copy(isAccountOpen = true)
                             )
                         }
-                    if (cachePosition != null) {
-                        showUSDCPosition(cachePosition.stakeAmount, cachePosition.coin)
+                        val cachePosition =
+                            withContext(ioDispatcher) {
+                                stakingDetailsRepository.getStakingDetailsByCoindId(
+                                    vaultId,
+                                    Coins.Ethereum.USDC.id,
+                                )
+                            }
+                        if (cachePosition != null) {
+                            showUSDCPosition(cachePosition.stakeAmount, cachePosition.coin)
+                        }
+                        fetchUSDCBalanceFromNetwork(addressSca)
                     }
-                    fetchUSDCBalanceFromNetwork(addressSca)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (t: Throwable) {
+                    Timber.e(t)
+                    _state.update { currentState ->
+                        currentState.copy(
+                            isTotalAmountLoading = false,
+                            circleDefi = currentState.circleDefi.copy(isLoading = false),
+                        )
+                    }
+                } finally {
+                    if (!coroutineContext[Job]!!.isCancelled) {
+                        _isRefreshing.value = false
+                    }
                 }
-            } catch (t: Throwable) {
-                Timber.e(t)
-                _state.update { currentState ->
-                    currentState.copy(
-                        isTotalAmountLoading = false,
-                        circleDefi = currentState.circleDefi.copy(isLoading = false),
-                    )
-                }
-            } finally {
-                _isRefreshing.value = false
             }
-        }
     }
 
     fun onTabSelected(tab: DeFiTab) {

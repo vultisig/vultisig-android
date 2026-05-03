@@ -33,7 +33,7 @@ internal fun CircleDeFiPositionsScreen(
     CircleDefiPositionScreenContent(
         state = state,
         isRefreshing = isRefreshing,
-        onRefresh = { viewModel.refresh(vaultId) },
+        onRefresh = viewModel::refresh,
         tabs = listOf(DeFiTab.DEPOSITED),
         onBackClick = viewModel::onBackClick,
         onTabSelected = viewModel::onTabSelected,
