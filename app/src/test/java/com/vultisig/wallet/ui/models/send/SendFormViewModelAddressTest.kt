@@ -196,7 +196,9 @@ internal class SendFormViewModelAddressTest {
     }
 
     @Test
-    fun `openAddressBook OUTPUT routes the address into addressFieldState`() = runTest {
+    fun `openAddressBook is a no-op when no token is selected`() = runTest {
+        // The address book flow is gated on a token selection: without selectedTokenValue,
+        // openAddressBook returns early before consulting the address book entry use case.
         val entry: AddressBookEntry = mockk(relaxed = true)
         every { entry.address } returns "0xfromBook"
         every { entry.chain } returns mockk(relaxed = true)
@@ -204,9 +206,6 @@ internal class SendFormViewModelAddressTest {
 
         val vm = buildViewModel()
         advanceUntilIdle()
-        // Without a selectedToken, openAddressBook returns early because selectedTokenValue is
-        // null.
-        // We assert the no-op behavior here — the address book flow is gated on a token selection.
 
         vm.openAddressBook(AddressBookType.OUTPUT)
         advanceUntilIdle()
