@@ -211,6 +211,7 @@ internal class SendFormViewModelAddressTest {
         advanceUntilIdle()
 
         assertEquals("", vm.addressFieldState.text.toString())
+        coVerify(exactly = 0) { requestAddressBookEntry.invoke(any(), any()) }
     }
 
     private fun buildViewModel(): SendFormViewModel {
