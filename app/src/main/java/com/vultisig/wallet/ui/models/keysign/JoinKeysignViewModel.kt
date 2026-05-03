@@ -1309,6 +1309,7 @@ constructor(
 
     private fun cleanUp() {
         _jobWaitingForKeysignStart?.cancel()
+        blockaidSimulationJob?.cancel()
     }
 
     private fun waitForKeysignToStart() {

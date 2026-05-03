@@ -68,52 +68,49 @@ internal class BlockaidSimulationServiceImpl(private val rpcClient: BlockaidRpcC
             return pending.await()
         }
 
-        // Leader path: dispatch the actual RPC. The cleanup block MUST run
-        // even if this coroutine is cancelled mid-flight, otherwise the
-        // [inflight] entry leaks and any future caller for the same key would
-        // suspend forever on an orphaned deferred. [NonCancellable] guarantees
-        // suspension points inside the block (mutex acquisition) ignore the
-        // cancellation signal until cleanup is done.
-        val outcome = runCatching { dispatchScan(payload, key) }
-        val result = outcome.getOrDefault(BlockaidKeysignScanResult.EMPTY)
-
-        var stillOwns = false
-        withContext(NonCancellable) {
-            mutex.withLock {
-                // Capture our former owned entry so we can detect whether [invalidateAll] has run
-                // while our dispatch was in flight. If the entry is no longer ours we MUST NOT
-                // write to [cache] — doing so would resurrect data the caller meant to clear.
-                val ownedEntry = inflight.remove(key)
-                stillOwns = ownedEntry === pending
-                // Empty results are cached: when the chain returns no diff or no risk, the
-                // verdict is stable for that calldata. Errors are NOT cached so the next screen
-                // can retry — on the same payload, a transient network error today shouldn't
-                // poison verify → done forever.
-                if (outcome.isSuccess && stillOwns) {
-                    cache[key] = result
-                } else if (!outcome.isSuccess) {
-                    outcome.exceptionOrNull()?.let {
-                        if (it !is CancellationException) {
-                            Timber.w(it, "Blockaid simulation scan failed for %s", key)
-                        }
-                    }
-                }
-            }
-            // Complete inside NonCancellable too so followers always wake up, even when the
-            // leader is being cancelled. [pending] is the captured local — NOT [inflight[key]] —
-            // so a re-entered scan that installed a fresh deferred is not affected.
-            pending.complete(result)
+        // Leader path: dispatch the actual RPC, then run cleanup under NonCancellable so an
+        // orphaned [inflight] entry can't strand future callers if the leader is cancelled.
+        // CancellationException is caught separately and rethrown after cleanup — the Kotlin
+        // coroutines contract requires the cancelled coroutine to observe it.
+        var result = BlockaidKeysignScanResult.EMPTY
+        var failure: Throwable? = null
+        var cancellation: CancellationException? = null
+        try {
+            result = dispatchScan(payload, key)
+        } catch (e: CancellationException) {
+            cancellation = e
+        } catch (e: Exception) {
+            failure = e
         }
 
-        // The leader's caller, on the other hand, MUST observe the CancellationException so the
-        // surrounding scope can unwind. Kotlin's coroutines contract is unambiguous: catch
-        // CancellationException only to perform cleanup, then rethrow.
-        outcome.exceptionOrNull()?.let { if (it is CancellationException) throw it }
+        val stillOwns =
+            withContext(NonCancellable) {
+                val owned =
+                    mutex.withLock {
+                        // If [invalidateAll] cleared the entry while we were dispatching, the
+                        // caller asked us to discard. Skip the cache write — resurrecting cleared
+                        // data violates the invalidate contract.
+                        val ownedEntry = inflight.remove(key)
+                        val owns = ownedEntry === pending
+                        // Successful empty results ARE cached: a stable "no diff" verdict for a
+                        // given calldata. Failures are not cached so the next screen retries.
+                        if (failure == null && cancellation == null && owns) {
+                            cache[key] = result
+                        }
+                        owns
+                    }
+                failure?.let { Timber.w(it, "Blockaid simulation scan failed for %s", key) }
+                // Complete inside NonCancellable so followers always wake up — even when the
+                // leader is being cancelled. [pending] is the captured local, not [inflight[key]],
+                // so a fresh deferred installed by a re-entered scan is unaffected.
+                pending.complete(result)
+                owned
+            }
 
-        // Symmetry with the cache write above: if [invalidateAll] cleared our entry while we were
-        // dispatching, the caller asked us to discard this scan. Returning EMPTY keeps the
-        // contract consistent with what followers received and prevents the leader from
-        // applying a stale verdict to UI state that has since moved on (e.g. a vault switch).
+        // Cancellation propagates to the leader's caller AFTER cleanup so the surrounding scope
+        // unwinds correctly.
+        cancellation?.let { throw it }
+
         return if (stillOwns) result else BlockaidKeysignScanResult.EMPTY
     }
 

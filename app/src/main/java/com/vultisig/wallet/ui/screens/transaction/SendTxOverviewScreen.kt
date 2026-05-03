@@ -147,14 +147,11 @@ internal fun SendTxOverviewScreen(
                 // Skip the native "Amount" row for EVM contract calls — the function name above
                 // is the action, and a "0 ETH" amount underneath would mislead. Plain sends still
                 // render the native amount here.
+                val nativeAmount = tx.token.value.toBigIntegerOrNull()
                 if (
                     tx.functionName == null &&
-                        tx.token.value.isNotEmpty() &&
-                        try {
-                            tx.token.value.toBigInteger() > BigInteger.ZERO
-                        } catch (_: NumberFormatException) {
-                            false
-                        }
+                        nativeAmount != null &&
+                        nativeAmount > BigInteger.ZERO
                 ) {
                     VerifyCardDivider(size = 1.dp)
 

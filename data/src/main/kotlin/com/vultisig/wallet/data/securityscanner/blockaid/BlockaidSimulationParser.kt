@@ -23,6 +23,14 @@ internal object BlockaidSimulationParser {
     /** Codepoint cap for a sanitised ticker — see [sanitisedTicker]. */
     private const val MAX_TICKER_CODEPOINTS = 12
 
+    /**
+     * Hard cap on input codepoints scanned by [sanitisedTicker]. Without this an adversarial input
+     * stuffed with stripped codepoints (e.g. megabytes of zero-width characters) would still be
+     * walked end-to-end on the UI thread. 128 is generous for legitimate input — the longest token
+     * symbol seen in the wild is under 20 codepoints.
+     */
+    private const val MAX_TICKER_SCANNED_CODEPOINTS = 128
+
     /** Hard cap on logo URL length to bound work passed to Coil. */
     private const val MAX_LOGO_URL_LENGTH = 2048
 
@@ -243,9 +251,12 @@ internal object BlockaidSimulationParser {
 
         val decimals = asset.decimals?.clampDecimals() ?: return null
 
+        // Sanitize every fallback path: a hostile/MITM'd response could replace `asset.address`
+        // with a string containing bidi/zero-width codepoints, which `truncatedMint` would then
+        // forward into the hero ticker.
         val ticker =
-            asset.symbol?.sanitisedTicker()
-                ?: if (isNative) Chain.Solana.feeUnit else truncatedMint(mint)
+            (asset.symbol ?: if (isNative) Chain.Solana.feeUnit else truncatedMint(mint))
+                .sanitisedTicker() ?: return null
 
         // Blockaid's per-request logo URLs (under cdn.blockaid.io) are not hot-linkable so the
         // AsyncImage placeholder would spin forever. Native SOL falls back to the chain's local
@@ -282,15 +293,21 @@ internal object BlockaidSimulationParser {
     internal fun parseRawAmount(raw: String): BigInteger? {
         val trimmed = raw.trim()
         if (trimmed.isEmpty() || trimmed.length > MAX_RAW_AMOUNT_LENGTH) return null
-        return try {
-            if (trimmed.startsWith("0x") || trimmed.startsWith("0X")) {
-                BigInteger(trimmed.drop(2), 16)
-            } else {
-                BigInteger(trimmed)
+        // Reject signed inputs: direction is encoded by `outgoing` vs `incoming`, and `BigInteger`
+        // happily parses `-1` / `+1` / hex with a leading sign. A negative amount in the hero
+        // would misrepresent the call.
+        if (trimmed.first() == '-' || trimmed.first() == '+') return null
+        val parsed =
+            try {
+                if (trimmed.startsWith("0x", ignoreCase = true)) {
+                    BigInteger(trimmed.drop(2), 16)
+                } else {
+                    BigInteger(trimmed)
+                }
+            } catch (_: NumberFormatException) {
+                return null
             }
-        } catch (_: NumberFormatException) {
-            null
-        }
+        return parsed.takeIf { it.signum() >= 0 }
     }
 
     /**
@@ -341,16 +358,19 @@ internal object BlockaidSimulationParser {
             buildString {
                     var i = 0
                     var codepointsKept = 0
+                    var codepointsScanned = 0
                     while (
-                        i < this@sanitisedTicker.length && codepointsKept < MAX_TICKER_CODEPOINTS
+                        i < this@sanitisedTicker.length &&
+                            codepointsKept < MAX_TICKER_CODEPOINTS &&
+                            codepointsScanned < MAX_TICKER_SCANNED_CODEPOINTS
                     ) {
                         val cp = this@sanitisedTicker.codePointAt(i)
-                        val width = Character.charCount(cp)
                         if (!isUnsafeCodePoint(cp)) {
                             appendCodePoint(cp)
                             codepointsKept++
                         }
-                        i += width
+                        i += Character.charCount(cp)
+                        codepointsScanned++
                     }
                 }
                 .trim()
@@ -388,6 +408,7 @@ internal object BlockaidSimulationParser {
         return cp == 0x200B || // ZERO WIDTH SPACE
             cp == 0x200C || // ZERO WIDTH NON-JOINER
             cp == 0x200D || // ZERO WIDTH JOINER
+            cp == 0x2060 || // WORD JOINER
             cp == 0xFEFF || // ZERO WIDTH NO-BREAK SPACE / BOM
             cp in 0x200E..0x200F || // LRM / RLM
             cp in 0x202A..0x202E || // LRE / RLE / PDF / LRO / RLO

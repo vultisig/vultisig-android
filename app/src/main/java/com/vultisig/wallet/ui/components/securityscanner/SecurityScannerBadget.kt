@@ -135,7 +135,7 @@ internal fun getSecurityScannerLogo(provider: String): Int {
     return when (provider) {
         BLOCKAID_PROVIDER -> R.drawable.blockaid_logo
         else -> {
-            Timber.w("SecurityScanner: Unknown provider logo requested: $provider")
+            Timber.w("SecurityScanner: Unknown provider logo requested: %s", provider)
             R.drawable.blockaid_logo
         }
     }

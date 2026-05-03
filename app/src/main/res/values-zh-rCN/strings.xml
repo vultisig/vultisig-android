@@ -700,7 +700,7 @@
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_function_inputs_title">功能输入</string>
-    <string name="dapp_hero_unverified_function_title">未验证的函数</string>
+    <string name="dapp_hero_unverified_function_title">未验证的功能</string>
     <string name="dapp_hero_unverified_function_subtitle">请在签名前查看下方详情</string>
 
     <!-- Fast Vault Password Reminder -->

@@ -10,6 +10,13 @@ import java.math.RoundingMode
 import javax.inject.Inject
 
 /**
+ * Eighteen fractional digits matches Ether wei-precision. Tokens with finer granularity are
+ * accommodated by [BuildHeroContentUseCase.formatAmount], which raises the scale to the token's own
+ * decimals when needed; this constant just sets the floor.
+ */
+private const val MAX_FRACTION_SCALE = 18
+
+/**
  * Builds the [HeroContent] for the dApp signing screens from upstream simulation + decoded function
  * name.
  *
@@ -84,12 +91,5 @@ class BuildHeroContentUseCase @Inject constructor() {
             .setScale(scale, RoundingMode.HALF_UP)
             .stripTrailingZeros()
             .toPlainString()
-    }
-
-    private companion object {
-        // Eighteen fractional digits matches Ether wei-precision. Tokens with finer granularity
-        // are accommodated by [formatAmount] which raises the scale to the token's own decimals
-        // when needed; this constant just sets the floor.
-        const val MAX_FRACTION_SCALE = 18
     }
 }

@@ -132,7 +132,7 @@ data class BlockaidSolanaSimulationResponseJson(
  * Note the divergences from EVM that the parser has to absorb:
  * - field name is `account_assets_diff` (singular "diff") not `assets_diffs`
  * - `in` / `out` are single objects, not arrays
- * - `raw_value` is sometimes a JSON number — see [SolanaBalanceChange]
+ * - `raw_value` is sometimes a JSON number — see [BalanceChange]
  */
 @Serializable
 data class BlockaidSolanaSimulationJson(
@@ -147,8 +147,8 @@ data class BlockaidSolanaSimulationJson(
     data class AccountAssetDiff(
         @SerialName("asset") val asset: Asset,
         @SerialName("asset_type") val assetType: String? = null,
-        @SerialName("in") val incoming: SolanaBalanceChange? = null,
-        @SerialName("out") val outgoing: SolanaBalanceChange? = null,
+        @SerialName("in") val incoming: BalanceChange? = null,
+        @SerialName("out") val outgoing: BalanceChange? = null,
     )
 
     @Serializable
@@ -167,5 +167,5 @@ data class BlockaidSolanaSimulationJson(
      * a [String] by the parser.
      */
     @Serializable
-    data class SolanaBalanceChange(@SerialName("raw_value") val rawValue: JsonElement? = null)
+    data class BalanceChange(@SerialName("raw_value") val rawValue: JsonElement? = null)
 }

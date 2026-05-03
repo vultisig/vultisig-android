@@ -60,24 +60,23 @@ internal fun HeroContentView(content: HeroContent, modifier: Modifier = Modifier
 /**
  * Common hero-or-fallback rendering used by the verify, sign, and done screens.
  *
- * Three branches in priority order:
- * 1. [heroContent] non-null — Blockaid simulation resolved a `Send` / `Swap` / `Unverified` shape.
- * 2. [functionName] non-null — 4byte decoded the call but Blockaid hasn't loaded yet (or failed).
- *    Renders a title-only hero so the screen reads as a contract call rather than a 0-ETH send.
- * 3. Otherwise — [fallback] (typically the legacy `VsOverviewToken` native-amount card).
+ * Branch priority: a non-null [heroContent] wins (Blockaid resolved a Send/Swap/Unverified shape);
+ * otherwise a non-null [functionName] renders as a title-only hero so the screen reads as a
+ * contract call rather than a 0-ETH send; otherwise [content] is invoked (typically the legacy
+ * `VsOverviewToken` native-amount card).
  */
 @Composable
 internal fun TransactionHero(
     heroContent: HeroContent?,
     functionName: String?,
     modifier: Modifier = Modifier,
-    fallback: @Composable () -> Unit,
+    content: @Composable () -> Unit,
 ) {
     when {
         heroContent != null -> HeroContentView(content = heroContent, modifier = modifier)
         functionName != null ->
             HeroContentView(content = HeroContent.Title(functionName), modifier = modifier)
-        else -> fallback()
+        else -> content()
     }
 }
 
