@@ -1421,27 +1421,31 @@ private val EVM_FUNCTION_NAME_BOUNDARY = Regex("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?
  * smuggle into the signing UI. Stripped before the function name is rendered as a hero title.
  *
  * 4byte.directory is open-submit and orders entries by `created_at` — an attacker can register a
- * crafted text for an unclaimed selector. Without this filter, `approve‮USDC` would render as
- * "Approve CDSU" via right-to-left override, misrepresenting the call.
+ * crafted text for an unclaimed selector. Without this filter, an entry containing U+202E
+ * (RIGHT-TO-LEFT OVERRIDE) could surface as a flipped, misleading hero title in the signing UI.
+ *
+ * Codepoints are spelled as `\u` escapes deliberately: the literal characters are invisible to
+ * editors, copy-paste-fragile, and Lint flags BOM-class characters embedded in source files.
  */
 private val UNSAFE_DISPLAY_CODEPOINTS =
     setOf(
-        '‪', // LEFT-TO-RIGHT EMBEDDING
-        '‫', // RIGHT-TO-LEFT EMBEDDING
-        '‬', // POP DIRECTIONAL FORMATTING
-        '‭', // LEFT-TO-RIGHT OVERRIDE
-        '‮', // RIGHT-TO-LEFT OVERRIDE
-        '⁦', // LEFT-TO-RIGHT ISOLATE
-        '⁧', // RIGHT-TO-LEFT ISOLATE
-        '⁨', // FIRST STRONG ISOLATE
-        '⁩', // POP DIRECTIONAL ISOLATE
-        '‎', // LEFT-TO-RIGHT MARK
-        '‏', // RIGHT-TO-LEFT MARK
-        '​', // ZERO WIDTH SPACE
-        '‌', // ZERO WIDTH NON-JOINER
-        '‍', // ZERO WIDTH JOINER
-        '⁠', // WORD JOINER
-        '﻿', // ZERO WIDTH NO-BREAK SPACE
+        '\u202A', // LEFT-TO-RIGHT EMBEDDING
+        '\u202B', // RIGHT-TO-LEFT EMBEDDING
+        '\u202C', // POP DIRECTIONAL FORMATTING
+        '\u202D', // LEFT-TO-RIGHT OVERRIDE
+        '\u202E', // RIGHT-TO-LEFT OVERRIDE
+        '\u2066', // LEFT-TO-RIGHT ISOLATE
+        '\u2067', // RIGHT-TO-LEFT ISOLATE
+        '\u2068', // FIRST STRONG ISOLATE
+        '\u2069', // POP DIRECTIONAL ISOLATE
+        '\u200E', // LEFT-TO-RIGHT MARK
+        '\u200F', // RIGHT-TO-LEFT MARK
+        '\u061C', // ARABIC LETTER MARK
+        '\u200B', // ZERO WIDTH SPACE
+        '\u200C', // ZERO WIDTH NON-JOINER
+        '\u200D', // ZERO WIDTH JOINER
+        '\u2060', // WORD JOINER
+        '\uFEFF', // ZERO WIDTH NO-BREAK SPACE / BOM
     )
 
 /**

@@ -29,6 +29,9 @@ internal object BlockaidSimulationParser {
     /** SPL wrapped-SOL mint, used as a sentinel for native SOL balance changes. */
     private const val WRAPPED_SOL_MINT = "So11111111111111111111111111111111111111112"
 
+    /** Marker Blockaid uses on native-SOL diffs in either `asset.type` or `assetType`. */
+    private const val SOLANA_NATIVE_ASSET_TYPE = "SOL"
+
     /** Some EVM responses use the zero address as a synonym for "native ETH". */
     private const val EVM_NATIVE_SENTINEL_ADDRESS = "0x0000000000000000000000000000000000000000"
 
@@ -68,7 +71,7 @@ internal object BlockaidSimulationParser {
             if (all.size == 3) {
                 val solFeeIndex =
                     all.indexOfFirst {
-                        val isNative = it.asset.type == "SOL" || it.assetType == "SOL"
+                        val isNative = it.isNativeSol()
                         val outgoingOnly =
                             it.outgoing?.rawValue?.toRawValueString() != null &&
                                 it.incoming?.rawValue?.toRawValueString() == null
@@ -166,7 +169,7 @@ internal object BlockaidSimulationParser {
         // to the upstream null/Title flow and the user reads the details row instead.
         val raw = diff.outgoing?.rawValue?.toRawValueString() ?: return null
         val amount = parseRawAmount(raw) ?: return null
-        val coin = buildSolanaCoin(diff.asset) ?: return null
+        val coin = buildSolanaCoin(diff.asset, diff.assetType) ?: return null
         return BlockaidSimulationInfo.Transfer(fromCoin = coin, fromAmount = amount)
     }
 
@@ -197,7 +200,7 @@ internal object BlockaidSimulationParser {
                     val amount = raw?.let(::parseRawAmount) ?: return null
                     acc + amount
                 }
-            val coin = buildSolanaCoin(firstAsset) ?: return null
+            val coin = buildSolanaCoin(firstAsset, outSources.first().assetType) ?: return null
             return BlockaidSimulationInfo.Transfer(fromCoin = coin, fromAmount = total)
         }
 
@@ -206,12 +209,12 @@ internal object BlockaidSimulationParser {
         val outSource = outSources.firstOrNull() ?: return null
         val outRaw = outSource.outgoing?.rawValue?.toRawValueString() ?: return null
         val outAmount = parseRawAmount(outRaw) ?: return null
-        val fromCoin = buildSolanaCoin(outSource.asset) ?: return null
+        val fromCoin = buildSolanaCoin(outSource.asset, outSource.assetType) ?: return null
 
         val inSource = inSources.firstOrNull()
         val inRaw = inSource?.incoming?.rawValue?.toRawValueString()
         val inAmount = inRaw?.let(::parseRawAmount)
-        val toCoin = inSource?.let { buildSolanaCoin(it.asset) }
+        val toCoin = inSource?.let { buildSolanaCoin(it.asset, it.assetType) }
 
         return if (inAmount != null && toCoin != null) {
             BlockaidSimulationInfo.Swap(
@@ -226,9 +229,15 @@ internal object BlockaidSimulationParser {
     }
 
     private fun buildSolanaCoin(
-        asset: BlockaidSolanaSimulationJson.Asset
+        asset: BlockaidSolanaSimulationJson.Asset,
+        assetType: String?,
     ): BlockaidSimulationCoin? {
-        val isNative = asset.type == "SOL"
+        // Blockaid sometimes marks native SOL via `asset.type == "SOL"`, sometimes via the sibling
+        // `assetType == "SOL"` field on the diff. Without the second check, native-SOL transfers
+        // surface with a null mint (the wire `asset.address` is absent) and the parser silently
+        // drops them.
+        val isNative =
+            asset.type == SOLANA_NATIVE_ASSET_TYPE || assetType == SOLANA_NATIVE_ASSET_TYPE
         val mint = if (isNative) WRAPPED_SOL_MINT else asset.address
         if (mint.isNullOrEmpty()) return null
 
@@ -251,6 +260,9 @@ internal object BlockaidSimulationParser {
             decimals = decimals,
         )
     }
+
+    private fun BlockaidSolanaSimulationJson.AccountAssetDiff.isNativeSol(): Boolean =
+        asset.type == SOLANA_NATIVE_ASSET_TYPE || assetType == SOLANA_NATIVE_ASSET_TYPE
 
     private fun truncatedMint(mint: String): String {
         if (mint.length <= 8) return mint

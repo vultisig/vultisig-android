@@ -289,6 +289,39 @@ internal class BlockaidSimulationParserTest {
     }
 
     @Test
+    fun `solana native SOL with assetType-only marker still resolves to wrapped sol`() {
+        // Regression: Blockaid sometimes flags native SOL via the sibling `asset_type` field on
+        // the diff while leaving `asset.type` blank. Without the parser checking both, the diff
+        // collapses to a null mint and the whole transfer is silently dropped.
+        val response =
+            solanaResponse(
+                """{
+                    "result": {
+                      "simulation": {
+                        "account_summary": {
+                          "account_assets_diff": [
+                            {
+                              "asset": { "decimals": 9, "address": null },
+                              "asset_type": "SOL",
+                              "out": { "raw_value": 1000000000 }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                """
+                    .trimIndent()
+            )
+
+        val transfer =
+            BlockaidSimulationParser.parseSolana(response) as BlockaidSimulationInfo.Transfer
+
+        assertEquals("So11111111111111111111111111111111111111112", transfer.fromCoin.address)
+        assertEquals("SOL", transfer.fromCoin.ticker)
+    }
+
+    @Test
     fun `solana empty simulation returns null`() {
         val response = solanaResponse("""{ "result": { "simulation": null } }""")
 

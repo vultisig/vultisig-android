@@ -4,10 +4,12 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -156,15 +158,21 @@ fun SecurityScannerBottomSheetContent(
             // legible. Bumped to caption (12sp) on text/tertiary so users can
             // discover the override path without losing the visual hierarchy
             // that points them at "Go back" first.
-            Text(
-                text = stringResource(R.string.security_scanner_continue_anyway),
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.supplementary.caption,
-                // Padding BEFORE clickable so the 8dp top/bottom area is part of the touch
-                // target. With the order reversed the click region is limited to the text
-                // glyphs only, shrinking the tap zone well below the 48dp a11y guideline.
-                modifier = Modifier.padding(vertical = 8.dp).clickable { onContinueAnyway() },
-            )
+            // Wrap the override text in a 48dp-tall clickable box. Caption-sized text alone has
+            // ~36dp height with our padding, well below the 48dp accessibility minimum, and an
+            // override on a "high risk" sheet is exactly the surface that needs a generous tap
+            // zone — not a needle-thin one.
+            Box(
+                modifier =
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { onContinueAnyway() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.security_scanner_continue_anyway),
+                    color = Theme.v2.colors.text.tertiary,
+                    style = Theme.brockmann.supplementary.caption,
+                )
+            }
         }
     }
 }
