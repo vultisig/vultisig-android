@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
 import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
-import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -41,20 +40,26 @@ import io.mockk.unmockkStatic
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 
-/** Unit tests for [VerifyTransactionViewModel]. */
+/**
+ * Unit tests for [VerifyTransactionViewModel].
+ *
+ * The VM takes an injected `@IoDispatcher CoroutineDispatcher` (mirroring
+ * `CircleDeFiPositionsViewModel`); we wire `testDispatcher` into it so the production
+ * `withContext(ioDispatcher)` hops in `loadTransaction()` and `scanTransaction()` run on the same
+ * scheduler as the test body and `advanceUntilIdle()` can drain them. Without this injection the
+ * real `Dispatchers.IO` bounce-back races the test scheduler and shows up on CI as
+ * `kotlinx.coroutines.test.UncaughtExceptionsBeforeTest`.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Timeout(value = 30, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 internal class VerifyTransactionViewModelTest {
@@ -91,11 +96,15 @@ internal class VerifyTransactionViewModelTest {
         // to a generic Object that fails the implicit cast at the VM call site.
         coEvery { isVaultHasFastSignById(any()) } returns false
         coEvery { mapTransactionToUiModel(any()) } returns TransactionDetailsUiModel()
-        // Default loadTransaction() onto the happy path. Without a stub the relaxed mock returns
-        // null, the safeLaunch body throws, and onError suspends through Navigator.back() on a
-        // relaxed mock — that suspension races the test body on CI and surfaces as
-        // UncaughtExceptionsBeforeTest. Per-test stubs override this (last-wins in MockK).
-        coEvery { transactionRepository.getTransaction(any()) } returns mockk(relaxed = true)
+        // Default loadTransaction() onto the happy path with a Transaction whose token.chain is a
+        // real enum value. Tests that need a specific Transaction shape override this stub
+        // (last-wins in MockK).
+        val defaultTx =
+            mockk<Transaction>(relaxed = true).apply {
+                every { token } returns
+                    mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.Ethereum }
+            }
+        coEvery { transactionRepository.getTransaction(any()) } returns defaultTx
     }
 
     /** Cleans up mocks and resets test dispatcher after each test. */
@@ -117,6 +126,7 @@ internal class VerifyTransactionViewModelTest {
             securityScannerService = securityScannerService,
             vaultRepository = vaultRepository,
             addressBookRepository = addressBookRepository,
+            ioDispatcher = testDispatcher,
         )
 
     /** Verifies checkConsentAddress sets consentAddress true. */
@@ -217,15 +227,6 @@ internal class VerifyTransactionViewModelTest {
             val vm = createViewModel()
             advanceUntilIdle()
 
-            // loadTransaction() and scanTransaction() each hop through Dispatchers.IO,
-            // which runTest's virtual time cannot advance. Yield real time on a real
-            // dispatcher until the scan status finalizes before driving joinKeySign().
-            withContext(Dispatchers.Default) {
-                withTimeout(2_000) {
-                    vm.uiState.first { it.txScanStatus is TransactionScanStatus.Scanned }
-                }
-            }
-
             vm.checkConsentAddress(true)
             vm.checkConsentAmount(true)
             vm.joinKeySign()
@@ -268,12 +269,9 @@ internal class VerifyTransactionViewModelTest {
 
     /**
      * Verifies the mapper's output is propagated into uiState.transaction across the user-visible
-     * fields. We feed the repository a non-null Transaction so loadTransaction reaches the mapper,
-     * and assert that all relevant TransactionDetailsUiModel fields (addresses, fees, memo, token)
-     * survive the loadTransaction copy that only overrides the *VaultName / dstAddressBookTitle
-     * fields. Note: loadTransaction performs a withContext(Dispatchers.IO) hop for
-     * vaultRepository.getAll(), so we suspend on uiState.first { ... } to await the post-hop
-     * emission instead of relying on advanceUntilIdle (which only advances the test scheduler).
+     * fields. With `ioDispatcher = testDispatcher`, `loadTransaction()`'s
+     * `withContext(ioDispatcher)` hop runs on the same scheduler as the test body, so
+     * `advanceUntilIdle()` is enough to drive it to completion.
      */
     @Test
     fun `transaction fields reflect mapper output (srcAddress, dstAddress, fee, memo, token)`() =
@@ -293,9 +291,9 @@ internal class VerifyTransactionViewModelTest {
             coEvery { mapTransactionToUiModel(tx) } returns expected
 
             val vm = createViewModel()
-            val state = vm.uiState.first { it.transaction.srcAddress.isNotEmpty() }
+            advanceUntilIdle()
 
-            val actual = state.transaction
+            val actual = vm.uiState.value.transaction
             actual.srcAddress shouldBe "0xSRC"
             actual.dstAddress shouldBe "0xDST"
             actual.networkFeeFiatValue shouldBe "$0.42"

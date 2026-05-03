@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.AddressBookRepository
@@ -31,7 +32,7 @@ import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -103,6 +104,7 @@ constructor(
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
     private val addressBookRepository: AddressBookRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -244,7 +246,7 @@ constructor(
             transaction = tx
             val transactionUiModel = mapTransactionToUiModel(tx)
 
-            val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+            val allVaults = withContext(ioDispatcher) { vaultRepository.getAll() }
             val chain = tx.token.chain
             val srcVaultName = allVaults.find { it.id == vaultId }?.name
             val normalizedDstAddress = normalizeAddressForLookup(tx.dstAddress)
@@ -295,7 +297,7 @@ constructor(
                 securityScannerService.createSecurityScannerTransaction(tx)
 
             val result =
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     securityScannerService.scanTransaction(securityScannerTransaction)
                 }
 
