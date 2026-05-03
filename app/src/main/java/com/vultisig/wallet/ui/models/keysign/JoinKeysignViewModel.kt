@@ -961,7 +961,11 @@ constructor(
                             }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                         } else {
-                            TokenValue(value = fees.amount, token = nativeCoin)
+                            computeJoinKeysignSendGasFee(
+                                blockChainSpecific = payload.blockChainSpecific,
+                                nativeCoin = nativeCoin,
+                                fallbackFeeAmount = fees.amount,
+                            )
                         }
 
                     val totalGasAndFee =
@@ -1483,3 +1487,29 @@ internal fun prettifyEvmFunctionName(signature: String): String? {
         it.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) }
     }
 }
+
+/**
+ * Computes the network fee for a non-UTXO send on the Join Keysign path.
+ *
+ * For EVM chains the fee is derived directly from the [BlockChainSpecific.Ethereum] payload
+ * (`maxFeePerGasWei × gasLimit`), matching the initiator path and the swap path. This ensures
+ * contract-call QR codes (where `gasLimit` > 21,000) display the correct fee instead of a default
+ * transfer-gas fallback.
+ *
+ * @param blockChainSpecific decoded chain-specific data from the keysign payload
+ * @param nativeCoin native coin of the chain, used as the fee denomination
+ * @param fallbackFeeAmount fee amount from the fee service, used for all non-EVM chains
+ */
+internal fun computeJoinKeysignSendGasFee(
+    blockChainSpecific: BlockChainSpecific,
+    nativeCoin: Coin,
+    fallbackFeeAmount: BigInteger,
+): TokenValue =
+    if (blockChainSpecific is BlockChainSpecific.Ethereum) {
+        TokenValue(
+            value = blockChainSpecific.maxFeePerGasWei * blockChainSpecific.gasLimit,
+            token = nativeCoin,
+        )
+    } else {
+        TokenValue(value = fallbackFeeAmount, token = nativeCoin)
+    }
