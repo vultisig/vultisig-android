@@ -7,11 +7,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -412,37 +413,35 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
     ) {
+        // Whole row is the tap target so the WCAG 2.5.5 minimum (48dp) is met without enlarging
+        // the visual chevron, and TalkBack announces "Transaction details, button, expanded /
+        // collapsed" instead of two separate nodes.
+        val expandLabel = stringResource(R.string.tx_done_transaction_details)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    role = Role.Button,
+                    onClickLabel = expandLabel,
+                ) {
+                    isExpanded = !isExpanded
+                },
         ) {
             Text(
-                text = stringResource(R.string.tx_done_transaction_details),
+                text = expandLabel,
                 style = Theme.brockmann.supplementary.footnote,
                 color = Theme.v2.colors.text.tertiary,
             )
 
-            // Lightweight 16dp clickable container so the chevron renders at its intended size.
-            // [androidx.compose.material3.IconButton] enforces a 40dp minimum touch target which
-            // fights the explicit size modifier and blows the row out of the design.
-            Box(
-                modifier =
-                    Modifier.size(16.dp).clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                    ) {
-                        isExpanded = !isExpanded
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                UiIcon(
-                    drawableResId = R.drawable.chevron,
-                    tint = Theme.v2.colors.text.tertiary,
-                    size = 8.dp,
-                    modifier = Modifier.graphicsLayer(rotationZ = if (isExpanded) 180f else 0f),
-                )
-            }
+            UiIcon(
+                drawableResId = R.drawable.chevron,
+                tint = Theme.v2.colors.text.tertiary,
+                size = 8.dp,
+                modifier = Modifier.graphicsLayer(rotationZ = if (isExpanded) 180f else 0f),
+            )
         }
 
         AnimatedVisibility(visible = isExpanded) {

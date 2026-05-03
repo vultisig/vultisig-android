@@ -830,7 +830,7 @@ constructor(
                         is BlockChainSpecific.MayaChain -> specific.isDeposit
                         is BlockChainSpecific.THORChain -> specific.isDeposit
                         else -> {
-                            val memoUpper = payload.memo?.uppercase()
+                            val memoUpper = payload.memo?.uppercase(Locale.ROOT)
                             payload.coin.isSecuredAssetEligible() &&
                                 (memoUpper?.contains("SECURE+:") == true)
                         }
@@ -1432,36 +1432,31 @@ constructor(
 private val EVM_FUNCTION_NAME_BOUNDARY = Regex("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
 
 /**
- * Bidi-override and zero-width codepoints that 4byte registry submissions must not be allowed to
- * smuggle into the signing UI. Stripped before the function name is rendered as a hero title.
+ * Codepoints that 4byte registry submissions must not smuggle into the signing UI: ISO controls,
+ * bidi/zero-width formatting, variation selectors, interlinear annotations, and tag codepoints.
  *
  * 4byte.directory is open-submit and orders entries by `created_at` — an attacker can register a
  * crafted text for an unclaimed selector. Without this filter, an entry containing U+202E
- * (RIGHT-TO-LEFT OVERRIDE) could surface as a flipped, misleading hero title in the signing UI.
+ * (RIGHT-TO-LEFT OVERRIDE) or a tag-codepoint payload could surface as a misleading hero title.
  *
- * Codepoints are spelled as `\u` escapes deliberately: the literal characters are invisible to
- * editors, copy-paste-fragile, and Lint flags BOM-class characters embedded in source files.
+ * MUST stay aligned with `BlockaidSimulationParser.isUnsafeCodePoint` so the same hero sanitisation
+ * applies whether the title comes from the 4byte fallback or a Blockaid response.
  */
-private val UNSAFE_DISPLAY_CODEPOINTS =
-    setOf(
-        '\u202A', // LEFT-TO-RIGHT EMBEDDING
-        '\u202B', // RIGHT-TO-LEFT EMBEDDING
-        '\u202C', // POP DIRECTIONAL FORMATTING
-        '\u202D', // LEFT-TO-RIGHT OVERRIDE
-        '\u202E', // RIGHT-TO-LEFT OVERRIDE
-        '\u2066', // LEFT-TO-RIGHT ISOLATE
-        '\u2067', // RIGHT-TO-LEFT ISOLATE
-        '\u2068', // FIRST STRONG ISOLATE
-        '\u2069', // POP DIRECTIONAL ISOLATE
-        '\u200E', // LEFT-TO-RIGHT MARK
-        '\u200F', // RIGHT-TO-LEFT MARK
-        '\u061C', // ARABIC LETTER MARK
-        '\u200B', // ZERO WIDTH SPACE
-        '\u200C', // ZERO WIDTH NON-JOINER
-        '\u200D', // ZERO WIDTH JOINER
-        '\u2060', // WORD JOINER
-        '\uFEFF', // ZERO WIDTH NO-BREAK SPACE / BOM
-    )
+private fun isUnsafeDisplayCodePoint(cp: Int): Boolean {
+    if (Character.isISOControl(cp)) return true
+    return cp == 0x200B || // ZERO WIDTH SPACE
+        cp == 0x200C || // ZERO WIDTH NON-JOINER
+        cp == 0x200D || // ZERO WIDTH JOINER
+        cp == 0x2060 || // WORD JOINER
+        cp == 0xFEFF || // ZERO WIDTH NO-BREAK SPACE / BOM
+        cp in 0x200E..0x200F || // LRM / RLM
+        cp in 0x202A..0x202E || // LRE / RLE / PDF / LRO / RLO
+        cp in 0x2066..0x2069 || // LRI / RLI / FSI / PDI
+        cp == 0x061C || // ARABIC LETTER MARK
+        cp in 0xFE00..0xFE0F || // VARIATION SELECTOR-1..16
+        cp in 0xFFF9..0xFFFB || // INTERLINEAR ANNOTATION ANCHOR/SEPARATOR/TERMINATOR
+        cp in 0xE0000..0xE007F // TAG codepoints (incl. LANGUAGE TAG)
+}
 
 /**
  * Extract a display-friendly function name from an ABI signature.
@@ -1471,12 +1466,21 @@ private val UNSAFE_DISPLAY_CODEPOINTS =
  * Digit-prefixed names like `ERC20transferFrom` are left as-is — splitting on digits produces
  * uglier output than it fixes for the long tail of selectors. Returns null when the signature has
  * no `(` or is empty before it.
+ *
+ * Iterates by codepoint, not [Char], so non-BMP unsafe codepoints (e.g. tag codepoints in plane 14)
+ * are stripped rather than ignored.
  */
 internal fun prettifyEvmFunctionName(signature: String): String? {
+    val before = signature.substringBefore('(', missingDelimiterValue = "")
     val rawName =
-        signature
-            .substringBefore('(', missingDelimiterValue = "")
-            .filterNot { it in UNSAFE_DISPLAY_CODEPOINTS }
+        buildString(before.length) {
+                var i = 0
+                while (i < before.length) {
+                    val cp = before.codePointAt(i)
+                    if (!isUnsafeDisplayCodePoint(cp)) appendCodePoint(cp)
+                    i += Character.charCount(cp)
+                }
+            }
             .trim()
     if (rawName.isEmpty()) return null
     return rawName.replace(EVM_FUNCTION_NAME_BOUNDARY, " ").split(' ').joinToString(" ") {

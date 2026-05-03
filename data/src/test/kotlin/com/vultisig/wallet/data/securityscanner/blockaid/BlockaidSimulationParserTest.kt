@@ -351,6 +351,29 @@ internal class BlockaidSimulationParserTest {
     }
 
     @Test
+    fun `parseRawAmount rejects signed and malformed inputs`() {
+        // Raw amounts on chain are unsigned. A negative or sign-prefixed input from a hostile
+        // Blockaid response would otherwise round-trip as |value| through `signum()` checks at
+        // the call site; reject up-front so the only path to a non-null result is a clean
+        // unsigned literal.
+        assertNull(BlockaidSimulationParser.parseRawAmount("-1"))
+        assertNull(BlockaidSimulationParser.parseRawAmount("+1"))
+        assertNull(BlockaidSimulationParser.parseRawAmount("-0xff"))
+        // `0x-1` slips past the leading-char guard (the `-` is at index 2, after the prefix is
+        // stripped). The final `signum() >= 0` check is what catches it. Locks in that the
+        // belt-and-braces guard is still load-bearing — deleting it would let this case through.
+        assertNull(BlockaidSimulationParser.parseRawAmount("0x-1"))
+        assertNull(BlockaidSimulationParser.parseRawAmount("-0"))
+        // Bare `0x` after stripping leaves an empty hex which BigInteger throws on.
+        assertNull(BlockaidSimulationParser.parseRawAmount("0x"))
+        // Whitespace is trimmed first, so trimming reveals the leading sign.
+        assertNull(BlockaidSimulationParser.parseRawAmount("  -1  "))
+        // No scientific notation, no underscores, no full-width / unicode digits.
+        assertNull(BlockaidSimulationParser.parseRawAmount("1e10"))
+        assertNull(BlockaidSimulationParser.parseRawAmount("1_000"))
+    }
+
+    @Test
     fun `evm transfer with non-https logo url drops the logo to empty`() {
         // Logo URLs come from untrusted Blockaid responses and flow into
         // Coil. Anything other than https:// (e.g. http://, file://, ipfs://)
@@ -555,6 +578,60 @@ internal class BlockaidSimulationParserTest {
                 as BlockaidSimulationInfo.Transfer
 
         assertEquals("USDC", transfer.fromCoin.ticker)
+    }
+
+    @Test
+    fun `evm transfer with word joiner U+2060 in symbol strips it`() {
+        // U+2060 (WORD JOINER) is a zero-width line-break inhibitor; same display-attack profile
+        // as the bidi/joiner family and must be stripped from tickers and function names.
+        val response = evmResponse(evmTransferJson(symbol = "USD⁠C"))
+
+        val transfer =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Transfer
+
+        assertEquals("USDC", transfer.fromCoin.ticker)
+    }
+
+    @Test
+    fun `evm transfer with variation selector in symbol strips it`() {
+        // U+FE0F (VS-16) toggles a base codepoint to its emoji presentation. A hostile ticker
+        // could use it to morph an ASCII letter into a different glyph; the parser must drop
+        // these so the ticker renders deterministically.
+        val response = evmResponse(evmTransferJson(symbol = "USD️C"))
+
+        val transfer =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Transfer
+
+        assertEquals("USDC", transfer.fromCoin.ticker)
+    }
+
+    @Test
+    fun `evm transfer with tag codepoint in symbol strips it`() {
+        // Plane-14 tag codepoints (U+E0000..E007F) render as nothing on most platforms but ride
+        // along inside the string. Iterating by codepoint is required — the surrogate-pair
+        // representation would slip past a Char-based filter.
+        val tagSpace = String(Character.toChars(0xE0020)) // TAG SPACE
+        val response = evmResponse(evmTransferJson(symbol = "USD${tagSpace}C"))
+
+        val transfer =
+            BlockaidSimulationParser.parseEvm(response, Chain.Ethereum)
+                as BlockaidSimulationInfo.Transfer
+
+        assertEquals("USDC", transfer.fromCoin.ticker)
+    }
+
+    @Test
+    fun `evm transfer with bidi padding longer than scan cap drops the ticker`() {
+        // 200 zero-width spaces exhaust `MAX_TICKER_SCANNED_CODEPOINTS = 128` before any
+        // legitimate codepoint is reached; the result is null, which the parser propagates as
+        // "skip this transfer" rather than rendering an empty ticker.
+        val response = evmResponse(evmTransferJson(symbol = "​".repeat(200)))
+
+        // No legitimate codepoints survive the scan-cap, so the parser drops the transfer rather
+        // than yielding a bogus zero-width ticker.
+        assertNull(BlockaidSimulationParser.parseEvm(response, Chain.Ethereum))
     }
 
     @Test

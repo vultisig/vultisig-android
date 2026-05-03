@@ -86,6 +86,13 @@ internal data class VerifyTransactionUiModel(
         get() = consentAddress && consentAmount
 }
 
+/**
+ * Annotated [Immutable] so the Compose compiler treats every variant as stable for skipping. The
+ * inner [SecurityScannerResult] holds a `List<SecurityWarning>` which Compose infers as unstable,
+ * but in practice the list is never mutated post-construction; the annotation closes that gap so
+ * `VerifyTransactionUiModel`'s own `@Immutable` declaration is not silently downgraded.
+ */
+@Immutable
 sealed class TransactionScanStatus {
     data object NotStarted : TransactionScanStatus()
 

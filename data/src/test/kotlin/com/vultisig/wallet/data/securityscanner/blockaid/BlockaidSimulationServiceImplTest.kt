@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalCoroutinesApi::class)
+
 package com.vultisig.wallet.data.securityscanner.blockaid
 
 import com.vultisig.wallet.data.models.Chain
@@ -6,7 +8,7 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
-import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 internal class BlockaidSimulationServiceImplTest {
 
@@ -67,7 +70,6 @@ internal class BlockaidSimulationServiceImplTest {
         assertEquals(2, rpc.evmCalls, "failure should not poison the cache")
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `concurrent calls coalesce into a single RPC`() = runTest {
         val rpc = FakeRpc(evmResponse = singleTransferEvmResponse(), evmDelayMillis = 100)
@@ -75,10 +77,14 @@ internal class BlockaidSimulationServiceImplTest {
         val payload = evmPayload(memo = "0xabc")
 
         val results = coroutineScope { (1..8).map { async { service.scan(payload) } }.awaitAll() }
-        advanceUntilIdle()
 
         assertEquals(8, results.size)
-        results.forEach { assertNotNull(it.simulation) }
+        results.forEach {
+            // assertSame against the leader's simulation: every follower MUST observe the
+            // identical instance the leader produced, not just any non-null value. A regression
+            // where each call resolved to a fresh empty result would still pass assertNotNull.
+            assertSame(results[0].simulation, it.simulation)
+        }
         assertEquals(1, rpc.evmCalls, "inflight coalescing should fire one RPC")
     }
 
@@ -119,7 +125,6 @@ internal class BlockaidSimulationServiceImplTest {
         assertEquals(2, rpc.evmCalls)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `follower cancellation propagates without affecting leader`() = runTest {
         // The follower's scan() call should let CancellationException
@@ -147,7 +152,6 @@ internal class BlockaidSimulationServiceImplTest {
         assertTrue(followerA.isCancelled)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `invalidateAll while leader is in-flight returns EMPTY to leader and follower alike`() =
         runTest {
@@ -173,25 +177,48 @@ internal class BlockaidSimulationServiceImplTest {
             assertNull(leader.await().simulation)
         }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `cancellation during scan does not poison the cache for retries`() = runTest {
-        // After the leader is cancelled mid-flight, inflight must be cleared
-        // so the next caller gets a fresh dispatch. This is the contract that
-        // matters for users: a transient cancellation (e.g. ViewModel scope
-        // tearing down between screens) shouldn't leave the cache in a state
-        // where the next screen sees EMPTY forever.
+        // After the leader is cancelled mid-flight, inflight must be cleared so the next caller
+        // gets a fresh dispatch — a transient cancellation (e.g. ViewModel scope tearing down
+        // between screens) shouldn't leave the cache in a state where the next screen sees
+        // EMPTY forever.
         val rpc = FakeRpc(evmResponse = singleTransferEvmResponse(), evmDelayMillis = 50)
         val service = BlockaidSimulationServiceImpl(rpc)
         val payload = evmPayload(memo = "0xabc")
 
-        val leader = launch { runCatching { service.scan(payload) } }
+        val leader = launch {
+            // Catch only CancellationException so that a non-cancellation throw from `scan`
+            // would still fail the test. `runCatching` would have swallowed CE and any other
+            // exception, masking regressions.
+            try {
+                service.scan(payload)
+            } catch (_: CancellationException) {}
+        }
         runCurrent()
         leader.cancel()
         leader.join()
 
-        // After the leader's dispatch unwinds, the next scan must succeed
-        // (cache is not poisoned with a stale EMPTY).
+        val retry = service.scan(payload)
+        assertNotNull(retry.simulation)
+    }
+
+    @Test
+    fun `cancelled scan propagates CancellationException rather than returning EMPTY`() = runTest {
+        // The contract `BlockaidSimulationServiceImpl` MUST honour: when the caller's coroutine
+        // is cancelled, scan rethrows CancellationException rather than swallowing it into an
+        // EMPTY result. Otherwise structured concurrency breaks: a parent that expects to see
+        // its child cancellation would instead see a normal completion.
+        val rpc = FakeRpc(evmResponse = singleTransferEvmResponse(), evmDelayMillis = 50)
+        val service = BlockaidSimulationServiceImpl(rpc)
+        val payload = evmPayload(memo = "0xabc")
+
+        val leader = async { service.scan(payload) }
+        runCurrent()
+        leader.cancel()
+
+        assertThrows<CancellationException> { leader.await() }
+        // The cancelled leader must not poison the cache.
         val retry = service.scan(payload)
         assertNotNull(retry.simulation)
     }
@@ -265,14 +292,13 @@ internal class BlockaidSimulationServiceImplTest {
         var solanaThrows: Throwable? = null,
         var evmDelayMillis: Long = 0,
     ) : BlockaidRpcClientContract {
-        private val evmCallCount = AtomicInteger(0)
-        private val solanaCallCount = AtomicInteger(0)
+        // Plain `Int` is sufficient — `runTest` runs on a single-threaded TestCoroutineScheduler,
+        // so concurrent increments cannot race here.
+        var evmCalls: Int = 0
+            private set
 
-        val evmCalls: Int
-            get() = evmCallCount.get()
-
-        val solanaCalls: Int
-            get() = solanaCallCount.get()
+        var solanaCalls: Int = 0
+            private set
 
         override suspend fun simulateEvmTransaction(
             chain: Chain,
@@ -282,7 +308,7 @@ internal class BlockaidSimulationServiceImplTest {
             data: String,
         ): BlockaidEvmSimulationResponseJson {
             if (evmDelayMillis > 0) delay(evmDelayMillis)
-            evmCallCount.incrementAndGet()
+            evmCalls++
             evmThrows?.let { throw it }
             return evmResponse ?: error("evm response not configured")
         }
@@ -291,7 +317,7 @@ internal class BlockaidSimulationServiceImplTest {
             address: String,
             rawTransactionsBase58: List<String>,
         ): BlockaidSolanaSimulationResponseJson {
-            solanaCallCount.incrementAndGet()
+            solanaCalls++
             solanaThrows?.let { throw it }
             return solanaResponse ?: error("solana response not configured")
         }

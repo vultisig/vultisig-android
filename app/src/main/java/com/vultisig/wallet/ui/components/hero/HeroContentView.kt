@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -84,15 +85,14 @@ internal fun TransactionHero(
  * Renders a centered title-only hero with an optional explainer caption.
  *
  * Two callers:
- * - [HeroContent.Title] passes a bare function name and no caption — used as the loading-tick
- *   fallback on done screens before simulation propagates.
+ * - [HeroContent.Title] passes a bare function name and no caption — the post-signing fallback
+ *   shown on done screens. The signature is already on chain, so no warning glyph is rendered.
  * - [HeroContent.Unverified] passes the localized "Unverified function" + "Review the details below
  *   before signing" pair — emitted by the use case when Blockaid simulation has loaded but returned
- *   no balance change.
+ *   no balance change. The warning glyph signals caution before the user signs.
  *
- * Hierarchy: warning glyph → title at `title2` weight → explainer at `body.s.medium`. The glyph is
- * always rendered because both states represent a missing balance change and should visually flag
- * caution.
+ * The presence of [caption] determines whether the warning glyph is shown: only the pre-signing
+ * Unverified state passes a non-null caption.
  */
 @Composable
 private fun TitleOnlyHero(text: String, caption: String?) {
@@ -101,14 +101,14 @@ private fun TitleOnlyHero(text: String, caption: String?) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        UiIcon(
-            drawableResId = R.drawable.ic_triangle_alert,
-            size = 24.dp,
-            tint = Theme.v2.colors.alerts.warning,
-            // Description duplicates the textual title that follows; TalkBack reads both so the
-            // user understands the warning state without relying on the glyph alone.
-            contentDescription = text,
-        )
+        if (caption != null) {
+            UiIcon(
+                drawableResId = R.drawable.ic_triangle_alert,
+                size = 24.dp,
+                tint = Theme.v2.colors.alerts.warning,
+                contentDescription = null,
+            )
+        }
         Text(
             text = text,
             style = Theme.brockmann.headings.title2,
@@ -116,9 +116,9 @@ private fun TitleOnlyHero(text: String, caption: String?) {
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
-        caption?.let {
+        if (caption != null) {
             Text(
-                text = it,
+                text = caption,
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.tertiary,
                 textAlign = TextAlign.Center,
@@ -207,12 +207,14 @@ private fun HeroCoinRow(coin: HeroCoinAmount, iconSize: Dp) {
                 )
             }
         }
-        val text = buildAnnotatedString {
-            append(coin.amount)
-            withStyle(SpanStyle(color = Theme.v2.colors.text.tertiary)) {
-                append(" ${coin.ticker}")
+        val tertiaryColor = Theme.v2.colors.text.tertiary
+        val text =
+            remember(coin.amount, coin.ticker, tertiaryColor) {
+                buildAnnotatedString {
+                    append(coin.amount)
+                    withStyle(SpanStyle(color = tertiaryColor)) { append(" ${coin.ticker}") }
+                }
             }
-        }
         Text(
             text = text,
             style = Theme.brockmann.headings.title2,

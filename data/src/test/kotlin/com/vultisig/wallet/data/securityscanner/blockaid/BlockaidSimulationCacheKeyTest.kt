@@ -5,7 +5,9 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import io.mockk.every
 import io.mockk.mockk
+import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -33,7 +35,7 @@ internal class BlockaidSimulationCacheKeyTest {
         // Two vaults running the same dApp call against the same router must not share a cache
         // entry. The cache key includes the signer so that on a multi-vault device, switching
         // vaults does not surface a stale verdict from the previous one.
-        assertTrue(BlockaidSimulationCacheKey.from(a) != BlockaidSimulationCacheKey.from(b))
+        assertNotEquals(BlockaidSimulationCacheKey.from(a), BlockaidSimulationCacheKey.from(b))
     }
 
     @Test
@@ -44,7 +46,18 @@ internal class BlockaidSimulationCacheKeyTest {
         // Same calldata against different routers must NOT collide — the
         // simulation result depends on the target contract, so caching them
         // under one key would surface stale data on the second call.
-        assertTrue(BlockaidSimulationCacheKey.from(a) != BlockaidSimulationCacheKey.from(b))
+        assertNotEquals(BlockaidSimulationCacheKey.from(a), BlockaidSimulationCacheKey.from(b))
+    }
+
+    @Test
+    fun `evm key differs when native value differs but calldata matches`() {
+        // payable contract calls with identical calldata can return different Blockaid verdicts
+        // depending on msg.value. Without value in the cache key, the second call would surface
+        // a stale verdict from the first.
+        val a = evmPayload(memo = "0xfeed", toAddress = "0xRouter", value = BigInteger.ZERO)
+        val b = evmPayload(memo = "0xfeed", toAddress = "0xRouter", value = BigInteger.ONE)
+
+        assertNotEquals(BlockaidSimulationCacheKey.from(a), BlockaidSimulationCacheKey.from(b))
     }
 
     @Test
@@ -80,7 +93,18 @@ internal class BlockaidSimulationCacheKeyTest {
         val a = solanaPayload(rawTransactions = listOf("AAA==", "BBB=="))
         val b = solanaPayload(rawTransactions = listOf("AAA==", "CCC=="))
 
-        assertTrue(BlockaidSimulationCacheKey.from(a) != BlockaidSimulationCacheKey.from(b))
+        assertNotEquals(BlockaidSimulationCacheKey.from(a), BlockaidSimulationCacheKey.from(b))
+    }
+
+    @Test
+    fun `solana keys differ when raw transactions are reordered`() {
+        // Solana batches are order-sensitive; reordering transactions produces a different
+        // logical message, so it MUST produce a different cache key. A future regression that
+        // sorted or re-ordered the digest input would fail this test.
+        val a = solanaPayload(rawTransactions = listOf("AAA==", "BBB=="))
+        val b = solanaPayload(rawTransactions = listOf("BBB==", "AAA=="))
+
+        assertNotEquals(BlockaidSimulationCacheKey.from(a), BlockaidSimulationCacheKey.from(b))
     }
 
     @Test
@@ -88,7 +112,7 @@ internal class BlockaidSimulationCacheKeyTest {
         val a = solanaPayload(rawTransactions = listOf("AAA=="), signer = "VaultA")
         val b = solanaPayload(rawTransactions = listOf("AAA=="), signer = "VaultB")
 
-        assertTrue(BlockaidSimulationCacheKey.from(a) != BlockaidSimulationCacheKey.from(b))
+        assertNotEquals(BlockaidSimulationCacheKey.from(a), BlockaidSimulationCacheKey.from(b))
     }
 
     @Test
@@ -154,6 +178,7 @@ internal class BlockaidSimulationCacheKeyTest {
         memo: String?,
         toAddress: String = "0xto",
         from: String = "0xfrom",
+        value: BigInteger = BigInteger.ZERO,
     ): KeysignPayload {
         val coin =
             mockk<Coin>(relaxed = true) {
@@ -164,6 +189,7 @@ internal class BlockaidSimulationCacheKeyTest {
             every { this@mockk.coin } returns coin
             every { this@mockk.memo } returns memo
             every { this@mockk.toAddress } returns toAddress
+            every { toAmount } returns value
             every { signSolana } returns null
         }
     }

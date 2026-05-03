@@ -404,7 +404,15 @@ internal object BlockaidSimulationParser {
     private fun isUnsafeCodePoint(cp: Int): Boolean {
         // ISO control range covers 0x00..0x1F and 0x7F..0x9F.
         if (Character.isISOControl(cp)) return true
-        // Zero-width and bidirectional formatting codepoints that change layout invisibly.
+        // Zero-width and bidirectional formatting codepoints that change layout invisibly,
+        // plus three ranges that can swap or hide glyphs without showing in the kept length:
+        //   - U+FE00..FE0F variation selectors swap a base glyph for an alt presentation
+        //     (e.g. emoji vs text style); a hostile ticker could prefix a letter to render
+        //     as a different visual.
+        //   - U+E0000..E007F tag codepoints render as nothing on most platforms but stay
+        //     in the string, allowing invisible content to ride along.
+        //   - U+FFF9..FFFB interlinear annotation anchors/separators/terminators alter
+        //     rendering in some text engines.
         return cp == 0x200B || // ZERO WIDTH SPACE
             cp == 0x200C || // ZERO WIDTH NON-JOINER
             cp == 0x200D || // ZERO WIDTH JOINER
@@ -413,7 +421,10 @@ internal object BlockaidSimulationParser {
             cp in 0x200E..0x200F || // LRM / RLM
             cp in 0x202A..0x202E || // LRE / RLE / PDF / LRO / RLO
             cp in 0x2066..0x2069 || // LRI / RLI / FSI / PDI
-            cp == 0x061C // ARABIC LETTER MARK
+            cp == 0x061C || // ARABIC LETTER MARK
+            cp in 0xFE00..0xFE0F || // VARIATION SELECTOR-1..16
+            cp in 0xFFF9..0xFFFB || // INTERLINEAR ANNOTATION ANCHOR/SEPARATOR/TERMINATOR
+            cp in 0xE0000..0xE007F // TAG codepoints (incl. LANGUAGE TAG)
     }
 }
 
