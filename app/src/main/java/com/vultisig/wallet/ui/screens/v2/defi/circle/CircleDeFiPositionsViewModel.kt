@@ -87,11 +87,21 @@ constructor(
 
     val state: StateFlow<DefiUiModel> = _state.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    /** True while a user-initiated pull-to-refresh is in flight. */
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
     fun setData(vaultId: String) {
         this.vaultId = vaultId
         loadBalanceVisibility()
         loadAccountStatus()
         loadCirclePositions()
+    }
+
+    /** Triggers a user-initiated pull-to-refresh; resets [isRefreshing] when complete. */
+    fun refresh(vaultId: String) {
+        _isRefreshing.value = true
+        setData(vaultId)
     }
 
     private fun loadAccountStatus() {
@@ -181,6 +191,8 @@ constructor(
                         circleDefi = currentState.circleDefi.copy(isLoading = false),
                     )
                 }
+            } finally {
+                _isRefreshing.value = false
             }
         }
     }
