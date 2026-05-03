@@ -1,0 +1,159 @@
+package com.vultisig.wallet.data.networkutils
+
+import com.vultisig.wallet.data.utils.NetworkException
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
+import java.io.IOException
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.Test
+
+/** Pins the retry policy installed by [HttpClientConfigurator]. */
+class HttpClientConfiguratorTest {
+
+    private val configurator = HttpClientConfigurator(Json { ignoreUnknownKeys = true })
+    private val jsonHeaders =
+        headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+
+    private fun configuredClient(engine: MockEngine): HttpClient =
+        HttpClient(engine) { configurator.configure(this) }
+
+    /**
+     * Verifies a safe GET request is retried three times on IOException before throwing
+     * NetworkException.
+     */
+    @Test
+    fun `retryOnIOException forSafeMethod retriesThreeTimes`() = runTest {
+        var callCount = 0
+        configuredClient(
+                MockEngine {
+                    callCount++
+                    throw IOException("Connection failed")
+                }
+            )
+            .use { client ->
+                assertFailsWith<NetworkException> { client.get("http://localhost/test") }
+                // 1 original call + 3 retries
+                assertEquals(4, callCount)
+            }
+    }
+
+    /**
+     * Verifies a safe GET request is retried three times on HTTP 500, succeeding on the fourth
+     * call.
+     */
+    @Test
+    fun `retryOn500 forSafeMethod retriesThreeTimes`() = runTest {
+        var callCount = 0
+        configuredClient(
+                MockEngine {
+                    if (++callCount == 4) {
+                        respond("ok", HttpStatusCode.OK, jsonHeaders)
+                    } else {
+                        respond("error", HttpStatusCode.InternalServerError, jsonHeaders)
+                    }
+                }
+            )
+            .use { client ->
+                val response = client.get("http://localhost/test")
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(4, callCount)
+            }
+    }
+
+    /**
+     * Verifies a safe GET request is retried three times on HTTP 429, succeeding on the fourth
+     * call.
+     */
+    @Test
+    fun `retryOn429 forSafeMethod retriesThreeTimes`() = runTest {
+        var callCount = 0
+        configuredClient(
+                MockEngine {
+                    if (++callCount == 4) {
+                        respond("ok", HttpStatusCode.OK, jsonHeaders)
+                    } else {
+                        respond("rate limited", HttpStatusCode.TooManyRequests, jsonHeaders)
+                    }
+                }
+            )
+            .use { client ->
+                val response = client.get("http://localhost/test")
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(4, callCount)
+            }
+    }
+
+    /**
+     * Verifies a safe GET request is retried three times on HTTP 408, succeeding on the fourth
+     * call.
+     */
+    @Test
+    fun `retryOn408 forSafeMethod retriesThreeTimes`() = runTest {
+        var callCount = 0
+        configuredClient(
+                MockEngine {
+                    if (++callCount == 4) {
+                        respond("ok", HttpStatusCode.OK, jsonHeaders)
+                    } else {
+                        respond("timeout", HttpStatusCode.RequestTimeout, jsonHeaders)
+                    }
+                }
+            )
+            .use { client ->
+                val response = client.get("http://localhost/test")
+                assertEquals(HttpStatusCode.OK, response.status)
+                assertEquals(4, callCount)
+            }
+    }
+
+    /**
+     * Verifies an unsafe POST request is NOT retried on HTTP 500 and returns the error response
+     * immediately.
+     */
+    @Test
+    fun `retryOn500 forPostMethod doesNotRetry`() = runTest {
+        var callCount = 0
+        configuredClient(
+                MockEngine {
+                    callCount++
+                    respond("error", HttpStatusCode.InternalServerError, jsonHeaders)
+                }
+            )
+            .use { client ->
+                val response = client.post("http://localhost/test")
+                assertEquals(HttpStatusCode.InternalServerError, response.status)
+                assertEquals(1, callCount)
+            }
+    }
+
+    /**
+     * Pins the documented behavior that [retryOnException] applies to every HTTP method, including
+     * unsafe ones like POST. This is intentional — transport-level retries on IOException are safe
+     * because the request never made it onto the wire.
+     */
+    @Test
+    fun `retryOnIOException forPostMethod alsoRetriesThreeTimes`() = runTest {
+        var callCount = 0
+        configuredClient(
+                MockEngine {
+                    callCount++
+                    throw IOException("Connection failed")
+                }
+            )
+            .use { client ->
+                assertFailsWith<NetworkException> { client.post("http://localhost/test") }
+                // 1 original call + 3 retries — the IOException retry policy is method-agnostic.
+                assertEquals(4, callCount)
+            }
+    }
+}
