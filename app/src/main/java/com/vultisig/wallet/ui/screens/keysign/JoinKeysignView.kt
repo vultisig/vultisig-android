@@ -63,7 +63,8 @@ internal fun JoinKeysignView(navController: NavHostController) {
         onBack = viewModel::navigateToHome,
         isError = state is Error,
         fullScreen = isKeysignInProgress,
-        applyDefaultPaddings = state !is JoinKeysign && !isKeysignFinished,
+        applyDefaultPaddings =
+            !(state == JoinKeysign && verifyUiModel is VerifyUiModel.Swap) && !isKeysignFinished,
     ) {
         when (state) {
             DiscoveringSessionID,
