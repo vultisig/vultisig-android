@@ -162,6 +162,11 @@ constructor(
             )
         }
 
+    /**
+     * Fetches a signed Bitcoin transaction plan for UTXO chains (excluding Cardano) and returns a
+     * [GasCalculationResult] with the actual plan fee and its fiat estimate. Returns `null` for
+     * non-UTXO chains, Cardano, or when the plan cannot be retrieved.
+     */
     internal suspend fun computeUtxoPlanFeeResult(
         vaultId: String,
         srcToken: Coin,
