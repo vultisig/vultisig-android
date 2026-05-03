@@ -101,7 +101,10 @@ fun BaseDeFiPositionsScreenContent(
 
                 UiSpacer(16.dp)
 
-                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                Column(
+                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
                     tabContent()
                 }
             }
