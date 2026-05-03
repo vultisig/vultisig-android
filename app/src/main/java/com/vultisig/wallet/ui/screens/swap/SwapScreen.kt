@@ -393,7 +393,7 @@ internal fun SwapScreen(
                         }
                     }
 
-                    AnimatedVisibility(visible = error == null || state.isLoading) {
+                    AnimatedVisibility(visible = state.formError == null || state.isLoading) {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                             modifier = Modifier.padding(horizontal = 8.dp),
@@ -402,6 +402,10 @@ internal fun SwapScreen(
                             FormDetails2(
                                 title = stringResource(R.string.swap_screen_provider_title),
                                 value = state.provider.asString(),
+                                placeholder =
+                                    if (state.isLoading) {
+                                        { UiPlaceholderLoader(placeHolderModifier) }
+                                    } else null,
                             )
 
                             FormDetails2(
