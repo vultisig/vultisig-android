@@ -4,8 +4,8 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import io.kotest.matchers.shouldBe
 import java.math.BigInteger
-import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class JoinKeysignSendGasFeeTest {
@@ -51,13 +51,13 @@ internal class JoinKeysignSendGasFeeTest {
         val fallback = BigInteger.valueOf(21_000) * maxFeePerGasWei
 
         val result =
-            computeJoinKeysignSendGasFee(
+            computeJoinKeysignNetworkFee(
                 blockChainSpecific = specific,
                 nativeCoin = ethCoin,
                 fallbackFeeAmount = fallback,
             )
 
-        assertEquals(TokenValue(value = maxFeePerGasWei * gasLimit, token = ethCoin), result)
+        result shouldBe TokenValue(value = maxFeePerGasWei * gasLimit, token = ethCoin)
     }
 
     /** Plain ETH transfer: gasLimit = 21,000 in payload → fee must match that limit exactly. */
@@ -74,13 +74,13 @@ internal class JoinKeysignSendGasFeeTest {
             )
 
         val result =
-            computeJoinKeysignSendGasFee(
+            computeJoinKeysignNetworkFee(
                 blockChainSpecific = specific,
                 nativeCoin = ethCoin,
                 fallbackFeeAmount = BigInteger.ZERO,
             )
 
-        assertEquals(TokenValue(value = maxFeePerGasWei * gasLimit, token = ethCoin), result)
+        result shouldBe TokenValue(value = maxFeePerGasWei * gasLimit, token = ethCoin)
     }
 
     /** Non-EVM chain (Solana): fallback fee amount from the fee service must be passed through. */
@@ -95,12 +95,12 @@ internal class JoinKeysignSendGasFeeTest {
             )
 
         val result =
-            computeJoinKeysignSendGasFee(
+            computeJoinKeysignNetworkFee(
                 blockChainSpecific = specific,
                 nativeCoin = solCoin,
                 fallbackFeeAmount = fallback,
             )
 
-        assertEquals(TokenValue(value = fallback, token = solCoin), result)
+        result shouldBe TokenValue(value = fallback, token = solCoin)
     }
 }

@@ -891,7 +891,7 @@ constructor(
                                 .amount
                         }
                     val estimatedTokenFees =
-                        computeJoinKeysignSendGasFee(
+                        computeJoinKeysignNetworkFee(
                             blockChainSpecific = payload.blockChainSpecific,
                             nativeCoin = nativeCoin,
                             fallbackFeeAmount = fallbackFeeAmount,
@@ -971,7 +971,7 @@ constructor(
                                 withContext(Dispatchers.IO) {
                                     feeServiceComposite.calculateFees(blockchainTransaction)
                                 }
-                            computeJoinKeysignSendGasFee(
+                            computeJoinKeysignNetworkFee(
                                 blockChainSpecific = payload.blockChainSpecific,
                                 nativeCoin = nativeCoin,
                                 fallbackFeeAmount = fees.amount,
@@ -1498,16 +1498,18 @@ internal fun prettifyEvmFunctionName(signature: String): String? {
     }
 }
 
-internal fun computeJoinKeysignSendGasFee(
+internal fun computeJoinKeysignNetworkFee(
     blockChainSpecific: BlockChainSpecific,
     nativeCoin: Coin,
     fallbackFeeAmount: BigInteger,
 ): TokenValue =
-    if (blockChainSpecific is BlockChainSpecific.Ethereum) {
-        TokenValue(
-            value = blockChainSpecific.maxFeePerGasWei * blockChainSpecific.gasLimit,
-            token = nativeCoin,
-        )
-    } else {
-        TokenValue(value = fallbackFeeAmount, token = nativeCoin)
+    when (blockChainSpecific) {
+        is BlockChainSpecific.Ethereum ->
+            TokenValue(
+                value = blockChainSpecific.maxFeePerGasWei * blockChainSpecific.gasLimit,
+                token = nativeCoin,
+            )
+        is BlockChainSpecific.THORChain ->
+            TokenValue(value = blockChainSpecific.fee, token = nativeCoin)
+        else -> TokenValue(value = fallbackFeeAmount, token = nativeCoin)
     }
