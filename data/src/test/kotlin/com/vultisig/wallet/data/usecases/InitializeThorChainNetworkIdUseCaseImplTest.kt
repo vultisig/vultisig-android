@@ -85,6 +85,9 @@ internal class InitializeThorChainNetworkIdUseCaseImplTest {
 
         useCase()
 
+        coVerify(exactly = 1) { vaultRepository.getAll() }
+        coVerify(exactly = 1) { thorChainRepository.getCachedNetworkChainId() }
+        coVerify(exactly = 1) { thorChainRepository.fetchNetworkChainId() }
         assertEquals("thorchain-cached", ThorChainHelper.THORCHAIN_NETWORK_ID)
     }
 
