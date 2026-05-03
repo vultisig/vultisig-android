@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 
+/** Tab content listing staking positions with stake, unstake, withdraw, and transfer actions. */
 @Composable
 internal fun StakingTabContent(
     state: StakingTabUiModel,

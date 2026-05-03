@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.models.defi.LpPositionUiModel
 import com.vultisig.wallet.ui.models.defi.LpTabUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
+/** Tab content listing LP positions, each with add and remove liquidity actions. */
 @Composable
 internal fun LpTabContent(
     state: LpTabUiModel,

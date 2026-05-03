@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.theme.Theme
 
+/** Tab content showing bonded node positions with a summary header and active nodes list. */
 @Composable
 internal fun BondedTabContent(
     bondToNodeOnClick: () -> Unit,
