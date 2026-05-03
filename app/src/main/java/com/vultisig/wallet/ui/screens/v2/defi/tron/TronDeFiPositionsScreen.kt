@@ -205,18 +205,8 @@ private fun TronDeFiPositionsScreenContent(
                 ) {
                     when (state) {
                         TronDeFiUiState.Loading -> {
-                            item {
-                                ResourceTwoCardsRow(
-                                    resourceUsage =
-                                        ResourceUsage(
-                                            availableBandwidth = 0L,
-                                            totalBandwidth = 0L,
-                                            availableEnergy = 0L,
-                                            totalEnergy = 0L,
-                                        )
-                                )
-                            }
-                            item { NoPositionsContainer() }
+                            // Intentionally empty: avoids 0/0 resource values and premature
+                            // empty-state during load.
                         }
                         is TronDeFiUiState.Error -> {
                             item {
