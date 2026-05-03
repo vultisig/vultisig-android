@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.SigningLibType
@@ -66,10 +67,10 @@ import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
-import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.keygen.MediatorServiceDiscoveryListener
 import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
+import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
 import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
@@ -189,6 +190,7 @@ constructor(
     private val mapTransactionHistoryData: SendTransactionHistoryDataMapper,
     private val mapSwapTransactionToHistoryData: SwapTransactionToHistoryDataMapper,
     private val mapDepositTransactionHistoryData: DepositTransactionHistoryDataMapper,
+    private val mapDepositTransactionToUiModel: DepositTransactionToUiModelMapper,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val tokenRepository: TokenRepository,
@@ -888,27 +890,21 @@ constructor(
                             )
                         )
 
-                    val depositTransactionUiModel =
-                        DepositTransactionUiModel(
-                            token =
-                                ValuedToken(
-                                    token = payload.coin,
-                                    value = mapTokenValueToDecimalUiString(tokenValue),
-                                    fiatValue =
-                                        fiatValueToStringMapper(
-                                            convertTokenValueToFiat(
-                                                payload.coin,
-                                                tokenValue,
-                                                currency,
-                                            )
-                                        ),
-                                ),
+                    val depositTransaction =
+                        DepositTransaction(
+                            id = UUID.randomUUID().toString(),
+                            vaultId = vaultId,
+                            srcToken = payload.coin,
                             srcAddress = payload.coin.address,
                             dstAddress = payload.toAddress,
-                            networkFeeTokenValue = totalGasAndFee.formattedTokenValue,
-                            networkFeeFiatValue = totalGasAndFee.formattedFiatValue,
                             memo = payload.memo ?: "",
+                            srcTokenValue = tokenValue,
+                            estimatedFees = estimatedTokenFees,
+                            estimateFeesFiat = totalGasAndFee.formattedFiatValue,
+                            blockChainSpecific = payload.blockChainSpecific,
                         )
+                    val depositTransactionUiModel =
+                        mapDepositTransactionToUiModel(depositTransaction)
                     transactionTypeUiModel =
                         TransactionTypeUiModel.Deposit(depositTransactionUiModel)
                     transactionHistoryData =
