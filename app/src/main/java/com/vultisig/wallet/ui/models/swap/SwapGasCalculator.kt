@@ -31,7 +31,13 @@ import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
-internal data class GasCalculationResult(val gasFee: TokenValue, val estimated: EstimatedGasFee)
+internal data class GasCalculationResult(
+    val gasFee: TokenValue,
+    val estimated: EstimatedGasFee,
+    val chain: Chain,
+)
+
+internal class InsufficientUtxosException : Exception("Error_not_enough_utxos")
 
 internal class SwapGasCalculator
 @Inject
@@ -94,7 +100,8 @@ constructor(
                     ),
                     memo = null,
                 )
-            estimatedTotalFee = gasFee.copy(value = (plan ?: return null).fee.toBigInteger())
+            if (plan.error != SigningError.OK) return null
+            estimatedTotalFee = gasFee.copy(value = plan.fee.toBigInteger())
         }
 
         val estimated =
@@ -107,7 +114,7 @@ constructor(
                 )
             )
 
-        return GasCalculationResult(gasFee = gasFee, estimated = estimated)
+        return GasCalculationResult(gasFee = gasFee, estimated = estimated, chain = chain)
     }
 
     private suspend fun getBitcoinTransactionPlan(
@@ -117,7 +124,7 @@ constructor(
         tokenAmountInt: BigInteger,
         specific: BlockChainSpecificAndUtxo,
         memo: String?,
-    ): Bitcoin.TransactionPlan? {
+    ): Bitcoin.TransactionPlan {
         val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
         val keysignPayload =
             KeysignPayload(
@@ -134,12 +141,7 @@ constructor(
             )
 
         val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
-        val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
-        if (plan.error != SigningError.OK) {
-            Timber.e("UTXO plan error: %s", plan.error.name)
-            return null
-        }
-        return plan
+        return utxo.getBitcoinTransactionPlan(keysignPayload)
     }
 
     suspend fun getSpecificAndUtxo(srcToken: Coin, srcAddress: String, gasFee: TokenValue) =
@@ -161,6 +163,51 @@ constructor(
                 UiText.StringResource(R.string.swap_screen_invalid_specific_and_utxo)
             )
         }
+
+    /**
+     * Fetches a signed Bitcoin transaction plan for UTXO chains (excluding Cardano) and returns a
+     * [GasCalculationResult] with the actual plan fee and its fiat estimate. Returns `null` for
+     * non-UTXO chains, Cardano, or when the plan cannot be retrieved.
+     */
+    internal suspend fun computeUtxoPlanFeeResult(
+        vaultId: String,
+        srcToken: Coin,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        specificAndUtxo: BlockChainSpecificAndUtxo,
+        memo: String?,
+    ): GasCalculationResult? {
+        if (srcToken.chain.standard != TokenStandard.UTXO || srcToken.chain == Chain.Cardano) {
+            return null
+        }
+        val plan =
+            getBitcoinTransactionPlan(
+                vaultId = vaultId,
+                selectedToken = srcToken,
+                dstAddress = dstAddress,
+                tokenAmountInt = tokenAmountInt,
+                specific = specificAndUtxo,
+                memo = memo,
+            )
+        if (plan.error == SigningError.Error_not_enough_utxos) throw InsufficientUtxosException()
+        if (plan.error != SigningError.OK) {
+            Timber.e("UTXO plan error: %s", plan.error.name)
+            return null
+        }
+        val nativeCoin =
+            withContext(Dispatchers.IO) { tokenRepository.getNativeToken(srcToken.chain.id) }
+        val planFee = TokenValue(value = plan.fee.toBigInteger(), token = nativeCoin)
+        val estimated =
+            gasFeeToEstimatedFee(
+                GasFeeParams(
+                    gasLimit = BigInteger.valueOf(1),
+                    gasFee = planFee,
+                    selectedToken = srcToken,
+                    perUnit = true,
+                )
+            )
+        return GasCalculationResult(gasFee = planFee, estimated = estimated, chain = srcToken.chain)
+    }
 
     private fun getGasLimit(token: Coin): BigInteger? {
         val isEVMSwap = token.isNativeToken && token.chain in listOf(Chain.Ethereum, Chain.Arbitrum)

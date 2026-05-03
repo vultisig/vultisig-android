@@ -142,6 +142,7 @@ internal class SwapFormViewModelTest {
                             TokenValue(value = BigInteger("1000000000000000"), token = ETH_COIN),
                         fiatValue = FiatValue(BigDecimal("2.00"), "USD"),
                     ),
+                chain = Chain.Ethereum,
             )
 
         val accountsRepository: AccountsRepository = mockk(relaxed = true)
