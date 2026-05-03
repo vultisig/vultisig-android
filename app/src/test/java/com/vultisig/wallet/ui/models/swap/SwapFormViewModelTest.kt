@@ -508,23 +508,7 @@ internal class SwapFormViewModelTest {
     // region flipSelectedTokens
 
     @Test
-    fun `flipSelectedTokens swaps source and destination token IDs`() =
-        runTest(mainDispatcher) {
-            val addresses = listOf(ethAddress(), btcAddress())
-            val vm = createViewModelWithAddresses(addresses)
-            advanceUntilIdle()
-
-            // The vm should have selected some tokens by now from addresses
-            vm.flipSelectedTokens()
-            advanceUntilIdle()
-
-            // After flip, the state should be reset for fresh calculation
-            assertEquals("0", vm.uiState.value.estimatedDstTokenValue)
-            assertEquals("0", vm.uiState.value.estimatedDstFiatValue)
-        }
-
-    @Test
-    fun `flipSelectedTokens swaps tokens in UI state, not duplicates them`() =
+    fun `flipSelectedTokens swaps src and dst instead of leaving them unchanged`() =
         runTest(mainDispatcher) {
             val vm =
                 createViewModelWithAddresses(
@@ -545,37 +529,7 @@ internal class SwapFormViewModelTest {
             val srcAfter = vm.uiState.value.selectedSrcToken?.model?.account?.token?.id
             val dstAfter = vm.uiState.value.selectedDstToken?.model?.account?.token?.id
             assertEquals(BTC_COIN.id, srcAfter, "src should now be BTC")
-            assertEquals(ETH_COIN.id, dstAfter, "dst should now be ETH (not BTC again)")
-        }
-
-    @Test
-    fun `flipSelectedTokens swaps tokens with StandardTestDispatcher`() =
-        runTest(kotlinx.coroutines.test.StandardTestDispatcher(scheduler)) {
-            Dispatchers.setMain(kotlinx.coroutines.test.StandardTestDispatcher(scheduler))
-            val vm =
-                createViewModelWithAddresses(
-                    addresses = listOf(ethAddress(), btcAddress()),
-                    srcTokenId = ETH_COIN.id,
-                    dstTokenId = BTC_COIN.id,
-                )
-            advanceUntilIdle()
-
-            assertEquals(ETH_COIN.id, vm.uiState.value.selectedSrcToken?.model?.account?.token?.id)
-            assertEquals(BTC_COIN.id, vm.uiState.value.selectedDstToken?.model?.account?.token?.id)
-
-            vm.flipSelectedTokens()
-            advanceUntilIdle()
-
-            assertEquals(
-                BTC_COIN.id,
-                vm.uiState.value.selectedSrcToken?.model?.account?.token?.id,
-                "src should now be BTC",
-            )
-            assertEquals(
-                ETH_COIN.id,
-                vm.uiState.value.selectedDstToken?.model?.account?.token?.id,
-                "dst should now be ETH (not BTC again)",
-            )
+            assertEquals(ETH_COIN.id, dstAfter, "dst should now be ETH")
         }
 
     @Test

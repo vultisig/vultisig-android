@@ -642,14 +642,14 @@ constructor(
 
         resetQuoteState()
 
-        val bufId = selectedSrcId.value
+        val previousSrcId = selectedSrcId.value
         selectedSrcId.value = selectedDstId.value
-        selectedDstId.value = bufId
+        selectedDstId.value = previousSrcId
 
-        // collectSelectedTokens() observes the IDs above and resolves both StateFlows.
-        // Under Main.immediate it runs on this same call stack, so an additional manual
-        // swap of selectedSrc/selectedDst here reads the already-updated values and
-        // reverts the flip — leaving src and dst pointing at the same token.
+        // collectSelectedTokens() observes the IDs above and resolves selectedSrc/selectedDst
+        // synchronously under Main.immediate. A manual swap of those resolved StateFlows here
+        // would read the already-resolved post-swap values and write them back into their
+        // original slots, silently reverting the flip so the UI shows the original pair.
 
         if (
             newSrcAmount != null &&
