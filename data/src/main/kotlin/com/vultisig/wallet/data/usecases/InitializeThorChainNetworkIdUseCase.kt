@@ -18,12 +18,13 @@ constructor(
 ) : InitializeThorChainNetworkIdUseCase {
 
     override suspend fun invoke() {
-        if (!vaultRepository.hasVaults()) {
+        val vaults = vaultRepository.getAll()
+        if (vaults.isEmpty()) {
             Timber.d("Skipping THORChain network id init: no vaults")
             return
         }
 
-        if (!isThorChainEnabledInAnyVault()) {
+        if (vaults.none { vault -> vault.coins.any { it.chain == Chain.ThorChain } }) {
             Timber.d("Skipping THORChain network id init: no vault uses THORChain")
             return
         }
@@ -48,7 +49,4 @@ constructor(
             Timber.e(e, "Failed to fetch network chain id")
         }
     }
-
-    private suspend fun isThorChainEnabledInAnyVault(): Boolean =
-        vaultRepository.getAll().any { vault -> vault.coins.any { it.chain == Chain.ThorChain } }
 }
