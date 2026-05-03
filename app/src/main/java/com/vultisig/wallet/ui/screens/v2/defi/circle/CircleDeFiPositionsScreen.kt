@@ -5,6 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -17,17 +20,32 @@ import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * Entry point for the Circle USDC DeFi positions screen; wires ViewModel state and pull-to-refresh.
+ */
 @Composable
 internal fun CircleDeFiPositionsScreen(
     vaultId: VaultId,
     viewModel: CircleDeFiPositionsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.isTotalAmountLoading) {
+        if (isRefreshing && !state.isTotalAmountLoading) {
+            isRefreshing = false
+        }
+    }
 
     LaunchedEffect(Unit) { viewModel.setData(vaultId) }
 
     CircleDefiPositionScreenContent(
         state = state,
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.setData(vaultId)
+        },
         tabs = listOf(DeFiTab.DEPOSITED),
         onBackClick = viewModel::onBackClick,
         onTabSelected = viewModel::onTabSelected,
@@ -38,9 +56,12 @@ internal fun CircleDeFiPositionsScreen(
     )
 }
 
+/** Stateless content for the Circle DeFi positions screen with pull-to-refresh support. */
 @Composable
 internal fun CircleDefiPositionScreenContent(
     state: DefiUiModel,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
     tabs: List<DeFiTab> = listOf(DeFiTab.DEPOSITED),
     onBackClick: () -> Unit,
     onTabSelected: (DeFiTab) -> Unit = {},
@@ -52,6 +73,8 @@ internal fun CircleDefiPositionScreenContent(
 ) {
     BaseDeFiPositionsScreenContent(
         state = state,
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
         tabs = tabs,
         bannerTitle = stringResource(R.string.circle_usdc_account),
         bannerImage = R.drawable.circle_defi_banner,
@@ -76,6 +99,7 @@ internal fun CircleDefiPositionScreenContent(
     )
 }
 
+/** Tab content composable showing the Circle USDC deposit total and deposit/withdraw actions. */
 @Composable
 private fun CircleContentDepositTab(
     state: DefiUiModel.CircleDeFi,
@@ -129,6 +153,7 @@ private fun CircleContentDepositTab(
     }
 }
 
+/** Preview for [CircleDefiPositionScreenContent]. */
 @Preview(showBackground = true)
 @Composable
 private fun CircleDeFiPositionsScreenPreview() {
@@ -139,6 +164,7 @@ private fun CircleDeFiPositionsScreenPreview() {
     )
 }
 
+/** Preview for [CircleDefiPositionScreenContent] with sample data. */
 @Preview(showBackground = true)
 @Composable
 private fun CircleDefiPositionScreenContentPreview() {
@@ -159,6 +185,7 @@ private fun CircleDefiPositionScreenContentPreview() {
     )
 }
 
+/** Preview for [CircleDefiPositionScreenContent] in loading state. */
 @Preview(showBackground = true)
 @Composable
 private fun CircleDefiPositionScreenContentLoadingPreview() {
@@ -179,6 +206,7 @@ private fun CircleDefiPositionScreenContentLoadingPreview() {
     )
 }
 
+/** Preview for [CircleDefiPositionScreenContent] with hidden balance. */
 @Preview(showBackground = true)
 @Composable
 private fun CircleDefiPositionScreenContentHiddenBalancePreview() {
