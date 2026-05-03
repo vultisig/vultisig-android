@@ -91,6 +91,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
 import java.net.UnknownHostException
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
@@ -169,7 +170,11 @@ internal sealed class VerifyUiModel {
     data class SignMessage(val model: VerifySignMessageUiModel) : VerifyUiModel()
 }
 
-internal data class FunctionInfo(val signature: String, val inputs: String)
+internal data class FunctionInfo(
+    val signature: String,
+    val inputs: String?,
+    val functionName: String? = null,
+)
 
 @HiltViewModel
 internal class JoinKeysignViewModel
@@ -1047,16 +1052,15 @@ constructor(
                             srcVaultName = srcVaultName,
                             dstVaultName = dstVaultName,
                             dstAddressBookTitle = dstAddressBookTitle,
+                            functionSignature = functionInfo?.signature,
+                            functionInputs = functionInfo?.inputs,
+                            functionName = functionInfo?.functionName,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)
                     verifyUiModel.value =
                         VerifyUiModel.Send(
-                            VerifyTransactionUiModel(
-                                transaction = namedTransactionUiModel,
-                                functionSignature = functionInfo?.signature,
-                                functionInputs = functionInfo?.inputs,
-                            )
+                            VerifyTransactionUiModel(transaction = namedTransactionUiModel)
                         )
                     val uiModel = verifyUiModel.value
                     if (uiModel is VerifyUiModel.Send) {
@@ -1330,14 +1334,50 @@ constructor(
         super.onCleared()
     }
 
+    /**
+     * Decode the function signature and pretty-formatted args from EVM calldata.
+     *
+     * The function name is split on camelCase boundaries and title-cased so it reads as a label
+     * (e.g. `supplyWithPermit` → `"Supply With Permit"`). Caller renders the name as a small-text
+     * heading; the resolved-amount hero is layered on by Blockaid simulation in #4306.
+     *
+     * Args decoding is best-effort. When it fails (malformed ABI, unsupported tuple shape, etc.)
+     * the signature + function name still surface so the user sees *what* is being called, just
+     * without the pretty-printed inputs row.
+     *
+     * 4byte HTTP + JNI ABI decode + JSON encode are bounced onto IO so the caller's dispatcher
+     * (typically the main / unconfined coroutine that runs `keysignVerify`) is never blocked.
+     */
     private suspend fun getTransactionFunctionInfo(memo: String?, chain: Chain): FunctionInfo? {
         if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty()) return null
+        return withContext(Dispatchers.IO) {
+            val functionSignature =
+                fourByteRepository.decodeFunction(memo) ?: return@withContext null
+            FunctionInfo(
+                signature = functionSignature,
+                inputs = fourByteRepository.decodeFunctionArgs(functionSignature, memo),
+                functionName = prettifyEvmFunctionName(functionSignature),
+            )
+        }
+    }
+}
 
-        val functionSignature = fourByteRepository.decodeFunction(memo)
-        val functionInputs =
-            if (functionSignature != null) {
-                fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
-            } else return null
-        return FunctionInfo(functionSignature, functionInputs)
+/** camelCase + acronym→word boundary, e.g. `supplyWithPermit` and `WBTCSwap`. */
+private val EVM_FUNCTION_NAME_BOUNDARY = Regex("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
+
+/**
+ * Extract a display-friendly function name from an ABI signature.
+ * - `supplyWithPermit(...)` → `"Supply With Permit"`
+ * - `WBTCSwap(...)` → `"WBTC Swap"`
+ *
+ * Digit-prefixed names like `ERC20transferFrom` are left as-is — splitting on digits produces
+ * uglier output than it fixes for the long tail of selectors. Returns null when the signature has
+ * no `(` or is empty before it.
+ */
+internal fun prettifyEvmFunctionName(signature: String): String? {
+    val rawName = signature.substringBefore('(', missingDelimiterValue = "").trim()
+    if (rawName.isEmpty()) return null
+    return rawName.replace(EVM_FUNCTION_NAME_BOUNDARY, " ").split(' ').joinToString(" ") {
+        it.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) }
     }
 }
