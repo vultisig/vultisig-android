@@ -59,6 +59,7 @@ internal fun <T> FastSelectionModalContent(
     currentIndex: Int,
     pressPosition: Offset,
     visibleItemCount: Int,
+    key: (T) -> Any,
     onItemHeightMeasured: (Int) -> Unit,
     itemContent: @Composable (item: T, distanceFromCenter: Int) -> Unit,
 ) {
@@ -168,7 +169,10 @@ internal fun <T> FastSelectionModalContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = false,
                 ) {
-                    itemsIndexed(paddedItems, key = { index, _ -> index }) { index, item ->
+                    itemsIndexed(
+                        paddedItems,
+                        key = { index, item -> if (item != null) key(item) else "padding_$index" },
+                    ) { index, item ->
                         val actualIndex = index - paddingItems
 
                         if (item != null) {
