@@ -2,11 +2,10 @@ package com.vultisig.wallet.ui.components.buttons
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
@@ -20,7 +19,21 @@ internal fun AutoSizingText(
     modifier: Modifier = Modifier,
     minFontSize: TextUnit = 1.sp,
 ) {
+    AutoSizingText(
+        text = AnnotatedString(text),
+        style = style.copy(color = color),
+        modifier = modifier,
+        minFontSize = minFontSize,
+    )
+}
 
+@Composable
+internal fun AutoSizingText(
+    text: AnnotatedString,
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    minFontSize: TextUnit = 1.sp,
+) {
     SubcomposeLayout(modifier = modifier) { constraints ->
         val maxWidth = constraints.maxWidth.toFloat()
 
@@ -31,7 +44,7 @@ internal fun AutoSizingText(
         // First, try to measure at original font size
         val originalMeasurable =
             subcompose("originalText") {
-                Text(text = text, style = style, color = color, maxLines = 1, softWrap = false)
+                Text(text = text, style = style, maxLines = 1, softWrap = false)
             }
 
         val originalPlaceables =
@@ -59,13 +72,7 @@ internal fun AutoSizingText(
 
             val measurable =
                 subcompose("text_$iteration") {
-                    Text(
-                        text = text,
-                        style = testStyle,
-                        color = color,
-                        maxLines = 1,
-                        softWrap = false,
-                    )
+                    Text(text = text, style = testStyle, maxLines = 1, softWrap = false)
                 }
 
             val placeables =
@@ -84,7 +91,7 @@ internal fun AutoSizingText(
 
         val finalMeasurable =
             subcompose("finalText") {
-                Text(text = text, style = bestStyle, color = color, maxLines = 1, softWrap = false)
+                Text(text = text, style = bestStyle, maxLines = 1, softWrap = false)
             }
 
         val placeables =
