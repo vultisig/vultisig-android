@@ -1,6 +1,9 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ThorChainRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import io.mockk.coEvery
@@ -45,8 +48,24 @@ internal class InitializeThorChainNetworkIdUseCaseImplTest {
     }
 
     @Test
-    fun `applies cached value then fetches when vaults exist`() = runTest {
+    fun `skips fetch and cache when no vault uses THORChain`() = runTest {
+        ThorChainHelper.THORCHAIN_NETWORK_ID = "default-id"
         coEvery { vaultRepository.hasVaults() } returns true
+        coEvery { vaultRepository.getAll() } returns
+            listOf(vaultWithChains(Chain.Bitcoin, Chain.Ethereum))
+
+        useCase()
+
+        coVerify(exactly = 0) { thorChainRepository.getCachedNetworkChainId() }
+        coVerify(exactly = 0) { thorChainRepository.fetchNetworkChainId() }
+        assertEquals("default-id", ThorChainHelper.THORCHAIN_NETWORK_ID)
+    }
+
+    @Test
+    fun `applies cached value then fetches when a vault uses THORChain`() = runTest {
+        coEvery { vaultRepository.hasVaults() } returns true
+        coEvery { vaultRepository.getAll() } returns
+            listOf(vaultWithChains(Chain.Bitcoin), vaultWithChains(Chain.ThorChain))
         coEvery { thorChainRepository.getCachedNetworkChainId() } returns "thorchain-cached"
         coEvery { thorChainRepository.fetchNetworkChainId() } returns "thorchain-fresh"
 
@@ -60,6 +79,7 @@ internal class InitializeThorChainNetworkIdUseCaseImplTest {
     @Test
     fun `keeps cached value when fetch fails`() = runTest {
         coEvery { vaultRepository.hasVaults() } returns true
+        coEvery { vaultRepository.getAll() } returns listOf(vaultWithChains(Chain.ThorChain))
         coEvery { thorChainRepository.getCachedNetworkChainId() } returns "thorchain-cached"
         coEvery { thorChainRepository.fetchNetworkChainId() } throws RuntimeException("boom")
 
@@ -67,4 +87,14 @@ internal class InitializeThorChainNetworkIdUseCaseImplTest {
 
         assertEquals("thorchain-cached", ThorChainHelper.THORCHAIN_NETWORK_ID)
     }
+
+    private fun vaultWithChains(vararg chains: Chain): Vault =
+        Vault(
+            id = "vault-${chains.joinToString("-")}",
+            name = "test",
+            coins = chains.map(::nativeCoin),
+        )
+
+    private fun nativeCoin(chain: Chain): Coin =
+        Coin.EMPTY.copy(chain = chain, ticker = chain.name, isNativeToken = true)
 }

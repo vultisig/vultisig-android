@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.ThorChainRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import javax.inject.Inject
@@ -19,6 +20,11 @@ constructor(
     override suspend fun invoke() {
         if (!vaultRepository.hasVaults()) {
             Timber.d("Skipping THORChain network id init: no vaults")
+            return
+        }
+
+        if (!isThorChainEnabledInAnyVault()) {
+            Timber.d("Skipping THORChain network id init: no vault uses THORChain")
             return
         }
 
@@ -42,4 +48,7 @@ constructor(
             Timber.e(e, "Failed to fetch network chain id")
         }
     }
+
+    private suspend fun isThorChainEnabledInAnyVault(): Boolean =
+        vaultRepository.getAll().any { vault -> vault.coins.any { it.chain == Chain.ThorChain } }
 }
