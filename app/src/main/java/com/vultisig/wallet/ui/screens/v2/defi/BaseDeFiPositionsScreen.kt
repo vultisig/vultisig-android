@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
@@ -50,12 +51,8 @@ fun BaseDeFiPositionsScreenContent(
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         V2Scaffold(onBackClick = onBackClick) {
             Column(
-                modifier =
-                    Modifier.fillMaxSize()
-                        .background(Theme.v2.colors.backgrounds.primary)
-                        .verticalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
                 horizontalAlignment = CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 BalanceBanner(
                     title = bannerTitle,
@@ -64,6 +61,8 @@ fun BaseDeFiPositionsScreenContent(
                     image = bannerImage,
                     isBalanceVisible = state.isBalanceVisible,
                 )
+
+                UiSpacer(16.dp)
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -100,7 +99,11 @@ fun BaseDeFiPositionsScreenContent(
                     }
                 }
 
-                tabContent()
+                UiSpacer(16.dp)
+
+                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                    tabContent()
+                }
             }
         }
     }
