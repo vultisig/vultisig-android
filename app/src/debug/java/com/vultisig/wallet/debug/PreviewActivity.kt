@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.QrShareField
 import com.vultisig.wallet.data.usecases.QrShareInfo
+import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.hero.HeroCoinAmount
 import com.vultisig.wallet.ui.components.hero.HeroContent
@@ -81,6 +82,8 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import vultisig.keysign.v1.SignTon
+import vultisig.keysign.v1.TonMessage
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -112,6 +115,8 @@ class PreviewActivity : ComponentActivity() {
                     "choose_vault" -> SelectVaultTypeScreenPreview()
                     "content_row" -> ContentRowPreview()
                     "solana_display" -> SolanaDisplayPreview()
+                    "ton_display_single" -> TonDisplayPreview(messageCount = 1)
+                    "ton_display_multi" -> TonDisplayPreview(messageCount = 4)
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
                     "import_seedphrase" -> ImportSeedphrasePreview()
@@ -351,6 +356,52 @@ private fun SolanaInstructionMock(
 }
 
 @Composable
+private fun TonDisplayPreview(messageCount: Int) {
+    val messages =
+        when (messageCount) {
+            1 ->
+                listOf(
+                    TonMessage(
+                        to = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "1500000000",
+                    )
+                )
+            else ->
+                listOf(
+                    TonMessage(
+                        to = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "1500000000",
+                        payload = "te6ccgEBAQEABgAACAA=",
+                    ),
+                    TonMessage(
+                        to = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "250000000",
+                        payload = "te6ccgEBAQEABgAACAA=",
+                        stateInit = "te6ccgEBAQEABwAA",
+                    ),
+                    TonMessage(
+                        to = "EQAB9999999999ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "100000",
+                    ),
+                    TonMessage(
+                        to = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "5000000000",
+                        stateInit = "te6ccgEBAQEABwAA",
+                    ),
+                )
+        }
+    androidx.compose.foundation.layout.Column(
+        modifier =
+            Modifier.padding(24.dp)
+                .fillMaxSize()
+                .background(Theme.v2.colors.backgrounds.primary)
+                .padding(16.dp)
+    ) {
+        SignTonDisplayView(signTon = SignTon(tonMessages = messages))
+    }
+}
+
+@Composable
 private fun SendTxDonePreview() {
     val ethCoin = Coins.Ethereum.ETH
 
@@ -373,6 +424,8 @@ private fun SendTxDonePreview() {
                 networkFeeTokenValue = "0.0024 ETH",
                 networkFeeFiatValue = "$6.15",
             ),
+        isTransactionDetailVisible = false,
+        onTransactionDetailVisibleChange = {},
     )
 }
 

@@ -34,7 +34,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.hero.HeroContent
-import com.vultisig.wallet.ui.components.hero.HeroContentView
+import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
@@ -57,14 +57,17 @@ internal fun SendTxOverviewScreen(
     onBack: () -> Unit = {},
     onAddToAddressBook: () -> Unit,
     tx: UiTransactionInfo,
+    isTransactionDetailVisible: Boolean,
+    onTransactionDetailVisibleChange: (Boolean) -> Unit,
 ) {
-
     TxDoneScaffold(
         transactionHash = transactionHash,
         transactionLink = transactionLink,
         transactionStatus = transactionStatus,
         showToolbar = showToolbar,
         onBack = onBack,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
         bottomBarContent = {
             VsButton(
                 label = stringResource(R.string.transaction_done_title),
@@ -75,37 +78,30 @@ internal fun SendTxOverviewScreen(
             )
         },
         tokenContent = {
-            val hero = tx.heroContent
-            when {
-                hero != null -> {
-                    HeroContentView(content = hero, modifier = Modifier.fillMaxWidth())
-                }
-                tx.functionName != null -> {
-                    // Simulation hasn't loaded yet (or failed before reaching done).
-                    // Show the function name without the unverified caption — caption
-                    // would mislead users into thinking the chain itself is unverified.
-                    HeroContentView(
-                        content = HeroContent.Title(text = tx.functionName),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                else -> {
-                    VsOverviewToken(
-                        header =
-                            if (tx.type == UiTransactionInfoType.Send) {
-                                stringResource(R.string.tx_overview_screen_tx_send)
-                            } else {
-                                stringResource(R.string.tx_overview_screen_tx_deposit)
-                            },
-                        valuedToken = tx.token,
-                        shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
+            TransactionHero(
+                heroContent = tx.heroContent,
+                functionName = tx.functionName,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                VsOverviewToken(
+                    header =
+                        if (tx.type == UiTransactionInfoType.Send) {
+                            stringResource(R.string.tx_overview_screen_tx_send)
+                        } else {
+                            stringResource(R.string.tx_overview_screen_tx_deposit)
+                        },
+                    valuedToken = tx.token,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         },
         detailContent = {
             Column {
+                TransactionStatusRow(transactionStatus)
+
+                VerifyCardDivider(size = 1.dp)
+
                 VerifyCardDetails(
                     title = stringResource(R.string.tx_overview_screen_tx_from),
                     subtitle = tx.fromLabel ?: tx.from,
@@ -148,26 +144,15 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
-                if (tx.tokenDisplay != null) {
-                    VerifyCardDivider(size = 1.dp)
-
-                    TextDetails(
-                        title = stringResource(R.string.deposit_screen_amount_title),
-                        subtitle = tx.tokenDisplay,
-                    )
-                }
-
-                // Skip the native "Amount" row when a decoded function/token/display
-                // already represents the intent — otherwise a misleading "0 ETH" surfaces
-                // for contract calls that send no native value.
+                // Skip the native "Amount" row for EVM contract calls — the function name above
+                // is the action, and a "0 ETH" amount underneath would mislead. Plain sends still
+                // render the native amount here.
                 if (
                     tx.functionName == null &&
-                        tx.resolvedToken == null &&
-                        tx.tokenDisplay == null &&
                         tx.token.value.isNotEmpty() &&
                         try {
                             tx.token.value.toBigInteger() > BigInteger.ZERO
-                        } catch (_: Exception) {
+                        } catch (_: NumberFormatException) {
                             false
                         }
                 ) {
@@ -292,7 +277,18 @@ internal fun TxDetails(
 
 @Preview
 @Composable
-private fun PreviewSendTxOverviewScreen() {
+private fun PreviewSendTxOverviewScreenCollapsed() {
+    PreviewSendTxOverviewScreen(isTransactionDetailVisible = false)
+}
+
+@Preview
+@Composable
+private fun PreviewSendTxOverviewScreenExpanded() {
+    PreviewSendTxOverviewScreen(isTransactionDetailVisible = true)
+}
+
+@Composable
+private fun PreviewSendTxOverviewScreen(isTransactionDetailVisible: Boolean) {
     SendTxOverviewScreen(
         transactionHash = "",
         transactionLink = "",
@@ -312,6 +308,8 @@ private fun PreviewSendTxOverviewScreen() {
                 .toUiTransactionInfo(),
         showSaveToAddressBook = true,
         transactionStatus = TransactionStatus.Broadcasted,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = {},
     )
 }
 
@@ -327,8 +325,6 @@ internal data class UiTransactionInfo(
     val networkFeeFiatValue: String,
     val signMethod: String = "",
     val functionName: String? = null,
-    val resolvedToken: ValuedToken? = null,
-    val tokenDisplay: String? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
     /**

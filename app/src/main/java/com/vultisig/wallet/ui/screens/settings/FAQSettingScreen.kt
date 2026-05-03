@@ -56,7 +56,7 @@ private fun FaqSettingScreen(onBackClick: () -> Unit, state: FAQSettingUiModel) 
     ) {
         V2Container(type = ContainerType.SECONDARY) {
             LazyColumn(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)) {
-                itemsIndexed(state.questions) { index, faq ->
+                itemsIndexed(state.questions, key = { _, faq -> faq.id }) { index, faq ->
                     FAQSettingItem(faq = faq, isLastItem = index == state.questions.lastIndex)
                 }
             }
@@ -120,16 +120,19 @@ private fun FaqSettingScreenPreview() {
                 questions =
                     listOf(
                         Faq(
+                            id = 1,
                             question = "What is Vultisig?",
                             answer =
                                 "It is a secure, multi-authentication wallet based on MPC technology that is used to manage digital assets. Transactions require approval from multiple devices.",
                         ),
                         Faq(
+                            id = 2,
                             question = "What are the benefits of using Vultisig?",
                             answer =
                                 "Vultisig offers enhanced security with multi-device authentication, support for many blockchains, easy recovery options, and no seed phrases or user tracking.",
                         ),
                         Faq(
+                            id = 3,
                             question = "Can I recover my assets if I lose a device?",
                             answer =
                                 "Yes, as long as you saved and have access to your backups when creating the vault. You can import these backups on a new device to regain access to your assets.",

@@ -24,24 +24,14 @@ import androidx.compose.runtime.Immutable
 @Immutable
 sealed interface HeroContent {
 
-    val title: String?
+    @Immutable data class Title(val title: String) : HeroContent
+
+    @Immutable data object Unverified : HeroContent
+
+    @Immutable data class Send(val title: String?, val coin: HeroCoinAmount) : HeroContent
 
     @Immutable
-    data class Title(val text: String) : HeroContent {
-        override val title: String
-            get() = text
-    }
-
-    @Immutable
-    data object Unverified : HeroContent {
-        override val title: String?
-            get() = null
-    }
-
-    @Immutable data class Send(override val title: String?, val coin: HeroCoinAmount) : HeroContent
-
-    @Immutable
-    data class Swap(override val title: String?, val from: HeroCoinAmount, val to: HeroCoinAmount) :
+    data class Swap(val title: String?, val from: HeroCoinAmount, val to: HeroCoinAmount) :
         HeroContent
 }
 

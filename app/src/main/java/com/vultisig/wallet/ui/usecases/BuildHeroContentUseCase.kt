@@ -32,28 +32,23 @@ class BuildHeroContentUseCase @Inject constructor() {
         simulation: BlockaidSimulationInfo?,
         decodedFunctionName: String?,
         didLoadSimulation: Boolean,
-    ): HeroContent? {
-        simulation?.let {
-            return when (it) {
-                is BlockaidSimulationInfo.Transfer ->
-                    HeroContent.Send(
-                        title = decodedFunctionName,
-                        coin = it.fromCoin.toHeroAmount(it.fromAmountText()),
-                    )
-
-                is BlockaidSimulationInfo.Swap ->
-                    HeroContent.Swap(
-                        title = decodedFunctionName,
-                        from = it.fromCoin.toHeroAmount(it.fromAmountText()),
-                        to = it.toCoin.toHeroAmount(it.toAmountText()),
-                    )
-            }
+    ): HeroContent? =
+        when (simulation) {
+            is BlockaidSimulationInfo.Transfer ->
+                HeroContent.Send(
+                    title = decodedFunctionName,
+                    coin = simulation.fromCoin.toHeroAmount(simulation.fromAmountText()),
+                )
+            is BlockaidSimulationInfo.Swap ->
+                HeroContent.Swap(
+                    title = decodedFunctionName,
+                    from = simulation.fromCoin.toHeroAmount(simulation.fromAmountText()),
+                    to = simulation.toCoin.toHeroAmount(simulation.toAmountText()),
+                )
+            null ->
+                if (didLoadSimulation && decodedFunctionName != null) HeroContent.Unverified
+                else null
         }
-
-        if (didLoadSimulation && decodedFunctionName != null) return HeroContent.Unverified
-
-        return null
-    }
 
     private fun BlockaidSimulationCoin.toHeroAmount(formatted: String): HeroCoinAmount =
         HeroCoinAmount(amount = formatted, ticker = ticker, logo = logo)
@@ -95,6 +90,6 @@ class BuildHeroContentUseCase @Inject constructor() {
         // Eighteen fractional digits matches Ether wei-precision. Tokens with finer granularity
         // are accommodated by [formatAmount] which raises the scale to the token's own decimals
         // when needed; this constant just sets the floor.
-        private const val MAX_FRACTION_SCALE = 18
+        const val MAX_FRACTION_SCALE = 18
     }
 }

@@ -48,15 +48,12 @@ import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.ContractCallExtractor
 import com.vultisig.wallet.data.repositories.FourByteRepository
-import com.vultisig.wallet.data.repositories.MAX_UINT256
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.repositories.evmFunctionName
-import com.vultisig.wallet.data.repositories.sentinelLabelFor
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidKeysignScanResult
@@ -178,10 +175,8 @@ internal sealed class VerifyUiModel {
 
 internal data class FunctionInfo(
     val signature: String,
-    val inputs: String,
-    val tokenDisplay: String? = null,
+    val inputs: String?,
     val functionName: String? = null,
-    val resolvedToken: ValuedToken? = null,
 )
 
 @HiltViewModel
@@ -265,7 +260,12 @@ constructor(
                 sessionId = _sessionID,
                 encryptionKeyHex = _encryptionKeyHex,
                 messagesToSign = messagesToSign,
-                keyType = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA,
+                keyType =
+                    _keysignPayload?.coin?.chain?.TssKeysignType
+                        ?: customMessagePayload?.chain?.let { raw ->
+                            runCatching { Chain.fromRaw(raw).TssKeysignType }.getOrNull()
+                        }
+                        ?: TssKeyType.ECDSA,
                 keysignPayload = _keysignPayload,
                 customMessagePayload = customMessagePayload,
                 transactionTypeUiModel = transactionTypeUiModel,
@@ -740,12 +740,17 @@ constructor(
                             return
                         }
                         val quote =
-                            swapQuoteRepository.getSwapQuote(
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                dstAddress = swapPayload.data.toAddress,
-                                tokenValue = srcTokenValue,
-                            )
+                            swapQuoteRepository
+                                .getQuote(
+                                    SwapProvider.THORCHAIN,
+                                    SwapQuoteRequest(
+                                        srcToken = srcToken,
+                                        dstToken = dstToken,
+                                        tokenValue = srcTokenValue,
+                                        dstAddress = swapPayload.data.toAddress,
+                                    ),
+                                )
+                                .expectNative(SwapProvider.THORCHAIN)
                         val swapTransactionUiModel = buildSwapUiModel(quote.fees, dstToken)
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
@@ -778,13 +783,18 @@ constructor(
                             return
                         }
                         val quote =
-                            swapQuoteRepository.getMayaSwapQuote(
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                dstAddress = swapPayload.data.toAddress,
-                                tokenValue = srcTokenValue,
-                                isAffiliate = true,
-                            )
+                            swapQuoteRepository
+                                .getQuote(
+                                    SwapProvider.MAYA,
+                                    SwapQuoteRequest(
+                                        srcToken = srcToken,
+                                        dstToken = dstToken,
+                                        tokenValue = srcTokenValue,
+                                        dstAddress = swapPayload.data.toAddress,
+                                        isAffiliate = true,
+                                    ),
+                                )
+                                .expectNative(SwapProvider.MAYA)
                         val swapTransactionUiModel = buildSwapUiModel(quote.fees, dstToken)
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
@@ -876,7 +886,14 @@ constructor(
                                 ValuedToken(
                                     token = payload.coin,
                                     value = mapTokenValueToDecimalUiString(tokenValue),
-                                    fiatValue = "",
+                                    fiatValue =
+                                        fiatValueToStringMapper(
+                                            convertTokenValueToFiat(
+                                                payload.coin,
+                                                tokenValue,
+                                                currency,
+                                            )
+                                        ),
                                 ),
                             srcAddress = payload.coin.address,
                             dstAddress = payload.toAddress,
@@ -945,12 +962,7 @@ constructor(
                                 selectedToken = payload.coin,
                             )
                         )
-                    // 4byte lookup + ABI decode + BigInteger math. Run on IO to match the
-                    // surrounding pattern and avoid blocking the caller dispatcher.
-                    val functionInfo =
-                        withContext(Dispatchers.IO) {
-                            getTransactionFunctionInfo(payload.memo, chain, payload.toAddress)
-                        }
+                    val functionInfo = getTransactionFunctionInfo(payload.memo, chain)
                     val normalizedSignAminoJson =
                         kotlinx.serialization.json.buildJsonArray {
                             payload.signAmino?.msgs?.forEach { cosmosMsg ->
@@ -981,6 +993,7 @@ constructor(
                             ?: ""
 
                     val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
+                    val signTon = payload.signTon
                     val transaction =
                         Transaction(
                             id = UUID.randomUUID().toString(),
@@ -999,6 +1012,7 @@ constructor(
                             signAmino = normalizedSignAmino,
                             signDirect = signDirect,
                             signSolana = signSolana,
+                            signTon = signTon,
                         )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
@@ -1046,9 +1060,7 @@ constructor(
                             dstAddressBookTitle = dstAddressBookTitle,
                             functionSignature = functionInfo?.signature,
                             functionInputs = functionInfo?.inputs,
-                            tokenDisplay = functionInfo?.tokenDisplay,
                             functionName = functionInfo?.functionName,
-                            resolvedToken = functionInfo?.resolvedToken,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)
@@ -1373,63 +1385,82 @@ constructor(
         super.onCleared()
     }
 
-    private suspend fun getTransactionFunctionInfo(
-        memo: String?,
-        chain: Chain,
-        toAddress: String?,
-    ): FunctionInfo? {
+    /**
+     * Decode the function signature and pretty-formatted args from EVM calldata.
+     *
+     * The function name is split on camelCase boundaries and title-cased so it reads as a label
+     * (e.g. `supplyWithPermit` → `"Supply With Permit"`). Caller renders the name as a small-text
+     * heading above the resolved-amount Blockaid hero.
+     *
+     * Args decoding is best-effort. When it fails (malformed ABI, unsupported tuple shape, etc.)
+     * the signature + function name still surface so the user sees *what* is being called, just
+     * without the pretty-printed inputs row.
+     *
+     * 4byte HTTP + JNI ABI decode + JSON encode are bounced onto IO so the caller's dispatcher
+     * (typically the main / unconfined coroutine that runs `keysignVerify`) is never blocked.
+     */
+    private suspend fun getTransactionFunctionInfo(memo: String?, chain: Chain): FunctionInfo? {
         if (chain.standard != TokenStandard.EVM || memo.isNullOrEmpty()) return null
-
-        val functionSignature = fourByteRepository.decodeFunction(memo) ?: return null
-        val functionInputs =
-            fourByteRepository.decodeFunctionArgs(functionSignature, memo) ?: return null
-
-        val funcName = functionSignature.evmFunctionName()
-        val resolvedToken =
-            funcName?.let { name ->
-                resolveContractCall(
-                    funcName = name,
-                    argsJson = functionInputs,
-                    signature = functionSignature,
-                    toAddress = toAddress,
-                    chain = chain,
-                )
-            }
-
-        return FunctionInfo(
-            signature = functionSignature,
-            inputs = functionInputs,
-            tokenDisplay = resolvedToken?.let { "${it.value} ${it.token.ticker}" },
-            functionName = funcName?.replaceFirstChar { it.titlecase(Locale.ROOT) },
-            resolvedToken = resolvedToken,
-        )
-    }
-
-    private suspend fun resolveContractCall(
-        funcName: String,
-        signature: String,
-        argsJson: String,
-        toAddress: String?,
-        chain: Chain,
-    ): ValuedToken? {
-        val pair = ContractCallExtractor.extract(signature, argsJson, toAddress) ?: return null
-
-        // Vault first (user has added it), then built-in tokens registry.
-        val coin =
-            _currentVault.coins.firstOrNull {
-                it.chain == chain && it.contractAddress.equals(pair.tokenAddress, ignoreCase = true)
-            } ?: tokenRepository.getBuiltInTokenByContract(chain, pair.tokenAddress) ?: return null
-
-        val raw = runCatching { BigInteger(pair.rawAmount) }.getOrNull() ?: return null
-
-        // MAX_UINT256 is a sentinel. For approvals → "Unlimited". For withdraw/repay
-        // the exact amount depends on on-chain state, so return null (skip display).
-        if (raw == MAX_UINT256) {
-            val label = sentinelLabelFor(funcName) ?: return null
-            return ValuedToken(token = coin, value = label, fiatValue = "")
+        return withContext(Dispatchers.IO) {
+            val functionSignature =
+                fourByteRepository.decodeFunction(memo) ?: return@withContext null
+            FunctionInfo(
+                signature = functionSignature,
+                inputs = fourByteRepository.decodeFunctionArgs(functionSignature, memo),
+                functionName = prettifyEvmFunctionName(functionSignature),
+            )
         }
+    }
+}
 
-        val amount = mapTokenValueToDecimalUiString(TokenValue(raw, coin))
-        return ValuedToken(token = coin, value = amount, fiatValue = "")
+/** camelCase + acronym→word boundary, e.g. `supplyWithPermit` and `WBTCSwap`. */
+private val EVM_FUNCTION_NAME_BOUNDARY = Regex("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
+
+/**
+ * Bidi-override and zero-width codepoints that 4byte registry submissions must not be allowed to
+ * smuggle into the signing UI. Stripped before the function name is rendered as a hero title.
+ *
+ * 4byte.directory is open-submit and orders entries by `created_at` — an attacker can register a
+ * crafted text for an unclaimed selector. Without this filter, `approve‮USDC` would render as
+ * "Approve CDSU" via right-to-left override, misrepresenting the call.
+ */
+private val UNSAFE_DISPLAY_CODEPOINTS =
+    setOf(
+        '‪', // LEFT-TO-RIGHT EMBEDDING
+        '‫', // RIGHT-TO-LEFT EMBEDDING
+        '‬', // POP DIRECTIONAL FORMATTING
+        '‭', // LEFT-TO-RIGHT OVERRIDE
+        '‮', // RIGHT-TO-LEFT OVERRIDE
+        '⁦', // LEFT-TO-RIGHT ISOLATE
+        '⁧', // RIGHT-TO-LEFT ISOLATE
+        '⁨', // FIRST STRONG ISOLATE
+        '⁩', // POP DIRECTIONAL ISOLATE
+        '‎', // LEFT-TO-RIGHT MARK
+        '‏', // RIGHT-TO-LEFT MARK
+        '​', // ZERO WIDTH SPACE
+        '‌', // ZERO WIDTH NON-JOINER
+        '‍', // ZERO WIDTH JOINER
+        '⁠', // WORD JOINER
+        '﻿', // ZERO WIDTH NO-BREAK SPACE
+    )
+
+/**
+ * Extract a display-friendly function name from an ABI signature.
+ * - `supplyWithPermit(...)` → `"Supply With Permit"`
+ * - `WBTCSwap(...)` → `"WBTC Swap"`
+ *
+ * Digit-prefixed names like `ERC20transferFrom` are left as-is — splitting on digits produces
+ * uglier output than it fixes for the long tail of selectors. Returns null when the signature has
+ * no `(` or is empty before it.
+ */
+internal fun prettifyEvmFunctionName(signature: String): String? {
+    val rawName =
+        signature
+            .substringBefore('(', missingDelimiterValue = "")
+            .filterNot { it in UNSAFE_DISPLAY_CODEPOINTS }
+            .trim()
+    if (rawName.isEmpty()) return null
+    return rawName.replace(EVM_FUNCTION_NAME_BOUNDARY, " ").split(' ').joinToString(" ") {
+        it.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) }
     }
 }

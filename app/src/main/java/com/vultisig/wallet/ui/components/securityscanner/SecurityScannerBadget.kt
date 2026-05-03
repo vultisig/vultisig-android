@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.components.securityscanner
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -35,9 +36,9 @@ import timber.log.Timber
  */
 @Composable
 internal fun SecurityScannerBadget(status: TransactionScanStatus) {
-    // [NotStarted] is the initial state; the badge stays absent until the
-    // scanner kicks off, which happens automatically on every verify-screen
-    // entry. Returning early avoids reserving a 20dp slot for an empty Row.
+    // [NotStarted] is the initial state; the badge stays absent until the scanner kicks off,
+    // which happens automatically on every verify-screen entry. Returning early avoids reserving
+    // a 20dp slot for an empty Row.
     when (status) {
         is TransactionScanStatus.Scanned ->
             BadgeRow { ScannedBadget(providerLogoId = status.result.provider) }
@@ -49,7 +50,7 @@ internal fun SecurityScannerBadget(status: TransactionScanStatus) {
 }
 
 @Composable
-private fun BadgeRow(content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
+private fun BadgeRow(content: @Composable RowScope.() -> Unit) {
     Row(
         modifier = Modifier.height(20.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -59,8 +60,8 @@ private fun BadgeRow(content: @Composable androidx.compose.foundation.layout.Row
 
 @Composable
 private fun ScanningBadget() {
-    // Figma uses a 16px loader-circle glyph; CircularProgressIndicator with a
-    // narrower stroke matches that visual weight without bundling another icon.
+    // Figma uses a 16px loader-circle glyph; CircularProgressIndicator with a narrower stroke
+    // matches that visual weight without bundling another icon.
     CircularProgressIndicator(
         color = Theme.v2.colors.text.secondary,
         modifier = Modifier.size(16.dp),

@@ -26,8 +26,7 @@ import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.hero.HeroContent
-import com.vultisig.wallet.ui.components.hero.HeroContentView
+import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.components.library.form.FormCard
 import com.vultisig.wallet.ui.components.library.form.FormDetails
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -71,25 +70,17 @@ internal fun TransactionDoneView(
                 ) {
                     if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
                         val transaction = transactionTypeUiModel.tx
-                        val hero = transaction.heroContent
-                        when {
-                            hero != null -> {
-                                HeroContentView(content = hero, modifier = Modifier.fillMaxWidth())
-                            }
-                            transaction.functionName != null -> {
-                                HeroContentView(
-                                    content = HeroContent.Title(text = transaction.functionName),
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
-                            else -> {
-                                VsOverviewToken(
-                                    header = stringResource(R.string.tx_overview_screen_tx_send),
-                                    valuedToken = transaction.token,
-                                    shape = RoundedCornerShape(24.dp),
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-                            }
+                        TransactionHero(
+                            heroContent = transaction.heroContent,
+                            functionName = transaction.functionName,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            VsOverviewToken(
+                                header = stringResource(R.string.tx_overview_screen_tx_send),
+                                valuedToken = transaction.token,
+                                shape = RoundedCornerShape(24.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                            )
                         }
                     }
 
@@ -264,37 +255,24 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                 value = transaction.memo,
             )
 
-        if (transaction.tokenDisplay != null) {
-            UiHorizontalDivider()
-            OtherField(
-                title = stringResource(R.string.verify_transaction_amount_title),
-                value = transaction.tokenDisplay,
-            )
-        }
+        // OtherField has its own bottom divider; an explicit one stacks and orphans when memo is
+        // absent.
         if (transaction.functionSignature != null) {
-            UiHorizontalDivider()
             OtherField(
                 title = stringResource(R.string.deposit_screen_title),
                 value = transaction.functionSignature,
             )
         }
         if (transaction.functionInputs != null) {
-            UiHorizontalDivider()
             OtherField(
                 title = stringResource(R.string.verify_transaction_function_inputs_title),
                 value = transaction.functionInputs,
             )
         }
 
-        // Native amount fallback. Suppressed when a resolved contract-call token was
-        // rendered upstream OR when the decoded call already provided its own display
-        // (e.g. "Unlimited USDC" for an approve MAX) — otherwise the screen shows the
-        // same amount twice, with the native row being the misleading one.
-        if (
-            transaction.functionName == null &&
-                transaction.resolvedToken == null &&
-                transaction.tokenDisplay == null
-        ) {
+        // Native amount + fiat — suppressed for EVM contract calls because the function name
+        // above is the action and the native value is typically zero.
+        if (transaction.functionName == null) {
             OtherField(
                 title = stringResource(R.string.verify_transaction_amount_title),
                 value = transaction.token.value,

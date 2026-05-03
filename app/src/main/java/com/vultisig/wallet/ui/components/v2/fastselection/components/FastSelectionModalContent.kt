@@ -168,7 +168,7 @@ internal fun <T> FastSelectionModalContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = false,
                 ) {
-                    itemsIndexed(paddedItems) { index, item ->
+                    itemsIndexed(paddedItems, key = { index, _ -> index }) { index, item ->
                         val actualIndex = index - paddingItems
 
                         if (item != null) {

@@ -4,18 +4,19 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +41,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.ui.components.SignSolanaDisplayView
+import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
@@ -49,8 +51,7 @@ import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
-import com.vultisig.wallet.ui.components.hero.HeroContent
-import com.vultisig.wallet.ui.components.hero.HeroContentView
+import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheet
@@ -219,32 +220,21 @@ internal fun VerifySendScreen(
                 Column(modifier = cardModifier) {
                     UiSpacer(12.dp)
 
-                    // Hero is the dApp signing source of truth: a Blockaid simulation
-                    // that survives verify → sign → done. When absent we fall back to
-                    // the existing native-amount card so non-dApp sends are unchanged.
-                    val hero = tx.heroContent
-                    when {
-                        hero != null -> {
-                            HeroContentView(content = hero, modifier = Modifier.fillMaxWidth())
-                        }
-                        tx.functionName != null -> {
-                            // Pre-simulation tick: function name without a caption.
-                            // Switches to title+caption (HeroContent.Title) once the
-                            // simulation completes and didLoadSimulation flips true.
-                            HeroContentView(
-                                content = HeroContent.Title(text = tx.functionName),
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-                        else -> {
-                            VsOverviewToken(
-                                header = stringResource(R.string.verify_deposit_sending),
-                                valuedToken = tx.token,
-                                shape = RoundedCornerShape(0.dp),
-                                modifier = Modifier.fillMaxWidth(),
-                                withContainer = false,
-                            )
-                        }
+                    // Hero is the dApp signing source of truth — Blockaid simulation when
+                    // resolved, function-name title when only the 4byte decode loaded, native
+                    // VsOverviewToken otherwise.
+                    TransactionHero(
+                        heroContent = tx.heroContent,
+                        functionName = tx.functionName,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        VsOverviewToken(
+                            header = stringResource(R.string.verify_deposit_sending),
+                            valuedToken = tx.token,
+                            shape = RoundedCornerShape(0.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            withContainer = false,
+                        )
                     }
 
                     UiSpacer(12.dp)
@@ -305,14 +295,14 @@ internal fun VerifySendScreen(
                             )
                         }
 
-                    if (tx.tokenDisplay != null) {
-                        VerifyCardDivider(0.dp)
+                    tx.signTon
+                        ?.takeIf { it.tonMessages.isNotEmpty() }
+                        ?.let { signTon ->
+                            VerifyCardDivider(0.dp)
 
-                        VerifyCardDetails(
-                            title = stringResource(R.string.verify_transaction_amount_title),
-                            subtitle = tx.tokenDisplay,
-                        )
-                    }
+                            SignTonDisplayView(signTon = signTon)
+                        }
+
                     if (tx.functionSignature != null || tx.functionInputs != null) {
                         VerifyCardDivider(0.dp)
                         TransactionDetailsSection(
@@ -424,7 +414,7 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Absolute.SpaceBetween,
+            horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
@@ -433,7 +423,19 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
                 color = Theme.v2.colors.text.tertiary,
             )
 
-            IconButton(onClick = { isExpanded = !isExpanded }, modifier = Modifier.size(16.dp)) {
+            // Lightweight 16dp clickable container so the chevron renders at its intended size.
+            // [androidx.compose.material3.IconButton] enforces a 40dp minimum touch target which
+            // fights the explicit size modifier and blows the row out of the design.
+            Box(
+                modifier =
+                    Modifier.size(16.dp).clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) {
+                        isExpanded = !isExpanded
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
                 UiIcon(
                     drawableResId = R.drawable.chevron,
                     tint = Theme.v2.colors.text.tertiary,
@@ -444,17 +446,18 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
         }
 
         AnimatedVisibility(visible = isExpanded) {
+            // Inner column intentionally lets content size naturally; the outer scaffold's
+            // verticalScroll handles long JSON. A nested verticalScroll here trapped the last
+            // lines of long signatures/inputs out of reach.
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier =
                     Modifier.fillMaxWidth()
-                        .heightIn(max = 300.dp)
                         .background(
                             color = Theme.v2.colors.variables.bordersLight,
                             shape = RoundedCornerShape(12.dp),
                         )
-                        .padding(12.dp)
-                        .verticalScroll(rememberScrollState()),
+                        .padding(12.dp),
             ) {
                 functionSignature?.let {
                     VerifyCardJsonDetails(

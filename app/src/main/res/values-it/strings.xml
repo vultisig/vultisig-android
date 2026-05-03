@@ -121,8 +121,8 @@
     <string name="keysign_screen_preparing_vault">PREPARANDO LA CASSAFORTE…</string>
     <string name="vault_settings_delete_vault_caution1">Sono consapevole che il caveau sarà eliminato permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Sono consapevole che posso perdere fondi</string>
-    <string name="vault_settings_delete_vault_caution3">Ho fatto un backup del caveau</string>
-    <string name="confirm_delete_permanent_delete_message">Stai eliminando definitivamente il tuo caveau</string>
+    <string name="vault_settings_delete_vault_caution3">Ho fatto un backup del caveau per ripristinarlo in seguito</string>
+    <string name="confirm_delete_permanent_delete_message">Stai eliminando definitivamente la tua parte del caveau da questa app</string>
     <string name="confirm_delete_delete_vault">Elimina Cassaforte</string>
     <string name="rename_vault_screen_vault_name">Nome Cassaforte</string>
     <string name="faq_settings_q2">Quali sono i vantaggi dell\'utilizzo di Vultisig?</string>
@@ -519,14 +519,15 @@
     <string name="deposit_option_add_liquidity">Aggiungi liquidità</string>
     <string name="deposit_option_remove_liquidity">Rimuovi liquidità</string>
     <string name="add_pool_title">Aggiungi Pool</string>
+    <string name="add_lp_title">Aggiungi LP %1$s</string>
     <string name="add_pool_amount_label">Importo</string>
     <string name="add_pool_gas_auto">Commissione di rete (automatica)</string>
     <string name="max">Max</string>
     <string name="token_fiat_toggle_token_label">Valore token</string>
     <string name="token_fiat_toggle_fiat_label">Valore fiat</string>
     <string name="remove_pool_title">Rimuovi Pool</string>
+    <string name="remove_lp_title">Rimuovi LP %1$s</string>
     <string name="remove_pool_amount_label">Quantità</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">Puntare CACAO</string>
     <string name="unstake_cacao_title">Rimuovi puntata CACAO</string>
@@ -723,6 +724,8 @@
     <string name="keysign_password_enter_your_password">Inserisci la tua password</string>
     <string name="migration_password_enter_your_password_to_unlock">Inserisci la tua password per sbloccare la tua condivisione server e avviare l\'aggiornamento</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Esiste un Vault con nome duplicato</string>
+    <string name="join_key_gen_vault_already_on_device">Il Vault \"%1$s\" è già su questo dispositivo</string>
+    <string name="join_key_gen_open_existing_vault">Apri Vault</string>
     <string name="join_key_gen_unknown_tssaction">TssAction sconosciuta</string>
     <string name="join_key_gen_mediator_discovery_timeout">Impossibile trovare l\'altro dispositivo sulla rete</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">In attesa che altri dispositivi si uniscano</string>
@@ -878,7 +881,6 @@
     <string name="select_vault_type_fast_title">Configurazione rapida su un solo dispositivo</string>
     <string name="select_vault_type_fast_desc_1">È necessario un solo dispositivo</string>
     <string name="scan_qr_code_modal_scan_the">Scansiona il QR sui tuoi altri dispositivi</string>
-    <string name="tx_overview_screen_title">Fatto</string>
     <string name="fast_vault_password_screen_warning">La password non può essere reimpostata o recuperata</string>
     <string name="referral_top_bar_list">Referral</string>
     <string name="onboarding_desc_page_1_part_3">il tuo nuovo</string>
@@ -1048,6 +1050,11 @@
     <string name="key_import_chains_no_results">Nessuna catena corrisponde alla tua ricerca</string>
 
     <string name="key_import_device_count_get_started">Inizia</string>
+    <string name="choose_device_count_a11y_description">Quanti dispositivi hai? Selezione attuale: %1$s. Tocca per sceglierne un altro.</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">Messaggi</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">Consigliata</string>
 
     <string name="welcome_tip">Suggerimento: Puoi usare un browser come dispositivo</string>

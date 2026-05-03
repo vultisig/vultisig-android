@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import vultisig.keysign.v1.SignTon
 
 @Immutable
 internal data class TransactionDetailsUiModel(
@@ -56,18 +57,16 @@ internal data class TransactionDetailsUiModel(
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,
+    val signTon: SignTon? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
-    val tokenDisplay: String? = null,
     val functionName: String? = null,
-    val resolvedToken: ValuedToken? = null,
     /**
-     * Resolved hero content for the dApp signing screens.
-     *
-     * Populated by [com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase] once the Blockaid
-     * simulation completes. When non-null, screens render this in place of the legacy "function
-     * name" text or the native-amount `VsOverviewToken`. When null, screens fall back to the
-     * existing display logic (resolved native amount / decoded function name).
+     * Resolved hero content for the dApp signing screens. Populated by [BuildHeroContentUseCase]
+     * once the Blockaid simulation completes. When non-null, screens render this in place of the
+     * function-name title or the native-amount `VsOverviewToken`. When null, screens fall back to
+     * the existing display logic (function-name title for EVM contract calls, otherwise native
+     * amount).
      */
     val heroContent: HeroContent? = null,
 )

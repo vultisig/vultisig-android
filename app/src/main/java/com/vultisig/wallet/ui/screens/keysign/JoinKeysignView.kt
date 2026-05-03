@@ -197,7 +197,7 @@ private fun JoinKeysignScreen(
         content()
     } else {
         V2Scaffold(
-            onBackClick = onBack.takeIf { isKeySignFinished.not() && isError.not() },
+            onBackClick = onBack.takeIf { isError.not() },
             rightIcon = R.drawable.big_close.takeIf { isError },
             onRightIconClick = onBack.takeIf { isError },
             title =
@@ -206,6 +206,9 @@ private fun JoinKeysignScreen(
                         if (isKeySignFinished.not()) R.string.keysign
                         else R.string.transaction_complete_screen_title
                 ),
+            // TxDoneScaffold inside KeysignView already pads its content; skip the
+            // V2Scaffold default padding when finished so it matches the initiator.
+            applyDefaultPaddings = isKeySignFinished.not(),
             content = content,
         )
     }

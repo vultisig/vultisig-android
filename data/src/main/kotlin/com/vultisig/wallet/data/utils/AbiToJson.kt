@@ -75,15 +75,17 @@ private fun convertSimpleValue(type: String, value: JsonElement): JsonElement {
  * Serialize a big integer ABI value as a JSON *string* so precision is preserved end-to-end.
  * Emitting it as a JSON number forces kotlinx.serialization to round-trip through a Number, which
  * for values like MAX_UINT256 (2^256 - 1) gets rendered in scientific notation
- * (`1.157920892373162E77`) — that both looks wrong in the raw function-inputs box AND breaks
- * downstream parsers that assume plain decimal digits (see ContractCallExtractor.extract).
+ * (`1.157920892373162E77`) — wrong in the user-facing function-inputs box.
+ *
+ * Malformed input falls through to [JsonNull] rather than forwarding the raw string. The args JSON
+ * is rendered verbatim into the signing UI; raw forwarding would let lookalike Unicode / RTL
+ * overrides / zero-width codepoints in attacker-controlled ABI args reach the signing screen.
  */
 private fun parseBigIntAsJsonString(value: String): JsonElement {
     return try {
-        val big = BigInteger(value)
-        JsonPrimitive(big.toString())
-    } catch (_: Exception) {
-        JsonPrimitive(value)
+        JsonPrimitive(BigInteger(value).toString())
+    } catch (_: NumberFormatException) {
+        JsonNull
     }
 }
 

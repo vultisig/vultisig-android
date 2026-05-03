@@ -129,8 +129,8 @@
     <string name="keysign_screen_signing_with_mldsa">ASSINANDO USANDO CHAVE MLDSA…</string>
     <string name="vault_settings_delete_vault_caution1">Estou ciente de que o cofre será excluído permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Estou ciente de que posso perder fundos</string>
-    <string name="vault_settings_delete_vault_caution3">Fiz um backup do cofre</string>
-    <string name="confirm_delete_permanent_delete_message">Você está excluindo permanentemente seu cofre</string>
+    <string name="vault_settings_delete_vault_caution3">Fiz um backup do cofre para restaurá-lo mais tarde</string>
+    <string name="confirm_delete_permanent_delete_message">Você está excluindo permanentemente sua parte do cofre deste aplicativo</string>
     <string name="confirm_delete_delete_vault">Deletar Cofre</string>
     <string name="rename_vault_screen_vault_name">Nome do Cofre</string>
     <string name="faq_settings_q1">O que é a Vultisig?</string>
@@ -517,14 +517,15 @@
     <string name="deposit_option_add_liquidity">Adicionar liquidez</string>
     <string name="deposit_option_remove_liquidity">Remover liquidez</string>
     <string name="add_pool_title">Adicionar Pool</string>
+    <string name="add_lp_title">Adicionar LP de %1$s</string>
     <string name="add_pool_amount_label">Valor</string>
     <string name="add_pool_gas_auto">Taxa de rede (auto)</string>
     <string name="max">Máx</string>
     <string name="token_fiat_toggle_token_label">Valor do token</string>
     <string name="token_fiat_toggle_fiat_label">Valor fiat</string>
     <string name="remove_pool_title">Remover Pool</string>
+    <string name="remove_lp_title">Remover LP de %1$s</string>
     <string name="remove_pool_amount_label">Montante</string>
-    <string name="remove_pool_zero_cacao">0 CACAO</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
     <string name="stake_cacao_title">Apostar CACAO</string>
     <string name="unstake_cacao_title">Desapostar CACAO</string>
@@ -722,6 +723,8 @@
     <string name="keysign_password_enter_your_password">Introduza a sua senha</string>
     <string name="migration_password_enter_your_password_to_unlock">Introduza a sua palavra-passe para desbloquear a sua Partilha de Servidor e iniciar a atualização.</string>
     <string name="join_key_gen_vault_with_duplicate_name_exists">Existe um cofre com nome duplicado</string>
+    <string name="join_key_gen_vault_already_on_device">O cofre \"%1$s\" já está neste dispositivo</string>
+    <string name="join_key_gen_open_existing_vault">Abrir cofre</string>
     <string name="join_key_gen_unknown_tssaction">Ação Tss desconhecida</string>
     <string name="join_key_gen_mediator_discovery_timeout">Não foi possível encontrar o outro dispositivo na rede</string>
     <string name="join_key_gen_waiting_for_other_devices_to_join">Aguarda a entrada de outros dispositivos</string>
@@ -877,7 +880,6 @@
     <string name="select_vault_type_fast_title">Configuração rápida num único dispositivo</string>
     <string name="select_vault_type_fast_desc_1">Apenas 1 dispositivo necessário</string>
     <string name="scan_qr_code_modal_scan_the">Leia o QR nos seus outros dispositivos</string>
-    <string name="tx_overview_screen_title">Concluído</string>
     <string name="fast_vault_password_screen_warning">A palavra-passe não pode ser redefinida ou recuperada</string>
     <string name="referral_top_bar_list">Referência</string>
     <string name="onboarding_desc_page_1_part_3">O seu novo</string>
@@ -1046,6 +1048,11 @@
     <string name="key_import_chains_no_results">Nenhuma cadeia corresponde à sua pesquisa</string>
 
     <string name="key_import_device_count_get_started">Começar</string>
+    <string name="choose_device_count_a11y_description">Quantos dispositivos tem? Seleção atual: %1$s. Toque para escolher outro.</string>
+    <!-- TonConnect multi-message sign payload -->
+    <string name="sign_ton_messages">Mensagens</string>
+    <string name="sign_ton_payload">Payload</string>
+    <string name="sign_ton_state_init">State Init</string>
     <string name="vault_count_recommended">Recomendada</string>
 
     <string name="welcome_tip">Dica: Pode usar um browser como dispositivo</string>

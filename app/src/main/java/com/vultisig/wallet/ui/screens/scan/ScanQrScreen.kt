@@ -147,6 +147,7 @@ private fun ScanQrScreen(
     var isScanned by remember { mutableStateOf(false) }
     var isPickerLaunched by remember { mutableStateOf(false) }
     var hasRequestedPermission by remember { mutableStateOf(false) }
+    val noBarcodeFoundMessage = stringResource(R.string.no_barcodes_found)
 
     val onSuccess: (List<Barcode>) -> Unit = { barcodes ->
         if (barcodes.isNotEmpty()) {
@@ -154,13 +155,13 @@ private fun ScanQrScreen(
                 isScanned = true
                 val barcode = barcodes.first()
                 val barcodeValue = barcode.rawValue
-                Timber.d(context.getString(R.string.successfully_scanned_barcode, barcodeValue))
+                Timber.d("Successfully scanned barcode: %s", barcodeValue)
                 if (barcodeValue != null) {
                     onScanSuccess(barcodeValue)
                 }
             }
         } else {
-            onError(context.getString(R.string.no_barcodes_found))
+            onError(noBarcodeFoundMessage)
         }
     }
 
@@ -189,14 +190,14 @@ private fun ScanQrScreen(
                                     if (retry.barcodes.isNotEmpty()) {
                                         onSuccess(retry.barcodes)
                                     } else {
-                                        onError(context.getString(R.string.no_barcodes_found))
+                                        onError(noBarcodeFoundMessage)
                                     }
                                 is ScanResult.Failure -> {
                                     Timber.e(
                                         "Scan failed: %s",
                                         (first as? ScanResult.Failure)?.message ?: retry.message,
                                     )
-                                    onError(context.getString(R.string.no_barcodes_found))
+                                    onError(noBarcodeFoundMessage)
                                 }
                             }
                         }
@@ -204,7 +205,7 @@ private fun ScanQrScreen(
                         throw e
                     } catch (e: Exception) {
                         Timber.e(e, "Failed to scan image from gallery")
-                        onError(context.getString(R.string.no_barcodes_found))
+                        onError(noBarcodeFoundMessage)
                     }
                 }
             }

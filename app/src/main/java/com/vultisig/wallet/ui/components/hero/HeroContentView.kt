@@ -45,7 +45,7 @@ internal fun HeroContentView(content: HeroContent, modifier: Modifier = Modifier
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         when (content) {
-            is HeroContent.Title -> TitleOnlyHero(text = content.text, caption = null)
+            is HeroContent.Title -> TitleOnlyHero(text = content.title, caption = null)
             HeroContent.Unverified ->
                 TitleOnlyHero(
                     text = stringResource(R.string.dapp_hero_unverified_function_title),
@@ -54,6 +54,30 @@ internal fun HeroContentView(content: HeroContent, modifier: Modifier = Modifier
             is HeroContent.Send -> SendHero(content)
             is HeroContent.Swap -> SwapHero(content)
         }
+    }
+}
+
+/**
+ * Common hero-or-fallback rendering used by the verify, sign, and done screens.
+ *
+ * Three branches in priority order:
+ * 1. [heroContent] non-null — Blockaid simulation resolved a `Send` / `Swap` / `Unverified` shape.
+ * 2. [functionName] non-null — 4byte decoded the call but Blockaid hasn't loaded yet (or failed).
+ *    Renders a title-only hero so the screen reads as a contract call rather than a 0-ETH send.
+ * 3. Otherwise — [fallback] (typically the legacy `VsOverviewToken` native-amount card).
+ */
+@Composable
+internal fun TransactionHero(
+    heroContent: HeroContent?,
+    functionName: String?,
+    modifier: Modifier = Modifier,
+    fallback: @Composable () -> Unit,
+) {
+    when {
+        heroContent != null -> HeroContentView(content = heroContent, modifier = modifier)
+        functionName != null ->
+            HeroContentView(content = HeroContent.Title(functionName), modifier = modifier)
+        else -> fallback()
     }
 }
 
@@ -235,7 +259,7 @@ private fun ArrowDivider() {
 @Preview
 @Composable
 private fun PreviewHeroContentTitleOnly() {
-    HeroContentView(content = HeroContent.Title(text = "Approve"))
+    HeroContentView(content = HeroContent.Title("Approve"))
 }
 
 @Preview

@@ -215,4 +215,16 @@ internal interface DataUsecasesModule {
     fun bindRefreshPendingTransactionsUseCase(
         impl: RefreshPendingTransactionsUseCaseImpl
     ): RefreshPendingTransactionsUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetThorChainLpPositionsUseCase(
+        impl: GetThorChainLpPositionsUseCaseImpl
+    ): GetThorChainLpPositionsUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetThorChainLpPositionUseCase(
+        impl: GetThorChainLpPositionUseCaseImpl
+    ): GetThorChainLpPositionUseCase
 }

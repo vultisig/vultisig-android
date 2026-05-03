@@ -58,6 +58,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
@@ -67,6 +68,7 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
+import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.navigation.Destination
@@ -171,8 +173,16 @@ internal data class DepositFormUiModel(
     val bondableAssets: List<String> = emptyList(),
     val selectedBondAsset: String = "",
     val availableLpUnits: String? = null,
-    val selectedPoolTotalLpUnits: Long = 0L,
-    val selectedPoolCacaoDepth: Long = 0L,
+    // For Maya: total LP units in the pool. For THORChain remove-LP, this stores the user's own
+    // units (the calculator divides by it so that selectedUnits/userUnits gives the redeem
+    // fraction).
+    val removeLpUnitsDivisor: BigInteger = BigInteger.ZERO,
+    // For Maya: pool's CACAO depth (base units). For THORChain remove-LP, this stores the user's
+    // pre-computed RUNE redeem value (base units). Renamed from chain-specific names because the
+    // semantic differs between flows.
+    val removeLpPoolDepth: BigInteger = BigInteger.ZERO,
+    val removeLpDecimals: Int = RemoveLpCalculator.CACAO_DECIMALS,
+    val removeLpTokenSymbol: String = "CACAO",
     val totalGas: UiText = UiText.Empty,
     val estimatedFee: UiText = UiText.Empty,
     val removeLpPercent: Float = 0f,
@@ -206,6 +216,7 @@ constructor(
     private val tokenRepository: TokenRepository,
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
+    private val getThorChainLpPositionUseCase: GetThorChainLpPositionUseCase,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -262,6 +273,7 @@ constructor(
     private val secureAssetNodeValue = MutableStateFlow<String?>(null)
     private var addressJob: Job? = null
     private var whitelistJob: Job? = null
+    private var loadLpJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
@@ -461,8 +473,8 @@ constructor(
                 bondableAssets = emptyList(),
                 selectedBondAsset = "",
                 availableLpUnits = null,
-                selectedPoolTotalLpUnits = 0L,
-                selectedPoolCacaoDepth = 0L,
+                removeLpUnitsDivisor = BigInteger.ZERO,
+                removeLpPoolDepth = BigInteger.ZERO,
             )
         }
         assetsFieldState.clearText()
@@ -492,8 +504,9 @@ constructor(
                     bondableAssets = assets,
                     selectedBondAsset = firstAsset,
                     availableLpUnits = firstPool?.availableUnits,
-                    selectedPoolTotalLpUnits = firstPool?.totalPoolLpUnits ?: 0L,
-                    selectedPoolCacaoDepth = firstPool?.poolCacaoDepth ?: 0L,
+                    removeLpUnitsDivisor =
+                        firstPool?.totalPoolLpUnits?.toBigInteger() ?: BigInteger.ZERO,
+                    removeLpPoolDepth = firstPool?.poolCacaoDepth?.toBigInteger() ?: BigInteger.ZERO,
                 )
             }
             if (firstAsset.isNotEmpty()) {
@@ -509,8 +522,8 @@ constructor(
                     _state.update {
                         it.copy(
                             availableLpUnits = null,
-                            selectedPoolTotalLpUnits = 0L,
-                            selectedPoolCacaoDepth = 0L,
+                            removeLpUnitsDivisor = BigInteger.ZERO,
+                            removeLpPoolDepth = BigInteger.ZERO,
                             errorText = UiText.StringResource(R.string.dialog_default_error_body),
                         )
                     }
@@ -519,87 +532,209 @@ constructor(
         _state.update {
             it.copy(
                 availableLpUnits = null,
-                selectedPoolTotalLpUnits = 0L,
-                selectedPoolCacaoDepth = 0L,
+                removeLpUnitsDivisor = BigInteger.ZERO,
+                removeLpPoolDepth = BigInteger.ZERO,
                 removeLpPercent = 0f,
                 removeLpCacaoDisplay = "",
                 balance = R.string.share_balance_loading.asUiText(),
+                errorText = null,
             )
         }
-        viewModelScope.safeLaunch {
-            val userAddress =
-                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
-                    ?.address
-                    ?: run {
-                        _state.update {
-                            it.copy(
-                                errorText =
-                                    UiText.StringResource(R.string.dialog_default_error_body)
-                            )
+        loadLpJob?.cancel()
+        loadLpJob =
+            viewModelScope.safeLaunch {
+                val userAddress =
+                    withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                        ?.address
+                        ?: run {
+                            _state.update {
+                                it.copy(
+                                    errorText =
+                                        UiText.StringResource(R.string.dialog_default_error_body)
+                                )
+                            }
+                            return@safeLaunch
                         }
-                        return@safeLaunch
+                val memberDetails =
+                    withContext(Dispatchers.IO) {
+                        mayachainBondRepository.getMemberDetails(userAddress)
                     }
-            val memberDetails =
-                withContext(Dispatchers.IO) {
-                    mayachainBondRepository.getMemberDetails(userAddress)
+                val userLpUnits =
+                    memberDetails.pools.find { it.pool == poolId }?.liquidityUnits
+                        ?: run {
+                            _state.update {
+                                it.copy(
+                                    availableLpUnits = null,
+                                    removeLpUnitsDivisor = BigInteger.ZERO,
+                                    removeLpPoolDepth = BigInteger.ZERO,
+                                    errorText =
+                                        UiText.StringResource(R.string.dialog_default_error_body),
+                                )
+                            }
+                            return@safeLaunch
+                        }
+                val poolStats =
+                    withContext(Dispatchers.IO) { mayachainBondRepository.getLpPoolStats() }
+                val pool =
+                    poolStats.find { it.asset == poolId }
+                        ?: run {
+                            _state.update {
+                                it.copy(
+                                    availableLpUnits = null,
+                                    removeLpUnitsDivisor = BigInteger.ZERO,
+                                    removeLpPoolDepth = BigInteger.ZERO,
+                                    errorText =
+                                        UiText.StringResource(R.string.dialog_default_error_body),
+                                )
+                            }
+                            return@safeLaunch
+                        }
+                val totalPoolUnits = pool.units.toBigIntegerOrNull() ?: BigInteger.ZERO
+                val cacaoDepth = pool.cacaoDepth.toBigIntegerOrNull() ?: BigInteger.ZERO
+                val userAvailableUnits = userLpUnits.toLongOrNull()
+                val userCacao =
+                    if (userAvailableUnits != null) {
+                        RemoveLpCalculator.computeAmountDisplay(
+                            selectedUnits = userAvailableUnits,
+                            poolDepth = cacaoDepth,
+                            totalPoolUnits = totalPoolUnits,
+                            decimals = RemoveLpCalculator.CACAO_DECIMALS,
+                        )
+                    } else null
+                val balanceText =
+                    if (userCacao != null) {
+                        UiText.FormattedText(
+                            R.string.remove_pool_amount_format,
+                            listOf(userCacao, "CACAO"),
+                        )
+                    } else UiText.Empty
+                _state.update {
+                    it.copy(
+                        availableLpUnits = userLpUnits,
+                        removeLpUnitsDivisor = totalPoolUnits,
+                        removeLpPoolDepth = cacaoDepth,
+                        removeLpDecimals = RemoveLpCalculator.CACAO_DECIMALS,
+                        removeLpTokenSymbol = "CACAO",
+                        balance = balanceText,
+                    )
                 }
-            val userLpUnits =
-                memberDetails.pools.find { it.pool == poolId }?.liquidityUnits
-                    ?: run {
-                        _state.update {
-                            it.copy(
-                                availableLpUnits = null,
-                                selectedPoolTotalLpUnits = 0L,
-                                selectedPoolCacaoDepth = 0L,
-                                errorText =
-                                    UiText.StringResource(R.string.dialog_default_error_body),
-                            )
-                        }
-                        return@safeLaunch
-                    }
-            val poolStats = withContext(Dispatchers.IO) { mayachainBondRepository.getLpPoolStats() }
-            val pool =
-                poolStats.find { it.asset == poolId }
-                    ?: run {
-                        _state.update {
-                            it.copy(
-                                availableLpUnits = null,
-                                selectedPoolTotalLpUnits = 0L,
-                                selectedPoolCacaoDepth = 0L,
-                                errorText =
-                                    UiText.StringResource(R.string.dialog_default_error_body),
-                            )
-                        }
-                        return@safeLaunch
-                    }
-            val totalPoolUnits = pool.units.toLongOrNull() ?: 0L
-            val cacaoDepth = pool.cacaoDepth.toLongOrNull() ?: 0L
-            val userAvailableUnits = userLpUnits.toLongOrNull()
-            val userCacao =
-                if (userAvailableUnits != null) {
-                    RemoveLpCalculator.computeCacaoDisplay(
-                        selectedUnits = userAvailableUnits,
-                        cacaoDepth = cacaoDepth,
-                        totalPoolUnits = totalPoolUnits,
-                    )
-                } else null
-            val balanceText =
-                if (userCacao != null) {
-                    UiText.FormattedText(
-                        R.string.remove_pool_cacao_amount_format,
-                        listOf(userCacao),
-                    )
-                } else UiText.Empty
-            _state.update {
-                it.copy(
-                    availableLpUnits = userLpUnits,
-                    selectedPoolTotalLpUnits = totalPoolUnits,
-                    selectedPoolCacaoDepth = cacaoDepth,
-                    balance = balanceText,
-                )
+                setRemoveLpPercent(state.value.removeLpPercent)
             }
-            setRemoveLpPercent(state.value.removeLpPercent)
+    }
+
+    private fun loadThorChainRemoveLpData() {
+        val poolId =
+            lpPoolId
+                ?: run {
+                    _state.update {
+                        it.copy(
+                            availableLpUnits = null,
+                            removeLpUnitsDivisor = BigInteger.ZERO,
+                            removeLpPoolDepth = BigInteger.ZERO,
+                            removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
+                            removeLpTokenSymbol = Coins.ThorChain.RUNE.ticker,
+                            errorText = UiText.StringResource(R.string.dialog_default_error_body),
+                        )
+                    }
+                    return
+                }
+        _state.update {
+            it.copy(
+                availableLpUnits = null,
+                removeLpUnitsDivisor = BigInteger.ZERO,
+                removeLpPoolDepth = BigInteger.ZERO,
+                removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
+                removeLpTokenSymbol = Coins.ThorChain.RUNE.ticker,
+                removeLpPercent = 0f,
+                removeLpCacaoDisplay = "",
+                balance = R.string.share_balance_loading.asUiText(),
+                errorText = null,
+            )
         }
+        loadLpJob?.cancel()
+        loadLpJob =
+            viewModelScope.safeLaunch {
+                val userAddress =
+                    withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                        ?.address
+                        ?: run {
+                            _state.update {
+                                it.copy(
+                                    errorText =
+                                        UiText.StringResource(R.string.dialog_default_error_body)
+                                )
+                            }
+                            return@safeLaunch
+                        }
+                val currentVaultId = vaultId
+                val pairedAddress =
+                    if (currentVaultId != null) {
+                        resolvePairedAddress(Chain.ThorChain, currentVaultId, poolId)
+                    } else null
+                val position =
+                    withContext(Dispatchers.IO) {
+                        getThorChainLpPositionUseCase(
+                            poolId = poolId,
+                            runeAddress = userAddress,
+                            assetAddress = pairedAddress,
+                        )
+                    }
+
+                if (position == null || position.units <= BigInteger.ZERO) {
+                    _state.update {
+                        it.copy(
+                            availableLpUnits = null,
+                            removeLpUnitsDivisor = BigInteger.ZERO,
+                            removeLpPoolDepth = BigInteger.ZERO,
+                            balance = UiText.Empty,
+                            errorText = UiText.StringResource(R.string.dialog_default_error_body),
+                        )
+                    }
+                    return@safeLaunch
+                }
+
+                // Use the pre-computed redeem value from the use case as `poolDepth` and the user's
+                // own
+                // units as `totalPoolUnits`. With selectedUnits = percent * userUnits, the
+                // calculator
+                // produces percent * runeRedeemValue, which is the symmetric RUNE half of
+                // withdrawal.
+                // Keep BigInteger end-to-end for whale positions whose units exceed Long.MAX_VALUE.
+                val userUnits = position.units
+                val runeRedeemBase = position.runeRedeemValue
+                val symbol = Coins.ThorChain.RUNE.ticker
+                val userUnitsLongOrNull =
+                    userUnits
+                        .takeIf { it.signum() > 0 && it.bitLength() < Long.SIZE_BITS }
+                        ?.toLong()
+                val userRune =
+                    userUnitsLongOrNull?.let { userUnitsLong ->
+                        RemoveLpCalculator.computeAmountDisplay(
+                            selectedUnits = userUnitsLong,
+                            poolDepth = runeRedeemBase,
+                            totalPoolUnits = userUnits,
+                            decimals = RemoveLpCalculator.RUNE_DECIMALS,
+                        )
+                    }
+                val balanceText =
+                    if (userRune != null) {
+                        UiText.FormattedText(
+                            R.string.remove_pool_amount_format,
+                            listOf(userRune, symbol),
+                        )
+                    } else UiText.Empty
+                _state.update {
+                    it.copy(
+                        availableLpUnits = userUnits.toString(),
+                        removeLpUnitsDivisor = userUnits,
+                        removeLpPoolDepth = runeRedeemBase,
+                        removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
+                        removeLpTokenSymbol = symbol,
+                        balance = balanceText,
+                    )
+                }
+                setRemoveLpPercent(state.value.removeLpPercent)
+            }
     }
 
     fun selectBondAsset(asset: String) {
@@ -608,8 +743,8 @@ constructor(
             it.copy(
                 selectedBondAsset = asset,
                 availableLpUnits = pool?.availableUnits,
-                selectedPoolTotalLpUnits = pool?.totalPoolLpUnits ?: 0L,
-                selectedPoolCacaoDepth = pool?.poolCacaoDepth ?: 0L,
+                removeLpUnitsDivisor = pool?.totalPoolLpUnits?.toBigInteger() ?: BigInteger.ZERO,
+                removeLpPoolDepth = pool?.poolCacaoDepth?.toBigInteger() ?: BigInteger.ZERO,
                 lpUnitsError = null,
             )
         }
@@ -627,10 +762,11 @@ constructor(
         val availableUnits = s.availableLpUnits?.toLongOrNull() ?: return
         val selectedUnits = (percent * availableUnits).toLong().coerceAtLeast(0L)
         val cacaoDisplay =
-            RemoveLpCalculator.computeCacaoDisplay(
+            RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = selectedUnits,
-                cacaoDepth = s.selectedPoolCacaoDepth,
-                totalPoolUnits = s.selectedPoolTotalLpUnits,
+                poolDepth = s.removeLpPoolDepth,
+                totalPoolUnits = s.removeLpUnitsDivisor,
+                decimals = s.removeLpDecimals,
             ) ?: return
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(selectedUnits.toString())
         _state.update { it.copy(removeLpPercent = percent, removeLpCacaoDisplay = cacaoDisplay) }
@@ -740,6 +876,8 @@ constructor(
     }
 
     fun selectDepositOption(option: DepositOption) {
+        // Stop any in-flight Remove LP fetch so it can't write stale state into the new option.
+        loadLpJob?.cancel()
         viewModelScope.launch {
             resetTextFields()
             _state.update { it.copy(depositOption = option) }
@@ -798,16 +936,22 @@ constructor(
                 }
 
                 DepositOption.AddLiquidity -> {
-                    _state.update {
-                        it.copy(selectedToken = Coins.MayaChain.CACAO, unstakableAmount = null)
-                    }
+                    val token =
+                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
+                        else Coins.ThorChain.RUNE
+                    _state.update { it.copy(selectedToken = token, unstakableAmount = null) }
                 }
 
                 DepositOption.RemoveLiquidity -> {
-                    _state.update {
-                        it.copy(selectedToken = Coins.MayaChain.CACAO, unstakableAmount = null)
+                    val token =
+                        if (chain == Chain.MayaChain) Coins.MayaChain.CACAO
+                        else Coins.ThorChain.RUNE
+                    _state.update { it.copy(selectedToken = token, unstakableAmount = null) }
+                    when (chain) {
+                        Chain.MayaChain -> loadRemoveLpData()
+                        Chain.ThorChain -> loadThorChainRemoveLpData()
+                        else -> Unit
                     }
-                    loadRemoveLpData()
                 }
 
                 DepositOption.WithdrawSecuredAsset -> {
@@ -1581,7 +1725,18 @@ constructor(
 
         val srcAddress = selectedToken.address
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
-        val memo = DepositMemo.AddLiquidity(poolId)
+        val pairedAddress = resolvePairedAddress(chain, vaultId, poolId)
+        // For a RUNE-side add into a non-THOR pool the memo MUST carry the paired-chain address —
+        // otherwise THORChain can't credit the LP when the asset half is later deposited.
+        if (chain == Chain.ThorChain && pairedAddress == null) {
+            val assetChain = parseThorChainPool(poolId).chain
+            if (assetChain != null && assetChain != Chain.ThorChain) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+            }
+        }
+        val memo = DepositMemo.AddLiquidity(poolId, pairedAddress)
 
         val specific =
             blockChainSpecificRepository.getSpecific(
@@ -1608,6 +1763,31 @@ constructor(
             blockChainSpecific = specific.blockChainSpecific,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
         )
+    }
+
+    /**
+     * For symmetric LP add the memo carries the user's address on the *paired* chain so THORChain
+     * can credit them when the asset half is later deposited from that chain. Returns null when the
+     * pool refers to the native chain (no pair) or when the asset chain can't be resolved.
+     */
+    private suspend fun resolvePairedAddress(
+        chain: Chain,
+        vaultId: String,
+        poolId: String,
+    ): String? {
+        if (chain != Chain.ThorChain) return null
+        val parsed =
+            parseThorChainPool(poolId).takeIf { it.chain != null && it.chain != Chain.ThorChain }
+                ?: return null
+        val assetChain = parsed.chain ?: return null
+        return try {
+            val vault = vaultRepository.get(vaultId) ?: return null
+            chainAccountAddressRepository.getAddress(chain = assetChain, vault = vault).first
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to resolve paired address for $poolId")
+            null
+        }
     }
 
     private suspend fun createRemoveLiquidityTransaction(): DepositTransaction {

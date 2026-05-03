@@ -14,12 +14,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -39,7 +41,6 @@ import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
-import kotlinx.coroutines.launch
 
 @Composable
 internal fun SwapTransactionOverviewScreen(
@@ -53,6 +54,8 @@ internal fun SwapTransactionOverviewScreen(
     progressLink: String?,
     onBack: () -> Unit = {},
     transactionTypeUiModel: SwapTransactionUiModel,
+    isTransactionDetailVisible: Boolean,
+    onTransactionDetailVisibleChange: (Boolean) -> Unit,
 ) {
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -64,6 +67,8 @@ internal fun SwapTransactionOverviewScreen(
         transactionLink = transactionLink,
         transactionStatus = transactionStatus,
         onBack = onBack,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
         tokenContent = {
             Box {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -106,21 +111,27 @@ internal fun SwapTransactionOverviewScreen(
         },
         detailContent = {
             Column {
-                val coroutineScope = rememberCoroutineScope()
-                val context = LocalContext.current
+                var copiedApprovalTx by remember { mutableStateOf<String?>(null) }
+                val copiedApprovalTxMessage =
+                    copiedApprovalTx?.let { stringResource(R.string.tx_done_address_copied, it) }
+                LaunchedEffect(copiedApprovalTx) {
+                    copiedApprovalTxMessage?.let { msg ->
+                        snackbarHostState.showSnackbar(msg)
+                        copiedApprovalTx = null
+                    }
+                }
+
+                TransactionStatusRow(transactionStatus)
+
+                VerifyCardDivider(size = 1.dp)
+
                 if (approveTransactionHash.isNotEmpty()) {
                     TxDetails(
                         title = stringResource(R.string.swap_transaction_overview_approval_tx_hash),
                         hash = approveTransactionHash,
                         link = approveTransactionLink,
                         modifier = Modifier.padding(vertical = 12.dp),
-                        onTxHashCopied = { tx ->
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar(
-                                    context.getString(R.string.tx_done_address_copied, tx)
-                                )
-                            }
-                        },
+                        onTxHashCopied = { tx -> copiedApprovalTx = tx },
                     )
 
                     VerifyCardDivider(size = 1.dp)
@@ -211,7 +222,18 @@ internal fun Details(
 
 @Preview
 @Composable
-private fun SwapTransactionOverviewScreenPreview() {
+private fun SwapTransactionOverviewScreenPreviewCollapsed() {
+    PreviewSwapTransactionOverviewScreen(isTransactionDetailVisible = false)
+}
+
+@Preview
+@Composable
+private fun SwapTransactionOverviewScreenPreviewExpanded() {
+    PreviewSwapTransactionOverviewScreen(isTransactionDetailVisible = true)
+}
+
+@Composable
+private fun PreviewSwapTransactionOverviewScreen(isTransactionDetailVisible: Boolean) {
     SwapTransactionOverviewScreen(
         transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
         approveTransactionHash = "321xba",
@@ -221,5 +243,7 @@ private fun SwapTransactionOverviewScreenPreview() {
         progressLink = "",
         transactionTypeUiModel = SwapTransactionUiModel(),
         transactionStatus = TransactionStatus.Broadcasted,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = {},
     )
 }
