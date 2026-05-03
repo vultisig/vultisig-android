@@ -43,7 +43,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -175,9 +178,16 @@ fun ResourceCard(
 
                 Column(modifier = Modifier.fillMaxWidth()) {
                     AutoSizingText(
-                        text = "${state.available}/${state.total}",
+                        text =
+                            buildAnnotatedString {
+                                withStyle(SpanStyle(color = colors.text.secondary)) {
+                                    append(state.available.toString())
+                                }
+                                withStyle(SpanStyle(color = colors.text.tertiary)) {
+                                    append(" / ${state.total}")
+                                }
+                            },
                         style = Theme.brockmann.supplementary.caption,
-                        color = colors.text.secondary,
                     )
                     Spacer(modifier = Modifier.height(7.dp))
                     AnimatedProgressBar(
