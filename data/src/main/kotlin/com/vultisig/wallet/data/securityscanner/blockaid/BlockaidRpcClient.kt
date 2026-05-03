@@ -9,7 +9,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 
-class BlockaidRpcClient(private val httpClient: HttpClient) : BlockaidRpcClientContract {
+internal class BlockaidRpcClient(private val httpClient: HttpClient) : BlockaidRpcClientContract {
 
     override suspend fun scanBitcoinTransaction(
         address: String,
@@ -48,7 +48,12 @@ class BlockaidRpcClient(private val httpClient: HttpClient) : BlockaidRpcClientC
         address: String,
         serializedMessage: String,
     ): BlockaidTransactionScanResponseJson {
-        val solanaRequest = buildSolanaScanRequest(address, serializedMessage)
+        val solanaRequest =
+            buildSolanaRequest(
+                address = address,
+                rawTransactions = listOf(serializedMessage),
+                options = listOf(BlockaidSimulationOptions.VALIDATION),
+            )
 
         return httpClient
             .post(BLOCKAID_BASE_URL) {
@@ -74,6 +79,50 @@ class BlockaidRpcClient(private val httpClient: HttpClient) : BlockaidRpcClientC
             .bodyOrThrow<BlockaidTransactionScanResponseJson>()
     }
 
+    override suspend fun simulateEvmTransaction(
+        chain: Chain,
+        from: String,
+        to: String,
+        amount: String,
+        data: String,
+    ): BlockaidEvmSimulationResponseJson {
+        val request = buildEvmSimulateRequest(chain, from, to, data, amount)
+
+        return httpClient
+            .post(BLOCKAID_BASE_URL) {
+                url { appendPathSegments("/evm/json-rpc/scan") }
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+            .bodyOrThrow<BlockaidEvmSimulationResponseJson>()
+    }
+
+    override suspend fun simulateSolanaTransaction(
+        address: String,
+        rawTransactionsBase58: List<String>,
+    ): BlockaidSolanaSimulationResponseJson {
+        // Asks for both simulation and validation in a single round-trip so the
+        // dApp hero gets balance changes and the security badge in one shot.
+        val request =
+            buildSolanaRequest(
+                address = address,
+                rawTransactions = rawTransactionsBase58,
+                options =
+                    listOf(
+                        BlockaidSimulationOptions.SIMULATION,
+                        BlockaidSimulationOptions.VALIDATION,
+                    ),
+            )
+
+        return httpClient
+            .post(BLOCKAID_BASE_URL) {
+                url { appendPathSegments("/solana/message/scan") }
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+            .bodyOrThrow<BlockaidSolanaSimulationResponseJson>()
+    }
+
     private fun buildBitcoinScanRequest(
         address: String,
         serializedTransaction: String,
@@ -81,7 +130,7 @@ class BlockaidRpcClient(private val httpClient: HttpClient) : BlockaidRpcClientC
         return BitcoinScanTransactionRequestJson(
             chain = Chain.Bitcoin.toName(),
             metadata = CommonMetadataJson(url = VULTISIG_DOMAIN),
-            options = listOf("validation"),
+            options = listOf(BlockaidSimulationOptions.VALIDATION),
             accountAddress = address,
             transaction = serializedTransaction,
         )
@@ -97,7 +146,7 @@ class BlockaidRpcClient(private val httpClient: HttpClient) : BlockaidRpcClientC
         return EthereumScanTransactionRequestJson(
             chain = chain.toName(),
             metadata = EthereumScanTransactionRequestJson.MetadataJson(domain = VULTISIG_DOMAIN),
-            options = listOf("validation"),
+            options = listOf(BlockaidSimulationOptions.VALIDATION),
             accountAddress = from,
             simulatedWithEstimatedGas = false,
             data =
@@ -110,17 +159,46 @@ class BlockaidRpcClient(private val httpClient: HttpClient) : BlockaidRpcClientC
         )
     }
 
-    private fun buildSolanaScanRequest(
+    private fun buildEvmSimulateRequest(
+        chain: Chain,
+        from: String,
+        to: String,
+        data: String,
+        amount: String,
+    ): BlockaidEvmSimulateRequestJson {
+        return BlockaidEvmSimulateRequestJson(
+            data =
+                BlockaidEvmSimulateRequestJson.DataJson(
+                    method = BlockaidEvmSimulateRequestJson.METHOD_ETH_SEND_TRANSACTION,
+                    params =
+                        listOf(
+                            BlockaidEvmSimulateRequestJson.DataJson.ParamsJson(
+                                from = from,
+                                to = to,
+                                value = amount,
+                                data = data,
+                            )
+                        ),
+                ),
+            chain = chain.toName(),
+            metadata = BlockaidEvmSimulateRequestJson.MetadataJson(domain = VULTISIG_DOMAIN),
+            options =
+                listOf(BlockaidSimulationOptions.SIMULATION, BlockaidSimulationOptions.VALIDATION),
+        )
+    }
+
+    private fun buildSolanaRequest(
         address: String,
-        serializedMessage: String,
+        rawTransactions: List<String>,
+        options: List<String>,
     ): SolanaScanTransactionRequestJson {
         return SolanaScanTransactionRequestJson(
             chain = SOLANA_CHAIN,
             metadata = CommonMetadataJson(url = VULTISIG_DOMAIN),
-            options = listOf("validation"),
+            options = options,
             accountAddress = address,
             encoding = SOLANA_ENCODING,
-            transactions = listOf(serializedMessage),
+            transactions = rawTransactions,
             method = SOLANA_SIGN_AND_SEND,
         )
     }
@@ -132,7 +210,7 @@ class BlockaidRpcClient(private val httpClient: HttpClient) : BlockaidRpcClientC
         return SuiScanTransactionRequestJson(
             chain = SUI_CHAIN,
             metadata = CommonMetadataJson(url = VULTISIG_DOMAIN),
-            options = listOf("validation"),
+            options = listOf(BlockaidSimulationOptions.VALIDATION),
             accountAddress = address,
             transaction = serializedTransaction,
         )

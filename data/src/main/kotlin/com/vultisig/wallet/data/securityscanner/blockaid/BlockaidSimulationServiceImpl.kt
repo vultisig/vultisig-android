@@ -1,0 +1,189 @@
+package com.vultisig.wallet.data.securityscanner.blockaid
+
+import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
+import com.vultisig.wallet.data.utils.NetworkException
+import com.vultisig.wallet.data.utils.toEvenLengthHexString
+import io.ktor.util.decodeBase64Bytes
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import timber.log.Timber
+import wallet.core.jni.Base58
+
+/**
+ * Cache + inflight-coalescing implementation of [BlockaidSimulationService].
+ *
+ * Mirrors the iOS `BlockaidSimulationService` actor:
+ * - one [Mutex] guards the cache + inflight maps, so map mutation and awaiting on inflight requests
+ *   are atomic per call
+ * - successful scans are cached forever (process lifetime)
+ * - empty scans (chain supported, no diff, no risk) are cached as well, so we don't keep retrying a
+ *   "this dApp call has no balance change" verdict
+ * - failures are not cached: the next screen retries
+ *
+ * The cache key is built lazily — only payloads whose [BlockaidSimulationCacheKey.from] returns
+ * non-null are eligible. Everything else short-circuits to [BlockaidKeysignScanResult.EMPTY]
+ * without hitting the network.
+ */
+internal class BlockaidSimulationServiceImpl(private val rpcClient: BlockaidRpcClientContract) :
+    BlockaidSimulationService {
+
+    private val mutex = Mutex()
+    private val cache = mutableMapOf<BlockaidSimulationCacheKey, BlockaidKeysignScanResult>()
+    private val inflight =
+        mutableMapOf<BlockaidSimulationCacheKey, CompletableDeferred<BlockaidKeysignScanResult>>()
+
+    override suspend fun scan(payload: KeysignPayload): BlockaidKeysignScanResult {
+        val key = BlockaidSimulationCacheKey.from(payload) ?: return BlockaidKeysignScanResult.EMPTY
+
+        // Fast path: cached successes return without acquiring an outer lock
+        // for very long. The mutex is released once we either (a) return cached
+        // value, (b) await an inflight task, or (c) install our own deferred.
+        val pending: CompletableDeferred<BlockaidKeysignScanResult>
+        val isLeader: Boolean
+        mutex.withLock {
+            cache[key]?.let {
+                return it
+            }
+            inflight[key]?.let {
+                pending = it
+                isLeader = false
+                return@withLock
+            }
+            val deferred = CompletableDeferred<BlockaidKeysignScanResult>()
+            inflight[key] = deferred
+            pending = deferred
+            isLeader = true
+        }
+
+        if (!isLeader) {
+            // Followers wait on the leader's deferred. The leader always
+            // completes the deferred with a value (EMPTY on its own failure),
+            // so [await] only throws if the follower's OWN coroutine is
+            // cancelled — in which case Kotlin requires we let the exception
+            // propagate so the follower's scope unwinds correctly.
+            return pending.await()
+        }
+
+        // Leader path: dispatch the actual RPC, then run cleanup under NonCancellable so an
+        // orphaned [inflight] entry can't strand future callers if the leader is cancelled.
+        // CancellationException is caught separately and rethrown after cleanup — the Kotlin
+        // coroutines contract requires the cancelled coroutine to observe it.
+        //
+        // Only [NetworkException] is treated as an expected operational failure: transport errors,
+        // HTTP 4xx/5xx, and JSON deserialisation are all wrapped into it by [bodyOrThrow] and the
+        // shared `HttpCallValidator`. Programming defects (NPE, ClassCastException, etc.) are
+        // allowed to propagate so they surface as bugs rather than being silently muted into
+        // EMPTY; the calling coroutine in [JoinKeysignViewModel.loadBlockaidSimulation] is wrapped
+        // in `safeLaunch` so a propagated defect still cannot crash the verify flow.
+        var result = BlockaidKeysignScanResult.EMPTY
+        var failure: NetworkException? = null
+        var cancellation: CancellationException? = null
+        try {
+            result = dispatchScan(payload, key)
+        } catch (e: CancellationException) {
+            cancellation = e
+        } catch (e: NetworkException) {
+            failure = e
+        }
+
+        val stillOwns =
+            withContext(NonCancellable) {
+                val owned =
+                    mutex.withLock {
+                        // If [invalidateAll] cleared the entry while we were dispatching, the
+                        // caller asked us to discard. Skip the cache write — resurrecting cleared
+                        // data violates the invalidate contract.
+                        val ownedEntry = inflight.remove(key)
+                        val owns = ownedEntry === pending
+                        // Successful empty results ARE cached: a stable "no diff" verdict for a
+                        // given calldata. Failures are not cached so the next screen retries.
+                        if (failure == null && cancellation == null && owns) {
+                            cache[key] = result
+                        }
+                        owns
+                    }
+                failure?.let { Timber.w(it, "Blockaid simulation scan failed for %s", key) }
+                // Complete inside NonCancellable so followers always wake up — even when the
+                // leader is being cancelled. [pending] is the captured local, not [inflight[key]],
+                // so a fresh deferred installed by a re-entered scan is unaffected.
+                pending.complete(result)
+                owned
+            }
+
+        // Cancellation propagates to the leader's caller AFTER cleanup so the surrounding scope
+        // unwinds correctly.
+        cancellation?.let { throw it }
+
+        return if (stillOwns) result else BlockaidKeysignScanResult.EMPTY
+    }
+
+    override suspend fun invalidateAll() {
+        // Mutex protects both maps; we MUST hold it because [scan] mutates
+        // them under the same lock. Pre-collect deferreds so we can complete
+        // them after releasing the lock — completion resumes awaiting
+        // coroutines, which we don't want to do while holding a non-reentrant
+        // lock.
+        val pending: List<CompletableDeferred<BlockaidKeysignScanResult>>
+        mutex.withLock {
+            cache.clear()
+            pending = inflight.values.toList()
+            inflight.clear()
+        }
+        pending.forEach { it.complete(BlockaidKeysignScanResult.EMPTY) }
+    }
+
+    private suspend fun dispatchScan(
+        payload: KeysignPayload,
+        key: BlockaidSimulationCacheKey,
+    ): BlockaidKeysignScanResult =
+        when (key) {
+            is BlockaidSimulationCacheKey.Evm -> scanEvm(payload)
+            is BlockaidSimulationCacheKey.Solana -> scanSolana(payload)
+        }
+
+    private suspend fun scanEvm(payload: KeysignPayload): BlockaidKeysignScanResult {
+        val response =
+            rpcClient.simulateEvmTransaction(
+                chain = payload.coin.chain,
+                from = payload.coin.address,
+                to = payload.toAddress,
+                amount = payload.toAmount.toEvenLengthHexString(),
+                data = payload.memo ?: "0x",
+            )
+        val simulation = BlockaidSimulationParser.parseEvm(response, payload.coin.chain)
+        val scannerResult = response.toSecurityScannerResultOrNull(BLOCKAID_PROVIDER)
+        return BlockaidKeysignScanResult(simulation = simulation, scannerResult = scannerResult)
+    }
+
+    private suspend fun scanSolana(payload: KeysignPayload): BlockaidKeysignScanResult {
+        // The Android keysign payload carries Solana raw transactions as base64
+        // (matches the proto definition `SignSolana.raw_transactions`). The
+        // Blockaid simulate endpoint expects base58, so we transcode here.
+        val rawBase64 = payload.signSolana?.rawTransactions.orEmpty()
+        if (rawBase64.isEmpty()) return BlockaidKeysignScanResult.EMPTY
+        val rawBase58 =
+            rawBase64.map { base64 ->
+                // encodeNoCheck rather than encode: these are raw transactions, not
+                // addresses, so the 4-byte SHA-256 checksum that Base58Check appends
+                // would corrupt the payload Blockaid receives.
+                runCatching { Base58.encodeNoCheck(base64.decodeBase64Bytes()) }
+                    .getOrElse {
+                        Timber.w(it, "Solana raw transaction base64 decode failed")
+                        return BlockaidKeysignScanResult.EMPTY
+                    }
+            }
+        val response =
+            rpcClient.simulateSolanaTransaction(
+                address = payload.coin.address,
+                rawTransactionsBase58 = rawBase58,
+            )
+        val simulation = BlockaidSimulationParser.parseSolana(response)
+        val scannerResult = response.toSecurityScannerResultOrNull(BLOCKAID_PROVIDER)
+        return BlockaidKeysignScanResult(simulation = simulation, scannerResult = scannerResult)
+    }
+}

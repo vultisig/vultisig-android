@@ -167,3 +167,61 @@ private fun String.toRecommendations(): String {
         else -> ""
     }
 }
+
+/**
+ * Maps a simulate-style EVM response to a [SecurityScannerResult] by re-using the validation logic
+ * that backs the standard scan endpoint. The simulation endpoint returns the same `validation`
+ * shape, so wrapping it in the existing scan response and delegating keeps a single source of truth
+ * for risk classification.
+ *
+ * Returns null when the response carries no validation data, OR when the shared validation parser
+ * raises a [SecurityScannerException] — the simulation hero must not propagate validation parsing
+ * errors because that would silently drop a parseable simulation alongside the validation failure.
+ * Errors are logged but the hero still degrades gracefully.
+ */
+internal fun BlockaidEvmSimulationResponseJson.toSecurityScannerResultOrNull(
+    provider: String
+): SecurityScannerResult? {
+    if (validation == null) return null
+    val wrapped =
+        BlockaidTransactionScanResponseJson(
+            requestId = null,
+            accountAddress = null,
+            status = null,
+            validation = validation,
+            result = null,
+            error = error,
+        )
+    return try {
+        wrapped.toSecurityScannerResult(provider)
+    } catch (e: SecurityScannerException) {
+        Timber.w(e, "Blockaid EVM validation parse failed; hero falls back")
+        null
+    }
+}
+
+/**
+ * Solana counterpart of [toSecurityScannerResultOrNull]. The validation block sits inside
+ * `result.validation` for Solana, so the wrapping has to fish it out of the simulation result
+ * before reusing the shared validation parser.
+ */
+internal fun BlockaidSolanaSimulationResponseJson.toSecurityScannerResultOrNull(
+    provider: String
+): SecurityScannerResult? {
+    val validation = result?.validation ?: return null
+    val wrapped =
+        BlockaidTransactionScanResponseJson(
+            requestId = null,
+            accountAddress = null,
+            status = status,
+            validation = null,
+            result = BlockaidTransactionScanResponseJson.BlockaidSolanaResultJson(validation),
+            error = error,
+        )
+    return try {
+        wrapped.toSolanaSecurityScannerResult(provider)
+    } catch (e: SecurityScannerException) {
+        Timber.w(e, "Blockaid Solana validation parse failed; hero falls back")
+        null
+    }
+}

@@ -57,6 +57,8 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
+import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidKeysignScanResult
+import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
@@ -85,6 +87,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.usecases.BuildHeroContentUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
@@ -210,6 +213,8 @@ constructor(
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
     private val resolveProviderUseCase: ResolveProviderUseCase,
     private val keysignViewModelFactory: KeysignViewModel.Factory,
+    private val blockaidSimulationService: BlockaidSimulationService,
+    private val buildHeroContent: BuildHeroContentUseCase,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -237,6 +242,7 @@ constructor(
     private var messagesToSign: List<String> = emptyList()
 
     private var _jobWaitingForKeysignStart: Job? = null
+    private var blockaidSimulationJob: Job? = null
     private var isNavigateToHome: Boolean = false
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
@@ -826,7 +832,7 @@ constructor(
                         is BlockChainSpecific.MayaChain -> specific.isDeposit
                         is BlockChainSpecific.THORChain -> specific.isDeposit
                         else -> {
-                            val memoUpper = payload.memo?.uppercase()
+                            val memoUpper = payload.memo?.uppercase(Locale.ROOT)
                             payload.coin.isSecuredAssetEligible() &&
                                 (memoUpper?.contains("SECURE+:") == true)
                         }
@@ -1074,11 +1080,56 @@ constructor(
                         )
                     val uiModel = verifyUiModel.value
                     if (uiModel is VerifyUiModel.Send) {
+                        // Kick off the Blockaid simulation in parallel with the
+                        // existing security scan; the hero refresh and the badge
+                        // refresh happen independently so neither blocks the
+                        // other and the UI doesn't go through an "all loading
+                        // at once" state.
+                        loadBlockaidSimulation(payload, functionInfo?.functionName)
                         scanTransaction(transaction)
                     }
                 }
             }
         }
+    }
+
+    /**
+     * Resolves the Blockaid hero for the current keysign payload and pushes the result into the
+     * shared [verifyUiModel].
+     *
+     * Runs on a background dispatcher; the cache + inflight coalescing inside
+     * [BlockaidSimulationService] makes calling this on every screen entry cheap. Failures degrade
+     * silently to the title-only fallback — the service swallows errors and returns
+     * [BlockaidKeysignScanResult.EMPTY].
+     */
+    private fun loadBlockaidSimulation(payload: KeysignPayload, decodedFunctionName: String?) {
+        // Cancel any in-flight scan before starting a new one. NSD can surface the same mediator
+        // service more than once (for example after a transient connectivity blip) and would
+        // otherwise launch concurrent coroutines that race to update the same StateFlow.
+        blockaidSimulationJob?.cancel()
+        blockaidSimulationJob =
+            viewModelScope.safeLaunch(
+                onError = { Timber.w(it, "Blockaid simulation failed during dApp signing") }
+            ) {
+                val result = withContext(Dispatchers.IO) { blockaidSimulationService.scan(payload) }
+                val hero =
+                    buildHeroContent(
+                        simulation = result.simulation,
+                        decodedFunctionName = decodedFunctionName,
+                        didLoadSimulation = true,
+                    )
+                updateSendUiModel(verifyUiModel) { current ->
+                    current.copy(transaction = current.transaction.copy(heroContent = hero))
+                }
+                // Mirror the resolved hero into [transactionTypeUiModel] so the
+                // done screen's `KeysignViewModel` carries the same content forward
+                // — the cache covers the same lookup, but updating in place avoids
+                // a per-screen re-fetch and a flash of "loading" state on done.
+                (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
+                    transactionTypeUiModel =
+                        TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))
+                }
+            }
     }
 
     private fun scanTransaction(transaction: Transaction) {
@@ -1268,6 +1319,7 @@ constructor(
 
     private fun cleanUp() {
         _jobWaitingForKeysignStart?.cancel()
+        blockaidSimulationJob?.cancel()
     }
 
     private fun waitForKeysignToStart() {
@@ -1349,7 +1401,7 @@ constructor(
      *
      * The function name is split on camelCase boundaries and title-cased so it reads as a label
      * (e.g. `supplyWithPermit` → `"Supply With Permit"`). Caller renders the name as a small-text
-     * heading; the resolved-amount hero is layered on by Blockaid simulation in #4306.
+     * heading above the resolved-amount Blockaid hero.
      *
      * Args decoding is best-effort. When it fails (malformed ABI, unsupported tuple shape, etc.)
      * the signature + function name still surface so the user sees *what* is being called, just
@@ -1376,6 +1428,33 @@ constructor(
 private val EVM_FUNCTION_NAME_BOUNDARY = Regex("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
 
 /**
+ * Codepoints that 4byte registry submissions must not smuggle into the signing UI: ISO controls,
+ * bidi/zero-width formatting, variation selectors, interlinear annotations, and tag codepoints.
+ *
+ * 4byte.directory is open-submit and orders entries by `created_at` — an attacker can register a
+ * crafted text for an unclaimed selector. Without this filter, an entry containing U+202E
+ * (RIGHT-TO-LEFT OVERRIDE) or a tag-codepoint payload could surface as a misleading hero title.
+ *
+ * MUST stay aligned with `BlockaidSimulationParser.isUnsafeCodePoint` so the same hero sanitisation
+ * applies whether the title comes from the 4byte fallback or a Blockaid response.
+ */
+private fun isUnsafeDisplayCodePoint(cp: Int): Boolean {
+    if (Character.isISOControl(cp)) return true
+    return cp == 0x200B || // ZERO WIDTH SPACE
+        cp == 0x200C || // ZERO WIDTH NON-JOINER
+        cp == 0x200D || // ZERO WIDTH JOINER
+        cp == 0x2060 || // WORD JOINER
+        cp == 0xFEFF || // ZERO WIDTH NO-BREAK SPACE / BOM
+        cp in 0x200E..0x200F || // LRM / RLM
+        cp in 0x202A..0x202E || // LRE / RLE / PDF / LRO / RLO
+        cp in 0x2066..0x2069 || // LRI / RLI / FSI / PDI
+        cp == 0x061C || // ARABIC LETTER MARK
+        cp in 0xFE00..0xFE0F || // VARIATION SELECTOR-1..16
+        cp in 0xFFF9..0xFFFB || // INTERLINEAR ANNOTATION ANCHOR/SEPARATOR/TERMINATOR
+        cp in 0xE0000..0xE007F // TAG codepoints (incl. LANGUAGE TAG)
+}
+
+/**
  * Extract a display-friendly function name from an ABI signature.
  * - `supplyWithPermit(...)` → `"Supply With Permit"`
  * - `WBTCSwap(...)` → `"WBTC Swap"`
@@ -1383,9 +1462,22 @@ private val EVM_FUNCTION_NAME_BOUNDARY = Regex("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?
  * Digit-prefixed names like `ERC20transferFrom` are left as-is — splitting on digits produces
  * uglier output than it fixes for the long tail of selectors. Returns null when the signature has
  * no `(` or is empty before it.
+ *
+ * Iterates by codepoint, not [Char], so non-BMP unsafe codepoints (e.g. tag codepoints in plane 14)
+ * are stripped rather than ignored.
  */
 internal fun prettifyEvmFunctionName(signature: String): String? {
-    val rawName = signature.substringBefore('(', missingDelimiterValue = "").trim()
+    val before = signature.substringBefore('(', missingDelimiterValue = "")
+    val rawName =
+        buildString(before.length) {
+                var i = 0
+                while (i < before.length) {
+                    val cp = before.codePointAt(i)
+                    if (!isUnsafeDisplayCodePoint(cp)) appendCodePoint(cp)
+                    i += Character.charCount(cp)
+                }
+            }
+            .trim()
     if (rawName.isEmpty()) return null
     return rawName.replace(EVM_FUNCTION_NAME_BOUNDARY, " ").split(' ').joinToString(" ") {
         it.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) }

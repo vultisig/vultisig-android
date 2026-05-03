@@ -19,6 +19,7 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 functionName = this.tx.functionName,
                 functionSignature = this.tx.functionSignature,
                 functionInputs = this.tx.functionInputs,
+                heroContent = this.tx.heroContent,
             )
         }
         is TransactionTypeUiModel.Deposit -> {

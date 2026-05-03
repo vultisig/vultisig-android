@@ -8,6 +8,20 @@ fun BigInteger.toHexString(): String {
     return this.toString(16).add0x()
 }
 
+/**
+ * Hex string with `0x` prefix and an even number of hex digits.
+ *
+ * Some RPC endpoints (Blockaid's `eth_sendTransaction` simulator in particular) reject odd-length
+ * hex even though `BigInteger.toString(16)` happily produces `"a"` for the value 10. This pads with
+ * a leading zero to guarantee an even digit count after the `0x` prefix.
+ */
+fun BigInteger.toEvenLengthHexString(): String {
+    require(signum() >= 0) { "toEvenLengthHexString does not support negative values" }
+    val hex = this.toString(16)
+    val padded = if (hex.length % 2 == 1) "0$hex" else hex
+    return padded.add0x()
+}
+
 fun BigInteger.toSafeByteArray(): ByteArray {
     val raw = this.toByteArray()
     return ByteArray(32).apply {
