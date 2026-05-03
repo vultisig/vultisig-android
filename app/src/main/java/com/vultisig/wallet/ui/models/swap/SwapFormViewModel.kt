@@ -984,6 +984,66 @@ constructor(
                             )
                         }
 
+                        // Refresh the network fee for UTXO chains using the actual swap
+                        // parameters so the form shows the same plan-based fee that will
+                        // be stored in the transaction, ensuring form/overview consistency.
+                        val utxoFeeData: Pair<String, String?>? =
+                            when (val q = quoteResult.quote) {
+                                is SwapQuote.ThorChain ->
+                                    (q.data.router
+                                        ?: q.data.inboundAddress
+                                        ?: src.address.address) to q.data.memo
+                                is SwapQuote.MayaChain ->
+                                    (q.data.inboundAddress ?: src.address.address) to q.data.memo
+                                else -> null
+                            }
+                        val currentGasFee = gasFee.value
+                        val currentVaultId = vaultId
+                        if (
+                            utxoFeeData != null &&
+                                currentGasFee != null &&
+                                currentVaultId != null &&
+                                srcToken.chain.standard == TokenStandard.UTXO &&
+                                srcToken.chain != Chain.Cardano
+                        ) {
+                            val (utxoDstAddress, utxoMemo) = utxoFeeData
+                            try {
+                                val specificAndUtxo =
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken,
+                                        src.address.address,
+                                        currentGasFee,
+                                    )
+                                val planFeeResult =
+                                    swapGasCalculator.computeUtxoPlanFeeResult(
+                                        vaultId = currentVaultId,
+                                        srcToken = srcToken,
+                                        dstAddress = utxoDstAddress,
+                                        tokenAmountInt = srcTokenValue,
+                                        specificAndUtxo = specificAndUtxo,
+                                        memo = utxoMemo,
+                                    )
+                                if (planFeeResult != null) {
+                                    estimatedNetworkFeeFiatValue.value =
+                                        planFeeResult.estimated.fiatValue
+                                    estimatedNetworkFeeTokenValue.value =
+                                        planFeeResult.estimated.tokenValue
+                                    uiState.update {
+                                        it.copy(
+                                            networkFee =
+                                                planFeeResult.estimated.formattedTokenValue,
+                                            networkFeeFiat =
+                                                planFeeResult.estimated.formattedFiatValue,
+                                        )
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                if (e is kotlin.coroutines.cancellation.CancellationException)
+                                    throw e
+                                Timber.e(e, "utxoPlanFee")
+                            }
+                        }
+
                         val balanceError =
                             swapValidator.validateBalanceForSwap(
                                 src,
