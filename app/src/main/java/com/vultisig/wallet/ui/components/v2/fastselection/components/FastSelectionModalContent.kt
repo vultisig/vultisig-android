@@ -171,7 +171,9 @@ internal fun <T> FastSelectionModalContent(
                 ) {
                     itemsIndexed(
                         paddedItems,
-                        key = { index, item -> if (item != null) key(item) else "padding_$index" },
+                        key = { index, item ->
+                            if (item != null) Pair("item", key(item)) else Pair("padding", index)
+                        },
                     ) { index, item ->
                         val actualIndex = index - paddingItems
 
