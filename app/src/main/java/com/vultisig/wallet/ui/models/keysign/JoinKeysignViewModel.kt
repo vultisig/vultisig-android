@@ -501,35 +501,49 @@ constructor(
                 val nativeToken = tokenRepository.getNativeToken(srcToken.chain.id)
 
                 val chain = srcToken.chain
-                val (nativeTokenAddress, _) =
-                    chainAccountAddressRepository.getAddress(nativeToken, _currentVault)
-                val blockchainTransaction =
-                    Swap(
-                        coin = srcToken,
-                        vault =
-                            VaultData(
-                                vaultHexPublicKey = _currentVault.getPubKeyByChain(chain),
-                                vaultHexChainCode = _currentVault.hexChainCode,
-                            ),
-                        amount = swapPayload.srcTokenValue.value,
-                        to = nativeTokenAddress,
-                        callData = "",
-                        approvalData = null,
-                    )
-                val calculatedFee =
-                    withContext(Dispatchers.IO) {
-                        feeServiceComposite.calculateFees(blockchainTransaction)
-                    }
+                val blockChainSpecific = payload.blockChainSpecific
                 val gasFee =
-                    if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                        val utxoHelper = UtxoHelper.getHelper(_currentVault, srcToken.coinType)
-                        val plan = utxoHelper.getBitcoinTransactionPlan(payload)
-                        if (plan.error != SigningError.OK) {
-                            Timber.e("UTXO plan error: ${plan.error.name}")
+                    when {
+                        chain.standard == TokenStandard.UTXO && chain != Chain.Cardano -> {
+                            val utxoHelper = UtxoHelper.getHelper(_currentVault, srcToken.coinType)
+                            val plan = utxoHelper.getBitcoinTransactionPlan(payload)
+                            if (plan.error != SigningError.OK) {
+                                Timber.e("UTXO plan error: ${plan.error.name}")
+                            }
+                            TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeToken)
                         }
-                        TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeToken)
-                    } else {
-                        TokenValue(value = calculatedFee.amount, token = nativeToken)
+                        blockChainSpecific is BlockChainSpecific.Ethereum ->
+                            TokenValue(
+                                value =
+                                    blockChainSpecific.maxFeePerGasWei *
+                                        blockChainSpecific.gasLimit,
+                                token = nativeToken,
+                            )
+                        blockChainSpecific is BlockChainSpecific.THORChain ->
+                            TokenValue(value = blockChainSpecific.fee, token = nativeToken)
+                        else -> {
+                            val (nativeTokenAddress, _) =
+                                chainAccountAddressRepository.getAddress(nativeToken, _currentVault)
+                            val blockchainTransaction =
+                                Swap(
+                                    coin = srcToken,
+                                    vault =
+                                        VaultData(
+                                            vaultHexPublicKey =
+                                                _currentVault.getPubKeyByChain(chain),
+                                            vaultHexChainCode = _currentVault.hexChainCode,
+                                        ),
+                                    amount = swapPayload.srcTokenValue.value,
+                                    to = nativeTokenAddress,
+                                    callData = "",
+                                    approvalData = null,
+                                )
+                            val calculatedFee =
+                                withContext(Dispatchers.IO) {
+                                    feeServiceComposite.calculateFees(blockchainTransaction)
+                                }
+                            TokenValue(value = calculatedFee.amount, token = nativeToken)
+                        }
                     }
                 val estimatedNetworkGasFee: EstimatedGasFee =
                     gasFeeToEstimatedFee(
