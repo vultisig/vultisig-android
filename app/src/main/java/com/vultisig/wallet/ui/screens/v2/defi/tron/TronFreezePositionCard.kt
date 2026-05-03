@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -32,6 +33,7 @@ internal fun TronFreezePositionCard(
     frozenTotalPrice: String,
     frozenTotalTrx: String,
     isBalanceVisible: Boolean,
+    isLoading: Boolean = false,
     isUnfreezeEnabled: Boolean,
     onClickFreeze: () -> Unit,
     onClickUnfreeze: () -> Unit,
@@ -59,11 +61,15 @@ internal fun TronFreezePositionCard(
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                 )
-                Text(
-                    text = if (isBalanceVisible) frozenTotalPrice else HIDE_BALANCE_CHARS,
-                    style = Theme.brockmann.headings.title1,
-                    color = Theme.v2.colors.text.primary,
-                )
+                if (isLoading) {
+                    UiPlaceholderLoader(modifier = Modifier.size(width = 120.dp, height = 28.dp))
+                } else {
+                    Text(
+                        text = if (isBalanceVisible) frozenTotalPrice else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                }
             }
         }
 
@@ -77,11 +83,15 @@ internal fun TronFreezePositionCard(
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                 )
-                Text(
-                    text = if (isBalanceVisible) "$frozenTotalTrx TRX" else HIDE_BALANCE_CHARS,
-                    style = Theme.brockmann.headings.title3,
-                    color = Theme.v2.colors.text.primary,
-                )
+                if (isLoading) {
+                    UiPlaceholderLoader(modifier = Modifier.size(width = 80.dp, height = 22.dp))
+                } else {
+                    Text(
+                        text = if (isBalanceVisible) "$frozenTotalTrx TRX" else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.headings.title3,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                }
             }
 
             Row(
@@ -94,7 +104,7 @@ internal fun TronFreezePositionCard(
                     background = Theme.v2.colors.backgrounds.tertiary_2,
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = TronFreezeCardIconCircleColor,
-                    enabled = isUnfreezeEnabled,
+                    enabled = !isLoading && isUnfreezeEnabled,
                     modifier = Modifier.weight(1f),
                     onClick = onClickUnfreeze,
                 )
@@ -104,6 +114,7 @@ internal fun TronFreezePositionCard(
                     background = Theme.v2.colors.buttons.ctaPrimary,
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = TronFreezeCardIconCircleColor,
+                    enabled = !isLoading,
                     modifier = Modifier.weight(1f),
                     onClick = onClickFreeze,
                 )

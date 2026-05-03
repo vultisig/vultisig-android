@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -207,19 +209,29 @@ private fun TronDeFiPositionsScreenContent(
                     when (state) {
                         TronDeFiUiState.Loading -> {
                             item {
-                                Box(
+                                Row(
                                     modifier =
                                         Modifier.fillMaxWidth()
                                             .height(96.dp)
                                             .clip(RoundedCornerShape(12.dp))
                                             .background(Theme.v2.colors.backgrounds.secondary)
-                                )
+                                ) {
+                                    Box(modifier = Modifier.weight(1f).fillMaxHeight())
+                                    Box(
+                                        modifier =
+                                            Modifier.width(1.dp)
+                                                .fillMaxHeight()
+                                                .background(Theme.v2.colors.backgrounds.primary)
+                                    )
+                                    Box(modifier = Modifier.weight(1f).fillMaxHeight())
+                                }
                             }
                             item {
                                 TronFreezePositionCard(
                                     frozenTotalPrice = "",
                                     frozenTotalTrx = "",
                                     isBalanceVisible = false,
+                                    isLoading = true,
                                     isUnfreezeEnabled = false,
                                     onClickFreeze = {},
                                     onClickUnfreeze = {},
