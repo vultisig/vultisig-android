@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -56,6 +59,7 @@ internal fun KeysignView(
             is KeysignState.KeysignFinished -> {
                 when (transactionTypeUiModel) {
                     is TransactionTypeUiModel.Swap -> {
+                        var isTransactionDetailVisible by remember { mutableStateOf(false) }
                         SwapTransactionOverviewScreen(
                             showToolbar = showToolbar,
                             transactionHash = txHash,
@@ -67,10 +71,13 @@ internal fun KeysignView(
                             progressLink = progressLink,
                             onBack = onBack,
                             transactionTypeUiModel = transactionTypeUiModel.swapTransactionUiModel,
+                            isTransactionDetailVisible = isTransactionDetailVisible,
+                            onTransactionDetailVisibleChange = { isTransactionDetailVisible = it },
                         )
                     }
                     is TransactionTypeUiModel.Deposit,
                     is TransactionTypeUiModel.Send -> {
+                        var isTransactionDetailVisible by remember { mutableStateOf(false) }
                         SendTxOverviewScreen(
                             transactionHash = txHash,
                             transactionLink = transactionLink,
@@ -81,6 +88,8 @@ internal fun KeysignView(
                             showToolbar = showToolbar,
                             onAddToAddressBook = onAddToAddressBook,
                             showSaveToAddressBook = showSaveToAddressBook,
+                            isTransactionDetailVisible = isTransactionDetailVisible,
+                            onTransactionDetailVisibleChange = { isTransactionDetailVisible = it },
                         )
                     }
                     else -> {

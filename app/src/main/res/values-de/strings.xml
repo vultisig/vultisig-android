@@ -881,7 +881,6 @@
     <string name="select_vault_type_fast_title">Schnelle Einrichtung mit nur einem Gerät</string>
     <string name="select_vault_type_fast_desc_1">Nur 1 Gerät erforderlich</string>
     <string name="scan_qr_code_modal_scan_the">Scannen Sie den QR auf Ihren anderen Geräten</string>
-    <string name="tx_overview_screen_title">Fertig</string>
     <string name="fast_vault_password_screen_warning">Passwort kann nicht zurückgesetzt oder wiederhergestellt werden</string>
     <string name="referral_top_bar_list">Empfehlung</string>
     <string name="onboarding_desc_page_1_part_3">Ihr neuer Tresor</string>

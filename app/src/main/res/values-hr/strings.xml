@@ -884,7 +884,6 @@
     <string name="select_vault_type_fast_title">Brzo postavljanje na 1 uređaju</string>
     <string name="select_vault_type_fast_desc_1">Potreban je samo 1 uređaj</string>
     <string name="scan_qr_code_modal_scan_the">Skenirajte QR na svojim drugim uređajima</string>
-    <string name="tx_overview_screen_title">Gotovo</string>
     <string name="fast_vault_password_screen_warning">Lozinka se ne može resetirati ili oporaviti</string>
     <string name="referral_top_bar_list">Preporuka</string>
     <string name="onboarding_desc_page_1_part_3">vaš novi</string>
