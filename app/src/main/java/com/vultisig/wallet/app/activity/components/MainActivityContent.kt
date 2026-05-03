@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.ForegroundNotificationState
@@ -40,6 +41,7 @@ import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
@@ -75,6 +77,18 @@ internal fun MainActivityContent(
                 }
 
                 launch { mainViewModel.route.collect { navController.route(it) } }
+
+                launch {
+                    navController.currentBackStackEntryFlow.collect { entry ->
+                        val destination = entry.destination
+                        if (
+                            destination.hasRoute<Route.Keysign.Join>() ||
+                                destination.hasRoute<Route.Keygen.Join>()
+                        ) {
+                            mainViewModel.clearForegroundNotification()
+                        }
+                    }
+                }
 
                 mainViewModel.onNavigationReady()
                 onNavigationReady()
