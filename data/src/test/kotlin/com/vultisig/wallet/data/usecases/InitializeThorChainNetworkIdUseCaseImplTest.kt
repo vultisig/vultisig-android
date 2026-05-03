@@ -38,10 +38,11 @@ internal class InitializeThorChainNetworkIdUseCaseImplTest {
     @Test
     fun `skips fetch and cache when no vaults exist`() = runTest {
         ThorChainHelper.THORCHAIN_NETWORK_ID = "default-id"
-        coEvery { vaultRepository.hasVaults() } returns false
+        coEvery { vaultRepository.getAll() } returns emptyList()
 
         useCase()
 
+        coVerify(exactly = 1) { vaultRepository.getAll() }
         coVerify(exactly = 0) { thorChainRepository.getCachedNetworkChainId() }
         coVerify(exactly = 0) { thorChainRepository.fetchNetworkChainId() }
         assertEquals("default-id", ThorChainHelper.THORCHAIN_NETWORK_ID)
@@ -50,12 +51,12 @@ internal class InitializeThorChainNetworkIdUseCaseImplTest {
     @Test
     fun `skips fetch and cache when no vault uses THORChain`() = runTest {
         ThorChainHelper.THORCHAIN_NETWORK_ID = "default-id"
-        coEvery { vaultRepository.hasVaults() } returns true
         coEvery { vaultRepository.getAll() } returns
             listOf(vaultWithChains(Chain.Bitcoin, Chain.Ethereum))
 
         useCase()
 
+        coVerify(exactly = 1) { vaultRepository.getAll() }
         coVerify(exactly = 0) { thorChainRepository.getCachedNetworkChainId() }
         coVerify(exactly = 0) { thorChainRepository.fetchNetworkChainId() }
         assertEquals("default-id", ThorChainHelper.THORCHAIN_NETWORK_ID)
@@ -63,7 +64,6 @@ internal class InitializeThorChainNetworkIdUseCaseImplTest {
 
     @Test
     fun `applies cached value then fetches when a vault uses THORChain`() = runTest {
-        coEvery { vaultRepository.hasVaults() } returns true
         coEvery { vaultRepository.getAll() } returns
             listOf(vaultWithChains(Chain.Bitcoin), vaultWithChains(Chain.ThorChain))
         coEvery { thorChainRepository.getCachedNetworkChainId() } returns "thorchain-cached"
@@ -71,6 +71,7 @@ internal class InitializeThorChainNetworkIdUseCaseImplTest {
 
         useCase()
 
+        coVerify(exactly = 1) { vaultRepository.getAll() }
         coVerify(exactly = 1) { thorChainRepository.getCachedNetworkChainId() }
         coVerify(exactly = 1) { thorChainRepository.fetchNetworkChainId() }
         assertEquals("thorchain-fresh", ThorChainHelper.THORCHAIN_NETWORK_ID)
@@ -78,7 +79,6 @@ internal class InitializeThorChainNetworkIdUseCaseImplTest {
 
     @Test
     fun `keeps cached value when fetch fails`() = runTest {
-        coEvery { vaultRepository.hasVaults() } returns true
         coEvery { vaultRepository.getAll() } returns listOf(vaultWithChains(Chain.ThorChain))
         coEvery { thorChainRepository.getCachedNetworkChainId() } returns "thorchain-cached"
         coEvery { thorChainRepository.fetchNetworkChainId() } throws RuntimeException("boom")
