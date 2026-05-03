@@ -31,7 +31,11 @@ import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
-internal data class GasCalculationResult(val gasFee: TokenValue, val estimated: EstimatedGasFee)
+internal data class GasCalculationResult(
+    val gasFee: TokenValue,
+    val estimated: EstimatedGasFee,
+    val chain: Chain,
+)
 
 internal class InsufficientUtxosException : Exception("Error_not_enough_utxos")
 
@@ -110,7 +114,7 @@ constructor(
                 )
             )
 
-        return GasCalculationResult(gasFee = gasFee, estimated = estimated)
+        return GasCalculationResult(gasFee = gasFee, estimated = estimated, chain = chain)
     }
 
     private suspend fun getBitcoinTransactionPlan(
@@ -202,7 +206,7 @@ constructor(
                     perUnit = true,
                 )
             )
-        return GasCalculationResult(gasFee = planFee, estimated = estimated)
+        return GasCalculationResult(gasFee = planFee, estimated = estimated, chain = srcToken.chain)
     }
 
     private fun getGasLimit(token: Coin): BigInteger? {

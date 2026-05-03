@@ -148,6 +148,7 @@ constructor(
 
     private val estimatedNetworkFeeTokenValue = MutableStateFlow<TokenValue?>(null)
     private val gasFee = MutableStateFlow<TokenValue?>(null)
+    private val gasFeeChain = MutableStateFlow<Chain?>(null)
     private val swapFeeFiat = MutableStateFlow<FiatValue?>(null)
     private val estimatedNetworkFeeFiatValue = MutableStateFlow<FiatValue?>(null)
 
@@ -780,8 +781,9 @@ constructor(
                 .filterNotNull()
                 .catch { Timber.e(it) }
                 .collect { result ->
-                    val chain = result.gasFee.token.chain
+                    val chain = result.chain
                     gasFee.value = result.gasFee
+                    gasFeeChain.value = result.chain
                     // UTXO non-Cardano fees are displayed from computeUtxoPlanFeeResult in
                     // calculateFees(); only update the display for non-UTXO chains here so
                     // a slow gas fetch can't overwrite the plan fee with a dust estimate.
@@ -980,7 +982,7 @@ constructor(
                                 else -> null
                             }
                         val currentGasFee =
-                            gasFee.value?.takeIf { it.token.chain == srcToken.chain }
+                            gasFee.value?.takeIf { gasFeeChain.value == srcToken.chain }
                         val currentVaultId = vaultId
                         if (
                             utxoFeeData != null &&
