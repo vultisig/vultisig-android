@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -205,8 +206,25 @@ private fun TronDeFiPositionsScreenContent(
                 ) {
                     when (state) {
                         TronDeFiUiState.Loading -> {
-                            // Intentionally empty: avoids 0/0 resource values and premature
-                            // empty-state during load.
+                            item {
+                                Box(
+                                    modifier =
+                                        Modifier.fillMaxWidth()
+                                            .height(96.dp)
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(Theme.v2.colors.backgrounds.secondary)
+                                )
+                            }
+                            item {
+                                TronFreezePositionCard(
+                                    frozenTotalPrice = "",
+                                    frozenTotalTrx = "",
+                                    isBalanceVisible = false,
+                                    isUnfreezeEnabled = false,
+                                    onClickFreeze = {},
+                                    onClickUnfreeze = {},
+                                )
+                            }
                         }
                         is TronDeFiUiState.Error -> {
                             item {
