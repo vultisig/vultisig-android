@@ -879,17 +879,22 @@ constructor(
                             isMax = false,
                         )
 
-                    val fees =
-                        withContext(Dispatchers.IO) {
-                            feeServiceComposite.calculateFees(blockchainTransaction)
-                        }
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+                    val fallbackFeeAmount =
+                        if (payload.blockChainSpecific is BlockChainSpecific.Ethereum) {
+                            BigInteger.ZERO
+                        } else {
+                            withContext(Dispatchers.IO) {
+                                    feeServiceComposite.calculateFees(blockchainTransaction)
+                                }
+                                .amount
+                        }
                     val estimatedTokenFees =
                         computeJoinKeysignSendGasFee(
                             blockChainSpecific = payload.blockChainSpecific,
                             nativeCoin = nativeCoin,
-                            fallbackFeeAmount = fees.amount,
+                            fallbackFeeAmount = fallbackFeeAmount,
                         )
 
                     val totalGasAndFee =
