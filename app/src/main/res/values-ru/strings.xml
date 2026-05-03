@@ -884,7 +884,6 @@
     <string name="select_vault_type_fast_title">Быстрая настройка на одном устройстве</string>
     <string name="select_vault_type_fast_desc_1">Требуется только одно устройство</string>
     <string name="scan_qr_code_modal_scan_the">Сканируйте QR на других устройствах</string>
-    <string name="tx_overview_screen_title">Готово</string>
     <string name="fast_vault_password_screen_warning">Пароль не может быть сброшен или восстановлен</string>
     <string name="referral_top_bar_list">Реферал</string>
     <string name="onboarding_desc_page_1_part_3">ваш новый</string>

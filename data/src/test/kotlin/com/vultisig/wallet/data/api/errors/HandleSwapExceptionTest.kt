@@ -81,6 +81,15 @@ class HandleSwapExceptionTest {
     }
 
     @Test
+    fun `thorchain pool does not exist full message maps to SwapRouteNotAvailable`() {
+        val result =
+            SwapException.handleSwapException(
+                "failed to calculate min swap amount: fail to convert dest fee to src asset pool does not exist: invalid request"
+            )
+        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
+    }
+
+    @Test
     fun `amount less than min swap maps to SmallSwapAmount`() {
         val result = SwapException.handleSwapException("amount less than min swap amount: 10000")
         assertInstanceOf(SwapException.SmallSwapAmount::class.java, result)

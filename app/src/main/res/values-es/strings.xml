@@ -879,7 +879,6 @@
     <string name="select_vault_type_fast_title">Configuración rápida en un solo dispositivo</string>
     <string name="select_vault_type_fast_desc_1">Solo se necesita un dispositivo</string>
     <string name="scan_qr_code_modal_scan_the">Escanea el QR en tus otros dispositivos</string>
-    <string name="tx_overview_screen_title">Listo</string>
     <string name="fast_vault_password_screen_warning">La contraseña no se puede restablecer ni recuperar.</string>
     <string name="referral_top_bar_list">Referido</string>
     <string name="onboarding_desc_page_1_part_3">Tu nuevo</string>

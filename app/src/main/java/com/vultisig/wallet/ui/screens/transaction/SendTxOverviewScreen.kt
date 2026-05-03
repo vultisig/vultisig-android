@@ -55,14 +55,17 @@ internal fun SendTxOverviewScreen(
     onBack: () -> Unit = {},
     onAddToAddressBook: () -> Unit,
     tx: UiTransactionInfo,
+    isTransactionDetailVisible: Boolean,
+    onTransactionDetailVisibleChange: (Boolean) -> Unit,
 ) {
-
     TxDoneScaffold(
         transactionHash = transactionHash,
         transactionLink = transactionLink,
         transactionStatus = transactionStatus,
         showToolbar = showToolbar,
         onBack = onBack,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
         bottomBarContent = {
             VsButton(
                 label = stringResource(R.string.transaction_done_title),
@@ -73,21 +76,36 @@ internal fun SendTxOverviewScreen(
             )
         },
         tokenContent = {
-            val tokenTitle =
-                if (tx.type == UiTransactionInfoType.Send) {
-                    stringResource(R.string.tx_overview_screen_tx_send)
-                } else {
-                    stringResource(R.string.tx_overview_screen_tx_deposit)
-                }
-            VsOverviewToken(
-                header = tokenTitle,
-                valuedToken = tx.token,
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth(),
-            )
+            // Title-only hero for EVM contract calls. The Blockaid hero (which will replace this
+            // for resolved calls) is layered on in #4306.
+            if (tx.functionName != null) {
+                Text(
+                    text = tx.functionName,
+                    style = Theme.brockmann.headings.title3,
+                    color = Theme.v2.colors.text.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                VsOverviewToken(
+                    header =
+                        if (tx.type == UiTransactionInfoType.Send) {
+                            stringResource(R.string.tx_overview_screen_tx_send)
+                        } else {
+                            stringResource(R.string.tx_overview_screen_tx_deposit)
+                        },
+                    valuedToken = tx.token,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         },
         detailContent = {
             Column {
+                TransactionStatusRow(transactionStatus)
+
+                VerifyCardDivider(size = 1.dp)
+
                 VerifyCardDetails(
                     title = stringResource(R.string.tx_overview_screen_tx_from),
                     subtitle = tx.fromLabel ?: tx.from,
@@ -130,11 +148,15 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
+                // Skip the native "Amount" row for EVM contract calls — the function name above
+                // is the action, and a "0 ETH" amount underneath would mislead. Plain sends still
+                // render the native amount here.
                 if (
-                    tx.token.value.isNotEmpty() &&
+                    tx.functionName == null &&
+                        tx.token.value.isNotEmpty() &&
                         try {
                             tx.token.value.toBigInteger() > BigInteger.ZERO
-                        } catch (_: Exception) {
+                        } catch (_: NumberFormatException) {
                             false
                         }
                 ) {
@@ -259,7 +281,18 @@ internal fun TxDetails(
 
 @Preview
 @Composable
-private fun PreviewSendTxOverviewScreen() {
+private fun PreviewSendTxOverviewScreenCollapsed() {
+    PreviewSendTxOverviewScreen(isTransactionDetailVisible = false)
+}
+
+@Preview
+@Composable
+private fun PreviewSendTxOverviewScreenExpanded() {
+    PreviewSendTxOverviewScreen(isTransactionDetailVisible = true)
+}
+
+@Composable
+private fun PreviewSendTxOverviewScreen(isTransactionDetailVisible: Boolean) {
     SendTxOverviewScreen(
         transactionHash = "",
         transactionLink = "",
@@ -279,6 +312,8 @@ private fun PreviewSendTxOverviewScreen() {
                 .toUiTransactionInfo(),
         showSaveToAddressBook = true,
         transactionStatus = TransactionStatus.Broadcasted,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = {},
     )
 }
 
@@ -293,6 +328,9 @@ internal data class UiTransactionInfo(
     val networkFeeTokenValue: String,
     val networkFeeFiatValue: String,
     val signMethod: String = "",
+    val functionName: String? = null,
+    val functionSignature: String? = null,
+    val functionInputs: String? = null,
 )
 
 internal enum class UiTransactionInfoType {

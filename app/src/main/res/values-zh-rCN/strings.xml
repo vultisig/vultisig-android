@@ -1210,7 +1210,6 @@
     <string name="select_vault_type_fast_title">快速单设备设置</string>
     <string name="select_vault_type_fast_desc_1">仅需一台设备</string>
     <string name="scan_qr_code_modal_scan_the">在其他设备上扫描二维码</string>
-    <string name="tx_overview_screen_title">完成</string>
     <string name="fast_vault_password_screen_warning">密码无法重置或恢复</string>
     <string name="referral_top_bar_list">推荐</string>
     <string name="onboarding_desc_page_1_part_3">您的新</string>
