@@ -13,9 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,6 +41,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import java.math.BigDecimal
 
+/** Tab content listing staking positions with stake, unstake, withdraw, and transfer actions. */
 @Composable
 internal fun StakingTabContent(
     state: StakingTabUiModel,
@@ -52,10 +51,7 @@ internal fun StakingTabContent(
     onClickTransfer: () -> Unit,
     isBalanceVisible: Boolean = true,
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         state.positions.forEach { stakingPosition ->
             StakingWidget(
                 state = stakingPosition,
