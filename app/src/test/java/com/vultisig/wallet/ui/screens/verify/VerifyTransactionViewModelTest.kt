@@ -15,8 +15,10 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerFeaturesType
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.SecurityScannerSupport
+import com.vultisig.wallet.data.securityscanner.SecurityScannerTransaction
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
+import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -44,6 +46,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -189,20 +193,30 @@ internal class VerifyTransactionViewModelTest {
                         listOf(
                             SecurityScannerSupport.Feature(
                                 chains = listOf(Chain.Ethereum),
-                                featureType = SecurityScannerFeaturesType.TRANSACTION_SCAN,
+                                featureType = SecurityScannerFeaturesType.SCAN_TRANSACTION,
                             )
                         ),
                 )
             every { securityScannerService.getSupportedChainsByFeature() } returns listOf(support)
             coEvery { securityScannerService.isSecurityServiceEnabled() } returns true
-            coEvery { securityScannerService.createSecurityScannerTransaction(any()) } returns
-                mockk(relaxed = true)
+            coEvery {
+                securityScannerService.createSecurityScannerTransaction(any<Transaction>())
+            } returns mockk<SecurityScannerTransaction>(relaxed = true)
             val scanResult = mockk<SecurityScannerResult>()
             every { scanResult.isSecure } returns false
             coEvery { securityScannerService.scanTransaction(any()) } returns scanResult
 
             val vm = createViewModel()
             advanceUntilIdle()
+
+            // loadTransaction() and scanTransaction() each hop through Dispatchers.IO,
+            // which runTest's virtual time cannot advance. Yield real time on a real
+            // dispatcher until the scan status finalizes before driving joinKeySign().
+            withContext(Dispatchers.Default) {
+                withTimeout(2_000) {
+                    vm.uiState.first { it.txScanStatus is TransactionScanStatus.Scanned }
+                }
+            }
 
             vm.checkConsentAddress(true)
             vm.checkConsentAmount(true)
