@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import io.kotest.matchers.shouldBe
 import java.math.BigInteger
 import org.junit.jupiter.api.Test
+import vultisig.keysign.v1.TransactionType
 
 internal class JoinKeysignSendGasFeeTest {
 
@@ -32,6 +33,19 @@ internal class JoinKeysignSendGasFeeTest {
             decimal = 9,
             hexPublicKey = "hex",
             priceProviderID = "solana",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    private val runeCoin =
+        Coin(
+            chain = Chain.ThorChain,
+            ticker = "RUNE",
+            logo = "rune",
+            address = "thoraddr",
+            decimal = 8,
+            hexPublicKey = "hex",
+            priceProviderID = "thorchain",
             contractAddress = "",
             isNativeToken = true,
         )
@@ -102,5 +116,28 @@ internal class JoinKeysignSendGasFeeTest {
             )
 
         result shouldBe TokenValue(value = fallback, token = solCoin)
+    }
+
+    /** THORChain: fee must come from blockChainSpecific.fee, not the fallback. */
+    @Test
+    fun `thorchain uses fee from blockChainSpecific`() {
+        val fee = BigInteger.valueOf(2_000_000)
+        val specific =
+            BlockChainSpecific.THORChain(
+                accountNumber = BigInteger.ONE,
+                sequence = BigInteger.ZERO,
+                fee = fee,
+                isDeposit = false,
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+            )
+
+        val result =
+            computeJoinKeysignNetworkFee(
+                blockChainSpecific = specific,
+                nativeCoin = runeCoin,
+                fallbackFeeAmount = BigInteger.valueOf(99_999),
+            )
+
+        result shouldBe TokenValue(value = fee, token = runeCoin)
     }
 }
