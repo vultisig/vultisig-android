@@ -342,6 +342,16 @@ constructor(
 
                                 val isAffiliate = true
 
+                                val planFeeResult =
+                                    swapGasCalculator.computeUtxoPlanFeeResult(
+                                        vaultId = vaultId,
+                                        srcToken = srcToken,
+                                        dstAddress = dstAddress,
+                                        tokenAmountInt = srcAmountInt,
+                                        specificAndUtxo = specificAndUtxo,
+                                        memo = quote.data.memo,
+                                    )
+
                                 RegularSwapTransaction(
                                     id = UUID.randomUUID().toString(),
                                     vaultId = vaultId,
@@ -352,10 +362,14 @@ constructor(
                                     expectedDstTokenValue = dstTokenValue,
                                     blockChainSpecific = specificAndUtxo,
                                     estimatedFees = quote.fees,
-                                    gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
+                                    gasFees =
+                                        planFeeResult?.gasFee
+                                            ?: estimatedNetworkFeeTokenValue.value
+                                            ?: gasFee,
                                     isApprovalRequired = isApprovalRequired,
                                     memo = quote.data.memo,
-                                    gasFeeFiatValue = gasFeeFiatValue,
+                                    gasFeeFiatValue =
+                                        planFeeResult?.estimated?.fiatValue ?: gasFeeFiatValue,
                                     payload =
                                         SwapPayload.ThorChain(
                                             THORChainSwapPayload(
@@ -411,6 +425,16 @@ constructor(
 
                                 val isAffiliate = true
 
+                                val planFeeResult =
+                                    swapGasCalculator.computeUtxoPlanFeeResult(
+                                        vaultId = vaultId,
+                                        srcToken = srcToken,
+                                        dstAddress = dstAddress,
+                                        tokenAmountInt = srcAmountInt,
+                                        specificAndUtxo = specificAndUtxo,
+                                        memo = quote.data.memo,
+                                    )
+
                                 RegularSwapTransaction(
                                     id = UUID.randomUUID().toString(),
                                     vaultId = vaultId,
@@ -421,10 +445,14 @@ constructor(
                                     expectedDstTokenValue = dstTokenValue,
                                     blockChainSpecific = specificAndUtxo,
                                     estimatedFees = quote.fees,
-                                    gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
+                                    gasFees =
+                                        planFeeResult?.gasFee
+                                            ?: estimatedNetworkFeeTokenValue.value
+                                            ?: gasFee,
                                     memo = quote.data.memo,
                                     isApprovalRequired = isApprovalRequired,
-                                    gasFeeFiatValue = gasFeeFiatValue,
+                                    gasFeeFiatValue =
+                                        planFeeResult?.estimated?.fiatValue ?: gasFeeFiatValue,
                                     payload =
                                         SwapPayload.MayaChain(
                                             THORChainSwapPayload(

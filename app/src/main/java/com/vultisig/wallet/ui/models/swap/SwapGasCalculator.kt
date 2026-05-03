@@ -162,6 +162,41 @@ constructor(
             )
         }
 
+    internal suspend fun computeUtxoPlanFeeResult(
+        vaultId: String,
+        srcToken: Coin,
+        dstAddress: String,
+        tokenAmountInt: BigInteger,
+        specificAndUtxo: BlockChainSpecificAndUtxo,
+        memo: String?,
+    ): GasCalculationResult? {
+        if (srcToken.chain.standard != TokenStandard.UTXO || srcToken.chain == Chain.Cardano) {
+            return null
+        }
+        val plan =
+            getBitcoinTransactionPlan(
+                vaultId = vaultId,
+                selectedToken = srcToken,
+                dstAddress = dstAddress,
+                tokenAmountInt = tokenAmountInt,
+                specific = specificAndUtxo,
+                memo = memo,
+            ) ?: return null
+        val nativeCoin =
+            withContext(Dispatchers.IO) { tokenRepository.getNativeToken(srcToken.chain.id) }
+        val planFee = TokenValue(value = plan.fee.toBigInteger(), token = nativeCoin)
+        val estimated =
+            gasFeeToEstimatedFee(
+                GasFeeParams(
+                    gasLimit = BigInteger.valueOf(1),
+                    gasFee = planFee,
+                    selectedToken = srcToken,
+                    perUnit = true,
+                )
+            )
+        return GasCalculationResult(gasFee = planFee, estimated = estimated)
+    }
+
     private fun getGasLimit(token: Coin): BigInteger? {
         val isEVMSwap = token.isNativeToken && token.chain in listOf(Chain.Ethereum, Chain.Arbitrum)
         return if (isEVMSwap)
