@@ -25,7 +25,7 @@ import kotlin.math.min
 
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
-internal fun <T> SelectPopup(
+internal fun <T : Any> SelectPopup(
     uiModel: SelectPopupUiModel<T>,
     key: (T) -> Any,
     onItemSelected: (T) -> Unit,

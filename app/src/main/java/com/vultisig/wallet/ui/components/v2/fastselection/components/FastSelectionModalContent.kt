@@ -51,9 +51,26 @@ import kotlinx.coroutines.launch
 
 internal val FAST_SELECTION_MODAL_WIDTH = 300.dp
 
+internal fun <T : Any> paddedItemKey(index: Int, item: T?, key: (T) -> Any): Any =
+    if (item != null) Pair("item", key(item)) else Pair("padding", index)
+
+internal fun <T : Any> buildPaddedItemKeys(
+    items: List<T>,
+    visibleItemCount: Int,
+    key: (T) -> Any,
+): List<Any> {
+    val paddingCount = visibleItemCount / 2
+    val paddedItems: List<T?> = buildList {
+        repeat(paddingCount) { add(null) }
+        addAll(items)
+        repeat(paddingCount) { add(null) }
+    }
+    return paddedItems.mapIndexed { index, item -> paddedItemKey(index, item, key) }
+}
+
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
-internal fun <T> FastSelectionModalContent(
+internal fun <T : Any> FastSelectionModalContent(
     modifier: Modifier,
     items: List<T>,
     currentIndex: Int,
@@ -171,9 +188,7 @@ internal fun <T> FastSelectionModalContent(
                 ) {
                     itemsIndexed(
                         paddedItems,
-                        key = { index, item ->
-                            if (item != null) Pair("item", key(item)) else Pair("padding", index)
-                        },
+                        key = { index, item -> paddedItemKey(index, item, key) },
                     ) { index, item ->
                         val actualIndex = index - paddingItems
 
