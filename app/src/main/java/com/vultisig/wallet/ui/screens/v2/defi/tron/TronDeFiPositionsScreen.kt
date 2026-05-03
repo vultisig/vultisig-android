@@ -153,7 +153,8 @@ private fun TronDeFiPositionsScreenContent(
                     }
                 }
 
-                if (state is TronDeFiUiState.Success) {
+                if (state is TronDeFiUiState.Success || state is TronDeFiUiState.Loading) {
+                    val isLoading = state is TronDeFiUiState.Loading
                     Row(
                         modifier =
                             Modifier.fillMaxWidth()
@@ -163,14 +164,16 @@ private fun TronDeFiPositionsScreenContent(
                     ) {
                         VsTabGroup(
                             index =
-                                TRON_DEFI_TABS.indexOfFirst { it == state.selectedTab }
-                                    .coerceAtLeast(0)
+                                if (state is TronDeFiUiState.Success)
+                                    TRON_DEFI_TABS.indexOfFirst { it == state.selectedTab }
+                                        .coerceAtLeast(0)
+                                else 0
                         ) {
                             TRON_DEFI_TABS.forEach { tab ->
                                 tab {
                                     VsTab(
                                         label = stringResource(tab.displayNameRes),
-                                        onClick = { onTabSelected(tab) },
+                                        onClick = { if (!isLoading) onTabSelected(tab) },
                                     )
                                 }
                             }
@@ -179,13 +182,17 @@ private fun TronDeFiPositionsScreenContent(
                         V2Container(
                             type = ContainerType.SECONDARY,
                             cornerType = CornerType.Circular,
-                            modifier = Modifier.clickOnce(onClick = onEditPositionClick),
+                            modifier =
+                                if (isLoading) Modifier
+                                else Modifier.clickOnce(onClick = onEditPositionClick),
                         ) {
                             UiIcon(
                                 drawableResId = R.drawable.edit_chain,
                                 size = 16.dp,
                                 modifier = Modifier.padding(all = 12.dp),
-                                tint = Theme.v2.colors.primary.accent4,
+                                tint =
+                                    if (isLoading) Theme.v2.colors.text.tertiary
+                                    else Theme.v2.colors.primary.accent4,
                             )
                         }
                     }
@@ -197,7 +204,20 @@ private fun TronDeFiPositionsScreenContent(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     when (state) {
-                        TronDeFiUiState.Loading -> Unit
+                        TronDeFiUiState.Loading -> {
+                            item {
+                                ResourceTwoCardsRow(
+                                    resourceUsage =
+                                        ResourceUsage(
+                                            availableBandwidth = 0L,
+                                            totalBandwidth = 0L,
+                                            availableEnergy = 0L,
+                                            totalEnergy = 0L,
+                                        )
+                                )
+                            }
+                            item { NoPositionsContainer() }
+                        }
                         is TronDeFiUiState.Error -> {
                             item {
                                 Text(
