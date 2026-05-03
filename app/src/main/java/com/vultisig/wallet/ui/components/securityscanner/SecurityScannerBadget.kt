@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
@@ -51,8 +52,12 @@ internal fun SecurityScannerBadget(status: TransactionScanStatus) {
 
 @Composable
 private fun BadgeRow(content: @Composable RowScope.() -> Unit) {
+    // [heightIn] (vs a fixed [height]) lets the row grow when font scale or a longer translation
+    // pushes the footnote line height past the design baseline; the 20dp design value remains the
+    // minimum so the inline brand mark and check icon still align with surrounding metadata at
+    // default density.
     Row(
-        modifier = Modifier.height(20.dp),
+        modifier = Modifier.heightIn(min = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )

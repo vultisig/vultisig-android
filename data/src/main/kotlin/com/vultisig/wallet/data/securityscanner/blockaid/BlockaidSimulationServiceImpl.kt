@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.securityscanner.blockaid
 
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.toEvenLengthHexString
 import io.ktor.util.decodeBase64Bytes
 import kotlinx.coroutines.CancellationException
@@ -72,14 +73,21 @@ internal class BlockaidSimulationServiceImpl(private val rpcClient: BlockaidRpcC
         // orphaned [inflight] entry can't strand future callers if the leader is cancelled.
         // CancellationException is caught separately and rethrown after cleanup — the Kotlin
         // coroutines contract requires the cancelled coroutine to observe it.
+        //
+        // Only [NetworkException] is treated as an expected operational failure: transport errors,
+        // HTTP 4xx/5xx, and JSON deserialisation are all wrapped into it by [bodyOrThrow] and the
+        // shared `HttpCallValidator`. Programming defects (NPE, ClassCastException, etc.) are
+        // allowed to propagate so they surface as bugs rather than being silently muted into
+        // EMPTY; the calling coroutine in [JoinKeysignViewModel.loadBlockaidSimulation] is wrapped
+        // in `safeLaunch` so a propagated defect still cannot crash the verify flow.
         var result = BlockaidKeysignScanResult.EMPTY
-        var failure: Throwable? = null
+        var failure: NetworkException? = null
         var cancellation: CancellationException? = null
         try {
             result = dispatchScan(payload, key)
         } catch (e: CancellationException) {
             cancellation = e
-        } catch (e: Exception) {
+        } catch (e: NetworkException) {
             failure = e
         }
 

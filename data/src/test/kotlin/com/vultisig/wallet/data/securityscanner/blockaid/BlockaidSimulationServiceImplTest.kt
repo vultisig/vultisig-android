@@ -5,6 +5,7 @@ package com.vultisig.wallet.data.securityscanner.blockaid
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.utils.NetworkException
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
@@ -55,8 +56,12 @@ internal class BlockaidSimulationServiceImplTest {
     }
 
     @Test
-    fun `evm scan does not cache on RPC failure`() = runTest {
-        val rpc = FakeRpc(evmThrows = RuntimeException("boom"))
+    fun `evm scan does not cache on operational RPC failure`() = runTest {
+        // Operational failures from the RPC layer are wrapped in [NetworkException] (transport
+        // errors and HTTP non-2xx alike — see RpcExtensions.bodyOrThrow + HttpCallValidator).
+        // These MUST be swallowed into EMPTY so the next screen can retry; failures must not
+        // poison the cache.
+        val rpc = FakeRpc(evmThrows = NetworkException(503, "boom"))
         val service = BlockaidSimulationServiceImpl(rpc)
         val payload = evmPayload(memo = "0xfeed")
 
@@ -67,7 +72,21 @@ internal class BlockaidSimulationServiceImplTest {
 
         assertSame(BlockaidKeysignScanResult.EMPTY, first)
         assertNotNull(second.simulation)
-        assertEquals(2, rpc.evmCalls, "failure should not poison the cache")
+        assertEquals(2, rpc.evmCalls, "operational failure should not poison the cache")
+    }
+
+    @Test
+    fun `unexpected runtime exception propagates rather than being swallowed`() = runTest {
+        // Programming defects (e.g. NPE or IllegalStateException from a refactor regression) MUST
+        // surface so they show up in crash reports and are noticed. Silently mapping them to EMPTY
+        // would mask real regressions in the signing-critical simulation path. The caller side
+        // (`safeLaunch` in JoinKeysignViewModel) catches the propagated exception and logs it
+        // without crashing the verify flow.
+        val rpc = FakeRpc(evmThrows = IllegalStateException("regression"))
+        val service = BlockaidSimulationServiceImpl(rpc)
+        val payload = evmPayload(memo = "0xfeed")
+
+        assertThrows<IllegalStateException> { service.scan(payload) }
     }
 
     @Test
