@@ -14,13 +14,13 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.SnackbarFlow
-import io.kotest.matchers.nulls.shouldBeNull
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
@@ -154,10 +154,10 @@ internal class MainViewModelTest {
             vm.onForegroundPushReceived("vultisig://qr-payload")
             advanceUntilIdle()
 
-            vm.foregroundNotification.value.shouldNotBeNull()
+            assertNotNull(vm.foregroundNotification.value)
 
             vm.clearForegroundNotification()
 
-            vm.foregroundNotification.value.shouldBeNull()
+            assertNull(vm.foregroundNotification.value)
         }
 }
