@@ -46,12 +46,24 @@ internal fun JoinKeysignView(navController: NavHostController) {
         viewModel.enableNavigationToHome()
     }
     val state by viewModel.currentState.collectAsState()
+    val verifyUiModel by viewModel.verifyUiModel.collectAsState()
+    val isKeysignFinished = keysignState is KeysignState.KeysignFinished
     val isKeysignInProgress = state == Keysign && keysignState.isInProgress
+    val title =
+        stringResource(
+            when {
+                isKeysignFinished -> R.string.transaction_complete_screen_title
+                state == JoinKeysign && verifyUiModel is VerifyUiModel.Swap ->
+                    R.string.verify_swap_swap_overview
+                else -> R.string.keysign
+            }
+        )
     JoinKeysignScreen(
-        isKeySignFinished = keysignState is KeysignState.KeysignFinished,
+        title = title,
         onBack = viewModel::navigateToHome,
         isError = state is Error,
         fullScreen = isKeysignInProgress,
+        applyDefaultPaddings = state !is JoinKeysign && !isKeysignFinished,
     ) {
         when (state) {
             DiscoveringSessionID,
@@ -74,8 +86,6 @@ internal fun JoinKeysignView(navController: NavHostController) {
             }
 
             JoinKeysign -> {
-                val verifyUiModel by viewModel.verifyUiModel.collectAsState()
-
                 when (val model = verifyUiModel) {
                     is VerifyUiModel.Send -> {
                         VerifySendScreen(
@@ -186,8 +196,9 @@ internal fun JoinKeysignView(navController: NavHostController) {
 
 @Composable
 private fun JoinKeysignScreen(
-    isKeySignFinished: Boolean,
+    title: String,
     isError: Boolean,
+    applyDefaultPaddings: Boolean = true,
     fullScreen: Boolean = false,
     onBack: () -> Unit = {},
     content: @Composable () -> Unit = {},
@@ -200,15 +211,8 @@ private fun JoinKeysignScreen(
             onBackClick = onBack.takeIf { isError.not() },
             rightIcon = R.drawable.big_close.takeIf { isError },
             onRightIconClick = onBack.takeIf { isError },
-            title =
-                stringResource(
-                    id =
-                        if (isKeySignFinished.not()) R.string.keysign
-                        else R.string.transaction_complete_screen_title
-                ),
-            // TxDoneScaffold inside KeysignView already pads its content; skip the
-            // V2Scaffold default padding when finished so it matches the initiator.
-            applyDefaultPaddings = isKeySignFinished.not(),
+            title = title,
+            applyDefaultPaddings = applyDefaultPaddings,
             content = content,
         )
     }
@@ -218,7 +222,7 @@ private fun JoinKeysignScreen(
 @Composable
 private fun JoinKeysignViewPreview() {
     JoinKeysignScreen(
-        isKeySignFinished = false,
+        title = stringResource(R.string.keysign),
         isError = true,
         content = {
             ErrorView(
