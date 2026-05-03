@@ -292,6 +292,7 @@ class MldsaKeysign(
                         onPeersResumed?.invoke()
                     }
                     lastMessageNano = System.nanoTime()
+                    heardFromThisAttempt.clear()
                     if (applyInboundMessages(handle, msgs, messageID)) return true
                 } else {
                     delay(POLL_INTERVAL_MS)

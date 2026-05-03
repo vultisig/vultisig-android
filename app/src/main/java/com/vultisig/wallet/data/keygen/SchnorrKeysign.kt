@@ -232,6 +232,7 @@ class SchnorrKeysign(
                         onPeersResumed?.invoke()
                     }
                     lastMessageNano = System.nanoTime()
+                    heardFromThisAttempt.clear()
                     if (processInboundMessage(handle, msgs, messageID)) {
                         return true
                     }
