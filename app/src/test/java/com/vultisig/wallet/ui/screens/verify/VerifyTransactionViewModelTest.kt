@@ -38,6 +38,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -51,9 +52,11 @@ import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 
 /** Unit tests for [VerifyTransactionViewModel]. */
 @OptIn(ExperimentalCoroutinesApi::class)
+@Timeout(value = 30, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
 internal class VerifyTransactionViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
@@ -88,6 +91,11 @@ internal class VerifyTransactionViewModelTest {
         // to a generic Object that fails the implicit cast at the VM call site.
         coEvery { isVaultHasFastSignById(any()) } returns false
         coEvery { mapTransactionToUiModel(any()) } returns TransactionDetailsUiModel()
+        // Default loadTransaction() onto the happy path. Without a stub the relaxed mock returns
+        // null, the safeLaunch body throws, and onError suspends through Navigator.back() on a
+        // relaxed mock — that suspension races the test body on CI and surfaces as
+        // UncaughtExceptionsBeforeTest. Per-test stubs override this (last-wins in MockK).
+        coEvery { transactionRepository.getTransaction(any()) } returns mockk(relaxed = true)
     }
 
     /** Cleans up mocks and resets test dispatcher after each test. */
