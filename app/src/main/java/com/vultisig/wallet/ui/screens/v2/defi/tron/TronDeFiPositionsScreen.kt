@@ -6,12 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -165,18 +162,13 @@ private fun TronDeFiPositionsScreenContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        VsTabGroup(
-                            index =
-                                if (state is TronDeFiUiState.Success)
-                                    TRON_DEFI_TABS.indexOfFirst { it == state.selectedTab }
-                                        .coerceAtLeast(0)
-                                else 0
-                        ) {
+                        VsTabGroup(index = 0) {
                             TRON_DEFI_TABS.forEach { tab ->
                                 tab {
                                     VsTab(
                                         label = stringResource(tab.displayNameRes),
-                                        onClick = { if (!isLoading) onTabSelected(tab) },
+                                        isEnabled = !isLoading,
+                                        onClick = { onTabSelected(tab) },
                                     )
                                 }
                             }
@@ -186,8 +178,10 @@ private fun TronDeFiPositionsScreenContent(
                             type = ContainerType.SECONDARY,
                             cornerType = CornerType.Circular,
                             modifier =
-                                if (isLoading) Modifier
-                                else Modifier.clickOnce(onClick = onEditPositionClick),
+                                Modifier.clickOnce(
+                                    enabled = !isLoading,
+                                    onClick = onEditPositionClick,
+                                ),
                         ) {
                             UiIcon(
                                 drawableResId = R.drawable.edit_chain,
@@ -209,22 +203,16 @@ private fun TronDeFiPositionsScreenContent(
                     when (state) {
                         TronDeFiUiState.Loading -> {
                             item {
-                                Row(
-                                    modifier =
-                                        Modifier.fillMaxWidth()
-                                            .height(96.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(Theme.v2.colors.backgrounds.secondary)
-                                ) {
-                                    Box(modifier = Modifier.weight(1f).fillMaxHeight())
-                                    Box(
-                                        modifier =
-                                            Modifier.width(1.dp)
-                                                .fillMaxHeight()
-                                                .background(Theme.v2.colors.backgrounds.primary)
-                                    )
-                                    Box(modifier = Modifier.weight(1f).fillMaxHeight())
-                                }
+                                ResourceTwoCardsRow(
+                                    resourceUsage =
+                                        ResourceUsage(
+                                            availableBandwidth = 0L,
+                                            totalBandwidth = 0L,
+                                            availableEnergy = 0L,
+                                            totalEnergy = 0L,
+                                        ),
+                                    isLoading = true,
+                                )
                             }
                             item {
                                 TronFreezePositionCard(
@@ -271,6 +259,7 @@ private fun TronDeFiPositionsScreenContent(
                                         frozenTotalTrx = tronData.frozenTotalTrx,
                                         isBalanceVisible = state.isBalanceVisible,
                                         isUnfreezeEnabled = tronData.hasFrozenBalance,
+                                        isFreezeEnabled = tronData.hasAvailableBalance,
                                         onClickFreeze = onClickFreeze,
                                         onClickUnfreeze = onClickUnfreeze,
                                     )

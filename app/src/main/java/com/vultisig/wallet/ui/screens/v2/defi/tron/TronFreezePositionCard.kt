@@ -35,6 +35,7 @@ internal fun TronFreezePositionCard(
     isBalanceVisible: Boolean,
     isLoading: Boolean = false,
     isUnfreezeEnabled: Boolean,
+    isFreezeEnabled: Boolean = true,
     onClickFreeze: () -> Unit,
     onClickUnfreeze: () -> Unit,
 ) {
@@ -114,7 +115,7 @@ internal fun TronFreezePositionCard(
                     background = Theme.v2.colors.buttons.ctaPrimary,
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = TronFreezeCardIconCircleColor,
-                    enabled = !isLoading,
+                    enabled = isFreezeEnabled && !isLoading,
                     modifier = Modifier.weight(1f),
                     onClick = onClickFreeze,
                 )
