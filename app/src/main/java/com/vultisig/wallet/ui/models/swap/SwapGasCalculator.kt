@@ -33,6 +33,8 @@ import wallet.core.jni.proto.Common.SigningError
 
 internal data class GasCalculationResult(val gasFee: TokenValue, val estimated: EstimatedGasFee)
 
+internal class InsufficientUtxosException : Exception("Error_not_enough_utxos")
+
 internal class SwapGasCalculator
 @Inject
 constructor(
@@ -94,7 +96,8 @@ constructor(
                     ),
                     memo = null,
                 )
-            estimatedTotalFee = gasFee.copy(value = (plan ?: return null).fee.toBigInteger())
+            if (plan.error != SigningError.OK) return null
+            estimatedTotalFee = gasFee.copy(value = plan.fee.toBigInteger())
         }
 
         val estimated =
@@ -117,7 +120,7 @@ constructor(
         tokenAmountInt: BigInteger,
         specific: BlockChainSpecificAndUtxo,
         memo: String?,
-    ): Bitcoin.TransactionPlan? {
+    ): Bitcoin.TransactionPlan {
         val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
         val keysignPayload =
             KeysignPayload(
@@ -134,12 +137,7 @@ constructor(
             )
 
         val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
-        val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
-        if (plan.error != SigningError.OK) {
-            Timber.e("UTXO plan error: %s", plan.error.name)
-            return null
-        }
-        return plan
+        return utxo.getBitcoinTransactionPlan(keysignPayload)
     }
 
     suspend fun getSpecificAndUtxo(srcToken: Coin, srcAddress: String, gasFee: TokenValue) =
@@ -186,7 +184,12 @@ constructor(
                 tokenAmountInt = tokenAmountInt,
                 specific = specificAndUtxo,
                 memo = memo,
-            ) ?: return null
+            )
+        if (plan.error == SigningError.Error_not_enough_utxos) throw InsufficientUtxosException()
+        if (plan.error != SigningError.OK) {
+            Timber.e("UTXO plan error: %s", plan.error.name)
+            return null
+        }
         val nativeCoin =
             withContext(Dispatchers.IO) { tokenRepository.getNativeToken(srcToken.chain.id) }
         val planFee = TokenValue(value = plan.fee.toBigInteger(), token = nativeCoin)

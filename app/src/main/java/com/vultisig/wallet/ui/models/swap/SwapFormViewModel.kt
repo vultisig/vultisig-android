@@ -342,16 +342,6 @@ constructor(
 
                                 val isAffiliate = true
 
-                                val planFeeResult =
-                                    swapGasCalculator.computeUtxoPlanFeeResult(
-                                        vaultId = vaultId,
-                                        srcToken = srcToken,
-                                        dstAddress = dstAddress,
-                                        tokenAmountInt = srcAmountInt,
-                                        specificAndUtxo = specificAndUtxo,
-                                        memo = quote.data.memo,
-                                    )
-
                                 RegularSwapTransaction(
                                     id = UUID.randomUUID().toString(),
                                     vaultId = vaultId,
@@ -362,14 +352,11 @@ constructor(
                                     expectedDstTokenValue = dstTokenValue,
                                     blockChainSpecific = specificAndUtxo,
                                     estimatedFees = quote.fees,
-                                    gasFees =
-                                        planFeeResult?.gasFee
-                                            ?: estimatedNetworkFeeTokenValue.value
-                                            ?: gasFee,
+                                    gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
                                     isApprovalRequired = isApprovalRequired,
                                     memo = quote.data.memo,
                                     gasFeeFiatValue =
-                                        planFeeResult?.estimated?.fiatValue ?: gasFeeFiatValue,
+                                        estimatedNetworkFeeFiatValue.value ?: gasFeeFiatValue,
                                     payload =
                                         SwapPayload.ThorChain(
                                             THORChainSwapPayload(
@@ -425,16 +412,6 @@ constructor(
 
                                 val isAffiliate = true
 
-                                val planFeeResult =
-                                    swapGasCalculator.computeUtxoPlanFeeResult(
-                                        vaultId = vaultId,
-                                        srcToken = srcToken,
-                                        dstAddress = dstAddress,
-                                        tokenAmountInt = srcAmountInt,
-                                        specificAndUtxo = specificAndUtxo,
-                                        memo = quote.data.memo,
-                                    )
-
                                 RegularSwapTransaction(
                                     id = UUID.randomUUID().toString(),
                                     vaultId = vaultId,
@@ -445,14 +422,11 @@ constructor(
                                     expectedDstTokenValue = dstTokenValue,
                                     blockChainSpecific = specificAndUtxo,
                                     estimatedFees = quote.fees,
-                                    gasFees =
-                                        planFeeResult?.gasFee
-                                            ?: estimatedNetworkFeeTokenValue.value
-                                            ?: gasFee,
+                                    gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
                                     memo = quote.data.memo,
                                     isApprovalRequired = isApprovalRequired,
                                     gasFeeFiatValue =
-                                        planFeeResult?.estimated?.fiatValue ?: gasFeeFiatValue,
+                                        estimatedNetworkFeeFiatValue.value ?: gasFeeFiatValue,
                                     payload =
                                         SwapPayload.MayaChain(
                                             THORChainSwapPayload(
@@ -806,22 +780,30 @@ constructor(
                 .filterNotNull()
                 .catch { Timber.e(it) }
                 .collect { result ->
+                    val chain = result.gasFee.token.chain
                     gasFee.value = result.gasFee
-                    try {
-                        estimatedNetworkFeeFiatValue.value = result.estimated.fiatValue
-                        estimatedNetworkFeeTokenValue.value = result.estimated.tokenValue
+                    // UTXO non-Cardano fees are displayed from computeUtxoPlanFeeResult in
+                    // calculateFees(); only update the display for non-UTXO chains here so
+                    // a slow gas fetch can't overwrite the plan fee with a dust estimate.
+                    if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) {
+                        try {
+                            estimatedNetworkFeeFiatValue.value = result.estimated.fiatValue
+                            estimatedNetworkFeeTokenValue.value = result.estimated.tokenValue
 
-                        uiState.update {
-                            it.copy(
-                                networkFee = result.estimated.formattedTokenValue,
-                                networkFeeFiat = result.estimated.formattedFiatValue,
+                            uiState.update {
+                                it.copy(
+                                    networkFee = result.estimated.formattedTokenValue,
+                                    networkFeeFiat = result.estimated.formattedFiatValue,
+                                )
+                            }
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                            showError(
+                                UiText.StringResource(
+                                    R.string.swap_screen_invalid_gas_fee_calculation
+                                )
                             )
                         }
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        showError(
-                            UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
-                        )
                     }
                 }
         }
@@ -997,7 +979,8 @@ constructor(
                                     (q.data.inboundAddress ?: src.address.address) to q.data.memo
                                 else -> null
                             }
-                        val currentGasFee = gasFee.value
+                        val currentGasFee =
+                            gasFee.value?.takeIf { it.token.chain == srcToken.chain }
                         val currentVaultId = vaultId
                         if (
                             utxoFeeData != null &&
@@ -1040,6 +1023,17 @@ constructor(
                             } catch (e: Exception) {
                                 if (e is kotlin.coroutines.cancellation.CancellationException)
                                     throw e
+                                if (e is InsufficientUtxosException) {
+                                    uiState.update {
+                                        it.copy(
+                                            isSwapDisabled = true,
+                                            formError =
+                                                UiText.StringResource(
+                                                    R.string.insufficient_utxos_error
+                                                ),
+                                        )
+                                    }
+                                }
                                 Timber.e(e, "utxoPlanFee")
                             }
                         }
