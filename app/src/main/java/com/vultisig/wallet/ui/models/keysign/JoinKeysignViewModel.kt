@@ -879,13 +879,23 @@ constructor(
                             isMax = false,
                         )
 
-                    val fees =
-                        withContext(Dispatchers.IO) {
-                            feeServiceComposite.calculateFees(blockchainTransaction)
-                        }
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-                    val estimatedTokenFees = TokenValue(value = fees.amount, token = nativeCoin)
+                    val fallbackFeeAmount =
+                        if (payload.blockChainSpecific is BlockChainSpecific.Ethereum) {
+                            BigInteger.ZERO
+                        } else {
+                            withContext(Dispatchers.IO) {
+                                    feeServiceComposite.calculateFees(blockchainTransaction)
+                                }
+                                .amount
+                        }
+                    val estimatedTokenFees =
+                        computeJoinKeysignNetworkFee(
+                            blockChainSpecific = payload.blockChainSpecific,
+                            nativeCoin = nativeCoin,
+                            fallbackFeeAmount = fallbackFeeAmount,
+                        )
 
                     val totalGasAndFee =
                         gasFeeToEstimatedFee(
@@ -946,10 +956,6 @@ constructor(
                             isMax = false,
                         )
 
-                    val fees =
-                        withContext(Dispatchers.IO) {
-                            feeServiceComposite.calculateFees(blockchainTransaction)
-                        }
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
                     val gasFee =
@@ -961,7 +967,15 @@ constructor(
                             }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                         } else {
-                            TokenValue(value = fees.amount, token = nativeCoin)
+                            val fees =
+                                withContext(Dispatchers.IO) {
+                                    feeServiceComposite.calculateFees(blockchainTransaction)
+                                }
+                            computeJoinKeysignNetworkFee(
+                                blockChainSpecific = payload.blockChainSpecific,
+                                nativeCoin = nativeCoin,
+                                fallbackFeeAmount = fees.amount,
+                            )
                         }
 
                     val totalGasAndFee =
@@ -1483,3 +1497,19 @@ internal fun prettifyEvmFunctionName(signature: String): String? {
         it.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) }
     }
 }
+
+internal fun computeJoinKeysignNetworkFee(
+    blockChainSpecific: BlockChainSpecific,
+    nativeCoin: Coin,
+    fallbackFeeAmount: BigInteger,
+): TokenValue =
+    when (blockChainSpecific) {
+        is BlockChainSpecific.Ethereum ->
+            TokenValue(
+                value = blockChainSpecific.maxFeePerGasWei * blockChainSpecific.gasLimit,
+                token = nativeCoin,
+            )
+        is BlockChainSpecific.THORChain ->
+            TokenValue(value = blockChainSpecific.fee, token = nativeCoin)
+        else -> TokenValue(value = fallbackFeeAmount, token = nativeCoin)
+    }
