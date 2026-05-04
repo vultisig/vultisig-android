@@ -77,6 +77,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -86,6 +87,8 @@ import tss.Tss
 import vultisig.keysign.v1.CustomMessagePayload
 
 private const val DEFAULT_ETHEREUM_DERIVATION_PATH = "m/44'/60'/0'/0/0"
+private const val MAX_EVM_RECEIPT_RETRIES = 5
+private const val EVM_RECEIPT_RETRY_DELAY_MS = 2_000L
 
 /** UI state for an in-progress or completed keysign session. */
 internal sealed class KeysignState {
@@ -775,12 +778,19 @@ constructor(
 
         viewModelScope.launch {
             try {
-                val receipt =
-                    evmApiFactory.createEvmApi(chain).getTxStatus(txHash)?.result ?: return@launch
-                val gasUsedHex = receipt.gasUsed ?: return@launch
-                val effectiveGasPriceHex = receipt.effectiveGasPrice ?: return@launch
-                val gasUsed = BigInteger(gasUsedHex.removePrefix("0x"), 16)
-                val effectiveGasPrice = BigInteger(effectiveGasPriceHex.removePrefix("0x"), 16)
+                val evmApi = evmApiFactory.createEvmApi(chain)
+                var gasUsedHex: String? = null
+                var effectiveGasPriceHex: String? = null
+                for (attempt in 1..MAX_EVM_RECEIPT_RETRIES) {
+                    val result = evmApi.getTxStatus(txHash)?.result
+                    gasUsedHex = result?.gasUsed
+                    effectiveGasPriceHex = result?.effectiveGasPrice
+                    if (gasUsedHex != null && effectiveGasPriceHex != null) break
+                    if (attempt < MAX_EVM_RECEIPT_RETRIES) delay(EVM_RECEIPT_RETRY_DELAY_MS)
+                }
+                val gasUsed = BigInteger((gasUsedHex ?: return@launch).removePrefix("0x"), 16)
+                val effectiveGasPrice =
+                    BigInteger((effectiveGasPriceHex ?: return@launch).removePrefix("0x"), 16)
                 val actualFeeWei = gasUsed.multiply(effectiveGasPrice)
                 val estimatedFee =
                     gasFeeToEstimatedFee(
@@ -790,15 +800,16 @@ constructor(
                             selectedToken = coin,
                         )
                     )
-                val currentModel = resolvedTransactionUiModel.value
-                val sendTx = currentModel as? TransactionTypeUiModel.Send ?: return@launch
-                resolvedTransactionUiModel.value =
+                resolvedTransactionUiModel.update { currentModel ->
+                    val sendTx =
+                        currentModel as? TransactionTypeUiModel.Send ?: return@update currentModel
                     TransactionTypeUiModel.Send(
                         sendTx.tx.copy(
                             networkFeeTokenValue = estimatedFee.formattedTokenValue,
                             networkFeeFiatValue = estimatedFee.formattedFiatValue,
                         )
                     )
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
