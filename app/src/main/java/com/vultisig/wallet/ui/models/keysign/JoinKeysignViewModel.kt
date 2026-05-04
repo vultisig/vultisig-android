@@ -435,9 +435,7 @@ constructor(
         val signingAddress =
             runCatching {
                     val chainStr = customMessage.chain ?: return@runCatching null
-                    _currentVault.coins
-                        .firstOrNull { it.chain == Chain.fromRaw(chainStr) }
-                        ?.address
+                    _currentVault.coins.firstOrNull { it.chain == Chain.fromRaw(chainStr) }?.address
                 }
                 .getOrNull() ?: ""
 
