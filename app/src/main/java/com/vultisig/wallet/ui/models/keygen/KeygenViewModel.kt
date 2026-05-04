@@ -12,9 +12,12 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.keygen.DKLSKeygen
+import com.vultisig.wallet.data.keygen.KeygenExecutor
 import com.vultisig.wallet.data.keygen.KeygenRouting
 import com.vultisig.wallet.data.keygen.MldsaKeygen
 import com.vultisig.wallet.data.keygen.SchnorrKeygen
+import com.vultisig.wallet.data.keygen.mergeReshareKeyshares
+import com.vultisig.wallet.data.keygen.selectKeygenExecutor
 import com.vultisig.wallet.data.keygen.shouldUseNewKeygenExecution
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Chain
@@ -286,6 +289,15 @@ constructor(
                     vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
                     vault.pubKeyMLDSA = cachedVault.pubKeyMLDSA
                     vault.keyshares = cachedVault.keyshares
+                    // Preserve user-curated state across reshare / migrate. The keygen ceremony
+                    // only regenerates the threshold root shares — coins (custom token list,
+                    // addresses) and per-chain public keys (KeyImport vaults' chain routing) must
+                    // survive untouched. Without this, SaveVaultUseCase would overwrite the
+                    // upserted vault's empty coin list with default chains, wiping the user's
+                    // selections; for KeyImport vaults the empty `chainPublicKeys` would also
+                    // break per-chain signing-key resolution in `Vault.getEcdsaSigningKey`.
+                    vault.coins = cachedVault.coins
+                    vault.chainPublicKeys = cachedVault.chainPublicKeys
                 }
             }
 
@@ -299,22 +311,15 @@ constructor(
                         "SingleKeygen requires an existing vault with ECDSA and EdDSA keys"
                     }
                     startSingleKeygen()
-                } else if (action == TssAction.ReShare) {
-                    // KeyImport vaults still hold ECDSA + EdDSA root keyshares produced by
-                    // DKLS / Schnorr — reshare regenerates only those root shares (per-chain
-                    // shares stay intact via the keyshare-preservation logic in startKeygenDkls).
-                    // GG20 reshare keeps the legacy protocol path. This mirrors iOS, where
-                    // every reshare regardless of `lib_type` runs the DKLS QC ceremony.
-                    when (libType) {
-                        SigningLibType.GG20 -> startKeygenGG20()
-                        SigningLibType.DKLS,
-                        SigningLibType.KeyImport -> startKeygenDkls()
-                    }
                 } else {
-                    when (libType) {
-                        SigningLibType.DKLS -> startKeygenDkls()
-                        SigningLibType.GG20 -> startKeygenGG20()
-                        SigningLibType.KeyImport -> startKeyImportKeygen()
+                    // Pure dispatch function lives in KeygenExecution.kt so the matrix is
+                    // unit-testable in isolation — the previous inline `when` shipped a
+                    // dispatch bug for (ReShare, KeyImport) that abstract audits missed.
+                    when (selectKeygenExecutor(action, libType)) {
+                        KeygenExecutor.SingleKeygen -> startSingleKeygen()
+                        KeygenExecutor.DklsKeygen -> startKeygenDkls()
+                        KeygenExecutor.Gg20Keygen -> startKeygenGG20()
+                        KeygenExecutor.KeyImportKeygen -> startKeyImportKeygen()
                     }
                 }
 
@@ -458,35 +463,25 @@ constructor(
             requireNotNull(dklsKeygen.keyshare) { "ECDSA keygen produced no keyshare" }
         val keyshareEddsa = requireNotNull(schnorr.keyshare) { "EdDSA keygen produced no keyshare" }
 
-        vault.pubKeyECDSA = keyshareEcdsa.pubKey
-        vault.pubKeyEDDSA = keyshareEddsa.pubKey
-        vault.hexChainCode = keyshareEcdsa.chaincode
-
-        // For reshare we must preserve any pre-existing keyshares the protocol does not
-        // touch — most importantly the MLDSA share added later via SingleKeygen — so the user
-        // doesn't silently lose their post-quantum key. The reshare protocol only regenerates
-        // ECDSA + EdDSA, so everything else carries over verbatim.
-        val preservedKeyshares =
-            if (action == TssAction.ReShare) {
-                vault.keyshares.filterNot { existing ->
-                    existing.pubKey == vault.pubKeyECDSA || existing.pubKey == vault.pubKeyEDDSA
-                }
-            } else {
-                emptyList()
-            }
-
-        vault.pubKeyECDSA = keyshareEcdsa.pubKey
-        vault.pubKeyEDDSA = keyshareEddsa.pubKey
-        vault.hexChainCode = keyshareEcdsa.chaincode
-
-        val newKeyshares =
-            mutableListOf(
-                KeyShare(pubKey = keyshareEcdsa.pubKey, keyShare = keyshareEcdsa.keyshare),
-                KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
+        // Compute the new keyshare list against the OLD pubkeys BEFORE mutating vault state.
+        // The pure helper enforces the invariant that root reshare must drop OLD ECDSA / EdDSA
+        // shares and keep everything else (MLDSA, KeyImport per-chain shares).
+        val mergedKeyshares =
+            mergeReshareKeyshares(
+                existing = vault.keyshares,
+                newEcdsa =
+                    KeyShare(pubKey = keyshareEcdsa.pubKey, keyShare = keyshareEcdsa.keyshare),
+                newEddsa =
+                    KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
+                oldEcdsaPubKey = vault.pubKeyECDSA,
+                oldEddsaPubKey = vault.pubKeyEDDSA,
+                isReshare = action == TssAction.ReShare,
             )
-        newKeyshares.addAll(preservedKeyshares)
 
-        vault.keyshares = newKeyshares
+        vault.pubKeyECDSA = keyshareEcdsa.pubKey
+        vault.pubKeyEDDSA = keyshareEddsa.pubKey
+        vault.hexChainCode = keyshareEcdsa.chaincode
+        vault.keyshares = mergedKeyshares
 
         if (action == TssAction.Migrate) {
             vault.libType = SigningLibType.DKLS

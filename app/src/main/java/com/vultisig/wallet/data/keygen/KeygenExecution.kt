@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.keygen
 
+import com.vultisig.wallet.data.models.KeyShare
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import kotlin.coroutines.cancellation.CancellationException
@@ -68,6 +69,77 @@ private fun isDklsRootKeygen(action: TssAction, libType: SigningLibType): Boolea
 internal fun isBatchEligibleReshare(action: TssAction, libType: SigningLibType): Boolean =
     action == TssAction.ReShare &&
         (libType == SigningLibType.DKLS || libType == SigningLibType.KeyImport)
+
+/**
+ * Identifies which keygen executor path runs for a given (action, libType). Pure function so the
+ * dispatch matrix in `KeygenViewModel.generateKey()` can be unit-tested in isolation —
+ * predicate-level tests are not enough; we need the executor decision to be exercised too.
+ */
+internal enum class KeygenExecutor {
+    SingleKeygen,
+    DklsKeygen,
+    Gg20Keygen,
+    KeyImportKeygen,
+}
+
+internal fun selectKeygenExecutor(action: TssAction, libType: SigningLibType): KeygenExecutor =
+    when (action) {
+        TssAction.SingleKeygen -> KeygenExecutor.SingleKeygen
+        TssAction.ReShare ->
+            // ReShare on DKLS or KeyImport vaults runs the DKLS QC ceremony (the root shares
+            // are produced by the same primitives in both vault types). GG20 reshare keeps its
+            // dedicated GG20 path because the legacy protocol has its own QC.
+            when (libType) {
+                SigningLibType.DKLS,
+                SigningLibType.KeyImport -> KeygenExecutor.DklsKeygen
+                SigningLibType.GG20 -> KeygenExecutor.Gg20Keygen
+            }
+        TssAction.KEYGEN,
+        TssAction.Migrate ->
+            when (libType) {
+                SigningLibType.DKLS -> KeygenExecutor.DklsKeygen
+                SigningLibType.GG20 -> KeygenExecutor.Gg20Keygen
+                // Reachable via Migrate when navigation forces libType=DKLS, but a stray
+                // KEYGEN on a KeyImport vault would land here too. Falling through to the
+                // KeyImport executor matches the prior behavior; in practice the navigation
+                // layer prevents this combination.
+                SigningLibType.KeyImport -> KeygenExecutor.KeyImportKeygen
+            }
+        TssAction.KeyImport -> KeygenExecutor.KeyImportKeygen
+    }
+
+/**
+ * Computes the new keyshare list for a completed root ceremony.
+ *
+ * For reshare we must drop the OLD root ECDSA / EdDSA shares and keep everything else (MLDSA,
+ * KeyImport per-chain shares). For non-reshare flows (KEYGEN / Migrate / KeyImport / SingleKeygen)
+ * the existing list is replaced with just the freshly produced root shares.
+ *
+ * Pure function so the preservation invariant is tested independently of the JNI-heavy ceremony
+ * code in `KeygenViewModel.startKeygenDkls`. The previous inline implementation captured the
+ * vault's pubkeys AFTER they were already overwritten — the filter never matched and stale root
+ * shares survived. Extracting this here makes that class of bug a unit-test concern.
+ */
+internal fun mergeReshareKeyshares(
+    existing: List<KeyShare>,
+    newEcdsa: KeyShare,
+    newEddsa: KeyShare,
+    oldEcdsaPubKey: String,
+    oldEddsaPubKey: String,
+    isReshare: Boolean,
+): List<KeyShare> {
+    val preserved =
+        if (isReshare) {
+            existing.filterNot { it.pubKey == oldEcdsaPubKey || it.pubKey == oldEddsaPubKey }
+        } else {
+            emptyList()
+        }
+    return buildList {
+        add(newEcdsa)
+        add(newEddsa)
+        addAll(preserved)
+    }
+}
 
 /**
  * Shared retry wrapper for keygen ceremonies.
