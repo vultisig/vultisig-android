@@ -882,7 +882,10 @@ constructor(
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
                     val fallbackFeeAmount =
-                        if (payload.blockChainSpecific is BlockChainSpecific.Ethereum) {
+                        if (
+                            payload.blockChainSpecific is BlockChainSpecific.Ethereum ||
+                                payload.blockChainSpecific is BlockChainSpecific.THORChain
+                        ) {
                             BigInteger.ZERO
                         } else {
                             withContext(Dispatchers.IO) {
@@ -967,14 +970,22 @@ constructor(
                             }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                         } else {
-                            val fees =
-                                withContext(Dispatchers.IO) {
-                                    feeServiceComposite.calculateFees(blockchainTransaction)
+                            val fallbackFeeAmount =
+                                if (
+                                    payload.blockChainSpecific is BlockChainSpecific.Ethereum ||
+                                        payload.blockChainSpecific is BlockChainSpecific.THORChain
+                                ) {
+                                    BigInteger.ZERO
+                                } else {
+                                    withContext(Dispatchers.IO) {
+                                            feeServiceComposite.calculateFees(blockchainTransaction)
+                                        }
+                                        .amount
                                 }
                             computeJoinKeysignNetworkFee(
                                 blockChainSpecific = payload.blockChainSpecific,
                                 nativeCoin = nativeCoin,
-                                fallbackFeeAmount = fees.amount,
+                                fallbackFeeAmount = fallbackFeeAmount,
                             )
                         }
 
