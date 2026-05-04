@@ -108,9 +108,10 @@ constructor(
             // Re-trigger after THORChain first appears in any vault, so adding a
             // THORChain coin (or importing a THORChain vault) mid-session still
             // initializes the live network id instead of relying on the default.
+            // Uses the lightweight DAO `EXISTS` flow so the cold-start path doesn't
+            // hydrate the full vault graph for non-THORChain users.
             vaultRepository
-                .getAllAsFlow()
-                .map { vaults -> vaults.any { it.coins.any { c -> c.chain == Chain.ThorChain } } }
+                .observeHasAnyCoinOnChain(Chain.ThorChain)
                 .distinctUntilChanged()
                 .filter { it }
                 .first()

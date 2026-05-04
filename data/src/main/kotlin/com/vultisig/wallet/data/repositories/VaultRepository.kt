@@ -41,6 +41,8 @@ interface VaultRepository {
 
     suspend fun hasAnyCoinOnChain(chain: Chain): Boolean
 
+    fun observeHasAnyCoinOnChain(chain: Chain): Flow<Boolean>
+
     suspend fun isNameTaken(name: String, excludeId: VaultId): Boolean
 
     suspend fun add(vault: Vault)
@@ -94,6 +96,9 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
 
     override suspend fun hasAnyCoinOnChain(chain: Chain): Boolean =
         vaultDao.hasCoinOnChain(chain.id)
+
+    override fun observeHasAnyCoinOnChain(chain: Chain): Flow<Boolean> =
+        vaultDao.observeHasCoinOnChain(chain.id)
 
     override suspend fun isNameTaken(name: String, excludeId: VaultId): Boolean =
         vaultDao.countByNameExcluding(name, excludeId) > 0
