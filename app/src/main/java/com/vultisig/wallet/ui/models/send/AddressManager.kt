@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal class AddressManager(
     private val scope: CoroutineScope,
@@ -112,7 +113,8 @@ internal class AddressManager(
             }
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Timber.d(e, "Failed to resolve address %s on %s", addressStr, chain)
             _resolvedDstAddress.value = null
             _dstAddressLabel.value = null
         }

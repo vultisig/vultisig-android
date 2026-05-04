@@ -13,6 +13,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,9 +61,16 @@ internal class AmountManager(
         _isMaxAmount.value = amount > BigDecimal.ZERO
     }
 
-    /** Reset the bidirectional cache so a fresh token selection re-triggers conversion. */
+    /**
+     * Reset the bidirectional cache and the max snapshot. Called when the selected token changes —
+     * keeping the prior token's max value would let `isMax` flip on a coincidental amount match
+     * after the switch.
+     */
     fun resetUserInputCache() {
         lastTokenValueUserInput = ""
+        lastFiatValueUserInput = ""
+        maxAmount = BigDecimal.ZERO
+        _isMaxAmount.value = false
     }
 
     fun validateTokenAmount(value: String): UiText? {
@@ -136,8 +144,10 @@ internal class AmountManager(
         val price =
             try {
                 tokenPriceRepository.getPrice(token, appCurrency.value).first()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                Timber.d("Failed to get price for token %s", token)
+                Timber.w(e, "Failed to get price for token %s", token)
                 return null
             }
 

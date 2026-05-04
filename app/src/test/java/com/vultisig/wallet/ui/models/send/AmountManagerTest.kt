@@ -229,6 +229,24 @@ internal class AmountManagerTest {
             assertEquals("100", fiatAmountFieldState.text.toString())
         }
 
+    @Test
+    fun `resetUserInputCache clears the max snapshot to avoid carry-over across token switches`() =
+        runTest(mainDispatcher) {
+            val manager = build(backgroundScope)
+
+            manager.markMax(BigDecimal("0.5"))
+            assertTrue(manager.isMaxAmount.value)
+            assertEquals(BigDecimal("0.5"), manager.currentMaxAmount)
+
+            // Simulating selectToken: the VM calls resetUserInputCache. The max snapshot from
+            // the previous token must NOT survive — otherwise an unrelated amount matching the
+            // old max would set isMaxAmount=true on the new token.
+            manager.resetUserInputCache()
+
+            assertFalse(manager.isMaxAmount.value)
+            assertEquals(BigDecimal.ZERO, manager.currentMaxAmount)
+        }
+
     // ──────── reaping flow ────────
 
     @Test
