@@ -557,7 +557,7 @@ constructor(
                             method = customMessagePayload?.method ?: "",
                             message = customMessagePayload?.message ?: "",
                             signingAddress = signingAddress,
-                            requestFrom = "",
+                            requestFrom = shareViewModel.customMessageRequestFrom,
                         )
                 )
             _isDataLoaded.value = true

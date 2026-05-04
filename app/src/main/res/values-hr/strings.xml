@@ -834,6 +834,7 @@
     <string name="referral_invite_onboarding_2">Zarađujte nagrade.</string>
     <string name="swap_screen_invalid_specific_and_utxo">Određeni izračun nije uspio</string>
     <string name="verify_sign_message_message_field_signature">Potpis</string>
+    <string name="verify_sign_message_request_from">Zahtjev od</string>
     <string name="verify_sign_message_signing_address">Adresa za potpis</string>
     <string name="verify_sign_message_signature_successful">Potpis uspješan</string>
     <string name="secret_enable_dkls">Omogućite DKLS</string>

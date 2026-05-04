@@ -829,6 +829,7 @@
     <string name="enter_email_screen_hint">E-mail</string>
     <string name="swap_screen_invalid_specific_and_utxo">Specifieke berekening mislukt</string>
     <string name="verify_sign_message_message_field_signature">Handtekening</string>
+    <string name="verify_sign_message_request_from">Verzoek van</string>
     <string name="verify_sign_message_signing_address">Ondertekenend adres</string>
     <string name="verify_sign_message_signature_successful">Handtekening geslaagd</string>
     <string name="secret_enable_dkls">Schakel DKLS in</string>

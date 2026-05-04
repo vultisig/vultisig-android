@@ -832,6 +832,7 @@
     <string name="enter_email_screen_hint">Email</string>
     <string name="swap_screen_invalid_specific_and_utxo">Calcolo specifico non riuscito</string>
     <string name="verify_sign_message_message_field_signature">Firma</string>
+    <string name="verify_sign_message_request_from">Richiesta da</string>
     <string name="verify_sign_message_signing_address">Indirizzo di firma</string>
     <string name="verify_sign_message_signature_successful">Firma riuscita</string>
     <string name="secret_enable_dkls">Abilita DKLS</string>

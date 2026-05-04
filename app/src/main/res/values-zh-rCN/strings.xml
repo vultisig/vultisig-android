@@ -1163,6 +1163,7 @@
     <string name="enter_email_screen_hint">邮箱</string>
     <string name="swap_screen_invalid_specific_and_utxo">特定计算失败</string>
     <string name="verify_sign_message_message_field_signature">签名</string>
+    <string name="verify_sign_message_request_from">请求来源</string>
     <string name="verify_sign_message_signing_address">签名地址</string>
     <string name="verify_sign_message_signature_successful">签名成功</string>
     <string name="secret_enable_dkls">启用 DKLS</string>

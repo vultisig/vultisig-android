@@ -57,6 +57,7 @@ constructor(
     var vault: Vault? = null
     var keysignPayload: KeysignPayload? = null
     var customMessagePayload: CustomMessagePayload? = null
+    var customMessageRequestFrom: String = ""
 
     val hasAllData: Boolean
         get() = vault != null && (keysignPayload != null || customMessagePayload != null)
@@ -116,6 +117,7 @@ constructor(
         this@KeysignShareViewModel.vault = vault
         keysignPayload = null
         customMessagePayload = dto.payload
+        customMessageRequestFrom = dto.requestFrom
     }
 
     suspend fun loadSwapTransaction(transactionId: TransactionId) {

@@ -10,6 +10,7 @@ data class CustomMessagePayloadDto(
     val id: String,
     val vaultId: VaultId,
     val payload: CustomMessagePayload,
+    val requestFrom: String = "",
 )
 
 interface CustomMessagePayloadRepo {
