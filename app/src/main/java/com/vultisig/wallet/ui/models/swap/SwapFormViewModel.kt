@@ -955,23 +955,9 @@ constructor(
                         this@SwapFormViewModel.quote = quoteResult.quote
                         swapFeeFiat.value = quoteResult.swapFeeFiat
 
-                        uiState.update {
-                            it.copy(
-                                provider = quoteResult.providerUiText,
-                                srcFiatValue = quoteResult.srcFiatValueText,
-                                estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
-                                estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
-                                fee = quoteResult.feeText,
-                                formError = null,
-                                isSwapDisabled = false,
-                                isLoading = false,
-                                expiredAt = this@SwapFormViewModel.quote?.expiredAt,
-                            )
-                        }
-
-                        // Refresh the network fee for UTXO chains using the actual swap
-                        // parameters so the form shows the same plan-based fee that will
-                        // be stored in the transaction, ensuring form/overview consistency.
+                        // Determine destination address and memo for UTXO plan fee computation.
+                        // Must be computed before the uiState.update so the button stays
+                        // disabled for UTXO swaps until the plan fee is verified.
                         val utxoFeeData: Pair<String, String?>? =
                             when (val q = quoteResult.quote) {
                                 is SwapQuote.ThorChain ->
@@ -982,62 +968,97 @@ constructor(
                                     (q.data.inboundAddress ?: src.address.address) to q.data.memo
                                 else -> null
                             }
-                        val currentGasFee =
-                            gasFee.value?.takeIf { gasFeeChain.value == srcToken.chain }
-                        val currentVaultId = vaultId
-                        if (
+                        val isUtxoSwap =
                             utxoFeeData != null &&
-                                currentGasFee != null &&
-                                currentVaultId != null &&
                                 srcToken.chain.standard == TokenStandard.UTXO &&
                                 srcToken.chain != Chain.Cardano
-                        ) {
-                            val (utxoDstAddress, utxoMemo) = utxoFeeData
-                            try {
-                                val specificAndUtxo =
-                                    swapGasCalculator.getSpecificAndUtxo(
-                                        srcToken,
-                                        src.address.address,
-                                        currentGasFee,
-                                    )
-                                val planFeeResult =
-                                    swapGasCalculator.computeUtxoPlanFeeResult(
-                                        vaultId = currentVaultId,
-                                        srcToken = srcToken,
-                                        dstAddress = utxoDstAddress,
-                                        tokenAmountInt = srcTokenValue,
-                                        specificAndUtxo = specificAndUtxo,
-                                        memo = utxoMemo,
-                                    )
-                                if (planFeeResult != null) {
-                                    estimatedNetworkFeeFiatValue.value =
-                                        planFeeResult.estimated.fiatValue
-                                    estimatedNetworkFeeTokenValue.value =
-                                        planFeeResult.estimated.tokenValue
-                                    uiState.update {
-                                        it.copy(
-                                            networkFee =
-                                                planFeeResult.estimated.formattedTokenValue,
-                                            networkFeeFiat =
-                                                planFeeResult.estimated.formattedFiatValue,
+
+                        // For UTXO swaps keep isSwapDisabled=true until plan fee is verified
+                        // so a tap between this update and the plan-fee write never submits
+                        // with sats/byte as the total fee.
+                        uiState.update {
+                            it.copy(
+                                provider = quoteResult.providerUiText,
+                                srcFiatValue = quoteResult.srcFiatValueText,
+                                estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
+                                estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
+                                fee = quoteResult.feeText,
+                                formError = null,
+                                isSwapDisabled = isUtxoSwap,
+                                isLoading = false,
+                                expiredAt = this@SwapFormViewModel.quote?.expiredAt,
+                            )
+                        }
+
+                        if (isUtxoSwap) {
+                            val currentGasFee =
+                                gasFee.value?.takeIf { gasFeeChain.value == srcToken.chain }
+                            val currentVaultId = vaultId
+                            if (currentGasFee != null && currentVaultId != null) {
+                                val (utxoDstAddress, utxoMemo) = utxoFeeData!!
+                                try {
+                                    val specificAndUtxo =
+                                        swapGasCalculator.getSpecificAndUtxo(
+                                            srcToken,
+                                            src.address.address,
+                                            currentGasFee,
                                         )
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                if (e is kotlin.coroutines.cancellation.CancellationException)
-                                    throw e
-                                if (e is InsufficientUtxosException) {
-                                    uiState.update {
-                                        it.copy(
-                                            isSwapDisabled = true,
-                                            formError =
-                                                UiText.StringResource(
-                                                    R.string.insufficient_utxos_error
-                                                ),
+                                    val planFeeResult =
+                                        swapGasCalculator.computeUtxoPlanFeeResult(
+                                            vaultId = currentVaultId,
+                                            srcToken = srcToken,
+                                            dstAddress = utxoDstAddress,
+                                            tokenAmountInt = srcTokenValue,
+                                            specificAndUtxo = specificAndUtxo,
+                                            memo = utxoMemo,
                                         )
+                                    if (planFeeResult != null) {
+                                        estimatedNetworkFeeFiatValue.value =
+                                            planFeeResult.estimated.fiatValue
+                                        estimatedNetworkFeeTokenValue.value =
+                                            planFeeResult.estimated.tokenValue
+                                        uiState.update {
+                                            it.copy(
+                                                networkFee =
+                                                    planFeeResult.estimated.formattedTokenValue,
+                                                networkFeeFiat =
+                                                    planFeeResult.estimated.formattedFiatValue,
+                                                isSwapDisabled = false,
+                                            )
+                                        }
                                     }
+                                } catch (e: Exception) {
+                                    if (e is kotlin.coroutines.cancellation.CancellationException)
+                                        throw e
+                                    if (e is InsufficientUtxosException) {
+                                        uiState.update {
+                                            it.copy(
+                                                isSwapDisabled = true,
+                                                formError =
+                                                    UiText.StringResource(
+                                                        R.string.insufficient_utxos_error
+                                                    ),
+                                            )
+                                        }
+                                    } else {
+                                        estimatedNetworkFeeTokenValue.value = null
+                                        estimatedNetworkFeeFiatValue.value = null
+                                        uiState.update {
+                                            it.copy(
+                                                isSwapDisabled = true,
+                                                networkFee = "",
+                                                networkFeeFiat = "",
+                                            )
+                                        }
+                                    }
+                                    Timber.e(e, "utxoPlanFee")
                                 }
-                                Timber.e(e, "utxoPlanFee")
+                            } else {
+                                // gasFeeChain lags srcToken.chain after a token switch:
+                                // clear any stale fee from the previous chain.
+                                estimatedNetworkFeeTokenValue.value = null
+                                estimatedNetworkFeeFiatValue.value = null
+                                uiState.update { it.copy(networkFee = "", networkFeeFiat = "") }
                             }
                         }
 
