@@ -88,6 +88,7 @@ internal class SwapFormViewModelTest {
     private lateinit var swapTokenSelector: SwapTokenSelector
     private lateinit var swapQuoteManager: SwapQuoteManager
     private lateinit var tokenSelectorAccountsRepository: AccountsRepository
+    private lateinit var tokenBalanceMapper: AccountToTokenBalanceUiModelMapper
 
     private val currencyFlow = MutableStateFlow(AppCurrency.USD)
 
@@ -146,9 +147,13 @@ internal class SwapFormViewModelTest {
 
         val accountsRepository: AccountsRepository = mockk(relaxed = true)
         coEvery { accountsRepository.loadAddresses(any()) } returns flowOf(emptyList())
-        val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper =
-            mockk(relaxed = true)
-        coEvery { accountToTokenBalanceUiModelMapper(any()) } returns mockk(relaxed = true)
+        tokenBalanceMapper = mockk(relaxed = true)
+        coEvery { tokenBalanceMapper(any()) } answers
+            {
+                val src = firstArg<SendSrc>()
+                mockk<com.vultisig.wallet.ui.models.send.TokenBalanceUiModel>(relaxed = true)
+                    .apply { every { model } returns src }
+            }
         val requestResultRepository: RequestResultRepository = mockk(relaxed = true)
 
         swapTokenSelector =
@@ -156,7 +161,7 @@ internal class SwapFormViewModelTest {
                 navigator = navigator,
                 accountsRepository = accountsRepository,
                 requestResultRepository = requestResultRepository,
-                accountToTokenBalanceUiModelMapper = accountToTokenBalanceUiModelMapper,
+                accountToTokenBalanceUiModelMapper = tokenBalanceMapper,
             )
         tokenSelectorAccountsRepository = accountsRepository
 
@@ -503,19 +508,28 @@ internal class SwapFormViewModelTest {
     // region flipSelectedTokens
 
     @Test
-    fun `flipSelectedTokens swaps source and destination token IDs`() =
+    fun `flipSelectedTokens swaps src and dst instead of leaving them unchanged`() =
         runTest(mainDispatcher) {
-            val addresses = listOf(ethAddress(), btcAddress())
-            val vm = createViewModelWithAddresses(addresses)
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress(), btcAddress()),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = BTC_COIN.id,
+                )
             advanceUntilIdle()
 
-            // The vm should have selected some tokens by now from addresses
+            val srcBefore = vm.uiState.value.selectedSrcToken?.model?.account?.token?.id
+            val dstBefore = vm.uiState.value.selectedDstToken?.model?.account?.token?.id
+            assertEquals(ETH_COIN.id, srcBefore)
+            assertEquals(BTC_COIN.id, dstBefore)
+
             vm.flipSelectedTokens()
             advanceUntilIdle()
 
-            // After flip, the state should be reset for fresh calculation
-            assertEquals("0", vm.uiState.value.estimatedDstTokenValue)
-            assertEquals("0", vm.uiState.value.estimatedDstFiatValue)
+            val srcAfter = vm.uiState.value.selectedSrcToken?.model?.account?.token?.id
+            val dstAfter = vm.uiState.value.selectedDstToken?.model?.account?.token?.id
+            assertEquals(BTC_COIN.id, srcAfter, "src should now be BTC")
+            assertEquals(ETH_COIN.id, dstAfter, "dst should now be ETH")
         }
 
     @Test

@@ -146,6 +146,7 @@ dependencies {
     // test
     testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)

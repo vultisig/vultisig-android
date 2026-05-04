@@ -4,10 +4,12 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -17,6 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -128,14 +131,17 @@ fun SecurityScannerBottomSheetContent(
                 Image(
                     painter = painterResource(id = getSecurityScannerLogo(securityScannerProvider)),
                     contentDescription = null,
-                    modifier = Modifier.height(16.dp),
+                    // Figma node 39523:57131 specs the inline brand mark at 13px
+                    // tall — same hierarchy as the surrounding "Powered by" copy.
+                    // The previous 16dp made it read like a separate badge.
+                    modifier = Modifier.height(13.dp),
                 )
             }
         }
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             VsButton(
@@ -147,12 +153,26 @@ fun SecurityScannerBottomSheetContent(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            Text(
-                text = stringResource(R.string.security_scanner_continue_anyway),
-                color = Color(0xFF718096),
-                style = Theme.brockmann.supplementary.captionSmall,
-                modifier = Modifier.clickable { onContinueAnyway() },
-            )
+            // "Continue anyway" intentionally reads as the secondary action,
+            // but in Figma it sat at 10sp text/disabled which was barely
+            // legible. Bumped to caption (12sp) on text/tertiary so users can
+            // discover the override path without losing the visual hierarchy
+            // that points them at "Go back" first.
+            // Wrap the override text in a 48dp-tall clickable box. Caption-sized text alone has
+            // ~36dp height with our padding, well below the 48dp accessibility minimum, and an
+            // override on a "high risk" sheet is exactly the surface that needs a generous tap
+            // zone — not a needle-thin one.
+            Box(
+                modifier =
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { onContinueAnyway() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.security_scanner_continue_anyway),
+                    color = Theme.v2.colors.text.tertiary,
+                    style = Theme.brockmann.supplementary.caption,
+                )
+            }
         }
     }
 }
@@ -194,6 +214,7 @@ private fun buildSettingsSecurityScannerBottomSheeStyle() =
         image = R.drawable.alert,
     )
 
+@Immutable
 data class SecurityScannerBottomSheetStyle(
     val title: String,
     val description: String,

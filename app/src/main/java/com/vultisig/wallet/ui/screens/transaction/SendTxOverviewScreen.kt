@@ -33,6 +33,8 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
@@ -42,7 +44,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
-import java.math.BigInteger
+import java.math.BigDecimal
 
 @Composable
 internal fun SendTxOverviewScreen(
@@ -55,14 +57,17 @@ internal fun SendTxOverviewScreen(
     onBack: () -> Unit = {},
     onAddToAddressBook: () -> Unit,
     tx: UiTransactionInfo,
+    isTransactionDetailVisible: Boolean,
+    onTransactionDetailVisibleChange: (Boolean) -> Unit,
 ) {
-
     TxDoneScaffold(
         transactionHash = transactionHash,
         transactionLink = transactionLink,
         transactionStatus = transactionStatus,
         showToolbar = showToolbar,
         onBack = onBack,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
         bottomBarContent = {
             VsButton(
                 label = stringResource(R.string.transaction_done_title),
@@ -73,21 +78,30 @@ internal fun SendTxOverviewScreen(
             )
         },
         tokenContent = {
-            val tokenTitle =
-                if (tx.type == UiTransactionInfoType.Send) {
-                    stringResource(R.string.tx_overview_screen_tx_send)
-                } else {
-                    stringResource(R.string.tx_overview_screen_tx_deposit)
-                }
-            VsOverviewToken(
-                header = tokenTitle,
-                valuedToken = tx.token,
-                shape = RoundedCornerShape(24.dp),
+            TransactionHero(
+                heroContent = tx.heroContent,
+                functionName = tx.functionName,
                 modifier = Modifier.fillMaxWidth(),
-            )
+            ) {
+                VsOverviewToken(
+                    header =
+                        if (tx.type == UiTransactionInfoType.Send) {
+                            stringResource(R.string.tx_overview_screen_tx_send)
+                        } else {
+                            stringResource(R.string.tx_overview_screen_tx_deposit)
+                        },
+                    valuedToken = tx.token,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         },
         detailContent = {
             Column {
+                TransactionStatusRow(transactionStatus)
+
+                VerifyCardDivider(size = 1.dp)
+
                 VerifyCardDetails(
                     title = stringResource(R.string.tx_overview_screen_tx_from),
                     subtitle = tx.fromLabel ?: tx.from,
@@ -130,13 +144,16 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
+                // Skip the native "Amount" row for EVM contract calls — the function name above
+                // is the action, and a "0 ETH" amount underneath would mislead. Plain sends still
+                // render the native amount here. Parse as [BigDecimal] (not [BigInteger]) so a
+                // fractional native amount such as "0.001 ETH" still surfaces; the integer parser
+                // would silently null out and hide the row.
+                val nativeAmount = tx.token.value.toBigDecimalOrNull()
                 if (
-                    tx.token.value.isNotEmpty() &&
-                        try {
-                            tx.token.value.toBigInteger() > BigInteger.ZERO
-                        } catch (_: Exception) {
-                            false
-                        }
+                    tx.functionName == null &&
+                        nativeAmount != null &&
+                        nativeAmount > BigDecimal.ZERO
                 ) {
                     VerifyCardDivider(size = 1.dp)
 
@@ -259,7 +276,18 @@ internal fun TxDetails(
 
 @Preview
 @Composable
-private fun PreviewSendTxOverviewScreen() {
+private fun PreviewSendTxOverviewScreenCollapsed() {
+    PreviewSendTxOverviewScreen(isTransactionDetailVisible = false)
+}
+
+@Preview
+@Composable
+private fun PreviewSendTxOverviewScreenExpanded() {
+    PreviewSendTxOverviewScreen(isTransactionDetailVisible = true)
+}
+
+@Composable
+private fun PreviewSendTxOverviewScreen(isTransactionDetailVisible: Boolean) {
     SendTxOverviewScreen(
         transactionHash = "",
         transactionLink = "",
@@ -279,6 +307,8 @@ private fun PreviewSendTxOverviewScreen() {
                 .toUiTransactionInfo(),
         showSaveToAddressBook = true,
         transactionStatus = TransactionStatus.Broadcasted,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = {},
     )
 }
 
@@ -293,6 +323,13 @@ internal data class UiTransactionInfo(
     val networkFeeTokenValue: String,
     val networkFeeFiatValue: String,
     val signMethod: String = "",
+    val functionName: String? = null,
+    val functionSignature: String? = null,
+    val functionInputs: String? = null,
+    /**
+     * Carried through from [com.vultisig.wallet.ui.models.TransactionDetailsUiModel.heroContent].
+     */
+    val heroContent: HeroContent? = null,
 )
 
 internal enum class UiTransactionInfoType {

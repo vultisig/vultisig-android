@@ -34,7 +34,11 @@ interface TokenRepository {
 
     suspend fun getEVMTokenByContract(chainId: String, contractAddress: String): Coin?
 
-    suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin>
+    suspend fun getTokensWithBalance(
+        chain: Chain,
+        address: String,
+        enabledDenoms: Set<String> = emptySet(),
+    ): List<Coin>
 
     suspend fun getRefreshTokens(chain: Chain, vault: Vault): List<Coin>
 
@@ -90,13 +94,19 @@ constructor(
         return coin
     }
 
-    override suspend fun getTokensWithBalance(chain: Chain, address: String): List<Coin> {
+    override suspend fun getTokensWithBalance(
+        chain: Chain,
+        address: String,
+        enabledDenoms: Set<String>,
+    ): List<Coin> {
         return when (chain) {
             Chain.ThorChain -> {
                 val balances = thorApi.getBalance(address)
                 val metaCache = mutableMapOf<String, DenomMetadata?>()
                 balances.mapNotNull {
                     if (it.denom in DEFI_ONLY_THORCHAIN_DENOMS) return@mapNotNull null
+                    if (enabledDenoms.isNotEmpty() && it.denom !in enabledDenoms)
+                        return@mapNotNull null
                     val metadata =
                         metaCache.getOrPut(it.denom) { thorApi.getDenomMetaFromLCD(it.denom) }
 
@@ -241,7 +251,11 @@ constructor(
 
     override suspend fun getRefreshTokens(chain: Chain, vault: Vault): List<Coin> {
         val (address, derivedPublicKey) = chainAccountAddressRepository.getAddress(chain, vault)
-        return (getTokensWithBalance(chain, address) +
+        val enabledDenoms =
+            if (chain == Chain.ThorChain)
+                vault.coins.filter { it.chain == chain }.map { it.contractAddress }.toSet()
+            else emptySet()
+        return (getTokensWithBalance(chain, address, enabledDenoms) +
                 enabledByDefaultTokens.getOrDefault(chain, emptyList()))
             .filterNot { it.isNativeToken }
             .map { token -> token.copy(address = address, hexPublicKey = derivedPublicKey) }

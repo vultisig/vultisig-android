@@ -54,6 +54,8 @@ internal interface DataUsecasesModule {
 
     @Binds @Singleton fun bindIsVaultNameValid(impl: IsVaultNameValidImpl): IsVaultNameValid
 
+    @Binds @Singleton fun bindIsEmailValid(impl: IsEmailValidImpl): IsEmailValid
+
     @Binds
     @Singleton
     fun bindMakeQrCodeBitmapShareFormat(
@@ -221,4 +223,10 @@ internal interface DataUsecasesModule {
     fun bindGetThorChainLpPositionsUseCase(
         impl: GetThorChainLpPositionsUseCaseImpl
     ): GetThorChainLpPositionsUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetThorChainLpPositionUseCase(
+        impl: GetThorChainLpPositionUseCaseImpl
+    ): GetThorChainLpPositionUseCase
 }

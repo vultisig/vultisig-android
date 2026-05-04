@@ -19,6 +19,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
@@ -137,5 +139,25 @@ internal class MainViewModelTest {
             // no advance — init coroutine has not executed yet
 
             assertTrue(vm.isLoading.value)
+        }
+
+    @Test
+    fun `clearForegroundNotification clears banner state`() =
+        runTest(dispatcher) {
+            coEvery { vaultRepository.hasVaults() } returns true
+            coEvery { vaultRepository.getByEcdsa(any()) } returns null
+            coEvery { getKeysignTransactionSummary.invoke(any()) } returns null
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.onForegroundPushReceived("vultisig://qr-payload")
+            advanceUntilIdle()
+
+            assertNotNull(vm.foregroundNotification.value)
+
+            vm.clearForegroundNotification()
+
+            assertNull(vm.foregroundNotification.value)
         }
 }

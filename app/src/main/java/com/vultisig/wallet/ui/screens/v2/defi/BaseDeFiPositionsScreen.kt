@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -18,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
@@ -28,72 +31,88 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * Base scaffold for DeFi position screens with balance banner, tab navigation, and pull-to-refresh.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BaseDeFiPositionsScreenContent(
     state: DefiUiModel,
     tabs: List<DeFiTab>,
     bannerTitle: String,
     bannerImage: Int = R.drawable.referral_data_banner,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
     onBackClick: () -> Unit,
     onTabSelected: (DeFiTab) -> Unit = {},
     onEditChains: () -> Unit = {},
     tabContent: @Composable () -> Unit = {},
 ) {
-    V2Scaffold(onBackClick = onBackClick) {
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .background(Theme.v2.colors.backgrounds.primary)
-                    .verticalScroll(rememberScrollState()),
-            horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            BalanceBanner(
-                title = bannerTitle,
-                isLoading = state.isTotalAmountLoading,
-                totalValue = state.totalAmountPrice,
-                image = bannerImage,
-                isBalanceVisible = state.isBalanceVisible,
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
+        V2Scaffold(onBackClick = onBackClick) {
+            Column(
+                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+                horizontalAlignment = CenterHorizontally,
             ) {
-                VsTabGroup(index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }) {
-                    tabs.forEach { tab ->
-                        tab {
-                            VsTab(
-                                label = stringResource(tab.displayNameRes),
-                                onClick = { onTabSelected(tab) },
+                BalanceBanner(
+                    title = bannerTitle,
+                    isLoading = state.isTotalAmountLoading,
+                    totalValue = state.totalAmountPrice,
+                    image = bannerImage,
+                    isBalanceVisible = state.isBalanceVisible,
+                )
+
+                UiSpacer(16.dp)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    VsTabGroup(
+                        index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }
+                    ) {
+                        tabs.forEach { tab ->
+                            tab {
+                                VsTab(
+                                    label = stringResource(tab.displayNameRes),
+                                    onClick = { onTabSelected(tab) },
+                                )
+                            }
+                        }
+                    }
+
+                    if (state.supportEditChains) {
+                        V2Container(
+                            type = ContainerType.SECONDARY,
+                            cornerType = CornerType.Circular,
+                            modifier = Modifier.clickOnce(onClick = {}),
+                        ) {
+                            UiIcon(
+                                drawableResId = R.drawable.edit_chain,
+                                size = 16.dp,
+                                modifier = Modifier.padding(all = 12.dp),
+                                tint = Theme.v2.colors.primary.accent4,
+                                onClick = onEditChains,
                             )
                         }
                     }
                 }
 
-                if (state.supportEditChains) {
-                    V2Container(
-                        type = ContainerType.SECONDARY,
-                        cornerType = CornerType.Circular,
-                        modifier = Modifier.clickOnce(onClick = {}),
-                    ) {
-                        UiIcon(
-                            drawableResId = R.drawable.edit_chain,
-                            size = 16.dp,
-                            modifier = Modifier.padding(all = 12.dp),
-                            tint = Theme.v2.colors.primary.accent4,
-                            onClick = onEditChains,
-                        )
-                    }
+                UiSpacer(16.dp)
+
+                Column(
+                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    tabContent()
                 }
             }
-
-            tabContent()
         }
     }
 }
 
+/** Tabs available in DeFi position screens. */
 enum class DeFiTab(@androidx.annotation.StringRes val displayNameRes: Int) {
     DEPOSITED(R.string.defi_tab_deposited),
     STAKED(R.string.defi_tab_staked),
@@ -101,6 +120,7 @@ enum class DeFiTab(@androidx.annotation.StringRes val displayNameRes: Int) {
     LP(R.string.defi_tab_lp),
 }
 
+/** Preview for [BaseDeFiPositionsScreenContent]. */
 @Preview(showBackground = true)
 @Composable
 private fun BaseDeFiPositionsScreenContentPreview() {
@@ -122,6 +142,7 @@ private fun BaseDeFiPositionsScreenContentPreview() {
     )
 }
 
+/** Preview for [BaseDeFiPositionsScreenContent] in loading state. */
 @Preview(showBackground = true)
 @Composable
 private fun BaseDeFiPositionsScreenContentLoadingPreview() {
@@ -143,6 +164,7 @@ private fun BaseDeFiPositionsScreenContentLoadingPreview() {
     )
 }
 
+/** Preview for [BaseDeFiPositionsScreenContent] with hidden balance. */
 @Preview(showBackground = true)
 @Composable
 private fun BaseDeFiPositionsScreenContentHiddenBalancePreview() {

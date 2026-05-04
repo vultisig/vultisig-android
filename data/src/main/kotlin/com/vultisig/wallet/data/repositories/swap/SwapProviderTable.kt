@@ -142,7 +142,11 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
     override fun eligibleProvidersFor(srcToken: Coin, dstToken: Coin): List<SwapProvider> {
         val shared = providersFor(srcToken).intersect(providersFor(dstToken))
         val crossChain = srcToken.chain != dstToken.chain
-        return shared.filter { provider -> !crossChain || provider !in sameChainOnly }
+        val bothThorChain = srcToken.chain == Chain.ThorChain && dstToken.chain == Chain.ThorChain
+        return shared.filter { provider ->
+            (!crossChain || provider !in sameChainOnly) &&
+                !(bothThorChain && provider == SwapProvider.MAYA)
+        }
     }
 
     private fun ethereumProviders(ticker: String): Set<SwapProvider> {

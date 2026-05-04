@@ -621,6 +621,8 @@
     <string name="keygen_email_error">이메일이 올바르지 않습니다. 확인해 주세요</string>
     <string name="scan_qr_screen_title">QR 코드 스캔</string>
     <string name="verify_transaction_function_inputs_title">함수 입력값</string>
+    <string name="dapp_hero_unverified_function_title">확인되지 않은 함수</string>
+    <string name="dapp_hero_unverified_function_subtitle">서명 전에 아래 세부정보를 확인하세요</string>
     <string name="fast_vault_password_reminder_title">비밀번호를 확인하세요:</string>
     <string name="fast_vault_password_reminder_done_button">완료</string>
     <string name="periodically_ask_verify_password">비밀번호를 잊지 않도록 주기적으로 확인을 요청합니다.</string>
@@ -638,7 +640,6 @@
     <string name="security_scanner_transaction_scanning">스캔 중…</string>
     <string name="security_scanner_transaction_not_scanned">거래 스캔 미완료:</string>
 
-    <string name="tx_overview_screen_title">완료</string>
     <string name="tx_transaction_successful_screen_title">거래 성공</string>
     <string name="tx_overview_screen_tx_hash">거래 해시</string>
     <string name="tx_overview_screen_tx_from">보내는 주소</string>

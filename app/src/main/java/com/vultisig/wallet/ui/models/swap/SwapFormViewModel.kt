@@ -644,13 +644,14 @@ constructor(
 
         resetQuoteState()
 
-        val bufId = selectedSrcId.value
+        val previousSrcId = selectedSrcId.value
         selectedSrcId.value = selectedDstId.value
-        selectedDstId.value = bufId
+        selectedDstId.value = previousSrcId
 
-        val buffer = selectedSrc.value
-        selectedSrc.value = selectedDst.value
-        selectedDst.value = buffer
+        // collectSelectedTokens() observes the IDs above and resolves selectedSrc/selectedDst
+        // synchronously under Main.immediate. A manual swap of those resolved StateFlows here
+        // would read the already-resolved post-swap values and write them back into their
+        // original slots, silently reverting the flip so the UI shows the original pair.
 
         if (
             newSrcAmount != null &&
@@ -715,6 +716,13 @@ constructor(
 
         if (maxUsableTokenAmount <= BigInteger.ZERO) {
             srcAmountState.setTextAndPlaceCursorAtEnd("0")
+            val errorRes =
+                if (srcToken.isNativeToken) {
+                    R.string.swap_error_insufficient_balance_and_fees
+                } else {
+                    R.string.swap_error_insufficient_source_token
+                }
+            showError(UiText.FormattedText(errorRes, listOf(srcToken.ticker)))
             return
         }
 

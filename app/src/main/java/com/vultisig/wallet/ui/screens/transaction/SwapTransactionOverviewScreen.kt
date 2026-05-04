@@ -54,6 +54,8 @@ internal fun SwapTransactionOverviewScreen(
     progressLink: String?,
     onBack: () -> Unit = {},
     transactionTypeUiModel: SwapTransactionUiModel,
+    isTransactionDetailVisible: Boolean,
+    onTransactionDetailVisibleChange: (Boolean) -> Unit,
 ) {
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -65,6 +67,8 @@ internal fun SwapTransactionOverviewScreen(
         transactionLink = transactionLink,
         transactionStatus = transactionStatus,
         onBack = onBack,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
         tokenContent = {
             Box {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -116,6 +120,11 @@ internal fun SwapTransactionOverviewScreen(
                         copiedApprovalTx = null
                     }
                 }
+
+                TransactionStatusRow(transactionStatus)
+
+                VerifyCardDivider(size = 1.dp)
+
                 if (approveTransactionHash.isNotEmpty()) {
                     TxDetails(
                         title = stringResource(R.string.swap_transaction_overview_approval_tx_hash),
@@ -213,7 +222,18 @@ internal fun Details(
 
 @Preview
 @Composable
-private fun SwapTransactionOverviewScreenPreview() {
+private fun SwapTransactionOverviewScreenPreviewCollapsed() {
+    PreviewSwapTransactionOverviewScreen(isTransactionDetailVisible = false)
+}
+
+@Preview
+@Composable
+private fun SwapTransactionOverviewScreenPreviewExpanded() {
+    PreviewSwapTransactionOverviewScreen(isTransactionDetailVisible = true)
+}
+
+@Composable
+private fun PreviewSwapTransactionOverviewScreen(isTransactionDetailVisible: Boolean) {
     SwapTransactionOverviewScreen(
         transactionHash = "abx123abx123abx123abx123abx123abx123abx123abx123abx123",
         approveTransactionHash = "321xba",
@@ -223,5 +243,7 @@ private fun SwapTransactionOverviewScreenPreview() {
         progressLink = "",
         transactionTypeUiModel = SwapTransactionUiModel(),
         transactionStatus = TransactionStatus.Broadcasted,
+        isTransactionDetailVisible = isTransactionDetailVisible,
+        onTransactionDetailVisibleChange = {},
     )
 }
