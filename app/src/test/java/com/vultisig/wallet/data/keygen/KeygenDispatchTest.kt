@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.keygen
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 
 /**
@@ -119,13 +120,19 @@ class KeygenDispatchTest {
         SigningLibType.entries.forEach { libType ->
             val executor = selectKeygenExecutor(TssAction.ReShare, libType)
             // Reshare must NEVER land on the KeyImport-keygen executor (it errors), and must
-            // NEVER land on SingleKeygen (that's MLDSA, a separate flow).
-            assert(executor != KeygenExecutor.KeyImportKeygen) {
-                "ReShare on $libType must not route to the KeyImport executor"
-            }
-            assert(executor != KeygenExecutor.SingleKeygen) {
-                "ReShare on $libType must not route to the SingleKeygen executor"
-            }
+            // NEVER land on SingleKeygen (that's MLDSA, a separate flow). Use JUnit
+            // `assertNotEquals` rather than Kotlin's `assert`, which is a no-op when the JVM is
+            // launched without `-ea` and would silently let regressions through here.
+            assertNotEquals(
+                KeygenExecutor.KeyImportKeygen,
+                executor,
+                "ReShare on $libType must not route to the KeyImport executor",
+            )
+            assertNotEquals(
+                KeygenExecutor.SingleKeygen,
+                executor,
+                "ReShare on $libType must not route to the SingleKeygen executor",
+            )
         }
     }
 }

@@ -498,7 +498,18 @@ constructor(
 
         vault.pubKeyECDSA = keyshareEcdsa.pubKey
         vault.pubKeyEDDSA = keyshareEddsa.pubKey
-        vault.hexChainCode = keyshareEcdsa.chaincode
+        // KeyImport vaults store the mnemonic's BIP32 chaincode in `vault.hexChainCode` so the
+        // root key can derive per-chain addresses; the DKLS-output chaincode "may differ" (see
+        // the explicit comment in startKeyImportKeygen). The DKLS QC reshare protocol regenerates
+        // threshold shares of the same secret, but we don't trust the QC output to round-trip the
+        // mnemonic chaincode byte-for-byte for imported vaults — silently swapping it would break
+        // BIP32 derivation and lock the user out of their imported chain addresses. For
+        // freshly-created DKLS / GG20 vaults the existing chaincode IS the DKLS output, so the
+        // assignment is a no-op (and Migrate forces libType=DKLS via navigation, so it lands
+        // here too).
+        if (libType != SigningLibType.KeyImport) {
+            vault.hexChainCode = keyshareEcdsa.chaincode
+        }
         vault.keyshares = mergedKeyshares
 
         if (action == TssAction.Migrate) {
