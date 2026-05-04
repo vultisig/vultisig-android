@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.repositories
 
 import com.vultisig.wallet.data.api.VultiSignerApi
 import com.vultisig.wallet.data.api.models.signer.BatchKeygenRequestJson
+import com.vultisig.wallet.data.api.models.signer.BatchReshareRequestJson
 import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
@@ -48,6 +49,8 @@ interface VultiSignerRepository {
     suspend fun joinKeysign(request: JoinKeysignRequestJson)
 
     suspend fun joinReshare(request: JoinReshareRequestJson)
+
+    suspend fun joinBatchReshare(request: BatchReshareRequestJson)
 
     suspend fun migrate(request: MigrateRequest)
 
@@ -96,6 +99,10 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
 
     override suspend fun joinReshare(request: JoinReshareRequestJson) {
         api.joinReshare(request)
+    }
+
+    override suspend fun joinBatchReshare(request: BatchReshareRequestJson) {
+        api.joinBatchReshare(request)
     }
 
     override suspend fun migrate(request: MigrateRequest) {

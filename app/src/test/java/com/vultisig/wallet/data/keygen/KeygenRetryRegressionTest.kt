@@ -35,12 +35,36 @@ class KeygenRetryRegressionTest {
     }
 
     @Test
-    fun `new keygen execution stays off for reshare even when feature flag is on`() {
+    fun `new keygen execution opts DKLS reshare in when the feature flag is on`() {
         val isEnabled =
             shouldUseNewKeygenExecution(
                 action = TssAction.ReShare,
                 libType = SigningLibType.DKLS,
                 isParallelKeygenFeatureEnabled = true,
+            )
+
+        assertEquals(true, isEnabled)
+    }
+
+    @Test
+    fun `non-DKLS reshare keeps the legacy path even when the feature flag is on`() {
+        val isEnabled =
+            shouldUseNewKeygenExecution(
+                action = TssAction.ReShare,
+                libType = SigningLibType.GG20,
+                isParallelKeygenFeatureEnabled = true,
+            )
+
+        assertEquals(false, isEnabled)
+    }
+
+    @Test
+    fun `reshare stays on the legacy path when the feature flag is off`() {
+        val isEnabled =
+            shouldUseNewKeygenExecution(
+                action = TssAction.ReShare,
+                libType = SigningLibType.DKLS,
+                isParallelKeygenFeatureEnabled = false,
             )
 
         assertEquals(false, isEnabled)

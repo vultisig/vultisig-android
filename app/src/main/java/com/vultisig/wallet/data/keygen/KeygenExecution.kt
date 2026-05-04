@@ -34,25 +34,21 @@ internal data class KeygenRouting(val exchangeMessageId: String?, val setupMessa
  *
  * The decision is intentionally all-or-nothing for the currently supported flows:
  * - flag off: keep the legacy path everywhere
- * - reshare: always keep the legacy path
- * - flag on: opt into the new path for DKLS root keygen/migrate, key import, and MLDSA
+ * - flag on: opt into the new path for DKLS root keygen/migrate, key import, MLDSA, and DKLS
+ *   reshare (matches iOS PR #4139 + Windows PR #3753)
  */
 internal fun shouldUseNewKeygenExecution(
     action: TssAction,
     libType: SigningLibType,
     isParallelKeygenFeatureEnabled: Boolean,
 ): Boolean {
-    if (action == TssAction.ReShare) {
+    if (!isParallelKeygenFeatureEnabled) {
         return false
     }
-
-    if (isParallelKeygenFeatureEnabled) {
-        return isMldsaSingleKeygen(action) ||
-            isKeyImportFlow(action, libType) ||
-            isDklsRootKeygen(action, libType)
-    }
-
-    return false
+    return isMldsaSingleKeygen(action) ||
+        isKeyImportFlow(action, libType) ||
+        isDklsRootKeygen(action, libType) ||
+        isDklsReshare(action, libType)
 }
 
 private fun isMldsaSingleKeygen(action: TssAction): Boolean = action == TssAction.SingleKeygen
@@ -62,6 +58,9 @@ private fun isKeyImportFlow(action: TssAction, libType: SigningLibType): Boolean
 
 private fun isDklsRootKeygen(action: TssAction, libType: SigningLibType): Boolean =
     libType == SigningLibType.DKLS && (action == TssAction.KEYGEN || action == TssAction.Migrate)
+
+private fun isDklsReshare(action: TssAction, libType: SigningLibType): Boolean =
+    libType == SigningLibType.DKLS && action == TssAction.ReShare
 
 /**
  * Shared retry wrapper for keygen ceremonies.

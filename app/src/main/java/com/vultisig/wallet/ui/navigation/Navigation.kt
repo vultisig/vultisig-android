@@ -301,6 +301,9 @@ internal sealed class Route {
 
             // key import chains
             val chains: List<String> = emptyList(),
+
+            // initiator opt-in for parallel ECDSA + EdDSA reshare ceremony
+            val isTssBatch: Boolean = false,
         )
     }
 

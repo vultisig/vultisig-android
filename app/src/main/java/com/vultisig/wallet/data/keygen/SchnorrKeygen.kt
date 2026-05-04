@@ -484,69 +484,91 @@ class SchnorrKeygen(
         }
     }
 
-    suspend fun schnorrReshareWithRetry(attempt: Int) {
-        try {
+    /**
+     * Runs the Schnorr (EdDSA) reshare ceremony.
+     *
+     * The default [routing] keeps legacy behavior: setup is namespaced as `"eddsa"` so it doesn't
+     * collide with the DKLS reshare setup that runs sequentially on the untagged namespace, and
+     * exchange is untagged. In batched mode the caller supplies `p-eddsa` for both setup and
+     * exchange so the server's batch reshare goroutine routes EdDSA traffic in isolation.
+     *
+     * Cancellation propagates through [runKeygenWithRetry] so a failure on the sibling DKLS
+     * ceremony cancels this one cleanly when both run via `coroutineScope { awaitAll() }`.
+     */
+    @Throws(Exception::class)
+    internal suspend fun schnorrReshareWithRetry(
+        attempt: Int,
+        routing: KeygenRouting = KeygenRouting.from(),
+    ) {
+        activeMessageId = routing.exchangeMessageId
+        messenger.setMessageID(activeMessageId)
+        cache.clear()
+        // Setup defaults to "eddsa" for the legacy sequential path so it stays distinguishable
+        // from the DKLS reshare setup that lives on the untagged namespace. In batched mode the
+        // caller passes "p-eddsa" explicitly.
+        val setupId = routing.setupMessageId ?: "eddsa"
+        runKeygenWithRetry(
+            attempt = attempt,
+            retry = { nextAttempt, cause ->
+                Timber.d("Failed to reshare EdDSA key, error: %s", cause.localizedMessage)
+                Timber.d("eddsa reshare retry, attempt: %d", nextAttempt)
+                schnorrReshareWithRetry(nextAttempt, routing)
+            },
+        ) {
             val keyshareHandle = Handle()
             if (vault.pubKeyEDDSA.isNotEmpty()) {
-                val keyshare = getKeyshareBytesFromVault()
-                val keyshareSlice = keyshare.toGoSlice()
+                val keyshareBytes = getKeyshareBytesFromVault()
+                val keyshareSlice = keyshareBytes.toGoSlice()
                 val result = schnorr_keyshare_from_bytes(keyshareSlice, keyshareHandle)
                 if (result != LIB_OK) {
-                    throw RuntimeException("fail to get keyshare, $result")
+                    error("fail to get keyshare, $result")
                 }
             }
 
-            val reshareSetupMsg: ByteArray
-            if (isInitiatingDevice && attempt == 0) {
-                // DKLS/Schnorr reshare needs to upload a different setup message, thus here pass in
-                // an
-                // additional header as "eddsa" to make sure
-                // DKLS and Schnorr setup messages will be saved differently
-                reshareSetupMsg = getSchnorrReshareSetupMessage(keyshareHandle)
-                sessionApi.uploadSetupMessage(
-                    serverUrl = mediatorURL,
-                    sessionId = sessionID,
-                    message =
-                        Base64.encode(
-                            encryption.encrypt(
-                                Base64.encodeToByteArray(reshareSetupMsg),
-                                Numeric.hexStringToByteArray(encryptionKeyHex),
-                            )
-                        ),
-                    messageId = "eddsa",
-                )
-            } else {
-                // download the setup message from relay server
-                // back off for 500ms so the initiate device will upload the setup message correctly
-                delay(500)
-                reshareSetupMsg =
+            val reshareSetupMsg: ByteArray =
+                if (isInitiatingDevice && attempt == 0) {
+                    val msg = getSchnorrReshareSetupMessage(keyshareHandle)
+                    sessionApi.uploadSetupMessage(
+                        serverUrl = mediatorURL,
+                        sessionId = sessionID,
+                        message =
+                            Base64.encode(
+                                encryption.encrypt(
+                                    Base64.encodeToByteArray(msg),
+                                    Numeric.hexStringToByteArray(encryptionKeyHex),
+                                )
+                            ),
+                        messageId = setupId,
+                    )
+                    msg
+                } else {
+                    // Backoff so the initiator has time to upload the setup before we poll.
+                    delay(500)
                     sessionApi
-                        .getSetupMessage(mediatorURL, sessionID, "eddsa")
+                        .getSetupMessage(mediatorURL, sessionID, setupId)
                         .let {
                             encryption.decrypt(
                                 Base64.decode(it),
                                 Numeric.hexStringToByteArray(encryptionKeyHex),
-                            )!!
+                            ) ?: error("fail to decrypt reshare setup message")
                         }
                         .let { Base64.decode(it) }
-            }
+                }
 
             val decodedSetupMsg = reshareSetupMsg.toGoSlice()
             val handler = Handle()
             val localPartyIDArr = localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
 
-            val result =
+            val sessionResult =
                 schnorr_qc_session_from_setup(
                     decodedSetupMsg,
                     localPartySlice,
                     keyshareHandle,
                     handler,
                 )
-            if (result != LIB_OK) {
-                throw RuntimeException(
-                    "fail to create session from reshare setup message, error: $result"
-                )
+            if (sessionResult != LIB_OK) {
+                error("fail to create session from reshare setup message, error: $sessionResult")
             }
 
             processSchnorrOutboundMessage(handler)
@@ -555,9 +577,8 @@ class SchnorrKeygen(
                 val newKeyshareHandler = Handle()
                 val keyShareResult = schnorr_qc_session_finish(handler, newKeyshareHandler)
                 if (keyShareResult != LIB_OK) {
-                    throw RuntimeException("fail to get new keyshare, $keyShareResult")
+                    error("fail to get new keyshare, $keyShareResult")
                 }
-
                 val keyshareBytes = getKeyshareBytes(newKeyshareHandler)
                 val publicKeyEdDSA = getPublicKeyBytes(newKeyshareHandler)
                 keyshare =
@@ -566,16 +587,8 @@ class SchnorrKeygen(
                         keyshare = Base64.encode(keyshareBytes),
                         chaincode = "",
                     )
-                Timber.d("publicKeyEdDSA: ${publicKeyEdDSA.toHexString()}")
-                delay(500) // slightly delay to give local party time to process outbound messages
-            }
-        } catch (e: Exception) {
-            Timber.d("Failed to reshare key, error: ${e.localizedMessage}")
-            if (attempt < 3) {
-                Timber.d("keygen/reshare retry, attempt: $attempt")
-                schnorrReshareWithRetry(attempt + 1)
-            } else {
-                throw e
+                Timber.d("reshare EdDSA key successfully")
+                delay(500)
             }
         }
     }

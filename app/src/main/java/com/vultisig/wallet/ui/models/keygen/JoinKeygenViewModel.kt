@@ -224,6 +224,9 @@ constructor(
                                 oldCommittee = message.oldParties,
                                 oldResharePrefix = message.oldResharePrefix,
                                 vaultId = existingVault?.id,
+                                // Migrate shares the proto with reshare but is excluded from
+                                // batched mode — the flag only flips on for genuine reshares.
+                                isTssBatch = action == TssAction.ReShare && message.isTssBatch,
                             )
                         }
 
@@ -385,6 +388,7 @@ constructor(
                                 hint = null,
                                 deviceCount = null,
                                 chains = session.chains,
+                                isTssBatch = session.isTssBatch,
                             ),
                         opts =
                             NavigationOptions(
@@ -419,6 +423,8 @@ constructor(
         val localPartyId: String,
         val vaultId: VaultId? = null,
         val chains: List<String> = emptyList(),
+        // Mirrors the initiator's QR opt-in for batched ECDSA + EdDSA reshare.
+        val isTssBatch: Boolean = false,
     )
 }
 

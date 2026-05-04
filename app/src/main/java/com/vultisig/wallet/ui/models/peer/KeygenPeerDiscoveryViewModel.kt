@@ -20,6 +20,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.BatchKeygenRequestJson
+import com.vultisig.wallet.data.api.models.signer.BatchReshareRequestJson
 import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
@@ -169,6 +170,16 @@ constructor(
     private var pubKeyEcdsa = ""
     private var signers: List<String> = emptyList()
     private var resharePrefix: String = ""
+
+    /**
+     * Snapshot of the `tss-batch` feature flag taken once per peer discovery session.
+     *
+     * Captured early in [loadData] so the QR payload, the FastVault dispatch, and the navigation
+     * arg passed to [com.vultisig.wallet.ui.models.keygen.KeygenViewModel] all see the same value —
+     * otherwise an in-flight toggle could route the QR through the legacy path while the FastVault
+     * call hits `/batch/reshare`, leaving the joiner stranded on the wrong relay channel.
+     */
+    private var isTssBatchEnabled: Boolean = false
 
     // fast vault data
     private val email = args?.email
@@ -326,6 +337,12 @@ constructor(
                         } ?: emptyList(),
                     oldResharePrefix = existingVault?.resharePrefix ?: "",
                     deviceCount = args.deviceCount,
+                    // Mirrors the QR opt-in: when the initiator chose batched reshare on
+                    // FastVault, every peer (including this one) must follow the same path.
+                    isTssBatch =
+                        args.action == TssAction.ReShare &&
+                            isTssBatchEnabled &&
+                            libType == SigningLibType.DKLS,
                 ),
                 opts =
                     NavigationOptions(
@@ -399,6 +416,8 @@ constructor(
             }
 
             setupLibType()
+
+            isTssBatchEnabled = featureFlagRepository.getFeatureFlags().isTssBatchEnabled
 
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
 
@@ -609,6 +628,12 @@ constructor(
                                     oldResharePrefix = resharePrefix,
                                     vaultName = args.vaultName,
                                     libType = libType.toProto(),
+                                    // Only opt the reshare ceremony into batch mode; migrate
+                                    // shares the same proto but is excluded from batched reshare.
+                                    isTssBatch =
+                                        args.action == TssAction.ReShare &&
+                                            isTssBatchEnabled &&
+                                            libType == SigningLibType.DKLS,
                                 )
                             )
                         )
@@ -647,25 +672,46 @@ constructor(
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
             when (args.action) {
                 TssAction.ReShare -> {
-                    vultiSignerRepository.joinReshare(
-                        JoinReshareRequestJson(
-                            vaultName = vaultName,
-                            publicKeyEcdsa = pubKeyEcdsa,
-                            sessionId = sessionId,
-                            hexEncryptionKey = encryptionKeyHex,
-                            hexChainCode = hexChainCode,
-                            localPartyId = localPartyId,
-                            encryptionPassword = password,
-                            email = email,
-                            oldParties = signers,
-                            oldResharePrefix = resharePrefix,
+                    if (isTssBatchEnabled && libType == SigningLibType.DKLS) {
+                        require(pubKeyEcdsa.isNotBlank()) {
+                            "Reshare requires the existing vault's ECDSA public key"
+                        }
+                        vultiSignerRepository.joinBatchReshare(
+                            BatchReshareRequestJson(
+                                publicKeyEcdsa = pubKeyEcdsa,
+                                sessionId = sessionId,
+                                hexEncryptionKey = encryptionKeyHex,
+                                localPartyId = generateServerPartyId(),
+                                oldParties = signers,
+                                encryptionPassword = password,
+                                email = email,
+                                protocols =
+                                    listOf(
+                                        BatchReshareRequestJson.PROTOCOL_ECDSA,
+                                        BatchReshareRequestJson.PROTOCOL_EDDSA,
+                                    ),
+                            )
                         )
-                    )
+                    } else {
+                        vultiSignerRepository.joinReshare(
+                            JoinReshareRequestJson(
+                                vaultName = vaultName,
+                                publicKeyEcdsa = pubKeyEcdsa,
+                                sessionId = sessionId,
+                                hexEncryptionKey = encryptionKeyHex,
+                                hexChainCode = hexChainCode,
+                                localPartyId = localPartyId,
+                                encryptionPassword = password,
+                                email = email,
+                                oldParties = signers,
+                                oldResharePrefix = resharePrefix,
+                            )
+                        )
+                    }
                 }
 
                 TssAction.KEYGEN -> {
-                    val featureFlags = featureFlagRepository.getFeatureFlags()
-                    if (featureFlags.isTssBatchEnabled) {
+                    if (isTssBatchEnabled) {
                         vultiSignerRepository.joinBatchKeygen(
                             BatchKeygenRequestJson(
                                 vaultName = vaultName,

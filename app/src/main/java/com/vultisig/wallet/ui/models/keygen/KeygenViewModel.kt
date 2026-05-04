@@ -189,7 +189,11 @@ constructor(
         shouldUseNewKeygenExecution(
             action = action,
             libType = libType,
-            isParallelKeygenFeatureEnabled = featureFlags.isTssBatchEnabled,
+            // Either the local feature flag OR an explicit opt-in from the initiator's QR
+            // payload steers this peer onto the batched path. The QR opt-in is necessary because
+            // the initiator's flag must override every joiner's local flag so all peers route
+            // through the same relay channels and FastVault endpoint.
+            isParallelKeygenFeatureEnabled = featureFlags.isTssBatchEnabled || args.isTssBatch,
         )
 
     private fun createDklsKeygen(localUi: String, action: TssAction = this.action): DKLSKeygen =
@@ -401,11 +405,38 @@ constructor(
 
             TssAction.ReShare -> {
                 schnorr = createSchnorrKeygen(localUi = localUiEddsa)
-                // Reshare still uses the legacy shared relay namespace. Keep it sequential until
-                // both ceremonies are explicitly partitioned the same way as keygen.
-                dklsKeygen.reshareWithRetry(0)
-                updateStep(KeygenState.ReshareEdDSA)
-                schnorr.schnorrReshareWithRetry(0)
+                if (useNewKeygenPath) {
+                    // Reshare partitioning is stricter than keygen: each protocol creates its own
+                    // setup message, so both setup AND exchange must be namespaced. The server's
+                    // ProcessBatchReshare expects p-ecdsa / p-eddsa for both.
+                    coroutineScope {
+                        listOf(
+                                async {
+                                    dklsKeygen.reshareWithRetry(
+                                        0,
+                                        KeygenRouting.from(
+                                            setupMessageId = ROOT_ECDSA_MESSAGE_ID,
+                                            exchangeMessageId = ROOT_ECDSA_MESSAGE_ID,
+                                        ),
+                                    )
+                                },
+                                async {
+                                    schnorr.schnorrReshareWithRetry(
+                                        0,
+                                        KeygenRouting.from(
+                                            setupMessageId = ROOT_EDDSA_MESSAGE_ID,
+                                            exchangeMessageId = ROOT_EDDSA_MESSAGE_ID,
+                                        ),
+                                    )
+                                },
+                            )
+                            .awaitAll()
+                    }
+                } else {
+                    dklsKeygen.reshareWithRetry(0)
+                    updateStep(KeygenState.ReshareEdDSA)
+                    schnorr.schnorrReshareWithRetry(0)
+                }
             }
 
             TssAction.KeyImport -> error("KeyImport is handled by startKeyImportKeygen()")
