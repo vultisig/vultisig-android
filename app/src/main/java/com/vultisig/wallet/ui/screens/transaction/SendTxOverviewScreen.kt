@@ -33,6 +33,8 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
@@ -42,7 +44,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
-import java.math.BigInteger
+import java.math.BigDecimal
 
 @Composable
 internal fun SendTxOverviewScreen(
@@ -76,17 +78,11 @@ internal fun SendTxOverviewScreen(
             )
         },
         tokenContent = {
-            // Title-only hero for EVM contract calls. The Blockaid hero (which will replace this
-            // for resolved calls) is layered on in #4306.
-            if (tx.functionName != null) {
-                Text(
-                    text = tx.functionName,
-                    style = Theme.brockmann.headings.title3,
-                    color = Theme.v2.colors.text.primary,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            } else {
+            TransactionHero(
+                heroContent = tx.heroContent,
+                functionName = tx.functionName,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
                 VsOverviewToken(
                     header =
                         if (tx.type == UiTransactionInfoType.Send) {
@@ -150,15 +146,14 @@ internal fun SendTxOverviewScreen(
 
                 // Skip the native "Amount" row for EVM contract calls — the function name above
                 // is the action, and a "0 ETH" amount underneath would mislead. Plain sends still
-                // render the native amount here.
+                // render the native amount here. Parse as [BigDecimal] (not [BigInteger]) so a
+                // fractional native amount such as "0.001 ETH" still surfaces; the integer parser
+                // would silently null out and hide the row.
+                val nativeAmount = tx.token.value.toBigDecimalOrNull()
                 if (
                     tx.functionName == null &&
-                        tx.token.value.isNotEmpty() &&
-                        try {
-                            tx.token.value.toBigInteger() > BigInteger.ZERO
-                        } catch (_: NumberFormatException) {
-                            false
-                        }
+                        nativeAmount != null &&
+                        nativeAmount > BigDecimal.ZERO
                 ) {
                     VerifyCardDivider(size = 1.dp)
 
@@ -331,6 +326,10 @@ internal data class UiTransactionInfo(
     val functionName: String? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
+    /**
+     * Carried through from [com.vultisig.wallet.ui.models.TransactionDetailsUiModel.heroContent].
+     */
+    val heroContent: HeroContent? = null,
 )
 
 internal enum class UiTransactionInfoType {

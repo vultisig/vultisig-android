@@ -165,8 +165,13 @@ constructor(
 
     fun onForegroundBannerTapped() {
         val qrCodeData = _foregroundNotification.value?.qrCodeData ?: return
-        _foregroundNotification.value = null
+        clearForegroundNotification()
         onPushNotificationReceived(qrCodeData)
+    }
+
+    fun clearForegroundNotification() {
+        foregroundPushJob?.cancel()
+        _foregroundNotification.value = null
     }
 
     fun onPushNotificationReceived(qrCodeData: String) {

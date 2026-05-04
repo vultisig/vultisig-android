@@ -39,7 +39,9 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,6 +53,7 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/** ViewModel for the Circle USDC DeFi positions screen. */
 @HiltViewModel
 internal class CircleDeFiPositionsViewModel
 @Inject
@@ -72,6 +75,7 @@ constructor(
 
     private lateinit var vaultId: String
     private var mscaAddress: String? = null
+    private var loadJob: Job? = null
 
     private val _state =
         MutableStateFlow(
@@ -85,12 +89,24 @@ constructor(
             )
         )
 
+    /** Current UI state for the DeFi positions screen. */
     val state: StateFlow<DefiUiModel> = _state.asStateFlow()
 
+    private val _isRefreshing = MutableStateFlow(false)
+    /** True while a user-initiated pull-to-refresh is in flight. */
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    /** Initializes the ViewModel with [vaultId] and starts loading positions. */
     fun setData(vaultId: String) {
         this.vaultId = vaultId
         loadBalanceVisibility()
         loadAccountStatus()
+        loadCirclePositions()
+    }
+
+    /** Triggers a user-initiated pull-to-refresh; resets [isRefreshing] when complete. */
+    fun refresh() {
+        _isRefreshing.value = true
         loadCirclePositions()
     }
 
@@ -123,76 +139,87 @@ constructor(
     }
 
     private fun loadCirclePositions() {
-        viewModelScope.launch {
-            try {
-                // Initial UI
-                _state.update { currentState ->
-                    currentState.copy(
-                        isTotalAmountLoading = true,
-                        circleDefi = currentState.circleDefi.copy(isLoading = true),
-                    )
-                }
-
-                // Check account exists
-                val addressSca =
-                    withContext(ioDispatcher) { scaCircleAccountRepository.getAccount(vaultId) }
-
-                // If not cache or don't exists, check network for MSCA and fetch balance
-                if (addressSca == null) {
-                    val fetchedAddress = fetchAssociatedMscaAccount()
-                    if (fetchedAddress != null) {
-                        mscaAddress = fetchedAddress
-                        fetchUSDCBalanceFromNetwork(fetchedAddress)
-                    } else {
-                        // Preserve `isAccountOpen` from current state: if `onCreateAccount`
-                        // raced ahead and already marked the account open, don't stomp it back
-                        // to false based on this now-stale "no account" finding.
-                        _state.update { currentState ->
-                            currentState.copy(
-                                isTotalAmountLoading = false,
-                                circleDefi = currentState.circleDefi.copy(isLoading = false),
-                            )
-                        }
-                    }
-                } else { // If account exists, show cache, then fetch and update from network
-                    mscaAddress = addressSca
+        loadJob?.cancel()
+        loadJob =
+            viewModelScope.launch {
+                try {
+                    // Initial UI
                     _state.update { currentState ->
                         currentState.copy(
-                            circleDefi = currentState.circleDefi.copy(isAccountOpen = true)
+                            isTotalAmountLoading = true,
+                            circleDefi = currentState.circleDefi.copy(isLoading = true),
                         )
                     }
-                    val cachePosition =
-                        withContext(ioDispatcher) {
-                            stakingDetailsRepository.getStakingDetailsByCoindId(
-                                vaultId,
-                                Coins.Ethereum.USDC.id,
+
+                    // Check account exists
+                    val addressSca =
+                        withContext(ioDispatcher) { scaCircleAccountRepository.getAccount(vaultId) }
+
+                    // If not cache or don't exists, check network for MSCA and fetch balance
+                    if (addressSca == null) {
+                        val fetchedAddress = fetchAssociatedMscaAccount()
+                        if (fetchedAddress != null) {
+                            mscaAddress = fetchedAddress
+                            fetchUSDCBalanceFromNetwork(fetchedAddress)
+                        } else {
+                            // Preserve `isAccountOpen` from current state: if `onCreateAccount`
+                            // raced ahead and already marked the account open, don't stomp it back
+                            // to false based on this now-stale "no account" finding.
+                            _state.update { currentState ->
+                                currentState.copy(
+                                    isTotalAmountLoading = false,
+                                    circleDefi = currentState.circleDefi.copy(isLoading = false),
+                                )
+                            }
+                        }
+                    } else { // If account exists, show cache, then fetch and update from network
+                        mscaAddress = addressSca
+                        _state.update { currentState ->
+                            currentState.copy(
+                                circleDefi = currentState.circleDefi.copy(isAccountOpen = true)
                             )
                         }
-                    if (cachePosition != null) {
-                        showUSDCPosition(cachePosition.stakeAmount, cachePosition.coin)
+                        val cachePosition =
+                            withContext(ioDispatcher) {
+                                stakingDetailsRepository.getStakingDetailsByCoindId(
+                                    vaultId,
+                                    Coins.Ethereum.USDC.id,
+                                )
+                            }
+                        if (cachePosition != null) {
+                            showUSDCPosition(cachePosition.stakeAmount, cachePosition.coin)
+                        }
+                        fetchUSDCBalanceFromNetwork(addressSca)
                     }
-                    fetchUSDCBalanceFromNetwork(addressSca)
-                }
-            } catch (t: Throwable) {
-                Timber.e(t)
-                _state.update { currentState ->
-                    currentState.copy(
-                        isTotalAmountLoading = false,
-                        circleDefi = currentState.circleDefi.copy(isLoading = false),
-                    )
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (t: Throwable) {
+                    Timber.e(t)
+                    _state.update { currentState ->
+                        currentState.copy(
+                            isTotalAmountLoading = false,
+                            circleDefi = currentState.circleDefi.copy(isLoading = false),
+                        )
+                    }
+                } finally {
+                    if (coroutineContext[Job]?.isCancelled != true) {
+                        _isRefreshing.value = false
+                    }
                 }
             }
-        }
     }
 
+    /** Updates the currently selected DeFi tab. */
     fun onTabSelected(tab: DeFiTab) {
         _state.update { currentState -> currentState.copy(selectedTab = tab.displayNameRes) }
     }
 
+    /** Navigates back. */
     fun onBackClick() {
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
+    /** Persists and dismisses the Circle DeFi warning banner. */
     fun onClickCloseWarning() {
         viewModelScope.launch {
             try {
@@ -208,6 +235,7 @@ constructor(
         }
     }
 
+    /** Creates a new Circle MSCA account for the current vault. */
     fun onCreateAccount() {
         viewModelScope.launch {
             val createdAddress =
@@ -243,6 +271,7 @@ constructor(
         snackbarFlow.showMessage(StringResource(messageRes).asString(context), type)
     }
 
+    /** Navigates to the Send screen to deposit USDC into the Circle account. */
     fun onDepositAccount() {
         viewModelScope.launch {
             try {
@@ -264,6 +293,7 @@ constructor(
         }
     }
 
+    /** Navigates to the Send screen to withdraw USDC from the Circle account. */
     fun onWithdrawAccount() {
         viewModelScope.launch {
             try {
