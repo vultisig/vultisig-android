@@ -26,6 +26,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
@@ -46,6 +47,8 @@ internal data class QuoteFetchResult(
     val estimatedDstFiat: FiatValue,
     val feeText: String,
     val swapFeeFiat: FiatValue,
+    val outboundFeeText: String? = null,
+    val swapFeePercent: String? = null,
 )
 
 internal data class QuoteCandidate(
@@ -155,6 +158,50 @@ constructor(
         val estimatedDstFiatValue =
             convertTokenValueToFiat(dstToken, quote.expectedDstValue, currency)
 
+        val thorMayaRawFees =
+            when (quote) {
+                is SwapQuote.ThorChain -> quote.data.fees
+                is SwapQuote.MayaChain -> quote.data.fees
+                else -> null
+            }
+
+        val (displayFeeText, outboundFeeText, swapFeePercent) =
+            if (thorMayaRawFees != null) {
+                val multiplier = dstToken.thorswapMultiplier
+                val affiliateTokenValue =
+                    TokenValue(
+                        value =
+                            BigDecimal(thorMayaRawFees.affiliate)
+                                .divide(multiplier, 8, RoundingMode.DOWN)
+                                .movePointRight(dstToken.decimal)
+                                .toBigInteger(),
+                        token = dstToken,
+                    )
+                val outboundTokenValue =
+                    TokenValue(
+                        value =
+                            BigDecimal(thorMayaRawFees.outbound)
+                                .divide(multiplier, 8, RoundingMode.DOWN)
+                                .movePointRight(dstToken.decimal)
+                                .toBigInteger(),
+                        token = dstToken,
+                    )
+                val affiliateFiat = convertTokenValueToFiat(dstToken, affiliateTokenValue, currency)
+                val outboundFiat = convertTokenValueToFiat(dstToken, outboundTokenValue, currency)
+                val pct =
+                    if (srcFiatValue.value > BigDecimal.ZERO) {
+                        "%.2f%%"
+                            .format(
+                                affiliateFiat.value
+                                    .divide(srcFiatValue.value, 6, RoundingMode.HALF_UP)
+                                    .multiply(BigDecimal("100"))
+                            )
+                    } else null
+                Triple(fiatValueToString(affiliateFiat), fiatValueToString(outboundFiat), pct)
+            } else {
+                Triple(fiatValueToString(fiatFees), null, null)
+            }
+
         return QuoteFetchResult(
             quote = quote,
             provider = provider,
@@ -163,8 +210,10 @@ constructor(
             estimatedDstTokenValue = estimatedDstTokenValue,
             estimatedDstFiatValue = fiatValueToString(estimatedDstFiatValue),
             estimatedDstFiat = estimatedDstFiatValue,
-            feeText = fiatValueToString(fiatFees),
+            feeText = displayFeeText,
             swapFeeFiat = fiatFees,
+            outboundFeeText = outboundFeeText,
+            swapFeePercent = swapFeePercent,
         )
     }
 
