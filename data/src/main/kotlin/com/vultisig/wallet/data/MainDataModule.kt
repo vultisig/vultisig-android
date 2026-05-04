@@ -2,6 +2,7 @@ package com.vultisig.wallet.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.security.crypto.EncryptedSharedPreferences
@@ -9,7 +10,6 @@ import androidx.security.crypto.MasterKey
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.data.sources.AppDataStoreImpl
 import com.vultisig.wallet.data.utils.EncryptingSharedPreferences
-import com.vultisig.wallet.data.utils.InMemorySharedPreferences
 import com.vultisig.wallet.data.utils.SECURE_PREFS_KEY_ALIAS
 import com.vultisig.wallet.data.utils.SharedPrefsMasterKeyInitializer
 import com.vultisig.wallet.data.utils.buildSecurePrefsKey
@@ -20,8 +20,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import java.io.File
-import java.io.IOException
-import java.security.GeneralSecurityException
 import java.security.KeyStore
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -94,7 +92,7 @@ internal interface MainDataModule {
                 return prefs
             }
 
-            fun recoverAndRetry(cause: Exception): SharedPreferences {
+            fun recoverAndRetry(cause: KeyPermanentlyInvalidatedException): SharedPreferences {
                 Timber.e(cause, "SecureSharedPrefs init failed, attempting recovery")
                 val prefsFile = File(context.filesDir.parent, "shared_prefs/$SECURE_PREFS_FILE.xml")
                 if (prefsFile.exists() && !prefsFile.delete()) {
@@ -119,21 +117,14 @@ internal interface MainDataModule {
                             .commit()
                     }
                     .onFailure { Timber.w(it, "Failed to clear migration marker during recovery") }
-                // Guard the retry: if the keystore is irrecoverably broken, return a non-persistent
-                // in-memory fallback so the app boots in a degraded state rather than crashing.
-                return try {
-                    create()
-                } catch (e: Exception) {
-                    Timber.e(e, "SecureSharedPrefs recovery failed; using in-memory fallback")
-                    InMemorySharedPreferences()
-                }
+                return create()
             }
 
+            // Issue #4401: only KeyPermanentlyInvalidatedException is destructive; transient
+            // GeneralSecurityException / IOException must propagate so user data is not wiped.
             return try {
                 create()
-            } catch (e: GeneralSecurityException) {
-                recoverAndRetry(e)
-            } catch (e: IOException) {
+            } catch (e: KeyPermanentlyInvalidatedException) {
                 recoverAndRetry(e)
             }
         }
