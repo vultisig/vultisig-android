@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -63,7 +63,14 @@ internal fun TronFreezePositionCard(
                     color = Theme.v2.colors.text.tertiary,
                 )
                 if (isLoading) {
-                    UiPlaceholderLoader(modifier = Modifier.size(width = 120.dp, height = 28.dp))
+                    Box(modifier = Modifier.width(120.dp)) {
+                        Text(
+                            text = "–",
+                            style = Theme.brockmann.headings.title1,
+                            color = Color.Transparent,
+                        )
+                        UiPlaceholderLoader(modifier = Modifier.matchParentSize())
+                    }
                 } else {
                     Text(
                         text = if (isBalanceVisible) frozenTotalPrice else HIDE_BALANCE_CHARS,
@@ -85,7 +92,14 @@ internal fun TronFreezePositionCard(
                     color = Theme.v2.colors.text.tertiary,
                 )
                 if (isLoading) {
-                    UiPlaceholderLoader(modifier = Modifier.size(width = 80.dp, height = 22.dp))
+                    Box(modifier = Modifier.width(80.dp)) {
+                        Text(
+                            text = "–",
+                            style = Theme.brockmann.headings.title3,
+                            color = Color.Transparent,
+                        )
+                        UiPlaceholderLoader(modifier = Modifier.matchParentSize())
+                    }
                 } else {
                     Text(
                         text = if (isBalanceVisible) "$frozenTotalTrx TRX" else HIDE_BALANCE_CHARS,
