@@ -557,6 +557,7 @@ constructor(
                             method = customMessagePayload?.method ?: "",
                             message = customMessagePayload?.message ?: "",
                             signingAddress = signingAddress,
+                            requestFrom = "",
                         )
                 )
             _isDataLoaded.value = true

@@ -26,6 +26,7 @@ internal data class SignMessageTransactionUiModel(
     val method: String = "",
     val message: String = "",
     val signingAddress: String = "",
+    val requestFrom: String = "",
 )
 
 internal data class VerifySignMessageUiModel(

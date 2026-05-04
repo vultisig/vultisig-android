@@ -360,6 +360,13 @@ private fun CustomMessageDetail(signMessage: SignMessageTransactionUiModel?, sig
         address = signMessage.method,
     )
 
+    if (signMessage.requestFrom.isNotEmpty()) {
+        AddressField(
+            title = stringResource(R.string.verify_sign_message_request_from),
+            address = signMessage.requestFrom,
+        )
+    }
+
     if (signMessage.signingAddress.isNotEmpty()) {
         AddressField(
             title = stringResource(R.string.verify_sign_message_signing_address),

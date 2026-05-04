@@ -445,6 +445,7 @@ constructor(
                 method = customMessage.method,
                 message = getNormalizedCustomMessage(customMessage),
                 signingAddress = signingAddress,
+                requestFrom = deepLinkHelper.value?.getParameter("origin") ?: "",
             )
 
         transactionTypeUiModel = TransactionTypeUiModel.SignMessage(model)
