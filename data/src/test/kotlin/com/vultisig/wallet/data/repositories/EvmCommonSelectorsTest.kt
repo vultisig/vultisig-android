@@ -123,8 +123,14 @@ internal class EvmCommonSelectorsTest {
     }
 
     @Test
-    fun `Universal Router execute selector resolves`() {
+    fun `Universal Router execute selectors resolve`() {
         assertEquals("execute(bytes,bytes[],uint256)", EvmCommonSelectors.lookup("3593564c"))
+        assertEquals("execute(bytes,bytes[])", EvmCommonSelectors.lookup("24856bc3"))
+    }
+
+    @Test
+    fun `Uniswap V3 refundETH selector resolves`() {
+        assertEquals("refundETH()", EvmCommonSelectors.lookup("12210e8a"))
     }
 
     @Test
@@ -154,7 +160,7 @@ internal class EvmCommonSelectorsTest {
         val hexKey = Regex("^[0-9a-f]{8}$")
         val signature = Regex("^[a-zA-Z_][a-zA-Z0-9_]*\\(.*\\)$")
 
-        val entries = EvmCommonSelectors.entries
+        val entries = EvmCommonSelectors.tableForTesting
         assertTrue(entries.isNotEmpty(), "table must not be empty")
 
         for ((selector, sig) in entries) {

@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.repositories
 
+import androidx.annotation.VisibleForTesting
+
 /**
  * Static lookup of common EVM 4-byte function selectors → canonical text signatures.
  *
@@ -52,8 +54,13 @@ internal object EvmCommonSelectors {
             "5023b4df" to
                 "exactOutputSingle((address,address,uint24,address,uint256,uint256,uint160))",
             "09b81346" to "exactOutput((bytes,address,uint256,uint256))",
-            // Uniswap Universal Router (current Uniswap UI swap entry point)
+            // Wraps inside `multicall` on every V3 swap that pays in ETH and overpays
+            "12210e8a" to "refundETH()",
+            // Uniswap Universal Router (current Uniswap UI swap entry point). Both the deadline
+            // variant (V1) and the deadline-less V2 (Uniswap UI default since late 2024) ship
+            // today.
             "3593564c" to "execute(bytes,bytes[],uint256)",
+            "24856bc3" to "execute(bytes,bytes[])",
             // Generic compose pattern — used by Uniswap V3, Aave V3, ENS, and many other contracts
             "ac9650d8" to "multicall(bytes[])",
             // Deadline-carrying multicall — wraps most current Uniswap UI swaps via SwapRouter02,
@@ -79,6 +86,7 @@ internal object EvmCommonSelectors {
 
     fun lookup(selector: String): String? = table[selector.lowercase()]
 
-    internal val entries: Map<String, String>
+    @VisibleForTesting
+    internal val tableForTesting: Map<String, String>
         get() = table
 }
