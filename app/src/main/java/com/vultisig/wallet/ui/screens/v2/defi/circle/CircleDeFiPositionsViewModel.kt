@@ -199,7 +199,7 @@ constructor(
                         )
                     }
                 } finally {
-                    if (!coroutineContext[Job]!!.isCancelled) {
+                    if (coroutineContext[Job]?.isCancelled != true) {
                         _isRefreshing.value = false
                     }
                 }
