@@ -93,7 +93,13 @@ internal interface MainDataModule {
             }
 
             fun recoverAndRetry(cause: KeyPermanentlyInvalidatedException): SharedPreferences {
-                Timber.e(cause, "SecureSharedPrefs init failed, attempting recovery")
+                Timber.w(
+                    cause,
+                    "KeyPermanentlyInvalidatedException detected; performing destructive recovery",
+                )
+                // File first so a partial recovery (alias delete fails below) leaves no
+                // ciphertext readable by the next launch; that next launch will re-enter recovery
+                // and retry the alias delete.
                 val prefsFile = File(context.filesDir.parent, "shared_prefs/$SECURE_PREFS_FILE.xml")
                 if (prefsFile.exists() && !prefsFile.delete()) {
                     Timber.w(

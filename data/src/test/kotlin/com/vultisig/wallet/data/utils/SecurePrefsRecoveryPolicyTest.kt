@@ -1,9 +1,3 @@
-/**
- * Verifies the policy encoded in [shouldDestructivelyRecover]: ONLY
- * [android.security.keystore.KeyPermanentlyInvalidatedException] may trigger destructive deletion
- * of EncryptedSharedPreferences; every other throwable — including superclasses, siblings, and
- * unrelated runtime exceptions — must NOT. Covers the hard rule in issue #4401.
- */
 package com.vultisig.wallet.data.utils
 
 import android.security.keystore.KeyPermanentlyInvalidatedException
@@ -18,10 +12,9 @@ import org.junit.jupiter.api.Test
 
 internal class SecurePrefsRecoveryPolicyTest {
 
-    // KeyPermanentlyInvalidatedException lives in android.security.keystore.
-    // The data/src/test source set runs on the JVM against Android stub jars where every Android
-    // class constructor throws RuntimeException("Stub!"). Use mockk to obtain an instance without
-    // triggering the stub, mirroring the pattern documented in QrShareInfoTest.kt.
+    // KPIE lives in android.security.keystore; the JVM test classpath binds an Android stub jar
+    // whose constructors throw RuntimeException("Stub!"). MockK gives a real subtype instance that
+    // satisfies the `is` check without triggering the stub.
     private val kpie: KeyPermanentlyInvalidatedException =
         mockk<KeyPermanentlyInvalidatedException>(relaxed = true)
 
@@ -58,5 +51,13 @@ internal class SecurePrefsRecoveryPolicyTest {
     @Test
     fun `RuntimeException does not trigger destructive recovery`() {
         assertFalse(shouldDestructivelyRecover(RuntimeException("unexpected crash")))
+    }
+
+    // Pins the deliberate no-unwrap policy: a wrapped KPIE is reported via its outer type and is
+    // therefore on a non-KPIE catch path, which the hard rule for #4401 forbids from destroying
+    // user data. If we ever decide to honor wrapped KPIE, the production catch must change too.
+    @Test
+    fun `KPIE wrapped as cause of IOException does not trigger destructive recovery`() {
+        assertFalse(shouldDestructivelyRecover(IOException("oem keystore wrapper", kpie)))
     }
 }
