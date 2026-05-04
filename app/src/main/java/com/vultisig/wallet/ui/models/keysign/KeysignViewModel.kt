@@ -776,44 +776,40 @@ constructor(
         if (chain.standard != TokenStandard.EVM) return
         val coin = keysignPayload?.coin ?: return
 
-        viewModelScope.launch {
-            try {
-                val evmApi = evmApiFactory.createEvmApi(chain)
-                var gasUsedHex: String? = null
-                var effectiveGasPriceHex: String? = null
-                for (attempt in 1..MAX_EVM_RECEIPT_RETRIES) {
-                    val result = evmApi.getTxStatus(txHash)?.result
-                    gasUsedHex = result?.gasUsed
-                    effectiveGasPriceHex = result?.effectiveGasPrice
-                    if (gasUsedHex != null && effectiveGasPriceHex != null) break
-                    if (attempt < MAX_EVM_RECEIPT_RETRIES) delay(EVM_RECEIPT_RETRY_DELAY_MS)
-                }
-                val gasUsed = BigInteger((gasUsedHex ?: return@launch).removePrefix("0x"), 16)
-                val effectiveGasPrice =
-                    BigInteger((effectiveGasPriceHex ?: return@launch).removePrefix("0x"), 16)
-                val actualFeeWei = gasUsed.multiply(effectiveGasPrice)
-                val estimatedFee =
-                    gasFeeToEstimatedFee(
-                        GasFeeParams(
-                            gasLimit = BigInteger.ONE,
-                            gasFee = TokenValue(value = actualFeeWei, unit = "", decimals = 18),
-                            selectedToken = coin,
-                        )
+        viewModelScope.safeLaunch(
+            onError = { e -> Timber.w(e, "Failed to update EVM actual fee for %s", txHash) }
+        ) {
+            val evmApi = evmApiFactory.createEvmApi(chain)
+            var gasUsedHex: String? = null
+            var effectiveGasPriceHex: String? = null
+            for (attempt in 1..MAX_EVM_RECEIPT_RETRIES) {
+                val result = evmApi.getTxStatus(txHash)?.result
+                gasUsedHex = result?.gasUsed
+                effectiveGasPriceHex = result?.effectiveGasPrice
+                if (gasUsedHex != null && effectiveGasPriceHex != null) break
+                if (attempt < MAX_EVM_RECEIPT_RETRIES) delay(EVM_RECEIPT_RETRY_DELAY_MS)
+            }
+            val gasUsed = BigInteger((gasUsedHex ?: return@safeLaunch).removePrefix("0x"), 16)
+            val effectiveGasPrice =
+                BigInteger((effectiveGasPriceHex ?: return@safeLaunch).removePrefix("0x"), 16)
+            val actualFeeWei = gasUsed.multiply(effectiveGasPrice)
+            val estimatedFee =
+                gasFeeToEstimatedFee(
+                    GasFeeParams(
+                        gasLimit = BigInteger.ONE,
+                        gasFee = TokenValue(value = actualFeeWei, unit = "", decimals = 18),
+                        selectedToken = coin,
                     )
-                resolvedTransactionUiModel.update { currentModel ->
-                    val sendTx =
-                        currentModel as? TransactionTypeUiModel.Send ?: return@update currentModel
-                    TransactionTypeUiModel.Send(
-                        sendTx.tx.copy(
-                            networkFeeTokenValue = estimatedFee.formattedTokenValue,
-                            networkFeeFiatValue = estimatedFee.formattedFiatValue,
-                        )
+                )
+            resolvedTransactionUiModel.update { currentModel ->
+                val sendTx =
+                    currentModel as? TransactionTypeUiModel.Send ?: return@update currentModel
+                TransactionTypeUiModel.Send(
+                    sendTx.tx.copy(
+                        networkFeeTokenValue = estimatedFee.formattedTokenValue,
+                        networkFeeFiatValue = estimatedFee.formattedFiatValue,
                     )
-                }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.w(e, "Failed to update EVM actual fee for %s", txHash)
+                )
             }
         }
     }
