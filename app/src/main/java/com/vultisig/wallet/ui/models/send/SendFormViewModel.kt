@@ -2888,11 +2888,6 @@ constructor(
         }
     }
 
-    private fun validateDstAddress(dstAddress: String): UiText? {
-        if (dstAddress.isBlank()) return UiText.StringResource(R.string.send_error_no_address)
-        return null
-    }
-
     fun enableAdvanceGasUi() {
         advanceGasUiRepository.showIcon()
     }

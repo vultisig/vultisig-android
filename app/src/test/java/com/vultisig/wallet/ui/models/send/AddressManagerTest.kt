@@ -9,14 +9,16 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -62,17 +64,17 @@ internal class AddressManagerTest {
             manager.start()
             advanceUntilIdle()
 
-            assertFalse(manager.isDstAddressComplete.value)
+            manager.isDstAddressComplete.value.shouldBeFalse()
 
             addressFieldState.setTextAndPlaceCursorAtEnd("0xabc")
             Snapshot.sendApplyNotifications()
             advanceUntilIdle()
-            assertTrue(manager.isDstAddressComplete.value)
+            manager.isDstAddressComplete.value.shouldBeTrue()
 
             addressFieldState.setTextAndPlaceCursorAtEnd("   ")
             Snapshot.sendApplyNotifications()
             advanceUntilIdle()
-            assertFalse(manager.isDstAddressComplete.value)
+            manager.isDstAddressComplete.value.shouldBeFalse()
         }
 
     @Test
@@ -82,7 +84,7 @@ internal class AddressManagerTest {
 
             manager.setOutputAddress("0xdeadbeef")
 
-            assertEquals("0xdeadbeef", addressFieldState.text.toString())
+            addressFieldState.text.toString() shouldBe "0xdeadbeef"
         }
 
     @Test
@@ -100,9 +102,9 @@ internal class AddressManagerTest {
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            assertEquals("0xabc", manager.resolvedDstAddress.value)
-            assertNull(manager.dstAddressLabel.value)
-            assertEquals(1, emissions.size)
+            manager.resolvedDstAddress.value shouldBe "0xabc"
+            manager.dstAddressLabel.value.shouldBeNull()
+            emissions shouldHaveSize 1
         }
 
     @Test
@@ -126,15 +128,15 @@ internal class AddressManagerTest {
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            assertEquals("0xres", manager.resolvedDstAddress.value)
-            assertEquals("vitalik.eth", manager.dstAddressLabel.value)
+            manager.resolvedDstAddress.value shouldBe "0xres"
+            manager.dstAddressLabel.value shouldBe "vitalik.eth"
 
             addressFieldState.setTextAndPlaceCursorAtEnd("0xres")
             Snapshot.sendApplyNotifications()
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            assertEquals("vitalik.eth", manager.dstAddressLabel.value)
+            manager.dstAddressLabel.value shouldBe "vitalik.eth"
         }
 
     @Test
@@ -154,9 +156,9 @@ internal class AddressManagerTest {
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            assertEquals("0xres", manager.resolvedDstAddress.value)
-            assertEquals("vitalik.eth", manager.dstAddressLabel.value)
-            assertEquals("0xres", addressFieldState.text.toString())
+            manager.resolvedDstAddress.value shouldBe "0xres"
+            manager.dstAddressLabel.value shouldBe "vitalik.eth"
+            addressFieldState.text.toString() shouldBe "0xres"
         }
 
     @Test
@@ -175,14 +177,20 @@ internal class AddressManagerTest {
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            assertNull(manager.resolvedDstAddress.value)
-            assertNull(manager.dstAddressLabel.value)
+            manager.resolvedDstAddress.value.shouldBeNull()
+            manager.dstAddressLabel.value.shouldBeNull()
         }
 
     @Test
     fun `empty input clears resolved state`() =
         runTest(mainDispatcher) {
-            every { chainAccountAddressRepository.isValid(any(), any()) } returns false
+            // Seed a real resolved state first, otherwise asserting "null after empty" would
+            // pass even if the clear path regressed (state would already be null).
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "vitalik.eth") } returns
+                false
+            every { chainAccountAddressRepository.isValid(Chain.Ethereum, "0xres") } returns true
+            coEvery { addressParserRepository.resolveName("vitalik.eth", Chain.Ethereum) } returns
+                "0xres"
             val manager = build(backgroundScope)
             manager.start()
             selectedToken.value = ethToken()
@@ -192,13 +200,17 @@ internal class AddressManagerTest {
             advanceTimeBy(400)
             advanceUntilIdle()
 
+            // Confirm we actually populated state before testing the clear.
+            manager.resolvedDstAddress.value shouldBe "0xres"
+            manager.dstAddressLabel.value shouldBe "vitalik.eth"
+
             addressFieldState.setTextAndPlaceCursorAtEnd("")
             Snapshot.sendApplyNotifications()
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            assertNull(manager.resolvedDstAddress.value)
-            assertNull(manager.dstAddressLabel.value)
+            manager.resolvedDstAddress.value.shouldBeNull()
+            manager.dstAddressLabel.value.shouldBeNull()
         }
 
     @Test
@@ -217,8 +229,8 @@ internal class AddressManagerTest {
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            assertNull(manager.resolvedDstAddress.value)
-            assertNull(manager.dstAddressLabel.value)
+            manager.resolvedDstAddress.value.shouldBeNull()
+            manager.dstAddressLabel.value.shouldBeNull()
 
             coVerify { addressParserRepository.resolveName("explode.eth", Chain.Ethereum) }
         }
@@ -238,7 +250,7 @@ internal class AddressManagerTest {
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            assertTrue(emissions.isEmpty())
+            emissions.shouldBeEmpty()
         }
 
     private fun TestScope.collectValidations(manager: AddressManager): MutableList<Unit> {

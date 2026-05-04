@@ -207,7 +207,7 @@ internal class AmountManagerTest {
         }
 
     @Test
-    fun `resetUserInputCache lets next emission re-trigger conversion`() =
+    fun `resetUserInputCache lets a token switch re-run conversion on the same amount`() =
         runTest(mainDispatcher) {
             every { tokenPriceRepository.getPrice(any(), any()) } returns flowOf(BigDecimal("100"))
             val manager = build(backgroundScope)
@@ -219,14 +219,17 @@ internal class AmountManagerTest {
             advanceUntilIdle()
             assertEquals("100", fiatAmountFieldState.text.toString())
 
-            // Without resetUserInputCache, re-typing the same value would be a no-op.
+            // Mirror the VM behavior on a token swap: clear the cache, then push a new token
+            // through selectedToken. Without resetUserInputCache the cached "1" would block the
+            // re-conversion against the new token's price; with it, conversion must run again.
             manager.resetUserInputCache()
-            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
-            Snapshot.sendApplyNotifications()
+            selectedToken.value = polkadotToken()
             advanceUntilIdle()
 
-            // Conversion ran again — fiat field still holds the converted value.
-            assertEquals("100", fiatAmountFieldState.text.toString())
+            // Pin the behavior: the price lookup must have been invoked a second time. Without
+            // this assertion the test would still pass even if resetUserInputCache no longer
+            // cleared the user-input cache — the fiat field already held "100" from run 1.
+            coVerify(exactly = 2) { tokenPriceRepository.getPrice(any(), any()) }
         }
 
     @Test

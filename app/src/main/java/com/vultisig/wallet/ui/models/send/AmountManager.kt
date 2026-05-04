@@ -102,7 +102,7 @@ internal class AmountManager(
 
     private suspend fun handleTokenInput(token: Coin, tokenString: String) {
         val tokenDecimal = tokenString.toBigDecimalOrNull()
-        _isMaxAmount.value = tokenDecimal == maxAmount && maxAmount > BigDecimal.ZERO
+        _isMaxAmount.value = tokenDecimal?.compareTo(maxAmount) == 0 && maxAmount > BigDecimal.ZERO
 
         val fiatValue =
             convertValue(tokenString, token) { value, price, t ->
@@ -112,7 +112,16 @@ internal class AmountManager(
                         .setScale(t.decimal, RoundingMode.DOWN)
                         .stripTrailingZeros()
                 }
-                ?.takeIf { it.isNotEmpty() } ?: return
+                ?.takeIf { it.isNotEmpty() }
+
+        if (fiatValue == null) {
+            // Token side became blank/invalid — clear the mirrored fiat field so the
+            // form does not show a stale converted value alongside an empty input.
+            lastTokenValueUserInput = tokenString
+            lastFiatValueUserInput = ""
+            fiatAmountFieldState.setTextAndPlaceCursorAtEnd("")
+            return
+        }
 
         lastTokenValueUserInput = tokenString
         lastFiatValueUserInput = fiatValue
@@ -124,10 +133,19 @@ internal class AmountManager(
             convertValue(fiatString, token) { value, price, t ->
                     value.divide(price, t.decimal, RoundingMode.DOWN)
                 }
-                ?.takeIf { it.isNotEmpty() } ?: return
+                ?.takeIf { it.isNotEmpty() }
+
+        if (tokenValue == null) {
+            // Fiat side became blank/invalid — clear the mirrored token field.
+            lastFiatValueUserInput = fiatString
+            lastTokenValueUserInput = ""
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("")
+            _isMaxAmount.value = false
+            return
+        }
 
         val tokenDecimal = tokenValue.toBigDecimalOrNull()
-        _isMaxAmount.value = tokenDecimal == maxAmount && maxAmount > BigDecimal.ZERO
+        _isMaxAmount.value = tokenDecimal?.compareTo(maxAmount) == 0 && maxAmount > BigDecimal.ZERO
 
         lastTokenValueUserInput = tokenValue
         lastFiatValueUserInput = fiatString
@@ -151,7 +169,7 @@ internal class AmountManager(
                 return null
             }
 
-        if (price == BigDecimal.ZERO) {
+        if (price.signum() == 0) {
             Timber.w("convertValue: price is ZERO for token %s, skipping", token.ticker)
             return null
         }
@@ -160,18 +178,21 @@ internal class AmountManager(
     }
 
     private suspend fun collectReaping() {
-        combine(
-                selectedToken.filterNotNull(),
-                tokenAmountFieldState.textAsFlow(),
-                gasFee.filterNotNull(),
-            ) { token, tokenAmount, gas ->
+        combine(selectedToken, tokenAmountFieldState.textAsFlow(), gasFee) { token, tokenAmount, gas
+                ->
+                // Don't filterNotNull on token/gas — when they clear (e.g. mid fee recalculation)
+                // we need the combine to still emit so we can drop any stale reaping warning.
                 _reapingError.value =
-                    chainValidationService.checkIsReapable(
-                        accountProvider(),
-                        token,
-                        tokenAmount.toString(),
-                        gas,
-                    )
+                    if (token == null || gas == null) {
+                        null
+                    } else {
+                        chainValidationService.checkIsReapable(
+                            accountProvider(),
+                            token,
+                            tokenAmount.toString(),
+                            gas,
+                        )
+                    }
             }
             .collect()
     }
