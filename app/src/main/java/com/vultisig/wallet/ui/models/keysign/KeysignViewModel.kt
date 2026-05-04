@@ -772,7 +772,7 @@ constructor(
      * After confirmation, fetches the receipt and replaces the estimated fee with the actual burned
      * fee (`gasUsed × effectiveGasPrice`). Falls back silently to the estimate on any error.
      */
-    private fun tryUpdateEvmActualFee(txHash: String, chain: Chain) {
+    internal fun tryUpdateEvmActualFee(txHash: String, chain: Chain) {
         if (chain.standard != TokenStandard.EVM) return
         val coin = keysignPayload?.coin ?: return
 
@@ -784,9 +784,12 @@ constructor(
             var effectiveGasPriceHex: String? = null
             for (attempt in 1..MAX_EVM_RECEIPT_RETRIES) {
                 val result = evmApi.getTxStatus(txHash)?.result
-                gasUsedHex = result?.gasUsed
-                effectiveGasPriceHex = result?.effectiveGasPrice
-                if (gasUsedHex != null && effectiveGasPriceHex != null) break
+                if (result != null) {
+                    gasUsedHex = result.gasUsed
+                    effectiveGasPriceHex = result.effectiveGasPrice
+                    break // receipt received — stop retrying whether or not fee fields are
+                    // populated
+                }
                 if (attempt < MAX_EVM_RECEIPT_RETRIES) delay(EVM_RECEIPT_RETRY_DELAY_MS)
             }
             val gasUsed = BigInteger((gasUsedHex ?: return@safeLaunch).removePrefix("0x"), 16)
@@ -797,7 +800,12 @@ constructor(
                 gasFeeToEstimatedFee(
                     GasFeeParams(
                         gasLimit = BigInteger.ONE,
-                        gasFee = TokenValue(value = actualFeeWei, unit = "", decimals = 18),
+                        gasFee =
+                            TokenValue(
+                                value = actualFeeWei,
+                                unit = coin.ticker,
+                                decimals = coin.decimal,
+                            ),
                         selectedToken = coin,
                     )
                 )
