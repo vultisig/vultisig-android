@@ -57,6 +57,7 @@ constructor(
     var vault: Vault? = null
     var keysignPayload: KeysignPayload? = null
     var customMessagePayload: CustomMessagePayload? = null
+    /** Origin of the sign-message request, populated from [CustomMessagePayloadDto.requestFrom]. */
     var customMessageRequestFrom: String = ""
 
     val hasAllData: Boolean

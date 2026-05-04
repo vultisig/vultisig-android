@@ -10,6 +10,9 @@ data class CustomMessagePayloadDto(
     val id: String,
     val vaultId: VaultId,
     val payload: CustomMessagePayload,
+    /**
+     * Origin of the sign-message request, e.g. the dApp URL from the deep-link "origin" parameter.
+     */
     val requestFrom: String = "",
 )
 
