@@ -85,7 +85,6 @@ internal fun ChainTokensScreen(
         onReceive = viewModel::openAddressQr,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
-        onBackClick = viewModel::back,
         onHideSearchBar = viewModel::hideSearchBar,
         onShowSearchBar = viewModel::showSearchBar,
         onShowReviewPopUp = { reviewManager.showReviewPopUp(context) },
@@ -106,7 +105,6 @@ internal fun ChainTokensScreen(
     onReceive: () -> Unit,
     onSelectTokens: () -> Unit,
     onTokenClick: (ChainTokenUiModel) -> Unit,
-    onBackClick: () -> Unit,
     onShowReviewPopUp: () -> Unit,
 ) {
     val snackbarState = rememberVsSnackbarState()
@@ -129,19 +127,12 @@ internal fun ChainTokensScreen(
                 shineSpotCenterYRatio = -0.15f,
                 shineSpotRadiusRatio = 0.45f,
             ) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    VsCircleButton(
-                        onClick = onBackClick,
-                        size = VsCircleButtonSize.Small,
-                        icon = R.drawable.ic_caret_left,
-                        type = VsCircleButtonType.Secondary,
-                        designType = DesignType.Shined,
-                    )
-                    if (uiModel.explorerURL.isNotEmpty()) {
+                if (uiModel.explorerURL.isNotEmpty()) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         VsCircleButton(
                             onClick = { uriHandler.openUri(uiModel.explorerURL) },
                             size = VsCircleButtonSize.Small,
@@ -150,9 +141,9 @@ internal fun ChainTokensScreen(
                             designType = DesignType.Shined,
                         )
                     }
-                }
 
-                UiSpacer(size = 10.dp)
+                    UiSpacer(size = 10.dp)
+                }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ChainLogo(name = uiModel.chainName, logo = uiModel.chainLogo)
@@ -353,7 +344,6 @@ private fun PreviewChainCoinScreen1() {
         onReceive = {},
         onSelectTokens = {},
         onTokenClick = {},
-        onBackClick = {},
         onShowReviewPopUp = {},
     )
 }

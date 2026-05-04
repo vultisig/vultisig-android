@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
 import com.vultisig.wallet.ui.models.ChainDashboardUiModel
 import com.vultisig.wallet.ui.models.ChainDashboardViewModel
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
@@ -41,6 +42,7 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
         uiModel = uiModel,
         onTypeClick = viewModel::updateCryptoConnectionType,
         onCameraClick = viewModel::openCamera,
+        onBackClick = viewModel::back,
         content = {
             when (val route = uiModel.route) {
                 is PositionCircle -> CircleDeFiPositionsScreen(vaultId = route.vaultId)
@@ -60,9 +62,11 @@ private fun ChainDashboardScreen(
     uiModel: ChainDashboardUiModel,
     onTypeClick: (CryptoConnectionType) -> Unit,
     onCameraClick: () -> Unit,
+    onBackClick: () -> Unit,
     content: @Composable () -> Unit = {},
 ) {
     Scaffold(
+        topBar = { V2Topbar(title = null, onBackClick = onBackClick) },
         bottomBar = {
             Box(modifier = Modifier.fillMaxWidth().animateContentSize()) {
                 if (uiModel.isBottomBarVisible) {
@@ -82,9 +86,15 @@ private fun ChainDashboardScreen(
                     }
                 }
             }
-        }
+        },
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
+        Box(
+            modifier =
+                Modifier.padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding(),
+                )
+        ) {
             content()
         }
     }
@@ -97,6 +107,7 @@ private fun ChainDashboardScreenPreview() {
         uiModel = ChainDashboardUiModel(route = Wallet(vaultId = "sdsda", "007")),
         onTypeClick = {},
         onCameraClick = {},
+        onBackClick = {},
         content = {
             ChainTokensScreen(
                 uiModel =
@@ -126,7 +137,6 @@ private fun ChainDashboardScreenPreview() {
                 onReceive = {},
                 onSelectTokens = {},
                 onTokenClick = {},
-                onBackClick = {},
                 onShowReviewPopUp = {},
             )
         },

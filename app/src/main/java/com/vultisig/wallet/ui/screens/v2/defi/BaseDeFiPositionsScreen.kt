@@ -25,7 +25,6 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.screens.v2.defi.model.DefiUiModel
@@ -43,70 +42,65 @@ fun BaseDeFiPositionsScreenContent(
     bannerImage: Int = R.drawable.referral_data_banner,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
-    onBackClick: () -> Unit,
     onTabSelected: (DeFiTab) -> Unit = {},
     onEditChains: () -> Unit = {},
     tabContent: @Composable () -> Unit = {},
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
-        V2Scaffold(onBackClick = onBackClick) {
-            Column(
-                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
-                horizontalAlignment = CenterHorizontally,
+        Column(
+            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+            horizontalAlignment = CenterHorizontally,
+        ) {
+            BalanceBanner(
+                title = bannerTitle,
+                isLoading = state.isTotalAmountLoading,
+                totalValue = state.totalAmountPrice,
+                image = bannerImage,
+                isBalanceVisible = state.isBalanceVisible,
+            )
+
+            UiSpacer(16.dp)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                BalanceBanner(
-                    title = bannerTitle,
-                    isLoading = state.isTotalAmountLoading,
-                    totalValue = state.totalAmountPrice,
-                    image = bannerImage,
-                    isBalanceVisible = state.isBalanceVisible,
-                )
-
-                UiSpacer(16.dp)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    VsTabGroup(
-                        index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }
-                    ) {
-                        tabs.forEach { tab ->
-                            tab {
-                                VsTab(
-                                    label = stringResource(tab.displayNameRes),
-                                    onClick = { onTabSelected(tab) },
-                                )
-                            }
-                        }
-                    }
-
-                    if (state.supportEditChains) {
-                        V2Container(
-                            type = ContainerType.SECONDARY,
-                            cornerType = CornerType.Circular,
-                            modifier = Modifier.clickOnce(onClick = {}),
-                        ) {
-                            UiIcon(
-                                drawableResId = R.drawable.edit_chain,
-                                size = 16.dp,
-                                modifier = Modifier.padding(all = 12.dp),
-                                tint = Theme.v2.colors.primary.accent4,
-                                onClick = onEditChains,
+                VsTabGroup(index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }) {
+                    tabs.forEach { tab ->
+                        tab {
+                            VsTab(
+                                label = stringResource(tab.displayNameRes),
+                                onClick = { onTabSelected(tab) },
                             )
                         }
                     }
                 }
 
-                UiSpacer(16.dp)
-
-                Column(
-                    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    tabContent()
+                if (state.supportEditChains) {
+                    V2Container(
+                        type = ContainerType.SECONDARY,
+                        cornerType = CornerType.Circular,
+                        modifier = Modifier.clickOnce(onClick = {}),
+                    ) {
+                        UiIcon(
+                            drawableResId = R.drawable.edit_chain,
+                            size = 16.dp,
+                            modifier = Modifier.padding(all = 12.dp),
+                            tint = Theme.v2.colors.primary.accent4,
+                            onClick = onEditChains,
+                        )
+                    }
                 }
+            }
+
+            UiSpacer(16.dp)
+
+            Column(
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                tabContent()
             }
         }
     }
@@ -135,7 +129,6 @@ private fun BaseDeFiPositionsScreenContentPreview() {
             ),
         tabs = listOf(DeFiTab.DEPOSITED, DeFiTab.STAKED),
         bannerTitle = "USDC Account",
-        onBackClick = {},
         onTabSelected = {},
         onEditChains = {},
         tabContent = {},
@@ -157,7 +150,6 @@ private fun BaseDeFiPositionsScreenContentLoadingPreview() {
             ),
         tabs = listOf(DeFiTab.DEPOSITED),
         bannerTitle = "USDC Account",
-        onBackClick = {},
         onTabSelected = {},
         onEditChains = {},
         tabContent = {},
@@ -179,7 +171,6 @@ private fun BaseDeFiPositionsScreenContentHiddenBalancePreview() {
             ),
         tabs = listOf(DeFiTab.DEPOSITED, DeFiTab.STAKED, DeFiTab.BONDED),
         bannerTitle = "USDC Account",
-        onBackClick = {},
         onTabSelected = {},
         onEditChains = {},
         tabContent = {},

@@ -35,7 +35,6 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
@@ -82,7 +81,6 @@ internal fun ThorchainDefiPositionsScreen(
             isRefreshing = true
             model.setData(vaultId)
         },
-        onBackClick = model::onBackClick,
         onClickBondToNode = model::bondToNode,
         onClickUnbond = { model.onClickUnBond(it) },
         onClickBond = { model.onClickBond(it) },
@@ -107,7 +105,6 @@ internal fun ThorchainDefiPositionScreenContent(
     state: ThorchainDefiPositionsUiModel = ThorchainDefiPositionsUiModel(),
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
-    onBackClick: () -> Unit,
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
     onClickBond: (String) -> Unit,
@@ -128,131 +125,123 @@ internal fun ThorchainDefiPositionScreenContent(
     val tabs = listOf(DeFiTab.BONDED, DeFiTab.STAKED, DeFiTab.LP)
 
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
-        V2Scaffold(onBackClick = onBackClick) {
-            Column(
-                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
-                horizontalAlignment = CenterHorizontally,
+        Column(
+            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+            horizontalAlignment = CenterHorizontally,
+        ) {
+            BalanceBanner(
+                title = Chain.ThorChain.raw,
+                isLoading = state.isTotalAmountLoading,
+                totalValue = state.totalAmountPrice,
+                image = R.drawable.referral_data_banner,
+                isBalanceVisible = state.isBalanceVisible,
+            )
+
+            UiSpacer(16.dp)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                BalanceBanner(
-                    title = Chain.ThorChain.raw,
-                    isLoading = state.isTotalAmountLoading,
-                    totalValue = state.totalAmountPrice,
-                    image = R.drawable.referral_data_banner,
-                    isBalanceVisible = state.isBalanceVisible,
-                )
-
-                UiSpacer(16.dp)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    VsTabGroup(
-                        index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }
-                    ) {
-                        tabs.forEach { tab ->
-                            tab {
-                                VsTab(
-                                    label = stringResource(tab.displayNameRes),
-                                    onClick = { onTabSelected(tab) },
-                                )
-                            }
+                VsTabGroup(index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }) {
+                    tabs.forEach { tab ->
+                        tab {
+                            VsTab(
+                                label = stringResource(tab.displayNameRes),
+                                onClick = { onTabSelected(tab) },
+                            )
                         }
-                    }
-
-                    V2Container(
-                        type = ContainerType.SECONDARY,
-                        cornerType = CornerType.Circular,
-                        modifier = Modifier.clickOnce(onClick = {}),
-                    ) {
-                        UiIcon(
-                            drawableResId = R.drawable.edit_chain,
-                            size = 16.dp,
-                            modifier = Modifier.padding(all = 12.dp),
-                            tint = Theme.v2.colors.primary.accent4,
-                            onClick = onEditPositionClick,
-                        )
                     }
                 }
 
-                UiSpacer(16.dp)
-
-                if (state.showPositionSelectionDialog) {
-                    PositionsSelectionDialog(
-                        bondPositions = state.bondPositionsDialog,
-                        stakePositions = state.stakingPositionsDialog,
-                        lpPositions = state.lpPositionsDialog,
-                        selectedPositions = state.tempSelectedPositions,
-                        searchTextFieldState = searchTextFieldState,
-                        onPositionSelectionChange = onPositionSelectionChange,
-                        onDoneClick = onDonePositionClick,
-                        onCancelClick = onCancelEditPositionClick,
+                V2Container(
+                    type = ContainerType.SECONDARY,
+                    cornerType = CornerType.Circular,
+                    modifier = Modifier.clickOnce(onClick = {}),
+                ) {
+                    UiIcon(
+                        drawableResId = R.drawable.edit_chain,
+                        size = 16.dp,
+                        modifier = Modifier.padding(all = 12.dp),
+                        tint = Theme.v2.colors.primary.accent4,
+                        onClick = onEditPositionClick,
                     )
                 }
+            }
 
-                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                    when (state.selectedTab) {
-                        DeFiTab.BONDED.displayNameRes -> {
-                            if (!state.selectedPositions.hasBondPositions()) {
-                                NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                            } else {
-                                BondedTabContent(
-                                    bondToNodeOnClick = onClickBondToNode,
-                                    state = state,
-                                    onClickUnbond = onClickUnbond,
-                                    onClickBond = onClickBond,
-                                )
-                            }
-                        }
+            UiSpacer(16.dp)
 
-                        DeFiTab.STAKED.displayNameRes -> {
-                            if (!state.selectedPositions.hasStakingPositions()) {
-                                NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                            } else {
-                                StakingTabContent(
-                                    state = state.staking,
-                                    onClickStake = onClickStake,
-                                    onClickUnstake = onClickUnstake,
-                                    onClickWithdraw = {
-                                        onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI)
-                                    },
-                                    onClickTransfer = onClickTransfer,
-                                    isBalanceVisible = state.isBalanceVisible,
-                                )
-                            }
-                        }
+            if (state.showPositionSelectionDialog) {
+                PositionsSelectionDialog(
+                    bondPositions = state.bondPositionsDialog,
+                    stakePositions = state.stakingPositionsDialog,
+                    lpPositions = state.lpPositionsDialog,
+                    selectedPositions = state.tempSelectedPositions,
+                    searchTextFieldState = searchTextFieldState,
+                    onPositionSelectionChange = onPositionSelectionChange,
+                    onDoneClick = onDonePositionClick,
+                    onCancelClick = onCancelEditPositionClick,
+                )
+            }
 
-                        DeFiTab.LP.displayNameRes -> {
-                            // Until the dialog dataset has loaded, treat the LP tab as still
-                            // loading
-                            // rather than flashing the no-positions container — the
-                            // lpPositionsDialog
-                            // list arrives asynchronously and "no match" is meaningless before
-                            // then.
-                            when {
-                                !state.lpDialogLoaded ->
-                                    LpTabContent(
-                                        state = state.lp.copy(isLoading = true),
-                                        onClickAdd = onClickAddLp,
-                                        onClickRemove = onClickRemoveLp,
-                                    )
-                                !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) ->
-                                    NoPositionsContainer(
-                                        onManagePositionsClick = onEditPositionClick
-                                    )
-                                else ->
-                                    LpTabContent(
-                                        state = state.lp,
-                                        onClickAdd = onClickAddLp,
-                                        onClickRemove = onClickRemoveLp,
-                                    )
-                            }
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                when (state.selectedTab) {
+                    DeFiTab.BONDED.displayNameRes -> {
+                        if (!state.selectedPositions.hasBondPositions()) {
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        } else {
+                            BondedTabContent(
+                                bondToNodeOnClick = onClickBondToNode,
+                                state = state,
+                                onClickUnbond = onClickUnbond,
+                                onClickBond = onClickBond,
+                            )
                         }
                     }
 
-                    UiSpacer(size = 16.dp)
+                    DeFiTab.STAKED.displayNameRes -> {
+                        if (!state.selectedPositions.hasStakingPositions()) {
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        } else {
+                            StakingTabContent(
+                                state = state.staking,
+                                onClickStake = onClickStake,
+                                onClickUnstake = onClickUnstake,
+                                onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) },
+                                onClickTransfer = onClickTransfer,
+                                isBalanceVisible = state.isBalanceVisible,
+                            )
+                        }
+                    }
+
+                    DeFiTab.LP.displayNameRes -> {
+                        // Until the dialog dataset has loaded, treat the LP tab as still
+                        // loading
+                        // rather than flashing the no-positions container — the
+                        // lpPositionsDialog
+                        // list arrives asynchronously and "no match" is meaningless before
+                        // then.
+                        when {
+                            !state.lpDialogLoaded ->
+                                LpTabContent(
+                                    state = state.lp.copy(isLoading = true),
+                                    onClickAdd = onClickAddLp,
+                                    onClickRemove = onClickRemoveLp,
+                                )
+                            !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) ->
+                                NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                            else ->
+                                LpTabContent(
+                                    state = state.lp,
+                                    onClickAdd = onClickAddLp,
+                                    onClickRemove = onClickRemoveLp,
+                                )
+                        }
+                    }
                 }
+
+                UiSpacer(size = 16.dp)
             }
         }
     }
@@ -263,7 +252,6 @@ internal fun ThorchainDefiPositionScreenContent(
 @Preview(showBackground = true, name = "DeFi Positions - Empty")
 private fun ThorchainDefiPositionsScreenPreviewEmpty() {
     ThorchainDefiPositionScreenContent(
-        onBackClick = {},
         state = ThorchainDefiPositionsUiModel(),
         onClickBond = {},
         onClickUnbond = {},
@@ -308,7 +296,6 @@ private fun ThorchainDefiPositionsScreenPreviewWithData() {
         )
 
     ThorchainDefiPositionScreenContent(
-        onBackClick = {},
         state =
             ThorchainDefiPositionsUiModel(
                 totalAmountPrice = "$3,250.00",
@@ -332,7 +319,6 @@ private fun ThorchainDefiPositionsScreenPreviewWithData() {
 @Preview(showBackground = true, name = "DeFi Positions - Loading")
 private fun ThorchainDefiPositionsScreenPreviewLoading() {
     ThorchainDefiPositionScreenContent(
-        onBackClick = {},
         state = ThorchainDefiPositionsUiModel(bonded = BondedTabUiModel(isLoading = true)),
         onClickBond = {},
         onClickUnbond = {},
