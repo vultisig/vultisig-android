@@ -6,13 +6,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -21,10 +24,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.hero.TransactionHero
@@ -361,10 +366,7 @@ private fun CustomMessageDetail(signMessage: SignMessageTransactionUiModel?, sig
     )
 
     if (signMessage.requestFrom.isNotEmpty()) {
-        AddressField(
-            title = stringResource(R.string.verify_sign_message_request_from),
-            address = signMessage.requestFrom,
-        )
+        DAppOriginField(requestFrom = signMessage.requestFrom)
     }
 
     if (signMessage.signingAddress.isNotEmpty()) {
@@ -379,6 +381,46 @@ private fun CustomMessageDetail(signMessage: SignMessageTransactionUiModel?, sig
         address = signature,
         divider = false,
     )
+}
+
+@Composable
+private fun DAppOriginField(requestFrom: String) {
+    val domain =
+        remember(requestFrom) {
+            runCatching { java.net.URI(requestFrom).host ?: requestFrom }.getOrDefault(requestFrom)
+        }
+    Column {
+        Text(
+            text = stringResource(R.string.verify_sign_message_request_from),
+            color = Theme.v2.colors.text.tertiary,
+            style = Theme.brockmann.headings.subtitle,
+        )
+        UiSpacer(size = 16.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            SubcomposeAsyncImage(
+                model = "https://www.google.com/s2/favicons?domain=$domain&sz=64",
+                contentDescription = null,
+                modifier = Modifier.size(20.dp).clip(RoundedCornerShape(4.dp)),
+                error = {
+                    UiIcon(
+                        drawableResId = R.drawable.ic_link,
+                        size = 20.dp,
+                        tint = Theme.v2.colors.text.tertiary,
+                    )
+                },
+            )
+            Text(
+                text = domain,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+        }
+        UiSpacer(size = 12.dp)
+        UiHorizontalDivider()
+    }
 }
 
 @Preview
