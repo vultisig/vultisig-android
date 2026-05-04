@@ -31,12 +31,14 @@ import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
 
+/** Result of a gas fee calculation, tagged with the source [chain]. */
 internal data class GasCalculationResult(
     val gasFee: TokenValue,
     val estimated: EstimatedGasFee,
     val chain: Chain,
 )
 
+/** Thrown when a UTXO transaction plan fails due to insufficient UTXOs. */
 internal class InsufficientUtxosException : Exception("Error_not_enough_utxos")
 
 internal class SwapGasCalculator
