@@ -90,14 +90,18 @@ jobs:
           ARTIFACT_URL="${{ steps.upload_apk.outputs.artifact-url }}"
           APK_PATH=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
           APK_SHA=$(sha256sum "$APK_PATH" | cut -d' ' -f1)
-          gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body "📦 **Debug APK ready** — commit \`${{ github.sha }}\`
-
-[Download \`vultisig-4360-trace-debug-apk\`]($ARTIFACT_URL) (requires GitHub login + repo access)
-
-SHA-256: \`$APK_SHA\`
-
-\`\`\`bash
-adb install -r app-debug.apk
-adb logcat -c
-adb logcat -v time | grep boot4360 > 4360-trace.log
-\`\`\`"
+          BODY_FILE=$(mktemp)
+          {
+            echo "📦 **Debug APK ready** — commit \`${{ github.sha }}\`"
+            echo ""
+            echo "[Download \`vultisig-4360-trace-debug-apk\`]($ARTIFACT_URL) (requires GitHub login + repo access)"
+            echo ""
+            echo "SHA-256: \`$APK_SHA\`"
+            echo ""
+            echo '```bash'
+            echo "adb install -r app-debug.apk"
+            echo "adb logcat -c"
+            echo "adb logcat -v time | grep boot4360 > 4360-trace.log"
+            echo '```'
+          } > "$BODY_FILE"
+          gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body-file "$BODY_FILE"
