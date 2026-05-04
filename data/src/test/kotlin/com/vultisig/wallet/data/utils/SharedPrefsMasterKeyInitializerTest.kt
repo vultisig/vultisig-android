@@ -12,6 +12,7 @@ import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -33,6 +34,7 @@ import timber.log.Timber
  * [InterruptedException], and [NullPointerException]. Test (d) is the canonical regression guard:
  * it MUST fail on origin/main and pass after the fix.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class SharedPrefsMasterKeyInitializerTest {
 
     // ── Log-capture infrastructure ────────────────────────────────────────────

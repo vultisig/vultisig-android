@@ -1,8 +1,7 @@
 package com.vultisig.wallet.data.utils
 
-import java.io.IOException
-import java.security.GeneralSecurityException
 import javax.crypto.SecretKey
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -33,16 +32,33 @@ object SharedPrefsMasterKeyInitializer {
     /** Fires a background key pre-warm; safe to call from Application.onCreate. */
     fun prewarm() {
         CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineName("SecurePrefsPrewarm"))
-            .launch {
-                try {
-                    _prewarmResult.complete(buildSecurePrefsKey())
-                } catch (e: GeneralSecurityException) {
-                    Timber.w(e, "Secure prefs key prewarm failed; deferring to sync path")
-                    _prewarmResult.complete(null)
-                } catch (e: IOException) {
-                    Timber.w(e, "Secure prefs key prewarm failed; deferring to sync path")
-                    _prewarmResult.complete(null)
-                }
-            }
+            .launch { runPrewarmInto(_prewarmResult, ::buildSecurePrefsKey) }
+    }
+
+    /**
+     * Runs the prewarm body against [target]. Settles [target] with the [supplier] result on
+     * success, or with `null` after a WARN-level Timber log on any non-cancellation [Exception] —
+     * the previous catch-list of `GeneralSecurityException | IOException` left the deferred
+     * uncompleted on `IllegalStateException` (the lock-timeout `error(...)` in
+     * [buildSecurePrefsKey]), `ProviderException`, OEM `RuntimeException`, etc., so any future
+     * awaiter would hang forever (issue #4402). Re-throws [CancellationException] without touching
+     * [target] so structured concurrency keeps propagating cancellation; the consumer in
+     * [com.vultisig.wallet.data.MainDataModule.provideEncryptedSharedPrefs] reads
+     * [Deferred.isCompleted] non-blockingly and falls through to a synchronous keystore lookup when
+     * the deferred is still active. A second call against an already-settled target is a no-op
+     * because [CompletableDeferred.complete] returns `false` on the second invocation.
+     */
+    internal fun runPrewarmInto(
+        target: CompletableDeferred<SecretKey?>,
+        supplier: () -> SecretKey,
+    ) {
+        try {
+            target.complete(supplier())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Secure prefs key prewarm failed; deferring to sync path")
+            target.complete(null)
+        }
     }
 }
