@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.screens.v2.defi.ActionButton
 import com.vultisig.wallet.ui.theme.Theme
 
@@ -32,7 +33,9 @@ internal fun TronFreezePositionCard(
     frozenTotalPrice: String,
     frozenTotalTrx: String,
     isBalanceVisible: Boolean,
+    isLoading: Boolean = false,
     isUnfreezeEnabled: Boolean,
+    isFreezeEnabled: Boolean = true,
     onClickFreeze: () -> Unit,
     onClickUnfreeze: () -> Unit,
 ) {
@@ -59,11 +62,22 @@ internal fun TronFreezePositionCard(
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                 )
-                Text(
-                    text = if (isBalanceVisible) frozenTotalPrice else HIDE_BALANCE_CHARS,
-                    style = Theme.brockmann.headings.title1,
-                    color = Theme.v2.colors.text.primary,
-                )
+                if (isLoading) {
+                    Box(modifier = Modifier.width(120.dp)) {
+                        Text(
+                            text = "–",
+                            style = Theme.brockmann.headings.title1,
+                            color = Color.Transparent,
+                        )
+                        UiPlaceholderLoader(modifier = Modifier.matchParentSize())
+                    }
+                } else {
+                    Text(
+                        text = if (isBalanceVisible) frozenTotalPrice else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.headings.title1,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                }
             }
         }
 
@@ -77,11 +91,22 @@ internal fun TronFreezePositionCard(
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.tertiary,
                 )
-                Text(
-                    text = if (isBalanceVisible) "$frozenTotalTrx TRX" else HIDE_BALANCE_CHARS,
-                    style = Theme.brockmann.headings.title3,
-                    color = Theme.v2.colors.text.primary,
-                )
+                if (isLoading) {
+                    Box(modifier = Modifier.width(80.dp)) {
+                        Text(
+                            text = "–",
+                            style = Theme.brockmann.headings.title3,
+                            color = Color.Transparent,
+                        )
+                        UiPlaceholderLoader(modifier = Modifier.matchParentSize())
+                    }
+                } else {
+                    Text(
+                        text = if (isBalanceVisible) "$frozenTotalTrx TRX" else HIDE_BALANCE_CHARS,
+                        style = Theme.brockmann.headings.title3,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                }
             }
 
             Row(
@@ -94,7 +119,7 @@ internal fun TronFreezePositionCard(
                     background = Theme.v2.colors.backgrounds.tertiary_2,
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = TronFreezeCardIconCircleColor,
-                    enabled = isUnfreezeEnabled,
+                    enabled = !isLoading && isUnfreezeEnabled,
                     modifier = Modifier.weight(1f),
                     onClick = onClickUnfreeze,
                 )
@@ -104,6 +129,7 @@ internal fun TronFreezePositionCard(
                     background = Theme.v2.colors.buttons.ctaPrimary,
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = TronFreezeCardIconCircleColor,
+                    enabled = isFreezeEnabled && !isLoading,
                     modifier = Modifier.weight(1f),
                     onClick = onClickFreeze,
                 )

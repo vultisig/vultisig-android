@@ -59,6 +59,7 @@ import com.vultisig.wallet.ui.components.buttons.AutoSizingText
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.containers.ContainerBorderType
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
@@ -77,7 +78,11 @@ data class ResourceState(
 )
 
 @Composable
-fun ResourceTwoCardsRow(resourceUsage: ResourceUsage, modifier: Modifier = Modifier) {
+fun ResourceTwoCardsRow(
+    resourceUsage: ResourceUsage,
+    modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+) {
     Surface(
         modifier =
             modifier
@@ -99,6 +104,7 @@ fun ResourceTwoCardsRow(resourceUsage: ResourceUsage, modifier: Modifier = Modif
                 ),
                 Modifier.weight(1f),
                 containerBg = colors.backgrounds.surface4,
+                isLoading = isLoading,
             )
             Box(
                 modifier =
@@ -115,6 +121,7 @@ fun ResourceTwoCardsRow(resourceUsage: ResourceUsage, modifier: Modifier = Modif
                 ),
                 Modifier.weight(1f),
                 containerBg = colors.backgrounds.surface3,
+                isLoading = isLoading,
                 onDisplayTronLegacy = { newDisplay -> display = newDisplay },
             )
         }
@@ -130,6 +137,7 @@ fun ResourceCard(
     state: ResourceState,
     modifier: Modifier = Modifier,
     containerBg: Color,
+    isLoading: Boolean = false,
     onDisplayTronLegacy: (Boolean) -> Unit = {},
 ) {
     Row(modifier = modifier.padding(16.dp), verticalAlignment = Alignment.Top) {
@@ -177,25 +185,32 @@ fun ResourceCard(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    AutoSizingText(
-                        text =
-                            buildAnnotatedString {
-                                withStyle(SpanStyle(color = colors.text.secondary)) {
-                                    append(state.available.toString())
-                                }
-                                withStyle(SpanStyle(color = colors.text.tertiary)) {
-                                    append(" / ${state.total}")
-                                }
-                            },
-                        style = Theme.brockmann.supplementary.caption,
-                    )
-                    Spacer(modifier = Modifier.height(7.dp))
-                    AnimatedProgressBar(
-                        value =
-                            if (state.total > 0) state.available.toFloat() / state.total.toFloat()
-                            else 0f,
-                        accent = state.accentColor,
-                    )
+                    if (isLoading) {
+                        UiPlaceholderLoader(modifier = Modifier.fillMaxWidth().height(14.dp))
+                        Spacer(modifier = Modifier.height(7.dp))
+                        UiPlaceholderLoader(modifier = Modifier.fillMaxWidth().height(8.dp))
+                    } else {
+                        AutoSizingText(
+                            text =
+                                buildAnnotatedString {
+                                    withStyle(SpanStyle(color = colors.text.secondary)) {
+                                        append(state.available.toString())
+                                    }
+                                    withStyle(SpanStyle(color = colors.text.tertiary)) {
+                                        append(" / ${state.total}")
+                                    }
+                                },
+                            style = Theme.brockmann.supplementary.caption,
+                        )
+                        Spacer(modifier = Modifier.height(7.dp))
+                        AnimatedProgressBar(
+                            value =
+                                if (state.total > 0)
+                                    state.available.toFloat() / state.total.toFloat()
+                                else 0f,
+                            accent = state.accentColor,
+                        )
+                    }
                 }
             }
         }
