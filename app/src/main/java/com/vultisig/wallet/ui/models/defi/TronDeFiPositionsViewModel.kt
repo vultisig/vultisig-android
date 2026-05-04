@@ -136,7 +136,9 @@ constructor(
                         TronDeFiUiState.Error(R.string.error_view_default_description.asUiText())
                 }
             ) {
-                val previousSuccess = _state.value as? TronDeFiUiState.Success
+                val previousSuccess =
+                    (_state.value as? TronDeFiUiState.Success)
+                        ?: (_state.value as? TronDeFiUiState.Loading)?.previousSuccess
                 _state.value = TronDeFiUiState.Loading(previousSuccess = previousSuccess)
 
                 // Resolve the TRX coin for this vault
