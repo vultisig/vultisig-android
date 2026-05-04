@@ -1306,7 +1306,7 @@ constructor(
                     tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
 
                 val srcAddress = selectedToken.address
-                val isMaxAmount = tokenAmount == amountManager.currentMaxAmount
+                val isMaxAmount = tokenAmount.compareTo(amountManager.currentMaxAmount) == 0
 
                 if (chain == Chain.Tron) {
                     val isTronStakingOp =
