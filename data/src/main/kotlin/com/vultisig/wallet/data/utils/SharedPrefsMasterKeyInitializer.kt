@@ -34,14 +34,33 @@ object SharedPrefsMasterKeyInitializer {
     fun prewarm() {
         CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineName("SecurePrefsPrewarm"))
             .launch {
+                val t0 = System.nanoTime()
+                Timber.i(
+                    "[boot4360] Prewarm coroutine started, thread=%s",
+                    Thread.currentThread().name,
+                )
                 try {
                     _prewarmResult.complete(buildSecurePrefsKey())
+                    Timber.i(
+                        "[boot4360] Prewarm complete OK, elapsed=%dms",
+                        (System.nanoTime() - t0) / 1_000_000,
+                    )
                 } catch (e: GeneralSecurityException) {
                     Timber.w(e, "Secure prefs key prewarm failed; deferring to sync path")
                     _prewarmResult.complete(null)
+                    Timber.i(
+                        "[boot4360] Prewarm complete FAIL(GSE), elapsed=%dms, err=%s",
+                        (System.nanoTime() - t0) / 1_000_000,
+                        e::class.simpleName,
+                    )
                 } catch (e: IOException) {
                     Timber.w(e, "Secure prefs key prewarm failed; deferring to sync path")
                     _prewarmResult.complete(null)
+                    Timber.i(
+                        "[boot4360] Prewarm complete FAIL(IOE), elapsed=%dms, err=%s",
+                        (System.nanoTime() - t0) / 1_000_000,
+                        e::class.simpleName,
+                    )
                 }
             }
     }

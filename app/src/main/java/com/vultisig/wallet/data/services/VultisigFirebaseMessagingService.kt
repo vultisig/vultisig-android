@@ -27,11 +27,21 @@ class VultisigFirebaseMessagingService : FirebaseMessagingService() {
     @Inject lateinit var pushNotificationManager: PushNotificationManager
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    override fun onCreate() {
+        super.onCreate()
+        Timber.i(
+            "[boot4360] VultisigFirebaseMessagingService.onCreate, thread=%s",
+            Thread.currentThread().name,
+        )
+    }
+
     override fun onNewToken(token: String) {
+        Timber.i("[boot4360] FCM onNewToken, thread=%s", Thread.currentThread().name)
         serviceScope.launch { pushNotificationManager.onNewToken(token) }
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
+        Timber.i("[boot4360] FCM onMessageReceived, thread=%s", Thread.currentThread().name)
         Timber.d(
             "FCM message received from: ${message.from}, data keys: ${message.data.keys}, notification: title=${message.notification?.title} body=${message.notification?.body?.take(80)}"
         )

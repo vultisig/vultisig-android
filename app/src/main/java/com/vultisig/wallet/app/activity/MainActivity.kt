@@ -65,6 +65,13 @@ class MainActivity : AppCompatActivity() {
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val tAct = System.nanoTime()
+        val hasQrExtra = intent?.hasExtra(VultisigFirebaseMessagingService.QR_CODE_DATA) == true
+        Timber.i(
+            "[boot4360] MainActivity.onCreate start, thread=%s, hasQrExtra=%b",
+            Thread.currentThread().name,
+            hasQrExtra,
+        )
         // Workaround for Android 8.0 (API 26) crash: "Only fullscreen opaque activities can
         // request orientation". Theme.SplashScreen sets windowIsTranslucent=true on API 26,
         // which conflicts with screenOrientation in the manifest. Setting it programmatically
@@ -78,6 +85,10 @@ class MainActivity : AppCompatActivity() {
 
         // Handle notification tap when app was killed — ViewModel awaits navigation readiness.
         intent?.getStringExtra(VultisigFirebaseMessagingService.QR_CODE_DATA)?.let {
+            Timber.i(
+                "[boot4360] MainActivity.onCreate Path A: about to deref mainViewModel for push, elapsed=%dms",
+                (System.nanoTime() - tAct) / 1_000_000,
+            )
             mainViewModel.onPushNotificationReceived(it)
         }
 
@@ -93,8 +104,25 @@ class MainActivity : AppCompatActivity() {
 
         observePreventScreenshots()
 
+        Timber.i(
+            "[boot4360] MainActivity.onCreate setContent called, elapsed=%dms",
+            (System.nanoTime() - tAct) / 1_000_000,
+        )
         setContent {
+            // Brackets the opaque Compose-runtime + theme-init window. Fires once per setContent.
+            remember {
+                Timber.i(
+                    "[boot4360] setContent lambda entered, elapsed=%dms",
+                    (System.nanoTime() - tAct) / 1_000_000,
+                )
+            }
             OnBoardingComposeTheme {
+                remember {
+                    Timber.i(
+                        "[boot4360] First Compose composition reached, elapsed=%dms",
+                        (System.nanoTime() - tAct) / 1_000_000,
+                    )
+                }
                 val screen by mainViewModel.startDestination.collectAsStateWithLifecycle()
 
                 val navController = rememberNavController()

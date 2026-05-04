@@ -35,17 +35,37 @@ private val secureKeyLock = ReentrantLock()
  * blocking indefinitely if the keystore daemon stalls.
  */
 internal fun buildSecurePrefsKey(): SecretKey {
+    val t0 = System.nanoTime()
+    Timber.i("[boot4360] buildSecurePrefsKey enter, thread=%s", Thread.currentThread().name)
     if (!secureKeyLock.tryLock(3_000L, TimeUnit.MILLISECONDS)) {
+        Timber.w("[boot4360] buildSecurePrefsKey lock timeout after 3s")
         error("Timed out waiting for secure prefs key lock after 3 s")
     }
+    val tLock = System.nanoTime()
+    Timber.i(
+        "[boot4360] buildSecurePrefsKey lock acquired, lockWait=%dms",
+        (tLock - t0) / 1_000_000,
+    )
     try {
         val ks = KeyStore.getInstance(KEYSTORE).apply { load(null) }
         val entry = ks.getEntry(SECURE_PREFS_KEY_ALIAS, null)
+        val tEntry = System.nanoTime()
+        Timber.i(
+            "[boot4360] buildSecurePrefsKey keystore load+getEntry done, elapsed=%dms, hasEntry=%b",
+            (tEntry - tLock) / 1_000_000,
+            entry != null,
+        )
         if (entry != null) {
-            return (entry as? KeyStore.SecretKeyEntry)?.secretKey
-                ?: error(
-                    "Alias $SECURE_PREFS_KEY_ALIAS holds unexpected entry type: ${entry::class.simpleName}"
-                )
+            val key =
+                (entry as? KeyStore.SecretKeyEntry)?.secretKey
+                    ?: error(
+                        "Alias $SECURE_PREFS_KEY_ALIAS holds unexpected entry type: ${entry::class.simpleName}"
+                    )
+            Timber.i(
+                "[boot4360] buildSecurePrefsKey returning existing key, total=%dms",
+                (System.nanoTime() - t0) / 1_000_000,
+            )
+            return key
         }
         val spec =
             KeyGenParameterSpec.Builder(
@@ -56,9 +76,16 @@ internal fun buildSecurePrefsKey(): SecretKey {
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(256)
                 .build()
-        return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
-            .apply { init(spec) }
-            .generateKey()
+        val key =
+            KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
+                .apply { init(spec) }
+                .generateKey()
+        Timber.i(
+            "[boot4360] buildSecurePrefsKey generateKey done, generateElapsed=%dms, total=%dms",
+            (System.nanoTime() - tEntry) / 1_000_000,
+            (System.nanoTime() - t0) / 1_000_000,
+        )
+        return key
     } finally {
         secureKeyLock.unlock()
     }
@@ -171,7 +198,22 @@ internal class EncryptingSharedPreferences(
      * trigger recovery before the first real read or write silently returns defaults.
      */
     internal fun selfTest() {
-        encryptRaw(secretKey, "probe")
+        val t0 = System.nanoTime()
+        Timber.i("[boot4360] selfTest start, thread=%s", Thread.currentThread().name)
+        // Inline the cipher init+doFinal so each step can be timed independently. Functionally
+        // equivalent to encryptRaw(secretKey, "probe") for the purpose of surfacing
+        // KeyPermanentlyInvalidatedException eagerly — both errors fire at Cipher.init() /
+        // doFinal().
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey)
+        val tInit = System.nanoTime()
+        Timber.i("[boot4360] selfTest cipher.init done, elapsed=%dms", (tInit - t0) / 1_000_000)
+        cipher.doFinal("probe".toByteArray(Charsets.UTF_8))
+        Timber.i(
+            "[boot4360] selfTest cipher.doFinal done, doFinalElapsed=%dms, total=%dms",
+            (System.nanoTime() - tInit) / 1_000_000,
+            (System.nanoTime() - t0) / 1_000_000,
+        )
     }
 
     private val listenerWrappers =

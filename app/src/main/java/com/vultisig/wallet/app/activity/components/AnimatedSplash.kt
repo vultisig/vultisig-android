@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import com.airbnb.lottie.compose.LottieAnimation
@@ -14,6 +15,7 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.theme.Theme
+import timber.log.Timber
 
 @Composable
 internal fun AnimatedSplash(
@@ -26,8 +28,15 @@ internal fun AnimatedSplash(
 
     val lottieState = animateLottieCompositionAsState(composition = composition)
 
+    remember { Timber.i("[boot4360] AnimatedSplash first composition, isLoading=%b", isLoading) }
+
     LaunchedEffect(lottieState.isAtEnd, isLoading) {
         if (lottieState.progress == 1f && !isLoading) {
+            Timber.i(
+                "[boot4360] AnimatedSplash dismissing, progress=%.2f, isLoading=%b",
+                lottieState.progress,
+                isLoading,
+            )
             onSplashComplete()
         }
     }

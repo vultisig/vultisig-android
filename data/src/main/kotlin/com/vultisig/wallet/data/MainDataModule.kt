@@ -75,12 +75,22 @@ internal interface MainDataModule {
         @Provides
         fun provideEncryptedSharedPrefs(@ApplicationContext context: Context): SharedPreferences {
             fun create(): SharedPreferences {
+                val tProv = System.nanoTime()
                 // Use the prewarm result if it completed before Hilt arrived; otherwise fall back
                 // to a fresh keystore lookup.
                 val prewarm = SharedPrefsMasterKeyInitializer.prewarmResult
+                Timber.i(
+                    "[boot4360] provideEncryptedSharedPrefs enter, thread=%s, prewarm.isCompleted=%b",
+                    Thread.currentThread().name,
+                    prewarm.isCompleted,
+                )
                 val key =
                     if (prewarm.isCompleted) prewarm.getCompleted() ?: buildSecurePrefsKey()
                     else buildSecurePrefsKey()
+                Timber.i(
+                    "[boot4360] provideEncryptedSharedPrefs key obtained, elapsed=%dms",
+                    (System.nanoTime() - tProv) / 1_000_000,
+                )
                 val rawPrefs = context.getSharedPreferences(SECURE_PREFS_FILE, Context.MODE_PRIVATE)
                 val prefs = EncryptingSharedPreferences(rawPrefs, key)
                 // Eagerly probe the key: KeyPermanentlyInvalidatedException (a
@@ -91,10 +101,15 @@ internal interface MainDataModule {
                 CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
                     migrateFromEncryptedSharedPrefs(context, prefs)
                 }
+                Timber.i(
+                    "[boot4360] provideEncryptedSharedPrefs returning, total=%dms",
+                    (System.nanoTime() - tProv) / 1_000_000,
+                )
                 return prefs
             }
 
             fun recoverAndRetry(cause: Exception): SharedPreferences {
+                Timber.i("[boot4360] recoverAndRetry triggered, cause=%s", cause::class.simpleName)
                 Timber.e(cause, "SecureSharedPrefs init failed, attempting recovery")
                 val prefsFile = File(context.filesDir.parent, "shared_prefs/$SECURE_PREFS_FILE.xml")
                 if (prefsFile.exists() && !prefsFile.delete()) {

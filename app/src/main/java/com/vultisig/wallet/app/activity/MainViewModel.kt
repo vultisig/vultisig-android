@@ -94,9 +94,20 @@ constructor(
         VSSnackbarState(duration = 1.seconds, coroutineScope = CoroutineScope(Dispatchers.Default))
 
     init {
+        Timber.i("[boot4360] MainViewModel ctor done, thread=%s", Thread.currentThread().name)
         viewModelScope.safeLaunch {
+            val tInit = System.nanoTime()
+            Timber.i(
+                "[boot4360] MainViewModel init coroutine started, thread=%s",
+                Thread.currentThread().name,
+            )
             _startDestination.value = resolveStartDestination()
+            Timber.i(
+                "[boot4360] MainViewModel resolveStartDestination done, elapsed=%dms",
+                (System.nanoTime() - tInit) / 1_000_000,
+            )
             _isLoading.value = false
+            Timber.i("[boot4360] MainViewModel _isLoading=false set")
 
             snackbarFlow.collectMessage { (message, type) -> snakeBarHostState.show(message, type) }
         }
@@ -219,6 +230,10 @@ constructor(
         try {
             withTimeoutOrNull(SPLASH_VAULT_QUERY_TIMEOUT) { vaultRepository.hasVaults() }
                 ?: false.also {
+                    Timber.i(
+                        "[boot4360] hasVaults() timed out after %ds; assuming no vaults",
+                        SPLASH_VAULT_QUERY_TIMEOUT.inWholeSeconds,
+                    )
                     Timber.w(
                         "hasVaults() timed out after %ds; assuming no vaults",
                         SPLASH_VAULT_QUERY_TIMEOUT.inWholeSeconds,
@@ -227,6 +242,7 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
+            Timber.i("[boot4360] hasVaults() failed: %s", e::class.simpleName)
             Timber.e(e, "hasVaults() failed; assuming no vaults")
             false
         }
