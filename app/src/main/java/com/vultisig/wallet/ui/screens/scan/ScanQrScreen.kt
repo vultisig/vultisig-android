@@ -9,8 +9,7 @@ import android.graphics.BlurMaskFilter.Blur
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -170,7 +169,7 @@ private fun ScanQrScreen(
     DisposableEffect(Unit) { onDispose { executor.shutdownNow() } }
 
     val pickMedia =
-        rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+        rememberLauncherForActivityResult(GetContent()) { uri ->
             isPickerLaunched = false
             coroutineScope.launch {
                 if (uri != null) {
@@ -216,7 +215,7 @@ private fun ScanQrScreen(
     val onUploadQr: () -> Unit = {
         if (!isPickerLaunched) {
             isPickerLaunched = true
-            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+            pickMedia.launch("image/*")
         }
     }
 

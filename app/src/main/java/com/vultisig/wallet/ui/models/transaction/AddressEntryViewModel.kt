@@ -282,6 +282,6 @@ constructor(
     }
 
     fun setOutputAddress(address: String) {
-        addressTextFieldState.setTextAndPlaceCursorAtEnd(address)
+        addressTextFieldState.setTextAndPlaceCursorAtEnd(address.trim())
     }
 }

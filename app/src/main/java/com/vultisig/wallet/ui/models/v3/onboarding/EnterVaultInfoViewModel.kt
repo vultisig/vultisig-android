@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.models.v3.onboarding
 
 import android.content.Context
-import android.util.Patterns
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -20,6 +19,7 @@ import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContr
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CheckServerVaultExistsUseCase
 import com.vultisig.wallet.data.usecases.GenerateUniqueName
+import com.vultisig.wallet.data.usecases.IsEmailValid
 import com.vultisig.wallet.data.usecases.IsVaultNameValid
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
@@ -146,6 +146,7 @@ constructor(
     private val navigator: Navigator<Destination>,
     private val vaultRepository: VaultRepository,
     private val isNameLengthValid: IsVaultNameValid,
+    private val isEmailValid: IsEmailValid,
     private val generateUniqueName: GenerateUniqueName,
     private val referralCodeSettingsRepository: ReferralCodeSettingsRepositoryContract,
     private val keyImportRepository: KeyImportRepository,
@@ -468,8 +469,7 @@ constructor(
         }
     }
 
-    private fun validateEmail(typingEmail: CharSequence) =
-        Patterns.EMAIL_ADDRESS.matcher(typingEmail).matches()
+    private fun validateEmail(typingEmail: CharSequence) = isEmailValid(typingEmail)
 
     private fun getEmailInnerState(email: String, isEmailValid: Boolean) =
         if (email.isEmpty()) VsTextInputFieldInnerState.Default
