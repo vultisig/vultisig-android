@@ -53,6 +53,7 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
+/** ViewModel for the Circle USDC DeFi positions screen. */
 @HiltViewModel
 internal class CircleDeFiPositionsViewModel
 @Inject
@@ -88,12 +89,14 @@ constructor(
             )
         )
 
+    /** Current UI state for the DeFi positions screen. */
     val state: StateFlow<DefiUiModel> = _state.asStateFlow()
 
     private val _isRefreshing = MutableStateFlow(false)
     /** True while a user-initiated pull-to-refresh is in flight. */
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
+    /** Initializes the ViewModel with [vaultId] and starts loading positions. */
     fun setData(vaultId: String) {
         this.vaultId = vaultId
         loadBalanceVisibility()
@@ -206,14 +209,17 @@ constructor(
             }
     }
 
+    /** Updates the currently selected DeFi tab. */
     fun onTabSelected(tab: DeFiTab) {
         _state.update { currentState -> currentState.copy(selectedTab = tab.displayNameRes) }
     }
 
+    /** Navigates back. */
     fun onBackClick() {
         viewModelScope.launch { navigator.navigate(Destination.Back) }
     }
 
+    /** Persists and dismisses the Circle DeFi warning banner. */
     fun onClickCloseWarning() {
         viewModelScope.launch {
             try {
@@ -229,6 +235,7 @@ constructor(
         }
     }
 
+    /** Creates a new Circle MSCA account for the current vault. */
     fun onCreateAccount() {
         viewModelScope.launch {
             val createdAddress =
@@ -264,6 +271,7 @@ constructor(
         snackbarFlow.showMessage(StringResource(messageRes).asString(context), type)
     }
 
+    /** Navigates to the Send screen to deposit USDC into the Circle account. */
     fun onDepositAccount() {
         viewModelScope.launch {
             try {
@@ -285,6 +293,7 @@ constructor(
         }
     }
 
+    /** Navigates to the Send screen to withdraw USDC from the Circle account. */
     fun onWithdrawAccount() {
         viewModelScope.launch {
             try {
