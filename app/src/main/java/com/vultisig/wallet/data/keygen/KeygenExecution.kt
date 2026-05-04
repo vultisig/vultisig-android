@@ -6,6 +6,20 @@ import com.vultisig.wallet.data.models.TssAction
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
+ * Relay message IDs for the batched keygen / reshare protocol. These MUST match the server's
+ * `ProcessBatchKeygen` / `ProcessBatchReshare` handlers byte-for-byte, and they MUST match the
+ * matching constants on iOS (`KeygenMessageId` enum in `DKLSKeygen.swift`) and Windows. Hosted here
+ * as `internal const val` so the routing tests can verify them directly instead of asserting
+ * tautologies against a local copy.
+ */
+internal const val ROOT_ECDSA_MESSAGE_ID = "p-ecdsa"
+internal const val ROOT_EDDSA_MESSAGE_ID = "p-eddsa"
+internal const val ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID = "ecdsa_key_import"
+internal const val ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID = "eddsa_key_import"
+internal const val ROOT_MLDSA_EXCHANGE_MESSAGE_ID = "p-mldsa"
+internal const val ROOT_MLDSA_SETUP_MESSAGE_ID = "p-mldsa-setup"
+
+/**
  * Relay routing for a single keygen ceremony.
  *
  * [exchangeMessageId] isolates the round-trip TSS message stream. [setupMessageId] isolates the

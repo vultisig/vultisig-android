@@ -15,6 +15,12 @@ import com.vultisig.wallet.data.keygen.DKLSKeygen
 import com.vultisig.wallet.data.keygen.KeygenExecutor
 import com.vultisig.wallet.data.keygen.KeygenRouting
 import com.vultisig.wallet.data.keygen.MldsaKeygen
+import com.vultisig.wallet.data.keygen.ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID
+import com.vultisig.wallet.data.keygen.ROOT_ECDSA_MESSAGE_ID
+import com.vultisig.wallet.data.keygen.ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID
+import com.vultisig.wallet.data.keygen.ROOT_EDDSA_MESSAGE_ID
+import com.vultisig.wallet.data.keygen.ROOT_MLDSA_EXCHANGE_MESSAGE_ID
+import com.vultisig.wallet.data.keygen.ROOT_MLDSA_SETUP_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.SchnorrKeygen
 import com.vultisig.wallet.data.keygen.mergeReshareKeyshares
 import com.vultisig.wallet.data.keygen.selectKeygenExecutor
@@ -169,17 +175,6 @@ constructor(
 
     private val isReshareMode: Boolean = action == TssAction.ReShare
 
-    private companion object {
-        // Relay message IDs must match the server batch keygen protocol prefixes.
-        // Server uses "p-ecdsa", "p-eddsa", "p-mldsa" in ProcessBatchKeygen.
-        const val ROOT_ECDSA_MESSAGE_ID = "p-ecdsa"
-        const val ROOT_EDDSA_MESSAGE_ID = "p-eddsa"
-        const val ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID = "ecdsa_key_import"
-        const val ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID = "eddsa_key_import"
-        const val ROOT_MLDSA_EXCHANGE_MESSAGE_ID = "p-mldsa"
-        const val ROOT_MLDSA_SETUP_MESSAGE_ID = "p-mldsa-setup"
-    }
-
     init {
         generateKey()
     }
@@ -192,12 +187,31 @@ constructor(
         shouldUseNewKeygenExecution(
             action = action,
             libType = libType,
-            // Either the local feature flag OR an explicit opt-in from the initiator's QR
-            // payload steers this peer onto the batched path. The QR opt-in is necessary because
-            // the initiator's flag must override every joiner's local flag so all peers route
-            // through the same relay channels and FastVault endpoint.
-            isParallelKeygenFeatureEnabled = featureFlags.isTssBatchEnabled || args.isTssBatch,
+            isParallelKeygenFeatureEnabled = isParallelKeygenEnabledForThisCeremony(),
         )
+
+    /**
+     * Decides whether THIS peer takes the parallel / batch path for the current ceremony.
+     *
+     * For reshare we trust the initiator's QR opt-in EXCLUSIVELY (matches iOS behavior in
+     * `KeygenViewModel.swift` — iOS sets `useParallelPath = self.isTssBatch` from the deserialised
+     * QR field, never OR'd with a local toggle). This avoids a cross-version deadlock where an iOS
+     * initiator with the toggle off (default) sends `is_tss_batch=false`, but an Android joiner
+     * with the local override forced on would otherwise read `localFlag || false = true` and poll
+     * the batched relay namespaces while iOS polled the legacy ones.
+     *
+     * For keygen / migrate / key-import we keep the OR fallback because Android does not yet carry
+     * `is_tss_batch` on the `KeygenMessage` proto on the read side, so a joiner has no QR signal to
+     * trust — its local feature flag is the only available decision input. (Reading the
+     * `is_tss_batch` field on `KeygenMessage` is a separate follow-up that will let us collapse to
+     * a single QR-driven rule.)
+     */
+    private fun isParallelKeygenEnabledForThisCeremony(): Boolean =
+        if (action == TssAction.ReShare) {
+            args.isTssBatch
+        } else {
+            featureFlags.isTssBatchEnabled || args.isTssBatch
+        }
 
     private fun createDklsKeygen(localUi: String, action: TssAction = this.action): DKLSKeygen =
         DKLSKeygen(
@@ -448,6 +462,10 @@ constructor(
                             )
                             .awaitAll()
                     }
+                    // Both ceremonies finished concurrently. Snap the progress indicator forward
+                    // so the user doesn't see it stuck on `ReshareECDSA` (33%) for the whole
+                    // parallel run before jumping straight to Success.
+                    updateStep(KeygenState.ReshareEdDSA)
                 } else {
                     dklsKeygen.reshareWithRetry(0)
                     updateStep(KeygenState.ReshareEdDSA)

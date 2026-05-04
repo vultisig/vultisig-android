@@ -11,6 +11,14 @@ import org.junit.jupiter.api.Test
  * `ProcessBatchReshare` protocol prefixes — the same `p-ecdsa` / `p-eddsa` constants iOS PR #4139
  * and Windows PR #3753 already established as the cross-platform wire contract.
  *
+ * The constants under test are the SAME `internal const val` declarations the production code
+ * imports from `KeygenExecution.kt`. A previous version of this test redeclared the strings locally
+ * and asserted them against themselves — a tautology that would have passed if someone accidentally
+ * renamed the production constants. Now we hold both ends together: any rename in production breaks
+ * this file, the assertion below pins the exact wire string, and the
+ * `KeygenRouting.from(setupMessageId = ROOT_ECDSA_MESSAGE_ID, ...)` factories are exercised on the
+ * same constants `KeygenViewModel.startKeygenDkls` uses at runtime.
+ *
  * Reshare differs from keygen on a critical point: each protocol creates its own setup message, so
  * **both** setup AND exchange must be namespaced (keygen shares the DKLS setup namespace, but
  * reshare cannot). These tests pin that down so future refactors don't accidentally re-share the
@@ -18,25 +26,57 @@ import org.junit.jupiter.api.Test
  */
 class ReshareRoutingServerMatchTest {
 
+    // -- Wire-string pin: production constants must match the server contract verbatim --
+
+    @Test
+    fun `ROOT_ECDSA_MESSAGE_ID is exactly "p-ecdsa" — wire contract with server`() {
+        assertEquals("p-ecdsa", ROOT_ECDSA_MESSAGE_ID)
+    }
+
+    @Test
+    fun `ROOT_EDDSA_MESSAGE_ID is exactly "p-eddsa" — wire contract with server`() {
+        assertEquals("p-eddsa", ROOT_EDDSA_MESSAGE_ID)
+    }
+
+    @Test
+    fun `ROOT_MLDSA_EXCHANGE_MESSAGE_ID is exactly "p-mldsa"`() {
+        assertEquals("p-mldsa", ROOT_MLDSA_EXCHANGE_MESSAGE_ID)
+    }
+
+    @Test
+    fun `ROOT_MLDSA_SETUP_MESSAGE_ID is exactly "p-mldsa-setup"`() {
+        assertEquals("p-mldsa-setup", ROOT_MLDSA_SETUP_MESSAGE_ID)
+    }
+
+    @Test
+    fun `ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID is exactly "ecdsa_key_import"`() {
+        assertEquals("ecdsa_key_import", ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID)
+    }
+
+    @Test
+    fun `ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID is exactly "eddsa_key_import"`() {
+        assertEquals("eddsa_key_import", ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID)
+    }
+
     // -- ECDSA reshare routing --
 
     @Test
-    fun `ECDSA reshare uses p-ecdsa as exchange message ID`() {
+    fun `ECDSA reshare routing surfaces production p-ecdsa as exchange ID`() {
         val routing =
             KeygenRouting.from(
-                setupMessageId = ECDSA_MESSAGE_ID,
-                exchangeMessageId = ECDSA_MESSAGE_ID,
+                setupMessageId = ROOT_ECDSA_MESSAGE_ID,
+                exchangeMessageId = ROOT_ECDSA_MESSAGE_ID,
             )
 
         assertEquals("p-ecdsa", routing.exchangeMessageId)
     }
 
     @Test
-    fun `ECDSA reshare uses p-ecdsa as setup message ID — unlike keygen which shares DKLS setup`() {
+    fun `ECDSA reshare routing surfaces production p-ecdsa as setup ID — unlike keygen`() {
         val routing =
             KeygenRouting.from(
-                setupMessageId = ECDSA_MESSAGE_ID,
-                exchangeMessageId = ECDSA_MESSAGE_ID,
+                setupMessageId = ROOT_ECDSA_MESSAGE_ID,
+                exchangeMessageId = ROOT_ECDSA_MESSAGE_ID,
             )
 
         assertEquals("p-ecdsa", routing.setupMessageId)
@@ -46,8 +86,8 @@ class ReshareRoutingServerMatchTest {
     fun `ECDSA reshare setup and exchange route through the same namespace`() {
         val routing =
             KeygenRouting.from(
-                setupMessageId = ECDSA_MESSAGE_ID,
-                exchangeMessageId = ECDSA_MESSAGE_ID,
+                setupMessageId = ROOT_ECDSA_MESSAGE_ID,
+                exchangeMessageId = ROOT_ECDSA_MESSAGE_ID,
             )
 
         assertEquals(routing.setupMessageId, routing.exchangeMessageId)
@@ -56,22 +96,22 @@ class ReshareRoutingServerMatchTest {
     // -- EdDSA reshare routing --
 
     @Test
-    fun `EdDSA reshare uses p-eddsa as exchange message ID`() {
+    fun `EdDSA reshare routing surfaces production p-eddsa as exchange ID`() {
         val routing =
             KeygenRouting.from(
-                setupMessageId = EDDSA_MESSAGE_ID,
-                exchangeMessageId = EDDSA_MESSAGE_ID,
+                setupMessageId = ROOT_EDDSA_MESSAGE_ID,
+                exchangeMessageId = ROOT_EDDSA_MESSAGE_ID,
             )
 
         assertEquals("p-eddsa", routing.exchangeMessageId)
     }
 
     @Test
-    fun `EdDSA reshare uses p-eddsa as setup message ID`() {
+    fun `EdDSA reshare routing surfaces production p-eddsa as setup ID`() {
         val routing =
             KeygenRouting.from(
-                setupMessageId = EDDSA_MESSAGE_ID,
-                exchangeMessageId = EDDSA_MESSAGE_ID,
+                setupMessageId = ROOT_EDDSA_MESSAGE_ID,
+                exchangeMessageId = ROOT_EDDSA_MESSAGE_ID,
             )
 
         assertEquals("p-eddsa", routing.setupMessageId)
@@ -81,8 +121,8 @@ class ReshareRoutingServerMatchTest {
     fun `EdDSA reshare setup and exchange route through the same namespace`() {
         val routing =
             KeygenRouting.from(
-                setupMessageId = EDDSA_MESSAGE_ID,
-                exchangeMessageId = EDDSA_MESSAGE_ID,
+                setupMessageId = ROOT_EDDSA_MESSAGE_ID,
+                exchangeMessageId = ROOT_EDDSA_MESSAGE_ID,
             )
 
         assertEquals(routing.setupMessageId, routing.exchangeMessageId)
@@ -94,13 +134,13 @@ class ReshareRoutingServerMatchTest {
     fun `ECDSA and EdDSA reshare use different namespaces so traffic does not collide`() {
         val ecdsa =
             KeygenRouting.from(
-                setupMessageId = ECDSA_MESSAGE_ID,
-                exchangeMessageId = ECDSA_MESSAGE_ID,
+                setupMessageId = ROOT_ECDSA_MESSAGE_ID,
+                exchangeMessageId = ROOT_ECDSA_MESSAGE_ID,
             )
         val eddsa =
             KeygenRouting.from(
-                setupMessageId = EDDSA_MESSAGE_ID,
-                exchangeMessageId = EDDSA_MESSAGE_ID,
+                setupMessageId = ROOT_EDDSA_MESSAGE_ID,
+                exchangeMessageId = ROOT_EDDSA_MESSAGE_ID,
             )
 
         assertNotEquals(ecdsa.exchangeMessageId, eddsa.exchangeMessageId)
@@ -111,13 +151,13 @@ class ReshareRoutingServerMatchTest {
     fun `both reshare protocols produce non-null setup and exchange IDs`() {
         val ecdsa =
             KeygenRouting.from(
-                setupMessageId = ECDSA_MESSAGE_ID,
-                exchangeMessageId = ECDSA_MESSAGE_ID,
+                setupMessageId = ROOT_ECDSA_MESSAGE_ID,
+                exchangeMessageId = ROOT_ECDSA_MESSAGE_ID,
             )
         val eddsa =
             KeygenRouting.from(
-                setupMessageId = EDDSA_MESSAGE_ID,
-                exchangeMessageId = EDDSA_MESSAGE_ID,
+                setupMessageId = ROOT_EDDSA_MESSAGE_ID,
+                exchangeMessageId = ROOT_EDDSA_MESSAGE_ID,
             )
 
         assertNotNull(ecdsa.setupMessageId)
@@ -134,13 +174,5 @@ class ReshareRoutingServerMatchTest {
 
         assertNull(routing.setupMessageId)
         assertNull(routing.exchangeMessageId)
-    }
-
-    private companion object {
-        // These values MUST match the private companion constants in KeygenViewModel and the
-        // server's ProcessBatchReshare handler. They are the same identifiers used by batch
-        // keygen — the server reuses its parallel-protocol prefixes for reshare too.
-        const val ECDSA_MESSAGE_ID = "p-ecdsa"
-        const val EDDSA_MESSAGE_ID = "p-eddsa"
     }
 }
