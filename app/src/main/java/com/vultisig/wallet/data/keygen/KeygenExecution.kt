@@ -34,8 +34,9 @@ internal data class KeygenRouting(val exchangeMessageId: String?, val setupMessa
  *
  * The decision is intentionally all-or-nothing for the currently supported flows:
  * - flag off: keep the legacy path everywhere
- * - flag on: opt into the new path for DKLS root keygen/migrate, key import, MLDSA, and DKLS
- *   reshare (matches iOS PR #4139 + Windows PR #3753)
+ * - flag on: opt into the new path for DKLS root keygen/migrate, key import, MLDSA, and reshare on
+ *   DKLS or KeyImport vaults (matches iOS PR #4139 + Windows PR #3753 — both treat KeyImport vaults
+ *   as batch-eligible because their root keyshares are also DKLS / Schnorr).
  */
 internal fun shouldUseNewKeygenExecution(
     action: TssAction,
@@ -48,7 +49,7 @@ internal fun shouldUseNewKeygenExecution(
     return isMldsaSingleKeygen(action) ||
         isKeyImportFlow(action, libType) ||
         isDklsRootKeygen(action, libType) ||
-        isDklsReshare(action, libType)
+        isBatchEligibleReshare(action, libType)
 }
 
 private fun isMldsaSingleKeygen(action: TssAction): Boolean = action == TssAction.SingleKeygen
@@ -59,8 +60,14 @@ private fun isKeyImportFlow(action: TssAction, libType: SigningLibType): Boolean
 private fun isDklsRootKeygen(action: TssAction, libType: SigningLibType): Boolean =
     libType == SigningLibType.DKLS && (action == TssAction.KEYGEN || action == TssAction.Migrate)
 
-private fun isDklsReshare(action: TssAction, libType: SigningLibType): Boolean =
-    libType == SigningLibType.DKLS && action == TssAction.ReShare
+/**
+ * Reshare is batch-eligible when the vault's root keyshares are DKLS (i.e. fresh DKLS vaults) or
+ * KeyImport (seed-phrase imported, also using DKLS / Schnorr internally). GG20 reshare must keep
+ * the legacy path because the GG20 protocol has its own qualifying ceremony semantics.
+ */
+internal fun isBatchEligibleReshare(action: TssAction, libType: SigningLibType): Boolean =
+    action == TssAction.ReShare &&
+        (libType == SigningLibType.DKLS || libType == SigningLibType.KeyImport)
 
 /**
  * Shared retry wrapper for keygen ceremonies.

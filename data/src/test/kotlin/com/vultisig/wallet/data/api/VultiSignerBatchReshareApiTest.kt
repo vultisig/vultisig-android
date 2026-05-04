@@ -180,7 +180,8 @@ class VultiSignerBatchReshareApiTest {
     private suspend fun captureRequestBody(block: suspend (VultiSignerApi) -> Unit): String {
         val request = captureRequest(block)
         val channel = request.body as io.ktor.http.content.OutgoingContent.ByteArrayContent
-        return String(channel.bytes())
+        // Decode explicitly as UTF-8 so the test is deterministic across environments.
+        return String(channel.bytes(), Charsets.UTF_8)
     }
 
     private fun vultiSignerApi(onRequest: (HttpRequestData) -> Unit): VultiSignerApi {

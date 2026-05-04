@@ -451,11 +451,29 @@ constructor(
         vault.pubKeyEDDSA = keyshareEddsa.pubKey
         vault.hexChainCode = keyshareEcdsa.chaincode
 
+        // For reshare we must preserve any pre-existing keyshares the protocol does not
+        // touch — most importantly the MLDSA share added later via SingleKeygen — so the user
+        // doesn't silently lose their post-quantum key. The reshare protocol only regenerates
+        // ECDSA + EdDSA, so everything else carries over verbatim.
+        val preservedKeyshares =
+            if (action == TssAction.ReShare) {
+                vault.keyshares.filterNot { existing ->
+                    existing.pubKey == vault.pubKeyECDSA || existing.pubKey == vault.pubKeyEDDSA
+                }
+            } else {
+                emptyList()
+            }
+
+        vault.pubKeyECDSA = keyshareEcdsa.pubKey
+        vault.pubKeyEDDSA = keyshareEddsa.pubKey
+        vault.hexChainCode = keyshareEcdsa.chaincode
+
         val newKeyshares =
             mutableListOf(
                 KeyShare(pubKey = keyshareEcdsa.pubKey, keyShare = keyshareEcdsa.keyshare),
                 KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
             )
+        newKeyshares.addAll(preservedKeyshares)
 
         vault.keyshares = newKeyshares
 

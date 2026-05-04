@@ -59,6 +59,37 @@ class KeygenRetryRegressionTest {
     }
 
     @Test
+    fun `KeyImport vault reshare opts into the new path when the flag is on`() {
+        // Mirrors iOS PR #4139: imported seed-phrase vaults also use DKLS / Schnorr threshold
+        // protocols at the root level, so they are batch-eligible for reshare.
+        val isEnabled =
+            shouldUseNewKeygenExecution(
+                action = TssAction.ReShare,
+                libType = SigningLibType.KeyImport,
+                isParallelKeygenFeatureEnabled = true,
+            )
+
+        assertEquals(true, isEnabled)
+    }
+
+    @Test
+    fun `isBatchEligibleReshare matches iOS supportsBatch predicate`() {
+        // iOS: `vault.libType == .DKLS || vault.libType == .KeyImport`
+        assertEquals(true, isBatchEligibleReshare(TssAction.ReShare, SigningLibType.DKLS))
+        assertEquals(true, isBatchEligibleReshare(TssAction.ReShare, SigningLibType.KeyImport))
+        assertEquals(false, isBatchEligibleReshare(TssAction.ReShare, SigningLibType.GG20))
+    }
+
+    @Test
+    fun `isBatchEligibleReshare rejects non-reshare actions`() {
+        // Migrate shares the proto with reshare but is NOT batch-eligible.
+        assertEquals(false, isBatchEligibleReshare(TssAction.Migrate, SigningLibType.DKLS))
+        assertEquals(false, isBatchEligibleReshare(TssAction.KEYGEN, SigningLibType.DKLS))
+        assertEquals(false, isBatchEligibleReshare(TssAction.KeyImport, SigningLibType.KeyImport))
+        assertEquals(false, isBatchEligibleReshare(TssAction.SingleKeygen, SigningLibType.DKLS))
+    }
+
+    @Test
     fun `reshare stays on the legacy path when the feature flag is off`() {
         val isEnabled =
             shouldUseNewKeygenExecution(

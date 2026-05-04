@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.sha256
+import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
@@ -339,10 +340,9 @@ constructor(
                     deviceCount = args.deviceCount,
                     // Mirrors the QR opt-in: when the initiator chose batched reshare on
                     // FastVault, every peer (including this one) must follow the same path.
-                    isTssBatch =
-                        args.action == TssAction.ReShare &&
-                            isTssBatchEnabled &&
-                            libType == SigningLibType.DKLS,
+                    // Both DKLS and KeyImport vaults qualify because they share the same root
+                    // ECDSA / EdDSA threshold protocols — matches iOS / Windows.
+                    isTssBatch = isBatchEligibleReshare(args.action, libType) && isTssBatchEnabled,
                 ),
                 opts =
                     NavigationOptions(
@@ -630,10 +630,10 @@ constructor(
                                     libType = libType.toProto(),
                                     // Only opt the reshare ceremony into batch mode; migrate
                                     // shares the same proto but is excluded from batched reshare.
+                                    // Both DKLS and KeyImport vaults qualify (matches iOS).
                                     isTssBatch =
-                                        args.action == TssAction.ReShare &&
-                                            isTssBatchEnabled &&
-                                            libType == SigningLibType.DKLS,
+                                        isBatchEligibleReshare(args.action, libType) &&
+                                            isTssBatchEnabled,
                                 )
                             )
                         )
@@ -672,7 +672,7 @@ constructor(
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
             when (args.action) {
                 TssAction.ReShare -> {
-                    if (isTssBatchEnabled && libType == SigningLibType.DKLS) {
+                    if (isTssBatchEnabled && isBatchEligibleReshare(args.action, libType)) {
                         require(pubKeyEcdsa.isNotBlank()) {
                             "Reshare requires the existing vault's ECDSA public key"
                         }

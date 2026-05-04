@@ -245,6 +245,32 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
         }
 
     @Test
+    fun `reshare on a KeyImport vault uses the batch endpoint when the flag is on`() =
+        runTest(testDispatcher) {
+            // iOS PR #4139 includes KeyImport in `supportsBatch` because imported seed-phrase
+            // vaults still use DKLS / Schnorr at the root level. Android must match or peers
+            // running iOS / Windows will deadlock against an Android initiator that fell back
+            // to the legacy `/reshare` endpoint while joiners follow the QR's `is_tss_batch=true`.
+            val keyImportVault = existingVault.copy(libType = SigningLibType.KeyImport)
+            coEvery { vaultRepository.get(vaultId) } returns keyImportVault
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isTssBatchEnabled = true)
+
+            stubReshareRoute()
+            createViewModel()
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) {
+                vultiSignerRepository.joinBatchReshare(
+                    match<BatchReshareRequestJson> {
+                        it.publicKeyEcdsa == keyImportVault.pubKeyECDSA
+                    }
+                )
+            }
+            coVerify(exactly = 0) { vultiSignerRepository.joinReshare(any()) }
+        }
+
+    @Test
     fun `reshare on a GG20 vault stays on the legacy endpoint even with the flag on`() =
         runTest(testDispatcher) {
             val gg20Vault = existingVault.copy(libType = SigningLibType.GG20)
