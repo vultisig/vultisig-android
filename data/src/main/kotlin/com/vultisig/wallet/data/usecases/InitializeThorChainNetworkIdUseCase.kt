@@ -18,13 +18,7 @@ constructor(
 ) : InitializeThorChainNetworkIdUseCase {
 
     override suspend fun invoke() {
-        val vaults = vaultRepository.getAll()
-        if (vaults.isEmpty()) {
-            Timber.d("Skipping THORChain network id init: no vaults")
-            return
-        }
-
-        if (vaults.none { vault -> vault.coins.any { it.chain == Chain.ThorChain } }) {
+        if (!vaultRepository.hasAnyCoinOnChain(Chain.ThorChain)) {
             Timber.d("Skipping THORChain network id init: no vault uses THORChain")
             return
         }

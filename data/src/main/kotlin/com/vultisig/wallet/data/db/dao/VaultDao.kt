@@ -44,6 +44,9 @@ interface VaultDao {
 
     @Query("SELECT COUNT(*) > 0 FROM vault") suspend fun hasVaults(): Boolean
 
+    @Query("SELECT EXISTS(SELECT 1 FROM coin WHERE chain = :chainId)")
+    suspend fun hasCoinOnChain(chainId: String): Boolean
+
     @Query("SELECT COUNT(*) FROM vault WHERE name = :name AND id != :excludeId")
     suspend fun countByNameExcluding(name: String, excludeId: String): Int
 
