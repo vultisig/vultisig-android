@@ -417,6 +417,8 @@
     <string name="deposit_form_unstake_percentage_hint">Voer percentage in om te unstaken</string>
     <string name="scan_qr_screen_title">QR-code scannen</string>
     <string name="verify_transaction_function_inputs_title">Functie-ingangen</string>
+    <string name="dapp_hero_unverified_function_title">Niet-geverifieerde functie</string>
+    <string name="dapp_hero_unverified_function_subtitle">Bekijk de details hieronder voordat je ondertekent</string>
     <string name="send_shares_currency_hint">Voer aandelen in</string>
     <string name="send_error_max_shares">Bedrag mag het saldo niet overschrijden</string>
     <string name="deposit_form_shares_title">Aandelen (Saldo: %1$s)</string>

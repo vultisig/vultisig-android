@@ -10,9 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -33,6 +31,7 @@ import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.theme.Theme
 
+/** Tab content showing bonded node positions with a summary header and active nodes list. */
 @Composable
 internal fun BondedTabContent(
     bondToNodeOnClick: () -> Unit,
@@ -42,10 +41,7 @@ internal fun BondedTabContent(
     coinName: String = "RUNE",
     coinIconRes: Int = R.drawable.rune,
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         HeaderDeFiWidget(
             title = stringResource(R.string.total_bonded_coin, coinName),
             iconRes = coinIconRes,
