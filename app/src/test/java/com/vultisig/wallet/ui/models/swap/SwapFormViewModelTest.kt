@@ -540,10 +540,15 @@ internal class SwapFormViewModelTest {
 
             vm.flipSelectedTokens()
 
-            assertEquals("0", vm.uiState.value.estimatedDstTokenValue)
-            assertEquals("0", vm.uiState.value.estimatedDstFiatValue)
-            assertEquals("0", vm.uiState.value.srcFiatValue)
-            assertNull(vm.uiState.value.formError)
+            val state = vm.uiState.value
+            assertEquals("0", state.estimatedDstTokenValue)
+            assertEquals("0", state.estimatedDstFiatValue)
+            assertEquals("0", state.srcFiatValue)
+            assertNull(state.formError)
+            // hasQuote must drop on flip, otherwise the fee block stays on screen during the
+            // 450ms debounce while collectTotalFee can still combine the new pair's gas with
+            // the prior pair's swapFeeFiat.
+            assertFalse(state.hasQuote)
         }
 
     // endregion
@@ -989,6 +994,11 @@ internal class SwapFormViewModelTest {
             assertFalse(state.isLoading)
             assertFalse(state.hasQuote)
             assertNull(state.expiredAt)
+            // Gas fields are tied to the source token (calculateGas), not the quote, so they
+            // must survive a quote exception — clearing them would leave the row empty until
+            // selectedSrc changes again.
+            assertEquals("0.001 ETH", state.networkFee)
+            assertEquals("$2.00", state.networkFeeFiat)
         }
 
     @Test
@@ -1035,6 +1045,11 @@ internal class SwapFormViewModelTest {
             assertFalse(state.isSwapDisabled)
             assertFalse(state.isLoading)
             assertNotNull(state.expiredAt)
+            // Gas fields are populated by calculateGas (selectedSrc-scoped) and are not
+            // touched by the SwapException catch nor repopulated by the success path. A
+            // regression that re-introduces clearing in resetQuoteState would surface here.
+            assertEquals("0.001 ETH", state.networkFee)
+            assertEquals("$2.00", state.networkFeeFiat)
         }
 
     @Test

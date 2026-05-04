@@ -688,16 +688,7 @@ constructor(
     }
 
     private fun resetQuoteState() {
-        quote = null
-        provider = null
-        uiState.update {
-            it.copy(
-                estimatedDstTokenValue = "0",
-                estimatedDstFiatValue = "0",
-                srcFiatValue = "0",
-                formError = null,
-            )
-        }
+        resetQuoteState(error = null, cause = null, tag = null)
     }
 
     fun selectSrcPercentage(percentage: Float) {
@@ -1008,15 +999,17 @@ constructor(
             }
     }
 
-    private fun resetQuoteState(error: UiText, cause: Throwable, tag: String) {
-        // The prior quote's refresh timer would otherwise fire mid-error and re-run
+    private fun resetQuoteState(error: UiText?, cause: Throwable?, tag: String?) {
+        // The prior quote's refresh timer would otherwise fire mid-flip/mid-error and re-run
         // calculateFees against the same invalid amount, briefly re-exposing the fee block.
         refreshQuoteJob?.cancel()
         refreshQuoteJob = null
         this@SwapFormViewModel.quote = null
+        this@SwapFormViewModel.provider = null
         // collectTotalFee() combines this with estimatedNetworkFeeFiatValue. Resetting it
         // to null lets filterNotNull() short-circuit so a later calculateGas() update can't
-        // write a (newGas + staleSwap) combination back into state.totalFee.
+        // write a (newGas + staleSwap) combination back into state.totalFee — the same race
+        // that triggers on flipSelectedTokens since selectedSrc changes synchronously.
         swapFeeFiat.value = null
         // networkFee/networkFeeFiat are tied to the source token (calculateGas), not to a
         // specific quote, so we deliberately leave them alone — resetting them would leave
@@ -1041,7 +1034,9 @@ constructor(
                 expiredAt = null,
             )
         }
-        Timber.e(cause, tag)
+        if (cause != null) {
+            Timber.e(cause, tag)
+        }
     }
 
     fun hideError() {
