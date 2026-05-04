@@ -52,6 +52,9 @@ internal fun KeysignView(
     showSaveToAddressBook: Boolean,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+        if (state.isInProgress) {
+            KeepScreenOn()
+        }
         when (state) {
             is KeysignState.KeysignFinished -> {
                 when (transactionTypeUiModel) {
@@ -116,8 +119,6 @@ internal fun KeysignView(
             }
 
             else -> {
-                KeepScreenOn()
-
                 KeysignRiveProgress(progress = state.progress)
             }
         }
