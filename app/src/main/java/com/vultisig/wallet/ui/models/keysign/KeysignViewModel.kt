@@ -83,17 +83,34 @@ import vultisig.keysign.v1.CustomMessagePayload
 
 private const val DEFAULT_ETHEREUM_DERIVATION_PATH = "m/44'/60'/0'/0/0"
 
+/** UI state for an in-progress or completed keysign session. */
 internal sealed class KeysignState {
+    /** Initial state while the native signing instance is being constructed. */
     data object CreatingInstance : KeysignState()
 
+    /** Active state while ECDSA (DKLS) signing messages are being exchanged. */
     data object KeysignECDSA : KeysignState()
 
+    /** Active state while EdDSA (Schnorr) signing messages are being exchanged. */
     data object KeysignEdDSA : KeysignState()
 
+    /** Active state while ML-DSA (Dilithium) signing messages are being exchanged. */
     data object KeysignMLDSA : KeysignState()
 
+    /**
+     * Emitted when a keysign peer has been silent for ~10 s.
+     *
+     * @property missingPeers Party IDs that have not sent any messages in the current attempt.
+     * @property signingProgress Rive progress value at the time silence was detected (0.33 for
+     *   ECDSA, 0.66 for EdDSA/MLDSA); used to avoid animating the progress indicator backward.
+     */
+    data class WaitingForPeer(val missingPeers: List<String>, val signingProgress: Float = 0.33f) :
+        KeysignState()
+
+    /** Terminal state when signing and broadcast have completed. */
     data class KeysignFinished(val transactionStatus: TransactionStatus) : KeysignState()
 
+    /** Terminal state when signing failed with an unrecoverable error. */
     data class Error(val errorMessage: UiText) : KeysignState()
 
     val isInProgress: Boolean
@@ -102,7 +119,8 @@ internal sealed class KeysignState {
                 CreatingInstance,
                 KeysignECDSA,
                 KeysignEdDSA,
-                KeysignMLDSA -> true
+                KeysignMLDSA,
+                is WaitingForPeer -> true
                 is KeysignFinished,
                 is Error -> false
             }
@@ -116,32 +134,44 @@ internal val KeysignState.progress: Float
             is KeysignState.KeysignEdDSA -> 0.66f
             // EdDSA and MLDSA are mutually exclusive signing paths, so both map to 66%
             is KeysignState.KeysignMLDSA -> 0.66f
+            is KeysignState.WaitingForPeer -> this.signingProgress
             is KeysignState.KeysignFinished -> 1f
             // Dead code: Error state is rendered by a separate branch in KeysignView
             is KeysignState.Error -> 0f
         }
 
+/** Discriminated union of transaction types shown in the keysign confirmation UI. */
 internal sealed interface TransactionTypeUiModel {
+    /** A coin-transfer transaction. */
     data class Send(val tx: TransactionDetailsUiModel) : TransactionTypeUiModel
 
+    /** A cross-chain or DEX swap. */
     data class Swap(val swapTransactionUiModel: SwapTransactionUiModel) : TransactionTypeUiModel
 
+    /** A protocol deposit (e.g. THORChain, Maya). */
     data class Deposit(val depositTransactionUiModel: DepositTransactionUiModel) :
         TransactionTypeUiModel
 
+    /** A custom message signing request. */
     data class SignMessage(val model: SignMessageTransactionUiModel) : TransactionTypeUiModel
 }
 
+/** Lifecycle status of a broadcast transaction as observed by the polling service. */
 sealed interface TransactionStatus {
+    /** Transaction has been submitted to the network. */
     data object Broadcasted : TransactionStatus
 
+    /** Transaction is in the mempool but not yet included in a block. */
     data object Pending : TransactionStatus
 
+    /** Transaction has been confirmed on-chain. */
     data object Confirmed : TransactionStatus
 
+    /** Transaction failed or was rejected. */
     data class Failed(val cause: UiText) : TransactionStatus
 }
 
+/** ViewModel that drives the keysign screen: starts the TSS signing flow and tracks its state. */
 internal class KeysignViewModel
 @AssistedInject
 constructor(
@@ -193,15 +223,23 @@ constructor(
         ): KeysignViewModel
     }
 
+    /** Current signing UI state; observed by the Compose screen. */
     val currentState: MutableStateFlow<KeysignState> =
         MutableStateFlow(KeysignState.CreatingInstance)
 
+    /** Primary transaction hash after broadcast, or empty before broadcast. */
     val txHash = MutableStateFlow("")
+    /** ERC-20 approval transaction hash, or empty when not applicable. */
     val approveTxHash = MutableStateFlow("")
+    /** Explorer URL for [txHash], or empty before broadcast. */
     val txLink = MutableStateFlow("")
+    /** Explorer URL for [approveTxHash], or empty when not applicable. */
     val approveTxLink = MutableStateFlow("")
+    /** Deep-link to the swap progress page, or null when not a swap. */
     val swapProgressLink = MutableStateFlow<String?>(null)
+    /** True when the destination address is not yet saved and is not another vault. */
     val showSaveToAddressBook = MutableStateFlow(false)
+    /** Transaction UI model, potentially enriched after signing completes. */
     val resolvedTransactionUiModel = MutableStateFlow(transactionTypeUiModel)
 
     private var tssInstance: ServiceImpl? = null
@@ -258,6 +296,7 @@ constructor(
         }
     }
 
+    /** Begins the TSS signing flow for the configured vault and payload. */
     fun startKeysign() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -324,6 +363,10 @@ constructor(
                             publicKeyOverride = ecdsaPublicKeyOverride,
                             sessionApi = sessionApi,
                             encryption = encryption,
+                            onWaitingForPeers = { peers ->
+                                currentState.value = KeysignState.WaitingForPeer(peers)
+                            },
+                            onPeersResumed = { currentState.value = KeysignState.KeysignECDSA },
                         )
 
                     dkls.keysignWithRetry()
@@ -349,6 +392,10 @@ constructor(
                             publicKeyOverride = eddsaPublicKeyOverride,
                             sessionApi = sessionApi,
                             encryption = encryption,
+                            onWaitingForPeers = { peers ->
+                                currentState.value = KeysignState.WaitingForPeer(peers, 0.66f)
+                            },
+                            onPeersResumed = { currentState.value = KeysignState.KeysignEdDSA },
                         )
 
                     schnorr.keysignWithRetry()
@@ -381,6 +428,10 @@ constructor(
                             isInitiateDevice = isInitiatingDevice,
                             sessionApi = sessionApi,
                             encryption = encryption,
+                            onWaitingForPeers = { peers ->
+                                currentState.value = KeysignState.WaitingForPeer(peers, 0.66f)
+                            },
+                            onPeersResumed = { currentState.value = KeysignState.KeysignMLDSA },
                         )
 
                     mldsa.keysignWithRetry()
@@ -704,11 +755,13 @@ constructor(
             }
     }
 
+    /** Cancels the transaction-status polling job and cleans up the background service. */
     fun stopPolling() {
         pollingTxStatusJob?.cancel()
         transactionStatusServiceManager.stopPolling()
     }
 
+    /** Navigates to the home screen (or back) depending on whether the flow completed normally. */
     fun navigateToHome() {
         viewModelScope.launch {
             if (isNavigateToHome) {
@@ -719,6 +772,7 @@ constructor(
         }
     }
 
+    /** Opens the address-book entry form pre-populated with the send destination. */
     fun navigateToAddressBook() {
         val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
         sendTx?.tx?.let { tx ->
@@ -744,6 +798,7 @@ constructor(
             TransactionResult.Pending -> TransactionStatus.Pending
         }
 
+    /** Stops polling and cleans up resources when the ViewModel is destroyed. */
     override fun onCleared() {
         stopPolling()
         transactionStatusServiceManager.cleanup()

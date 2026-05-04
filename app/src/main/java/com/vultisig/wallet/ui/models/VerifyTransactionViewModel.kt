@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -63,6 +64,14 @@ internal data class TransactionDetailsUiModel(
     val functionSignature: String? = null,
     val functionInputs: String? = null,
     val functionName: String? = null,
+    /**
+     * Resolved hero content for the dApp signing screens. Populated by [BuildHeroContentUseCase]
+     * once the Blockaid simulation completes. When non-null, screens render this in place of the
+     * function-name title or the native-amount `VsOverviewToken`. When null, screens fall back to
+     * the existing display logic (function-name title for EVM contract calls, otherwise native
+     * amount).
+     */
+    val heroContent: HeroContent? = null,
 )
 
 @Immutable
@@ -80,6 +89,13 @@ internal data class VerifyTransactionUiModel(
         get() = consentAddress && consentAmount
 }
 
+/**
+ * Annotated [Immutable] so the Compose compiler treats every variant as stable for skipping. The
+ * inner [SecurityScannerResult] holds a `List<SecurityWarning>` which Compose infers as unstable,
+ * but in practice the list is never mutated post-construction; the annotation closes that gap so
+ * `VerifyTransactionUiModel`'s own `@Immutable` declaration is not silently downgraded.
+ */
+@Immutable
 sealed class TransactionScanStatus {
     data object NotStarted : TransactionScanStatus()
 
