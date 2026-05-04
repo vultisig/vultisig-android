@@ -187,6 +187,7 @@
     <string name="swap_form_dst_token_title">Aan</string>
     <string name="transaction_type_button_swap">Wisselen</string>
     <string name="swap_form_gas_title">Netwerkkosten</string>
+    <string name="swap_form_outbound_fee_title">Uitgaande vergoeding</string>
     <string name="swap_form_total_fees_title">Totale kosten</string>
     <string name="share_qr_utils_choose_an_app">Kies een app</string>
     <string name="verify_swap_agree_receive_amount">Ik ga akkoord met het minimumbedrag dat ik zal ontvangen</string>
