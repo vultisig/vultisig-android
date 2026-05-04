@@ -174,6 +174,7 @@ constructor(
     private var _currentVault: Vault? = null
     private var _keysignPayload: KeysignPayload? = null
     private var customMessagePayload: CustomMessagePayload? = null
+    private var customMessageRequestFrom: String = ""
     private val _keysignMessage: MutableStateFlow<String> = MutableStateFlow("")
     private var messagesToSign = emptyList<String>()
 
@@ -278,6 +279,7 @@ constructor(
             _keysignPayload = modifiedKeysignPayload
             val customMessagePayload = shareViewModel.customMessagePayload
             this.customMessagePayload = customMessagePayload
+            customMessageRequestFrom = shareViewModel.customMessageRequestFrom
             messagesToSign =
                 when {
                     modifiedKeysignPayload != null ->
@@ -557,7 +559,7 @@ constructor(
                             method = customMessagePayload?.method ?: "",
                             message = customMessagePayload?.message ?: "",
                             signingAddress = signingAddress,
-                            requestFrom = shareViewModel.customMessageRequestFrom,
+                            requestFrom = customMessageRequestFrom,
                         )
                 )
             _isDataLoaded.value = true
