@@ -20,9 +20,12 @@ import com.vultisig.wallet.data.keygen.MldsaKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CommonTransactionHistoryData
+import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
+import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
@@ -42,6 +45,7 @@ import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
@@ -202,6 +206,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val balanceRepository: BalanceRepository,
+    private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
 ) : ViewModel() {
 
     /** Creates [KeysignViewModel] with runtime-provided assisted parameters. */
@@ -742,9 +747,14 @@ constructor(
                             transactionStatus = statusResult.toTransactionStatus()
                         )
                     when (statusResult) {
-                        TransactionResult.NotFound,
-                        is TransactionResult.Failed,
-                        TransactionResult.Confirmed -> {
+                        TransactionResult.Confirmed,
+                        is TransactionResult.Failed -> {
+                            tryUpdateEvmActualFee(txHash, chain)
+                            transactionStatusServiceManager.stopPolling()
+                            pollingTxStatusJob?.cancel()
+                        }
+
+                        TransactionResult.NotFound -> {
                             transactionStatusServiceManager.stopPolling()
                             pollingTxStatusJob?.cancel()
                         }
@@ -753,6 +763,48 @@ constructor(
                     }
                 }
             }
+    }
+
+    /**
+     * After confirmation, fetches the receipt and replaces the estimated fee with the actual burned
+     * fee (`gasUsed × effectiveGasPrice`). Falls back silently to the estimate on any error.
+     */
+    private fun tryUpdateEvmActualFee(txHash: String, chain: Chain) {
+        if (chain.standard != TokenStandard.EVM) return
+        val coin = keysignPayload?.coin ?: return
+
+        viewModelScope.launch {
+            try {
+                val receipt =
+                    evmApiFactory.createEvmApi(chain).getTxStatus(txHash)?.result ?: return@launch
+                val gasUsedHex = receipt.gasUsed ?: return@launch
+                val effectiveGasPriceHex = receipt.effectiveGasPrice ?: return@launch
+                val gasUsed = BigInteger(gasUsedHex.removePrefix("0x"), 16)
+                val effectiveGasPrice = BigInteger(effectiveGasPriceHex.removePrefix("0x"), 16)
+                val actualFeeWei = gasUsed.multiply(effectiveGasPrice)
+                val estimatedFee =
+                    gasFeeToEstimatedFee(
+                        GasFeeParams(
+                            gasLimit = BigInteger.ONE,
+                            gasFee = TokenValue(value = actualFeeWei, unit = "", decimals = 18),
+                            selectedToken = coin,
+                        )
+                    )
+                val currentModel = resolvedTransactionUiModel.value
+                val sendTx = currentModel as? TransactionTypeUiModel.Send ?: return@launch
+                resolvedTransactionUiModel.value =
+                    TransactionTypeUiModel.Send(
+                        sendTx.tx.copy(
+                            networkFeeTokenValue = estimatedFee.formattedTokenValue,
+                            networkFeeFiatValue = estimatedFee.formattedFiatValue,
+                        )
+                    )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to update EVM actual fee for %s", txHash)
+            }
+        }
     }
 
     /** Cancels the transaction-status polling job and cleans up the background service. */
