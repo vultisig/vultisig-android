@@ -31,6 +31,7 @@ data class EvmFeeHistoryResponseJson(
 
 @Serializable data class EvmBaseFeeJson(@SerialName("baseFeePerGas") val baseFeePerGas: String)
 
+/** EVM transaction receipt fields returned by `eth_getTransactionReceipt`. */
 @Serializable
 data class EvmTxStatusJson(
     @SerialName("status") val status: String,
