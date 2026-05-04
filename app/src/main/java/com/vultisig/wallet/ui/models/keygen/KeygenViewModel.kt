@@ -299,6 +299,17 @@ constructor(
                         "SingleKeygen requires an existing vault with ECDSA and EdDSA keys"
                     }
                     startSingleKeygen()
+                } else if (action == TssAction.ReShare) {
+                    // KeyImport vaults still hold ECDSA + EdDSA root keyshares produced by
+                    // DKLS / Schnorr — reshare regenerates only those root shares (per-chain
+                    // shares stay intact via the keyshare-preservation logic in startKeygenDkls).
+                    // GG20 reshare keeps the legacy protocol path. This mirrors iOS, where
+                    // every reshare regardless of `lib_type` runs the DKLS QC ceremony.
+                    when (libType) {
+                        SigningLibType.GG20 -> startKeygenGG20()
+                        SigningLibType.DKLS,
+                        SigningLibType.KeyImport -> startKeygenDkls()
+                    }
                 } else {
                     when (libType) {
                         SigningLibType.DKLS -> startKeygenDkls()
