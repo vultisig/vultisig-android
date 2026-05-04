@@ -36,17 +36,10 @@ object SharedPrefsMasterKeyInitializer {
     }
 
     /**
-     * Runs the prewarm body against [target]. Settles [target] with the [supplier] result on
-     * success, or with `null` after a WARN-level Timber log on any non-cancellation [Exception] —
-     * the previous catch-list of `GeneralSecurityException | IOException` left the deferred
-     * uncompleted on `IllegalStateException` (the lock-timeout `error(...)` in
-     * [buildSecurePrefsKey]), `ProviderException`, OEM `RuntimeException`, etc., so any future
-     * awaiter would hang forever (issue #4402). Re-throws [CancellationException] without touching
-     * [target] so structured concurrency keeps propagating cancellation; the consumer in
-     * [com.vultisig.wallet.data.MainDataModule.provideEncryptedSharedPrefs] reads
-     * [Deferred.isCompleted] non-blockingly and falls through to a synchronous keystore lookup when
-     * the deferred is still active. A second call against an already-settled target is a no-op
-     * because [CompletableDeferred.complete] returns `false` on the second invocation.
+     * Settles [target] with [supplier]'s result, or with `null` after a WARN log on any
+     * non-cancellation [Exception]. Rethrows [CancellationException] without touching [target] so
+     * structured concurrency keeps propagating cancellation. Idempotent: a second call against an
+     * already-settled target is a no-op.
      */
     internal fun runPrewarmInto(
         target: CompletableDeferred<SecretKey?>,

@@ -50,9 +50,6 @@ internal class SharedPrefsMasterKeyInitializerTest {
             }
         }
 
-    // android.util.Log.WARN == 5; use the literal to avoid the Android SDK in JVM tests.
-    private val WARN = 5
-
     @AfterEach
     fun tearDown() {
         Timber.uprootAll()
@@ -193,6 +190,9 @@ internal class SharedPrefsMasterKeyInitializerTest {
     // ── (j) Parameterized invariant: every non-cancellation throwable settles to null ───
 
     companion object {
+        // android.util.Log.WARN == 5; the literal avoids the Android SDK in JVM tests.
+        private const val WARN_PRIORITY = 5
+
         private class CustomUncheckedException : Exception("custom")
 
         @JvmStatic
@@ -237,7 +237,7 @@ internal class SharedPrefsMasterKeyInitializerTest {
         )
         val entry = capturedLogs.single()
         assertEquals(
-            WARN,
+            WARN_PRIORITY,
             entry.priority,
             "log priority must be WARN (5) for ${t::class.simpleName}",
         )
@@ -247,9 +247,5 @@ internal class SharedPrefsMasterKeyInitializerTest {
             entry.throwable,
             "logged throwable must be the same instance for ${t::class.simpleName}",
         )
-
-        // Reset for the next parameterized iteration.
-        capturedLogs.clear()
-        Timber.uprootAll()
     }
 }
