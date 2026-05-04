@@ -53,6 +53,7 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -95,6 +96,7 @@ internal data class SwapFormUiModel(
     val isLoading: Boolean = false,
     val isLoadingNextScreen: Boolean = false,
     val enableMaxAmount: Boolean = false,
+    val hasQuote: Boolean = false,
     val expiredAt: Instant? = null,
     val tierType: TierType? = null,
     val vultBpsDiscount: Int? = null,
@@ -945,6 +947,7 @@ constructor(
                                 formError = null,
                                 isSwapDisabled = false,
                                 isLoading = false,
+                                hasQuote = true,
                                 expiredAt = this@SwapFormViewModel.quote?.expiredAt,
                             )
                         }
@@ -961,39 +964,24 @@ constructor(
                             }
                         }
                     } catch (e: SwapException) {
-                        this@SwapFormViewModel.quote = null
-                        val formError =
-                            swapQuoteManager.mapSwapExceptionToFormError(
-                                e,
-                                srcToken,
-                                uiState.value.selectedSrcToken?.title,
-                            )
-                        uiState.update {
-                            it.copy(
-                                provider = UiText.Empty,
-                                srcFiatValue = "0",
-                                estimatedDstTokenValue = "0",
-                                estimatedDstFiatValue = "0",
-                                fee = "0",
-                                networkFee = "",
-                                networkFeeFiat = "",
-                                totalFee = "0",
-                                vultBpsDiscount = null,
-                                vultBpsDiscountFiatValue = null,
-                                referralBpsDiscount = null,
-                                referralBpsDiscountFiatValue = null,
-                                tierType = null,
-                                isSwapDisabled = true,
-                                formError = formError,
-                                isLoading = false,
-                                expiredAt = null,
-                            )
-                        }
-                        Timber.e(e, "swapError")
+                        resetQuoteState(
+                            error =
+                                swapQuoteManager.mapSwapExceptionToFormError(
+                                    e,
+                                    srcToken,
+                                    uiState.value.selectedSrcToken?.title,
+                                ),
+                            cause = e,
+                            tag = "swapError",
+                        )
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
-                        this@SwapFormViewModel.quote = null
-                        isLoading = false
-                        Timber.e(e)
+                        resetQuoteState(
+                            error = UiText.StringResource(R.string.swap_error_quote_failed),
+                            cause = e,
+                            tag = "swapUnexpectedError",
+                        )
                     }
 
                     this@SwapFormViewModel.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
@@ -1010,6 +998,42 @@ constructor(
                     refreshQuoteState.value++
                 }
             }
+    }
+
+    private fun resetQuoteState(error: UiText, cause: Throwable, tag: String) {
+        // The prior quote's refresh timer would otherwise fire mid-error and re-run
+        // calculateFees against the same invalid amount, briefly re-exposing the fee block.
+        refreshQuoteJob?.cancel()
+        refreshQuoteJob = null
+        this@SwapFormViewModel.quote = null
+        // collectTotalFee() combines this with estimatedNetworkFeeFiatValue. Resetting it
+        // to null lets filterNotNull() short-circuit so a later calculateGas() update can't
+        // write a (newGas + staleSwap) combination back into state.totalFee.
+        swapFeeFiat.value = null
+        // networkFee/networkFeeFiat are tied to the source token (calculateGas), not to a
+        // specific quote, so we deliberately leave them alone — resetting them would leave
+        // them empty until selectedSrc changes again.
+        uiState.update {
+            it.copy(
+                provider = UiText.Empty,
+                srcFiatValue = "0",
+                estimatedDstTokenValue = "0",
+                estimatedDstFiatValue = "0",
+                fee = "0",
+                totalFee = "0",
+                vultBpsDiscount = null,
+                vultBpsDiscountFiatValue = null,
+                referralBpsDiscount = null,
+                referralBpsDiscountFiatValue = null,
+                tierType = null,
+                isSwapDisabled = true,
+                hasQuote = false,
+                formError = error,
+                isLoading = false,
+                expiredAt = null,
+            )
+        }
+        Timber.e(cause, tag)
     }
 
     fun hideError() {

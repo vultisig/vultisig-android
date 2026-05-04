@@ -393,7 +393,9 @@ internal fun SwapScreen(
                         }
                     }
 
-                    AnimatedVisibility(visible = state.formError == null || state.isLoading) {
+                    AnimatedVisibility(
+                        visible = state.isLoading || (state.formError == null && state.hasQuote)
+                    ) {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                             modifier = Modifier.padding(horizontal = 8.dp),

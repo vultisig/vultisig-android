@@ -965,8 +965,6 @@ internal class SwapFormViewModelTest {
             assertEquals("0", state.estimatedDstTokenValue)
             assertEquals("0", state.estimatedDstFiatValue)
             assertEquals("0", state.fee)
-            assertEquals("", state.networkFee)
-            assertEquals("", state.networkFeeFiat)
             assertEquals("0", state.totalFee)
             assertNull(state.vultBpsDiscount)
             assertNull(state.vultBpsDiscountFiatValue)
@@ -975,7 +973,88 @@ internal class SwapFormViewModelTest {
             assertNull(state.tierType)
             assertTrue(state.isSwapDisabled)
             assertFalse(state.isLoading)
+            assertFalse(state.hasQuote)
             assertNull(state.expiredAt)
+        }
+
+    @Test
+    fun `calculateFees recovers hasQuote on success after a swap exception`() =
+        runTest(mainDispatcher) {
+            // First call throws, second call (after a new amount) succeeds.
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws
+                SwapException.SwapIsNotSupported("Not supported") andThen
+                createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            // Trigger the exception path.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.hasQuote)
+            assertNotNull(vm.uiState.value.formError)
+
+            // Trigger the recovery path.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.2")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertTrue(state.hasQuote)
+            assertNull(state.formError)
+            assertFalse(state.isSwapDisabled)
+            assertFalse(state.isLoading)
+            assertNotNull(state.expiredAt)
+        }
+
+    @Test
+    fun `calculateFees on generic exception sets quote-failed formError and clears hasQuote`() =
+        runTest(mainDispatcher) {
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws RuntimeException("network IO failed")
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals(UiText.StringResource(R.string.swap_error_quote_failed), state.formError)
+            assertFalse(state.hasQuote)
+            assertEquals(UiText.Empty, state.provider)
+            assertEquals("0", state.totalFee)
+            assertTrue(state.isSwapDisabled)
+            assertFalse(state.isLoading)
         }
 
     // endregion
