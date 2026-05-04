@@ -54,6 +54,7 @@ private val TRON_STAKE_POSITIONS_DIALOG =
 
 private val TRON_DEFAULT_SELECTED_POSITIONS = listOf(TRON_KEY)
 
+/** UI model for the Tron staking/freeze position screen. */
 @Immutable
 internal data class TronStakingUiModel(
     val totalAmountPrice: String = "",
@@ -68,8 +69,13 @@ internal data class TronStakingUiModel(
     val hasAvailableBalance: Boolean = false,
 )
 
+/** UI state for the Tron DeFi positions screen. */
 @Immutable
 internal sealed interface TronDeFiUiState {
+    /**
+     * Loading state; carries [previousSuccess] so the UI can show skeleton placeholders sized to
+     * real data.
+     */
     data class Loading(val previousSuccess: Success? = null) : TronDeFiUiState
 
     @Immutable data class Error(val error: UiText) : TronDeFiUiState

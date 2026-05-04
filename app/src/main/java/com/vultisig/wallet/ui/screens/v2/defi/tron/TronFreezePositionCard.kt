@@ -28,6 +28,10 @@ import com.vultisig.wallet.ui.theme.Theme
 
 private val TronFreezeCardIconCircleColor = Color.White.copy(alpha = 0.12f)
 
+/**
+ * Card showing frozen TRX balance with Freeze/Unfreeze actions; shows placeholders and disables
+ * buttons when [isLoading].
+ */
 @Composable
 internal fun TronFreezePositionCard(
     frozenTotalPrice: String,

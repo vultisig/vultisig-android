@@ -77,6 +77,10 @@ data class ResourceState(
     val icon: Int,
 )
 
+/**
+ * Displays bandwidth and energy resource cards side-by-side; shows skeleton placeholders when
+ * [isLoading].
+ */
 @Composable
 fun ResourceTwoCardsRow(
     resourceUsage: ResourceUsage,
@@ -132,6 +136,10 @@ fun ResourceTwoCardsRow(
     }
 }
 
+/**
+ * Displays a single resource card (bandwidth or energy); shows skeleton placeholders when
+ * [isLoading].
+ */
 @Composable
 fun ResourceCard(
     state: ResourceState,
