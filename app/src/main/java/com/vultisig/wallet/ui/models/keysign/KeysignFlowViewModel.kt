@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mappers.PayloadToProtoMapper
 import com.vultisig.wallet.data.mediator.MediatorService
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
@@ -539,12 +540,23 @@ constructor(
                 }
             }
         } else {
+            val signingAddress =
+                runCatching {
+                        _currentVault
+                            ?.coins
+                            ?.firstOrNull {
+                                it.chain == Chain.fromRaw(customMessagePayload?.chain ?: "")
+                            }
+                            ?.address
+                    }
+                    .getOrNull() ?: ""
             transactionTypeUiModel =
                 TransactionTypeUiModel.SignMessage(
                     model =
                         SignMessageTransactionUiModel(
                             method = customMessagePayload?.method ?: "",
                             message = customMessagePayload?.message ?: "",
+                            signingAddress = signingAddress,
                         )
                 )
             _isDataLoaded.value = true

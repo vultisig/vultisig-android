@@ -475,6 +475,8 @@
     <string name="vault_settings_sign_message_description">Sign custom message</string>
     <string name="swap_screen_invalid_specific_and_utxo">Specific calculation failed</string>
     <string name="verify_sign_message_message_field_signature">Signature</string>
+    <string name="verify_sign_message_signing_address">Signing Address</string>
+    <string name="verify_sign_message_signature_successful">Signature Successful</string>
     <string name="secret_enable_dkls">Enable DKLS</string>
     <string name="dialog_default_error_body">Something went wrong</string>
     <string name="address_bookmark_error_invalid_address">This address is not valid for %s</string>

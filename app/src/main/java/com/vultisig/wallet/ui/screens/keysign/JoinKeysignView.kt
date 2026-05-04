@@ -52,6 +52,8 @@ internal fun JoinKeysignView(navController: NavHostController) {
     val title =
         stringResource(
             when {
+                isKeysignFinished && verifyUiModel is VerifyUiModel.SignMessage ->
+                    R.string.transaction_done_overview
                 isKeysignFinished -> R.string.transaction_complete_screen_title
                 state == JoinKeysign && verifyUiModel is VerifyUiModel.Swap ->
                     R.string.verify_swap_swap_overview

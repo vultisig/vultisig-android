@@ -432,10 +432,19 @@ constructor(
 
         customMessagePayload = customMessage
 
+        val signingAddress =
+            runCatching {
+                    _currentVault.coins
+                        .firstOrNull { it.chain == Chain.fromRaw(customMessage.chain) }
+                        ?.address
+                }
+                .getOrNull() ?: ""
+
         val model =
             SignMessageTransactionUiModel(
                 method = customMessage.method,
                 message = getNormalizedCustomMessage(customMessage),
+                signingAddress = signingAddress,
             )
 
         transactionTypeUiModel = TransactionTypeUiModel.SignMessage(model)

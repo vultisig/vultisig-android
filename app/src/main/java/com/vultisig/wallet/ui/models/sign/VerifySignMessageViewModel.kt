@@ -25,6 +25,7 @@ import timber.log.Timber
 internal data class SignMessageTransactionUiModel(
     val method: String = "",
     val message: String = "",
+    val signingAddress: String = "",
 )
 
 internal data class VerifySignMessageUiModel(

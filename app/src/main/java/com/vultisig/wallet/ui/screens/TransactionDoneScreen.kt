@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -333,15 +334,38 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
 private fun CustomMessageDetail(signMessage: SignMessageTransactionUiModel?, signature: String) {
     if (signMessage == null) return
 
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        UiIcon(
+            drawableResId = R.drawable.ic_check,
+            size = 32.dp,
+            tint = Theme.v2.colors.alerts.success,
+        )
+        Text(
+            text = stringResource(R.string.verify_sign_message_signature_successful),
+            style = Theme.brockmann.headings.title2,
+            color = Theme.v2.colors.text.primary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+
+    UiHorizontalDivider()
+
     AddressField(
         title = stringResource(R.string.verify_sign_message_method_field_title),
         address = signMessage.method,
     )
 
-    AddressField(
-        title = stringResource(R.string.verify_sign_message_message_field_title),
-        address = signMessage.message,
-    )
+    if (signMessage.signingAddress.isNotEmpty()) {
+        AddressField(
+            title = stringResource(R.string.verify_sign_message_signing_address),
+            address = signMessage.signingAddress,
+        )
+    }
 
     AddressField(
         title = stringResource(R.string.verify_sign_message_message_field_signature),
