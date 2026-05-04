@@ -44,9 +44,60 @@ jobs:
         run: ./gradlew :app:assembleDebug --no-daemon --build-cache
 
       - name: Upload debug APK
+        id: upload_apk
         uses: actions/upload-artifact@v4
         with:
           name: vultisig-4360-trace-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Write APK download link to run summary
+        run: |
+          APK_PATH=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
+          APK_NAME=$(basename "$APK_PATH")
+          APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+          APK_SHA=$(sha256sum "$APK_PATH" | cut -d' ' -f1)
+          ARTIFACT_URL="${{ steps.upload_apk.outputs.artifact-url }}"
+          {
+            echo "## 📦 Debug APK ready"
+            echo ""
+            echo "**Direct download:** $ARTIFACT_URL"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| File | \`$APK_NAME\` |"
+            echo "| Size | $APK_SIZE |"
+            echo "| SHA-256 | \`$APK_SHA\` |"
+            echo ""
+            echo "Capture command:"
+            echo '```bash'
+            echo "adb install -r $APK_NAME"
+            echo "adb logcat -c"
+            echo "adb logcat -v time | grep boot4360 > 4360-trace.log"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post APK link as PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER=$(gh pr list --repo "${{ github.repository }}" --head "${{ github.ref_name }}" --json number --jq '.[0].number // empty')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR for branch ${{ github.ref_name }}; skipping comment."
+            exit 0
+          fi
+          ARTIFACT_URL="${{ steps.upload_apk.outputs.artifact-url }}"
+          APK_PATH=$(find app/build/outputs/apk/debug -name "*.apk" | head -1)
+          APK_SHA=$(sha256sum "$APK_PATH" | cut -d' ' -f1)
+          gh pr comment "$PR_NUMBER" --repo "${{ github.repository }}" --body "📦 **Debug APK ready** — commit \`${{ github.sha }}\`
+
+[Download \`vultisig-4360-trace-debug-apk\`]($ARTIFACT_URL) (requires GitHub login + repo access)
+
+SHA-256: \`$APK_SHA\`
+
+\`\`\`bash
+adb install -r app-debug.apk
+adb logcat -c
+adb logcat -v time | grep boot4360 > 4360-trace.log
+\`\`\`"
