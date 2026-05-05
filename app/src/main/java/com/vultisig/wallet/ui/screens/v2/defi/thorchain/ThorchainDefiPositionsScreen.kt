@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
+import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
@@ -73,6 +74,11 @@ internal fun ThorchainDefiPositionsScreen(
     }
 
     LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
+
+    RegisterChainDashboardTopBarAction(
+        icon = R.drawable.ic_shapes_plus_x_square_circle,
+        onClick = { model.setPositionSelectionDialogVisibility(true) },
+    )
 
     ThorchainDefiPositionScreenContent(
         state = state,
@@ -126,7 +132,10 @@ internal fun ThorchainDefiPositionScreenContent(
 
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Column(
-            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+            modifier =
+                Modifier.fillMaxSize()
+                    .background(Theme.v2.colors.backgrounds.primary)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = CenterHorizontally,
         ) {
             BalanceBanner(
@@ -158,14 +167,13 @@ internal fun ThorchainDefiPositionScreenContent(
                 V2Container(
                     type = ContainerType.SECONDARY,
                     cornerType = CornerType.Circular,
-                    modifier = Modifier.clickOnce(onClick = {}),
+                    modifier = Modifier.clickOnce(onClick = onEditPositionClick),
                 ) {
                     UiIcon(
                         drawableResId = R.drawable.edit_chain,
                         size = 16.dp,
                         modifier = Modifier.padding(all = 12.dp),
                         tint = Theme.v2.colors.primary.accent4,
-                        onClick = onEditPositionClick,
                     )
                 }
             }

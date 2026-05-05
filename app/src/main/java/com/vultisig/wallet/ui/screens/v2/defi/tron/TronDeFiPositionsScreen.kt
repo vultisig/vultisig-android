@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.models.defi.TronDeFiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.TronDeFiUiState
 import com.vultisig.wallet.ui.models.defi.TronPendingWithdrawalUiModel
 import com.vultisig.wallet.ui.models.defi.TronStakingUiModel
+import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
@@ -92,6 +93,11 @@ internal fun TronDeFiPositionsScreen(
         viewModel.setData(vaultId)
         onPauseOrDispose {}
     }
+
+    RegisterChainDashboardTopBarAction(
+        icon = R.drawable.ic_shapes_plus_x_square_circle,
+        onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
+    )
 
     TronDeFiPositionsScreenContent(
         state = state,

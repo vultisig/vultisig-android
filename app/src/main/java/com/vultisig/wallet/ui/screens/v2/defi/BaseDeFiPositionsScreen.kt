@@ -48,7 +48,10 @@ fun BaseDeFiPositionsScreenContent(
 ) {
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Column(
-            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+            modifier =
+                Modifier.fillMaxSize()
+                    .background(Theme.v2.colors.backgrounds.primary)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = CenterHorizontally,
         ) {
             BalanceBanner(
@@ -81,14 +84,13 @@ fun BaseDeFiPositionsScreenContent(
                     V2Container(
                         type = ContainerType.SECONDARY,
                         cornerType = CornerType.Circular,
-                        modifier = Modifier.clickOnce(onClick = {}),
+                        modifier = Modifier.clickOnce(onClick = onEditChains),
                     ) {
                         UiIcon(
                             drawableResId = R.drawable.edit_chain,
                             size = 16.dp,
                             modifier = Modifier.padding(all = 12.dp),
                             tint = Theme.v2.colors.primary.accent4,
-                            onClick = onEditChains,
                         )
                     }
                 }

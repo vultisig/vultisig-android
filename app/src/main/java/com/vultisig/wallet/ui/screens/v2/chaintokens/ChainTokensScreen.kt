@@ -49,6 +49,7 @@ import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
+import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
@@ -74,6 +75,13 @@ internal fun ChainTokensScreen(
     KeyboardAware(viewModel::handleKeyboardState)
 
     LaunchedEffect(Unit) { viewModel.initData(vaultId = vaultId, chainId = chainId) }
+
+    val uriHandler = VsUriHandler()
+    RegisterChainDashboardTopBarAction(
+        icon = R.drawable.ic_shapes_plus_x_square_circle,
+        enabled = uiModel.explorerURL.isNotEmpty(),
+        onClick = { uriHandler.openUri(uiModel.explorerURL) },
+    )
 
     ChainTokensScreen(
         uiModel = uiModel,
@@ -141,9 +149,9 @@ internal fun ChainTokensScreen(
                             designType = DesignType.Shined,
                         )
                     }
-
-                    UiSpacer(size = 10.dp)
                 }
+
+                UiSpacer(size = 10.dp)
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ChainLogo(name = uiModel.chainName, logo = uiModel.chainLogo)

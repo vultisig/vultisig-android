@@ -41,6 +41,7 @@ import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiUiState
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
+import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
@@ -75,6 +76,11 @@ internal fun MayachainDefiPositionsScreen(
     }
 
     LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
+
+    RegisterChainDashboardTopBarAction(
+        icon = R.drawable.ic_shapes_plus_x_square_circle,
+        onClick = { model.setPositionSelectionDialogVisibility(true) },
+    )
 
     when (val s = uiState) {
         is MayachainDefiUiState.Loading -> Unit
@@ -142,7 +148,10 @@ internal fun MayachainDefiPositionsScreenContent(
 
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Column(
-            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+            modifier =
+                Modifier.fillMaxSize()
+                    .background(Theme.v2.colors.backgrounds.primary)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             BalanceBanner(
