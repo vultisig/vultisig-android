@@ -228,9 +228,9 @@ internal class BuildSecurePrefsKeyTest {
         val warns = warnLogs()
         assertEquals(1, warns.size, "exactly one WARN log expected on wrong entry type")
         assertTrue(
-            warns[0].message.contains("unexpected entry type") ||
+            warns[0].message.contains("unexpected entry type") &&
                 warns[0].message.contains(SECURE_PREFS_KEY_ALIAS),
-            "WARN message must mention unexpected entry type or the alias, was: ${warns[0].message}",
+            "WARN message must mention both the alias and the unexpected entry type, was: ${warns[0].message}",
         )
 
         assertFalse(lock.isLocked, "lock must be released after unexpected-entry-type failure")
@@ -358,9 +358,11 @@ internal class BuildSecurePrefsKeyTest {
     ) {
         try {
             scenario.run()
-        } catch (_: Throwable) {
-            // Lock-state-only check; assertion failures inside scenario lambdas are intentionally
-            // ignored here. Per-scenario behavior is asserted in dedicated @Test methods above.
+        } catch (_: Exception) {
+            // Lock-state-only check: failure-mode exceptions thrown by buildSecurePrefsKey are
+            // expected here. Per-scenario semantics (type, message, log count) are asserted in
+            // dedicated @Test methods above. Errors (including AssertionError) intentionally
+            // propagate so a broken scenario does not silently green this test.
         } finally {
             scenario.cleanup()
         }
@@ -425,6 +427,7 @@ internal class BuildSecurePrefsKeyTest {
         } finally {
             releaseHolder.countDown()
             holderThread.join(5_000)
+            assertFalse(holderThread.isAlive, "holder thread did not terminate after release")
         }
     }
 
@@ -478,7 +481,9 @@ internal class BuildSecurePrefsKeyTest {
                     thread.isDaemon = true
                     thread.start()
                     holderThread = thread
-                    check(started.await(5, TimeUnit.SECONDS)) { "holder did not start" }
+                    if (!started.await(5, TimeUnit.SECONDS)) {
+                        throw AssertionError("holder thread did not acquire the lock within 5s")
+                    }
                     buildSecurePrefsKey(
                         lock = lock,
                         lockTimeoutMillis = 0L,
