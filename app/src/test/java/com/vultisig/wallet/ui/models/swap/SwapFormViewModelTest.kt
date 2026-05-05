@@ -540,10 +540,15 @@ internal class SwapFormViewModelTest {
 
             vm.flipSelectedTokens()
 
-            assertEquals("0", vm.uiState.value.estimatedDstTokenValue)
-            assertEquals("0", vm.uiState.value.estimatedDstFiatValue)
-            assertEquals("0", vm.uiState.value.srcFiatValue)
-            assertNull(vm.uiState.value.formError)
+            val state = vm.uiState.value
+            assertEquals("0", state.estimatedDstTokenValue)
+            assertEquals("0", state.estimatedDstFiatValue)
+            assertEquals("0", state.srcFiatValue)
+            assertNull(state.formError)
+            // hasQuote must drop on flip, otherwise the fee block stays on screen during the
+            // 450ms debounce while collectTotalFee can still combine the new pair's gas with
+            // the prior pair's swapFeeFiat.
+            assertFalse(state.hasQuote)
         }
 
     // endregion
@@ -979,9 +984,106 @@ internal class SwapFormViewModelTest {
             assertEquals("0", state.estimatedDstTokenValue)
             assertEquals("0", state.estimatedDstFiatValue)
             assertEquals("0", state.fee)
+            assertEquals("0", state.totalFee)
+            assertNull(state.vultBpsDiscount)
+            assertNull(state.vultBpsDiscountFiatValue)
+            assertNull(state.referralBpsDiscount)
+            assertNull(state.referralBpsDiscountFiatValue)
+            assertNull(state.tierType)
             assertTrue(state.isSwapDisabled)
             assertFalse(state.isLoading)
+            assertFalse(state.hasQuote)
             assertNull(state.expiredAt)
+            // Gas fields are tied to the source token (calculateGas), not the quote, so they
+            // must survive a quote exception — clearing them would leave the row empty until
+            // selectedSrc changes again.
+            assertEquals("0.001 ETH", state.networkFee)
+            assertEquals("$2.00", state.networkFeeFiat)
+        }
+
+    @Test
+    fun `calculateFees recovers hasQuote on success after a swap exception`() =
+        runTest(mainDispatcher) {
+            // First call throws, second call (after a new amount) succeeds.
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws
+                SwapException.SwapIsNotSupported("Not supported") andThen
+                createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            // Trigger the exception path.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.hasQuote)
+            assertNotNull(vm.uiState.value.formError)
+
+            // Trigger the recovery path.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.2")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertTrue(state.hasQuote)
+            assertNull(state.formError)
+            assertFalse(state.isSwapDisabled)
+            assertFalse(state.isLoading)
+            assertNotNull(state.expiredAt)
+            // Gas fields are populated by calculateGas (selectedSrc-scoped) and are not
+            // touched by the SwapException catch nor repopulated by the success path. A
+            // regression that re-introduces clearing in resetQuoteState would surface here.
+            assertEquals("0.001 ETH", state.networkFee)
+            assertEquals("$2.00", state.networkFeeFiat)
+        }
+
+    @Test
+    fun `calculateFees on generic exception sets quote-failed formError and clears hasQuote`() =
+        runTest(mainDispatcher) {
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws RuntimeException("network IO failed")
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals(UiText.StringResource(R.string.swap_error_quote_failed), state.formError)
+            assertFalse(state.hasQuote)
+            assertEquals(UiText.Empty, state.provider)
+            assertEquals("0", state.totalFee)
+            assertTrue(state.isSwapDisabled)
+            assertFalse(state.isLoading)
         }
 
     // endregion

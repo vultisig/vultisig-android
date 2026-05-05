@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.crypto.ThorChainHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.ThorChainRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import javax.inject.Inject
@@ -17,8 +18,8 @@ constructor(
 ) : InitializeThorChainNetworkIdUseCase {
 
     override suspend fun invoke() {
-        if (!vaultRepository.hasVaults()) {
-            Timber.d("Skipping THORChain network id init: no vaults")
+        if (!vaultRepository.hasAnyCoinOnChain(Chain.ThorChain)) {
+            Timber.d("Skipping THORChain network id init: no vault uses THORChain")
             return
         }
 
