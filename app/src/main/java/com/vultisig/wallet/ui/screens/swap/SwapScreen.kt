@@ -435,6 +435,7 @@ internal fun SwapScreen(
                                                     modifier = Modifier.rotate(rotationAngle),
                                                 )
                                             }
+                                        }
                                     },
                             )
 
