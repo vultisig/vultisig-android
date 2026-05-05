@@ -1,7 +1,7 @@
 package com.vultisig.wallet.ui.components.v2.fastselection.components
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
 
 internal class FastSelectionModalContentTest {
 
@@ -12,7 +12,7 @@ internal class FastSelectionModalContentTest {
         val items =
             listOf(Item("chain-eth", "ETH"), Item("chain-btc", "BTC"), Item("chain-sol", "SOL"))
         val keys = buildPaddedItemKeys(items, visibleItemCount = 5, key = { it.id })
-        assertEquals("expected all keys to be distinct", keys.size, keys.distinct().size)
+        assertEquals(keys.size, keys.distinct().size, "expected all keys to be distinct")
     }
 
     @Test
@@ -20,7 +20,7 @@ internal class FastSelectionModalContentTest {
         // Regression guard: using ticker as key lets two chains collide; id must be used instead.
         val items = listOf(Item("erc20-eth-mainnet", "ETH"), Item("erc20-eth-sepolia", "ETH"))
         val keys = buildPaddedItemKeys(items, visibleItemCount = 5, key = { it.id })
-        assertEquals("expected all keys to be distinct", keys.size, keys.distinct().size)
+        assertEquals(keys.size, keys.distinct().size, "expected all keys to be distinct")
     }
 
     @Test
@@ -29,20 +29,20 @@ internal class FastSelectionModalContentTest {
         // so they are disjoint regardless of what key(item) returns.
         val items = listOf(Item("0", "BTC"), Item("1", "ETH"))
         val keys = buildPaddedItemKeys(items, visibleItemCount = 3, key = { it.id })
-        assertEquals("expected all keys to be distinct", keys.size, keys.distinct().size)
+        assertEquals(keys.size, keys.distinct().size, "expected all keys to be distinct")
     }
 
     @Test
     fun `single item list produces unique keys`() {
         val items = listOf(Item("only-item", "ONLY"))
         val keys = buildPaddedItemKeys(items, visibleItemCount = 7, key = { it.id })
-        assertEquals("expected all keys to be distinct", keys.size, keys.distinct().size)
+        assertEquals(keys.size, keys.distinct().size, "expected all keys to be distinct")
     }
 
     @Test
     fun `empty items list produces only unique padding keys`() {
         val keys = buildPaddedItemKeys(emptyList<Item>(), visibleItemCount = 5, key = { it.id })
-        assertEquals("expected all keys to be distinct", keys.size, keys.distinct().size)
+        assertEquals(keys.size, keys.distinct().size, "expected all keys to be distinct")
     }
 
     @Test
@@ -79,14 +79,14 @@ internal class FastSelectionModalContentTest {
         val keyC_after = paddedItemKey(index = 2, item = itemC, key = { it.id })
 
         assertEquals(
-            "B key must not change when an item is inserted before it",
             keyB_before,
             keyB_after,
+            "B key must not change when an item is inserted before it",
         )
         assertEquals(
-            "C key must not change when an item is inserted before it",
             keyC_before,
             keyC_after,
+            "C key must not change when an item is inserted before it",
         )
     }
 
@@ -101,9 +101,9 @@ internal class FastSelectionModalContentTest {
                 key = { it.id },
             )
         assertEquals(
-            "expected all keys to be distinct after removal",
             keysAfterRemoval.size,
             keysAfterRemoval.distinct().size,
+            "expected all keys to be distinct after removal",
         )
     }
 
@@ -113,17 +113,17 @@ internal class FastSelectionModalContentTest {
         val expanded = listOf(Item("a", "A"), Item("b", "B"), Item("c", "C"), Item("d", "D"))
         val keys = buildPaddedItemKeys(expanded, visibleItemCount = 5, key = { it.id })
         assertEquals(
-            "expected all keys to be distinct after insertion",
             keys.size,
             keys.distinct().size,
+            "expected all keys to be distinct after insertion",
         )
 
         // Verify that the surviving items from the base list still have the same key.
         val baseKeys = buildPaddedItemKeys(base, visibleItemCount = 5, key = { it.id })
         assertEquals(
-            "B key must survive list expansion unchanged",
             baseKeys.find { it == Pair("item", "b") },
             keys.find { it == Pair("item", "b") },
+            "B key must survive list expansion unchanged",
         )
     }
 }

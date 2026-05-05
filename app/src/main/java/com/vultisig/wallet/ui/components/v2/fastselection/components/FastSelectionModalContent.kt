@@ -62,25 +62,34 @@ internal fun <T : Any> paddedItemKey(index: Int, item: T?, key: (T) -> Any): Any
     if (item != null) Pair("item", key(item)) else Pair("padding", index)
 
 /**
+ * Wraps [items] with [visibleItemCount]/2 null-padding slots at each end.
+ *
+ * The padding slots are the sentinel values that allow the first and last real items to be scrolled
+ * to the centre of the visible window.
+ */
+internal fun <T : Any> buildPaddedItems(items: List<T>, visibleItemCount: Int): List<T?> {
+    val paddingCount = visibleItemCount / 2
+    return buildList {
+        repeat(paddingCount) { add(null) }
+        addAll(items)
+        repeat(paddingCount) { add(null) }
+    }
+}
+
+/**
  * Builds the complete key list for a padded item list.
  *
- * Adds [visibleItemCount]/2 null-padding slots at both ends of [items] and returns a key for every
- * slot via [paddedItemKey]. All returned keys are guaranteed to be unique as long as [key] returns
- * a distinct value for each element of [items].
+ * Delegates to [buildPaddedItems] and maps each slot through [paddedItemKey]. All returned keys are
+ * guaranteed to be unique as long as [key] returns a distinct value for each element of [items].
  */
 internal fun <T : Any> buildPaddedItemKeys(
     items: List<T>,
     visibleItemCount: Int,
     key: (T) -> Any,
-): List<Any> {
-    val paddingCount = visibleItemCount / 2
-    val paddedItems: List<T?> = buildList {
-        repeat(paddingCount) { add(null) }
-        addAll(items)
-        repeat(paddingCount) { add(null) }
+): List<Any> =
+    buildPaddedItems(items, visibleItemCount).mapIndexed { index, item ->
+        paddedItemKey(index, item, key)
     }
-    return paddedItems.mapIndexed { index, item -> paddedItemKey(index, item, key) }
-}
 
 /**
  * Scrollable picker list that positions itself near the user's drag gesture.
@@ -188,11 +197,7 @@ internal fun <T : Any> FastSelectionModalContent(
                         )
             ) {
                 val paddingItems = visibleItemCount / 2
-                val paddedItems = buildList {
-                    repeat(paddingItems) { add(null) }
-                    addAll(items)
-                    repeat(paddingItems) { add(null) }
-                }
+                val paddedItems = buildPaddedItems(items, visibleItemCount)
 
                 LazyColumn(
                     state = listState,
