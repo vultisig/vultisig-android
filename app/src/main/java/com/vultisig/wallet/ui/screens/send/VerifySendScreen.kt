@@ -410,12 +410,11 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
     var isExpanded by rememberSaveable { mutableStateOf(false) }
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier =
             Modifier.fillMaxWidth()
                 .padding(vertical = 12.dp)
                 .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp))
-                .padding(12.dp),
+                .padding(vertical = 12.dp)
     ) {
         // Whole row is the tap target so the WCAG 2.5.5 minimum (48dp) is met without enlarging
         // the visual chevron, and TalkBack announces "Transaction details, button, expanded /
@@ -454,7 +453,7 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
             // lines of long signatures/inputs out of reach.
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
             ) {
                 functionSignature?.let {
                     VerifyCardJsonDetails(
