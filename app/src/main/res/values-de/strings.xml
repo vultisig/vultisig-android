@@ -146,7 +146,6 @@
     <string name="swap_form_dst_token_title">Zu</string>
     <string name="transaction_type_button_swap">Tauschen</string>
     <string name="swap_form_gas_title">Netzwerkgebühr</string>
-    <string name="swap_form_outbound_fee_title">Ausgehende Gebühr</string>
     <string name="swap_form_total_fees_title">Gesamtgebühren</string>
     <string name="verify_swap_sign_button">Transaktion Signieren</string>
     <string name="swap_form_vault">Tresor</string>

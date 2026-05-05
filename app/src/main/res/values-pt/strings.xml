@@ -149,7 +149,6 @@
     <string name="swap_form_dst_token_title">Para</string>
     <string name="transaction_type_button_swap">Trocar</string>
     <string name="swap_form_gas_title">Taxa de rede</string>
-    <string name="swap_form_outbound_fee_title">Taxa de saída</string>
     <string name="swap_form_total_fees_title">Taxas totais</string>
     <string name="verify_swap_sign_button">Sign</string>
     <string name="swap_screen_invalid_vault">A transação provavelmente falhará, o cofre não pôde ser carregado.</string>

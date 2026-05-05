@@ -139,7 +139,6 @@
     <string name="swap_form_from_title">Da</string>
     <string name="swap_form_dst_token_title">A</string>
     <string name="swap_form_gas_title">Commissione di rete</string>
-    <string name="swap_form_outbound_fee_title">Commissione in uscita</string>
     <string name="swap_form_total_fees_title">Totale commissioni</string>
     <string name="verify_swap_sign_button">Firma Transazione</string>
     <string name="swap_error_no_amount">a quantità deve essere un numero positivo.</string>
