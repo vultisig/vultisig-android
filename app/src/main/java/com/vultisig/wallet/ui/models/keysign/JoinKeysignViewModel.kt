@@ -882,17 +882,7 @@ constructor(
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
                     val fallbackFeeAmount =
-                        if (
-                            payload.blockChainSpecific is BlockChainSpecific.Ethereum ||
-                                payload.blockChainSpecific is BlockChainSpecific.THORChain
-                        ) {
-                            BigInteger.ZERO
-                        } else {
-                            withContext(Dispatchers.IO) {
-                                    feeServiceComposite.calculateFees(blockchainTransaction)
-                                }
-                                .amount
-                        }
+                        resolveFallbackFeeAmount(payload.blockChainSpecific, blockchainTransaction)
                     val estimatedTokenFees =
                         computeJoinKeysignNetworkFee(
                             blockChainSpecific = payload.blockChainSpecific,
@@ -971,17 +961,10 @@ constructor(
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                         } else {
                             val fallbackFeeAmount =
-                                if (
-                                    payload.blockChainSpecific is BlockChainSpecific.Ethereum ||
-                                        payload.blockChainSpecific is BlockChainSpecific.THORChain
-                                ) {
-                                    BigInteger.ZERO
-                                } else {
-                                    withContext(Dispatchers.IO) {
-                                            feeServiceComposite.calculateFees(blockchainTransaction)
-                                        }
-                                        .amount
-                                }
+                                resolveFallbackFeeAmount(
+                                    payload.blockChainSpecific,
+                                    blockchainTransaction,
+                                )
                             computeJoinKeysignNetworkFee(
                                 blockChainSpecific = payload.blockChainSpecific,
                                 nativeCoin = nativeCoin,
@@ -1447,6 +1430,24 @@ constructor(
             )
         }
     }
+
+    /**
+     * Returns ZERO for EVM/THORChain (fee is read from [BlockChainSpecific]) or fetches via the fee
+     * service otherwise.
+     */
+    private suspend fun resolveFallbackFeeAmount(
+        blockChainSpecific: BlockChainSpecific,
+        blockchainTransaction: Transfer,
+    ): BigInteger =
+        if (
+            blockChainSpecific is BlockChainSpecific.Ethereum ||
+                blockChainSpecific is BlockChainSpecific.THORChain
+        ) {
+            BigInteger.ZERO
+        } else {
+            withContext(Dispatchers.IO) { feeServiceComposite.calculateFees(blockchainTransaction) }
+                .amount
+        }
 }
 
 /** camelCase + acronym→word boundary, e.g. `supplyWithPermit` and `WBTCSwap`. */
