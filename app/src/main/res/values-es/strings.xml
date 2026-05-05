@@ -278,6 +278,7 @@
     <string name="signing_error_mixed_reshare">Firma de recompartición mixta.\n Utilice recursos compartidos de bóveda del mismo ciclo de recompartición.</string>
     <string name="verify_transaction_fast_sign_btn_title">Firma rápida</string>
     <string name="keysign_sign_transaction">Firmar transacción</string>
+    <string name="sign_transaction">Firmar transacción</string>
     <string name="keysign_password_title">Contraseña</string>
     <string name="start_screen_new">NUEVO</string>
     <string name="start_screen_import_seedphrase">Importar frase semilla</string>
@@ -417,7 +418,7 @@
     <string name="withdraw_amount">Retirar %s</string>
     <string name="deposit_form_unstake_percentage_hint">Ingrese el porcentaje a desbloquear</string>
     <string name="scan_qr_screen_title">Escanear código QR</string>
-    <string name="verify_transaction_function_inputs_title">Entradas de función</string>
+    <string name="verify_transaction_function_inputs_title">Argumentos de función</string>
     <string name="dapp_hero_unverified_function_title">Función no verificada</string>
     <string name="dapp_hero_unverified_function_subtitle">Revisa los detalles antes de firmar</string>
     <string name="send_shares_currency_hint">Introduce acciones</string>

@@ -583,7 +583,7 @@ internal fun VerifyCardJsonDetails(title: String, subtitle: String, modifier: Mo
         Text(
             text = subtitle,
             style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.primary,
+            color = Theme.v2.colors.alerts.success,
             textAlign = TextAlign.Start,
             modifier = Modifier.horizontalScroll(rememberScrollState()),
         )
