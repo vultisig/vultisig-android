@@ -69,7 +69,12 @@ fun BaseDeFiPositionsScreenContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                VsTabGroup(index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }) {
+                VsTabGroup(
+                    index =
+                        tabs
+                            .indexOfFirst { it.displayNameRes == state.selectedTab }
+                            .coerceAtLeast(0)
+                ) {
                     tabs.forEach { tab ->
                         tab {
                             VsTab(
