@@ -1258,12 +1258,6 @@ constructor(
 
     fun send() = sendStrategy.submit()
 
-    fun bond() = bondStrategy.submit()
-
-    fun unbond() = unbondStrategy.submit()
-
-    fun unstake() = unstakeStrategy.submit()
-
     private fun hideLoading() {
         uiState.update { it.copy(isLoading = false) }
     }
