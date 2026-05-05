@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -132,7 +134,7 @@ private fun TronDeFiPositionsScreenContent(
             ) {
                 Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
                     when (state) {
-                        TronDeFiUiState.Loading ->
+                        is TronDeFiUiState.Loading ->
                             TronDeFiBanner(
                                 isLoading = true,
                                 totalValue = "",
@@ -153,7 +155,8 @@ private fun TronDeFiPositionsScreenContent(
                     }
                 }
 
-                if (state is TronDeFiUiState.Success) {
+                if (state is TronDeFiUiState.Success || state is TronDeFiUiState.Loading) {
+                    val isLoading = state is TronDeFiUiState.Loading
                     Row(
                         modifier =
                             Modifier.fillMaxWidth()
@@ -161,15 +164,12 @@ private fun TronDeFiPositionsScreenContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        VsTabGroup(
-                            index =
-                                TRON_DEFI_TABS.indexOfFirst { it == state.selectedTab }
-                                    .coerceAtLeast(0)
-                        ) {
+                        VsTabGroup(index = 0) {
                             TRON_DEFI_TABS.forEach { tab ->
                                 tab {
                                     VsTab(
                                         label = stringResource(tab.displayNameRes),
+                                        isEnabled = !isLoading,
                                         onClick = { onTabSelected(tab) },
                                     )
                                 }
@@ -179,13 +179,19 @@ private fun TronDeFiPositionsScreenContent(
                         V2Container(
                             type = ContainerType.SECONDARY,
                             cornerType = CornerType.Circular,
-                            modifier = Modifier.clickOnce(onClick = onEditPositionClick),
+                            modifier =
+                                Modifier.clickOnce(
+                                    enabled = !isLoading,
+                                    onClick = onEditPositionClick,
+                                ),
                         ) {
                             UiIcon(
                                 drawableResId = R.drawable.edit_chain,
                                 size = 16.dp,
                                 modifier = Modifier.padding(all = 12.dp),
-                                tint = Theme.v2.colors.primary.accent4,
+                                tint =
+                                    if (isLoading) Theme.v2.colors.text.tertiary
+                                    else Theme.v2.colors.primary.accent4,
                             )
                         }
                     }
@@ -197,7 +203,56 @@ private fun TronDeFiPositionsScreenContent(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     when (state) {
-                        TronDeFiUiState.Loading -> Unit
+                        is TronDeFiUiState.Loading -> {
+                            item {
+                                ResourceTwoCardsRow(
+                                    resourceUsage =
+                                        ResourceUsage(
+                                            availableBandwidth = 0L,
+                                            totalBandwidth = 0L,
+                                            availableEnergy = 0L,
+                                            totalEnergy = 0L,
+                                        ),
+                                    isLoading = true,
+                                )
+                            }
+                            item {
+                                TronFreezePositionCard(
+                                    frozenTotalPrice = "",
+                                    frozenTotalTrx = "",
+                                    isBalanceVisible = false,
+                                    isLoading = true,
+                                    isUnfreezeEnabled = false,
+                                    onClickFreeze = {},
+                                    onClickUnfreeze = {},
+                                )
+                            }
+                            val prevWithdrawals =
+                                state.previousSuccess?.tronData?.pendingWithdrawals
+                            if (!prevWithdrawals.isNullOrEmpty()) {
+                                item(key = "tron-pending-withdrawals-header") {
+                                    Box(
+                                        modifier =
+                                            Modifier.width(160.dp)
+                                                .height(18.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Theme.v2.colors.backgrounds.tertiary_2)
+                                    )
+                                }
+                                items(
+                                    count = prevWithdrawals.size,
+                                    key = { "tron-pw-skeleton-$it" },
+                                ) {
+                                    Box(
+                                        modifier =
+                                            Modifier.fillMaxWidth()
+                                                .height(72.dp)
+                                                .clip(RoundedCornerShape(16.dp))
+                                                .background(Theme.v2.colors.backgrounds.secondary)
+                                    )
+                                }
+                            }
+                        }
                         is TronDeFiUiState.Error -> {
                             item {
                                 Text(
@@ -231,6 +286,7 @@ private fun TronDeFiPositionsScreenContent(
                                         frozenTotalTrx = tronData.frozenTotalTrx,
                                         isBalanceVisible = state.isBalanceVisible,
                                         isUnfreezeEnabled = tronData.hasFrozenBalance,
+                                        isFreezeEnabled = tronData.hasAvailableBalance,
                                         onClickFreeze = onClickFreeze,
                                         onClickUnfreeze = onClickUnfreeze,
                                     )
@@ -401,7 +457,7 @@ private fun TronResourceTypeBadge(resourceType: TronResourceType) {
 @Preview(showBackground = true)
 @Composable
 private fun TronDeFiPositionsScreenLoadingPreview() {
-    TronDeFiPositionsScreenContent(state = TronDeFiUiState.Loading)
+    TronDeFiPositionsScreenContent(state = TronDeFiUiState.Loading())
 }
 
 /** Preview for [TronDeFiPositionsScreenContent] in error state. */
