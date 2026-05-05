@@ -373,7 +373,7 @@
     <string name="signing_error_mixed_reshare">혼합 재공유 서명.\n동일한 재공유 주기의 볼트 공유를 사용해 주세요.</string>
     <string name="verify_transaction_fast_sign_btn_title">빠른 서명</string>
     <string name="keysign_sign_transaction">거래 서명</string>
-    <string name="sign_transaction">트랜잭션 서명</string>
+    <string name="sign_transaction">거래 서명</string>
     <string name="keysign_password_title">비밀번호</string>
     <string name="start_screen_new">새로운</string>
     <string name="start_screen_import_seedphrase">시드 구문 가져오기</string>
