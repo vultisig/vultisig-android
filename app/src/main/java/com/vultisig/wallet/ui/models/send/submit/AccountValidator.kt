@@ -12,6 +12,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asAddressInput
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -68,6 +69,8 @@ internal class AccountValidator(
         val dstAddress =
             try {
                 addressParserRepository.resolveName(addressFieldState.text.asAddressInput(), chain)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e)
                 throw InvalidTransactionDataException(

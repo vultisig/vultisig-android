@@ -26,6 +26,7 @@ import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.UUID
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
@@ -141,7 +142,9 @@ internal class UnstakeStrategy(
                                     .firstOrNull()
                                     ?.flatMap { it.accounts }
                                     ?.find { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
-                                    ?: return@launch
+                                    ?: throw InvalidTransactionDataException(
+                                        UiText.StringResource(R.string.send_error_no_token)
+                                    )
 
                             createRUJIRewardsDepositTransaction(
                                 vaultId = vaultId,
@@ -164,6 +167,8 @@ internal class UnstakeStrategy(
                 )
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
@@ -230,16 +235,18 @@ internal class UnstakeStrategy(
         val memo = ThorchainFunctions.rujiRewardsMemo(selectedToken.contractAddress, tokenAmountInt)
 
         val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
-            )
+            withContext(Dispatchers.IO) {
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    selectedToken,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+                )
+            }
 
         return DepositTransaction(
             id = UUID.randomUUID().toString(),
@@ -271,38 +278,42 @@ internal class UnstakeStrategy(
         gasFee: TokenValue,
         chain: Chain,
     ): DepositTransaction {
-        val percentage =
-            if (totalTokenAmount > BigInteger.ZERO) {
-                (tokenAmountInt.toDouble() / totalTokenAmount.toDouble()) * 100.0
-            } else {
-                100.0
-            }
-
         val isAutoCompound = isAutocompoundProvider()
         val unstakeMemo =
             if (isAutoCompound) {
                 ""
             } else {
-                val basisPoints = (percentage * 100).toInt().coerceIn(0, 10000)
+                val basisPoints =
+                    if (totalTokenAmount > BigInteger.ZERO) {
+                        tokenAmountInt
+                            .multiply(BigInteger.valueOf(10_000))
+                            .divide(totalTokenAmount)
+                            .toInt()
+                            .coerceIn(0, 10_000)
+                    } else {
+                        10_000
+                    }
                 ThorchainFunctions.tcyUnstakeMemo(basisPoints)
             }
 
         val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType =
-                    if (isAutoCompound) {
-                        TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
-                    } else {
-                        TransactionType.TRANSACTION_TYPE_UNSPECIFIED
-                    },
-            )
+            withContext(Dispatchers.IO) {
+                blockChainSpecificRepository.getSpecific(
+                    chain,
+                    srcAddress,
+                    selectedToken,
+                    gasFee,
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = true,
+                    transactionType =
+                        if (isAutoCompound) {
+                            TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT
+                        } else {
+                            TransactionType.TRANSACTION_TYPE_UNSPECIFIED
+                        },
+                )
+            }
 
         val unstakePayload =
             if (isAutoCompound) {

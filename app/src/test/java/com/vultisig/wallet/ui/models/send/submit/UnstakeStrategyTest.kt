@@ -27,7 +27,6 @@ import io.mockk.every
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -71,10 +70,10 @@ internal class UnstakeStrategyTest {
     }
 
     @Test
-    fun `submit on WITHDRAW_RUJI returns silently when no RUJI account exists`() = runTest {
+    fun `submit on WITHDRAW_RUJI surfaces no_token error when no RUJI account exists`() = runTest {
         // Setup: balance/RUNE checks pass, but the second loadAddresses lookup
-        // for the RUJI account returns no match — the strategy must early-return
-        // without surfacing an error and without saving a deposit.
+        // for the RUJI account returns no match — the strategy must surface a
+        // user-facing error rather than silently no-op.
         givenValidatedAccount()
         tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
@@ -87,7 +86,7 @@ internal class UnstakeStrategyTest {
         build(this, DeFiNavActions.WITHDRAW_RUJI).submit()
         advanceUntilIdle()
 
-        assertNull(lastError)
+        assertEquals(R.string.send_error_no_token, lastError.stringId())
         coVerify(exactly = 0) { depositTransactionRepository.addTransaction(any()) }
         coVerify(exactly = 0) { navigator.route(any(), any()) }
     }

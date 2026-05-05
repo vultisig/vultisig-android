@@ -20,6 +20,7 @@ import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.UUID
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,6 +63,8 @@ internal class BondStrategy(
                                 providerBondFieldState.text.toString(),
                                 chain,
                             )
+                        } catch (e: CancellationException) {
+                            throw e
                         } catch (e: Exception) {
                             Timber.e(e)
                             throw InvalidTransactionDataException(
@@ -158,6 +161,8 @@ internal class BondStrategy(
                 )
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 showError(e.message?.asUiText() ?: UiText.Empty)
             } finally {
