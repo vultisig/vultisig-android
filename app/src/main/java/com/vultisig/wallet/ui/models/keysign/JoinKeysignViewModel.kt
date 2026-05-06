@@ -1066,18 +1066,27 @@ constructor(
                         } else null
 
                     val isUnlimitedApproval =
-                        functionInfo?.signature == "approve(address,uint256)" &&
+                        functionInfo?.signature?.replace(" ", "")?.lowercase(Locale.ROOT)?.let {
+                            it == "approve(address,uint256)" || it == "approve(address,uint)"
+                        } == true &&
                             runCatching {
-                                    val args =
+                                    val rawAmount =
                                         json
                                             .parseToJsonElement(functionInfo.inputs ?: "[]")
                                             .jsonArray
-                                    args.getOrNull(1)?.jsonPrimitive?.content?.let {
-                                        BigInteger(it)
+                                            .getOrNull(1)
+                                            ?.jsonPrimitive
+                                            ?.content
+                                            ?.trim()
+                                    when {
+                                        rawAmount.isNullOrEmpty() -> null
+                                        rawAmount.startsWith("0x", ignoreCase = true) ->
+                                            BigInteger(rawAmount.substring(2), 16)
+                                        else -> BigInteger(rawAmount)
                                     }
                                 }
                                 .getOrNull() ==
-                                BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE)
+                                BigInteger.ONE.shiftLeft(256).subtract(BigInteger.ONE)
 
                     val namedTransactionUiModel =
                         transactionToUiModel.copy(
