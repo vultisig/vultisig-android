@@ -277,6 +277,7 @@
     <string name="signing_error_mixed_reshare">Gemengde Reshare-ondertekening.\nGebruik kluisshares van dezelfde Reshare-cyclus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>
+    <string name="sign_transaction">Transactie ondertekenen</string>
     <string name="keysign_password_title">Wachtwoord</string>
     <string name="start_screen_new">NIEUW</string>
     <string name="start_screen_import_seedphrase">Seedphrase importeren</string>
@@ -416,7 +417,7 @@
     <string name="withdraw_amount">%s opnemen</string>
     <string name="deposit_form_unstake_percentage_hint">Voer percentage in om te unstaken</string>
     <string name="scan_qr_screen_title">QR-code scannen</string>
-    <string name="verify_transaction_function_inputs_title">Functie-ingangen</string>
+    <string name="verify_transaction_function_inputs_title">Functie-argumenten</string>
     <string name="dapp_hero_unverified_function_title">Niet-geverifieerde functie</string>
     <string name="dapp_hero_unverified_function_subtitle">Bekijk de details hieronder voordat je ondertekent</string>
     <string name="send_shares_currency_hint">Voer aandelen in</string>

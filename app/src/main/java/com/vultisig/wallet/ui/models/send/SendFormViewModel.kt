@@ -72,7 +72,6 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
-import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -103,9 +102,7 @@ import java.math.RoundingMode
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.uuid.Uuid
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
@@ -123,7 +120,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -324,17 +320,10 @@ constructor(
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
 
     private val gasFee = MutableStateFlow<TokenValue?>(null)
-    private val resolvedDstAddress = MutableStateFlow<String?>(null)
-    private val dstAddressLabel = MutableStateFlow<String?>(null)
 
     private var gasSettings = MutableStateFlow<GasSettings?>(null)
 
     private val specific = MutableStateFlow<BlockChainSpecificAndUtxo?>(null)
-    private var maxAmount = BigDecimal.ZERO
-    private val isMaxAmount = MutableStateFlow(false)
-
-    private var lastTokenValueUserInput = ""
-    private var lastFiatValueUserInput = ""
 
     private val isSwitchingAccounts = MutableStateFlow(false)
 
@@ -344,6 +333,28 @@ constructor(
 
     private fun isTronStakingType(): Boolean =
         defiType == DeFiNavActions.FREEZE_TRX || defiType == DeFiNavActions.UNFREEZE_TRX
+
+    private val addressManager =
+        AddressManager(
+            scope = viewModelScope,
+            addressFieldState = addressFieldState,
+            selectedToken = selectedToken,
+            chainAccountAddressRepository = chainAccountAddressRepository,
+            addressParserRepository = addressParserRepository,
+        )
+
+    private val amountManager =
+        AmountManager(
+            scope = viewModelScope,
+            tokenAmountFieldState = tokenAmountFieldState,
+            fiatAmountFieldState = fiatAmountFieldState,
+            selectedToken = selectedToken,
+            gasFee = gasFee,
+            accountProvider = { selectedAccount },
+            appCurrency = appCurrency,
+            chainValidationService = chainValidationService,
+            tokenPriceRepository = tokenPriceRepository,
+        )
 
     init {
         loadData(
@@ -358,70 +369,33 @@ constructor(
         )
         loadSelectedCurrency()
         collectSelectedAccount()
-        collectAmountChanges()
         calculateGasFees()
         calculateGasTokenBalance()
         collectEstimatedFee()
         collectPlanFee()
         calculateSpecific()
         collectAdvanceGasUi()
-        collectAmountChecks()
         loadVaultName()
         loadGasSettings()
-        collectDstAddress()
-        collectAddress()
         collectMaxAmount()
+        addressManager.start()
+        amountManager.start()
+        observeManagers()
     }
 
-    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-    private fun collectAddress() {
+    private fun observeManagers() {
         viewModelScope.launch {
-            addressFieldState
-                .textAsFlow()
-                .debounce(300)
-                .combine(selectedToken.filterNotNull()) { address, token ->
-                    address.asAddressInput() to token
-                }
-                .mapLatest { (addressStr, token) ->
-                    if (chainAccountAddressRepository.isValid(token.chain, addressStr)) {
-                        // Only clear ENS label if the user typed a new raw address,
-                        // not when we programmatically set the field to the resolved address.
-                        if (addressStr != resolvedDstAddress.value) {
-                            dstAddressLabel.value = null
-                        }
-                        resolvedDstAddress.value = addressStr
-                        expandSection(SendSections.Amount)
-                    } else if (addressStr.isNotEmpty()) {
-                        // Clear stale resolved address while async resolution is in-flight
-                        resolvedDstAddress.value = null
-                        dstAddressLabel.value = null
-                        try {
-                            val resolved =
-                                addressParserRepository.resolveName(addressStr, token.chain)
-                            // Ignore stale result if user changed input while resolving
-                            if (addressFieldState.text.asAddressInput() != addressStr)
-                                return@mapLatest
-                            if (chainAccountAddressRepository.isValid(token.chain, resolved)) {
-                                dstAddressLabel.value = addressStr
-                                resolvedDstAddress.value = resolved
-                                addressFieldState.setTextAndPlaceCursorAtEnd(resolved)
-                                expandSection(SendSections.Amount)
-                            } else {
-                                resolvedDstAddress.value = null
-                                dstAddressLabel.value = null
-                            }
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (_: Exception) {
-                            resolvedDstAddress.value = null
-                            dstAddressLabel.value = null
-                        }
-                    } else {
-                        resolvedDstAddress.value = null
-                        dstAddressLabel.value = null
-                    }
-                }
-                .collect()
+            addressManager.isDstAddressComplete.collect { isComplete ->
+                uiState.update { it.copy(isDstAddressComplete = isComplete) }
+            }
+        }
+        viewModelScope.launch {
+            addressManager.onAddressValidated.collect { expandSection(SendSections.Amount) }
+        }
+        viewModelScope.launch {
+            amountManager.reapingError.collect { error ->
+                uiState.update { it.copy(reapingError = error) }
+            }
         }
     }
 
@@ -606,20 +580,8 @@ constructor(
         }
     }
 
-    private fun collectDstAddress() {
-        viewModelScope.launch {
-            addressFieldState
-                .textAsFlow()
-                .map { it.toString() }
-                .collect { dstAddress ->
-                    val isDstAddressComplete = dstAddress.isNotBlank()
-                    uiState.update { it.copy(isDstAddressComplete = isDstAddressComplete) }
-                }
-        }
-    }
-
     fun validateTokenAmount() {
-        val errorText = validateTokenAmount(tokenAmountFieldState.text.toString())
+        val errorText = amountManager.validateTokenAmount(tokenAmountFieldState.text.toString())
         uiState.update { it.copy(tokenAmountError = errorText) }
     }
 
@@ -806,7 +768,7 @@ constructor(
     }
 
     fun setOutputAddress(address: String) {
-        addressFieldState.setTextAndPlaceCursorAtEnd(address)
+        addressManager.setOutputAddress(address)
     }
 
     fun setProviderAddress(address: String) {
@@ -951,8 +913,7 @@ constructor(
                     } finally {
                         uiState.update { it.copy(isAmountSelectionLoading = false) }
                     }
-                maxAmount = amount
-                isMaxAmount.value = true
+                amountManager.markMax(amount)
                 tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
             }
     }
@@ -1313,11 +1274,11 @@ constructor(
                             UiText.StringResource(R.string.failed_to_resolve_address)
                         )
                     }
-                // Use the label from collectAddress() if available (ENS/thorname was already
-                // resolved
-                // and the field was rewritten to the resolved address). Fall back to rawInput for
-                // cases where the user typed an ENS name and taps send before debounce completes.
-                val labelCandidate = dstAddressLabel.value ?: rawInput
+                // Use the label from AddressManager if available (ENS/thorname was already
+                // resolved and the field was rewritten to the resolved address). Fall back to
+                // rawInput for cases where the user typed an ENS name and taps send before the
+                // debounce completes.
+                val labelCandidate = addressManager.dstAddressLabel.value ?: rawInput
                 val dstLabel =
                     labelCandidate.takeIf {
                         it.isNotBlank() &&
@@ -1345,7 +1306,7 @@ constructor(
                     tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
 
                 val srcAddress = selectedToken.address
-                val isMaxAmount = tokenAmount == maxAmount
+                val isMaxAmount = tokenAmount.compareTo(amountManager.currentMaxAmount) == 0
 
                 if (chain == Chain.Tron) {
                     val isTronStakingOp =
@@ -2347,7 +2308,7 @@ constructor(
     private fun selectToken(token: Coin) {
         Timber.d("selectToken(token = $token)")
 
-        lastTokenValueUserInput = ""
+        amountManager.resetUserInputCache()
         selectedToken.value = token
     }
 
@@ -2666,7 +2627,7 @@ constructor(
                                             vaultHexPublicKey = vault.getPubKeyByChain(chain),
                                         ),
                                     amount = tokenAmountInt,
-                                    to = resolvedDstAddress.value ?: dst,
+                                    to = addressManager.resolvedDstAddress.value ?: dst,
                                     memo = memo,
                                     isMax = false,
                                 )
@@ -2750,7 +2711,7 @@ constructor(
 
     private fun collectMaxAmount() {
         viewModelScope.launch {
-            isMaxAmount.collect { isMax ->
+            amountManager.isMaxAmount.collect { isMax ->
                 val chain = selectedAccount?.token?.chain ?: return@collect
                 // Only require to re-trigger utxo chains, due to no change output utxo and
                 // therefore
@@ -2925,121 +2886,6 @@ constructor(
                 }
                 .collect()
         }
-    }
-
-    private fun collectAmountChanges() {
-        viewModelScope.launch {
-            combine(
-                    selectedToken.filterNotNull(),
-                    tokenAmountFieldState.textAsFlow(),
-                    fiatAmountFieldState.textAsFlow(),
-                ) { selectedToken, tokenFieldValue, fiatFieldValue ->
-                    val tokenString = tokenFieldValue.toString()
-                    val fiatString = fiatFieldValue.toString()
-                    if (lastTokenValueUserInput != tokenString) {
-                        val tokenDecimal = tokenString.toBigDecimalOrNull()
-                        isMaxAmount.value = tokenDecimal == maxAmount && maxAmount > BigDecimal.ZERO
-
-                        val fiatValue =
-                            convertValue(tokenString, selectedToken) { value, price, token ->
-                                    // this is the fiat value , we should not keep too much decimal
-                                    // places
-                                    value
-                                        .multiply(price)
-                                        .setScale(selectedToken.decimal, RoundingMode.DOWN)
-                                        .stripTrailingZeros()
-                                }
-                                ?.takeIf { it.isNotEmpty() } ?: return@combine
-
-                        lastTokenValueUserInput = tokenString
-                        lastFiatValueUserInput = fiatValue
-
-                        fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
-                    } else if (lastFiatValueUserInput != fiatString) {
-                        val tokenValue =
-                            convertValue(fiatString, selectedToken) { value, price, token ->
-                                    value.divide(price, token.decimal, RoundingMode.DOWN)
-                                }
-                                ?.takeIf { it.isNotEmpty() } ?: return@combine
-
-                        val tokenDecimal = tokenValue.toBigDecimalOrNull()
-                        isMaxAmount.value = tokenDecimal == maxAmount && maxAmount > BigDecimal.ZERO
-
-                        lastTokenValueUserInput = tokenValue
-                        lastFiatValueUserInput = fiatString
-
-                        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
-                    }
-                }
-                .collect()
-        }
-    }
-
-    private fun collectAmountChecks() {
-        viewModelScope.launch {
-            combine(
-                    selectedToken.filterNotNull(),
-                    tokenAmountFieldState.textAsFlow(),
-                    gasFee.filterNotNull(),
-                ) { selectedToken, tokenAmount, gasFee ->
-                    val reapingError =
-                        chainValidationService.checkIsReapable(
-                            selectedAccount,
-                            selectedToken,
-                            tokenAmount.toString(),
-                            gasFee,
-                        )
-                    uiState.update { it.copy(reapingError = reapingError) }
-                }
-                .collect()
-        }
-    }
-
-    private suspend fun convertValue(
-        value: String,
-        token: Coin?,
-        transform: (value: BigDecimal, price: BigDecimal, token: Coin) -> BigDecimal,
-    ): String? {
-        val decimalValue = value.toBigDecimalOrNull()
-
-        return if (decimalValue != null) {
-            val selectedToken = token ?: return null
-
-            val price =
-                try {
-                    tokenPriceRepository.getPrice(selectedToken, appCurrency.value).first()
-                } catch (e: Exception) {
-                    Timber.d("Failed to get price for token $selectedToken")
-                    return null
-                }
-
-            if (price == BigDecimal.ZERO) {
-                Timber.w(
-                    "convertValue: price is ZERO for token %s, skipping conversion",
-                    selectedToken.ticker,
-                )
-                return null
-            }
-
-            transform(decimalValue, price, selectedToken).toPlainString()
-        } else {
-            ""
-        }
-    }
-
-    private fun validateDstAddress(dstAddress: String): UiText? {
-        if (dstAddress.isBlank()) return UiText.StringResource(R.string.send_error_no_address)
-        return null
-    }
-
-    private fun validateTokenAmount(tokenAmount: String): UiText? {
-        if (tokenAmount.length > TextFieldUtils.AMOUNT_MAX_LENGTH)
-            return UiText.StringResource(R.string.send_from_invalid_amount)
-        val tokenAmountBigDecimal = tokenAmount.toBigDecimalOrNull()
-        if (tokenAmountBigDecimal == null || tokenAmountBigDecimal <= BigDecimal.ZERO) {
-            return UiText.StringResource(R.string.send_error_no_amount)
-        }
-        return null
     }
 
     fun enableAdvanceGasUi() {
