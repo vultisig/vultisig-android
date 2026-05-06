@@ -86,10 +86,7 @@ class CoinSwapAssetNameTest {
                 "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
                 isNativeToken = false,
             )
-        assertEquals(
-            "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-            c.swapAssetName(),
-        )
+        assertEquals("eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", c.swapAssetName())
     }
 
     // swapAssetName — EVM non-native

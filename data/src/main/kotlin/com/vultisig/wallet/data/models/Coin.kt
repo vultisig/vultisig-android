@@ -104,8 +104,7 @@ fun Coin.swapAssetName(): String =
         ) {
             "${chain.swapAssetName()}.${ticker}"
         } else if (chain == Chain.ThorChain) {
-            if (isSecuredAsset()) contractAddress
-            else "${chain.swapAssetName()}.${ticker}"
+            if (isSecuredAsset()) contractAddress else "${chain.swapAssetName()}.${ticker}"
         } else {
             "${chain.swapAssetName()}.${ticker}-${contractAddress}"
         }
