@@ -447,7 +447,11 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
             // lines of long signatures/inputs out of reach.
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(top = 12.dp)
+                        .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp))
+                        .padding(16.dp),
             ) {
                 functionSignature?.let {
                     VerifyCardJsonDetails(
