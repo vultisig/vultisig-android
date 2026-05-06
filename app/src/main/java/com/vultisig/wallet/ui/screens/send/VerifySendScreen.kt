@@ -435,8 +435,8 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
 
             UiIcon(
                 drawableResId = R.drawable.chevron,
-                tint = Theme.v2.colors.text.primary,
-                size = 16.dp,
+                tint = Theme.v2.colors.text.tertiary,
+                size = 8.dp,
                 modifier = Modifier.graphicsLayer(rotationZ = if (isExpanded) 180f else 0f),
             )
         }
