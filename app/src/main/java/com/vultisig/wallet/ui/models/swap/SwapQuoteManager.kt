@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
+import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
@@ -27,6 +28,7 @@ import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
@@ -166,32 +168,27 @@ constructor(
             }
         val (resolvedFeeText, outboundFeeText, swapFeePercent) =
             if (rawFees != null) {
-                val multiplier = dstToken.thorswapMultiplier
-                fun tokenValueFromRaw(amount: String) =
-                    TokenValue(
-                        value =
-                            BigDecimal(amount)
-                                .divide(multiplier, 8, RoundingMode.DOWN)
-                                .movePointRight(dstToken.decimal)
-                                .toBigInteger(),
-                        token = dstToken,
-                    )
                 val affiliateFiat =
                     convertTokenValueToFiat(
                         dstToken,
-                        tokenValueFromRaw(rawFees.affiliate),
+                        dstToken.convertToTokenValue(rawFees.affiliate),
                         currency,
                     )
                 val outboundFiat =
-                    convertTokenValueToFiat(dstToken, tokenValueFromRaw(rawFees.outbound), currency)
+                    convertTokenValueToFiat(
+                        dstToken,
+                        dstToken.convertToTokenValue(rawFees.outbound),
+                        currency,
+                    )
                 val pct =
                     if (srcFiatValue.value > BigDecimal.ZERO)
-                        "%.2f%%"
-                            .format(
-                                affiliateFiat.value
-                                    .divide(srcFiatValue.value, 4, RoundingMode.HALF_UP)
-                                    .multiply(BigDecimal(100))
-                            )
+                        String.format(
+                            Locale.US,
+                            "%.2f%%",
+                            affiliateFiat.value
+                                .divide(srcFiatValue.value, 4, RoundingMode.HALF_UP)
+                                .multiply(BigDecimal(100)),
+                        )
                     else null
                 Triple(fiatValueToString(affiliateFiat), fiatValueToString(outboundFiat), pct)
             } else {

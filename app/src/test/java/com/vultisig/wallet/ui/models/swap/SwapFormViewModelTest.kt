@@ -786,6 +786,107 @@ internal class SwapFormViewModelTest {
 
     // endregion
 
+    // region calculateFees — outboundFee and swapFeePercent
+
+    @Test
+    fun `calculateFees populates outboundFee and swapFeePercent when present in result`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(outboundFeeText = "$1.50", swapFeePercent = "0.30%")
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals("$1.50", state.outboundFee)
+            assertEquals("0.30%", state.swapFeePercent)
+        }
+
+    @Test
+    fun `calculateFees leaves outboundFee and swapFeePercent null when absent from result`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertNull(state.outboundFee)
+            assertNull(state.swapFeePercent)
+        }
+
+    @Test
+    fun `calculateFees clears outboundFee and swapFeePercent on swap exception`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapException.SwapIsNotSupported("Not supported")
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertNull(state.outboundFee)
+            assertNull(state.swapFeePercent)
+        }
+
+    // endregion
+
     // region calculateFees — swap exception handling
 
     @Test
@@ -1806,6 +1907,8 @@ internal class SwapFormViewModelTest {
         estimatedDstFiat: FiatValue = FiatValue(BigDecimal("95.00"), "USD"),
         feeText: String = "$0.00",
         swapFeeFiat: FiatValue = FiatValue(BigDecimal.ZERO, "USD"),
+        outboundFeeText: String? = null,
+        swapFeePercent: String? = null,
     ): BestQuote =
         BestQuote(
             candidate =
@@ -1821,6 +1924,8 @@ internal class SwapFormViewModelTest {
                     estimatedDstFiat = estimatedDstFiat,
                     feeText = feeText,
                     swapFeeFiat = swapFeeFiat,
+                    outboundFeeText = outboundFeeText,
+                    swapFeePercent = swapFeePercent,
                 ),
         )
 
