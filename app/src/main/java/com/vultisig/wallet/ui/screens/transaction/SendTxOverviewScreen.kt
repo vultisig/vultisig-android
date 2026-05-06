@@ -179,7 +179,7 @@ internal fun SendTxOverviewScreen(
                             text =
                                 stringResource(
                                     R.string.erc20_approval_unlimited_amount,
-                                    tx.token.token.ticker,
+                                    tx.approvalTokenTicker ?: tx.token.token.ticker,
                                 ),
                             style = Theme.brockmann.body.s.medium,
                             color = Theme.v2.colors.alerts.warning,
@@ -368,6 +368,10 @@ internal data class UiTransactionInfo(
     val isUnlimitedApproval: Boolean = false,
     /** The address being granted the unlimited allowance (args[0] of the approval call). */
     val approvalSpender: String? = null,
+    /**
+     * Resolved ERC-20 ticker for the token contract being approved (overrides native coin ticker).
+     */
+    val approvalTokenTicker: String? = null,
     /**
      * Carried through from [com.vultisig.wallet.ui.models.TransactionDetailsUiModel.heroContent].
      */

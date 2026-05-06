@@ -7,9 +7,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.FourByteRepository
+import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -20,7 +23,10 @@ import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.models.keysign.FunctionInfo
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
+import com.vultisig.wallet.ui.models.keysign.isUnlimitedApproval
+import com.vultisig.wallet.ui.models.keysign.prettifyEvmFunctionName
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.navigation.Destination
@@ -33,6 +39,7 @@ import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,6 +49,10 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.parseToJsonElement
 import timber.log.Timber
 import vultisig.keysign.v1.SignTon
 
@@ -70,6 +81,10 @@ internal data class TransactionDetailsUiModel(
     val isUnlimitedApproval: Boolean = false,
     /** The address being granted the unlimited allowance (args[0] of the approval call). */
     val approvalSpender: String? = null,
+    /**
+     * Resolved ERC-20 ticker for the token contract being approved (overrides native coin ticker).
+     */
+    val approvalTokenTicker: String? = null,
     /**
      * Resolved hero content for the dApp signing screens. Populated by [BuildHeroContentUseCase]
      * once the Blockaid simulation completes. When non-null, screens render this in place of the
@@ -126,6 +141,8 @@ constructor(
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
     private val addressBookRepository: AddressBookRepository,
+    private val fourByteRepository: FourByteRepository,
+    @param:PrettyJson private val json: Json,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -289,11 +306,58 @@ constructor(
                         .getOrNull()
                 } else null
 
+            val functionInfo =
+                if (chain.standard == TokenStandard.EVM && !tx.memo.isNullOrEmpty()) {
+                    withContext(ioDispatcher) {
+                        val sig =
+                            fourByteRepository.decodeFunction(tx.memo) ?: return@withContext null
+                        FunctionInfo(
+                            signature = sig,
+                            inputs = fourByteRepository.decodeFunctionArgs(sig, tx.memo),
+                            functionName = prettifyEvmFunctionName(sig),
+                        )
+                    }
+                } else null
+            val isUnlimitedApproval =
+                functionInfo != null &&
+                    isUnlimitedApproval(functionInfo.signature, functionInfo.inputs, json)
+            val approvalSpender =
+                if (isUnlimitedApproval) {
+                    runCatching {
+                            json
+                                .parseToJsonElement(functionInfo!!.inputs ?: "[]")
+                                .jsonArray
+                                .getOrNull(0)
+                                ?.jsonPrimitive
+                                ?.content
+                                ?.trim()
+                                ?.takeIf { it.isNotEmpty() }
+                        }
+                        .onFailure { if (it is CancellationException) throw it }
+                        .getOrNull()
+                } else null
+            val approvalTokenTicker =
+                if (isUnlimitedApproval) {
+                    allVaults
+                        .flatMap { it.coins }
+                        .firstOrNull { coin ->
+                            coin.chain == chain &&
+                                coin.contractAddress.equals(tx.dstAddress, ignoreCase = true)
+                        }
+                        ?.ticker
+                } else null
+
             val namedUiModel =
                 transactionUiModel.copy(
                     srcVaultName = srcVaultName,
                     dstVaultName = dstVaultName,
                     dstAddressBookTitle = dstAddressBookTitle,
+                    functionSignature = functionInfo?.signature,
+                    functionInputs = functionInfo?.inputs,
+                    functionName = functionInfo?.functionName,
+                    isUnlimitedApproval = isUnlimitedApproval,
+                    approvalSpender = approvalSpender,
+                    approvalTokenTicker = approvalTokenTicker,
                 )
 
             _uiState.update { it.copy(transaction = namedUiModel) }

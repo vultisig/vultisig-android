@@ -1081,7 +1081,21 @@ constructor(
                                         ?.trim()
                                         ?.takeIf { it.isNotEmpty() }
                                 }
+                                .onFailure { if (it is CancellationException) throw it }
                                 .getOrNull()
+                        } else null
+                    val approvalTokenTicker =
+                        if (isUnlimitedApproval) {
+                            allVaults
+                                .flatMap { it.coins }
+                                .firstOrNull { coin ->
+                                    coin.chain == chain &&
+                                        coin.contractAddress.equals(
+                                            payload.toAddress,
+                                            ignoreCase = true,
+                                        )
+                                }
+                                ?.ticker
                         } else null
 
                     val namedTransactionUiModel =
@@ -1094,6 +1108,7 @@ constructor(
                             functionName = functionInfo?.functionName,
                             isUnlimitedApproval = isUnlimitedApproval,
                             approvalSpender = approvalSpender,
+                            approvalTokenTicker = approvalTokenTicker,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)

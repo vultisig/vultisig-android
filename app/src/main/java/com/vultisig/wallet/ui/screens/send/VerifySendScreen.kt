@@ -320,7 +320,7 @@ internal fun VerifySendScreen(
                                 text =
                                     stringResource(
                                         R.string.erc20_approval_unlimited_amount,
-                                        tx.token.token.ticker,
+                                        tx.approvalTokenTicker ?: tx.token.token.ticker,
                                     ),
                                 style = Theme.brockmann.body.s.medium,
                                 color = Theme.v2.colors.alerts.warning,
