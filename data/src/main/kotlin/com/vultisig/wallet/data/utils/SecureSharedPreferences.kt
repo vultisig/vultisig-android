@@ -5,6 +5,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import java.security.KeyStore
+import java.security.KeyStoreException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -26,6 +27,8 @@ private const val P_INT = "i:"
 private const val P_LONG = "l:"
 private const val P_FLOAT = "f:"
 
+private const val SECURE_PREFS_LOCK_TIMEOUT_MS = 3_000L
+
 private val secureKeyLock = ReentrantLock()
 
 /**
@@ -33,34 +36,82 @@ private val secureKeyLock = ReentrantLock()
  * StrongBox is not requested to avoid keystore-daemon stalls on certain Pixel/Samsung devices.
  * Acquires [secureKeyLock] with a 3-second timeout so contended callers can fail fast instead of
  * blocking indefinitely if the keystore daemon stalls.
+ *
+ * Lock-timeout, lock-interrupt, and unexpected-entry-type surface as [KeyStoreException] (a
+ * [java.security.GeneralSecurityException]) so the existing catches in
+ * [com.vultisig.wallet.data.MainDataModule.provideEncryptedSharedPrefs] and
+ * [SharedPrefsMasterKeyInitializer.prewarm] can route to recovery instead of letting an
+ * `IllegalStateException` escape and crash Hilt at boot. (Issue #4403.)
  */
-internal fun buildSecurePrefsKey(): SecretKey {
-    if (!secureKeyLock.tryLock(3_000L, TimeUnit.MILLISECONDS)) {
-        error("Timed out waiting for secure prefs key lock after 3 s")
+internal fun buildSecurePrefsKey(): SecretKey =
+    buildSecurePrefsKey(
+        lock = secureKeyLock,
+        lockTimeoutMillis = SECURE_PREFS_LOCK_TIMEOUT_MS,
+        loadEntry = {
+            KeyStore.getInstance(KEYSTORE)
+                .apply { load(null) }
+                .getEntry(SECURE_PREFS_KEY_ALIAS, null)
+        },
+        generateKey = {
+            val spec =
+                KeyGenParameterSpec.Builder(
+                        SECURE_PREFS_KEY_ALIAS,
+                        KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
+                    )
+                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                    .setKeySize(256)
+                    .build()
+            KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
+                .apply { init(spec) }
+                .generateKey()
+        },
+    )
+
+/**
+ * Testable seam for [buildSecurePrefsKey]: accepts the lock, timeout, entry loader, and key
+ * generator as parameters so unit tests can exercise every exit path without AndroidKeyStore. The
+ * no-arg overload pins these to production values.
+ */
+internal fun buildSecurePrefsKey(
+    lock: ReentrantLock,
+    lockTimeoutMillis: Long,
+    loadEntry: () -> KeyStore.Entry?,
+    generateKey: () -> SecretKey,
+): SecretKey {
+    val acquired =
+        try {
+            lock.tryLock(lockTimeoutMillis, TimeUnit.MILLISECONDS)
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            Timber.w(e, "Interrupted while waiting for secure prefs key lock")
+            throw KeyStoreException("Interrupted while waiting for secure prefs key lock", e)
+        }
+    if (!acquired) {
+        Timber.w("Timed out waiting for secure prefs key lock after %d ms", lockTimeoutMillis)
+        throw KeyStoreException(
+            "Timed out waiting for secure prefs key lock after $lockTimeoutMillis ms"
+        )
     }
     try {
-        val ks = KeyStore.getInstance(KEYSTORE).apply { load(null) }
-        val entry = ks.getEntry(SECURE_PREFS_KEY_ALIAS, null)
+        val entry = loadEntry()
         if (entry != null) {
-            return (entry as? KeyStore.SecretKeyEntry)?.secretKey
-                ?: error(
+            val secretEntry = entry as? KeyStore.SecretKeyEntry
+            if (secretEntry == null) {
+                Timber.w(
+                    "Alias %s holds unexpected entry type: %s",
+                    SECURE_PREFS_KEY_ALIAS,
+                    entry::class.simpleName,
+                )
+                throw KeyStoreException(
                     "Alias $SECURE_PREFS_KEY_ALIAS holds unexpected entry type: ${entry::class.simpleName}"
                 )
+            }
+            return secretEntry.secretKey
         }
-        val spec =
-            KeyGenParameterSpec.Builder(
-                    SECURE_PREFS_KEY_ALIAS,
-                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT,
-                )
-                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                .setKeySize(256)
-                .build()
-        return KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
-            .apply { init(spec) }
-            .generateKey()
+        return generateKey()
     } finally {
-        secureKeyLock.unlock()
+        lock.unlock()
     }
 }
 

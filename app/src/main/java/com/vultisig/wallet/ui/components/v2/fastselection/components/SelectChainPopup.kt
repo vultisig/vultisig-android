@@ -38,6 +38,7 @@ internal inline fun <reified T : Any> SelectChainPopup(
                 currentDragPosition = selectNetworkUiModel.currentDragPosition,
                 pressPosition = Offset(args.pressX, args.pressY),
             ),
+        key = { it.chain.id },
         onItemSelected = sharedViewModel::onNetworkSelected,
         itemContent = { item, distanceFromCenter ->
             ChainSelectorPickerItem(item = item, distanceFromCenter = distanceFromCenter)

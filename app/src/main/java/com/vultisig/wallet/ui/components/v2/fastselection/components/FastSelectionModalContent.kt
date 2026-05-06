@@ -51,14 +51,69 @@ import kotlinx.coroutines.launch
 
 internal val FAST_SELECTION_MODAL_WIDTH = 300.dp
 
+/**
+ * Returns a namespaced key for one entry in the padded list.
+ *
+ * Real items use the `"item"` namespace so their keys can never collide with padding entries that
+ * use the `"padding"` namespace, even when [key] happens to return a value that looks like a
+ * position index.
+ */
+internal fun <T : Any> paddedItemKey(index: Int, item: T?, key: (T) -> Any): Any =
+    if (item != null) Pair("item", key(item)) else Pair("padding", index)
+
+/**
+ * Wraps [items] with [visibleItemCount]/2 null-padding slots at each end.
+ *
+ * The padding slots are the sentinel values that allow the first and last real items to be scrolled
+ * to the centre of the visible window.
+ */
+internal fun <T : Any> buildPaddedItems(items: List<T>, visibleItemCount: Int): List<T?> {
+    val paddingCount = visibleItemCount / 2
+    return buildList {
+        repeat(paddingCount) { add(null) }
+        addAll(items)
+        repeat(paddingCount) { add(null) }
+    }
+}
+
+/**
+ * Builds the complete key list for a padded item list.
+ *
+ * Delegates to [buildPaddedItems] and maps each slot through [paddedItemKey]. All returned keys are
+ * guaranteed to be unique as long as [key] returns a distinct value for each element of [items].
+ */
+internal fun <T : Any> buildPaddedItemKeys(
+    items: List<T>,
+    visibleItemCount: Int,
+    key: (T) -> Any,
+): List<Any> =
+    buildPaddedItems(items, visibleItemCount).mapIndexed { index, item ->
+        paddedItemKey(index, item, key)
+    }
+
+/**
+ * Scrollable picker list that positions itself near the user's drag gesture.
+ *
+ * @param modifier Applied to the outermost [Box].
+ * @param items Selectable items; must not contain nulls (nulls are used internally for padding).
+ * @param currentIndex Index into [items] that is currently selected.
+ * @param pressPosition Absolute screen coordinates of the pointer, used to place the popup.
+ * @param visibleItemCount How many rows to display at once; an odd value centres the selection.
+ * @param key Stable, unique identity for each item — passed as the [LazyColumn] item key to prevent
+ *   [IllegalArgumentException] from key collisions during [AnimatedVisibility] transitions when the
+ *   underlying list changes concurrently.
+ * @param onItemHeightMeasured Called once with the measured row height in pixels.
+ * @param itemContent Composable slot rendered for each non-null item.
+ */
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
-internal fun <T> FastSelectionModalContent(
+internal fun <T : Any> FastSelectionModalContent(
     modifier: Modifier,
     items: List<T>,
     currentIndex: Int,
     pressPosition: Offset,
     visibleItemCount: Int,
+    key: (T) -> Any,
     onItemHeightMeasured: (Int) -> Unit,
     itemContent: @Composable (item: T, distanceFromCenter: Int) -> Unit,
 ) {
@@ -142,11 +197,7 @@ internal fun <T> FastSelectionModalContent(
                         )
             ) {
                 val paddingItems = visibleItemCount / 2
-                val paddedItems = buildList {
-                    repeat(paddingItems) { add(null) }
-                    addAll(items)
-                    repeat(paddingItems) { add(null) }
-                }
+                val paddedItems = buildPaddedItems(items, visibleItemCount)
 
                 LazyColumn(
                     state = listState,
@@ -168,7 +219,10 @@ internal fun <T> FastSelectionModalContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     userScrollEnabled = false,
                 ) {
-                    itemsIndexed(paddedItems, key = { index, _ -> index }) { index, item ->
+                    itemsIndexed(
+                        paddedItems,
+                        key = { index, item -> paddedItemKey(index, item, key) },
+                    ) { index, item ->
                         val actualIndex = index - paddingItems
 
                         if (item != null) {
