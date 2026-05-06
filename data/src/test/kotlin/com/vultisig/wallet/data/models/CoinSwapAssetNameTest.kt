@@ -67,8 +67,18 @@ class CoinSwapAssetNameTest {
 
     @Test
     fun `ThorChain secured asset address word-dash-word returned as-is`() {
-        val c = coin(Chain.ThorChain, "ETH", "eth-eth", isNativeToken = false)
-        assertEquals("eth-eth", c.swapAssetName())
+        listOf(
+                "BTC" to "btc-btc",
+                "ETH" to "eth-eth",
+                "LTC" to "ltc-ltc",
+                "DOGE" to "doge-doge",
+                "AVAX" to "avax-avax",
+                "BNB" to "bsc-bnb",
+            )
+            .forEach { (ticker, denom) ->
+                val c = coin(Chain.ThorChain, ticker, denom, isNativeToken = false)
+                assertEquals(denom, c.swapAssetName())
+            }
     }
 
     @Test
