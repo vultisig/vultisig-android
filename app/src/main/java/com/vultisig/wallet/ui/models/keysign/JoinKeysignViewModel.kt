@@ -1071,21 +1071,27 @@ constructor(
                             isUnlimitedApproval(functionInfo.signature, functionInfo.inputs, json)
                     val approvalSpender =
                         if (isUnlimitedApproval) {
-                            runCatching {
-                                    json
-                                        .parseToJsonElement(functionInfo!!.inputs ?: "[]")
-                                        .jsonArray
-                                        .getOrNull(0)
-                                        ?.jsonPrimitive
-                                        ?.content
-                                        ?.trim()
-                                        ?.takeIf { it.isNotEmpty() }
-                                }
-                                .onFailure { if (it is CancellationException) throw it }
-                                .getOrNull()
+                            val spenderIdx = approvalSpenderArgIndex(functionInfo?.signature ?: "")
+                            if (spenderIdx != null) {
+                                runCatching {
+                                        json
+                                            .parseToJsonElement(functionInfo?.inputs ?: "[]")
+                                            .jsonArray
+                                            .getOrNull(spenderIdx)
+                                            ?.jsonPrimitive
+                                            ?.content
+                                            ?.trim()
+                                            ?.takeIf { it.isNotEmpty() }
+                                    }
+                                    .onFailure { if (it is CancellationException) throw it }
+                                    .getOrNull()
+                            } else null
                         } else null
                     val approvalTokenTicker =
-                        if (isUnlimitedApproval) {
+                        if (
+                            isUnlimitedApproval &&
+                                isTokenContractApproval(functionInfo?.signature ?: "")
+                        ) {
                             allVaults
                                 .flatMap { it.coins }
                                 .firstOrNull { coin ->
@@ -1488,6 +1494,31 @@ internal fun firstUintParamIndex(signature: String): Int? {
             .takeIf { it.isNotEmpty() }
             ?.split(',') ?: return null
     return params.indexOfFirst { it.trim().startsWith("uint") }.takeIf { it >= 0 }
+}
+
+/**
+ * Returns the args-array index of the spender address for known approval call shapes, or null when
+ * the spender cannot be read as a simple flat element (e.g., Permit2 tuples).
+ * - `approve(address spender, uint256)` → 0
+ * - `permit(address owner, address spender, uint256, …)` → 1
+ * - `permitSingle` / `permitBatch` → null (spender is inside a `PermitDetails` tuple)
+ */
+internal fun approvalSpenderArgIndex(signature: String): Int? {
+    return when (signature.replace(" ", "").lowercase(Locale.ROOT).substringBefore('(')) {
+        "approve" -> 0
+        "permit" -> 1
+        else -> null
+    }
+}
+
+/**
+ * Returns true when the contract at [toAddress] is the ERC-20 token itself. For `approve` and
+ * EIP-2612 `permit`, the call target is the token contract. For Permit2 (`permitSingle` /
+ * `permitBatch`), the call target is the Permit2 router — not the token.
+ */
+internal fun isTokenContractApproval(signature: String): Boolean {
+    val name = signature.replace(" ", "").lowercase(Locale.ROOT).substringBefore('(')
+    return name == "approve" || name == "permit"
 }
 
 /**

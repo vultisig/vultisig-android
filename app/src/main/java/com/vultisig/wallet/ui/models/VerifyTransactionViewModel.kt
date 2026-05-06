@@ -25,6 +25,8 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.keysign.FunctionInfo
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
+import com.vultisig.wallet.ui.models.keysign.approvalSpenderArgIndex
+import com.vultisig.wallet.ui.models.keysign.isTokenContractApproval
 import com.vultisig.wallet.ui.models.keysign.isUnlimitedApproval
 import com.vultisig.wallet.ui.models.keysign.prettifyEvmFunctionName
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -52,7 +54,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.parseToJsonElement
 import timber.log.Timber
 import vultisig.keysign.v1.SignTon
 
@@ -306,14 +307,14 @@ constructor(
                         .getOrNull()
                 } else null
 
+            val memo = tx.memo
             val functionInfo =
-                if (chain.standard == TokenStandard.EVM && !tx.memo.isNullOrEmpty()) {
+                if (chain.standard == TokenStandard.EVM && !memo.isNullOrEmpty()) {
                     withContext(ioDispatcher) {
-                        val sig =
-                            fourByteRepository.decodeFunction(tx.memo) ?: return@withContext null
+                        val sig = fourByteRepository.decodeFunction(memo) ?: return@withContext null
                         FunctionInfo(
                             signature = sig,
-                            inputs = fourByteRepository.decodeFunctionArgs(sig, tx.memo),
+                            inputs = fourByteRepository.decodeFunctionArgs(sig, memo),
                             functionName = prettifyEvmFunctionName(sig),
                         )
                     }
@@ -323,21 +324,24 @@ constructor(
                     isUnlimitedApproval(functionInfo.signature, functionInfo.inputs, json)
             val approvalSpender =
                 if (isUnlimitedApproval) {
-                    runCatching {
-                            json
-                                .parseToJsonElement(functionInfo!!.inputs ?: "[]")
-                                .jsonArray
-                                .getOrNull(0)
-                                ?.jsonPrimitive
-                                ?.content
-                                ?.trim()
-                                ?.takeIf { it.isNotEmpty() }
-                        }
-                        .onFailure { if (it is CancellationException) throw it }
-                        .getOrNull()
+                    val spenderIdx = approvalSpenderArgIndex(functionInfo?.signature ?: "")
+                    if (spenderIdx != null) {
+                        runCatching {
+                                json
+                                    .parseToJsonElement(functionInfo?.inputs ?: "[]")
+                                    .jsonArray
+                                    .getOrNull(spenderIdx)
+                                    ?.jsonPrimitive
+                                    ?.content
+                                    ?.trim()
+                                    ?.takeIf { it.isNotEmpty() }
+                            }
+                            .onFailure { if (it is CancellationException) throw it }
+                            .getOrNull()
+                    } else null
                 } else null
             val approvalTokenTicker =
-                if (isUnlimitedApproval) {
+                if (isUnlimitedApproval && isTokenContractApproval(functionInfo?.signature ?: "")) {
                     allVaults
                         .flatMap { it.coins }
                         .firstOrNull { coin ->
