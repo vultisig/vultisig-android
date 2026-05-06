@@ -100,6 +100,7 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -1085,6 +1086,7 @@ constructor(
                                         else -> BigInteger(rawAmount)
                                     }
                                 }
+                                .onFailure { if (it is CancellationException) throw it }
                                 .getOrNull() ==
                                 BigInteger.ONE.shiftLeft(256).subtract(BigInteger.ONE)
 

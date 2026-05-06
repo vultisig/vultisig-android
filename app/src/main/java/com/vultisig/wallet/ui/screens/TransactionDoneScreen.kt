@@ -276,7 +276,6 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                     color = Theme.v2.colors.alerts.warning,
                 )
             }
-            UiHorizontalDivider()
         }
 
         // OtherField has its own bottom divider; an explicit one stacks and orphans when memo is
