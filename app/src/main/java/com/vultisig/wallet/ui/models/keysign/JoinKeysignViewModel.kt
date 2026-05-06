@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
@@ -524,7 +525,7 @@ constructor(
                             TokenValue(
                                 value =
                                     blockChainSpecific.maxFeePerGasWei *
-                                        blockChainSpecific.gasLimit,
+                                        defaultEvmSwapGasLimit(chain),
                                 token = nativeToken,
                             )
                         blockChainSpecific is BlockChainSpecific.THORChain ->
@@ -1525,3 +1526,11 @@ internal fun computeJoinKeysignNetworkFee(
             TokenValue(value = blockChainSpecific.fee, token = nativeCoin)
         else -> TokenValue(value = fallbackFeeAmount, token = nativeCoin)
     }
+
+// The initiator's swap path always displays maxFeePerGas * DEFAULT_SWAP_LIMIT (via
+// EthereumFeeService.calculateDefaultFees(Swap)), ignoring BlockChainSpecific.gasLimit —
+// which can be as low as 40k for native ETH/Arb swaps. Mirror that here so joiner output
+// matches initiator output instead of being ~15× lower.
+internal fun defaultEvmSwapGasLimit(chain: Chain): BigInteger =
+    if (chain == Chain.Mantle) EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
+    else EthereumFeeService.DEFAULT_SWAP_LIMIT
