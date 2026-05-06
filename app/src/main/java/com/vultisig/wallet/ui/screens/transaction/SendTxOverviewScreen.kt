@@ -185,6 +185,21 @@ internal fun SendTxOverviewScreen(
                             color = Theme.v2.colors.alerts.warning,
                         )
                     }
+                    tx.approvalSpender?.let { spender ->
+                        VerifyCardDivider(size = 1.dp)
+                        Details(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            title = stringResource(R.string.erc20_approval_spender),
+                        ) {
+                            Text(
+                                text = spender,
+                                style = Theme.brockmann.body.s.medium,
+                                color = Theme.v2.colors.text.primary,
+                                textAlign = TextAlign.End,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
                 }
 
                 VerifyCardDivider(size = 1.dp)
@@ -351,6 +366,8 @@ internal data class UiTransactionInfo(
     val functionSignature: String? = null,
     val functionInputs: String? = null,
     val isUnlimitedApproval: Boolean = false,
+    /** The address being granted the unlimited allowance (args[0] of the approval call). */
+    val approvalSpender: String? = null,
     /**
      * Carried through from [com.vultisig.wallet.ui.models.TransactionDetailsUiModel.heroContent].
      */

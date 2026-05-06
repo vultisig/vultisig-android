@@ -1182,5 +1182,6 @@
     <string name="key_import_error_title">Schlüsselimport fehlgeschlagen</string>
     <string name="key_import_error_description">Der Tresor konnte nicht aus der Seed-Phrase importiert werden. Bitte überprüfen Sie Ihre Seed-Phrase und versuchen Sie es erneut.</string>
     <string name="key_import_error_no_mnemonic_description">Keine Seed-Phrase gefunden. Bitte geben Sie Ihre Seed-Phrase erneut ein und versuchen Sie es noch einmal.</string>
-    <string name="erc20_approval_unlimited_amount">Unbegrenzt %1$s</string>
+    <string name="erc20_approval_unlimited_amount">Unbegrenzte %1$s-Freigabe</string>
+    <string name="erc20_approval_spender">Begünstigter</string>
 </resources>

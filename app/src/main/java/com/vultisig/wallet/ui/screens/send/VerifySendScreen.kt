@@ -326,6 +326,13 @@ internal fun VerifySendScreen(
                                 color = Theme.v2.colors.alerts.warning,
                             )
                         }
+                        tx.approvalSpender?.let { spender ->
+                            VerifyCardDivider(0.dp)
+                            VerifyCardDetails(
+                                title = stringResource(R.string.erc20_approval_spender),
+                                subtitle = spender,
+                            )
+                        }
                     }
 
                     if (tx.functionSignature != null || tx.functionInputs != null) {

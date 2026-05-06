@@ -1067,28 +1067,22 @@ constructor(
                         } else null
 
                     val isUnlimitedApproval =
-                        functionInfo?.signature?.replace(" ", "")?.lowercase(Locale.ROOT)?.let {
-                            it == "approve(address,uint256)" || it == "approve(address,uint)"
-                        } == true &&
+                        functionInfo != null &&
+                            isUnlimitedApproval(functionInfo.signature, functionInfo.inputs, json)
+                    val approvalSpender =
+                        if (isUnlimitedApproval) {
                             runCatching {
-                                    val rawAmount =
-                                        json
-                                            .parseToJsonElement(functionInfo.inputs ?: "[]")
-                                            .jsonArray
-                                            .getOrNull(1)
-                                            ?.jsonPrimitive
-                                            ?.content
-                                            ?.trim()
-                                    when {
-                                        rawAmount.isNullOrEmpty() -> null
-                                        rawAmount.startsWith("0x", ignoreCase = true) ->
-                                            BigInteger(rawAmount.substring(2), 16)
-                                        else -> BigInteger(rawAmount)
-                                    }
+                                    json
+                                        .parseToJsonElement(functionInfo!!.inputs ?: "[]")
+                                        .jsonArray
+                                        .getOrNull(0)
+                                        ?.jsonPrimitive
+                                        ?.content
+                                        ?.trim()
+                                        ?.takeIf { it.isNotEmpty() }
                                 }
-                                .onFailure { if (it is CancellationException) throw it }
-                                .getOrNull() ==
-                                BigInteger.ONE.shiftLeft(256).subtract(BigInteger.ONE)
+                                .getOrNull()
+                        } else null
 
                     val namedTransactionUiModel =
                         transactionToUiModel.copy(
@@ -1099,6 +1093,7 @@ constructor(
                             functionInputs = functionInfo?.inputs,
                             functionName = functionInfo?.functionName,
                             isUnlimitedApproval = isUnlimitedApproval,
+                            approvalSpender = approvalSpender,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)
@@ -1450,6 +1445,65 @@ constructor(
             )
         }
     }
+}
+
+/**
+ * ERC-20 approval functions that can grant unlimited token allowances. Mirrors iOS
+ * `ContractCallExtractor.unlimitedApprovalFunctions` and the Windows companion list.
+ */
+private val UNLIMITED_APPROVAL_FUNCTIONS = setOf("approve", "permit", "permitsingle", "permitbatch")
+
+/**
+ * Any allowance at or above 2^96 tokens is treated as effectively unlimited. This threshold covers
+ * MAX_UINT256, `type(uint160).max` (used by Permit2), and any other value that would exhaust a
+ * realistic token supply many times over, while not firing on ordinary large-but-bounded amounts.
+ */
+private val UNLIMITED_APPROVAL_THRESHOLD: BigInteger = BigInteger.ONE.shiftLeft(96)
+
+/**
+ * Returns the index of the first `uint` or `uint256` parameter in [signature], or null if none.
+ * Parsing the signature dynamically means this works for `approve(address,uint256)` (index 1) and
+ * `permit(address,address,uint256,…)` (index 2) without hard-coding positions.
+ */
+internal fun firstUintParamIndex(signature: String): Int? {
+    val params =
+        signature
+            .substringAfter('(', "")
+            .substringBefore(')')
+            .takeIf { it.isNotEmpty() }
+            ?.split(',') ?: return null
+    return params.indexOfFirst { it.trim().startsWith("uint") }.takeIf { it >= 0 }
+}
+
+/**
+ * Returns true when [signature] is an ERC-20 approval function (`approve`, `permit`,
+ * `permitSingle`, or `permitBatch`) and the first uint parameter in [inputs] is at or above
+ * [UNLIMITED_APPROVAL_THRESHOLD], indicating an effectively unbounded allowance.
+ */
+internal fun isUnlimitedApproval(signature: String, inputs: String?, json: Json): Boolean {
+    val normalized = signature.replace(" ", "").lowercase(Locale.ROOT)
+    if (normalized.substringBefore('(') !in UNLIMITED_APPROVAL_FUNCTIONS) return false
+    val amountIndex = firstUintParamIndex(normalized) ?: return false
+    val amount =
+        runCatching {
+                val rawAmount =
+                    json
+                        .parseToJsonElement(inputs ?: "[]")
+                        .jsonArray
+                        .getOrNull(amountIndex)
+                        ?.jsonPrimitive
+                        ?.content
+                        ?.trim()
+                when {
+                    rawAmount.isNullOrEmpty() -> null
+                    rawAmount.startsWith("0x", ignoreCase = true) ->
+                        BigInteger(rawAmount.substring(2), 16)
+                    else -> BigInteger(rawAmount)
+                }
+            }
+            .onFailure { if (it is CancellationException) throw it }
+            .getOrNull() ?: return false
+    return amount >= UNLIMITED_APPROVAL_THRESHOLD
 }
 
 /** camelCase + acronym→word boundary, e.g. `supplyWithPermit` and `WBTCSwap`. */
