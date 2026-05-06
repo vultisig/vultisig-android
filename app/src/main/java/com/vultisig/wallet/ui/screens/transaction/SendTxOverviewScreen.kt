@@ -163,6 +163,30 @@ internal fun SendTxOverviewScreen(
                     )
                 }
 
+                if (tx.isUnlimitedApproval) {
+                    VerifyCardDivider(size = 1.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    ) {
+                        UiIcon(
+                            drawableResId = R.drawable.ic_triangle_alert,
+                            tint = Theme.v2.colors.alerts.warning,
+                            size = 16.dp,
+                        )
+                        Text(
+                            text =
+                                stringResource(
+                                    R.string.erc20_approval_unlimited_amount,
+                                    tx.token.token.ticker,
+                                ),
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.alerts.warning,
+                        )
+                    }
+                }
+
                 VerifyCardDivider(size = 1.dp)
 
                 Details(
@@ -326,6 +350,7 @@ internal data class UiTransactionInfo(
     val functionName: String? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
+    val isUnlimitedApproval: Boolean = false,
     /**
      * Carried through from [com.vultisig.wallet.ui.models.TransactionDetailsUiModel.heroContent].
      */
