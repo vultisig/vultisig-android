@@ -278,6 +278,7 @@
     <string name="signing_error_mixed_reshare">Assinatura mista de nova partilha. \nUtilizar partilhas do cofre do mesmo ciclo de nova partilha.</string>
     <string name="verify_transaction_fast_sign_btn_title">Sinal rápido</string>
     <string name="keysign_sign_transaction">Assinar transação</string>
+    <string name="sign_transaction">Assinar transação</string>
     <string name="keysign_password_title">Palavra-passe</string>
     <string name="start_screen_new">NOVO</string>
     <string name="start_screen_import_seedphrase">Importar frase-semente</string>
@@ -417,7 +418,7 @@
     <string name="withdraw_amount">Sacar %s</string>
     <string name="deposit_form_unstake_percentage_hint">Insira a percentagem para desbloquear</string>
     <string name="scan_qr_screen_title">Digitalize o código QR</string>
-    <string name="verify_transaction_function_inputs_title">Entradas de função</string>
+    <string name="verify_transaction_function_inputs_title">Argumentos de função</string>
     <string name="dapp_hero_unverified_function_title">Função não verificada</string>
     <string name="dapp_hero_unverified_function_subtitle">Reveja os detalhes antes de assinar</string>
     <string name="send_shares_currency_hint">Insira cotas</string>
