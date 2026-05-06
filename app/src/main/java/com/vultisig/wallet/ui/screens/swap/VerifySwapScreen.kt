@@ -36,6 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -582,8 +583,8 @@ internal fun VerifyCardJsonDetails(title: String, subtitle: String, modifier: Mo
 
         Text(
             text = subtitle,
-            style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.primary,
+            style = Theme.brockmann.body.m.medium.copy(fontFamily = FontFamily.Monospace),
+            color = Theme.v2.colors.alerts.success,
             textAlign = TextAlign.Start,
             modifier = Modifier.horizontalScroll(rememberScrollState()),
         )

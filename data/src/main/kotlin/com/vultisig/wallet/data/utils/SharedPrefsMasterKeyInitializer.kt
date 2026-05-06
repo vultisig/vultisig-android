@@ -1,8 +1,7 @@
 package com.vultisig.wallet.data.utils
 
-import java.io.IOException
-import java.security.GeneralSecurityException
 import javax.crypto.SecretKey
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -33,16 +32,26 @@ object SharedPrefsMasterKeyInitializer {
     /** Fires a background key pre-warm; safe to call from Application.onCreate. */
     fun prewarm() {
         CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineName("SecurePrefsPrewarm"))
-            .launch {
-                try {
-                    _prewarmResult.complete(buildSecurePrefsKey())
-                } catch (e: GeneralSecurityException) {
-                    Timber.w(e, "Secure prefs key prewarm failed; deferring to sync path")
-                    _prewarmResult.complete(null)
-                } catch (e: IOException) {
-                    Timber.w(e, "Secure prefs key prewarm failed; deferring to sync path")
-                    _prewarmResult.complete(null)
-                }
-            }
+            .launch { runPrewarmInto(_prewarmResult, ::buildSecurePrefsKey) }
+    }
+
+    /**
+     * Settles [target] with [supplier]'s result, or with `null` after a WARN log on any
+     * non-cancellation [Exception]. Rethrows [CancellationException] without touching [target] so
+     * structured concurrency keeps propagating cancellation. Idempotent: a second call against an
+     * already-settled target is a no-op.
+     */
+    internal fun runPrewarmInto(
+        target: CompletableDeferred<SecretKey?>,
+        supplier: () -> SecretKey,
+    ) {
+        try {
+            target.complete(supplier())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Secure prefs key prewarm failed; deferring to sync path")
+            target.complete(null)
+        }
     }
 }

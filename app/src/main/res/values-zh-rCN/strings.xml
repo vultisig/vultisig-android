@@ -525,6 +525,7 @@
 
     <!-- Keysign -->
     <string name="keysign_sign_transaction">签署交易</string>
+    <string name="sign_transaction">签署交易</string>
     <string name="keysign_password_title">密码</string>
 
     <!-- Home Screen -->
@@ -699,7 +700,7 @@
     <string name="scan_qr_screen_title">扫描二维码</string>
 
     <!-- Verify Transaction -->
-    <string name="verify_transaction_function_inputs_title">功能输入</string>
+    <string name="verify_transaction_function_inputs_title">函数参数</string>
     <string name="dapp_hero_unverified_function_title">未验证的功能</string>
     <string name="dapp_hero_unverified_function_subtitle">请在签名前查看下方详情</string>
 
