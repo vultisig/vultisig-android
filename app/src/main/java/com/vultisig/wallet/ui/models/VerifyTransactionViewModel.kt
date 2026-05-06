@@ -64,6 +64,8 @@ internal data class TransactionDetailsUiModel(
     val functionSignature: String? = null,
     val functionInputs: String? = null,
     val functionName: String? = null,
+    /** True when the transaction is an ERC-20 `approve(address,uint256)` call with MAX_UINT256. */
+    val isUnlimitedApproval: Boolean = false,
     /**
      * Resolved hero content for the dApp signing screens. Populated by [BuildHeroContentUseCase]
      * once the Blockaid simulation completes. When non-null, screens render this in place of the

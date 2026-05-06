@@ -1229,4 +1229,5 @@
     <string name="staked_yrune_header">Staked yRUNE</string>
     <string name="compounded_tcy_header">Compounded TCY</string>
     <string name="unknown_error">Unknown error</string>
+    <string name="erc20_approval_unlimited_amount">Unlimited %1$s</string>
 </resources>

@@ -1180,4 +1180,5 @@
     <string name="key_import_error_title">Importación de Clave Fallida</string>
     <string name="key_import_error_description">No se puede importar la billetera desde la frase semilla. Por favor, verifique su frase semilla e inténtelo de nuevo.</string>
     <string name="key_import_error_no_mnemonic_description">No se encontró frase semilla. Por favor, vuelva a ingresar su frase semilla e inténtelo de nuevo.</string>
+    <string name="erc20_approval_unlimited_amount">Ilimitado %1$s</string>
 </resources>

@@ -113,6 +113,8 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
@@ -1063,6 +1065,20 @@ constructor(
                                 .getOrNull()
                         } else null
 
+                    val isUnlimitedApproval =
+                        functionInfo?.signature == "approve(address,uint256)" &&
+                            runCatching {
+                                    val args =
+                                        json
+                                            .parseToJsonElement(functionInfo.inputs ?: "[]")
+                                            .jsonArray
+                                    args.getOrNull(1)?.jsonPrimitive?.content?.let {
+                                        BigInteger(it)
+                                    }
+                                }
+                                .getOrNull() ==
+                                BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE)
+
                     val namedTransactionUiModel =
                         transactionToUiModel.copy(
                             srcVaultName = srcVaultName,
@@ -1071,6 +1087,7 @@ constructor(
                             functionSignature = functionInfo?.signature,
                             functionInputs = functionInfo?.inputs,
                             functionName = functionInfo?.functionName,
+                            isUnlimitedApproval = isUnlimitedApproval,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)

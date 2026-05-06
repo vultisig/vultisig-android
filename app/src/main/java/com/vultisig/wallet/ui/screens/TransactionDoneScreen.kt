@@ -255,6 +255,30 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                 value = transaction.memo,
             )
 
+        if (transaction.isUnlimitedApproval) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.ic_triangle_alert,
+                    tint = Theme.v2.colors.alerts.warning,
+                    size = 16.dp,
+                )
+                Text(
+                    text =
+                        stringResource(
+                            R.string.erc20_approval_unlimited_amount,
+                            transaction.token.token.ticker,
+                        ),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.alerts.warning,
+                )
+            }
+            UiHorizontalDivider()
+        }
+
         // OtherField has its own bottom divider; an explicit one stacks and orphans when memo is
         // absent.
         if (transaction.functionSignature != null) {
