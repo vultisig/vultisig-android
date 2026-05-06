@@ -684,6 +684,7 @@
     <string name="invite_to_x_banner_title">Vultisig gradi s vama.</string>
     <string name="invite_to_x_banner_desc">Pratite nas na X</string>
     <string name="invite_to_x_banner_button">Pratite %s</string>
+    <string name="buy_vult_banner_desc">I uštedi na naknadama za swap</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Spremni ste za korištenje novog standarda novčanika.</string>
     <string name="vault_detail_vault_info">Informacije o trezoru</string>
     <string name="vault_details_keys">ključevi</string>

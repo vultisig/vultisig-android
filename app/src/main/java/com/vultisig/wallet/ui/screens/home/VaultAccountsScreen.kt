@@ -129,6 +129,8 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
         onChooseChains = viewModel::openAddChainAccount,
         onMigrateClick = viewModel::migrate,
         onDismissBanner = viewModel::tempRemoveBanner,
+        onBuyVultClick = viewModel::buyVult,
+        onBuyVultDismiss = viewModel::dismissBuyVultBanner,
         onCryptoConnectionTypeClick = viewModel::setCryptoConnectionType,
     )
 }
@@ -151,6 +153,8 @@ internal fun VaultAccountsScreen(
     onOpenSettingsClick: () -> Unit = {},
     onChooseChains: () -> Unit = {},
     onDismissBanner: () -> Unit = {},
+    onBuyVultClick: () -> Unit = {},
+    onBuyVultDismiss: () -> Unit = {},
     onCryptoConnectionTypeClick: (CryptoConnectionType) -> Unit = {},
 ) {
 
@@ -284,7 +288,10 @@ internal fun VaultAccountsScreen(
                                 modifier =
                                     Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
                                 hasMigration = state.showMigration,
+                                showBuyVult = state.showBuyVultBanner,
                                 onMigrateClick = onMigrateClick,
+                                onBuyVultClick = onBuyVultClick,
+                                onBuyVultDismiss = onBuyVultDismiss,
                                 context = context,
                                 onDismissBanner = onDismissBanner,
                             )

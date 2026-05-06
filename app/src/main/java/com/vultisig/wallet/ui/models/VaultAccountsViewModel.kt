@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -85,6 +86,7 @@ internal data class VaultAccountsUiModel(
     val defiAccounts: List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val isBannerVisible: Boolean = true,
+    val showBuyVultBanner: Boolean = false,
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
     val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
     val isChainSelectionEnabled: Boolean = true,
@@ -157,6 +159,14 @@ constructor(
     init {
         collectCryptoConnectionType()
         collectLastOpenedVault()
+        collectBuyVultBannerDismissed()
+    }
+
+    private fun collectBuyVultBannerDismissed() {
+        vaultDataStoreRepository
+            .readBuyVultBannerDismissed()
+            .onEach { dismissed -> uiState.update { it.copy(showBuyVultBanner = !dismissed) } }
+            .launchIn(viewModelScope)
     }
 
     private fun collectCryptoConnectionType() {
@@ -288,6 +298,33 @@ constructor(
         viewModelScope.launch {
             navigator.route(Route.OnRamp(vaultId = vaultId, chainId = Chain.ThorChain.raw))
         }
+    }
+
+    fun buyVult() {
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            try {
+                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                if (vault != null && vault.coins.none { it.id == Coins.Ethereum.VULT.id }) {
+                    withContext(Dispatchers.IO) { enableTokenUseCase(vaultId, Coins.Ethereum.VULT) }
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to ensure VULT token before swap navigation")
+            }
+            navigator.route(
+                Route.Swap(
+                    vaultId = vaultId,
+                    chainId = Chain.Ethereum.id,
+                    dstTokenId = Coins.Ethereum.VULT.id,
+                )
+            )
+        }
+    }
+
+    fun dismissBuyVultBanner() {
+        viewModelScope.safeLaunch { vaultDataStoreRepository.setBuyVultBannerDismissed(true) }
     }
 
     fun receive() {

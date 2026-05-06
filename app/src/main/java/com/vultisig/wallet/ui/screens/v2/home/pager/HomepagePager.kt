@@ -11,6 +11,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.pager.VsPager
 import com.vultisig.wallet.ui.components.v2.pager.indicator.VsPagerIndicator
 import com.vultisig.wallet.ui.components.v2.pager.utils.rememberVsPagerState
+import com.vultisig.wallet.ui.screens.v2.home.pager.banner.BuyVultBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.FollowXBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.UpgradeBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.container.HomePagePagerContainer
@@ -22,6 +23,8 @@ internal fun HomepagePager(
     onCloseClick: () -> Unit,
     onUpgradeClick: () -> Unit,
     onFollowXClick: () -> Unit,
+    onBuyVultClick: () -> Unit,
+    onBuyVultDismiss: () -> Unit,
 ) {
     val state = rememberVsPagerState(key = params)
 
@@ -42,6 +45,13 @@ internal fun HomepagePager(
                     FollowXBanner(onFollowXClick = onFollowXClick)
                 }
             }
+
+            if (params.showBuyVult)
+                item {
+                    HomePagePagerContainer(onCloseClick = onBuyVultDismiss) {
+                        BuyVultBanner(onBuyVultClick = onBuyVultClick)
+                    }
+                }
         }
 
         if (state.pageCount > 1) {
@@ -61,11 +71,13 @@ internal fun HomepagePager(
 @Composable
 private fun HomepagePagerPreview() {
     HomepagePager(
-        params = HomepagePagerParams(hasMigration = true),
+        params = HomepagePagerParams(hasMigration = true, showBuyVult = true),
         onCloseClick = {},
         onUpgradeClick = {},
         onFollowXClick = {},
+        onBuyVultClick = {},
+        onBuyVultDismiss = {},
     )
 }
 
-internal data class HomepagePagerParams(val hasMigration: Boolean)
+internal data class HomepagePagerParams(val hasMigration: Boolean, val showBuyVult: Boolean)

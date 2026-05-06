@@ -12,17 +12,22 @@ import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 internal fun Banners(
     modifier: Modifier,
     hasMigration: Boolean,
+    showBuyVult: Boolean,
     onMigrateClick: () -> Unit,
+    onBuyVultClick: () -> Unit,
+    onBuyVultDismiss: () -> Unit,
     context: Context,
     onDismissBanner: () -> Unit,
 ) {
     HomepagePager(
         modifier = modifier,
-        params = HomepagePagerParams(hasMigration = hasMigration),
+        params = HomepagePagerParams(hasMigration = hasMigration, showBuyVult = showBuyVult),
         onUpgradeClick = onMigrateClick,
         onFollowXClick = {
             SocialUtils.openTwitter(context = context, twitterHandle = VsAuxiliaryLinks.TWITTER_ID)
         },
+        onBuyVultClick = onBuyVultClick,
+        onBuyVultDismiss = onBuyVultDismiss,
         onCloseClick = onDismissBanner,
     )
 }
