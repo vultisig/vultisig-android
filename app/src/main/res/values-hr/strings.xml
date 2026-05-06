@@ -186,7 +186,8 @@
     <string name="verify_swap_agree_receive_amount">Slažem se s minimalnim iznosom koji ću dobiti</string>
     <string name="vault_settings_success_backup_file">datoteka spremljena u Downloads/%1$s</string>
     <string name="swap_form_estimated_fees_title">Naknada za zamjenu</string>
-    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Naknada za zamjenu (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Izlazna naknada</string>
     <string name="keysign_screen_error_please_try_again">Greška! Molim te pokušaj ponovno. %1$s</string>
     <string name="join_keysign_discovering_session_id">Otkrivanje ID-a sesije</string>
     <string name="join_keysign_discovery_service">Usluga otkrivanja</string>

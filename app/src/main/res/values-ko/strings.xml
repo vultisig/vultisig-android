@@ -266,7 +266,8 @@
     <string name="biometry_auth_login_button">생체 인증으로 로그인</string>
     <string name="swap_form_from_title">보내는 토큰</string>
     <string name="swap_form_estimated_fees_title">스왑 수수료</string>
-    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
+    <string name="swap_form_estimated_fees_with_percent_title">스왑 수수료 (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">출금 수수료</string>
     <string name="swap_form_dst_token_title">받는 토큰</string>
     <string name="transaction_type_button_swap">스왑</string>
     <string name="swap_form_gas_title">네트워크 수수료</string>

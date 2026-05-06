@@ -498,10 +498,14 @@ internal fun SwapScreen(
 
                                         FormDetails2(
                                             title =
-                                                if (state.swapFeePercent != null)
-                                                    "${stringResource(R.string.swap_form_estimated_fees_title)} (${state.swapFeePercent})"
-                                                else
+                                                state.swapFeePercent?.let {
                                                     stringResource(
+                                                        R.string
+                                                            .swap_form_estimated_fees_with_percent_title,
+                                                        it,
+                                                    )
+                                                }
+                                                    ?: stringResource(
                                                         R.string.swap_form_estimated_fees_title
                                                     ),
                                             value = state.fee,
