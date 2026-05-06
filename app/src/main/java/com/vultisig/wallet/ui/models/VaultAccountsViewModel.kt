@@ -303,21 +303,26 @@ constructor(
     fun buyVult() {
         val vaultId = vaultId ?: return
         viewModelScope.launch {
-            try {
-                val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
-                if (vault != null && vault.coins.none { it.id == Coins.Ethereum.VULT.id }) {
-                    withContext(Dispatchers.IO) { enableTokenUseCase(vaultId, Coins.Ethereum.VULT) }
+            val vultEnabled =
+                try {
+                    val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                    if (vault != null && vault.coins.none { it.id == Coins.Ethereum.VULT.id }) {
+                        withContext(Dispatchers.IO) {
+                            enableTokenUseCase(vaultId, Coins.Ethereum.VULT)
+                        }
+                    }
+                    true
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.e(e, "Failed to ensure VULT token before swap navigation")
+                    false
                 }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to ensure VULT token before swap navigation")
-            }
             navigator.route(
                 Route.Swap(
                     vaultId = vaultId,
                     chainId = Chain.Ethereum.id,
-                    dstTokenId = Coins.Ethereum.VULT.id,
+                    dstTokenId = Coins.Ethereum.VULT.id.takeIf { vultEnabled },
                 )
             )
         }

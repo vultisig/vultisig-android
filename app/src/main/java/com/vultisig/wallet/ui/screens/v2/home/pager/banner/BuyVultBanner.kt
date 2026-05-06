@@ -26,11 +26,11 @@ internal fun BuyVultBanner(onBuyVultClick: () -> Unit) {
     Box(
         modifier =
             Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
                     color = Theme.v2.colors.border.light,
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(12.dp),
                 )
     ) {
         SetBackgroundBanner(backgroundImageResId = R.drawable.buy_vult_banner)
