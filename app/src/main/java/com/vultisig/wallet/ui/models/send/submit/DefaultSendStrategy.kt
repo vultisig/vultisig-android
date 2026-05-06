@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Transaction
-import com.vultisig.wallet.data.models.allowZeroGas
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
@@ -40,10 +39,12 @@ import java.math.BigInteger
 import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
+import kotlinx.coroutines.withContext
 import wallet.core.jni.proto.Bitcoin
 
 internal class DefaultSendStrategy(
@@ -79,7 +80,10 @@ internal class DefaultSendStrategy(
     private val showError: (UiText) -> Unit,
 ) : SendSubmitStrategy {
 
+    private var submitJob: Job? = null
+
     override fun submit() {
+        if (submitJob?.isActive == true) return
         if (addressFieldState.text.isBlank()) {
             expandSection(SendSections.Address)
             emitFocusField(SendFocusField.ADDRESS)
@@ -91,259 +95,243 @@ internal class DefaultSendStrategy(
             return
         }
 
-        scope.launch {
-            showLoading()
-            try {
-                val vaultId =
-                    vaultIdProvider()
-                        ?: throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_no_token)
-                        )
+        submitJob =
+            scope.launch {
+                showLoading()
+                try {
+                    val validated = accountValidator.validate()
+                    val vaultId = validated.vaultId
+                    val chain = validated.chain
+                    val dstAddress = validated.dstAddress
+                    val selectedAccount = validated.selectedAccount
+                    val gasFee = validated.gasFee
 
-                val selectedAccount =
-                    selectedAccountProvider()
-                        ?: throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_no_token)
-                        )
+                    val rawInput = addressFieldState.text.asAddressInput()
+                    val labelCandidate = addressManager.dstAddressLabel.value ?: rawInput
+                    val dstLabel =
+                        labelCandidate.takeIf {
+                            it.isNotBlank() &&
+                                !chainAccountAddressRepository.isValid(chain, it) &&
+                                chainAccountAddressRepository.isValid(chain, dstAddress)
+                        }
 
-                val chain = selectedAccount.token.chain
-
-                val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
-
-                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_amount)
-                    )
-                }
-
-                val gasFee = accountValidator.awaitGasFee()
-
-                if (!selectedAccount.token.allowZeroGas() && gasFee.value <= BigInteger.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_gas_fee)
-                    )
-                }
-                val rawInput = addressFieldState.text.asAddressInput()
-                val dstAddress =
-                    try {
-                        accountValidator.resolveDstAddress(rawInput, chain)
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        Timber.e(e)
+                    if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
                         throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.failed_to_resolve_address)
+                            UiText.StringResource(R.string.send_error_no_address)
                         )
                     }
-                val labelCandidate = addressManager.dstAddressLabel.value ?: rawInput
-                val dstLabel =
-                    labelCandidate.takeIf {
-                        it.isNotBlank() &&
-                            !chainAccountAddressRepository.isValid(chain, it) &&
-                            chainAccountAddressRepository.isValid(chain, dstAddress)
-                    }
 
-                if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_address)
-                    )
-                }
+                    val selectedTokenValue =
+                        selectedAccount.tokenValue
+                            ?: throw InvalidTransactionDataException(
+                                UiText.StringResource(R.string.send_error_no_token)
+                            )
 
-                val selectedTokenValue =
-                    selectedAccount.tokenValue
-                        ?: throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_no_token)
-                        )
+                    val memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() }
 
-                val memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() }
+                    val selectedToken = selectedAccount.token
 
-                val selectedToken = selectedAccount.token
-
-                val tokenAmountInt =
-                    tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
-
-                val srcAddress = selectedToken.address
-                val isMaxAmount = tokenAmount.compareTo(amountManager.currentMaxAmount) == 0
-
-                if (chain == Chain.Tron) {
-                    val isTronStakingOp =
-                        memo != null &&
-                            selectedToken.isNativeToken &&
-                            TRON_STAKING_MEMO_REGEX.matches(memo)
-                    if (!isTronStakingOp && srcAddress == dstAddress) {
+                    val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+                    if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
                         throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_same_address)
+                            UiText.StringResource(R.string.send_error_no_amount)
                         )
                     }
-                }
 
-                val specific =
-                    blockChainSpecificRepository
-                        .getSpecific(
-                            chain = chain,
-                            address = srcAddress,
-                            token = selectedToken,
-                            gasFee = gasFee,
-                            memo = memoFieldState.text.toString().takeIf { it.isNotEmpty() },
-                            tokenAmountValue = tokenAmountInt,
-                            isSwap = false,
-                            isMaxAmountEnabled = isMaxAmount,
-                            isDeposit = false,
-                            dstAddress = dstAddress,
-                        )
-                        .let { applyGasSettings(it) }
-                        .let {
-                            applyBitcoinPlan(
-                                it,
-                                vaultId,
-                                selectedToken,
-                                dstAddress,
-                                tokenAmountInt,
-                                memo,
-                                chain,
+                    val tokenAmountInt =
+                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
+
+                    val srcAddress = selectedToken.address
+                    val isMaxAmount = tokenAmount.compareTo(amountManager.currentMaxAmount) == 0
+
+                    if (chain == Chain.Tron) {
+                        val isTronStakingOp =
+                            memo != null &&
+                                selectedToken.isNativeToken &&
+                                TRON_STAKING_MEMO_REGEX.matches(memo)
+                        if (!isTronStakingOp && srcAddress == dstAddress) {
+                            throw InvalidTransactionDataException(
+                                UiText.StringResource(R.string.send_error_same_address)
+                            )
+                        }
+                    }
+
+                    val specific =
+                        withContext(Dispatchers.IO) {
+                                blockChainSpecificRepository.getSpecific(
+                                    chain = chain,
+                                    address = srcAddress,
+                                    token = selectedToken,
+                                    gasFee = gasFee,
+                                    memo =
+                                        memoFieldState.text.toString().takeIf { it.isNotEmpty() },
+                                    tokenAmountValue = tokenAmountInt,
+                                    isSwap = false,
+                                    isMaxAmountEnabled = isMaxAmount,
+                                    isDeposit = false,
+                                    dstAddress = dstAddress,
+                                )
+                            }
+                            .let { applyGasSettings(it) }
+                            .let {
+                                applyBitcoinPlan(
+                                    it,
+                                    vaultId,
+                                    selectedToken,
+                                    dstAddress,
+                                    tokenAmountInt,
+                                    memo,
+                                    chain,
+                                )
+                            }
+
+                    if (selectedToken.isNativeToken) {
+                        val defiType = defiTypeProvider()
+                        val availableTokenBalance =
+                            if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                                currentTronFrozenBalanceProvider()
+                                    ?.movePointRight(selectedToken.decimal)
+                                    ?.toBigInteger() ?: BigInteger.ZERO
+                            } else {
+                                getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
+                                    ?: BigInteger.ZERO
+                            }
+
+                        if (tokenAmountInt > availableTokenBalance) {
+                            val errorRes =
+                                if (defiType == DeFiNavActions.UNFREEZE_TRX) {
+                                    R.string.send_error_insufficient_frozen_balance
+                                } else {
+                                    R.string.send_error_insufficient_native_balance_with_fees
+                                }
+                            throw InvalidTransactionDataException(
+                                UiText.FormattedText(errorRes, listOf(selectedToken.ticker))
                             )
                         }
 
-                if (selectedToken.isNativeToken) {
-                    val defiType = defiTypeProvider()
-                    val availableTokenBalance =
                         if (defiType == DeFiNavActions.UNFREEZE_TRX) {
-                            currentTronFrozenBalanceProvider()
-                                ?.movePointRight(selectedToken.decimal)
-                                ?.toBigInteger() ?: BigInteger.ZERO
-                        } else {
-                            getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
-                                ?: BigInteger.ZERO
+                            val liquidForGas =
+                                getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)?.value
+                                    ?: BigInteger.ZERO
+                            if (liquidForGas < gasFee.value) {
+                                throw InvalidTransactionDataException(
+                                    UiText.FormattedText(
+                                        R.string.send_error_insufficient_native_balance_with_fees,
+                                        listOf(selectedToken.ticker),
+                                    )
+                                )
+                            }
                         }
 
-                    if (tokenAmountInt > availableTokenBalance) {
-                        val errorRes =
-                            if (defiType == DeFiNavActions.UNFREEZE_TRX) {
-                                R.string.send_error_insufficient_frozen_balance
-                            } else {
-                                R.string.send_error_insufficient_native_balance_with_fees
-                            }
-                        throw InvalidTransactionDataException(
-                            UiText.FormattedText(errorRes, listOf(selectedToken.ticker))
-                        )
-                    }
+                        if (chain == Chain.Cardano) {
+                            chainValidationService.validateCardanoUTXORequirements(
+                                sendAmount = tokenAmountInt,
+                                totalBalance = selectedTokenValue.value,
+                                estimatedFee = gasFee.value,
+                            )
+                        }
 
-                    if (defiType == DeFiNavActions.UNFREEZE_TRX) {
-                        val liquidForGas =
-                            getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)?.value
-                                ?: BigInteger.ZERO
-                        if (liquidForGas < gasFee.value) {
+                        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                            chainValidationService.validateBtcLikeAmount(
+                                tokenAmountInt,
+                                chain,
+                                planBtc.value,
+                            )
+                        }
+                    } else {
+                        val nativeTokenAccount =
+                            accounts.value.find {
+                                it.token.isNativeToken && it.token.chain == chain
+                            }
+                        val nativeTokenValue =
+                            nativeTokenAccount?.tokenValue?.value
+                                ?: throw InvalidTransactionDataException(
+                                    UiText.StringResource(R.string.send_error_no_token)
+                                )
+
+                        if (selectedTokenValue.value < tokenAmountInt) {
                             throw InvalidTransactionDataException(
                                 UiText.FormattedText(
                                     R.string.send_error_insufficient_native_balance_with_fees,
                                     listOf(selectedToken.ticker),
                                 )
                             )
+                        } else if (nativeTokenValue < gasFee.value) {
+                            throw InvalidTransactionDataException(
+                                UiText.FormattedText(
+                                    R.string.insufficient_native_token,
+                                    listOf(nativeTokenAccount.token.ticker),
+                                )
+                            )
                         }
                     }
 
-                    if (chain == Chain.Cardano) {
-                        chainValidationService.validateCardanoUTXORequirements(
-                            sendAmount = tokenAmountInt,
-                            totalBalance = selectedTokenValue.value,
-                            estimatedFee = gasFee.value,
-                        )
-                    }
-
-                    if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                        chainValidationService.validateBtcLikeAmount(
-                            tokenAmountInt,
-                            chain,
-                            planBtc.value,
-                        )
-                    }
-                } else {
-                    val nativeTokenAccount =
-                        accounts.value.find { it.token.isNativeToken && it.token.chain == chain }
-                    val nativeTokenValue =
-                        nativeTokenAccount?.tokenValue?.value
-                            ?: throw InvalidTransactionDataException(
-                                UiText.StringResource(R.string.send_error_no_token)
-                            )
-
-                    if (selectedTokenValue.value < tokenAmountInt) {
-                        throw InvalidTransactionDataException(
-                            UiText.FormattedText(
-                                R.string.send_error_insufficient_native_balance_with_fees,
-                                listOf(selectedToken.ticker),
+                    val evmGasSettings = gasSettings.value as? GasSettings.Eth
+                    val totalGasAndFee =
+                        gasFeeToEstimatedFee(
+                            GasFeeParams(
+                                gasLimit =
+                                    if (evmGasSettings != null) evmGasSettings.gasLimit
+                                    else BigInteger.valueOf(1),
+                                gasFee =
+                                    selectGasFeeForFeeEstimation(
+                                        chain = chain,
+                                        gasFee = gasFee,
+                                        planFee = planFee.value,
+                                        evmGasSettings = evmGasSettings,
+                                    ),
+                                selectedToken = selectedToken,
                             )
                         )
-                    } else if (nativeTokenValue < gasFee.value) {
-                        throw InvalidTransactionDataException(
-                            UiText.FormattedText(
-                                R.string.insufficient_native_token,
-                                listOf(nativeTokenAccount.token.ticker),
-                            )
-                        )
-                    }
-                }
 
-                val evmGasSettings = gasSettings.value as? GasSettings.Eth
-                val totalGasAndFee =
-                    gasFeeToEstimatedFee(
-                        GasFeeParams(
-                            gasLimit =
-                                if (evmGasSettings != null) evmGasSettings.gasLimit
-                                else BigInteger.valueOf(1),
-                            gasFee =
-                                selectGasFeeForFeeEstimation(
-                                    chain = chain,
-                                    gasFee = gasFee,
-                                    planFee = planFee.value,
-                                    evmGasSettings = evmGasSettings,
+                    val transaction =
+                        Transaction(
+                            id = UUID.randomUUID().toString(),
+                            vaultId = vaultId,
+                            chainId = chain.raw,
+                            token = selectedToken,
+                            srcAddress = srcAddress,
+                            dstAddress = dstAddress,
+                            dstLabel = dstLabel,
+                            tokenValue =
+                                TokenValue(
+                                    value = tokenAmountInt,
+                                    unit = selectedTokenValue.unit,
+                                    decimals = selectedToken.decimal,
                                 ),
-                            selectedToken = selectedToken,
+                            fiatValue =
+                                FiatValue(
+                                    value =
+                                        fiatAmountFieldState.text.toString().toBigDecimalOrNull()
+                                            ?: BigDecimal.ZERO,
+                                    currency = appCurrency.value.ticker,
+                                ),
+                            gasFee = gasFee,
+                            blockChainSpecific = specific.blockChainSpecific,
+                            utxos = specific.utxos,
+                            memo = memo,
+                            estimatedFee = totalGasAndFee.formattedFiatValue,
+                            totalGas = totalGasAndFee.formattedTokenValue,
                         )
+
+                    transactionRepository.addTransaction(transaction)
+
+                    navigator.route(
+                        Route.VerifySend(transactionId = transaction.id, vaultId = vaultId)
                     )
-
-                val transaction =
-                    Transaction(
-                        id = UUID.randomUUID().toString(),
-                        vaultId = vaultId,
-                        chainId = chain.raw,
-                        token = selectedToken,
-                        srcAddress = srcAddress,
-                        dstAddress = dstAddress,
-                        dstLabel = dstLabel,
-                        tokenValue =
-                            TokenValue(
-                                value = tokenAmountInt,
-                                unit = selectedTokenValue.unit,
-                                decimals = selectedToken.decimal,
-                            ),
-                        fiatValue =
-                            FiatValue(
-                                value =
-                                    fiatAmountFieldState.text.toString().toBigDecimalOrNull()
-                                        ?: BigDecimal.ZERO,
-                                currency = appCurrency.value.ticker,
-                            ),
-                        gasFee = gasFee,
-                        blockChainSpecific = specific.blockChainSpecific,
-                        utxos = specific.utxos,
-                        memo = memo,
-                        estimatedFee = totalGasAndFee.formattedFiatValue,
-                        totalGas = totalGasAndFee.formattedTokenValue,
+                } catch (e: InvalidTransactionDataException) {
+                    showError(e.text)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    showError(
+                        e.message?.asUiText()
+                            ?: UiText.StringResource(R.string.dialog_default_error_body)
                     )
-
-                transactionRepository.addTransaction(transaction)
-
-                navigator.route(Route.VerifySend(transactionId = transaction.id, vaultId = vaultId))
-            } catch (e: InvalidTransactionDataException) {
-                showError(e.text)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
-            } finally {
-                hideLoading()
+                } finally {
+                    hideLoading()
+                }
             }
-        }
     }
 
     private fun applyGasSettings(it: BlockChainSpecificAndUtxo): BlockChainSpecificAndUtxo {

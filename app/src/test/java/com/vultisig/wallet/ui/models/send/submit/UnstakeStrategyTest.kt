@@ -5,13 +5,18 @@ package com.vultisig.wallet.ui.models.send.submit
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.chains.helpers.ThorchainFunctions
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
@@ -19,14 +24,21 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.screens.v2.defi.STAKING_RUJI_CONTRACT
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkAll
+import io.mockk.unmockkStatic
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,6 +52,8 @@ import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import vultisig.keysign.v1.TransactionType
+import vultisig.keysign.v1.WasmExecuteContractPayload
 
 internal class UnstakeStrategyTest {
 
@@ -62,10 +76,40 @@ internal class UnstakeStrategyTest {
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(mainDispatcher)
+        mockkObject(ThorchainFunctions)
+        every {
+            ThorchainFunctions.unstakeRUJI(
+                fromAddress = any(),
+                amount = any(),
+                stakingContract = any(),
+            )
+        } answers
+            {
+                WasmExecuteContractPayload(
+                    senderAddress = arg(0),
+                    contractAddress = arg(2),
+                    executeMsg = "withdraw-msg",
+                    coins = emptyList(),
+                )
+            }
+        every {
+            ThorchainFunctions.claimRujiRewards(fromAddress = any(), stakingContract = any())
+        } answers
+            {
+                WasmExecuteContractPayload(
+                    senderAddress = arg(0),
+                    contractAddress = arg(1),
+                    executeMsg = "claim-rewards-msg",
+                    coins = emptyList(),
+                )
+            }
+        every { ThorchainFunctions.rujiRewardsMemo(any(), any()) } returns "rewards-memo"
+        every { ThorchainFunctions.tcyUnstakeMemo(any()) } answers { "tcy-unstake:${arg<Int>(0)}" }
     }
 
     @AfterEach
     fun tearDown() {
+        unmockkAll()
         Dispatchers.resetMain()
     }
 
@@ -106,6 +150,66 @@ internal class UnstakeStrategyTest {
     }
 
     @Test
+    fun `submit UNSTAKE_RUJI persists deposit with withdraw memo and ruji staking contract`() =
+        runTest {
+            withMockedIoDispatcher {
+                givenSuccessfulFlow()
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+
+                val captured = slot<DepositTransaction>()
+                coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns
+                    Unit
+
+                build(this, DeFiNavActions.UNSTAKE_RUJI).submit()
+                advanceUntilIdle()
+
+                val tx = captured.captured
+                assertEquals("withdraw:ruji-contract:50000000", tx.memo)
+                assertNotNull(tx.wasmExecuteContractPayload)
+                assertEquals(STAKING_RUJI_CONTRACT, tx.wasmExecuteContractPayload!!.contractAddress)
+            }
+        }
+
+    @Test
+    fun `submit UNSTAKE_TCY persists deposit with basis-point memo when not autocompounding`() =
+        runTest {
+            withMockedIoDispatcher {
+                givenSuccessfulFlow()
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+
+                val captured = slot<DepositTransaction>()
+                coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns
+                    Unit
+
+                build(this, DeFiNavActions.UNSTAKE_TCY).submit()
+                advanceUntilIdle()
+
+                // Non-autocompound TCY unstake encodes basis points via tcyUnstakeMemo;
+                // 0.5/avail (0.5/availableTokenBalance) maps to ~5000 bps under the test fixture.
+                assertEquals("tcy-unstake:5000", captured.captured.memo)
+            }
+        }
+
+    @Test
+    fun `submit WITHDRAW_RUJI persists rewards-claim deposit when RUJI account exists`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulFlow(includeRuji = true)
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this, DeFiNavActions.WITHDRAW_RUJI).submit()
+            advanceUntilIdle()
+
+            val tx = captured.captured
+            assertEquals("rewards-memo", tx.memo)
+            assertNotNull(tx.wasmExecuteContractPayload)
+            assertEquals(STAKING_RUJI_CONTRACT, tx.wasmExecuteContractPayload!!.contractAddress)
+        }
+    }
+
+    @Test
     fun `submit surfaces no_address when chain validates dst as invalid`() = runTest {
         givenValidatedAccount()
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns false
@@ -114,6 +218,79 @@ internal class UnstakeStrategyTest {
         advanceUntilIdle()
 
         assertEquals(R.string.send_error_no_address, lastError.stringId())
+    }
+
+    private inline fun withMockedIoDispatcher(block: () -> Unit) {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            block()
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    private fun givenSuccessfulFlow(includeRuji: Boolean = false) {
+        givenValidatedAccount()
+        coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+        coEvery { getAvailableTokenBalance(any(), any()) } returns
+            TokenValue(BigInteger.valueOf(100_000_000), rujiCoin())
+        val accounts =
+            mutableListOf(
+                Account(
+                    token = Coins.ThorChain.RUNE,
+                    tokenValue =
+                        TokenValue(
+                            value = BigInteger.valueOf(2_000_000_000),
+                            token = Coins.ThorChain.RUNE,
+                        ),
+                    fiatValue = null,
+                    price = null,
+                )
+            )
+        if (includeRuji) {
+            accounts.add(
+                Account(
+                    token = Coins.ThorChain.RUJI,
+                    tokenValue =
+                        TokenValue(BigInteger.valueOf(1_000_000_000), Coins.ThorChain.RUJI),
+                    fiatValue = null,
+                    price = null,
+                )
+            )
+        }
+        every { accountsRepository.loadAddresses(VAULT_ID) } returns
+            flowOf(
+                listOf(Address(chain = Chain.ThorChain, address = "thor1self", accounts = accounts))
+            )
+        coEvery {
+            blockChainSpecificRepository.getSpecific(
+                chain = any(),
+                address = any(),
+                token = any(),
+                gasFee = any(),
+                isSwap = any(),
+                isMaxAmountEnabled = any(),
+                isDeposit = any(),
+                transactionType = any(),
+            )
+        } returns
+            BlockChainSpecificAndUtxo(
+                BlockChainSpecific.THORChain(
+                    accountNumber = BigInteger.ZERO,
+                    sequence = BigInteger.ZERO,
+                    fee = BigInteger.ZERO,
+                    isDeposit = true,
+                    transactionType = TransactionType.TRANSACTION_TYPE_GENERIC_CONTRACT,
+                )
+            )
+        coEvery { gasFeeToEstimatedFee(any()) } returns
+            EstimatedGasFee(
+                formattedFiatValue = "$0.01",
+                formattedTokenValue = "0.0001 RUNE",
+                tokenValue = TokenValue(BigInteger.ONE, Coins.ThorChain.RUNE),
+                fiatValue = mockk(relaxed = true),
+            )
     }
 
     private fun givenValidatedAccount(gasFeeValue: BigInteger = BigInteger.valueOf(2_000_000)) {

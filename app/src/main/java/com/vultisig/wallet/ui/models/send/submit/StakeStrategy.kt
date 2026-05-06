@@ -29,6 +29,7 @@ import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -52,106 +53,116 @@ internal class StakeStrategy(
     private val showError: (UiText) -> Unit,
 ) : SendSubmitStrategy {
 
+    private var submitJob: Job? = null
+
     override fun submit() {
-        scope.launch {
-            showLoading()
-            try {
-                val validated = accountValidator.validate()
-                val vaultId = validated.vaultId
-                val chain = validated.chain
-                val dstAddress = validated.dstAddress
-                val selectedAccount = validated.selectedAccount
-                val gasFee = validated.gasFee
+        if (submitJob?.isActive == true) return
+        submitJob =
+            scope.launch {
+                showLoading()
+                try {
+                    val validated = accountValidator.validate()
+                    val vaultId = validated.vaultId
+                    val chain = validated.chain
+                    val dstAddress = validated.dstAddress
+                    val selectedAccount = validated.selectedAccount
+                    val gasFee = validated.gasFee
 
-                if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_address)
-                    )
-                }
-
-                val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
-                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_amount)
-                    )
-                }
-
-                val nonDeFiBalance =
-                    accountsRepository
-                        .loadAddresses(vaultId)
-                        .firstOrNull()
-                        ?.flatMap { it.accounts }
-                        ?.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
-                        ?.tokenValue
-                        ?.value ?: BigInteger.ZERO
-
-                if (nonDeFiBalance < gasFee.value) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_insufficient_balance)
-                    )
-                }
-
-                val selectedToken = selectedAccount.token
-                val srcAddress = selectedToken.address
-                val tokenAmountInt =
-                    tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
-
-                val availableTokenBalance =
-                    getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
-                        ?: BigInteger.ZERO
-
-                if (tokenAmountInt > availableTokenBalance) {
-                    throw InvalidTransactionDataException(
-                        UiText.FormattedText(
-                            R.string.send_error_insufficient_native_balance_with_fees,
-                            listOf(selectedToken.ticker),
+                    if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_no_address)
                         )
-                    )
-                }
-
-                val depositTx =
-                    when (defiTypeProvider()) {
-                        DeFiNavActions.STAKE_RUJI ->
-                            createRujiStakeDepositTransaction(
-                                vaultId = vaultId,
-                                selectedToken = selectedToken,
-                                srcAddress = srcAddress,
-                                dstAddress = dstAddress,
-                                tokenAmountInt = tokenAmountInt,
-                                gasFee = gasFee,
-                                chain = chain,
-                            )
-
-                        DeFiNavActions.STAKE_TCY,
-                        DeFiNavActions.STAKE_STCY ->
-                            createTCYStakeDepositTransaction(
-                                vaultId = vaultId,
-                                selectedToken = selectedToken,
-                                srcAddress = srcAddress,
-                                dstAddress = dstAddress,
-                                tokenAmountInt = tokenAmountInt,
-                                gasFee = gasFee,
-                                chain = chain,
-                            )
-
-                        else -> error("DeFi Type not supported ${defiTypeProvider()?.type}")
                     }
 
-                depositTransactionRepository.addTransaction(depositTx)
+                    val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+                    if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_no_amount)
+                        )
+                    }
 
-                navigator.route(
-                    Route.VerifyDeposit(transactionId = depositTx.id, vaultId = vaultId)
-                )
-            } catch (e: InvalidTransactionDataException) {
-                showError(e.text)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
-            } finally {
-                hideLoading()
+                    val nonDeFiBalance =
+                        accountsRepository
+                            .loadAddresses(vaultId)
+                            .firstOrNull()
+                            ?.flatMap { it.accounts }
+                            ?.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
+                            ?.tokenValue
+                            ?.value ?: BigInteger.ZERO
+
+                    if (nonDeFiBalance < gasFee.value) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_insufficient_balance)
+                        )
+                    }
+
+                    val selectedToken = selectedAccount.token
+                    val srcAddress = selectedToken.address
+                    val tokenAmountInt =
+                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
+
+                    val availableTokenBalance =
+                        getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
+                            ?: BigInteger.ZERO
+
+                    if (tokenAmountInt > availableTokenBalance) {
+                        throw InvalidTransactionDataException(
+                            UiText.FormattedText(
+                                R.string.send_error_insufficient_native_balance_with_fees,
+                                listOf(selectedToken.ticker),
+                            )
+                        )
+                    }
+
+                    val depositTx =
+                        when (defiTypeProvider()) {
+                            DeFiNavActions.STAKE_RUJI ->
+                                createRujiStakeDepositTransaction(
+                                    vaultId = vaultId,
+                                    selectedToken = selectedToken,
+                                    srcAddress = srcAddress,
+                                    dstAddress = dstAddress,
+                                    tokenAmountInt = tokenAmountInt,
+                                    gasFee = gasFee,
+                                    chain = chain,
+                                )
+
+                            DeFiNavActions.STAKE_TCY,
+                            DeFiNavActions.STAKE_STCY ->
+                                createTCYStakeDepositTransaction(
+                                    vaultId = vaultId,
+                                    selectedToken = selectedToken,
+                                    srcAddress = srcAddress,
+                                    dstAddress = dstAddress,
+                                    tokenAmountInt = tokenAmountInt,
+                                    gasFee = gasFee,
+                                    chain = chain,
+                                )
+
+                            else ->
+                                throw InvalidTransactionDataException(
+                                    UiText.StringResource(R.string.dialog_default_error_body)
+                                )
+                        }
+
+                    depositTransactionRepository.addTransaction(depositTx)
+
+                    navigator.route(
+                        Route.VerifyDeposit(transactionId = depositTx.id, vaultId = vaultId)
+                    )
+                } catch (e: InvalidTransactionDataException) {
+                    showError(e.text)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    showError(
+                        e.message?.asUiText()
+                            ?: UiText.StringResource(R.string.dialog_default_error_body)
+                    )
+                } finally {
+                    hideLoading()
+                }
             }
-        }
     }
 
     private suspend fun createRujiStakeDepositTransaction(

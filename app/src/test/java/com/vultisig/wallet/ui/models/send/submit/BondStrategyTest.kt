@@ -8,8 +8,12 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.DepositTransaction
+import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.repositories.AddressParserRepository
+import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
@@ -20,7 +24,11 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkStatic
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlinx.coroutines.CoroutineScope
@@ -106,6 +114,24 @@ internal class BondStrategyTest {
     }
 
     @Test
+    fun `submit persists bond deposit with BOND memo and node dstAddress`() = runTest {
+        withMockedIoDispatcher {
+            givenSuccessfulBond()
+            tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
+
+            val captured = slot<DepositTransaction>()
+            coEvery { depositTransactionRepository.addTransaction(capture(captured)) } returns Unit
+
+            build(this).submit()
+            advanceUntilIdle()
+
+            val tx = captured.captured
+            assertEquals("BOND:thor-node-address", tx.memo)
+            assertEquals("thor-node-address", tx.dstAddress)
+        }
+    }
+
+    @Test
     fun `submit surfaces no_address error when chain validates dst as invalid`() = runTest {
         givenValidatedAccount()
         coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns false
@@ -114,6 +140,51 @@ internal class BondStrategyTest {
         advanceUntilIdle()
 
         assertEquals(R.string.send_error_no_address, lastError.stringId())
+    }
+
+    private inline fun withMockedIoDispatcher(block: () -> Unit) {
+        mockkStatic(Dispatchers::class)
+        every { Dispatchers.IO } returns mainDispatcher
+        try {
+            block()
+        } finally {
+            unmockkStatic(Dispatchers::class)
+        }
+    }
+
+    private fun givenSuccessfulBond() {
+        givenValidatedAccount()
+        coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+        coEvery { getAvailableTokenBalance(any(), any()) } returns
+            TokenValue(BigInteger.valueOf(1_000_000_000), runeCoin())
+        coEvery {
+            blockChainSpecificRepository.getSpecific(
+                chain = any(),
+                address = any(),
+                token = any(),
+                gasFee = any(),
+                isSwap = any(),
+                isMaxAmountEnabled = any(),
+                isDeposit = any(),
+            )
+        } returns
+            BlockChainSpecificAndUtxo(
+                BlockChainSpecific.THORChain(
+                    accountNumber = BigInteger.ZERO,
+                    sequence = BigInteger.ZERO,
+                    fee = BigInteger.ZERO,
+                    isDeposit = true,
+                    transactionType =
+                        vultisig.keysign.v1.TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+                )
+            )
+        coEvery { gasFeeToEstimatedFee(any()) } returns
+            EstimatedGasFee(
+                formattedFiatValue = "$0.01",
+                formattedTokenValue = "0.0001 RUNE",
+                tokenValue = TokenValue(BigInteger.ONE, runeCoin()),
+                fiatValue = mockk(relaxed = true),
+            )
     }
 
     private fun givenValidatedAccount() {

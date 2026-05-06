@@ -23,6 +23,7 @@ import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -45,129 +46,137 @@ internal class BondStrategy(
     private val showError: (UiText) -> Unit,
 ) : SendSubmitStrategy {
 
-    override fun submit() {
-        scope.launch {
-            showLoading()
-            try {
-                val validated = accountValidator.validate()
-                val vaultId = validated.vaultId
-                val chain = validated.chain
-                val dstAddress = validated.dstAddress
-                val selectedAccount = validated.selectedAccount
-                val gasFee = validated.gasFee
+    private var submitJob: Job? = null
 
-                val providerAddress =
-                    if (providerBondFieldState.text.toString().isNotEmpty()) {
-                        try {
-                            addressParserRepository.resolveName(
-                                providerBondFieldState.text.toString(),
-                                chain,
+    override fun submit() {
+        if (submitJob?.isActive == true) return
+        submitJob =
+            scope.launch {
+                showLoading()
+                try {
+                    val validated = accountValidator.validate()
+                    val vaultId = validated.vaultId
+                    val chain = validated.chain
+                    val dstAddress = validated.dstAddress
+                    val selectedAccount = validated.selectedAccount
+                    val gasFee = validated.gasFee
+
+                    val providerAddress =
+                        if (providerBondFieldState.text.toString().isNotEmpty()) {
+                            try {
+                                addressParserRepository.resolveName(
+                                    providerBondFieldState.text.toString(),
+                                    chain,
+                                )
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                Timber.e(e)
+                                throw InvalidTransactionDataException(
+                                    UiText.StringResource(R.string.failed_to_resolve_address)
+                                )
+                            }
+                        } else {
+                            ""
+                        }
+
+                    val feeBondOperator = operatorFeesBondFieldState.text.toString()
+                    val operatorFeeValue: Int? =
+                        if (feeBondOperator.isNotEmpty()) {
+                            feeBondOperator.toIntOrNull()?.takeIf { it in 0..10000 }
+                                ?: throw InvalidTransactionDataException(
+                                    UiText.StringResource(R.string.send_error_invalid_operator_fee)
+                                )
+                        } else {
+                            null
+                        }
+
+                    if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_no_address)
+                        )
+                    }
+
+                    val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
+                    if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.send_error_no_amount)
+                        )
+                    }
+
+                    val selectedToken = selectedAccount.token
+                    val srcAddress = selectedToken.address
+                    val tokenAmountInt =
+                        tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
+
+                    val availableTokenBalance =
+                        getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
+                            ?: BigInteger.ZERO
+
+                    if (tokenAmountInt > availableTokenBalance) {
+                        throw InvalidTransactionDataException(
+                            UiText.FormattedText(
+                                R.string.send_error_insufficient_native_balance_with_fees,
+                                listOf(selectedToken.ticker),
                             )
-                        } catch (e: CancellationException) {
-                            throw e
-                        } catch (e: Exception) {
-                            Timber.e(e)
-                            throw InvalidTransactionDataException(
-                                UiText.StringResource(R.string.failed_to_resolve_address)
+                        )
+                    }
+
+                    val depositMemo =
+                        Bond.Thor(
+                            nodeAddress = dstAddress,
+                            providerAddress = providerAddress.takeIf { it.isNotEmpty() },
+                            operatorFee = operatorFeeValue,
+                        )
+
+                    val specific =
+                        withContext(Dispatchers.IO) {
+                            blockChainSpecificRepository.getSpecific(
+                                chain,
+                                srcAddress,
+                                selectedToken,
+                                gasFee,
+                                isSwap = false,
+                                isMaxAmountEnabled = false,
+                                isDeposit = true,
                             )
                         }
-                    } else {
-                        ""
-                    }
 
-                val feeBondOperator = operatorFeesBondFieldState.text.toString()
-                val operatorFeeValue: Int? =
-                    if (feeBondOperator.isNotEmpty()) {
-                        feeBondOperator.toIntOrNull()?.takeIf { it in 0..10000 }
-                            ?: throw InvalidTransactionDataException(
-                                UiText.StringResource(R.string.send_error_invalid_operator_fee)
-                            )
-                    } else {
-                        null
-                    }
-
-                if (!chainAccountAddressRepository.isValid(chain, dstAddress)) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_address)
-                    )
-                }
-
-                val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
-                if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-                    throw InvalidTransactionDataException(
-                        UiText.StringResource(R.string.send_error_no_amount)
-                    )
-                }
-
-                val selectedToken = selectedAccount.token
-                val srcAddress = selectedToken.address
-                val tokenAmountInt =
-                    tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
-
-                val availableTokenBalance =
-                    getAvailableTokenBalance(selectedAccount, gasFee.value)?.value
-                        ?: BigInteger.ZERO
-
-                if (tokenAmountInt > availableTokenBalance) {
-                    throw InvalidTransactionDataException(
-                        UiText.FormattedText(
-                            R.string.send_error_insufficient_native_balance_with_fees,
-                            listOf(selectedToken.ticker),
+                    val depositTx =
+                        DepositTransaction(
+                            id = UUID.randomUUID().toString(),
+                            vaultId = vaultId,
+                            srcToken = selectedToken,
+                            srcAddress = srcAddress,
+                            dstAddress = dstAddress,
+                            memo = depositMemo.toString(),
+                            srcTokenValue =
+                                TokenValue(value = tokenAmountInt, token = selectedToken),
+                            estimatedFees = gasFee,
+                            estimateFeesFiat =
+                                gasFeeToEstimatedFee
+                                    .fiatFeesFor(gasFee, selectedToken)
+                                    .formattedFiatValue,
+                            blockChainSpecific = specific.blockChainSpecific,
                         )
+
+                    depositTransactionRepository.addTransaction(depositTx)
+
+                    navigator.route(
+                        Route.VerifyDeposit(transactionId = depositTx.id, vaultId = vaultId)
                     )
+                } catch (e: InvalidTransactionDataException) {
+                    showError(e.text)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    showError(
+                        e.message?.asUiText()
+                            ?: UiText.StringResource(R.string.dialog_default_error_body)
+                    )
+                } finally {
+                    hideLoading()
                 }
-
-                val depositMemo =
-                    Bond.Thor(
-                        nodeAddress = dstAddress,
-                        providerAddress = providerAddress.takeIf { it.isNotEmpty() },
-                        operatorFee = operatorFeeValue,
-                    )
-
-                val specific =
-                    withContext(Dispatchers.IO) {
-                        blockChainSpecificRepository.getSpecific(
-                            chain,
-                            srcAddress,
-                            selectedToken,
-                            gasFee,
-                            isSwap = false,
-                            isMaxAmountEnabled = false,
-                            isDeposit = true,
-                        )
-                    }
-
-                val depositTx =
-                    DepositTransaction(
-                        id = UUID.randomUUID().toString(),
-                        vaultId = vaultId,
-                        srcToken = selectedToken,
-                        srcAddress = srcAddress,
-                        dstAddress = dstAddress,
-                        memo = depositMemo.toString(),
-                        srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
-                        estimatedFees = gasFee,
-                        estimateFeesFiat =
-                            gasFeeToEstimatedFee
-                                .fiatFeesFor(gasFee, selectedToken)
-                                .formattedFiatValue,
-                        blockChainSpecific = specific.blockChainSpecific,
-                    )
-
-                depositTransactionRepository.addTransaction(depositTx)
-
-                navigator.route(
-                    Route.VerifyDeposit(transactionId = depositTx.id, vaultId = vaultId)
-                )
-            } catch (e: InvalidTransactionDataException) {
-                showError(e.text)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                showError(e.message?.asUiText() ?: UiText.Empty)
-            } finally {
-                hideLoading()
             }
-        }
     }
 }

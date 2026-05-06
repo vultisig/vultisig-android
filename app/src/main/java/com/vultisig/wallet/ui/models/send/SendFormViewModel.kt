@@ -1252,11 +1252,17 @@ constructor(
             DeFiNavActions.REDEEM_YTCY -> redeemStrategy.submit()
 
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withdrawUsdcCircleStrategy.submit()
-            else -> sendStrategy.submit()
+
+            null,
+            DeFiNavActions.DEPOSIT_USDC_CIRCLE,
+            DeFiNavActions.STAKE_CACAO,
+            DeFiNavActions.UNSTAKE_CACAO,
+            DeFiNavActions.ADD_LP,
+            DeFiNavActions.REMOVE_LP,
+            DeFiNavActions.FREEZE_TRX,
+            DeFiNavActions.UNFREEZE_TRX -> sendStrategy.submit()
         }
     }
-
-    fun send() = sendStrategy.submit()
 
     private fun hideLoading() {
         uiState.update { it.copy(isLoading = false) }
