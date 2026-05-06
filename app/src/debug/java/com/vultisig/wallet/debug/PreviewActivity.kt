@@ -1036,6 +1036,7 @@ private fun SelectChainPopupPreview() {
                 isLongPressActive = true,
                 pressPosition = Offset(pressX, pressY),
             ),
+        key = { it.chain },
         onItemSelected = {},
         itemContent = { item, distanceFromCenter ->
             ChainSelectorPickerItem(item = item, distanceFromCenter = distanceFromCenter)
