@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
+import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
@@ -26,6 +27,8 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
@@ -46,6 +49,8 @@ internal data class QuoteFetchResult(
     val estimatedDstFiat: FiatValue,
     val feeText: String,
     val swapFeeFiat: FiatValue,
+    val outboundFeeText: String? = null,
+    val swapFeePercent: String? = null,
 )
 
 internal data class QuoteCandidate(
@@ -155,6 +160,56 @@ constructor(
         val estimatedDstFiatValue =
             convertTokenValueToFiat(dstToken, quote.expectedDstValue, currency)
 
+        val rawFees =
+            when (quote) {
+                is SwapQuote.ThorChain -> quote.data.fees
+                is SwapQuote.MayaChain -> quote.data.fees
+                else -> null
+            }
+        val resolvedFeeText: String
+        val outboundFeeText: String?
+        val swapFeePercent: String?
+        val resolvedSwapFeeFiat: FiatValue
+        if (rawFees != null) {
+            val affiliateFiat =
+                convertTokenValueToFiat(
+                    dstToken,
+                    dstToken.convertToTokenValue(rawFees.affiliate),
+                    currency,
+                )
+            val outboundFiat =
+                convertTokenValueToFiat(
+                    dstToken,
+                    dstToken.convertToTokenValue(rawFees.outbound),
+                    currency,
+                )
+            swapFeePercent =
+                if (srcFiatValue.value > BigDecimal.ZERO)
+                    String.format(
+                        Locale.US,
+                        "%.2f%%",
+                        affiliateFiat.value
+                            .divide(srcFiatValue.value, 4, RoundingMode.HALF_UP)
+                            .multiply(BigDecimal(100)),
+                    )
+                else null
+            resolvedFeeText = fiatValueToString(affiliateFiat)
+            outboundFeeText = fiatValueToString(outboundFiat)
+            // Headline total must reconcile to the breakdown rows (Swap Fee + Outbound Fee).
+            // Raw `fees.total` includes the `asset` (liquidity) component, but liquidity is
+            // already reflected in `expectedDstValue`, so we drop it here.
+            resolvedSwapFeeFiat =
+                FiatValue(
+                    value = affiliateFiat.value + outboundFiat.value,
+                    currency = fiatFees.currency,
+                )
+        } else {
+            resolvedFeeText = fiatValueToString(fiatFees)
+            outboundFeeText = null
+            swapFeePercent = null
+            resolvedSwapFeeFiat = fiatFees
+        }
+
         return QuoteFetchResult(
             quote = quote,
             provider = provider,
@@ -163,8 +218,10 @@ constructor(
             estimatedDstTokenValue = estimatedDstTokenValue,
             estimatedDstFiatValue = fiatValueToString(estimatedDstFiatValue),
             estimatedDstFiat = estimatedDstFiatValue,
-            feeText = fiatValueToString(fiatFees),
-            swapFeeFiat = fiatFees,
+            feeText = resolvedFeeText,
+            swapFeeFiat = resolvedSwapFeeFiat,
+            outboundFeeText = outboundFeeText,
+            swapFeePercent = swapFeePercent,
         )
     }
 
