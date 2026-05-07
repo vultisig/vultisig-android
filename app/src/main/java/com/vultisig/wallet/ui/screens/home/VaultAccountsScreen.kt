@@ -279,7 +279,7 @@ internal fun VaultAccountsScreen(
                     item {
                         AnimatedVisibility(
                             visible =
-                                state.isBannerVisible &&
+                                (state.isBannerVisible || state.showBuyVultBanner) &&
                                     state.cryptoConnectionType == CryptoConnectionType.Wallet,
                             enter = fadeIn() + expandVertically(),
                             exit = fadeOut() + shrinkVertically(),
@@ -288,6 +288,7 @@ internal fun VaultAccountsScreen(
                                 modifier =
                                     Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
                                 hasMigration = state.showMigration,
+                                showSessionBanners = state.isBannerVisible,
                                 showBuyVult = state.showBuyVultBanner,
                                 onMigrateClick = onMigrateClick,
                                 onBuyVultClick = onBuyVultClick,

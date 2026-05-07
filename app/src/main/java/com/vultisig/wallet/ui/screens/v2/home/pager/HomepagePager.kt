@@ -33,18 +33,19 @@ internal fun HomepagePager(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         VsPager(state = state) {
-            if (params.hasMigration)
+            if (params.hasMigration && params.showSessionBanners)
                 item {
                     HomePagePagerContainer(onCloseClick = onCloseClick) {
                         UpgradeBanner(onUpgradeClick = onUpgradeClick)
                     }
                 }
 
-            item {
-                HomePagePagerContainer(onCloseClick = onCloseClick) {
-                    FollowXBanner(onFollowXClick = onFollowXClick)
+            if (params.showSessionBanners)
+                item {
+                    HomePagePagerContainer(onCloseClick = onCloseClick) {
+                        FollowXBanner(onFollowXClick = onFollowXClick)
+                    }
                 }
-            }
 
             if (params.showBuyVult)
                 item {
@@ -71,7 +72,8 @@ internal fun HomepagePager(
 @Composable
 private fun HomepagePagerPreview() {
     HomepagePager(
-        params = HomepagePagerParams(hasMigration = true, showBuyVult = true),
+        params =
+            HomepagePagerParams(hasMigration = true, showSessionBanners = true, showBuyVult = true),
         onCloseClick = {},
         onUpgradeClick = {},
         onFollowXClick = {},
@@ -80,4 +82,8 @@ private fun HomepagePagerPreview() {
     )
 }
 
-internal data class HomepagePagerParams(val hasMigration: Boolean, val showBuyVult: Boolean)
+internal data class HomepagePagerParams(
+    val hasMigration: Boolean,
+    val showSessionBanners: Boolean,
+    val showBuyVult: Boolean,
+)

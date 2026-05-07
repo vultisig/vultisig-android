@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
@@ -219,23 +220,7 @@ constructor(
         viewModelScope.launch {
             try {
                 val vault = vaultRepository.get(vaultId) ?: return@launch
-
-                // Check if vault has Ethereum chain enabled
-                val hasEthereum = vault.coins.any { it.chain == Chain.Ethereum }
-                if (!hasEthereum) {
-                    Timber.d("Ethereum chain not enabled, skipping VULT token auto-enable")
-                    return@launch
-                }
-
-                // Check if VULT token is already enabled
-                val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id }
-
-                if (vultCoin == null) {
-                    // Enable VULT token in background
-                    Timber.d("VULT token not enabled, enabling it now for vault: $vaultId")
-                    withContext(Dispatchers.IO) { enableTokenUseCase(vaultId, Coins.Ethereum.VULT) }
-                    Timber.d("VULT token enabled successfully")
-                }
+                ensureVultEnabled(vault)
 
                 // fetch NFT
                 val ethAddress = vault.coins.find { it.id == Coins.Ethereum.ETH.id }?.address
@@ -245,9 +230,29 @@ constructor(
                         tiersNFTRepository.saveTierNFT(vaultId, balance)
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to auto-enable VULT token")
             }
+        }
+    }
+
+    private suspend fun ensureVultEnabled(vault: Vault): Boolean {
+        if (vault.coins.any { it.id == Coins.Ethereum.VULT.id }) return true
+        if (vault.coins.none { it.chain == Chain.Ethereum }) {
+            Timber.d("Ethereum chain not enabled, cannot enable VULT token")
+            return false
+        }
+        return try {
+            withContext(Dispatchers.IO) {
+                enableTokenUseCase(vault.id, Coins.Ethereum.VULT) != null
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to enable VULT token")
+            false
         }
     }
 
@@ -303,26 +308,17 @@ constructor(
     fun buyVult() {
         val vaultId = vaultId ?: return
         viewModelScope.launch {
-            val vultEnabled =
-                try {
-                    val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
-                    if (vault != null && vault.coins.none { it.id == Coins.Ethereum.VULT.id }) {
-                        withContext(Dispatchers.IO) {
-                            enableTokenUseCase(vaultId, Coins.Ethereum.VULT)
-                        }
-                    }
-                    true
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to ensure VULT token before swap navigation")
-                    false
-                }
+            val vault =
+                withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return@launch
+            if (!ensureVultEnabled(vault)) {
+                Timber.w("VULT setup unavailable, skipping swap navigation")
+                return@launch
+            }
             navigator.route(
                 Route.Swap(
                     vaultId = vaultId,
                     chainId = Chain.Ethereum.id,
-                    dstTokenId = Coins.Ethereum.VULT.id.takeIf { vultEnabled },
+                    dstTokenId = Coins.Ethereum.VULT.id,
                 )
             )
         }
