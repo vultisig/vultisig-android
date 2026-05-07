@@ -238,6 +238,18 @@ constructor(
         val uri = uiModel.value.fileUri ?: return
         viewModelScope.launch {
             val fileContent = uri.fileContent(context)
+            if (fileContent == null) {
+                uiModel.update {
+                    it.copy(
+                        fileUri = null,
+                        fileName = null,
+                        fileContent = null,
+                        isZip = null,
+                        error = UiText.StringResource(R.string.import_file_not_supported),
+                    )
+                }
+                return@launch
+            }
             uiModel.update { it.copy(fileContent = fileContent) }
             parseFileContent()
         }
