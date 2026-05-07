@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
@@ -26,9 +25,9 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +47,6 @@ internal data class ChainUiModel(val isEnabled: Boolean, val coin: Coin)
 internal class ChainSelectionViewModel
 @Inject
 constructor(
-    @param:ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
@@ -126,9 +124,8 @@ constructor(
 
             if (failedChains.isNotEmpty()) {
                 snackbarFlow.showMessage(
-                    context.getString(
-                        R.string.chain_selection_enable_failed,
-                        failedChains.joinToString(", "),
+                    R.string.chain_selection_enable_failed.asUiText(
+                        failedChains.joinToString(", ")
                     ),
                     SnackbarType.Error,
                 )

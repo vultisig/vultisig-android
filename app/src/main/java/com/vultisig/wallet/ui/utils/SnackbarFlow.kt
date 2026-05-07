@@ -9,13 +9,21 @@ import kotlinx.coroutines.flow.receiveAsFlow
 @Singleton
 internal class SnackbarFlow @Inject constructor() {
 
-    private val messageFlow = Channel<Pair<String, SnackbarType>>()
+    private val messageFlow = Channel<Pair<UiText, SnackbarType>>()
 
     suspend fun showMessage(message: String, type: SnackbarType = SnackbarType.Success) {
+        showMessage(message.asUiText(), type)
+    }
+
+    suspend fun showMessage(message: UiText, type: SnackbarType = SnackbarType.Success) {
         messageFlow.send(message to type)
     }
 
-    suspend fun collectMessage(onMessageReceived: suspend (Pair<String, SnackbarType>) -> Unit) {
-        messageFlow.receiveAsFlow().collect { if (it.first.isNotBlank()) onMessageReceived(it) }
+    suspend fun collectMessage(onMessageReceived: suspend (Pair<UiText, SnackbarType>) -> Unit) {
+        messageFlow.receiveAsFlow().collect { (message, type) ->
+            if (message !is UiText.DynamicString || message.text.isNotBlank()) {
+                onMessageReceived(message to type)
+            }
+        }
     }
 }
