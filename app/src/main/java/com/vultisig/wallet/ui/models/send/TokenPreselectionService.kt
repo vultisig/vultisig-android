@@ -27,7 +27,12 @@ internal class TokenPreselectionService(
         preSelectedTokenId: TokenId?,
         forcePreselection: Boolean = false,
     ) {
-        Timber.d("preSelectToken($preSelectedChainIds, $preSelectedTokenId, $forcePreselection)")
+        Timber.d(
+            "preSelectToken(%s, %s, %s)",
+            preSelectedChainIds,
+            preSelectedTokenId,
+            forcePreselection,
+        )
 
         preSelectTokenJob?.cancel()
         preSelectTokenJob =
@@ -44,7 +49,7 @@ internal class TokenPreselectionService(
                             )
                         }
 
-                    Timber.d("Found a new token to pre select $preSelectedToken")
+                    Timber.d("Found a new token to pre select %s", preSelectedToken)
 
                     // if user hasn't yet selected any token, preselect found token
                     if (

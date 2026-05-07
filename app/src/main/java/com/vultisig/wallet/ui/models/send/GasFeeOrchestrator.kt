@@ -28,6 +28,7 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asAddressInput
 import com.vultisig.wallet.ui.utils.textAsFlow
 import java.math.BigInteger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -101,15 +102,15 @@ internal class GasFeeOrchestrator(
 
     private fun collectGasTokenBalance() {
         scope.launch {
-            selectedToken
-                .filterNotNull()
-                .map {
-                    if (it.isNativeToken) {
+            // Combine on accounts as well so the label re-evaluates when the native balance
+            // arrives or changes for the same selected token.
+            combine(selectedToken.filterNotNull(), accounts) { token, accounts ->
+                    if (token.isNativeToken) {
                         null
                     } else {
-                        accounts.value
+                        accounts
                             .find { account ->
-                                account.token.isNativeToken && account.token.chain == it.chain
+                                account.token.isNativeToken && account.token.chain == token.chain
                             }
                             ?.tokenValue
                     }
@@ -241,6 +242,8 @@ internal class GasFeeOrchestrator(
 
                         planFee.value = plan.fee
                         planBtc.value = plan
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         Timber.e(e)
                     }
@@ -349,6 +352,8 @@ internal class GasFeeOrchestrator(
                         advanceGasUiRepository.updateBlockChainSpecific(spec.blockChainSpecific)
                         advanceGasUiRepository.showIcon()
                         uiState.update { it.copy(specific = spec) }
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
                         Timber.e(e)
                     }

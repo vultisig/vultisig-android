@@ -635,7 +635,8 @@ constructor(
                 parseDepositType(type)
             }
 
-        if (this.mscaAddress != mscaAddress) {
+        val mscaChanged = this.mscaAddress != mscaAddress
+        if (mscaChanged) {
             this.mscaAddress = mscaAddress
         }
 
@@ -644,6 +645,10 @@ constructor(
             accountsLoader.load(vaultId)
             loadVaultName()
             initFormType()
+        } else if (mscaChanged && defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE) {
+            // The Circle USDC account is built from mscaAddress; without this reload the form
+            // would stay on the zero-balance placeholder until the screen is recreated.
+            accountsLoader.load(vaultId)
         }
 
         if (address != null) {

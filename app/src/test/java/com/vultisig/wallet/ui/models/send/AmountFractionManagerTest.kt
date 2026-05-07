@@ -22,7 +22,6 @@ import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -207,12 +206,11 @@ internal class AmountFractionManagerTest {
         }
 
     @Test
-    fun `choosePercentageAmount cancels in-flight job when invoked twice`() =
+    fun `choosePercentageAmount cancels in-flight job when invoked twice - latest call wins`() =
         runTest(mainDispatcher) {
-            // Two rapid invocations: only the second one's outcome should be observable in
-            // selectedAmountFraction. The first job is cancelled before it can write its fraction
-            // because TextFieldState writes are synchronous on the unconfined dispatcher; what we
-            // can verify is that the fraction settles on the latest call, and no markMax came in.
+            // The ensureActive() guard inside the manager makes this deterministic: the first
+            // job's continuation, after cancel(), throws CancellationException at the
+            // post-finally checkpoint and never reaches setTextAndPlaceCursorAtEnd.
             account = ethAccount()
             gasFee.value = TokenValue(value = BigInteger("0"), token = ethAccount().token)
             coEvery { getAvailableTokenBalance(any(), any()) } returns
@@ -223,12 +221,9 @@ internal class AmountFractionManagerTest {
             manager.choosePercentageAmount(AmountFraction.F75)
             advanceUntilIdle()
 
-            assertTrue(
-                uiState.value.selectedAmountFraction == AmountFraction.F75 ||
-                    uiState.value.selectedAmountFraction == AmountFraction.F25
-            )
-            // Whatever order they collapsed in, neither should have called markMax — that is
-            // chooseMaxTokenAmount's job alone.
+            // The latest invocation always wins — F25 is never an acceptable end-state.
+            assertEquals(AmountFraction.F75, uiState.value.selectedAmountFraction)
+            // Only chooseMaxTokenAmount calls markMax, never the percentage path.
             coVerify(exactly = 0) { amountManager.markMax(any()) }
         }
 

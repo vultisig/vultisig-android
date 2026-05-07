@@ -22,6 +22,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -72,6 +74,10 @@ internal class AmountFractionManager(
                     } finally {
                         uiState.update { it.copy(isAmountSelectionLoading = false) }
                     }
+                // If a newer choose*Amount call cancelled this job after the last suspension
+                // point, abort before applying — otherwise the older selection would clobber
+                // the newer one.
+                currentCoroutineContext().ensureActive()
                 amountManager.markMax(amount)
                 tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
             }
@@ -99,6 +105,7 @@ internal class AmountFractionManager(
                     } finally {
                         uiState.update { it.copy(isAmountSelectionLoading = false) }
                     }
+                currentCoroutineContext().ensureActive()
                 tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
             }
     }
@@ -111,11 +118,7 @@ internal class AmountFractionManager(
         val defiType = defiTypeProvider()
 
         if (defiType == DeFiNavActions.UNFREEZE_TRX) {
-            val frozen = currentTronFrozenBalanceProvider() ?: return BigDecimal.ZERO
-            return frozen
-                .multiply(percentage.toBigDecimal())
-                .setScale(token.decimal, RoundingMode.DOWN)
-                .stripTrailingZeros()
+            return frozenTrxFraction(percentage, token.decimal)
         }
 
         var amount =
@@ -194,11 +197,7 @@ internal class AmountFractionManager(
         val defiType = defiTypeProvider()
 
         if (defiType == DeFiNavActions.UNFREEZE_TRX) {
-            val frozen = currentTronFrozenBalanceProvider() ?: return BigDecimal.ZERO
-            return frozen
-                .multiply(percentage.toBigDecimal())
-                .setScale(selectedAccount.token.decimal, RoundingMode.DOWN)
-                .stripTrailingZeros()
+            return frozenTrxFraction(percentage, selectedAccount.token.decimal)
         }
 
         val availableTokenBalance =
@@ -228,5 +227,13 @@ internal class AmountFractionManager(
             ?.multiply(percentage.toBigDecimal())
             ?.setScale(selectedAccount.token.decimal, RoundingMode.DOWN)
             ?.stripTrailingZeros() ?: BigDecimal.ZERO
+    }
+
+    private fun frozenTrxFraction(percentage: Float, decimals: Int): BigDecimal {
+        val frozen = currentTronFrozenBalanceProvider() ?: return BigDecimal.ZERO
+        return frozen
+            .multiply(percentage.toBigDecimal())
+            .setScale(decimals, RoundingMode.DOWN)
+            .stripTrailingZeros()
     }
 }

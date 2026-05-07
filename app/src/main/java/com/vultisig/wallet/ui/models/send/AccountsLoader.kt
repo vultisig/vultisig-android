@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import java.math.BigInteger
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +16,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import timber.log.Timber
 
 internal class AccountsLoader(
@@ -32,10 +32,11 @@ internal class AccountsLoader(
         loadAccountsJob?.cancel()
         loadAccountsJob =
             when (defiTypeProvider()) {
-                DeFiNavActions.WITHDRAW_RUJI -> scope.launch { loadRewardsAccount(vaultId) }
+                DeFiNavActions.WITHDRAW_RUJI ->
+                    scope.safeLaunch(onError = ::onLoadError) { loadRewardsAccount(vaultId) }
 
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE ->
-                    scope.launch { loadCircleUSDCAccount(vaultId) }
+                    scope.safeLaunch(onError = ::onLoadError) { loadCircleUSDCAccount(vaultId) }
 
                 null,
                 DeFiNavActions.BOND,
@@ -49,7 +50,7 @@ internal class AccountsLoader(
                 DeFiNavActions.REDEEM_YTCY,
                 DeFiNavActions.DEPOSIT_USDC_CIRCLE,
                 DeFiNavActions.FREEZE_TRX ->
-                    scope.launch {
+                    scope.safeLaunch(onError = ::onLoadError) {
                         accountsRepository
                             .loadAddresses(vaultId)
                             .map { addrs -> addrs.flatMap { it.accounts } }
@@ -57,13 +58,17 @@ internal class AccountsLoader(
                     }
 
                 else ->
-                    scope.launch {
+                    scope.safeLaunch(onError = ::onLoadError) {
                         accountsRepository
                             .loadDeFiAddresses(vaultId, false)
                             .map { addrs -> addrs.flatMap { it.accounts } }
                             .collect(accounts)
                     }
             }
+    }
+
+    private suspend fun onLoadError(error: Throwable) {
+        Timber.e(error, "Failed to load accounts")
     }
 
     private suspend fun loadCircleUSDCAccount(vaultId: VaultId) {
