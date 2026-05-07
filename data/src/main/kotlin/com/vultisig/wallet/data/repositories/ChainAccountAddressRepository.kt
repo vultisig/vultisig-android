@@ -32,6 +32,26 @@ interface ChainAccountAddressRepository {
     fun isValid(chain: Chain, address: String): Boolean
 }
 
+private const val EDDSA_PUB_KEY_HEX_LENGTH = 64
+
+private val HEX_CHARS = Regex("^[0-9a-fA-F]+$")
+
+/**
+ * Validates that [eddsaPubKey] is a 32-byte (64 hex-character) Ed25519 public key. Throws
+ * [IllegalArgumentException] with a descriptive message instead of letting [PublicKey] throw a
+ * generic [java.security.InvalidParameterException] when the key is malformed.
+ */
+internal fun validateEddsaPubKey(chain: Chain, eddsaPubKey: String) {
+    require(eddsaPubKey.isNotBlank()) { "EdDSA public key for ${chain.raw} is missing" }
+    require(eddsaPubKey.length == EDDSA_PUB_KEY_HEX_LENGTH) {
+        "EdDSA public key for ${chain.raw} has invalid length: ${eddsaPubKey.length} " +
+            "(expected $EDDSA_PUB_KEY_HEX_LENGTH hex characters)"
+    }
+    require(eddsaPubKey.matches(HEX_CHARS)) {
+        "EdDSA public key for ${chain.raw} contains non-hex characters"
+    }
+}
+
 internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
     ChainAccountAddressRepository {
 
@@ -79,6 +99,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
 
             TssKeyType.EDDSA -> {
                 val eddsaPubKey = chainPubKey?.publicKey ?: vault.pubKeyEDDSA
+                validateEddsaPubKey(chain, eddsaPubKey)
 
                 if (chain == Chain.Cardano) {
                     val address = CardanoUtils.createEnterpriseAddress(eddsaPubKey)
