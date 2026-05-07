@@ -30,6 +30,7 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
@@ -103,6 +104,11 @@ constructor(
             toEnableAccounts.forEach { chain ->
                 try {
                     enableAccount(chain.coin, vault)
+                } catch (e: CancellationException) {
+                    // Rethrow to preserve coroutine cancellation: `CancellationException`
+                    // extends `IllegalStateException`, so the broader catch below would
+                    // otherwise swallow it.
+                    throw e
                 } catch (e: IllegalArgumentException) {
                     // Covers `require(...)`, `hexToByteArray` parse errors, and Trust Wallet
                     // Core's `PublicKey` JNI constructor throwing `InvalidParameterException`
