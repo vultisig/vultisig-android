@@ -21,6 +21,6 @@ internal fun RegisterChainDashboardTopBarAction(
     val setter = LocalChainDashboardTopBarActionSetter.current
     val onClickState by rememberUpdatedState(onClick)
     LaunchedEffect(setter, icon, enabled) {
-        setter(if (enabled) ChainDashboardTopBarAction(icon = icon) { onClickState() } else null)
+        setter(if (enabled) ChainDashboardTopBarAction(icon = icon, onClick = onClickState) else null)
     }
 }
