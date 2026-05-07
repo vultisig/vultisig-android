@@ -30,7 +30,6 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
@@ -104,9 +103,15 @@ constructor(
             toEnableAccounts.forEach { chain ->
                 try {
                     enableAccount(chain.coin, vault)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
+                } catch (e: IllegalArgumentException) {
+                    // Covers `require(...)`, `hexToByteArray` parse errors, and Trust Wallet
+                    // Core's `PublicKey` JNI constructor throwing `InvalidParameterException`
+                    // (a subclass of `IllegalArgumentException`) for malformed key bytes.
+                    Timber.w(e, "Failed to enable chain %s", chain.coin.chain.raw)
+                    failedChains += chain.coin.chain.raw
+                } catch (e: IllegalStateException) {
+                    // Covers `error(...)` calls in address derivation (e.g. Cardano WalletCore
+                    // validation failure).
                     Timber.w(e, "Failed to enable chain %s", chain.coin.chain.raw)
                     failedChains += chain.coin.chain.raw
                 }
