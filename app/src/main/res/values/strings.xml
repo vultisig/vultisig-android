@@ -382,6 +382,7 @@
     <string name="signing_error_mixed_reshare">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
     <string name="keysign_sign_transaction">Sign transaction</string>
+    <string name="sign_transaction">Sign Transaction</string>
     <string name="keysign_password_title">Password</string>
     <string name="start_screen_new">NEW</string>
     <string name="start_screen_import_seedphrase">Import seedphrase</string>
@@ -630,7 +631,7 @@
     <string name="merge_account_doesnt_exist">Selected token is not found for this address</string>
     <string name="keygen_email_error">Incorrect email, please check</string>
     <string name="scan_qr_screen_title">Scan QR Code</string>
-    <string name="verify_transaction_function_inputs_title">Function Inputs</string>
+    <string name="verify_transaction_function_inputs_title">Function Arguments</string>
     <string name="dapp_hero_unverified_function_title">Unverified function</string>
     <string name="dapp_hero_unverified_function_subtitle">Review the details below before signing</string>
     <string name="fast_vault_password_reminder_title">Verify your password for:</string>
@@ -882,6 +883,9 @@
     <string name="invite_to_x_banner_title">Vultisig is building with you.</string>
     <string name="invite_to_x_banner_desc">Follow us on X</string>
     <string name="invite_to_x_banner_button">Follow @%s</string>
+    <string name="buy_vult_banner_title" translatable="false">Buy $VULT</string>
+    <string name="buy_vult_banner_desc">And save on swap fees</string>
+    <string name="buy_vult_banner_button" translatable="false">Buy $VULT</string>
     <string name="home_defi_portfolio">DeFi Portfolio</string>
     <string name="home_page_no_chains_enabled">No chains enabled</string>
     <string name="home_page_no_chain_enabled_desc">You’ve disabled all chains. Make sure that at least one chain is enabled.</string>

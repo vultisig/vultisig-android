@@ -35,13 +35,13 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiUiState
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
+import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
@@ -77,22 +77,24 @@ internal fun MayachainDefiPositionsScreen(
 
     LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
 
+    RegisterChainDashboardTopBarAction(
+        icon = R.drawable.ic_shapes_plus_x_square_circle,
+        onClick = { model.setPositionSelectionDialogVisibility(true) },
+    )
+
     when (val s = uiState) {
         is MayachainDefiUiState.Loading -> Unit
 
         is MayachainDefiUiState.Error ->
-            V2Scaffold(onBackClick = model::onBackClick) {
-                Box(
-                    modifier =
-                        Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = s.message,
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.secondary,
-                    )
-                }
+            Box(
+                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = s.message,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.secondary,
+                )
             }
 
         is MayachainDefiUiState.Success ->
@@ -103,7 +105,6 @@ internal fun MayachainDefiPositionsScreen(
                     isRefreshing = true
                     model.setData(vaultId)
                 },
-                onBackClick = model::onBackClick,
                 onClickBondToNode = model::bondToNode,
                 onClickBond = { model.onClickBond(it) },
                 onClickUnbond = { model.onClickUnBond(it) },
@@ -129,7 +130,6 @@ internal fun MayachainDefiPositionsScreenContent(
     state: MayachainDefiPositionsUiModel = MayachainDefiPositionsUiModel(),
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
-    onBackClick: () -> Unit = {},
     onClickBondToNode: () -> Unit = {},
     onClickBond: (String) -> Unit = {},
     onClickUnbond: (String) -> Unit = {},
@@ -147,122 +147,120 @@ internal fun MayachainDefiPositionsScreenContent(
     val tabs = MAYA_DEFI_TABS
 
     PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
-        V2Scaffold(onBackClick = onBackClick) {
-            Column(
-                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
-                horizontalAlignment = Alignment.CenterHorizontally,
+        Column(
+            modifier =
+                Modifier.fillMaxSize()
+                    .background(Theme.v2.colors.backgrounds.primary)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            BalanceBanner(
+                title = Chain.MayaChain.raw,
+                isLoading = state.isTotalAmountLoading,
+                totalValue = state.totalAmountPrice,
+                image = R.drawable.maya_defi_banner,
+                isBalanceVisible = state.isBalanceVisible,
+            )
+
+            UiSpacer(16.dp)
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                BalanceBanner(
-                    title = Chain.MayaChain.raw,
-                    isLoading = state.isTotalAmountLoading,
-                    totalValue = state.totalAmountPrice,
-                    image = R.drawable.maya_defi_banner,
-                    isBalanceVisible = state.isBalanceVisible,
-                )
-
-                UiSpacer(16.dp)
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    VsTabGroup(
-                        index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }
-                    ) {
-                        tabs.forEach { tab ->
-                            tab {
-                                VsTab(
-                                    label =
-                                        androidx.compose.ui.res.stringResource(tab.displayNameRes),
-                                    onClick = { onTabSelected(tab) },
-                                )
-                            }
+                VsTabGroup(index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }) {
+                    tabs.forEach { tab ->
+                        tab {
+                            VsTab(
+                                label = androidx.compose.ui.res.stringResource(tab.displayNameRes),
+                                onClick = { onTabSelected(tab) },
+                            )
                         }
-                    }
-
-                    V2Container(
-                        type = ContainerType.SECONDARY,
-                        cornerType = CornerType.Circular,
-                        modifier = Modifier.clickOnce(onClick = onEditPositionClick),
-                    ) {
-                        UiIcon(
-                            drawableResId = R.drawable.edit_chain,
-                            size = 16.dp,
-                            modifier = Modifier.padding(all = 12.dp),
-                            tint = Theme.v2.colors.primary.accent4,
-                        )
                     }
                 }
 
-                UiSpacer(16.dp)
-
-                if (state.showPositionSelectionDialog) {
-                    PositionsSelectionDialog(
-                        bondPositions = state.bondPositionsDialog,
-                        stakePositions = state.stakingPositionsDialog,
-                        lpPositions = state.lpPositionsDialog,
-                        selectedPositions = state.tempSelectedPositions,
-                        searchTextFieldState = searchTextFieldState,
-                        onPositionSelectionChange = onPositionSelectionChange,
-                        onDoneClick = onDonePositionClick,
-                        onCancelClick = onCancelEditPositionClick,
+                V2Container(
+                    type = ContainerType.SECONDARY,
+                    cornerType = CornerType.Circular,
+                    modifier = Modifier.clickOnce(onClick = onEditPositionClick),
+                ) {
+                    UiIcon(
+                        drawableResId = R.drawable.edit_chain,
+                        size = 16.dp,
+                        modifier = Modifier.padding(all = 12.dp),
+                        tint = Theme.v2.colors.primary.accent4,
                     )
                 }
+            }
 
-                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-                    when (state.selectedTab) {
-                        DeFiTab.BONDED.displayNameRes -> {
-                            if (!state.selectedPositions.hasBondPositions()) {
-                                NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                            } else {
-                                BondedTabContent(
-                                    bondToNodeOnClick = onClickBondToNode,
-                                    state =
-                                        ThorchainDefiPositionsUiModel(
-                                            bonded = state.bonded,
-                                            isBalanceVisible = state.isBalanceVisible,
-                                            totalAmountPrice = state.totalAmountPrice,
-                                            isTotalAmountLoading = state.isTotalAmountLoading,
-                                        ),
-                                    onClickBond = onClickBond,
-                                    onClickUnbond = onClickUnbond,
-                                    coinName = "CACAO",
-                                    coinIconRes = R.drawable.cacao,
-                                )
-                            }
-                        }
+            UiSpacer(16.dp)
 
-                        DeFiTab.STAKED.displayNameRes -> {
-                            if (!state.selectedPositions.hasMayaStakingPositions()) {
-                                NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                            } else {
-                                StakingTabContent(
-                                    state = state.staking,
-                                    onClickStake = onClickStake,
-                                    onClickUnstake = onClickUnstake,
-                                    onClickWithdraw = {},
-                                    onClickTransfer = {},
-                                    isBalanceVisible = state.isBalanceVisible,
-                                )
-                            }
-                        }
+            if (state.showPositionSelectionDialog) {
+                PositionsSelectionDialog(
+                    bondPositions = state.bondPositionsDialog,
+                    stakePositions = state.stakingPositionsDialog,
+                    lpPositions = state.lpPositionsDialog,
+                    selectedPositions = state.tempSelectedPositions,
+                    searchTextFieldState = searchTextFieldState,
+                    onPositionSelectionChange = onPositionSelectionChange,
+                    onDoneClick = onDonePositionClick,
+                    onCancelClick = onCancelEditPositionClick,
+                )
+            }
 
-                        DeFiTab.LP.displayNameRes -> {
-                            if (!state.selectedPositions.hasLpPositions(state.lpPositionsDialog)) {
-                                NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                            } else {
-                                LpTabContent(
-                                    state = state.lp,
-                                    onClickAdd = onClickAddLp,
-                                    onClickRemove = onClickRemoveLp,
-                                )
-                            }
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                when (state.selectedTab) {
+                    DeFiTab.BONDED.displayNameRes -> {
+                        if (!state.selectedPositions.hasBondPositions()) {
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        } else {
+                            BondedTabContent(
+                                bondToNodeOnClick = onClickBondToNode,
+                                state =
+                                    ThorchainDefiPositionsUiModel(
+                                        bonded = state.bonded,
+                                        isBalanceVisible = state.isBalanceVisible,
+                                        totalAmountPrice = state.totalAmountPrice,
+                                        isTotalAmountLoading = state.isTotalAmountLoading,
+                                    ),
+                                onClickBond = onClickBond,
+                                onClickUnbond = onClickUnbond,
+                                coinName = "CACAO",
+                                coinIconRes = R.drawable.cacao,
+                            )
                         }
                     }
 
-                    UiSpacer(size = 16.dp)
+                    DeFiTab.STAKED.displayNameRes -> {
+                        if (!state.selectedPositions.hasMayaStakingPositions()) {
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        } else {
+                            StakingTabContent(
+                                state = state.staking,
+                                onClickStake = onClickStake,
+                                onClickUnstake = onClickUnstake,
+                                onClickWithdraw = {},
+                                onClickTransfer = {},
+                                isBalanceVisible = state.isBalanceVisible,
+                            )
+                        }
+                    }
+
+                    DeFiTab.LP.displayNameRes -> {
+                        if (!state.selectedPositions.hasLpPositions(state.lpPositionsDialog)) {
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        } else {
+                            LpTabContent(
+                                state = state.lp,
+                                onClickAdd = onClickAddLp,
+                                onClickRemove = onClickRemoveLp,
+                            )
+                        }
+                    }
                 }
+
+                UiSpacer(size = 16.dp)
             }
         }
     }

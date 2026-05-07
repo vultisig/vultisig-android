@@ -375,6 +375,7 @@
     <string name="signing_error_mixed_reshare">혼합 재공유 서명.\n동일한 재공유 주기의 볼트 공유를 사용해 주세요.</string>
     <string name="verify_transaction_fast_sign_btn_title">빠른 서명</string>
     <string name="keysign_sign_transaction">거래 서명</string>
+    <string name="sign_transaction">거래 서명</string>
     <string name="keysign_password_title">비밀번호</string>
     <string name="start_screen_new">새로운</string>
     <string name="start_screen_import_seedphrase">시드 구문 가져오기</string>
@@ -622,7 +623,7 @@
     <string name="merge_account_doesnt_exist">이 주소에서 선택한 토큰을 찾을 수 없습니다</string>
     <string name="keygen_email_error">이메일이 올바르지 않습니다. 확인해 주세요</string>
     <string name="scan_qr_screen_title">QR 코드 스캔</string>
-    <string name="verify_transaction_function_inputs_title">함수 입력값</string>
+    <string name="verify_transaction_function_inputs_title">함수 인수</string>
     <string name="dapp_hero_unverified_function_title">확인되지 않은 함수</string>
     <string name="dapp_hero_unverified_function_subtitle">서명 전에 아래 세부정보를 확인하세요</string>
     <string name="fast_vault_password_reminder_title">비밀번호를 확인하세요:</string>
@@ -863,6 +864,7 @@
     <string name="invite_to_x_banner_title">Vultisig는 여러분과 함께 성장합니다.</string>
     <string name="invite_to_x_banner_desc">X에서 팔로우하세요</string>
     <string name="invite_to_x_banner_button">@%s 팔로우</string>
+    <string name="buy_vult_banner_desc">스왑 수수료를 절약하세요</string>
     <string name="home_defi_portfolio">DeFi 포트폴리오</string>
     <string name="home_page_no_chains_enabled">활성화된 체인 없음</string>
     <string name="home_page_no_chain_enabled_desc">모든 체인을 비활성화했습니다. 최소 하나의 체인을 활성화해 주세요.</string>

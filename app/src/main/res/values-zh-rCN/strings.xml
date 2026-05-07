@@ -527,6 +527,7 @@
 
     <!-- Keysign -->
     <string name="keysign_sign_transaction">签署交易</string>
+    <string name="sign_transaction">签署交易</string>
     <string name="keysign_password_title">密码</string>
 
     <!-- Home Screen -->
@@ -701,7 +702,7 @@
     <string name="scan_qr_screen_title">扫描二维码</string>
 
     <!-- Verify Transaction -->
-    <string name="verify_transaction_function_inputs_title">功能输入</string>
+    <string name="verify_transaction_function_inputs_title">函数参数</string>
     <string name="dapp_hero_unverified_function_title">未验证的功能</string>
     <string name="dapp_hero_unverified_function_subtitle">请在签名前查看下方详情</string>
 
@@ -1081,6 +1082,7 @@
     <string name="invite_to_x_banner_title">Vultisig 正在与您一起构建。</string>
     <string name="invite_to_x_banner_desc">在 X 上关注我们</string>
     <string name="invite_to_x_banner_button">关注 %s</string>
+    <string name="buy_vult_banner_desc">并节省交换费用</string>
     <string name="rename_vault_screen_rename_vault">改名</string>
     <string name="custom_token_screen_finding_token">查找代币</string>
     <string name="retry">重试</string>

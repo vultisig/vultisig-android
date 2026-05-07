@@ -409,10 +409,7 @@ internal fun AddressField(title: String, address: String, divider: Boolean = tru
 private fun TransactionDetailsSection(functionSignature: String?, functionInputs: String?) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
 
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         // Whole row is the tap target so the WCAG 2.5.5 minimum (48dp) is met without enlarging
         // the visual chevron, and TalkBack announces "Transaction details, button, expanded /
         // collapsed" instead of two separate nodes.
@@ -432,8 +429,8 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
         ) {
             Text(
                 text = expandLabel,
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.tertiary,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
             )
 
             UiIcon(
@@ -452,11 +449,9 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier =
                     Modifier.fillMaxWidth()
-                        .background(
-                            color = Theme.v2.colors.variables.bordersLight,
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .padding(12.dp),
+                        .padding(top = 12.dp)
+                        .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp))
+                        .padding(16.dp),
             ) {
                 functionSignature?.let {
                     VerifyCardJsonDetails(

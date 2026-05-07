@@ -280,6 +280,7 @@
     <string name="signing_error_mixed_reshare">Potpisivanje mješovitog ponovnog dijeljenja.\nUpotrijebite dijeljenja trezora istog ciklusa ponovnog dijeljenja.</string>
     <string name="verify_transaction_fast_sign_btn_title">Brzi znak</string>
     <string name="keysign_sign_transaction">Potpiši transakciju</string>
+    <string name="sign_transaction">Potpiši transakciju</string>
     <string name="keysign_password_title">Lozinka</string>
     <string name="start_screen_new">NOVO</string>
     <string name="start_screen_import_seedphrase">Uvezi seed-frazu</string>
@@ -420,7 +421,7 @@
     <string name="withdraw_amount">Povuci %s</string>
     <string name="deposit_form_unstake_percentage_hint">Unesite postotak za deblokiranje</string>
     <string name="scan_qr_screen_title">Skeniraj QR kod</string>
-    <string name="verify_transaction_function_inputs_title">Funkcijski ulazi</string>
+    <string name="verify_transaction_function_inputs_title">Argumenti funkcije</string>
     <string name="dapp_hero_unverified_function_title">Neprovjerena funkcija</string>
     <string name="dapp_hero_unverified_function_subtitle">Pregledajte detalje prije potpisivanja</string>
     <string name="send_shares_currency_hint">Unesite udjele</string>
@@ -685,6 +686,7 @@
     <string name="invite_to_x_banner_title">Vultisig gradi s vama.</string>
     <string name="invite_to_x_banner_desc">Pratite nas na X</string>
     <string name="invite_to_x_banner_button">Pratite %s</string>
+    <string name="buy_vult_banner_desc">I uštedi na naknadama za zamjenu</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Spremni ste za korištenje novog standarda novčanika.</string>
     <string name="vault_detail_vault_info">Informacije o trezoru</string>
     <string name="vault_details_keys">ključevi</string>
