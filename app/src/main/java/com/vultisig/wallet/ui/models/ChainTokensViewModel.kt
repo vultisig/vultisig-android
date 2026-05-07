@@ -35,7 +35,6 @@ import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
@@ -348,10 +347,6 @@ constructor(
         } else {
             bottomBarVisibility.showBottomBar()
         }
-    }
-
-    fun back() {
-        viewModelScope.launch { navigator.back() }
     }
 
     private fun fetchMergeBalanceFlow(chain: Chain): Flow<List<MergeAccount>> = flow {

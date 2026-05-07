@@ -214,11 +214,6 @@ constructor(
         _state.update { currentState -> currentState.copy(selectedTab = tab.displayNameRes) }
     }
 
-    /** Navigates back. */
-    fun onBackClick() {
-        viewModelScope.launch { navigator.navigate(Destination.Back) }
-    }
-
     /** Persists and dismisses the Circle DeFi warning banner. */
     fun onClickCloseWarning() {
         viewModelScope.launch {
