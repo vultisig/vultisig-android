@@ -680,6 +680,7 @@
     <string name="invite_to_x_banner_title">A Vultisig está a construir consigo.</string>
     <string name="invite_to_x_banner_desc">Siga-nos no X</string>
     <string name="invite_to_x_banner_button">Siga %s</string>
+    <string name="buy_vult_banner_desc">E poupe nas taxas de troca</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Está pronto para usar um novo padrão de carteira.</string>
     <string name="vault_detail_vault_info">Informações do Cofre</string>
     <string name="vault_details_keys">Chaves</string>

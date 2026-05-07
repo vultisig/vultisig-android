@@ -67,8 +67,18 @@ class CoinSwapAssetNameTest {
 
     @Test
     fun `ThorChain secured asset address word-dash-word returned as-is`() {
-        val c = coin(Chain.ThorChain, "ETH", "eth-eth", isNativeToken = false)
-        assertEquals("eth-eth", c.swapAssetName())
+        listOf(
+                "BTC" to "btc-btc",
+                "ETH" to "eth-eth",
+                "LTC" to "ltc-ltc",
+                "DOGE" to "doge-doge",
+                "AVAX" to "avax-avax",
+                "BNB" to "bsc-bnb",
+            )
+            .forEach { (ticker, denom) ->
+                val c = coin(Chain.ThorChain, ticker, denom, isNativeToken = false)
+                assertEquals(denom, c.swapAssetName())
+            }
     }
 
     @Test
@@ -78,10 +88,15 @@ class CoinSwapAssetNameTest {
     }
 
     @Test
-    fun `ThorChain address with multiple dashes does not match anchored regex`() {
-        // "abc-def-ghi" does not match ^\w+-\w+$ so falls through to THOR.ticker
-        val c = coin(Chain.ThorChain, "FOO", "abc-def-ghi", isNativeToken = false)
-        assertEquals("THOR.FOO", c.swapAssetName())
+    fun `ThorChain secured USDC address returned as-is`() {
+        val c =
+            coin(
+                Chain.ThorChain,
+                "USDC",
+                "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                isNativeToken = false,
+            )
+        assertEquals("eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", c.swapAssetName())
     }
 
     // swapAssetName — EVM non-native

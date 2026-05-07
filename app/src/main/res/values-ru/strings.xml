@@ -682,6 +682,7 @@
     <string name="invite_to_x_banner_title">Vultisig строит вместе с вами.</string>
     <string name="invite_to_x_banner_desc">Подпишитесь на нас в X</string>
     <string name="invite_to_x_banner_button">Подписаться на %s</string>
+    <string name="buy_vult_banner_desc">И экономьте на комиссиях за обмен</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Вы готовы использовать новый стандарт кошелька.</string>
     <string name="vault_detail_vault_info">Информация о хранилище</string>
     <string name="vault_details_keys">Ключи</string>

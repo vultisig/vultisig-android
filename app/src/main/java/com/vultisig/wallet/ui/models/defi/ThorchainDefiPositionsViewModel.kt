@@ -1156,10 +1156,6 @@ constructor(
         }
     }
 
-    fun onBackClick() {
-        viewModelScope.launch { navigator.navigate(Destination.Back) }
-    }
-
     fun onClickTransfer() {
         viewModelScope.launch {
             navigator.route(
