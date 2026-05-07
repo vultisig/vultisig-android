@@ -36,6 +36,10 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.containers.ExpandedTopbarContainer
 import com.vultisig.wallet.ui.components.v2.containers.TopShineContainer
 import com.vultisig.wallet.ui.components.v2.scaffold.ScaffoldWithExpandableTopBar
@@ -45,7 +49,6 @@ import com.vultisig.wallet.ui.components.v2.visuals.BottomFadeEffect
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
-import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
@@ -62,6 +65,7 @@ import com.vultisig.wallet.ui.utils.showReviewPopUp
 internal fun ChainTokensScreen(
     vaultId: VaultId,
     chainId: ChainId,
+    onBackClick: () -> Unit,
     viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
@@ -72,15 +76,9 @@ internal fun ChainTokensScreen(
 
     LaunchedEffect(Unit) { viewModel.initData(vaultId = vaultId, chainId = chainId) }
 
-    val uriHandler = VsUriHandler()
-    RegisterChainDashboardTopBarAction(
-        icon = R.drawable.explor,
-        enabled = uiModel.explorerURL.isNotEmpty(),
-        onClick = { uriHandler.openUri(uiModel.explorerURL) },
-    )
-
     ChainTokensScreen(
         uiModel = uiModel,
+        onBackClick = onBackClick,
         onRefresh = viewModel::refresh,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
@@ -99,6 +97,7 @@ internal fun ChainTokensScreen(
 @Composable
 internal fun ChainTokensScreen(
     uiModel: ChainTokensUiModel,
+    onBackClick: () -> Unit,
     onRefresh: () -> Unit,
     onShowSearchBar: () -> Unit,
     onHideSearchBar: () -> Unit,
@@ -112,6 +111,7 @@ internal fun ChainTokensScreen(
     onShowReviewPopUp: () -> Unit,
 ) {
     val snackbarState = rememberVsSnackbarState()
+    val uriHandler = VsUriHandler()
     val addressCopiedMessage = stringResource(R.string.address_copied, uiModel.chainName)
 
     var isAddressBottomSheetVisible by remember { mutableStateOf(false) }
@@ -130,6 +130,31 @@ internal fun ChainTokensScreen(
                 shineSpotCenterYRatio = -0.15f,
                 shineSpotRadiusRatio = 0.45f,
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    VsCircleButton(
+                        onClick = onBackClick,
+                        size = VsCircleButtonSize.Small,
+                        icon = R.drawable.ic_caret_left,
+                        type = VsCircleButtonType.Secondary,
+                        designType = DesignType.Shined,
+                    )
+                    if (uiModel.explorerURL.isNotEmpty()) {
+                        VsCircleButton(
+                            onClick = { uriHandler.openUri(uiModel.explorerURL) },
+                            size = VsCircleButtonSize.Small,
+                            icon = R.drawable.explor,
+                            type = VsCircleButtonType.Secondary,
+                            designType = DesignType.Shined,
+                        )
+                    }
+                }
+
+                UiSpacer(size = 10.dp)
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     ChainLogo(name = uiModel.chainName, logo = uiModel.chainLogo)
                     UiSpacer(size = 8.dp)
@@ -319,6 +344,7 @@ private fun PreviewChainCoinScreen1() {
                         ),
                     ),
             ),
+        onBackClick = {},
         onRefresh = {},
         onShowSearchBar = {},
         onHideSearchBar = {},

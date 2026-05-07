@@ -59,7 +59,12 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
                 is PositionMaya ->
                     MayachainDefiPositionsScreen(vaultId = (uiModel.route as PositionMaya).vaultId)
                 is PositionTron -> TronDeFiPositionsScreen(vaultId = route.vaultId)
-                is Wallet -> ChainTokensScreen(vaultId = route.vaultId, chainId = route.chainId)
+                is Wallet ->
+                    ChainTokensScreen(
+                        vaultId = route.vaultId,
+                        chainId = route.chainId,
+                        onBackClick = viewModel::back,
+                    )
                 null -> Unit
             }
         },
@@ -80,22 +85,24 @@ private fun ChainDashboardScreen(
 
     Scaffold(
         topBar = {
-            V2Topbar(
-                title = null,
-                onBackClick = onBackClick,
-                actions =
-                    topBarAction?.let { action ->
-                        {
-                            VsCircleButton(
-                                onClick = action.onClick,
-                                size = VsCircleButtonSize.Small,
-                                type = VsCircleButtonType.Secondary,
-                                designType = DesignType.Shined,
-                                icon = action.icon,
-                            )
-                        }
-                    },
-            )
+            if (uiModel.route !is Wallet) {
+                V2Topbar(
+                    title = null,
+                    onBackClick = onBackClick,
+                    actions =
+                        topBarAction?.let { action ->
+                            {
+                                VsCircleButton(
+                                    onClick = action.onClick,
+                                    size = VsCircleButtonSize.Small,
+                                    type = VsCircleButtonType.Secondary,
+                                    designType = DesignType.Shined,
+                                    icon = action.icon,
+                                )
+                            }
+                        },
+                )
+            }
         },
         bottomBar = {
             Box(modifier = Modifier.fillMaxWidth().animateContentSize()) {
@@ -161,6 +168,7 @@ private fun ChainDashboardScreenPreview() {
                                 )
                             ),
                     ),
+                onBackClick = {},
                 onRefresh = {},
                 onShowSearchBar = {},
                 onHideSearchBar = {},
