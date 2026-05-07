@@ -856,6 +856,9 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees clears outboundFee and swapFeePercent on swap exception`() =
         runTest(mainDispatcher) {
+            // First quote populates the fields; the second throws so the reset path runs.
+            // Without this two-step flow the test would pass even if the reset were removed,
+            // since both fields default to null on SwapFormUiModel.
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
                 listOf(SwapProvider.THORCHAIN)
             coEvery {
@@ -870,12 +873,27 @@ internal class SwapFormViewModelTest {
                     any(),
                     any(),
                 )
-            } throws SwapException.SwapIsNotSupported("Not supported")
+            } returns
+                createDefaultQuoteFetchResult(
+                    outboundFeeText = "$1.50",
+                    swapFeePercent = "0.30%",
+                ) andThenThrows
+                SwapException.SwapIsNotSupported("Not supported")
 
             val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
             advanceUntilIdle()
 
             vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            // Sanity-check: the successful quote populated both fields.
+            assertEquals("$1.50", vm.uiState.value.outboundFee)
+            assertEquals("0.30%", vm.uiState.value.swapFeePercent)
+
+            // Re-trigger; this time the mock throws and the reset block must clear them.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("2")
             Snapshot.sendApplyNotifications()
             advanceTimeBy(500)
             advanceUntilIdle()

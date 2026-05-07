@@ -21,7 +21,12 @@ private const val THORSWAP_DECIMAL_SCALE = 8
 internal fun Coin.toThorTokenValue(tokenValue: TokenValue): BigInteger =
     (tokenValue.decimal * thorswapMultiplier).toBigInteger()
 
-/** Inverse of [toThorTokenValue]: scales [amount] returned by THOR/Maya into this coin's units. */
+/**
+ * Inverse of [toThorTokenValue]: scales [amount] returned by THOR/Maya into this coin's units.
+ *
+ * Public because it's also called from the `app` module (e.g. `SwapQuoteManager` for splitting the
+ * affiliate / outbound fee components out of THOR/MAYA quote responses).
+ */
 fun Coin.convertToTokenValue(amount: String): TokenValue {
     val scaled =
         BigDecimal(amount).divide(thorswapMultiplier, THORSWAP_DECIMAL_SCALE, RoundingMode.DOWN)
