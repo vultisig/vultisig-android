@@ -9,9 +9,12 @@ import java.io.ByteArrayInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 
 /**
@@ -94,5 +97,12 @@ internal class FileHelperUriFileContentTest {
         val result = uri.fileContent(context)
 
         assertNull(result)
+    }
+
+    @Test
+    fun `does not swallow CancellationException`() {
+        every { contentResolver.openInputStream(uri) } throws CancellationException("scope cleared")
+
+        assertThrows(CancellationException::class.java) { runBlocking { uri.fileContent(context) } }
     }
 }
