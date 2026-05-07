@@ -12,6 +12,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,6 +40,9 @@ internal class TokenPreselectionServiceTest {
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(mainDispatcher)
+        defiType = null
+        selectedToken = null
+        accounts.value = emptyList()
         selectedTokens.clear()
     }
 
@@ -208,8 +212,11 @@ internal class TokenPreselectionServiceTest {
 
             // After both calls run, the latest one is what survives. Both fall back to the only
             // account (ETH), so we expect at least one ETH selection from the surviving job.
-            // The exact count is flaky on the unconfined dispatcher — pin only the value.
-            assertEquals(true, selectedTokens.all { it == Coins.Ethereum.ETH })
+            // Pin the value AND that something was actually selected — Iterable.all returns
+            // true on an empty list (vacuous truth), which would hide a regression that
+            // cancelled both jobs.
+            assertTrue(selectedTokens.isNotEmpty())
+            assertTrue(selectedTokens.all { it == Coins.Ethereum.ETH })
         }
 
     // ──────── helpers ────────
