@@ -107,15 +107,12 @@ constructor(
                     // extends `IllegalStateException`, so the broader catch below would
                     // otherwise swallow it.
                     throw e
-                } catch (e: IllegalArgumentException) {
-                    // Covers `require(...)`, `hexToByteArray` parse errors, and Trust Wallet
-                    // Core's `PublicKey` JNI constructor throwing `InvalidParameterException`
-                    // (a subclass of `IllegalArgumentException`) for malformed key bytes.
-                    Timber.w(e, "Failed to enable chain %s", chain.coin.chain.raw)
-                    failedChains += chain.coin.chain.raw
-                } catch (e: IllegalStateException) {
-                    // Covers `error(...)` calls in address derivation (e.g. Cardano WalletCore
-                    // validation failure).
+                } catch (e: Exception) {
+                    // Covers `require(...)`/`error(...)`, `hexToByteArray` parse errors, Trust
+                    // Wallet Core's `PublicKey` JNI constructor `InvalidParameterException`, and
+                    // the gomobile `Tss.getDerivedPubKey` checked `Exception` reachable from the
+                    // ECDSA branch via `PublicKeyHelper.getDerivedPublicKey` for vaults with a
+                    // malformed `pubKeyECDSA` or `hexChainCode`.
                     Timber.w(e, "Failed to enable chain %s", chain.coin.chain.raw)
                     failedChains += chain.coin.chain.raw
                 }
@@ -123,10 +120,11 @@ constructor(
             toDisableAccounts.forEach { disableAccount(it.coin) }
 
             if (failedChains.isNotEmpty()) {
+                val shown = failedChains.take(MAX_FAILED_CHAINS_SHOWN).joinToString(", ")
+                val overflow = failedChains.size - MAX_FAILED_CHAINS_SHOWN
+                val summary = if (overflow > 0) "$shown +$overflow" else shown
                 snackbarFlow.showMessage(
-                    R.string.chain_selection_enable_failed.asUiText(
-                        failedChains.joinToString(", ")
-                    ),
+                    R.string.chain_selection_enable_failed.asUiText(summary),
                     SnackbarType.Error,
                 )
             }
@@ -198,5 +196,9 @@ constructor(
                 }
                 .collect { chains -> uiState.update { it.copy(chains = chains) } }
         }
+    }
+
+    private companion object {
+        private const val MAX_FAILED_CHAINS_SHOWN = 5
     }
 }

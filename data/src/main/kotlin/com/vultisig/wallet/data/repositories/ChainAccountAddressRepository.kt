@@ -115,8 +115,7 @@ internal class ChainAccountAddressRepositoryImpl @Inject constructor() :
                 }
                 val publicKey = PublicKey(eddsaPubKey.hexToByteArray(), PublicKeyType.ED25519)
                 if (chain == Chain.Bittensor) {
-                    // eddsaPubKey is the raw 32-byte ed25519 hex — use first 64 hex chars
-                    val rawKey = BittensorHelper.hexToBytes(eddsaPubKey.take(64))
+                    val rawKey = BittensorHelper.hexToBytes(eddsaPubKey)
                     val address = BittensorHelper.ss58Encode(rawKey)
                     return Pair(address, eddsaPubKey)
                 }

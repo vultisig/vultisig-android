@@ -21,7 +21,6 @@ internal class SnackbarFlow @Inject constructor() {
 
     suspend fun collectMessage(onMessageReceived: suspend (Pair<UiText, SnackbarType>) -> Unit) {
         messageFlow.receiveAsFlow().collect { (message, type) ->
-            if (message is UiText.DynamicString && message.text.isBlank()) return@collect
             onMessageReceived(message to type)
         }
     }

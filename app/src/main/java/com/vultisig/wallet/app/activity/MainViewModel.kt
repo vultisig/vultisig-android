@@ -103,7 +103,9 @@ constructor(
             _isLoading.value = false
 
             snackbarFlow.collectMessage { (message, type) ->
-                snakeBarHostState.show(message.asString(context), type)
+                val resolved = message.asString(context)
+                if (resolved.isBlank()) return@collectMessage
+                snakeBarHostState.show(resolved, type)
             }
         }
 
