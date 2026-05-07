@@ -863,6 +863,7 @@
     <string name="invite_to_x_banner_title">Vultisig는 여러분과 함께 성장합니다.</string>
     <string name="invite_to_x_banner_desc">X에서 팔로우하세요</string>
     <string name="invite_to_x_banner_button">@%s 팔로우</string>
+    <string name="buy_vult_banner_desc">스왑 수수료를 절약하세요</string>
     <string name="home_defi_portfolio">DeFi 포트폴리오</string>
     <string name="home_page_no_chains_enabled">활성화된 체인 없음</string>
     <string name="home_page_no_chain_enabled_desc">모든 체인을 비활성화했습니다. 최소 하나의 체인을 활성화해 주세요.</string>

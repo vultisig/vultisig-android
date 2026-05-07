@@ -295,8 +295,4 @@ constructor(
             )
         }
     }
-
-    fun onBackClick() {
-        viewModelScope.safeLaunch { navigator.navigate(Destination.Back) }
-    }
 }

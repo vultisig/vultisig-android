@@ -1081,6 +1081,7 @@
     <string name="invite_to_x_banner_title">Vultisig 正在与您一起构建。</string>
     <string name="invite_to_x_banner_desc">在 X 上关注我们</string>
     <string name="invite_to_x_banner_button">关注 %s</string>
+    <string name="buy_vult_banner_desc">并节省交换费用</string>
     <string name="rename_vault_screen_rename_vault">改名</string>
     <string name="custom_token_screen_finding_token">查找代币</string>
     <string name="retry">重试</string>

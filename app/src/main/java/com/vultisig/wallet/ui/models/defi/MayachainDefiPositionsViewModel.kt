@@ -764,10 +764,6 @@ constructor(
             navigator.route(Route.BondForm(vaultId = vaultId, chainId = Chain.MayaChain.id))
         }
     }
-
-    fun onBackClick() {
-        viewModelScope.launch { navigator.navigate(Destination.Back) }
-    }
 }
 
 private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
