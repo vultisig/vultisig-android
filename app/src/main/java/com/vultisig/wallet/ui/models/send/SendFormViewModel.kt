@@ -88,7 +88,6 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 import javax.inject.Inject
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.Dispatchers
@@ -292,8 +291,6 @@ constructor(
     private var preSelectTokenJob: Job? = null
     private var loadAccountsJob: Job? = null
 
-    private var chooseAmountFractionJob: Job? = null
-
     private val appCurrency =
         appCurrencyRepository.currency.stateIn(
             viewModelScope,
@@ -352,6 +349,27 @@ constructor(
         )
 
     private val bitcoinPlanService = BitcoinPlanService(vaultRepository)
+
+    private val amountFractionManager =
+        AmountFractionManager(
+            scope = viewModelScope,
+            tokenAmountFieldState = tokenAmountFieldState,
+            addressFieldState = addressFieldState,
+            memoFieldState = memoFieldState,
+            uiState = uiState,
+            gasFee = gasFee,
+            gasSettings = gasSettings,
+            specific = specific,
+            defiTypeProvider = { defiType },
+            vaultProvider = { vault },
+            accountProvider = { selectedAccount },
+            currentTronFrozenBalanceProvider = ::currentTronFrozenBalance,
+            getAvailableTokenBalance = getAvailableTokenBalance,
+            feeServiceComposite = feeServiceComposite,
+            tokenRepository = tokenRepository,
+            adjustGasFee = ::adjustGasFee,
+            amountManager = amountManager,
+        )
 
     private val sendStrategy =
         DefaultSendStrategy(
@@ -1059,174 +1077,10 @@ constructor(
         }
     }
 
-    fun chooseMaxTokenAmount() {
-        if (defiType == DeFiNavActions.UNFREEZE_TRX && uiState.value.isTronFrozenBalancesLoading) {
-            return
-        }
-        chooseAmountFractionJob?.cancel()
-        chooseAmountFractionJob =
-            viewModelScope.launch {
-                uiState.update {
-                    it.copy(selectedAmountFraction = F100, isAmountSelectionLoading = true)
-                }
-                val amount =
-                    try {
-                        calculatePercentageWithAccurateFee(1f)
-                    } finally {
-                        uiState.update { it.copy(isAmountSelectionLoading = false) }
-                    }
-                amountManager.markMax(amount)
-                tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
-            }
-    }
+    fun chooseMaxTokenAmount() = amountFractionManager.chooseMaxTokenAmount()
 
-    fun choosePercentageAmount(amountFraction: AmountFraction) {
-        if (defiType == DeFiNavActions.UNFREEZE_TRX && uiState.value.isTronFrozenBalancesLoading) {
-            return
-        }
-        chooseAmountFractionJob?.cancel()
-        chooseAmountFractionJob =
-            viewModelScope.launch {
-                uiState.update {
-                    it.copy(
-                        selectedAmountFraction = amountFraction,
-                        isAmountSelectionLoading = true,
-                    )
-                }
-                val amount =
-                    try {
-                        calculatePercentageWithAccurateFee(amountFraction.value)
-                    } finally {
-                        uiState.update { it.copy(isAmountSelectionLoading = false) }
-                    }
-                tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
-            }
-    }
-
-    private suspend fun calculatePercentageWithAccurateFee(percentage: Float): BigDecimal {
-        val vault = vault ?: return BigDecimal.ZERO
-        val isMax = percentage == 1f
-        val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
-        val token = selectedAccount.token
-
-        if (defiType == DeFiNavActions.UNFREEZE_TRX) {
-            val frozen = currentTronFrozenBalance() ?: return BigDecimal.ZERO
-            return frozen
-                .multiply(percentage.toBigDecimal())
-                .setScale(token.decimal, RoundingMode.DOWN)
-                .stripTrailingZeros()
-        }
-
-        var amount =
-            if (gasFee.value != null) {
-                fetchPercentageOfAvailableBalance(percentage)
-            } else {
-                getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)
-                    ?.decimal
-                    ?.multiply(percentage.toBigDecimal()) ?: BigDecimal.ZERO
-            }
-
-        if (
-            defiType != null &&
-                defiType != DeFiNavActions.BOND &&
-                defiType != DeFiNavActions.STAKE_RUJI &&
-                defiType != DeFiNavActions.UNSTAKE_RUJI &&
-                defiType != DeFiNavActions.STAKE_TCY &&
-                defiType != DeFiNavActions.UNSTAKE_TCY &&
-                defiType != DeFiNavActions.STAKE_STCY &&
-                defiType != DeFiNavActions.UNSTAKE_STCY &&
-                defiType != DeFiNavActions.REDEEM_YRUNE &&
-                defiType != DeFiNavActions.MINT_YTCY &&
-                defiType != DeFiNavActions.REDEEM_YTCY &&
-                defiType != DeFiNavActions.FREEZE_TRX &&
-                defiType != DeFiNavActions.UNFREEZE_TRX
-        ) {
-            return amount
-        }
-
-        val chain = token.chain
-
-        if (gasFee.value != null && chain.standard == TokenStandard.EVM) {
-            return amount
-        }
-
-        try {
-            val tokenAmountInt = amount.movePointRight(token.decimal).toBigInteger()
-            val blockchainTransaction =
-                Transfer(
-                    coin = token,
-                    vault =
-                        VaultData(
-                            vaultHexChainCode = vault.hexChainCode,
-                            vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                        ),
-                    amount = tokenAmountInt,
-                    to = addressFieldState.text.asAddressInput(),
-                    memo = memoFieldState.text.toString(),
-                    isMax = isMax,
-                )
-
-            val calculatedFee =
-                withContext(Dispatchers.IO) {
-                    feeServiceComposite.calculateFees(blockchainTransaction)
-                }
-
-            val nativeCoin =
-                withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-
-            val newGasFee = TokenValue(value = calculatedFee.amount, token = nativeCoin)
-
-            gasFee.value = adjustGasFee(newGasFee, gasSettings.value, specific.value)
-            amount = fetchPercentageOfAvailableBalance(percentage)
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to calculate gas fee for percentage amount")
-        }
-
-        return amount
-    }
-
-    private suspend fun fetchPercentageOfAvailableBalance(percentage: Float): BigDecimal {
-        val selectedAccount = selectedAccount ?: return BigDecimal.ZERO
-        val currentGasFee = gasFee.value ?: return BigDecimal.ZERO
-
-        if (defiType == DeFiNavActions.UNFREEZE_TRX) {
-            val frozen = currentTronFrozenBalance() ?: return BigDecimal.ZERO
-            return frozen
-                .multiply(percentage.toBigDecimal())
-                .setScale(selectedAccount.token.decimal, RoundingMode.DOWN)
-                .stripTrailingZeros()
-        }
-
-        val availableTokenBalance =
-            if (
-                defiType == null ||
-                    defiType == DeFiNavActions.BOND ||
-                    defiType == DeFiNavActions.STAKE_RUJI ||
-                    defiType == DeFiNavActions.STAKE_TCY ||
-                    defiType == DeFiNavActions.STAKE_STCY ||
-                    defiType == DeFiNavActions.MINT_YRUNE ||
-                    defiType == DeFiNavActions.REDEEM_YRUNE ||
-                    defiType == DeFiNavActions.MINT_YTCY ||
-                    defiType == DeFiNavActions.REDEEM_YTCY ||
-                    defiType == DeFiNavActions.FREEZE_TRX
-            ) {
-                getAvailableTokenBalance(selectedAccount, currentGasFee.value)
-            } else {
-                getAvailableTokenBalance(
-                    selectedAccount,
-                    BigInteger
-                        .ZERO, // Substraction should not happen to DeFi Balance (Unbond, Staked,
-                    // Rewards,
-                    // etc...)
-                )
-            }
-
-        return availableTokenBalance
-            ?.decimal
-            ?.multiply(percentage.toBigDecimal())
-            ?.setScale(selectedAccount.token.decimal, RoundingMode.DOWN)
-            ?.stripTrailingZeros() ?: BigDecimal.ZERO
-    }
+    fun choosePercentageAmount(amountFraction: AmountFraction) =
+        amountFractionManager.choosePercentageAmount(amountFraction)
 
     fun dismissError() {
         uiState.update { it.copy(errorText = null) }
