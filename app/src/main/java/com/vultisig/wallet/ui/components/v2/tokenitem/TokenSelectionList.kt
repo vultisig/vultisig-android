@@ -158,8 +158,8 @@ internal fun <T> TokenSelectionList(
 
                             itemsIndexed(
                                 items,
-                                key = { _, item ->
-                                    "${title ?: "group$groupIndex"}-${item.hashCode()}"
+                                key = { itemIndex, item ->
+                                    "${title ?: "group$groupIndex"}-${item.hashCode()}_$itemIndex"
                                 },
                             ) { _, item ->
                                 GridItem(
