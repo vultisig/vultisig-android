@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
@@ -179,7 +180,8 @@ internal fun SendTxOverviewScreen(
                             text =
                                 stringResource(
                                     R.string.erc20_approval_unlimited_amount,
-                                    tx.approvalTokenTicker ?: tx.token.token.ticker,
+                                    tx.approvalTokenTicker
+                                        ?: sanitizeDisplayString(tx.token.token.ticker),
                                 ),
                             style = Theme.brockmann.body.s.medium,
                             color = Theme.v2.colors.alerts.warning,

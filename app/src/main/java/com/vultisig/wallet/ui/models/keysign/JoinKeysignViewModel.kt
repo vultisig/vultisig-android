@@ -1583,6 +1583,21 @@ private fun isUnsafeDisplayCodePoint(cp: Int): Boolean {
 }
 
 /**
+ * Strips bidi/zero-width/control codepoints from [input] so attacker-controlled text relayed via
+ * the keysign payload (e.g. a crafted ticker carrying U+202E) cannot smuggle reordering or
+ * invisible content into the signing UI. Mirrors `BlockaidSimulationParser.sanitisedTicker`.
+ */
+internal fun sanitizeDisplayString(input: String): String =
+    buildString(input.length) {
+        var i = 0
+        while (i < input.length) {
+            val cp = input.codePointAt(i)
+            if (!isUnsafeDisplayCodePoint(cp)) appendCodePoint(cp)
+            i += Character.charCount(cp)
+        }
+    }
+
+/**
  * Extract a display-friendly function name from an ABI signature.
  * - `supplyWithPermit(...)` → `"Supply With Permit"`
  * - `WBTCSwap(...)` → `"WBTC Swap"`
