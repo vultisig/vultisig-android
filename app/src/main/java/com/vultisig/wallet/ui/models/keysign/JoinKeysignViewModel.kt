@@ -95,8 +95,9 @@ import com.vultisig.wallet.ui.utils.asUiText
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
-import java.io.IOException
 import java.math.BigInteger
+import java.net.SocketException
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Locale
 import java.util.UUID
@@ -386,8 +387,11 @@ constructor(
             } catch (e: UnknownHostException) {
                 Timber.d(e, "Failed to resolve request")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
-            } catch (e: IOException) {
-                Timber.d(e, "IO failure during QR scan")
+            } catch (e: SocketException) {
+                Timber.d(e, "Socket failure during QR scan")
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+            } catch (e: SocketTimeoutException) {
+                Timber.d(e, "Socket timeout during QR scan")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
                 Timber.d(e, "Failed to parse QR code")
