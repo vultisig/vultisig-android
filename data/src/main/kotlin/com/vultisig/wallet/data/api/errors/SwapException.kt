@@ -62,6 +62,7 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("trading is halted") -> SwapRouteNotAvailable(error)
                     contains("timeout") -> TimeOut(error)
                     contains("unable to resolve host") -> NetworkConnection(error)
+                    contains("no internet connection") -> NetworkConnection(error)
                     contains("too many requests") || contains("rate limit") ->
                         RateLimitExceeded(error)
                     contains("slippage") -> HighPriceImpact(error)
