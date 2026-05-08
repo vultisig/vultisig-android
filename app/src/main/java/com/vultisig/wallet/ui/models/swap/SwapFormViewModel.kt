@@ -103,6 +103,8 @@ internal data class SwapFormUiModel(
     val vultBpsDiscountFiatValue: String? = null,
     val referralBpsDiscount: Int? = null,
     val referralBpsDiscountFiatValue: String? = null,
+    val outboundFee: String? = null,
+    val swapFeePercent: String? = null,
 )
 
 @HiltViewModel
@@ -976,6 +978,8 @@ constructor(
                                 estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
                                 estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
                                 fee = quoteResult.feeText,
+                                outboundFee = quoteResult.outboundFeeText,
+                                swapFeePercent = quoteResult.swapFeePercent,
                                 formError = null,
                                 isSwapDisabled = isUtxoSwap,
                                 isLoading = false,
@@ -1131,6 +1135,8 @@ constructor(
                 vultBpsDiscountFiatValue = null,
                 referralBpsDiscount = null,
                 referralBpsDiscountFiatValue = null,
+                outboundFee = null,
+                swapFeePercent = null,
                 tierType = null,
                 isSwapDisabled = true,
                 hasQuote = false,

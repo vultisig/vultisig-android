@@ -496,17 +496,35 @@ internal fun SwapScreen(
                                                 } else null,
                                         )
 
-                                        FormDetails2(
-                                            title =
+                                        val feeTitle =
+                                            state.swapFeePercent?.let {
                                                 stringResource(
+                                                    R.string
+                                                        .swap_form_estimated_fees_with_percent_title,
+                                                    it,
+                                                )
+                                            }
+                                                ?: stringResource(
                                                     R.string.swap_form_estimated_fees_title
-                                                ),
+                                                )
+                                        FormDetails2(
+                                            title = feeTitle,
                                             value = state.fee,
                                             placeholder =
                                                 if (state.isLoading) {
                                                     { UiPlaceholderLoader(placeHolderModifier) }
                                                 } else null,
                                         )
+
+                                        if (state.outboundFee != null) {
+                                            FormDetails2(
+                                                title =
+                                                    stringResource(
+                                                        R.string.swap_form_outbound_fee_title
+                                                    ),
+                                                value = state.outboundFee,
+                                            )
+                                        }
 
                                         if (state.vultBpsDiscount != null) {
                                             Row(

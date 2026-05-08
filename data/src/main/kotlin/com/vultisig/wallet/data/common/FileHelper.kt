@@ -20,6 +20,7 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -143,9 +144,16 @@ suspend fun Context.provideFileUri(file: File): Uri = doFileOperation {
 }
 
 suspend fun Uri.fileContent(context: Context): String? = doFileOperation {
-    val item = context.contentResolver.openInputStream(this@fileContent)
-    val bytes = item?.readBytes()
-    bytes?.toString(Charsets.UTF_8)
+    try {
+        context.contentResolver.openInputStream(this@fileContent)?.use { input ->
+            input.readBytes().toString(Charsets.UTF_8)
+        }
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "error in fileContent")
+        null
+    }
 }
 
 suspend fun Uri.fileName(context: Context): String? = doFileOperation {

@@ -228,4 +228,25 @@ internal class ImportFileViewModelTest {
         assertEquals(null, state.fileName)
         assertEquals(null, state.fileContent)
     }
+
+    @Test
+    fun `saveFileToAppDir surfaces unsupported error when fileContent returns null`() = runTest {
+        val uri = mockk<Uri>()
+        mockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
+        coEvery { uri.fileContent(context) } returns null
+
+        val vm = createViewModel(fileContent = null)
+        vm.uiModel.value =
+            vm.uiModel.value.copy(fileUri = uri, fileName = "share1of2-test.bak", isZip = false)
+
+        vm.saveFileToAppDir()
+
+        val state = vm.uiModel.first { it.error != null }
+        assertEquals(UiText.StringResource(R.string.import_file_not_supported), state.error)
+        assertEquals(null, state.fileUri)
+        assertEquals(null, state.fileName)
+        assertEquals(null, state.fileContent)
+        assertEquals(null, state.isZip)
+        coVerify(exactly = 0) { parseVaultFromString(any(), any()) }
+    }
 }

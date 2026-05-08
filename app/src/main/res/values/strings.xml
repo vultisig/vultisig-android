@@ -267,6 +267,8 @@
     <string name="biometry_auth_login_button">Login with biometry</string>
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_estimated_fees_title">Swap Fee</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Swap Fee (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
     <string name="swap_form_dst_token_title">To</string>
     <string name="transaction_type_button_swap">Swap</string>
     <string name="swap_form_gas_title">Network Fee</string>
