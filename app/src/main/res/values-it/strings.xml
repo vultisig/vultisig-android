@@ -1186,4 +1186,6 @@
     <string name="key_import_error_title">Importazione Chiave Fallita</string>
     <string name="key_import_error_description">Impossibile importare il vault dalla frase seme. Per favore controlla la tua frase seme e riprova.</string>
     <string name="key_import_error_no_mnemonic_description">Nessuna frase seme trovata. Per favore reinserisci la tua frase seme e riprova.</string>
+    <string name="erc20_approval_unlimited_amount">Approvazione illimitata di %1$s</string>
+    <string name="erc20_approval_spender">Destinatario</string>
 </resources>
