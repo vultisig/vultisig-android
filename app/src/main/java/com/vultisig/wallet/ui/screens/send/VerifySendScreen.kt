@@ -61,6 +61,7 @@ import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
+import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
@@ -304,6 +305,38 @@ internal fun VerifySendScreen(
                             SignTonDisplayView(signTon = signTon)
                         }
 
+                    if (tx.isUnlimitedApproval) {
+                        VerifyCardDivider(0.dp)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        ) {
+                            UiIcon(
+                                drawableResId = R.drawable.ic_triangle_alert,
+                                tint = Theme.v2.colors.alerts.warning,
+                                size = 16.dp,
+                            )
+                            Text(
+                                text =
+                                    stringResource(
+                                        R.string.erc20_approval_unlimited_amount,
+                                        tx.approvalTokenTicker
+                                            ?: sanitizeDisplayString(tx.token.token.ticker),
+                                    ),
+                                style = Theme.brockmann.body.s.medium,
+                                color = Theme.v2.colors.alerts.warning,
+                            )
+                        }
+                        tx.approvalSpender?.let { spender ->
+                            VerifyCardDivider(0.dp)
+                            VerifyCardDetails(
+                                title = stringResource(R.string.erc20_approval_spender),
+                                subtitle = spender,
+                            )
+                        }
+                    }
+
                     if (tx.functionSignature != null || tx.functionInputs != null) {
                         VerifyCardDivider(0.dp)
                         TransactionDetailsSection(
@@ -499,6 +532,35 @@ internal fun OtherField(title: String, value: String, divider: Boolean = true) {
             UiHorizontalDivider()
         }
     }
+}
+
+@Preview
+@Composable
+private fun PreviewVerifySendScreenUnlimitedApproval() {
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        srcAddress = "0x1111111111111111111111111111111111111111",
+                        dstAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                        functionName = "Approve",
+                        functionSignature = "approve(address,uint256)",
+                        functionInputs =
+                            "[\"0x1111111111111111111111111111111111111111\"," +
+                                "\"115792089237316195423570985008687907853269984665640564039457584007913129639935\"]",
+                        isUnlimitedApproval = true,
+                        approvalSpender = "0x1111111111111111111111111111111111111111",
+                        approvalTokenTicker = "USDC",
+                    )
+            ),
+        isConsentsEnabled = true,
+        confirmTitle = stringResource(R.string.keysign_sign_transaction),
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onFastSignClick = {},
+        onConfirm = {},
+    )
 }
 
 @Preview

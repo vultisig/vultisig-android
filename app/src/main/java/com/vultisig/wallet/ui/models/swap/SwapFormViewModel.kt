@@ -74,7 +74,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import timber.log.Timber
@@ -995,11 +994,9 @@ constructor(
     private fun launchRefreshQuoteTimer(expiredAt: Instant) {
         refreshQuoteJob?.cancel()
         refreshQuoteJob =
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    delay(expiredAt - Clock.System.now())
-                    refreshQuoteState.value++
-                }
+            viewModelScope.launch(Dispatchers.IO) {
+                delay(expiredAt - Clock.System.now())
+                refreshQuoteState.value++
             }
     }
 
