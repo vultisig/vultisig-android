@@ -26,6 +26,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -213,13 +214,14 @@ private fun TransactionGroupedList(
     onItemClick: (TransactionHistoryItemUiModel) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val snapshot = remember(groups) { groups }
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        groups.forEach { group ->
-            stickyHeader(key = "header_${group.dateSuffix}") {
+        snapshot.forEach { group ->
+            stickyHeader(key = "header_${group.dateKey}") {
                 DateStickyHeader(
                     prefix = group.datePrefix.asString(),
                     suffix = group.dateSuffix.asString(),
@@ -502,6 +504,7 @@ private fun PreviewOverviewTab() {
                             datePrefix = UiText.DynamicString("Today"),
                             dateSuffix = UiText.DynamicString("Sept 2, 2025"),
                             transactions = listOf(previewSendInProgress, previewSwap),
+                            dateKey = "2025-09-02",
                         ),
                         TransactionHistoryGroupUiModel(
                             datePrefix = UiText.DynamicString("Yesterday"),
@@ -528,6 +531,7 @@ private fun PreviewOverviewTab() {
                                         toAddress = "0x0000000000000000abcd",
                                     ),
                                 ),
+                            dateKey = "2025-09-01",
                         ),
                     ),
             ),
@@ -551,6 +555,7 @@ private fun PreviewSwapTab() {
                             datePrefix = UiText.DynamicString("Today"),
                             dateSuffix = UiText.DynamicString("Sept 2, 2025"),
                             transactions = listOf(previewSwap),
+                            dateKey = "2025-09-02",
                         )
                     ),
             ),
@@ -590,11 +595,13 @@ private fun PreviewWithAssetFilters() {
                             datePrefix = UiText.DynamicString("Today"),
                             dateSuffix = UiText.DynamicString("Sept 2, 2025"),
                             transactions = listOf(previewSend, previewSwap),
+                            dateKey = "2025-09-02",
                         ),
                         TransactionHistoryGroupUiModel(
                             datePrefix = UiText.DynamicString("Yesterday"),
                             dateSuffix = UiText.DynamicString("Sept 1, 2025"),
                             transactions = listOf(previewSendInProgress),
+                            dateKey = "2025-09-01",
                         ),
                     ),
             ),
