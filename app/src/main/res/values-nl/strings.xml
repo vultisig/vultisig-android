@@ -184,6 +184,8 @@
     <string name="biometry_auth_login_button">Inloggen met biometrie</string>
     <string name="swap_form_from_title">Van</string>
     <string name="swap_form_estimated_fees_title">Wisselkosten</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Wisselkosten (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Uitgaande vergoeding</string>
     <string name="swap_form_dst_token_title">Aan</string>
     <string name="transaction_type_button_swap">Wisselen</string>
     <string name="swap_form_gas_title">Netwerkkosten</string>
@@ -678,6 +680,7 @@
     <string name="invite_to_x_banner_title">Vultisig bouwt met je mee.</string>
     <string name="invite_to_x_banner_desc">Volg ons op X</string>
     <string name="invite_to_x_banner_button">Volg %s</string>
+    <string name="buy_vult_banner_desc">En bespaar op wisselkosten</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Je bent klaar om een ​​nieuwe walletstandaard te gebruiken.</string>
     <string name="vault_detail_vault_info">Kluisinfo</string>
     <string name="vault_details_keys">Sleutels</string>

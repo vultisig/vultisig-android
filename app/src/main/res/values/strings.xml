@@ -267,6 +267,8 @@
     <string name="biometry_auth_login_button">Login with biometry</string>
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_estimated_fees_title">Swap Fee</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Swap Fee (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
     <string name="swap_form_dst_token_title">To</string>
     <string name="transaction_type_button_swap">Swap</string>
     <string name="swap_form_gas_title">Network Fee</string>
@@ -881,6 +883,9 @@
     <string name="invite_to_x_banner_title">Vultisig is building with you.</string>
     <string name="invite_to_x_banner_desc">Follow us on X</string>
     <string name="invite_to_x_banner_button">Follow @%s</string>
+    <string name="buy_vult_banner_title" translatable="false">Buy $VULT</string>
+    <string name="buy_vult_banner_desc">And save on swap fees</string>
+    <string name="buy_vult_banner_button" translatable="false">Buy $VULT</string>
     <string name="home_defi_portfolio">DeFi Portfolio</string>
     <string name="home_page_no_chains_enabled">No chains enabled</string>
     <string name="home_page_no_chain_enabled_desc">You’ve disabled all chains. Make sure that at least one chain is enabled.</string>

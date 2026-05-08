@@ -186,6 +186,8 @@
     <string name="verify_swap_agree_receive_amount">Slažem se s minimalnim iznosom koji ću dobiti</string>
     <string name="vault_settings_success_backup_file">datoteka spremljena u Downloads/%1$s</string>
     <string name="swap_form_estimated_fees_title">Naknada za zamjenu</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Naknada za zamjenu (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Izlazna naknada</string>
     <string name="keysign_screen_error_please_try_again">Greška! Molim te pokušaj ponovno. %1$s</string>
     <string name="join_keysign_discovering_session_id">Otkrivanje ID-a sesije</string>
     <string name="join_keysign_discovery_service">Usluga otkrivanja</string>
@@ -684,6 +686,7 @@
     <string name="invite_to_x_banner_title">Vultisig gradi s vama.</string>
     <string name="invite_to_x_banner_desc">Pratite nas na X</string>
     <string name="invite_to_x_banner_button">Pratite %s</string>
+    <string name="buy_vult_banner_desc">I uštedi na naknadama za zamjenu</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Spremni ste za korištenje novog standarda novčanika.</string>
     <string name="vault_detail_vault_info">Informacije o trezoru</string>
     <string name="vault_details_keys">ključevi</string>

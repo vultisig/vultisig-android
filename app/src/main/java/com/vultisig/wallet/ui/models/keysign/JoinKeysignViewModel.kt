@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
@@ -527,7 +528,7 @@ constructor(
                             TokenValue(
                                 value =
                                     blockChainSpecific.maxFeePerGasWei *
-                                        blockChainSpecific.gasLimit,
+                                        defaultEvmSwapGasLimit(chain),
                                 token = nativeToken,
                             )
                         blockChainSpecific is BlockChainSpecific.THORChain ->
@@ -882,13 +883,16 @@ constructor(
                             isMax = false,
                         )
 
-                    val fees =
-                        withContext(Dispatchers.IO) {
-                            feeServiceComposite.calculateFees(blockchainTransaction)
-                        }
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-                    val estimatedTokenFees = TokenValue(value = fees.amount, token = nativeCoin)
+                    val fallbackFeeAmount =
+                        resolveFallbackFeeAmount(payload.blockChainSpecific, blockchainTransaction)
+                    val estimatedTokenFees =
+                        computeJoinKeysignNetworkFee(
+                            blockChainSpecific = payload.blockChainSpecific,
+                            nativeCoin = nativeCoin,
+                            fallbackFeeAmount = fallbackFeeAmount,
+                        )
 
                     val totalGasAndFee =
                         gasFeeToEstimatedFee(
@@ -949,10 +953,6 @@ constructor(
                             isMax = false,
                         )
 
-                    val fees =
-                        withContext(Dispatchers.IO) {
-                            feeServiceComposite.calculateFees(blockchainTransaction)
-                        }
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
                     val gasFee =
@@ -964,7 +964,16 @@ constructor(
                             }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                         } else {
-                            TokenValue(value = fees.amount, token = nativeCoin)
+                            val fallbackFeeAmount =
+                                resolveFallbackFeeAmount(
+                                    payload.blockChainSpecific,
+                                    blockchainTransaction,
+                                )
+                            computeJoinKeysignNetworkFee(
+                                blockChainSpecific = payload.blockChainSpecific,
+                                nativeCoin = nativeCoin,
+                                fallbackFeeAmount = fallbackFeeAmount,
+                            )
                         }
 
                     val totalGasAndFee =
@@ -1466,6 +1475,24 @@ constructor(
             )
         }
     }
+
+    /**
+     * Returns ZERO for EVM/THORChain (fee is read from [BlockChainSpecific]) or fetches via the fee
+     * service otherwise.
+     */
+    private suspend fun resolveFallbackFeeAmount(
+        blockChainSpecific: BlockChainSpecific,
+        blockchainTransaction: Transfer,
+    ): BigInteger =
+        if (
+            blockChainSpecific is BlockChainSpecific.Ethereum ||
+                blockChainSpecific is BlockChainSpecific.THORChain
+        ) {
+            BigInteger.ZERO
+        } else {
+            withContext(Dispatchers.IO) { feeServiceComposite.calculateFees(blockchainTransaction) }
+                .amount
+        }
 }
 
 /**
@@ -1626,3 +1653,27 @@ internal fun prettifyEvmFunctionName(signature: String): String? {
         it.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) }
     }
 }
+
+internal fun computeJoinKeysignNetworkFee(
+    blockChainSpecific: BlockChainSpecific,
+    nativeCoin: Coin,
+    fallbackFeeAmount: BigInteger,
+): TokenValue =
+    when (blockChainSpecific) {
+        is BlockChainSpecific.Ethereum ->
+            TokenValue(
+                value = blockChainSpecific.maxFeePerGasWei * blockChainSpecific.gasLimit,
+                token = nativeCoin,
+            )
+        is BlockChainSpecific.THORChain ->
+            TokenValue(value = blockChainSpecific.fee, token = nativeCoin)
+        else -> TokenValue(value = fallbackFeeAmount, token = nativeCoin)
+    }
+
+// The initiator's swap path always displays maxFeePerGas * DEFAULT_SWAP_LIMIT (via
+// EthereumFeeService.calculateDefaultFees(Swap)), ignoring BlockChainSpecific.gasLimit —
+// which can be as low as 40k for native ETH/Arb swaps. Mirror that here so joiner output
+// matches initiator output instead of being ~15× lower.
+internal fun defaultEvmSwapGasLimit(chain: Chain): BigInteger =
+    if (chain == Chain.Mantle) EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
+    else EthereumFeeService.DEFAULT_SWAP_LIMIT

@@ -65,6 +65,7 @@ import com.vultisig.wallet.ui.utils.showReviewPopUp
 internal fun ChainTokensScreen(
     vaultId: VaultId,
     chainId: ChainId,
+    onBackClick: () -> Unit,
     viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
@@ -77,6 +78,7 @@ internal fun ChainTokensScreen(
 
     ChainTokensScreen(
         uiModel = uiModel,
+        onBackClick = onBackClick,
         onRefresh = viewModel::refresh,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
@@ -85,7 +87,6 @@ internal fun ChainTokensScreen(
         onReceive = viewModel::openAddressQr,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
-        onBackClick = viewModel::back,
         onHideSearchBar = viewModel::hideSearchBar,
         onShowSearchBar = viewModel::showSearchBar,
         onShowReviewPopUp = { reviewManager.showReviewPopUp(context) },
@@ -96,6 +97,7 @@ internal fun ChainTokensScreen(
 @Composable
 internal fun ChainTokensScreen(
     uiModel: ChainTokensUiModel,
+    onBackClick: () -> Unit,
     onRefresh: () -> Unit,
     onShowSearchBar: () -> Unit,
     onHideSearchBar: () -> Unit,
@@ -106,7 +108,6 @@ internal fun ChainTokensScreen(
     onReceive: () -> Unit,
     onSelectTokens: () -> Unit,
     onTokenClick: (ChainTokenUiModel) -> Unit,
-    onBackClick: () -> Unit,
     onShowReviewPopUp: () -> Unit,
 ) {
     val snackbarState = rememberVsSnackbarState()
@@ -130,7 +131,7 @@ internal fun ChainTokensScreen(
                 shineSpotRadiusRatio = 0.45f,
             ) {
                 Row(
-                    Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -343,6 +344,7 @@ private fun PreviewChainCoinScreen1() {
                         ),
                     ),
             ),
+        onBackClick = {},
         onRefresh = {},
         onShowSearchBar = {},
         onHideSearchBar = {},
@@ -353,7 +355,6 @@ private fun PreviewChainCoinScreen1() {
         onReceive = {},
         onSelectTokens = {},
         onTokenClick = {},
-        onBackClick = {},
         onShowReviewPopUp = {},
     )
 }
