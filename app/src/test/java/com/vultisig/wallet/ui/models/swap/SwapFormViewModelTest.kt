@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.swap
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
@@ -53,6 +54,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -71,6 +73,7 @@ internal class SwapFormViewModelTest {
 
     private val scheduler = TestCoroutineScheduler()
     private val mainDispatcher = UnconfinedTestDispatcher(scheduler)
+    private val createdViewModels = mutableListOf<SwapFormViewModel>()
 
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var navigator: Navigator<Destination>
@@ -170,28 +173,34 @@ internal class SwapFormViewModelTest {
 
     @AfterEach
     fun tearDown() {
+        // Cancel viewModelScope on all VMs created during the test before resetting Main.
+        // This cooperatively cancels any pending IO-thread delays (e.g. launchRefreshQuoteTimer)
+        // so they don't try to dispatch a continuation back to Dispatchers.Main after resetMain().
+        createdViewModels.forEach { it.viewModelScope.cancel() }
+        createdViewModels.clear()
         Dispatchers.resetMain()
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
     }
 
     private fun createViewModel() =
         SwapFormViewModel(
-            savedStateHandle = savedStateHandle,
-            navigator = navigator,
-            fiatValueToString = fiatValueToString,
-            convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
-            swapQuoteRepository = swapQuoteRepository,
-            allowanceRepository = allowanceRepository,
-            appCurrencyRepository = appCurrencyRepository,
-            swapTransactionRepository = swapTransactionRepository,
-            getDiscountBpsUseCase = getDiscountBpsUseCase,
-            referralRepository = referralRepository,
-            swapValidator = swapValidator,
-            swapDiscountChecker = swapDiscountChecker,
-            swapGasCalculator = swapGasCalculator,
-            swapTokenSelector = swapTokenSelector,
-            swapQuoteManager = swapQuoteManager,
-        )
+                savedStateHandle = savedStateHandle,
+                navigator = navigator,
+                fiatValueToString = fiatValueToString,
+                convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
+                swapQuoteRepository = swapQuoteRepository,
+                allowanceRepository = allowanceRepository,
+                appCurrencyRepository = appCurrencyRepository,
+                swapTransactionRepository = swapTransactionRepository,
+                getDiscountBpsUseCase = getDiscountBpsUseCase,
+                referralRepository = referralRepository,
+                swapValidator = swapValidator,
+                swapDiscountChecker = swapDiscountChecker,
+                swapGasCalculator = swapGasCalculator,
+                swapTokenSelector = swapTokenSelector,
+                swapQuoteManager = swapQuoteManager,
+            )
+            .also { createdViewModels += it }
 
     private fun createViewModelWithAddresses(
         addresses: List<Address> = listOf(ethAddress(), btcAddress()),
