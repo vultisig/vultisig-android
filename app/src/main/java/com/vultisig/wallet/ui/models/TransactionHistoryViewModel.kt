@@ -55,6 +55,7 @@ data class TransactionHistoryGroupUiModel(
     val datePrefix: UiText,
     val dateSuffix: UiText,
     val transactions: List<TransactionHistoryItemUiModel>,
+    val dateKey: String,
 )
 
 sealed interface TransactionStatusUiModel {
@@ -430,6 +431,7 @@ constructor(
                     datePrefix = datePrefix ?: UiText.Empty,
                     dateSuffix = dateSuffix,
                     transactions = items,
+                    dateKey = date.toString(),
                 )
             }
     }
