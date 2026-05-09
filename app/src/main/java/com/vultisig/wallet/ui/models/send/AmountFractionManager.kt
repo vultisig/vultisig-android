@@ -27,6 +27,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -82,7 +83,12 @@ internal class AmountFractionManager(
                     try {
                         calculatePercentageWithAccurateFee(1f)
                     } finally {
-                        uiState.update { it.copy(isAmountSelectionLoading = false) }
+                        // Cancelled job's finally still runs, but if a newer selection is
+                        // in flight, that one owns the loading flag now — isActive is false
+                        // for cancelled jobs and true for normal completion.
+                        if (currentCoroutineContext().isActive) {
+                            uiState.update { it.copy(isAmountSelectionLoading = false) }
+                        }
                     }
                 // If a newer choose*Amount call cancelled this job after the last suspension
                 // point, abort before applying — otherwise the older selection would clobber
@@ -113,7 +119,9 @@ internal class AmountFractionManager(
                     try {
                         calculatePercentageWithAccurateFee(amountFraction.value)
                     } finally {
-                        uiState.update { it.copy(isAmountSelectionLoading = false) }
+                        if (currentCoroutineContext().isActive) {
+                            uiState.update { it.copy(isAmountSelectionLoading = false) }
+                        }
                     }
                 currentCoroutineContext().ensureActive()
                 tokenAmountFieldState.setTextAndPlaceCursorAtEnd(amount.toPlainString())
@@ -149,6 +157,7 @@ internal class AmountFractionManager(
                 defiType != DeFiNavActions.UNSTAKE_TCY &&
                 defiType != DeFiNavActions.STAKE_STCY &&
                 defiType != DeFiNavActions.UNSTAKE_STCY &&
+                defiType != DeFiNavActions.MINT_YRUNE &&
                 defiType != DeFiNavActions.REDEEM_YRUNE &&
                 defiType != DeFiNavActions.MINT_YTCY &&
                 defiType != DeFiNavActions.REDEEM_YTCY &&
