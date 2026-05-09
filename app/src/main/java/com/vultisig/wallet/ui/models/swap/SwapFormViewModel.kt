@@ -1031,6 +1031,16 @@ constructor(
                                                 isSwapDisabled = false,
                                             )
                                         }
+                                    } else {
+                                        estimatedNetworkFeeTokenValue.value = null
+                                        estimatedNetworkFeeFiatValue.value = null
+                                        uiState.update {
+                                            it.copy(
+                                                isSwapDisabled = true,
+                                                networkFee = "",
+                                                networkFeeFiat = "",
+                                            )
+                                        }
                                     }
                                 } catch (e: Exception) {
                                     if (e is kotlin.coroutines.cancellation.CancellationException)
