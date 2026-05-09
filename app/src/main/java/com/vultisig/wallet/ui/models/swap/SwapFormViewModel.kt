@@ -777,8 +777,9 @@ constructor(
                 .catch { Timber.e(it) }
                 .collect { result ->
                     val chain = result.chain
+                    val previousChain = gasFeeChain.value
                     gasFee.value = result.gasFee
-                    gasFeeChain.value = result.chain
+                    gasFeeChain.value = chain
                     // UTXO non-Cardano fees are displayed from computeUtxoPlanFeeResult in
                     // calculateFees(); only update the display for non-UTXO chains here so
                     // a slow gas fetch can't overwrite the plan fee with a dust estimate.
@@ -801,6 +802,13 @@ constructor(
                                 )
                             )
                         }
+                    } else if (previousChain != chain) {
+                        // UTXO non-Cardano + chain transitioned (initial selection or token
+                        // switch). The plan-fee block in calculateFees() may have already run
+                        // with a stale or null gasFeeChain and skipped via its chain guard,
+                        // leaving the form fee blank; re-fire so it can compute with the byte
+                        // fee for this chain.
+                        refreshQuoteState.value++
                     }
                 }
         }
