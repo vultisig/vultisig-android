@@ -1807,7 +1807,8 @@ constructor(
 
                     val address = token.address
                     val hasMemo =
-                        token.isNativeToken || token.chain.standard == TokenStandard.COSMOS
+                        token.chain != Chain.Cardano &&
+                            (token.isNativeToken || token.chain.standard == TokenStandard.COSMOS)
 
                     val uiModel =
                         accountToTokenBalanceUiModelMapper(
