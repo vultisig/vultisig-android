@@ -146,6 +146,7 @@ internal class SwapFormViewModelTest {
                             TokenValue(value = BigInteger("1000000000000000"), token = ETH_COIN),
                         fiatValue = FiatValue(BigDecimal("2.00"), "USD"),
                     ),
+                chain = Chain.Ethereum,
             )
 
         val accountsRepository: AccountsRepository = mockk(relaxed = true)
@@ -1634,6 +1635,214 @@ internal class SwapFormViewModelTest {
 
     // endregion
 
+    // region calculateFees — UTXO plan fee refresh block
+
+    @Test
+    fun `calculateFees for UTXO chain enables swap after successful plan fee`() =
+        runTest(mainDispatcher) {
+            coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
+                GasCalculationResult(
+                    gasFee = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.000001 BTC",
+                            formattedFiatValue = "$0.05",
+                            tokenValue = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                            fiatValue = FiatValue(BigDecimal("0.05"), "USD"),
+                        ),
+                    chain = Chain.Bitcoin,
+                )
+            coEvery {
+                swapGasCalculator.computeUtxoPlanFeeResult(any(), any(), any(), any(), any(), any())
+            } returns
+                GasCalculationResult(
+                    gasFee = TokenValue(value = BigInteger("816"), token = BTC_COIN),
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.00000816 BTC",
+                            formattedFiatValue = "$0.00",
+                            tokenValue = TokenValue(value = BigInteger("816"), token = BTC_COIN),
+                            fiatValue = FiatValue(BigDecimal("0.00"), "USD"),
+                        ),
+                    chain = Chain.Bitcoin,
+                )
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcAddressLargeBalance(), ethAddress()),
+                    srcTokenId = BTC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.isSwapDisabled)
+            assertEquals("0.00000816 BTC", vm.uiState.value.networkFee)
+        }
+
+    @Test
+    fun `calculateFees for UTXO chain shows InsufficientUtxos error and disables swap`() =
+        runTest(mainDispatcher) {
+            coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
+                GasCalculationResult(
+                    gasFee = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.000001 BTC",
+                            formattedFiatValue = "$0.05",
+                            tokenValue = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                            fiatValue = FiatValue(BigDecimal("0.05"), "USD"),
+                        ),
+                    chain = Chain.Bitcoin,
+                )
+            coEvery {
+                swapGasCalculator.computeUtxoPlanFeeResult(any(), any(), any(), any(), any(), any())
+            } throws InsufficientUtxosException()
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcAddressLargeBalance(), ethAddress()),
+                    srcTokenId = BTC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.isSwapDisabled)
+            assertEquals(
+                UiText.StringResource(R.string.insufficient_utxos_error),
+                vm.uiState.value.formError,
+            )
+        }
+
+    @Test
+    fun `calculateFees for UTXO chain clears fee and disables swap on plan network error`() =
+        runTest(mainDispatcher) {
+            coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
+                GasCalculationResult(
+                    gasFee = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.000001 BTC",
+                            formattedFiatValue = "$0.05",
+                            tokenValue = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                            fiatValue = FiatValue(BigDecimal("0.05"), "USD"),
+                        ),
+                    chain = Chain.Bitcoin,
+                )
+            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } throws
+                RuntimeException("network error")
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcAddressLargeBalance(), ethAddress()),
+                    srcTokenId = BTC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.isSwapDisabled)
+            assertEquals("", vm.uiState.value.networkFee)
+        }
+
+    @Test
+    fun `calculateFees for UTXO chain clears fee when gasFeeChain does not match srcToken chain`() =
+        runTest(mainDispatcher) {
+            // Default calculateGasFee mock returns Chain.Ethereum; srcToken is BTC (Bitcoin),
+            // so gasFeeChain != srcToken.chain — chain guard rejects and stale fee is cleared.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcAddressLargeBalance(), ethAddress()),
+                    srcTokenId = BTC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.isSwapDisabled)
+            assertEquals("", vm.uiState.value.networkFee)
+        }
+
+    // endregion
+
     // region getGasLimit
 
     @Test
@@ -1922,6 +2131,13 @@ internal class SwapFormViewModelTest {
             chain = Chain.Bitcoin,
             address = "bc1qbtcaddress",
             accounts = listOf(createAccount(BTC_COIN, BigInteger("100000000"))),
+        )
+
+    private fun btcAddressLargeBalance(): Address =
+        Address(
+            chain = Chain.Bitcoin,
+            address = "bc1qbtcaddress",
+            accounts = listOf(createAccount(BTC_COIN, BigInteger("1000000000"))),
         )
 
     private fun createDefaultQuoteFetchResult(
