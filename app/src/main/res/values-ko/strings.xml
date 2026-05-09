@@ -845,6 +845,7 @@
     <string name="chain_selection_select_defi_chains">DeFi 체인 선택</string>
     <string name="chain_selection_no_chains_found">체인을 찾을 수 없습니다</string>
     <string name="chain_selection_key_import_warning">키 가져오기 및 시드 기반 지갑의 기술적 제한으로 인해 사전 생성된 체인만 선택할 수 있습니다.</string>
+    <string name="chain_selection_enable_failed">활성화 실패: %1$s</string>
     <string name="transaction_type_button_send">보내기</string>
     <string name="transaction_type_button_functions">기능</string>
     <string name="copy_address">주소 복사</string>

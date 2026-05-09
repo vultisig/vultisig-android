@@ -43,7 +43,9 @@ data class Coin(
 val Coin.isLpToken: Boolean
     get() =
         when (chain) {
-            Chain.ThorChain -> contractAddress.startsWith("x/")
+            Chain.ThorChain ->
+                contractAddress.startsWith("x/staking-") ||
+                    contractAddress.startsWith("x/nami-index-")
             Chain.MayaChain ->
                 contractAddress.startsWith("x/bow-") ||
                     contractAddress.startsWith("x/ghost-vault/") ||
