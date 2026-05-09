@@ -50,6 +50,7 @@ protobuf = "0.9.4"
 rive = "11.1.1"
 update = "2.1.0"
 review = "2.0.2"
+security = "1.1.0"
 coreKtxVersion = "1.7.0"
 googleGmsGoogleServices = "4.4.4"
 firebaseMessaging = "25.0.1"
@@ -79,6 +80,7 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "jun
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesCore" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+androidx-security = { module = "androidx.security:security-crypto", version.ref = "security" }
 
 apache-compress = { module = "org.apache.commons:commons-compress", version.ref = "apache-compress" }
 apache-compress-xz = { module = "org.tukaani:xz", version.ref = "apache-compress-xz" }
