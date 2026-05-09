@@ -262,8 +262,9 @@ object CardanoHelper {
 
     /**
      * Inserts an `auxiliary_data_hash` (CBOR map key 7, 32 bytes) entry at the end of the Cardano
-     * transaction body map. Assumes the body is a CBOR map with all keys < 7, which is the case for
-     * simple ADA transfers (keys 0,1,2,3).
+     * transaction body map. Walks the existing body to verify every top-level key is a small uint <
+     * 7 — guarding against future WalletCore changes that would emit key 7 themselves or out-of-
+     * range keys, which would otherwise break canonical CBOR key ordering or duplicate the entry.
      */
     internal fun appendAuxDataHashToBody(body: ByteArray, hash: ByteArray): ByteArray {
         require(hash.size == AUX_DATA_HASH_SIZE) { "aux_data_hash must be 32 bytes" }
@@ -274,6 +275,17 @@ object CardanoHelper {
         val mapSize = firstByte and 0x1F
         require(mapSize in 1..22) { "unexpected Cardano body map size: $mapSize" }
 
+        var pos = 1
+        repeat(mapSize) {
+            require(pos < body.size) { "Cardano tx body truncated while reading key" }
+            val keyByte = body[pos].toInt() and 0xFF
+            require(keyByte in 0x00..0x06) {
+                "Cardano tx body contains map key >= 7; cannot safely append auxiliary_data_hash"
+            }
+            pos = skipCborItem(body, pos + 1)
+        }
+        require(pos == body.size) { "Cardano tx body has trailing bytes after map content" }
+
         val out = ByteArrayOutputStream(body.size + 35)
         out.write(0xA0 or (mapSize + 1))
         out.write(body, 1, body.size - 1)
@@ -283,6 +295,64 @@ object CardanoHelper {
         out.write(hash)
         return out.toByteArray()
     }
+
+    /** Returns the position immediately after the CBOR data item starting at [pos] in [buf]. */
+    private fun skipCborItem(buf: ByteArray, pos: Int): Int {
+        require(pos < buf.size) { "CBOR item out of bounds" }
+        val initial = buf[pos].toInt() and 0xFF
+        val majorType = initial shr 5
+        val info = initial and 0x1F
+        val (length, headerEnd) = readCborLength(buf, pos, info)
+        return when (majorType) {
+            0,
+            1 -> headerEnd
+            2,
+            3 -> {
+                require(headerEnd + length <= buf.size) { "CBOR string out of bounds" }
+                headerEnd + length
+            }
+            4 -> {
+                var p = headerEnd
+                repeat(length) { p = skipCborItem(buf, p) }
+                p
+            }
+            5 -> {
+                var p = headerEnd
+                repeat(length * 2) { p = skipCborItem(buf, p) }
+                p
+            }
+            6 -> skipCborItem(buf, headerEnd)
+            else -> error("Unsupported CBOR major type in tx body: $majorType")
+        }
+    }
+
+    /**
+     * Decodes the CBOR length argument for the item at [pos] (initial byte already inspected),
+     * returning the numeric length together with the position immediately after the header.
+     */
+    private fun readCborLength(buf: ByteArray, pos: Int, info: Int): Pair<Int, Int> =
+        when {
+            info < 24 -> info to (pos + 1)
+            info == 24 -> {
+                require(pos + 1 < buf.size) { "CBOR length truncated" }
+                (buf[pos + 1].toInt() and 0xFF) to (pos + 2)
+            }
+            info == 25 -> {
+                require(pos + 2 < buf.size) { "CBOR length truncated" }
+                val v = ((buf[pos + 1].toInt() and 0xFF) shl 8) or (buf[pos + 2].toInt() and 0xFF)
+                v to (pos + 3)
+            }
+            info == 26 -> {
+                require(pos + 4 < buf.size) { "CBOR length truncated" }
+                val v =
+                    ((buf[pos + 1].toInt() and 0xFF) shl 24) or
+                        ((buf[pos + 2].toInt() and 0xFF) shl 16) or
+                        ((buf[pos + 3].toInt() and 0xFF) shl 8) or
+                        (buf[pos + 4].toInt() and 0xFF)
+                v to (pos + 5)
+            }
+            else -> error("Unsupported CBOR length info: $info")
+        }
 
     /**
      * Encodes CIP-20 auxiliary data carrying [memo] as Alonzo+ tagged metadata `#6.259({ 0 => { 674

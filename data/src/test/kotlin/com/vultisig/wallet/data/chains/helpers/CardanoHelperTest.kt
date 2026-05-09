@@ -145,6 +145,20 @@ class CardanoHelperTest {
     }
 
     @Test
+    fun `appendAuxDataHashToBody rejects body whose existing keys reach 7`() {
+        // map(1) { 7 => 1 } — mimics a future body that already carries an auxiliary_data_hash
+        // slot. Appending another key 7 entry would break canonical CBOR key ordering.
+        val body = byteArrayOf(0xA1.toByte(), 0x07, 0x01)
+        val hash = ByteArray(32)
+        try {
+            CardanoHelper.appendAuxDataHashToBody(body, hash)
+            error("Expected IllegalArgumentException for body with key >= 7")
+        } catch (_: IllegalArgumentException) {
+            // expected
+        }
+    }
+
+    @Test
     fun `encodeVKeyWitnessSet emits map with vkey and signature entries`() {
         val pub = ByteArray(32) { 0x11 }
         val sig = ByteArray(64) { 0x22 }
