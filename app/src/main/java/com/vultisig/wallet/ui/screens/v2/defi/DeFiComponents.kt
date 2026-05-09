@@ -33,9 +33,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
@@ -110,6 +117,44 @@ internal fun BalanceBanner(
 }
 
 private val HIDE_BALANCE_CHARS = "• ".repeat(8).trim()
+
+private val ActionButtonBevelTopColor = Color.White.copy(alpha = 0.10f)
+private val ActionButtonBevelBottomColor = Color(0xFF0F1C3E)
+
+/**
+ * Draws a 1dp top highlight and a 1dp bottom shadow inset on a pill-shaped button to match the
+ * Figma `DeFi Button` bevel spec. Applies a 0.5 alpha multiplier when [enabled] is `false` so the
+ * bevel dims with the rest of the disabled-state styling.
+ */
+private fun Modifier.actionButtonInnerBevel(enabled: Boolean): Modifier = drawWithContent {
+    drawContent()
+    val alphaMultiplier = if (enabled) 1f else 0.5f
+    val strokePx = 1.dp.toPx()
+    val path =
+        Path().apply {
+            addRoundRect(
+                RoundRect(
+                    rect = Rect(offset = Offset.Zero, size = size),
+                    cornerRadius = CornerRadius(size.height / 2f),
+                )
+            )
+        }
+    clipPath(path) {
+        drawRect(
+            color =
+                ActionButtonBevelTopColor.copy(
+                    alpha = ActionButtonBevelTopColor.alpha * alphaMultiplier
+                ),
+            topLeft = Offset.Zero,
+            size = Size(size.width, strokePx),
+        )
+        drawRect(
+            color = ActionButtonBevelBottomColor.copy(alpha = alphaMultiplier),
+            topLeft = Offset(0f, size.height - strokePx),
+            size = Size(size.width, strokePx),
+        )
+    }
+}
 
 @Preview(showBackground = true, name = "Balance Banner - With Value")
 @Composable
@@ -243,7 +288,7 @@ fun ActionButton(
             },
         shape = RoundedCornerShape(50),
         contentPadding = PaddingValues(start = 4.dp, end = 16.dp),
-        modifier = modifier.height(42.dp),
+        modifier = modifier.height(42.dp).actionButtonInnerBevel(enabled = enabled),
     ) {
         if (icon != null) {
             Box(

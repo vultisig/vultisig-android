@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.v2.defi.tron
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -121,6 +122,7 @@ internal fun TronFreezePositionCard(
                     title = stringResource(R.string.tron_defi_unfreeze),
                     icon = R.drawable.circle_minus,
                     background = Theme.v2.colors.backgrounds.tertiary_2,
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.03f)),
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = TronFreezeCardIconCircleColor,
                     enabled = !isLoading && isUnfreezeEnabled,
@@ -131,6 +133,7 @@ internal fun TronFreezePositionCard(
                     title = stringResource(R.string.tron_defi_freeze),
                     icon = R.drawable.circle_plus,
                     background = Theme.v2.colors.buttons.ctaPrimary,
+                    border = BorderStroke(1.dp, Theme.v2.colors.primary.accent3),
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = TronFreezeCardIconCircleColor,
                     enabled = isFreezeEnabled && !isLoading,
