@@ -184,6 +184,8 @@
     <string name="biometry_auth_login_button">Вход с использованием биометрии</string>
     <string name="swap_form_from_title">Из</string>
     <string name="swap_form_estimated_fees_title">Комиссия за обмен</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Комиссия за обмен (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Исходящая комиссия</string>
     <string name="swap_form_dst_token_title">В</string>
     <string name="transaction_type_button_swap">Обмен</string>
     <string name="swap_form_gas_title">Сетевой сбор</string>
@@ -669,6 +671,7 @@
     <string name="chain_selection_select_defi_chains">Выбрать DeFi сети</string>
     <string name="chain_selection_no_chains_found">Сети не найдены</string>
     <string name="chain_selection_key_import_warning">Из-за технических ограничений импорта ключей и кошельков на основе сид-фразы можно выбрать только предварительно сгенерированные сети.</string>
+    <string name="chain_selection_enable_failed">Не удалось включить: %1$s</string>
     <string name="transaction_type_button_functions">Функции</string>
     <string name="copy_address">Копировать адрес</string>
     <string name="chain_tokens_qr_receive_label">Получить %1$s</string>
@@ -682,6 +685,7 @@
     <string name="invite_to_x_banner_title">Vultisig строит вместе с вами.</string>
     <string name="invite_to_x_banner_desc">Подпишитесь на нас в X</string>
     <string name="invite_to_x_banner_button">Подписаться на %s</string>
+    <string name="buy_vult_banner_desc">И экономьте на комиссиях за обмен</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Вы готовы использовать новый стандарт кошелька.</string>
     <string name="vault_detail_vault_info">Информация о хранилище</string>
     <string name="vault_details_keys">Ключи</string>
@@ -1192,4 +1196,6 @@
     <string name="key_import_error_title">Ошибка импорта ключа</string>
     <string name="key_import_error_description">Не удалось импортировать хранилище из seed-фразы. Пожалуйста, проверьте вашу seed-фразу и попробуйте снова.</string>
     <string name="key_import_error_no_mnemonic_description">Seed-фраза не найдена. Пожалуйста, введите заново вашу seed-фразу и попробуйте снова.</string>
+    <string name="erc20_approval_unlimited_amount">Неограниченное одобрение %1$s</string>
+    <string name="erc20_approval_spender">Получатель</string>
 </resources>

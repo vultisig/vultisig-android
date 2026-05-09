@@ -15,6 +15,7 @@ import com.vultisig.wallet.ui.navigation.ChainDashboardRouteNavType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.screens.v2.home.components.BOTH_CRYPTO_CONNECTION_TYPES
 import com.vultisig.wallet.ui.screens.v2.home.components.ONLY_WALLET
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -144,5 +145,9 @@ constructor(
 
     fun openCamera() {
         viewModelScope.launch { navigator.route(Route.ScanQr(vaultId = vaultId)) }
+    }
+
+    fun back() {
+        viewModelScope.launch { navigator.back() }
     }
 }

@@ -186,6 +186,8 @@
     <string name="verify_swap_agree_receive_amount">Ich bin mit dem Mindestbetrag einverstanden, den ich erhalte</string>
     <string name="vault_settings_success_backup_file">Datei gespeichert in Downloads/%1$s</string>
     <string name="swap_form_estimated_fees_title">Swap Gebühr</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Swap Gebühr (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Ausgehende Gebühr</string>
     <string name="keysign_screen_error_please_try_again">Fehler! Bitte versuchen Sie es erneut. %1$s</string>
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_keysign_discovery_service">Service entdecken</string>
@@ -668,6 +670,7 @@
     <string name="chain_selection_select_defi_chains">DeFi-Blockchains auswählen</string>
     <string name="chain_selection_no_chains_found">Keine Blockchains gefunden</string>
     <string name="chain_selection_key_import_warning">Aufgrund technischer Einschränkungen von Schlüsselimport- und Seed-basierten Wallets können nur vorab generierte Blockchains ausgewählt werden.</string>
+    <string name="chain_selection_enable_failed">Aktivieren fehlgeschlagen: %1$s</string>
     <string name="transaction_type_button_functions">Funktionen</string>
     <string name="copy_address">Adresse kopieren</string>
     <string name="chain_tokens_qr_receive_label">Empfange %1$s</string>
@@ -683,6 +686,7 @@
     <string name="invite_to_x_banner_title">Vultisig entwickelt mit Ihnen.</string>
     <string name="invite_to_x_banner_desc">Folgen Sie uns auf X</string>
     <string name="invite_to_x_banner_button">Folgen Sie %s</string>
+    <string name="buy_vult_banner_desc">Und sparen Sie Swap-Gebühren</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Sie sind bereit für den neuen Wallet-Standard.</string>
     <string name="vault_detail_vault_info">Tresorinformationen</string>
     <string name="vault_details_keys">Schlüssel</string>
@@ -1182,4 +1186,6 @@
     <string name="key_import_error_title">Schlüsselimport fehlgeschlagen</string>
     <string name="key_import_error_description">Der Tresor konnte nicht aus der Seed-Phrase importiert werden. Bitte überprüfen Sie Ihre Seed-Phrase und versuchen Sie es erneut.</string>
     <string name="key_import_error_no_mnemonic_description">Keine Seed-Phrase gefunden. Bitte geben Sie Ihre Seed-Phrase erneut ein und versuchen Sie es noch einmal.</string>
+    <string name="erc20_approval_unlimited_amount">Unbegrenzte %1$s-Freigabe</string>
+    <string name="erc20_approval_spender">Begünstigter</string>
 </resources>

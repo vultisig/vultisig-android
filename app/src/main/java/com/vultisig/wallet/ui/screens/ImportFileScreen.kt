@@ -203,9 +203,7 @@ private fun ImportFileScreen(
 @Composable
 private fun ZipOutput(zipOutputs: List<AppZipEntry>, onImportVult: (AppZipEntry) -> Unit) {
     LazyColumn {
-        itemsIndexed(zipOutputs, key = { index, zipOutput -> "$index:${zipOutput.name}" }) {
-            index,
-            zipOutput ->
+        itemsIndexed(zipOutputs, key = { _, zipOutput -> zipOutput.name }) { index, zipOutput ->
             Column {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),

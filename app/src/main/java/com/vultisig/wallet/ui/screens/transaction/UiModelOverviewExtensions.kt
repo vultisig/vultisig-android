@@ -19,6 +19,9 @@ internal fun TransactionTypeUiModel.toUiTransactionInfo(): UiTransactionInfo {
                 functionName = this.tx.functionName,
                 functionSignature = this.tx.functionSignature,
                 functionInputs = this.tx.functionInputs,
+                isUnlimitedApproval = this.tx.isUnlimitedApproval,
+                approvalSpender = this.tx.approvalSpender,
+                approvalTokenTicker = this.tx.approvalTokenTicker,
                 heroContent = this.tx.heroContent,
             )
         }

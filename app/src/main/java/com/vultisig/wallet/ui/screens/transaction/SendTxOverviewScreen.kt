@@ -38,6 +38,7 @@ import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.send.EstimatedNetworkFee
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
@@ -161,6 +162,46 @@ internal fun SendTxOverviewScreen(
                         title = stringResource(R.string.deposit_screen_amount_title),
                         subtitle = tx.token.value,
                     )
+                }
+
+                if (tx.isUnlimitedApproval) {
+                    VerifyCardDivider(size = 1.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    ) {
+                        UiIcon(
+                            drawableResId = R.drawable.ic_triangle_alert,
+                            tint = Theme.v2.colors.alerts.warning,
+                            size = 16.dp,
+                        )
+                        Text(
+                            text =
+                                stringResource(
+                                    R.string.erc20_approval_unlimited_amount,
+                                    tx.approvalTokenTicker
+                                        ?: sanitizeDisplayString(tx.token.token.ticker),
+                                ),
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.alerts.warning,
+                        )
+                    }
+                    tx.approvalSpender?.let { spender ->
+                        VerifyCardDivider(size = 1.dp)
+                        Details(
+                            modifier = Modifier.padding(vertical = 12.dp),
+                            title = stringResource(R.string.erc20_approval_spender),
+                        ) {
+                            Text(
+                                text = spender,
+                                style = Theme.brockmann.body.s.medium,
+                                color = Theme.v2.colors.text.primary,
+                                textAlign = TextAlign.End,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
                 }
 
                 VerifyCardDivider(size = 1.dp)
@@ -326,6 +367,13 @@ internal data class UiTransactionInfo(
     val functionName: String? = null,
     val functionSignature: String? = null,
     val functionInputs: String? = null,
+    val isUnlimitedApproval: Boolean = false,
+    /** The address being granted the unlimited allowance (args[0] of the approval call). */
+    val approvalSpender: String? = null,
+    /**
+     * Resolved ERC-20 ticker for the token contract being approved (overrides native coin ticker).
+     */
+    val approvalTokenTicker: String? = null,
     /**
      * Carried through from [com.vultisig.wallet.ui.models.TransactionDetailsUiModel.heroContent].
      */
