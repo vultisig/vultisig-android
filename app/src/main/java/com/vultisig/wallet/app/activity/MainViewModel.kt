@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -101,7 +102,11 @@ constructor(
             _startDestination.value = resolveStartDestination()
             _isLoading.value = false
 
-            snackbarFlow.collectMessage { (message, type) -> snakeBarHostState.show(message, type) }
+            snackbarFlow.collectMessage { (message, type) ->
+                val resolved = message.asString(context)
+                if (resolved.isBlank()) return@collectMessage
+                snakeBarHostState.show(resolved, type)
+            }
         }
 
         viewModelScope.safeLaunch {
