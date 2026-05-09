@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.swap
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
@@ -53,6 +54,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -71,6 +73,7 @@ internal class SwapFormViewModelTest {
 
     private val scheduler = TestCoroutineScheduler()
     private val mainDispatcher = UnconfinedTestDispatcher(scheduler)
+    private val createdViewModels = mutableListOf<SwapFormViewModel>()
 
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var navigator: Navigator<Destination>
@@ -170,28 +173,34 @@ internal class SwapFormViewModelTest {
 
     @AfterEach
     fun tearDown() {
+        // Cancel viewModelScope on all VMs created during the test before resetting Main.
+        // This cooperatively cancels any pending IO-thread delays (e.g. launchRefreshQuoteTimer)
+        // so they don't try to dispatch a continuation back to Dispatchers.Main after resetMain().
+        createdViewModels.forEach { it.viewModelScope.cancel() }
+        createdViewModels.clear()
         Dispatchers.resetMain()
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
     }
 
     private fun createViewModel() =
         SwapFormViewModel(
-            savedStateHandle = savedStateHandle,
-            navigator = navigator,
-            fiatValueToString = fiatValueToString,
-            convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
-            swapQuoteRepository = swapQuoteRepository,
-            allowanceRepository = allowanceRepository,
-            appCurrencyRepository = appCurrencyRepository,
-            swapTransactionRepository = swapTransactionRepository,
-            getDiscountBpsUseCase = getDiscountBpsUseCase,
-            referralRepository = referralRepository,
-            swapValidator = swapValidator,
-            swapDiscountChecker = swapDiscountChecker,
-            swapGasCalculator = swapGasCalculator,
-            swapTokenSelector = swapTokenSelector,
-            swapQuoteManager = swapQuoteManager,
-        )
+                savedStateHandle = savedStateHandle,
+                navigator = navigator,
+                fiatValueToString = fiatValueToString,
+                convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
+                swapQuoteRepository = swapQuoteRepository,
+                allowanceRepository = allowanceRepository,
+                appCurrencyRepository = appCurrencyRepository,
+                swapTransactionRepository = swapTransactionRepository,
+                getDiscountBpsUseCase = getDiscountBpsUseCase,
+                referralRepository = referralRepository,
+                swapValidator = swapValidator,
+                swapDiscountChecker = swapDiscountChecker,
+                swapGasCalculator = swapGasCalculator,
+                swapTokenSelector = swapTokenSelector,
+                swapQuoteManager = swapQuoteManager,
+            )
+            .also { createdViewModels += it }
 
     private fun createViewModelWithAddresses(
         addresses: List<Address> = listOf(ethAddress(), btcAddress()),
@@ -782,6 +791,125 @@ internal class SwapFormViewModelTest {
                 UiText.StringResource(R.string.swap_form_provider_mayachain),
                 vm.uiState.value.provider,
             )
+        }
+
+    // endregion
+
+    // region calculateFees — outboundFee and swapFeePercent
+
+    @Test
+    fun `calculateFees populates outboundFee and swapFeePercent when present in result`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(outboundFeeText = "$1.50", swapFeePercent = "0.30%")
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals("$1.50", state.outboundFee)
+            assertEquals("0.30%", state.swapFeePercent)
+        }
+
+    @Test
+    fun `calculateFees leaves outboundFee and swapFeePercent null when absent from result`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertNull(state.outboundFee)
+            assertNull(state.swapFeePercent)
+        }
+
+    @Test
+    fun `calculateFees clears outboundFee and swapFeePercent on swap exception`() =
+        runTest(mainDispatcher) {
+            // First quote populates the fields; the second throws so the reset path runs.
+            // Without this two-step flow the test would pass even if the reset were removed,
+            // since both fields default to null on SwapFormUiModel.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    outboundFeeText = "$1.50",
+                    swapFeePercent = "0.30%",
+                ) andThenThrows
+                SwapException.SwapIsNotSupported("Not supported")
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            // Sanity-check: the successful quote populated both fields.
+            assertEquals("$1.50", vm.uiState.value.outboundFee)
+            assertEquals("0.30%", vm.uiState.value.swapFeePercent)
+
+            // Re-trigger; this time the mock throws and the reset block must clear them.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("2")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertNull(state.outboundFee)
+            assertNull(state.swapFeePercent)
         }
 
     // endregion
@@ -1806,6 +1934,8 @@ internal class SwapFormViewModelTest {
         estimatedDstFiat: FiatValue = FiatValue(BigDecimal("95.00"), "USD"),
         feeText: String = "$0.00",
         swapFeeFiat: FiatValue = FiatValue(BigDecimal.ZERO, "USD"),
+        outboundFeeText: String? = null,
+        swapFeePercent: String? = null,
     ): BestQuote =
         BestQuote(
             candidate =
@@ -1821,6 +1951,8 @@ internal class SwapFormViewModelTest {
                     estimatedDstFiat = estimatedDstFiat,
                     feeText = feeText,
                     swapFeeFiat = swapFeeFiat,
+                    outboundFeeText = outboundFeeText,
+                    swapFeePercent = swapFeePercent,
                 ),
         )
 

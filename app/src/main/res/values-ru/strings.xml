@@ -184,6 +184,8 @@
     <string name="biometry_auth_login_button">Вход с использованием биометрии</string>
     <string name="swap_form_from_title">Из</string>
     <string name="swap_form_estimated_fees_title">Комиссия за обмен</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Комиссия за обмен (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Исходящая комиссия</string>
     <string name="swap_form_dst_token_title">В</string>
     <string name="transaction_type_button_swap">Обмен</string>
     <string name="swap_form_gas_title">Сетевой сбор</string>
@@ -1194,4 +1196,6 @@
     <string name="key_import_error_title">Ошибка импорта ключа</string>
     <string name="key_import_error_description">Не удалось импортировать хранилище из seed-фразы. Пожалуйста, проверьте вашу seed-фразу и попробуйте снова.</string>
     <string name="key_import_error_no_mnemonic_description">Seed-фраза не найдена. Пожалуйста, введите заново вашу seed-фразу и попробуйте снова.</string>
+    <string name="erc20_approval_unlimited_amount">Неограниченное одобрение %1$s</string>
+    <string name="erc20_approval_spender">Получатель</string>
 </resources>

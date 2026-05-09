@@ -176,6 +176,8 @@
     <string name="biometry_auth_login_button">Iniciar sesión con biometría</string>
     <string name="swap_form_from_title">De</string>
     <string name="swap_form_estimated_fees_title">Tarifa de intercambio</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Tarifa de intercambio (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Tarifa de salida</string>
     <string name="swap_form_dst_token_title">A</string>
     <string name="transaction_type_button_swap">Intercambiar</string>
     <string name="swap_form_gas_title">Tarifa de red</string>
@@ -1182,4 +1184,6 @@
     <string name="key_import_error_title">Importación de Clave Fallida</string>
     <string name="key_import_error_description">No se puede importar la billetera desde la frase semilla. Por favor, verifique su frase semilla e inténtelo de nuevo.</string>
     <string name="key_import_error_no_mnemonic_description">No se encontró frase semilla. Por favor, vuelva a ingresar su frase semilla e inténtelo de nuevo.</string>
+    <string name="erc20_approval_unlimited_amount">Aprobación ilimitada de %1$s</string>
+    <string name="erc20_approval_spender">Gastador</string>
 </resources>

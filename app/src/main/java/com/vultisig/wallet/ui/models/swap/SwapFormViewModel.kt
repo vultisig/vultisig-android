@@ -74,7 +74,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import timber.log.Timber
@@ -103,6 +102,8 @@ internal data class SwapFormUiModel(
     val vultBpsDiscountFiatValue: String? = null,
     val referralBpsDiscount: Int? = null,
     val referralBpsDiscountFiatValue: String? = null,
+    val outboundFee: String? = null,
+    val swapFeePercent: String? = null,
 )
 
 @HiltViewModel
@@ -943,6 +944,8 @@ constructor(
                                 estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
                                 estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
                                 fee = quoteResult.feeText,
+                                outboundFee = quoteResult.outboundFeeText,
+                                swapFeePercent = quoteResult.swapFeePercent,
                                 formError = null,
                                 isSwapDisabled = false,
                                 isLoading = false,
@@ -991,11 +994,9 @@ constructor(
     private fun launchRefreshQuoteTimer(expiredAt: Instant) {
         refreshQuoteJob?.cancel()
         refreshQuoteJob =
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    delay(expiredAt - Clock.System.now())
-                    refreshQuoteState.value++
-                }
+            viewModelScope.launch(Dispatchers.IO) {
+                delay(expiredAt - Clock.System.now())
+                refreshQuoteState.value++
             }
     }
 
@@ -1026,6 +1027,8 @@ constructor(
                 vultBpsDiscountFiatValue = null,
                 referralBpsDiscount = null,
                 referralBpsDiscountFiatValue = null,
+                outboundFee = null,
+                swapFeePercent = null,
                 tierType = null,
                 isSwapDisabled = true,
                 hasQuote = false,
