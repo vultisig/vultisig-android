@@ -1807,11 +1807,7 @@ constructor(
 
                     val address = token.address
                     val hasMemo =
-                        token.chain != Chain.Cardano &&
-                            (token.isNativeToken || token.chain.standard == TokenStandard.COSMOS)
-                    if (!hasMemo && memoFieldState.text.isNotEmpty()) {
-                        memoFieldState.clearText()
-                    }
+                        token.isNativeToken || token.chain.standard == TokenStandard.COSMOS
 
                     val uiModel =
                         accountToTokenBalanceUiModelMapper(
