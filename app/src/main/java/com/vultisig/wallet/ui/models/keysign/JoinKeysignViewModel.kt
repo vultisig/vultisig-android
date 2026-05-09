@@ -11,6 +11,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
@@ -95,6 +96,8 @@ import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
+import java.net.SocketException
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Locale
 import java.util.UUID
@@ -376,8 +379,19 @@ constructor(
                 } else {
                     currentState.value = JoinKeysignState.DiscoverService
                 }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: SwapException.NetworkConnection) {
+                Timber.d(e, "Network connection failure during QR scan")
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: UnknownHostException) {
                 Timber.d(e, "Failed to resolve request")
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+            } catch (e: SocketException) {
+                Timber.d(e, "Socket failure during QR scan")
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+            } catch (e: SocketTimeoutException) {
+                Timber.d(e, "Socket timeout during QR scan")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
                 Timber.d(e, "Failed to parse QR code")
