@@ -72,8 +72,13 @@ internal class AccountsLoader(
     }
 
     private suspend fun loadCircleUSDCAccount(vaultId: VaultId) {
+        // isRefresh = true skips the cached pre-emission so firstOrNull() returns the
+        // hydrated list — the ETH account we copy into accounts.value is then shown with
+        // refreshed balances rather than whatever fetchAccountFromDb wrote on a prior load.
         val accountsLoaded =
-            accountsRepository.loadAddresses(vaultId).firstOrNull()?.flatMap { it.accounts }
+            accountsRepository.loadAddresses(vaultId, isRefresh = true).firstOrNull()?.flatMap {
+                it.accounts
+            }
         val ethereumAccount =
             accountsLoaded?.find { it.token.id.equals(Coins.Ethereum.ETH.id, true) }
         if (ethereumAccount == null) {
@@ -118,8 +123,12 @@ internal class AccountsLoader(
     }
 
     private suspend fun loadRewardsAccount(vaultId: VaultId) {
+        // isRefresh = true skips the cached pre-emission — RUNE and RUJI accounts pushed
+        // into accounts.value below are then shown with hydrated balances.
         val accountsLoaded =
-            accountsRepository.loadAddresses(vaultId).firstOrNull()?.flatMap { it.accounts }
+            accountsRepository.loadAddresses(vaultId, isRefresh = true).firstOrNull()?.flatMap {
+                it.accounts
+            }
         val thorchainAccount =
             accountsLoaded?.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
                 ?: run {

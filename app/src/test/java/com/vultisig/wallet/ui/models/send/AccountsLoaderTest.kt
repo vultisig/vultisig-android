@@ -139,7 +139,7 @@ internal class AccountsLoaderTest {
             defiType = DeFiNavActions.WITHDRAW_RUJI
             val runeAccount = thorAccount(Coins.ThorChain.RUNE.copy(address = "thor1"))
             val rujiAccount = thorAccount(Coins.ThorChain.RUJI.copy(address = "thor1"))
-            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
                 flowOf(
                     listOf(
                         Address(
@@ -174,7 +174,7 @@ internal class AccountsLoaderTest {
             defiType = DeFiNavActions.WITHDRAW_RUJI
             val runeAccount = thorAccount(Coins.ThorChain.RUNE)
             val rujiAccount = thorAccount(Coins.ThorChain.RUJI)
-            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
                 flowOf(
                     listOf(
                         Address(
@@ -203,7 +203,8 @@ internal class AccountsLoaderTest {
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.WITHDRAW_RUJI
             // No RUNE account in the vault — short-circuits before staking-details lookup.
-            every { accountsRepository.loadAddresses(VAULT_ID) } returns flowOf(emptyList())
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
+                flowOf(emptyList())
             val loader = build(backgroundScope)
 
             // Pre-existing state from a prior nav action — must not leak through.
@@ -226,7 +227,7 @@ internal class AccountsLoaderTest {
             defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE
             mscaAddress = null
             val ethAccount = ethAccount()
-            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
                 flowOf(
                     listOf(
                         Address(
@@ -255,7 +256,7 @@ internal class AccountsLoaderTest {
             defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE
             mscaAddress = "0xMSCA"
             val ethAccount = ethAccount()
-            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
                 flowOf(
                     listOf(
                         Address(
@@ -284,7 +285,8 @@ internal class AccountsLoaderTest {
             // No ETH account in the vault → falling back to a zero-address ETH placeholder
             // would silently produce a USDC token with no address bound, which breaks any
             // later submit. The loader must publish empty instead.
-            every { accountsRepository.loadAddresses(VAULT_ID) } returns flowOf(emptyList())
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
+                flowOf(emptyList())
             val loader = build(backgroundScope)
 
             accounts.value = listOf(ethAccount()) // sentinel
