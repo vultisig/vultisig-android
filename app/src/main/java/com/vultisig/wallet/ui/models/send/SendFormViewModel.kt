@@ -696,7 +696,12 @@ constructor(
         tronStakingService.initIfStakingType()
     }
 
-    fun setTronResourceType(type: TronResourceType) = tronStakingService.setResourceType(type)
+    fun setTronResourceType(type: TronResourceType) {
+        // Preempt any in-flight percentage calc so it can't resume after the field clears
+        // and overwrite them with the amount computed for the previous resource type.
+        amountFractionManager.cancel()
+        tronStakingService.setResourceType(type)
+    }
 
     private fun loadVaultName() {
         viewModelScope.launch {

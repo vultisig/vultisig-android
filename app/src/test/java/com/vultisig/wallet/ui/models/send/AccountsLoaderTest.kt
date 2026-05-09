@@ -275,6 +275,25 @@ internal class AccountsLoaderTest {
             assertEquals(BigInteger("789"), accounts.value[1].tokenValue?.value)
         }
 
+    @Test
+    fun `WITHDRAW_USDC_CIRCLE bails out with empty list when ETH account is missing`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE
+            mscaAddress = "0xMSCA"
+            // No ETH account in the vault → falling back to a zero-address ETH placeholder
+            // would silently produce a USDC token with no address bound, which breaks any
+            // later submit. The loader must publish empty instead.
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns flowOf(emptyList())
+            val loader = build(backgroundScope)
+
+            accounts.value = listOf(ethAccount()) // sentinel
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            assertEquals(emptyList(), accounts.value)
+            coVerify(exactly = 0) { stakingDetailsRepository.getStakingDetailsById(any(), any()) }
+        }
+
     // ──────── helpers ────────
 
     private fun build(scope: CoroutineScope) =

@@ -227,6 +227,28 @@ internal class AmountFractionManagerTest {
             coVerify(exactly = 0) { amountManager.markMax(any()) }
         }
 
+    @Test
+    fun `cancel is safe to call when no job is in-flight and clears the held reference`() =
+        runTest(mainDispatcher) {
+            // The Tron resource toggle calls cancel() unconditionally on every invocation,
+            // including the first one before any percentage calc has run. Must not throw.
+            val manager = build(backgroundScope)
+
+            manager.cancel()
+            manager.cancel() // idempotent
+
+            // Subsequent percentage calls still work after cancel.
+            account = ethAccount()
+            gasFee.value = TokenValue(value = BigInteger("0"), token = ethAccount().token)
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(value = BigInteger("1000000000000000000"), token = ethAccount().token)
+
+            manager.choosePercentageAmount(AmountFraction.F50)
+            advanceUntilIdle()
+
+            assertEquals(AmountFraction.F50, uiState.value.selectedAmountFraction)
+        }
+
     // ──────── helpers ────────
 
     private fun build(scope: CoroutineScope) =

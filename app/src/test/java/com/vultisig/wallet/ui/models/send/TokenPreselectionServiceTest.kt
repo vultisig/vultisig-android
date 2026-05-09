@@ -114,8 +114,10 @@ internal class TokenPreselectionServiceTest {
     fun `preSelect WITHDRAW_RUJI - default coin is the RUJI rewards coin when no account match`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.WITHDRAW_RUJI
-            // Empty accounts → falls through to the default-coin map.
-            accounts.value = emptyList()
+            // Non-empty accounts list with no token-id match → falls through to the
+            // default-coin map. (Empty accounts is an initial-emission sentinel; the service
+            // intentionally waits for AccountsLoader to publish the real list.)
+            accounts.value = listOf(thorAccount(Coins.ThorChain.RUNE))
             val service = build(backgroundScope)
 
             service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
@@ -146,7 +148,9 @@ internal class TokenPreselectionServiceTest {
     fun `preSelect FREEZE_TRX - default coin is TRX`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.FREEZE_TRX
-            accounts.value = emptyList()
+            // Need at least one account so the observer doesn't skip the empty initial
+            // emission; no token-id match → falls through to the default-coin map.
+            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH))
             val service = build(backgroundScope)
 
             service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
@@ -194,6 +198,50 @@ internal class TokenPreselectionServiceTest {
             advanceUntilIdle()
 
             assertEquals(listOf(Coins.Ethereum.ETH), selectedTokens)
+        }
+
+    @Test
+    fun `preSelect skips the empty initial emission and only fires once accounts arrives`() =
+        runTest(mainDispatcher) {
+            defiType = null
+            accounts.value = emptyList() // initial StateFlow value
+            val service = build(backgroundScope)
+
+            service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
+            advanceUntilIdle()
+            // Empty emission must not trigger preselection — otherwise we'd lock in a static
+            // template that lacks an address binding.
+            assertEquals(emptyList(), selectedTokens)
+
+            // Real accounts land — now we preselect.
+            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH))
+            advanceUntilIdle()
+            assertEquals(listOf(Coins.Ethereum.ETH), selectedTokens)
+        }
+
+    @Test
+    fun `preSelect with force=true fires once and then defers to the user`() =
+        runTest(mainDispatcher) {
+            defiType = null
+            selectedToken = null
+            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH))
+            val service = build(backgroundScope)
+
+            service.preSelect(
+                preSelectedChainIds = listOf(Chain.Ethereum.id),
+                preSelectedTokenId = null,
+                forcePreselection = true,
+            )
+            advanceUntilIdle()
+            assertEquals(listOf(Coins.Ethereum.ETH), selectedTokens)
+
+            // Simulate the user typing into amount fields — selectedToken stays the one we
+            // forced. A subsequent accounts hydration must not re-fire onTokenSelected and
+            // wipe their input via resetUserInputCache.
+            selectedToken = Coins.Ethereum.ETH
+            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH), ethAccount(Coins.Ethereum.USDC))
+            advanceUntilIdle()
+            assertEquals(listOf(Coins.Ethereum.ETH), selectedTokens) // unchanged
         }
 
     @Test

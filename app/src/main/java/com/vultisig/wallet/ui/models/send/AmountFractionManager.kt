@@ -52,6 +52,16 @@ internal class AmountFractionManager(
 ) {
     private var chooseAmountFractionJob: Job? = null
 
+    /**
+     * Cancels any in-flight percentage/max calculation so callers (e.g. the Tron resource toggle)
+     * can clear amount fields without an older calc resuming and clobbering them after the
+     * suspension point in `calculatePercentageWithAccurateFee`.
+     */
+    fun cancel() {
+        chooseAmountFractionJob?.cancel()
+        chooseAmountFractionJob = null
+    }
+
     fun chooseMaxTokenAmount() {
         if (
             defiTypeProvider() == DeFiNavActions.UNFREEZE_TRX &&

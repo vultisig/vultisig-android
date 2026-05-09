@@ -37,7 +37,13 @@ internal class TokenPreselectionService(
         preSelectTokenJob?.cancel()
         preSelectTokenJob =
             scope.launch {
+                var forced = forcePreselection
                 accounts.collect { accounts ->
+                    // Skip the initial empty StateFlow value so we don't lock in a static
+                    // default-coin template (which has no chain address bound) before
+                    // AccountsLoader publishes the real list.
+                    if (accounts.isEmpty()) return@collect
+
                     val preSelectedToken =
                         if (defiTypeProvider() == null) {
                             findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
@@ -51,12 +57,12 @@ internal class TokenPreselectionService(
 
                     Timber.d("Found a new token to pre select %s", preSelectedToken)
 
-                    // if user hasn't yet selected any token, preselect found token
-                    if (
-                        (forcePreselection || selectedTokenProvider() == null) &&
-                            preSelectedToken != null
-                    ) {
+                    // Force preselection fires once on the first non-empty emission, then
+                    // defers to the user — otherwise every later accounts hydration would
+                    // wipe their typed amount via selectToken → resetUserInputCache.
+                    if ((forced || selectedTokenProvider() == null) && preSelectedToken != null) {
                         onTokenSelected(preSelectedToken)
+                        forced = false
                     }
                 }
             }

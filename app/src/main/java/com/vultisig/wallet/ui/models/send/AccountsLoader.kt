@@ -76,12 +76,13 @@ internal class AccountsLoader(
             accountsRepository.loadAddresses(vaultId).firstOrNull()?.flatMap { it.accounts }
         val ethereumAccount =
             accountsLoaded?.find { it.token.id.equals(Coins.Ethereum.ETH.id, true) }
-                ?: Account(
-                    token = Coins.Ethereum.ETH,
-                    tokenValue = TokenValue(BigInteger.ZERO, Coins.Ethereum.ETH),
-                    fiatValue = null,
-                    price = null,
-                )
+        if (ethereumAccount == null) {
+            // Without a vault-bound ETH account the address copied onto USDC below would be
+            // empty, which silently breaks any later submit through WithdrawUsdcCircleStrategy.
+            Timber.e("Ethereum account not available for Circle USDC withdrawal")
+            accounts.value = emptyList()
+            return
+        }
 
         val usdc = Coins.Ethereum.USDC.copy(address = ethereumAccount.token.address)
         val mscaAddress = mscaAddressProvider()
