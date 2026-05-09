@@ -121,10 +121,18 @@ internal class AccountsLoader(
         val accountsLoaded =
             accountsRepository.loadAddresses(vaultId).firstOrNull()?.flatMap { it.accounts }
         val thorchainAccount =
-            accountsLoaded?.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) } ?: return
+            accountsLoaded?.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
+                ?: run {
+                    accounts.value = emptyList()
+                    return
+                }
 
         val rujiAccount =
-            accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUJI.id, true) } ?: return
+            accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
+                ?: run {
+                    accounts.value = emptyList()
+                    return
+                }
 
         val cachedDetails =
             stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)

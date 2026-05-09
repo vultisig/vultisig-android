@@ -199,19 +199,20 @@ internal class AccountsLoaderTest {
         }
 
     @Test
-    fun `WITHDRAW_RUJI is a no-op when the RUNE account is missing`() =
+    fun `WITHDRAW_RUJI clears stale accounts when the RUNE account is missing`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.WITHDRAW_RUJI
             // No RUNE account in the vault — short-circuits before staking-details lookup.
             every { accountsRepository.loadAddresses(VAULT_ID) } returns flowOf(emptyList())
             val loader = build(backgroundScope)
 
-            accounts.value = listOf(thorAccount(Coins.ThorChain.RUJI)) // sentinel
+            // Pre-existing state from a prior nav action — must not leak through.
+            accounts.value = listOf(thorAccount(Coins.ThorChain.RUJI))
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
-            // Untouched — service returns early before mutating accounts.
-            assertEquals(1, accounts.value.size)
+            // Cleared — otherwise the UI would render stale rows from the previous flow.
+            assertEquals(emptyList(), accounts.value)
             coVerify(exactly = 0) {
                 stakingDetailsRepository.getStakingDetailsByCoindId(any(), any())
             }
