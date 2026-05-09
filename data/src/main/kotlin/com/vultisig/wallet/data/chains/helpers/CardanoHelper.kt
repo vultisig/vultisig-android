@@ -252,7 +252,7 @@ object CardanoHelper {
      * Estimates the lovelace fee bump required to cover the auxiliary data hash entry in the body
      * and the auxiliary data tail in the signed transaction.
      */
-    private fun auxDataExtraFee(memo: String?, byteFee: Long): Long {
+    internal fun auxDataExtraFee(memo: String?, byteFee: Long): Long {
         val nonEmpty = memo?.takeIf { it.isNotEmpty() } ?: return 0L
         val auxDataSize = encodeCip20AuxData(nonEmpty).size
         // Body grows by: 1 (key) + 2 (bytes(32) header) + 32 (hash) = 35 bytes.
@@ -265,7 +265,7 @@ object CardanoHelper {
      * transaction body map. Assumes the body is a CBOR map with all keys < 7, which is the case for
      * simple ADA transfers (keys 0,1,2,3).
      */
-    private fun appendAuxDataHashToBody(body: ByteArray, hash: ByteArray): ByteArray {
+    internal fun appendAuxDataHashToBody(body: ByteArray, hash: ByteArray): ByteArray {
         require(hash.size == AUX_DATA_HASH_SIZE) { "aux_data_hash must be 32 bytes" }
         require(body.isNotEmpty()) { "tx body cannot be empty" }
         val firstByte = body[0].toInt() and 0xFF
@@ -289,7 +289,7 @@ object CardanoHelper {
      * => { "msg" => [chunks] } } })`. Long memos are split into UTF-8 chunks of at most 64 bytes
      * per CIP-20.
      */
-    private fun encodeCip20AuxData(memo: String): ByteArray {
+    internal fun encodeCip20AuxData(memo: String): ByteArray {
         val chunks = chunkUtf8Bytes(memo, CIP20_MSG_CHUNK_BYTES)
         val out = ByteArrayOutputStream()
         // tag(259)
@@ -323,7 +323,7 @@ object CardanoHelper {
      * unsigned-integer keys, so this is hand-encoded rather than going through a generic CBOR
      * library that may tag the map.
      */
-    private fun encodeVKeyWitnessSet(publicKey: ByteArray, signature: ByteArray): ByteArray {
+    internal fun encodeVKeyWitnessSet(publicKey: ByteArray, signature: ByteArray): ByteArray {
         require(publicKey.size == 32) { "Ed25519 public key must be 32 bytes" }
         require(signature.size == 64) { "Ed25519 signature must be 64 bytes" }
         val out = ByteArrayOutputStream(2 + 1 + 1 + 2 + 32 + 2 + 64)
@@ -341,7 +341,7 @@ object CardanoHelper {
     }
 
     /** Wraps a Cardano signed transaction: `[body, witnesses, true, aux_data]`. */
-    private fun encodeSignedTx(
+    internal fun encodeSignedTx(
         body: ByteArray,
         witnessSet: ByteArray,
         auxData: ByteArray,
