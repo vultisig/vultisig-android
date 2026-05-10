@@ -113,4 +113,48 @@ class ThorchainMemoParserTest {
         assertEquals("BTC.BTC", parsed?.pool)
         assertEquals("thor1abc", parsed?.thorAddress)
     }
+
+    @Test
+    fun `WITHDRAW alias matches canonical dash prefix`() {
+        val canonical = ThorchainMemoParser.parse("-:BTC.BTC:5000")
+        val alias = ThorchainMemoParser.parse("WITHDRAW:BTC.BTC:5000")
+
+        assertEquals(OPERATION_WITHDRAW, alias?.operation)
+        assertEquals(canonical?.operation, alias?.operation)
+        assertEquals(canonical?.pool, alias?.pool)
+        assertEquals(canonical?.thorAddress, alias?.thorAddress)
+    }
+
+    @Test
+    fun `WD alias matches canonical dash prefix`() {
+        val canonical = ThorchainMemoParser.parse("-:BTC.BTC:5000")
+        val alias = ThorchainMemoParser.parse("WD:BTC.BTC:5000")
+
+        assertEquals(OPERATION_WITHDRAW, alias?.operation)
+        assertEquals(canonical?.operation, alias?.operation)
+        assertEquals(canonical?.pool, alias?.pool)
+        assertEquals(canonical?.thorAddress, alias?.thorAddress)
+    }
+
+    @Test
+    fun `dollar plus alias matches LOAN+ prefix`() {
+        val canonical = ThorchainMemoParser.parse("LOAN+:BTC.BTC:thor1abc")
+        val alias = ThorchainMemoParser.parse("\$+:BTC.BTC:thor1abc")
+
+        assertEquals("Loan Open", alias?.operation)
+        assertEquals(canonical?.operation, alias?.operation)
+        assertEquals(canonical?.pool, alias?.pool)
+        assertEquals(canonical?.thorAddress, alias?.thorAddress)
+    }
+
+    @Test
+    fun `dollar minus alias matches LOAN- prefix`() {
+        val canonical = ThorchainMemoParser.parse("LOAN-:BTC.BTC:thor1abc")
+        val alias = ThorchainMemoParser.parse("\$-:BTC.BTC:thor1abc")
+
+        assertEquals("Loan Close", alias?.operation)
+        assertEquals(canonical?.operation, alias?.operation)
+        assertEquals(canonical?.pool, alias?.pool)
+        assertEquals(canonical?.thorAddress, alias?.thorAddress)
+    }
 }
