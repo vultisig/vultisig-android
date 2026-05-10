@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalEncodingApi::class)
+@file:OptIn(ExperimentalEncodingApi::class, ExperimentalStdlibApi::class)
 
 package com.vultisig.wallet.data.usecases
 
@@ -9,6 +9,10 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.protobuf.ProtoNumber
 
@@ -85,11 +89,118 @@ internal class ParseCosmosMessageUseCaseImpl @Inject constructor(private val pro
         }
     }
 
-    private fun ProtobufAny.toMessage() = Message(typeUrl = typeUrl, value = Base64.encode(value))
+    private fun ProtobufAny.toMessage() =
+        Message(typeUrl = typeUrl, value = decodeValueOrFallback())
+
+    private fun ProtobufAny.decodeValueOrFallback(): JsonElement =
+        try {
+            when (typeUrl) {
+                "/cosmos.bank.v1beta1.MsgSend" ->
+                    JSON.encodeToJsonElement(protoBuf.decodeFromByteArray<MsgSendBody>(value))
+                "/types.MsgSend" ->
+                    JSON.encodeToJsonElement(
+                        protoBuf.decodeFromByteArray<ThorMsgSendBody>(value).toRendered()
+                    )
+                "/types.MsgDeposit" ->
+                    JSON.encodeToJsonElement(
+                        protoBuf.decodeFromByteArray<ThorMsgDepositBody>(value).toRendered()
+                    )
+                else -> JsonPrimitive(Base64.encode(value))
+            }
+        } catch (_: Exception) {
+            JsonPrimitive(Base64.encode(value))
+        }
 
     private fun AuthInfoFee.toFee() =
-        Fee(amount = amount.map { Amount(denom = it.denom, amount = it.amount) })
+        Fee(
+            amount = amount.map { Amount(denom = it.denom, amount = it.amount) },
+            gasLimit = gasLimit.toString(),
+        )
+
+    companion object {
+        private val JSON = Json {
+            encodeDefaults = true
+            explicitNulls = false
+        }
+    }
 }
+
+private fun ThorMsgSendBody.toRendered() =
+    RenderedThorMsgSend(
+        fromAddress = fromAddress.toHexString(),
+        toAddress = toAddress.toHexString(),
+        amount = amount,
+    )
+
+private fun ThorMsgDepositBody.toRendered() =
+    RenderedThorMsgDeposit(coins = coins, memo = memo, signer = signer.toHexString())
+
+@Serializable
+internal data class MsgSendBody(
+    @ProtoNumber(1) val fromAddress: String = "",
+    @ProtoNumber(2) val toAddress: String = "",
+    @ProtoNumber(3) val amount: List<Coin> = emptyList(),
+)
+
+@Serializable
+internal data class ThorMsgSendBody(
+    @ProtoNumber(1) val fromAddress: ByteArray = ByteArray(0),
+    @ProtoNumber(2) val toAddress: ByteArray = ByteArray(0),
+    @ProtoNumber(3) val amount: List<Coin> = emptyList(),
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ThorMsgSendBody) return false
+        if (!fromAddress.contentEquals(other.fromAddress)) return false
+        if (!toAddress.contentEquals(other.toAddress)) return false
+        if (amount != other.amount) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = fromAddress.contentHashCode()
+        result = 31 * result + toAddress.contentHashCode()
+        result = 31 * result + amount.hashCode()
+        return result
+    }
+}
+
+@Serializable
+internal data class ThorMsgDepositBody(
+    @ProtoNumber(1) val coins: List<Coin> = emptyList(),
+    @ProtoNumber(2) val memo: String = "",
+    @ProtoNumber(3) val signer: ByteArray = ByteArray(0),
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ThorMsgDepositBody) return false
+        if (coins != other.coins) return false
+        if (memo != other.memo) return false
+        if (!signer.contentEquals(other.signer)) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = coins.hashCode()
+        result = 31 * result + memo.hashCode()
+        result = 31 * result + signer.contentHashCode()
+        return result
+    }
+}
+
+@Serializable
+private data class RenderedThorMsgSend(
+    val fromAddress: String,
+    val toAddress: String,
+    val amount: List<Coin>,
+)
+
+@Serializable
+private data class RenderedThorMsgDeposit(
+    val coins: List<Coin>,
+    val memo: String,
+    val signer: String,
+)
 
 @Serializable
 internal data class TxBody(
@@ -206,8 +317,8 @@ data class CosmosMessage(
     @SerialName("fee") val authInfoFee: Fee,
 )
 
-@Serializable data class Message(val typeUrl: String, val value: String)
+@Serializable data class Message(val typeUrl: String, val value: JsonElement)
 
-@Serializable data class Fee(val amount: List<Amount>)
+@Serializable data class Fee(val amount: List<Amount>, val gasLimit: String = "0")
 
 @Serializable data class Amount(val denom: String, val amount: String)

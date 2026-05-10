@@ -6,6 +6,12 @@ import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.junit.Assert.*
 import org.junit.Test
@@ -519,11 +525,11 @@ class ParseCosmosMessageTest {
     }
 
     @Test
-    fun `Message value should be properly base64 encoded`() {
+    fun `unknown typeUrl should fall back to base64 JsonPrimitive`() {
         val originalBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
         val txBody =
             TxBody(
-                messages = listOf(ProtobufAny("/cosmos.bank.v1beta1.MsgSend", originalBytes)),
+                messages = listOf(ProtobufAny("/some.unknown.TypeUrl", originalBytes)),
                 memo = "test",
             )
         val authInfo = createValidAuthInfo()
@@ -537,8 +543,73 @@ class ParseCosmosMessageTest {
             )
 
         val result = parseCosmosMessage(signDirect)
-        val decodedValue = Base64.decode(result.messages[0].value)
-        assertArrayEquals(originalBytes, decodedValue)
+        val value = result.messages[0].value
+        val base64String = (value as JsonPrimitive).contentOrNull
+        assertNotNull(base64String)
+        assertArrayEquals(originalBytes, Base64.decode(base64String!!))
+    }
+
+    @Test
+    fun `MsgSend value should be decoded into nested JSON object`() {
+        val msgSend =
+            MsgSendBody(
+                fromAddress = "thor1from",
+                toAddress = "thor1to",
+                amount = listOf(Coin(denom = "rune", amount = "100000000")),
+            )
+        val msgBytes = protoBuf.encodeToByteArray(MsgSendBody.serializer(), msgSend)
+        val txBody =
+            TxBody(
+                messages = listOf(ProtobufAny("/cosmos.bank.v1beta1.MsgSend", msgBytes)),
+                memo = "test",
+            )
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        assertEquals("thor1from", value["fromAddress"]!!.jsonPrimitive.content)
+        assertEquals("thor1to", value["toAddress"]!!.jsonPrimitive.content)
+        val amounts = value["amount"]!!.jsonArray
+        assertEquals(1, amounts.size)
+        assertEquals("rune", amounts[0].jsonObject["denom"]!!.jsonPrimitive.content)
+        assertEquals("100000000", amounts[0].jsonObject["amount"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `Fee should include gasLimit from AuthInfoFee`() {
+        val txBody = createValidTxBody()
+        val authInfo =
+            AuthInfo(
+                signerInfos =
+                    listOf(
+                        SignerInfo(
+                            publicKey =
+                                ProtobufAny("/cosmos.crypto.secp256k1.PubKey", ByteArray(33)),
+                            modeInfo = ModeInfo(single = ModeInfoSingle(mode = 1)),
+                            sequence = 42UL,
+                        )
+                    ),
+                authInfoFee = AuthInfoFee(amount = listOf(Coin("rune", "0")), gasLimit = 99368UL),
+            )
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        assertEquals("99368", result.authInfoFee.gasLimit)
     }
 
     private fun encodeTxBody(txBody: TxBody): String {
