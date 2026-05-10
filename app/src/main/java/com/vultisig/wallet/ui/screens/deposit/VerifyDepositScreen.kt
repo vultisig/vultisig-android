@@ -151,7 +151,7 @@ internal fun VerifyDepositScreen(
                             text =
                                 stringResource(
                                     R.string.lp_destination_format,
-                                    tx.pool,
+                                    tx.pool.substringBefore('-'),
                                     tx.token.token.ticker,
                                 ),
                             style = Theme.brockmann.headings.title3,
