@@ -66,6 +66,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
+import com.vultisig.wallet.data.usecases.ThorchainMemoParser
 import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
 import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -917,6 +918,8 @@ constructor(
                             )
                         )
 
+                    val parsedThorMemo = ThorchainMemoParser.parse(payload.memo ?: "")
+
                     val depositTransaction =
                         DepositTransaction(
                             id = UUID.randomUUID().toString(),
@@ -929,6 +932,8 @@ constructor(
                             estimatedFees = estimatedTokenFees,
                             estimateFeesFiat = totalGasAndFee.formattedFiatValue,
                             blockChainSpecific = payload.blockChainSpecific,
+                            operation = parsedThorMemo?.operation.orEmpty(),
+                            thorAddress = parsedThorMemo?.thorAddress.orEmpty(),
                         )
                     val depositTransactionUiModel =
                         mapDepositTransactionToUiModel(depositTransaction)
