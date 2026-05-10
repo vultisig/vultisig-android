@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalEncodingApi::class, ExperimentalStdlibApi::class)
+@file:OptIn(ExperimentalEncodingApi::class)
 
 package com.vultisig.wallet.data.usecases
 
@@ -10,6 +10,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -97,20 +98,31 @@ internal class ParseCosmosMessageUseCaseImpl @Inject constructor(private val pro
         try {
             when (typeUrl) {
                 "/cosmos.bank.v1beta1.MsgSend" ->
-                    JSON.encodeToJsonElement(protoBuf.decodeFromByteArray<MsgSendBody>(value))
+                    JSON.encodeToJsonElement(decodeStrict<MsgSendBody>(value))
                 "/types.MsgSend" ->
-                    JSON.encodeToJsonElement(
-                        protoBuf.decodeFromByteArray<ThorMsgSendBody>(value).toRendered()
-                    )
+                    JSON.encodeToJsonElement(decodeStrict<ThorMsgSendBody>(value).toRendered())
                 "/types.MsgDeposit" ->
+                    JSON.encodeToJsonElement(decodeStrict<ThorMsgDepositBody>(value).toRendered())
+                "/cosmwasm.wasm.v1.MsgExecuteContract" ->
                     JSON.encodeToJsonElement(
-                        protoBuf.decodeFromByteArray<ThorMsgDepositBody>(value).toRendered()
+                        decodeStrict<MsgExecuteContractBody>(value).toRendered()
                     )
+                "/ibc.applications.transfer.v1.MsgTransfer" ->
+                    JSON.encodeToJsonElement(decodeStrict<MsgTransferBody>(value))
                 else -> JsonPrimitive(Base64.encode(value))
             }
         } catch (_: SerializationException) {
             JsonPrimitive(Base64.encode(value))
         }
+
+    private inline fun <reified T> decodeStrict(bytes: ByteArray): T {
+        val decoded = protoBuf.decodeFromByteArray<T>(bytes)
+        val reencoded = protoBuf.encodeToByteArray(decoded)
+        if (!reencoded.contentEquals(bytes)) {
+            throw SerializationException("Decoded shape does not round-trip to input bytes")
+        }
+        return decoded
+    }
 
     private fun AuthInfoFee.toFee() =
         Fee(
@@ -126,15 +138,77 @@ internal class ParseCosmosMessageUseCaseImpl @Inject constructor(private val pro
     }
 }
 
+private const val THOR_BECH32_HRP = "thor"
+
+private const val BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
+
+private fun ByteArray.toThorBech32(): String =
+    if (isEmpty()) "" else bech32Encode(THOR_BECH32_HRP, this)
+
+private fun bech32Encode(hrp: String, data: ByteArray): String {
+    val values = convertBits(data, 8, 5, pad = true)
+    val checksum = bech32CreateChecksum(hrp, values)
+    val sb = StringBuilder(hrp).append('1')
+    (values + checksum).forEach { sb.append(BECH32_CHARSET[it]) }
+    return sb.toString()
+}
+
+private fun convertBits(data: ByteArray, fromBits: Int, toBits: Int, pad: Boolean): IntArray {
+    var acc = 0
+    var bits = 0
+    val maxv = (1 shl toBits) - 1
+    val out = mutableListOf<Int>()
+    for (b in data) {
+        acc = (acc shl fromBits) or (b.toInt() and 0xFF)
+        bits += fromBits
+        while (bits >= toBits) {
+            bits -= toBits
+            out.add((acc shr bits) and maxv)
+        }
+    }
+    if (pad && bits > 0) out.add((acc shl (toBits - bits)) and maxv)
+    return out.toIntArray()
+}
+
+private fun bech32CreateChecksum(hrp: String, data: IntArray): IntArray {
+    val values = bech32HrpExpand(hrp) + data.toList() + listOf(0, 0, 0, 0, 0, 0)
+    val polymod = bech32Polymod(values) xor 1
+    return IntArray(6) { (polymod shr (5 * (5 - it))) and 31 }
+}
+
+private fun bech32HrpExpand(hrp: String): List<Int> =
+    hrp.map { it.code shr 5 } + 0 + hrp.map { it.code and 31 }
+
+private fun bech32Polymod(values: List<Int>): Int {
+    val gen = intArrayOf(0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3)
+    var chk = 1
+    for (v in values) {
+        val top = chk shr 25
+        chk = ((chk and 0x1ffffff) shl 5) xor v
+        for (i in gen.indices) {
+            if ((top shr i) and 1 != 0) chk = chk xor gen[i]
+        }
+    }
+    return chk
+}
+
 private fun ThorMsgSendBody.toRendered() =
     RenderedThorMsgSend(
-        fromAddress = fromAddress.toHexString(),
-        toAddress = toAddress.toHexString(),
+        fromAddress = fromAddress.toThorBech32(),
+        toAddress = toAddress.toThorBech32(),
         amount = amount,
     )
 
 private fun ThorMsgDepositBody.toRendered() =
-    RenderedThorMsgDeposit(coins = coins, memo = memo, signer = signer.toHexString())
+    RenderedThorMsgDeposit(coins = coins, memo = memo, signer = signer.toThorBech32())
+
+private fun MsgExecuteContractBody.toRendered() =
+    RenderedMsgExecuteContract(
+        sender = sender,
+        contract = contract,
+        msg = msg.toString(Charsets.UTF_8),
+        funds = funds,
+    )
 
 @Serializable
 internal data class MsgSendBody(
@@ -167,8 +241,25 @@ internal data class ThorMsgSendBody(
 }
 
 @Serializable
+internal data class ThorChainAsset(
+    @ProtoNumber(1) val chain: String = "",
+    @ProtoNumber(2) val symbol: String = "",
+    @ProtoNumber(3) val ticker: String = "",
+    @ProtoNumber(4) val synth: Boolean = false,
+    @ProtoNumber(5) val trade: Boolean = false,
+    @ProtoNumber(6) val secured: Boolean = false,
+)
+
+@Serializable
+internal data class ThorChainCoin(
+    @ProtoNumber(1) val asset: ThorChainAsset = ThorChainAsset(),
+    @ProtoNumber(2) val amount: String = "",
+    @ProtoNumber(3) val decimals: Long = 0L,
+)
+
+@Serializable
 internal data class ThorMsgDepositBody(
-    @ProtoNumber(1) val coins: List<Coin> = emptyList(),
+    @ProtoNumber(1) val coins: List<ThorChainCoin> = emptyList(),
     @ProtoNumber(2) val memo: String = "",
     @ProtoNumber(3) val signer: ByteArray = ByteArray(0),
 ) {
@@ -190,6 +281,50 @@ internal data class ThorMsgDepositBody(
 }
 
 @Serializable
+internal data class MsgExecuteContractBody(
+    @ProtoNumber(1) val sender: String = "",
+    @ProtoNumber(2) val contract: String = "",
+    @ProtoNumber(3) val msg: ByteArray = ByteArray(0),
+    @ProtoNumber(5) val funds: List<Coin> = emptyList(),
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is MsgExecuteContractBody) return false
+        if (sender != other.sender) return false
+        if (contract != other.contract) return false
+        if (!msg.contentEquals(other.msg)) return false
+        if (funds != other.funds) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = sender.hashCode()
+        result = 31 * result + contract.hashCode()
+        result = 31 * result + msg.contentHashCode()
+        result = 31 * result + funds.hashCode()
+        return result
+    }
+}
+
+@Serializable
+internal data class IbcHeight(
+    @ProtoNumber(1) val revisionNumber: ULong = 0UL,
+    @ProtoNumber(2) val revisionHeight: ULong = 0UL,
+)
+
+@Serializable
+internal data class MsgTransferBody(
+    @ProtoNumber(1) val sourcePort: String = "",
+    @ProtoNumber(2) val sourceChannel: String = "",
+    @ProtoNumber(3) val token: Coin? = null,
+    @ProtoNumber(4) val sender: String = "",
+    @ProtoNumber(5) val receiver: String = "",
+    @ProtoNumber(6) val timeoutHeight: IbcHeight? = null,
+    @ProtoNumber(7) val timeoutTimestamp: ULong = 0UL,
+    @ProtoNumber(8) val memo: String = "",
+)
+
+@Serializable
 private data class RenderedThorMsgSend(
     val fromAddress: String,
     val toAddress: String,
@@ -198,9 +333,17 @@ private data class RenderedThorMsgSend(
 
 @Serializable
 private data class RenderedThorMsgDeposit(
-    val coins: List<Coin>,
+    val coins: List<ThorChainCoin>,
     val memo: String,
     val signer: String,
+)
+
+@Serializable
+private data class RenderedMsgExecuteContract(
+    val sender: String,
+    val contract: String,
+    val msg: String,
+    val funds: List<Coin>,
 )
 
 @Serializable

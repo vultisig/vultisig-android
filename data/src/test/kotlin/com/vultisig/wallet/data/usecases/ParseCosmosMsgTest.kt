@@ -584,9 +584,10 @@ class ParseCosmosMessageTest {
     }
 
     @Test
-    fun `types MsgSend value should be decoded into nested JSON object with hex addresses`() {
-        val fromBytes = byteArrayOf(0x01, 0x02, 0x03)
-        val toBytes = byteArrayOf(0xab.toByte(), 0xcd.toByte(), 0xef.toByte())
+    fun `types MsgSend value should be decoded with thor1 bech32 addresses`() {
+        // 20-byte address payloads -> standard length thor1... bech32 (BIP-0173)
+        val fromBytes = ByteArray(20) { it.toByte() }
+        val toBytes = ByteArray(20) { (0xFF - it).toByte() }
         val msgSend =
             ThorMsgSendBody(
                 fromAddress = fromBytes,
@@ -608,8 +609,14 @@ class ParseCosmosMessageTest {
 
         val result = parseCosmosMessage(signDirect)
         val value = result.messages[0].value as JsonObject
-        assertEquals("010203", value["fromAddress"]!!.jsonPrimitive.content)
-        assertEquals("abcdef", value["toAddress"]!!.jsonPrimitive.content)
+        val from = value["fromAddress"]!!.jsonPrimitive.content
+        val to = value["toAddress"]!!.jsonPrimitive.content
+        assertTrue("expected thor1 prefix, got $from", from.startsWith("thor1"))
+        assertTrue("expected thor1 prefix, got $to", to.startsWith("thor1"))
+        // 20-byte payload -> 32 data chars + 6 checksum chars + "thor1" prefix = 43
+        assertEquals(43, from.length)
+        assertEquals(43, to.length)
+        assertNotEquals(from, to)
         val amounts = value["amount"]!!.jsonArray
         assertEquals(1, amounts.size)
         assertEquals("rune", amounts[0].jsonObject["denom"]!!.jsonPrimitive.content)
@@ -617,11 +624,27 @@ class ParseCosmosMessageTest {
     }
 
     @Test
-    fun `types MsgDeposit value should be decoded into nested JSON object with hex signer`() {
-        val signerBytes = byteArrayOf(0xde.toByte(), 0xad.toByte(), 0xbe.toByte(), 0xef.toByte())
+    fun `types MsgDeposit value should decode coins with Asset structure and thor1 signer`() {
+        // common.Coin in THORChain is (Asset asset, string amount, int64 decimals) — NOT (denom,
+        // amount).
+        val signerBytes = ByteArray(20) { (it + 1).toByte() }
+        val coin =
+            ThorChainCoin(
+                asset =
+                    ThorChainAsset(
+                        chain = "LTC",
+                        symbol = "LTC",
+                        ticker = "LTC",
+                        synth = false,
+                        trade = false,
+                        secured = false,
+                    ),
+                amount = "12345",
+                decimals = 8L,
+            )
         val msgDeposit =
             ThorMsgDepositBody(
-                coins = listOf(Coin(denom = "rune", amount = "500")),
+                coins = listOf(coin),
                 memo = "swap:BTC.BTC:bc1qaddr",
                 signer = signerBytes,
             )
@@ -640,12 +663,126 @@ class ParseCosmosMessageTest {
 
         val result = parseCosmosMessage(signDirect)
         val value = result.messages[0].value as JsonObject
-        assertEquals("deadbeef", value["signer"]!!.jsonPrimitive.content)
+        val signer = value["signer"]!!.jsonPrimitive.content
+        assertTrue("expected thor1 prefix, got $signer", signer.startsWith("thor1"))
+        assertEquals(43, signer.length)
         assertEquals("swap:BTC.BTC:bc1qaddr", value["memo"]!!.jsonPrimitive.content)
         val coins = value["coins"]!!.jsonArray
         assertEquals(1, coins.size)
-        assertEquals("rune", coins[0].jsonObject["denom"]!!.jsonPrimitive.content)
-        assertEquals("500", coins[0].jsonObject["amount"]!!.jsonPrimitive.content)
+        val coin0 = coins[0].jsonObject
+        val asset = coin0["asset"]!!.jsonObject
+        assertEquals("LTC", asset["chain"]!!.jsonPrimitive.content)
+        assertEquals("LTC", asset["symbol"]!!.jsonPrimitive.content)
+        assertEquals("LTC", asset["ticker"]!!.jsonPrimitive.content)
+        assertEquals("12345", coin0["amount"]!!.jsonPrimitive.content)
+        assertEquals("8", coin0["decimals"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `cross-typeUrl bytes should fall back to base64 via re-encode check`() {
+        // Encode an MsgExecuteContract body and label it as /types.MsgSend. Field 1 in both is
+        // length-delimited (wire-type 2), so a naive decoder silently produces a fake MsgSend.
+        // The strict round-trip check must reject this and fall back to base64.
+        val wrongShape =
+            MsgExecuteContractBody(
+                sender = "thor1sender",
+                contract = "thor1contract",
+                msg = "{\"swap\":{}}".toByteArray(),
+                funds = emptyList(),
+            )
+        val msgBytes = protoBuf.encodeToByteArray(MsgExecuteContractBody.serializer(), wrongShape)
+        val txBody =
+            TxBody(messages = listOf(ProtobufAny("/types.MsgSend", msgBytes)), memo = "test")
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value
+        val base64String = (value as JsonPrimitive).contentOrNull
+        assertNotNull(base64String)
+        assertArrayEquals(msgBytes, Base64.decode(base64String!!))
+    }
+
+    @Test
+    fun `MsgExecuteContract value should be decoded with sender, contract, msg, funds`() {
+        val body =
+            MsgExecuteContractBody(
+                sender = "osmo1sender",
+                contract = "osmo1contract",
+                msg = "{\"swap\":{\"amount\":\"1\"}}".toByteArray(),
+                funds = listOf(Coin(denom = "uosmo", amount = "1000")),
+            )
+        val msgBytes = protoBuf.encodeToByteArray(MsgExecuteContractBody.serializer(), body)
+        val txBody =
+            TxBody(
+                messages = listOf(ProtobufAny("/cosmwasm.wasm.v1.MsgExecuteContract", msgBytes)),
+                memo = "",
+            )
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "osmosis-1",
+                accountNumber = "1",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        assertEquals("osmo1sender", value["sender"]!!.jsonPrimitive.content)
+        assertEquals("osmo1contract", value["contract"]!!.jsonPrimitive.content)
+        assertEquals("{\"swap\":{\"amount\":\"1\"}}", value["msg"]!!.jsonPrimitive.content)
+        val funds = value["funds"]!!.jsonArray
+        assertEquals(1, funds.size)
+        assertEquals("uosmo", funds[0].jsonObject["denom"]!!.jsonPrimitive.content)
+        assertEquals("1000", funds[0].jsonObject["amount"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `MsgTransfer value should be decoded with sender, receiver, token`() {
+        val body =
+            MsgTransferBody(
+                sourcePort = "transfer",
+                sourceChannel = "channel-0",
+                token = Coin(denom = "uatom", amount = "5000"),
+                sender = "cosmos1sender",
+                receiver = "osmo1receiver",
+                timeoutTimestamp = 1700000000000000000UL,
+            )
+        val msgBytes = protoBuf.encodeToByteArray(MsgTransferBody.serializer(), body)
+        val txBody =
+            TxBody(
+                messages =
+                    listOf(ProtobufAny("/ibc.applications.transfer.v1.MsgTransfer", msgBytes)),
+                memo = "",
+            )
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "cosmoshub-4",
+                accountNumber = "1",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        assertEquals("transfer", value["sourcePort"]!!.jsonPrimitive.content)
+        assertEquals("channel-0", value["sourceChannel"]!!.jsonPrimitive.content)
+        assertEquals("cosmos1sender", value["sender"]!!.jsonPrimitive.content)
+        assertEquals("osmo1receiver", value["receiver"]!!.jsonPrimitive.content)
+        val token = value["token"]!!.jsonObject
+        assertEquals("uatom", token["denom"]!!.jsonPrimitive.content)
+        assertEquals("5000", token["amount"]!!.jsonPrimitive.content)
     }
 
     @Test
