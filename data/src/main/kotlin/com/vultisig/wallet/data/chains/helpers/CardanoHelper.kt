@@ -261,10 +261,11 @@ object CardanoHelper {
     }
 
     /**
-     * Inserts an `auxiliary_data_hash` (CBOR map key 7, 32 bytes) entry at the end of the Cardano
-     * transaction body map. Walks the existing body to verify every top-level key is a small uint <
-     * 7 — guarding against future WalletCore changes that would emit key 7 themselves or out-of-
-     * range keys, which would otherwise break canonical CBOR key ordering or duplicate the entry.
+     * Inserts an `auxiliary_data_hash` (CBOR map key 7, 32 bytes) entry into the Cardano
+     * transaction body map at the canonical sort position (between the last key < 7 and the first
+     * key > 7). Rejects bodies that already carry key 7 or that use non-uint keys; tolerates
+     * Conway-era body keys >= 8 (validity_interval_start, mint, collateral, reference_inputs,
+     * voting_procedures, etc.) provided canonical sort order is preserved.
      */
     internal fun appendAuxDataHashToBody(body: ByteArray, hash: ByteArray): ByteArray {
         require(hash.size == AUX_DATA_HASH_SIZE) { "aux_data_hash must be 32 bytes" }
@@ -275,24 +276,37 @@ object CardanoHelper {
         val mapSize = firstByte and 0x1F
         require(mapSize in 1..22) { "unexpected Cardano body map size: $mapSize" }
 
+        val auxKey = AUX_DATA_HASH_BODY_KEY.toInt() and 0xFF
         var pos = 1
+        var insertPos = -1
         repeat(mapSize) {
             require(pos < body.size) { "Cardano tx body truncated while reading key" }
-            val keyByte = body[pos].toInt() and 0xFF
-            require(keyByte in 0x00..0x06) {
-                "Cardano tx body contains map key >= 7; cannot safely append auxiliary_data_hash"
+            val keyStart = pos
+            val keyByte = body[keyStart].toInt() and 0xFF
+            val keyMajorType = (keyByte shr 5) and 0x07
+            require(keyMajorType == 0) {
+                "Cardano tx body must use unsigned-integer keys; saw major type $keyMajorType"
             }
-            pos = skipCborItem(body, pos + 1)
+            require(keyByte != auxKey) {
+                "Cardano tx body already contains auxiliary_data_hash entry"
+            }
+            if (insertPos < 0 && keyByte > auxKey) {
+                insertPos = keyStart
+            }
+            val afterKey = skipCborItem(body, keyStart)
+            pos = skipCborItem(body, afterKey)
         }
         require(pos == body.size) { "Cardano tx body has trailing bytes after map content" }
+        if (insertPos < 0) insertPos = body.size
 
         val out = ByteArrayOutputStream(body.size + 35)
         out.write(0xA0 or (mapSize + 1))
-        out.write(body, 1, body.size - 1)
-        out.write(AUX_DATA_HASH_BODY_KEY.toInt())
+        if (insertPos > 1) out.write(body, 1, insertPos - 1)
+        out.write(auxKey)
         out.write(0x58) // bytes, 1-byte length follows
         out.write(AUX_DATA_HASH_SIZE)
         out.write(hash)
+        if (insertPos < body.size) out.write(body, insertPos, body.size - insertPos)
         return out.toByteArray()
     }
 
@@ -302,6 +316,7 @@ object CardanoHelper {
         val initial = buf[pos].toInt() and 0xFF
         val majorType = initial shr 5
         val info = initial and 0x1F
+        if (majorType == 7) return skipSimpleOrFloat(buf, pos, info)
         val (length, headerEnd) = readCborLength(buf, pos, info)
         return when (majorType) {
             0,
@@ -325,6 +340,29 @@ object CardanoHelper {
             else -> error("Unsupported CBOR major type in tx body: $majorType")
         }
     }
+
+    /** Returns the position immediately after a CBOR major-type-7 item (simple value or float). */
+    private fun skipSimpleOrFloat(buf: ByteArray, pos: Int, info: Int): Int =
+        when (info) {
+            in 0..23 -> pos + 1
+            24 -> {
+                require(pos + 1 < buf.size) { "CBOR simple value truncated" }
+                pos + 2
+            }
+            25 -> {
+                require(pos + 2 < buf.size) { "CBOR float16 truncated" }
+                pos + 3
+            }
+            26 -> {
+                require(pos + 4 < buf.size) { "CBOR float32 truncated" }
+                pos + 5
+            }
+            27 -> {
+                require(pos + 8 < buf.size) { "CBOR float64 truncated" }
+                pos + 9
+            }
+            else -> error("Unsupported CBOR major type 7 info: $info")
+        }
 
     /**
      * Decodes the CBOR length argument for the item at [pos] (initial byte already inspected),
@@ -350,6 +388,24 @@ object CardanoHelper {
                         ((buf[pos + 3].toInt() and 0xFF) shl 8) or
                         (buf[pos + 4].toInt() and 0xFF)
                 v to (pos + 5)
+            }
+            info == 27 -> {
+                require(pos + 8 < buf.size) { "CBOR length truncated" }
+                require(
+                    buf[pos + 1].toInt() == 0 &&
+                        buf[pos + 2].toInt() == 0 &&
+                        buf[pos + 3].toInt() == 0 &&
+                        buf[pos + 4].toInt() == 0
+                ) {
+                    "CBOR 8-byte length exceeds Int range"
+                }
+                val v =
+                    ((buf[pos + 5].toInt() and 0xFF) shl 24) or
+                        ((buf[pos + 6].toInt() and 0xFF) shl 16) or
+                        ((buf[pos + 7].toInt() and 0xFF) shl 8) or
+                        (buf[pos + 8].toInt() and 0xFF)
+                require(v >= 0) { "CBOR 8-byte length exceeds Int range" }
+                v to (pos + 9)
             }
             else -> error("Unsupported CBOR length info: $info")
         }

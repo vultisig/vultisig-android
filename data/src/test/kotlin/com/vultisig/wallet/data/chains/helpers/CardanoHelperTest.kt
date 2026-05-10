@@ -152,9 +152,109 @@ class CardanoHelperTest {
         val hash = ByteArray(32)
         try {
             CardanoHelper.appendAuxDataHashToBody(body, hash)
-            error("Expected IllegalArgumentException for body with key >= 7")
+            error("Expected IllegalArgumentException for body with key 7 present")
         } catch (_: IllegalArgumentException) {
             // expected
+        }
+    }
+
+    @Test
+    fun `appendAuxDataHashToBody inserts key 7 in canonical sort order when body has key gt 7`() {
+        // map(2) { 0 => 1, 8 => 2 } — mimics a Conway-era body that already uses a key > 7
+        // (e.g. validity_interval_start). The new key 7 entry must be inserted *before* key 8 to
+        // preserve canonical CBOR map sort order.
+        val body = byteArrayOf(0xA2.toByte(), 0x00, 0x01, 0x08, 0x02)
+        val hash = ByteArray(32) { 0xCD.toByte() }
+        val out = CardanoHelper.appendAuxDataHashToBody(body, hash)
+        assertEquals(0xA3.toByte(), out[0], "Map size must grow from 2 to 3")
+        assertEquals(0x00.toByte(), out[1])
+        assertEquals(0x01.toByte(), out[2])
+        assertEquals(0x07.toByte(), out[3], "Key 7 must be inserted before key 8")
+        assertEquals(0x58.toByte(), out[4])
+        assertEquals(32, out[5].toInt() and 0xFF)
+        assertTrue(out.copyOfRange(6, 6 + 32).all { it == 0xCD.toByte() })
+        assertEquals(0x08.toByte(), out[6 + 32], "Key 8 must follow the inserted key 7 entry")
+        assertEquals(0x02.toByte(), out[7 + 32])
+    }
+
+    @Test
+    fun `appendAuxDataHashToBody appends key 7 at end when all keys lt 7`() {
+        // map(2) { 0 => 1, 5 => 1 } — all keys < 7, so the new key 7 entry is appended at the end.
+        val body = byteArrayOf(0xA2.toByte(), 0x00, 0x01, 0x05, 0x01)
+        val hash = ByteArray(32) { 0x11 }
+        val out = CardanoHelper.appendAuxDataHashToBody(body, hash)
+        assertEquals(0xA3.toByte(), out[0])
+        assertEquals(0x00.toByte(), out[1])
+        assertEquals(0x01.toByte(), out[2])
+        assertEquals(0x05.toByte(), out[3])
+        assertEquals(0x01.toByte(), out[4])
+        assertEquals(0x07.toByte(), out[5], "Key 7 must be appended at the end")
+    }
+
+    @Test
+    fun `appendAuxDataHashToBody walks past CBOR major type 7 values without erroring`() {
+        // map(1) { 0 => true } encoded as 0xA1 0x00 0xF5 — exercises the major-type-7 walker
+        // path. The pre-fix walker errored on major type 7, which would brick memo sends for any
+        // future WalletCore body emitting bool/null values.
+        val body = byteArrayOf(0xA1.toByte(), 0x00, 0xF5.toByte())
+        val hash = ByteArray(32) { 0x22 }
+        val out = CardanoHelper.appendAuxDataHashToBody(body, hash)
+        assertEquals(0xA2.toByte(), out[0])
+        assertEquals(body.size + 35, out.size)
+    }
+
+    @Test
+    fun `appendAuxDataHashToBody grows the body by exactly 35 bytes pinning auxDataExtraFee math`() {
+        // The "+35" body delta in auxDataExtraFee comes from: 1 (key 7) + 2 (bytes(32) header) +
+        // 32 (hash). If appendAuxDataHashToBody ever emits a different byte delta, the fee bump
+        // becomes wrong and Cardano's strict minFee check rejects every memo send.
+        val body = byteArrayOf(0xA1.toByte(), 0x00, 0x01)
+        val hash = ByteArray(32)
+        val out = CardanoHelper.appendAuxDataHashToBody(body, hash)
+        assertEquals(body.size + 35, out.size)
+    }
+
+    @Test
+    fun `auxDataExtraFee math matches body delta plus aux-tail delta`() {
+        // Pins the relationship between auxDataExtraFee and the body/tail byte deltas so a
+        // WalletCore envelope-shape change (e.g. aux slot no longer a single-byte CBOR null,
+        // or body delta diverging from 35) fails this assertion loudly.
+        val memo = "vultisig-cip20-regression"
+        val byteFee = 44L
+        val auxDataSize = CardanoHelper.encodeCip20AuxData(memo).size
+        val bodyDelta = 35L
+        val envelopeTailDelta = auxDataSize - 1L
+        assertEquals(
+            byteFee * (bodyDelta + envelopeTailDelta),
+            CardanoHelper.auxDataExtraFee(memo, byteFee),
+        )
+    }
+
+    @Test
+    fun `WalletCore preSigningOutput body shape matches append walker assumptions`() {
+        // Pin the byte-level assumption that WalletCore's Cardano preSigningOutput.data is a CBOR
+        // map walkable by appendAuxDataHashToBody — i.e. all top-level keys are unsigned ints,
+        // no key 7 is present, and the walker reaches end-of-body cleanly. If WalletCore changes
+        // body shape (new key types, indefinite-length encodings, etc.), this regression fails
+        // loudly instead of producing a tx that Cardano rejects with a confusing minFee error.
+        val payload = cardanoPayload(memo = null)
+        try {
+            val inputData = CardanoHelper.getPreSignedInputData(payload)
+            val hashes =
+                wallet.core.jni.TransactionCompiler.preImageHashes(
+                    wallet.core.jni.CoinType.CARDANO,
+                    inputData,
+                )
+            val pso = wallet.core.jni.proto.TransactionCompiler.PreSigningOutput.parseFrom(hashes)
+            val body = pso.data.toByteArray()
+            val grown = CardanoHelper.appendAuxDataHashToBody(body, ByteArray(32) { 0x33 })
+            assertEquals(
+                body.size + 35,
+                grown.size,
+                "WalletCore-encoded body must grow by exactly 35 bytes — keeps auxDataExtraFee correct",
+            )
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
         }
     }
 
