@@ -174,6 +174,10 @@ internal fun VerifyDepositScreen(
                         )
                         VerifyCardDivider(0.dp)
                     }
+                    if (tx.pool.isNotEmpty()) {
+                        VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
+                        VerifyCardDivider(0.dp)
+                    }
                     if (tx.operation.isNotEmpty()) {
                         VerifyCardDetails(
                             title = stringResource(R.string.operation),

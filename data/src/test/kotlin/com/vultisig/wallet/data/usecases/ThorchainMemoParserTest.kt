@@ -104,4 +104,13 @@ class ThorchainMemoParserTest {
 
         assertEquals(OPERATION_MINT, parsed?.operation)
     }
+
+    @Test
+    fun `whitespace padded memo is parsed after trim`() {
+        val parsed = ThorchainMemoParser.parse("  ADD:BTC.BTC:thor1abc  ")
+
+        assertEquals(OPERATION_MINT, parsed?.operation)
+        assertEquals("BTC.BTC", parsed?.pool)
+        assertEquals("thor1abc", parsed?.thorAddress)
+    }
 }

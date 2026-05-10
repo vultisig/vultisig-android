@@ -41,6 +41,7 @@ constructor(
             dstAddress = from.dstAddress,
             operation = from.operation,
             thorAddress = from.thorAddress,
+            pool = from.pool,
         )
     }
 }

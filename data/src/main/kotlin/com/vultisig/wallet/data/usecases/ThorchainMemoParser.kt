@@ -30,8 +30,9 @@ object ThorchainMemoParser {
      * deposit-shaped (swaps, blank, unknown prefixes).
      */
     fun parse(memo: String): ParsedThorchainMemo? {
-        if (memo.isBlank()) return null
-        val parts = memo.split(":")
+        val normalized = memo.trim()
+        if (normalized.isEmpty()) return null
+        val parts = normalized.split(":")
         val tag = parts[0].uppercase()
 
         return when (tag) {

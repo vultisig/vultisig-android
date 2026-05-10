@@ -33,6 +33,7 @@ internal data class DepositTransactionUiModel(
     val memo: String = "",
     val operation: String = "",
     val thorAddress: String = "",
+    val pool: String = "",
 )
 
 internal data class VerifyDepositUiModel(
@@ -81,6 +82,7 @@ constructor(
                         memo = transaction.memo,
                         operation = transaction.operation,
                         thorAddress = transaction.thorAddress,
+                        pool = transaction.pool,
                     )
 
                 state.update {
