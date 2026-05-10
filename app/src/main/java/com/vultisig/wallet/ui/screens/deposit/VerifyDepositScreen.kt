@@ -145,6 +145,20 @@ internal fun VerifyDepositScreen(
 
                     SwapToken(valuedToken = tx.token, isLoading = state.isLoading)
 
+                    if (tx.pool.isNotEmpty()) {
+                        UiSpacer(8.dp)
+                        Text(
+                            text =
+                                stringResource(
+                                    R.string.lp_destination_format,
+                                    tx.pool,
+                                    tx.token.token.ticker,
+                                ),
+                            style = Theme.brockmann.headings.title3,
+                            color = Theme.v2.colors.text.primary,
+                        )
+                    }
+
                     UiSpacer(12.dp)
 
                     VerifyCardDivider(8.dp)
@@ -167,21 +181,14 @@ internal fun VerifyDepositScreen(
                         )
                         VerifyCardDivider(0.dp)
                     }
-                    if (tx.thorAddress.isNotEmpty()) {
-                        VerifyCardDetails(
-                            title = stringResource(R.string.thor_address),
-                            subtitle = tx.thorAddress,
-                        )
-                        VerifyCardDivider(0.dp)
-                    }
                     if (tx.pool.isNotEmpty()) {
                         VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
                         VerifyCardDivider(0.dp)
                     }
-                    if (tx.operation.isNotEmpty()) {
+                    if (tx.thorAddress.isNotEmpty()) {
                         VerifyCardDetails(
-                            title = stringResource(R.string.operation),
-                            subtitle = tx.operation,
+                            title = stringResource(R.string.paired_address),
+                            subtitle = tx.thorAddress,
                         )
                         VerifyCardDivider(0.dp)
                     }

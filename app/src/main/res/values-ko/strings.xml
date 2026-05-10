@@ -973,9 +973,10 @@
     <string name="amount_to_withdraw">출금 금액 (잔액: %1$s)</string>
     <string name="mint_secured_asset_secure">보안 자산 민트 (SECURE+)</string>
     <string name="target_asset">대상 자산: %1$s-%2$s</string>
-    <string name="thor_address">Thor 주소</string>
+    <string name="paired_address">페어링된 주소</string>
     <string name="operation">작업</string>
     <string name="pool">풀</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">볼트에서 THORChain 주소를 찾을 수 없습니다. 볼트에 RUNE이 있는지 확인해 주세요</string>
     <string name="deposit_error_not_secured_asset">선택한 자산은 보안 자산이 아니므로 처리할 수 없습니다</string>
     <string name="keysign_password_hide_hint">힌트 숨기기</string>
