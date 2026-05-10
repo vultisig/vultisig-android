@@ -584,6 +584,96 @@ class ParseCosmosMessageTest {
     }
 
     @Test
+    fun `types MsgSend value should be decoded into nested JSON object with hex addresses`() {
+        val fromBytes = byteArrayOf(0x01, 0x02, 0x03)
+        val toBytes = byteArrayOf(0xab.toByte(), 0xcd.toByte(), 0xef.toByte())
+        val msgSend =
+            ThorMsgSendBody(
+                fromAddress = fromBytes,
+                toAddress = toBytes,
+                amount = listOf(Coin(denom = "rune", amount = "100000000")),
+            )
+        val msgBytes = protoBuf.encodeToByteArray(ThorMsgSendBody.serializer(), msgSend)
+        val txBody =
+            TxBody(messages = listOf(ProtobufAny("/types.MsgSend", msgBytes)), memo = "test")
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        assertEquals("010203", value["fromAddress"]!!.jsonPrimitive.content)
+        assertEquals("abcdef", value["toAddress"]!!.jsonPrimitive.content)
+        val amounts = value["amount"]!!.jsonArray
+        assertEquals(1, amounts.size)
+        assertEquals("rune", amounts[0].jsonObject["denom"]!!.jsonPrimitive.content)
+        assertEquals("100000000", amounts[0].jsonObject["amount"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `types MsgDeposit value should be decoded into nested JSON object with hex signer`() {
+        val signerBytes = byteArrayOf(0xde.toByte(), 0xad.toByte(), 0xbe.toByte(), 0xef.toByte())
+        val msgDeposit =
+            ThorMsgDepositBody(
+                coins = listOf(Coin(denom = "rune", amount = "500")),
+                memo = "swap:BTC.BTC:bc1qaddr",
+                signer = signerBytes,
+            )
+        val msgBytes = protoBuf.encodeToByteArray(ThorMsgDepositBody.serializer(), msgDeposit)
+        val txBody =
+            TxBody(messages = listOf(ProtobufAny("/types.MsgDeposit", msgBytes)), memo = "test")
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        assertEquals("deadbeef", value["signer"]!!.jsonPrimitive.content)
+        assertEquals("swap:BTC.BTC:bc1qaddr", value["memo"]!!.jsonPrimitive.content)
+        val coins = value["coins"]!!.jsonArray
+        assertEquals(1, coins.size)
+        assertEquals("rune", coins[0].jsonObject["denom"]!!.jsonPrimitive.content)
+        assertEquals("500", coins[0].jsonObject["amount"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `known typeUrl with malformed bytes should fall back to base64 JsonPrimitive`() {
+        val malformedBytes = byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte())
+        val txBody =
+            TxBody(
+                messages = listOf(ProtobufAny("/cosmos.bank.v1beta1.MsgSend", malformedBytes)),
+                memo = "test",
+            )
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "cosmoshub-4",
+                accountNumber = "12345",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value
+        val base64String = (value as JsonPrimitive).contentOrNull
+        assertNotNull(base64String)
+        assertArrayEquals(malformedBytes, Base64.decode(base64String!!))
+    }
+
+    @Test
     fun `Fee should include gasLimit from AuthInfoFee`() {
         val txBody = createValidTxBody()
         val authInfo =

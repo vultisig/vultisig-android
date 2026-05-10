@@ -8,6 +8,7 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -107,7 +108,7 @@ internal class ParseCosmosMessageUseCaseImpl @Inject constructor(private val pro
                     )
                 else -> JsonPrimitive(Base64.encode(value))
             }
-        } catch (_: Exception) {
+        } catch (_: SerializationException) {
             JsonPrimitive(Base64.encode(value))
         }
 
