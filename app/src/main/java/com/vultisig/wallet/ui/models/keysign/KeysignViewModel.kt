@@ -691,7 +691,7 @@ constructor(
         }
     }
 
-    private suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
+    internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
         transactionHistoryData?.let {
             runCatching {
                 val now = System.currentTimeMillis()
