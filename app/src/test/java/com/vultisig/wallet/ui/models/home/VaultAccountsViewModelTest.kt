@@ -159,6 +159,7 @@ internal class VaultAccountsViewModelTest {
             remoteNFTService = remoteNFTService,
             pushNotificationManager = pushNotificationManager,
             snackbarFlow = snackbarFlow,
+            ioDispatcher = testDispatcher,
         )
 
     /** Verifies dismissBackupReminder sets showMonthlyBackupReminder to false. */
