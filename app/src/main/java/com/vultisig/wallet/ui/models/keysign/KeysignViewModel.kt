@@ -701,7 +701,7 @@ constructor(
                         txHash = txHash,
                         chain = chain.raw,
                         timestamp = now,
-                        explorerUrl = txLink.value,
+                        explorerUrl = swapProgressLink.value ?: txLink.value,
                         status = BROADCASTED,
                         type =
                             when (it) {
