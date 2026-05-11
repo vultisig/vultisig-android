@@ -66,8 +66,6 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
-import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
-import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -218,7 +216,6 @@ constructor(
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
-    private val resolveProviderUseCase: ResolveProviderUseCase,
     private val keysignViewModelFactory: KeysignViewModel.Factory,
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
@@ -583,15 +580,12 @@ constructor(
 
                 val vaultName = _currentVault.name
 
-                val resolvedProvider =
-                    runCatching {
-                            resolveProviderUseCase(
-                                SwapSelectionContext(srcToken, dstToken, srcTokenValue)
-                            )
-                        }
-                        .onFailure { Timber.w(it, "Failed to resolve swap provider in join flow") }
-                        .getOrNull()
-                val provider = resolvedProvider?.getSwapProviderId().orEmpty()
+                val provider =
+                    when (swapPayload) {
+                        is SwapPayload.ThorChain -> SwapProvider.THORCHAIN.getSwapProviderId()
+                        is SwapPayload.MayaChain -> SwapProvider.MAYA.getSwapProviderId()
+                        is SwapPayload.EVM -> swapPayload.data.provider
+                    }
 
                 suspend fun buildSwapUiModel(
                     providerFee: TokenValue,
@@ -651,7 +645,7 @@ constructor(
                         // treat src.chain != dst.chain as LI.FI even if provider resolution
                         // failed in this flow.
                         val isLiFi =
-                            resolvedProvider == SwapProvider.LIFI ||
+                            swapPayload.data.provider == SwapProvider.LIFI.getSwapProviderId() ||
                                 srcToken.chain != dstToken.chain
 
                         val feeToken =
