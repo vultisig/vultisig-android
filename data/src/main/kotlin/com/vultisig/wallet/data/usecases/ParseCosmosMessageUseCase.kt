@@ -10,7 +10,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromByteArray
-import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -103,17 +102,28 @@ internal class ParseCosmosMessageUseCaseImpl(
         try {
             when (typeUrl) {
                 "/cosmos.bank.v1beta1.MsgSend" ->
-                    JSON.encodeToJsonElement(decodeStrict<MsgSendBody>(value))
+                    JSON.encodeToJsonElement(decodeChecked<MsgSendBody>(value))
                 "/types.MsgSend" ->
-                    JSON.encodeToJsonElement(decodeStrict<ThorMsgSendBody>(value).toRendered())
+                    JSON.encodeToJsonElement(
+                        decodeChecked<ThorMsgSendBody>(value) {
+                                requireThorAddressBytes(it.fromAddress)
+                                requireThorAddressBytes(it.toAddress)
+                            }
+                            .toRendered()
+                    )
                 "/types.MsgDeposit" ->
-                    JSON.encodeToJsonElement(decodeStrict<ThorMsgDepositBody>(value).toRendered())
+                    JSON.encodeToJsonElement(
+                        decodeChecked<ThorMsgDepositBody>(value) {
+                                requireThorAddressBytes(it.signer)
+                            }
+                            .toRendered()
+                    )
                 "/cosmwasm.wasm.v1.MsgExecuteContract" ->
                     JSON.encodeToJsonElement(
-                        decodeStrict<MsgExecuteContractBody>(value).toRendered()
+                        decodeChecked<MsgExecuteContractBody>(value).toRendered()
                     )
                 "/ibc.applications.transfer.v1.MsgTransfer" ->
-                    JSON.encodeToJsonElement(decodeStrict<MsgTransferBody>(value))
+                    JSON.encodeToJsonElement(decodeChecked<MsgTransferBody>(value))
                 else -> JsonPrimitive(Base64.encode(value))
             }
         } catch (_: SerializationException) {
@@ -133,13 +143,15 @@ internal class ParseCosmosMessageUseCaseImpl(
     private fun encodeThorAddress(bytes: ByteArray): String =
         if (bytes.isEmpty()) "" else thorAddressEncoder(bytes)
 
-    private inline fun <reified T> decodeStrict(bytes: ByteArray): T {
-        val decoded = protoBuf.decodeFromByteArray<T>(bytes)
-        val reencoded = protoBuf.encodeToByteArray(decoded)
-        if (!reencoded.contentEquals(bytes)) {
-            throw SerializationException("Decoded shape does not round-trip to input bytes")
+    private inline fun <reified T> decodeChecked(bytes: ByteArray, validate: (T) -> Unit = {}): T =
+        protoBuf.decodeFromByteArray<T>(bytes).also(validate)
+
+    private fun requireThorAddressBytes(bytes: ByteArray) {
+        if (bytes.size != THOR_ADDRESS_LENGTH_BYTES) {
+            throw SerializationException(
+                "Invalid Thor address byte length: ${bytes.size}, expected $THOR_ADDRESS_LENGTH_BYTES"
+            )
         }
-        return decoded
     }
 
     private fun AuthInfoFee.toFee() =
@@ -150,6 +162,7 @@ internal class ParseCosmosMessageUseCaseImpl(
 
     companion object {
         private const val THOR_BECH32_HRP = "thor"
+        private const val THOR_ADDRESS_LENGTH_BYTES = 20
 
         private val JSON = Json {
             encodeDefaults = true
