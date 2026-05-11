@@ -12,10 +12,10 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.slot
-import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -123,7 +123,7 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
                     genericData = capture(captured),
                 )
             }
-            assertEquals("https://thorchain.net/tx/0xabc", captured.captured.explorerUrl)
+            captured.captured.explorerUrl shouldBe "https://thorchain.net/tx/0xabc"
         }
 
     @Test
@@ -145,7 +145,7 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
                     genericData = capture(captured),
                 )
             }
-            assertEquals("https://blockstream.info/tx/0xabc", captured.captured.explorerUrl)
+            captured.captured.explorerUrl shouldBe "https://blockstream.info/tx/0xabc"
         }
 
     @Test
@@ -167,6 +167,6 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
                     genericData = capture(captured),
                 )
             }
-            assertEquals("https://etherscan.io/tx/0xabc", captured.captured.explorerUrl)
+            captured.captured.explorerUrl shouldBe "https://etherscan.io/tx/0xabc"
         }
 }
