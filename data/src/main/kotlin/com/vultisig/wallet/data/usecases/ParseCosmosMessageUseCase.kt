@@ -17,13 +17,18 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.protobuf.ProtoBuf
 import kotlinx.serialization.protobuf.ProtoNumber
+import wallet.core.jni.Bech32
 
 fun interface ParseCosmosMessageUseCase {
     operator fun invoke(signDirect: SignDirectProto): CosmosMessage
 }
 
-internal class ParseCosmosMessageUseCaseImpl @Inject constructor(private val protoBuf: ProtoBuf) :
-    ParseCosmosMessageUseCase {
+internal class ParseCosmosMessageUseCaseImpl(
+    private val protoBuf: ProtoBuf,
+    private val thorAddressEncoder: (ByteArray) -> String,
+) : ParseCosmosMessageUseCase {
+
+    @Inject constructor(protoBuf: ProtoBuf) : this(protoBuf, { Bech32.encode(THOR_BECH32_HRP, it) })
 
     override fun invoke(signDirect: SignDirectProto): CosmosMessage {
         require(signDirect.chainId.isNotBlank()) { "Chain ID cannot be blank" }
@@ -115,6 +120,19 @@ internal class ParseCosmosMessageUseCaseImpl @Inject constructor(private val pro
             JsonPrimitive(Base64.encode(value))
         }
 
+    private fun ThorMsgSendBody.toRendered() =
+        RenderedThorMsgSend(
+            fromAddress = encodeThorAddress(fromAddress),
+            toAddress = encodeThorAddress(toAddress),
+            amount = amount,
+        )
+
+    private fun ThorMsgDepositBody.toRendered() =
+        RenderedThorMsgDeposit(coins = coins, memo = memo, signer = encodeThorAddress(signer))
+
+    private fun encodeThorAddress(bytes: ByteArray): String =
+        if (bytes.isEmpty()) "" else thorAddressEncoder(bytes)
+
     private inline fun <reified T> decodeStrict(bytes: ByteArray): T {
         val decoded = protoBuf.decodeFromByteArray<T>(bytes)
         val reencoded = protoBuf.encodeToByteArray(decoded)
@@ -131,76 +149,14 @@ internal class ParseCosmosMessageUseCaseImpl @Inject constructor(private val pro
         )
 
     companion object {
+        private const val THOR_BECH32_HRP = "thor"
+
         private val JSON = Json {
             encodeDefaults = true
             explicitNulls = false
         }
     }
 }
-
-private const val THOR_BECH32_HRP = "thor"
-
-private const val BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
-
-private fun ByteArray.toThorBech32(): String =
-    if (isEmpty()) "" else bech32Encode(THOR_BECH32_HRP, this)
-
-private fun bech32Encode(hrp: String, data: ByteArray): String {
-    val values = convertBits(data, 8, 5, pad = true)
-    val checksum = bech32CreateChecksum(hrp, values)
-    val sb = StringBuilder(hrp).append('1')
-    (values + checksum).forEach { sb.append(BECH32_CHARSET[it]) }
-    return sb.toString()
-}
-
-private fun convertBits(data: ByteArray, fromBits: Int, toBits: Int, pad: Boolean): IntArray {
-    var acc = 0
-    var bits = 0
-    val maxv = (1 shl toBits) - 1
-    val out = mutableListOf<Int>()
-    for (b in data) {
-        acc = (acc shl fromBits) or (b.toInt() and 0xFF)
-        bits += fromBits
-        while (bits >= toBits) {
-            bits -= toBits
-            out.add((acc shr bits) and maxv)
-        }
-    }
-    if (pad && bits > 0) out.add((acc shl (toBits - bits)) and maxv)
-    return out.toIntArray()
-}
-
-private fun bech32CreateChecksum(hrp: String, data: IntArray): IntArray {
-    val values = bech32HrpExpand(hrp) + data.toList() + listOf(0, 0, 0, 0, 0, 0)
-    val polymod = bech32Polymod(values) xor 1
-    return IntArray(6) { (polymod shr (5 * (5 - it))) and 31 }
-}
-
-private fun bech32HrpExpand(hrp: String): List<Int> =
-    hrp.map { it.code shr 5 } + 0 + hrp.map { it.code and 31 }
-
-private fun bech32Polymod(values: List<Int>): Int {
-    val gen = intArrayOf(0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3)
-    var chk = 1
-    for (v in values) {
-        val top = chk shr 25
-        chk = ((chk and 0x1ffffff) shl 5) xor v
-        for (i in gen.indices) {
-            if ((top shr i) and 1 != 0) chk = chk xor gen[i]
-        }
-    }
-    return chk
-}
-
-private fun ThorMsgSendBody.toRendered() =
-    RenderedThorMsgSend(
-        fromAddress = fromAddress.toThorBech32(),
-        toAddress = toAddress.toThorBech32(),
-        amount = amount,
-    )
-
-private fun ThorMsgDepositBody.toRendered() =
-    RenderedThorMsgDeposit(coins = coins, memo = memo, signer = signer.toThorBech32())
 
 private fun MsgExecuteContractBody.toRendered() =
     RenderedMsgExecuteContract(

@@ -20,7 +20,16 @@ class ParseCosmosMessageTest {
 
     private val protoBuf = ProtoBuf { encodeDefaults = false }
 
-    private val parseCosmosMessageUseCaseImpl = ParseCosmosMessageUseCaseImpl(protoBuf)
+    // Stub thor bech32 encoder so unit tests don't depend on the WalletCore JNI library.
+    // Produces a `thor1`-prefixed 43-char string deterministically derived from the input bytes,
+    // satisfying the prefix/length/uniqueness assertions in the address tests below.
+    private val testThorEncoder: (ByteArray) -> String = { bytes ->
+        val hex = bytes.joinToString("") { "%02x".format(it.toInt() and 0xff) }
+        "thor1" + (hex + "q".repeat(38)).take(38)
+    }
+
+    private val parseCosmosMessageUseCaseImpl =
+        ParseCosmosMessageUseCaseImpl(protoBuf, testThorEncoder)
 
     @Test
     fun `parseCosmosMessage should successfully parse valid input`() {
