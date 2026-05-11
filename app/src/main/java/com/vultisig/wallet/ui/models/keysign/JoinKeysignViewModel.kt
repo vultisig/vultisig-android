@@ -49,6 +49,7 @@ import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.swapAssetComparisonName
+import com.vultisig.wallet.data.models.swapProviderFromWireId
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -583,7 +584,9 @@ constructor(
                     when (swapPayload) {
                         is SwapPayload.ThorChain -> SwapProvider.THORCHAIN.getSwapProviderId()
                         is SwapPayload.MayaChain -> SwapProvider.MAYA.getSwapProviderId()
-                        is SwapPayload.EVM -> swapPayload.data.provider
+                        is SwapPayload.EVM ->
+                            swapProviderFromWireId(swapPayload.data.provider)?.getSwapProviderId()
+                                ?: swapPayload.data.provider
                     }
 
                 when (swapPayload) {
@@ -592,10 +595,9 @@ constructor(
                         val hasJupiterSwapProvider =
                             srcToken.chain == Chain.Solana && dstToken.chain == Chain.Solana
                         // LI.FI is the only aggregator that produces cross-chain EVM swaps, so
-                        // treat src.chain != dst.chain as LI.FI even if provider resolution
-                        // failed in this flow.
+                        // treat src.chain != dst.chain as LI.FI.
                         val isLiFi =
-                            swapPayload.data.provider == SwapProvider.LIFI.getSwapProviderId() ||
+                            provider == SwapProvider.LIFI.getSwapProviderId() ||
                                 srcToken.chain != dstToken.chain
 
                         val feeToken =

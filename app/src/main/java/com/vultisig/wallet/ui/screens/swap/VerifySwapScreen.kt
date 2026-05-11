@@ -263,7 +263,7 @@ private fun VerifySwapScreen(
 
                     VerifyCardDivider(size = 20.dp)
 
-                    if (tx.provider.isNotEmpty()) {
+                    if (tx.provider.isNotBlank()) {
                         VerifyProviderRow(provider = tx.provider)
                     }
 
