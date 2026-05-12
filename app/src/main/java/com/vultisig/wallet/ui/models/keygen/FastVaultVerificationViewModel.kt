@@ -3,7 +3,6 @@ package com.vultisig.wallet.ui.models.keygen
 import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -223,7 +222,7 @@ constructor(
     }
 
     private fun isCodeTemplateValid(code: String) =
-        code.isDigitsOnly() && code.length == FAST_VAULT_VERIFICATION_CODE_LENGTH
+        code.length == FAST_VAULT_VERIFICATION_CODE_LENGTH && code.all { it.isDigit() }
 
     private fun updateVerifyState(verifyState: VerifyPinState) {
         state.update { it.copy(verifyPinState = verifyState) }
