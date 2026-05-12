@@ -757,10 +757,7 @@ constructor(
                             pollingTxStatusJob?.cancel()
                         }
 
-                        TransactionResult.NotFound -> {
-                            transactionStatusServiceManager.stopPolling()
-                            pollingTxStatusJob?.cancel()
-                        }
+                        TransactionResult.NotFound -> Unit
 
                         else -> Unit
                     }
@@ -859,8 +856,7 @@ constructor(
         when (this) {
             TransactionResult.Confirmed -> TransactionStatus.Confirmed
             is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
-            TransactionResult.NotFound ->
-                TransactionStatus.Failed("Confirmation taking longer than expected".asUiText())
+            TransactionResult.NotFound -> TransactionStatus.Pending
 
             TransactionResult.Pending -> TransactionStatus.Pending
         }
