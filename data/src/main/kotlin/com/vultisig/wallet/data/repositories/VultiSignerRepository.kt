@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.api.models.signer.MigrateRequest
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.utils.NetworkException
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import timber.log.Timber
@@ -203,6 +204,8 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
             } else {
                 BackupCodeVerifyResult.ServerError(e.httpStatusCode)
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Timber.e(e, "verifyBackupCode unexpected failure")
             BackupCodeVerifyResult.NetworkError
