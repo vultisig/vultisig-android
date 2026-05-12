@@ -5,7 +5,6 @@ import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.DashApi
-import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
@@ -196,17 +195,17 @@ constructor(
                                 ) // keep it consistent with how we calculate default gas limit in
                     // EthereumFeeService
 
+                    // ERC-20 router deposits need depositWithExpiry headroom, but
+                    // eth_estimateGas reverts when the router hasn't been approved yet —
+                    // so we hardcode the limit instead of estimating.
                     val routerDepositGasLimit =
-                        if (isThorchainRouterDeposit) {
-                            estimateThorchainRouterDepositGas(
-                                evmApi = evmApi,
-                                chain = chain,
-                                token = token,
-                                dstAddress = dstAddress,
-                                tokenAmountValue = tokenAmountValue,
-                                memo = memo,
-                            )
-                        } else null
+                        if (
+                            isThorchainRouterDeposit &&
+                                !token.isNativeToken &&
+                                isThorchainRouterChain(chain)
+                        )
+                            THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT
+                        else null
 
                     val nonce = evmApi.getNonce(address)
 
@@ -648,53 +647,6 @@ constructor(
             }
         }
 
-    /**
-     * Re-estimates gas for THORChain-style ERC-20 router deposits (LP add, swap-in) so the limit
-     * reflects the cost of `depositWithExpiry` rather than a bare ERC-20 transfer. Non-standard
-     * tokens like USDT push the router call past the bare-transfer estimate, causing OOG reverts
-     * under the old cap.
-     *
-     * Caller signals router-deposit intent via the `isThorchainRouterDeposit` flag — we don't sniff
-     * the memo since a user-typed memo starting with `+:`/`=:`/`SWAP:`/`ADD:` on a non-router
-     * recipient would otherwise overcharge gas.
-     *
-     * Returns `null` when the chain isn't EVM-router capable, the token is native, the destination
-     * is unknown, or the RPC estimate fails — in which case callers keep the legacy gas
-     * computation.
-     */
-    private suspend fun estimateThorchainRouterDepositGas(
-        evmApi: EvmApi,
-        chain: Chain,
-        token: Coin,
-        dstAddress: String?,
-        tokenAmountValue: BigInteger?,
-        memo: String?,
-    ): BigInteger? {
-        if (token.isNativeToken) return null
-        if (!isThorchainRouterChain(chain)) return null
-        if (dstAddress.isNullOrEmpty()) return null
-        if (memo.isNullOrEmpty()) return null
-        val expiration = BigInteger.valueOf(Clock.System.now().epochSeconds + ROUTER_EXPIRATION_PAD)
-        val estimate =
-            try {
-                evmApi.estimateGasForThorchainRouterDeposit(
-                    senderAddress = token.address,
-                    routerAddress = dstAddress,
-                    vaultAddress = dstAddress,
-                    assetAddress = token.contractAddress,
-                    amount = tokenAmountValue ?: BigInteger.ZERO,
-                    memo = memo,
-                    expiration = expiration,
-                )
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.w(e, "thorchain router gas estimation failed; using floor")
-                BigInteger.ZERO
-            }
-        return max(estimate.increaseByPercent(30), THORCHAIN_ROUTER_DEPOSIT_FLOOR)
-    }
-
     private fun isThorchainRouterChain(chain: Chain): Boolean =
         chain == Chain.Ethereum ||
             chain == Chain.Base ||
@@ -708,8 +660,6 @@ constructor(
 
         private const val ENERGY_TO_SUN_FACTOR = 280
 
-        private const val ROUTER_EXPIRATION_PAD = 3600L
-
-        private val THORCHAIN_ROUTER_DEPOSIT_FLOOR = BigInteger.valueOf(200_000)
+        private val THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT = BigInteger.valueOf(200_000)
     }
 }
