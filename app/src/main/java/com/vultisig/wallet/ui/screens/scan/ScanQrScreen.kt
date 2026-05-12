@@ -47,6 +47,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.asAndroidPaint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -425,7 +426,7 @@ private fun ScanViewport(
                     drawIntoCanvas { canvas ->
                         val paint =
                             Paint().also { p ->
-                                p.asFrameworkPaint().apply {
+                                p.asAndroidPaint().apply {
                                     this.color = shadowColor.toArgb()
                                     this.maskFilter = BlurMaskFilter(blurRadius, Blur.NORMAL)
                                 }
