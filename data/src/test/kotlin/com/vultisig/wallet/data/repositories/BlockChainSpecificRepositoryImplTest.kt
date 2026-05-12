@@ -112,7 +112,7 @@ internal class BlockChainSpecificRepositoryImplTest {
     }
 
     @Test
-    fun `ERC20 router deposit memo applies 200k floor when router estimate is low`() = runTest {
+    fun `ERC20 router deposit flag applies 200k floor when router estimate is low`() = runTest {
         val router = "0xD37BbE5744D730a1d98d8DC97c42F0Ca46aD7146"
         val coin =
             evmCoin(chain = Chain.Ethereum, isNativeToken = false, contractAddress = "0xusdt")
@@ -140,6 +140,7 @@ internal class BlockChainSpecificRepositoryImplTest {
                     dstAddress = router,
                     tokenAmountValue = BigInteger("300000"),
                     memo = "+:ETH.USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7:thor1abc",
+                    isThorchainRouterDeposit = true,
                 )
 
         // estimate=80k → ×1.3=104k, floored at 200k. Existing ERC-20 path would give max(150k,
@@ -153,7 +154,7 @@ internal class BlockChainSpecificRepositoryImplTest {
     }
 
     @Test
-    fun `ERC20 router deposit memo applies 1_3x multiplier when estimate is high`() = runTest {
+    fun `ERC20 router deposit flag applies 1_3x multiplier when estimate is high`() = runTest {
         val router = "0xD37BbE5744D730a1d98d8DC97c42F0Ca46aD7146"
         val coin =
             evmCoin(chain = Chain.Ethereum, isNativeToken = false, contractAddress = "0xusdt")
@@ -181,12 +182,53 @@ internal class BlockChainSpecificRepositoryImplTest {
                     dstAddress = router,
                     tokenAmountValue = BigInteger("300000"),
                     memo = "+:ETH.USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7:thor1abc",
+                    isThorchainRouterDeposit = true,
                 )
 
         // estimate=250k → ×1.3=325k, which is above both 200k floor and the legacy 150k path.
         assertEthereumSpecific(
             result = result,
             gasLimit = BigInteger("325000"),
+            maxFeePerGas = BigInteger("111"),
+            priorityFee = BigInteger("22"),
+        )
+    }
+
+    @Test
+    fun `ERC20 with router-like memo but no flag does not apply router deposit floor`() = runTest {
+        // Regression guard for the false-positive scenario: a regular USDT send to a non-router
+        // recipient where the user-typed memo happens to begin with `+:` should not push the limit
+        // to the 200k router-deposit floor — it should land at the standard ERC-20 transfer path.
+        val destination = "0xnotrouter"
+        val coin =
+            evmCoin(chain = Chain.Ethereum, isNativeToken = false, contractAddress = "0xusdt")
+        val result =
+            repository(
+                    evmApi =
+                        evmApi(erc20GasByRecipient = mapOf(destination to BigInteger("50000"))),
+                    evmFeeService =
+                        evmFeeService(
+                            feesByRecipient =
+                                mapOf(destination to (BigInteger("111") to BigInteger("22")))
+                        ),
+                )
+                .getSpecific(
+                    chain = Chain.Ethereum,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                    dstAddress = destination,
+                    tokenAmountValue = BigInteger("300000"),
+                    memo = "+:something-the-user-typed",
+                )
+
+        // ERC-20 path: max(150k DEFAULT_TOKEN_TRANSFER_LIMIT, 50k*1.5=75k) = 150k.
+        assertEthereumSpecific(
+            result = result,
+            gasLimit = BigInteger("150000"),
             maxFeePerGas = BigInteger("111"),
             priorityFee = BigInteger("22"),
         )

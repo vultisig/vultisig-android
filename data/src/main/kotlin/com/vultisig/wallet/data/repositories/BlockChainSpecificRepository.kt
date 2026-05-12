@@ -72,6 +72,7 @@ interface BlockChainSpecificRepository {
         tokenAmountValue: BigInteger? = null,
         memo: String? = null,
         transactionType: TransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+        isThorchainRouterDeposit: Boolean = false,
     ): BlockChainSpecificAndUtxo
 }
 
@@ -108,6 +109,7 @@ constructor(
         tokenAmountValue: BigInteger?,
         memo: String?,
         transactionType: TransactionType,
+        isThorchainRouterDeposit: Boolean,
     ): BlockChainSpecificAndUtxo =
         when (chain.standard) {
             TokenStandard.THORCHAIN -> {
@@ -195,14 +197,16 @@ constructor(
                     // EthereumFeeService
 
                     val routerDepositGasLimit =
-                        estimateThorchainRouterDepositGas(
-                            evmApi = evmApi,
-                            chain = chain,
-                            token = token,
-                            dstAddress = dstAddress,
-                            tokenAmountValue = tokenAmountValue,
-                            memo = memo,
-                        )
+                        if (isThorchainRouterDeposit) {
+                            estimateThorchainRouterDepositGas(
+                                evmApi = evmApi,
+                                chain = chain,
+                                token = token,
+                                dstAddress = dstAddress,
+                                tokenAmountValue = tokenAmountValue,
+                                memo = memo,
+                            )
+                        } else null
 
                     val nonce = evmApi.getNonce(address)
 
@@ -650,8 +654,13 @@ constructor(
      * tokens like USDT push the router call past the bare-transfer estimate, causing OOG reverts
      * under the old cap.
      *
-     * Returns `null` when the call doesn't look like a router deposit, the destination is unknown,
-     * or the RPC estimate fails — in which case callers keep the legacy gas computation.
+     * Caller signals router-deposit intent via the `isThorchainRouterDeposit` flag — we don't sniff
+     * the memo since a user-typed memo starting with `+:`/`=:`/`SWAP:`/`ADD:` on a non-router
+     * recipient would otherwise overcharge gas.
+     *
+     * Returns `null` when the chain isn't EVM-router capable, the token is native, the destination
+     * is unknown, or the RPC estimate fails — in which case callers keep the legacy gas
+     * computation.
      */
     private suspend fun estimateThorchainRouterDepositGas(
         evmApi: EvmApi,
@@ -664,7 +673,7 @@ constructor(
         if (token.isNativeToken) return null
         if (!isThorchainRouterChain(chain)) return null
         if (dstAddress.isNullOrEmpty()) return null
-        if (memo.isNullOrEmpty() || !looksLikeThorchainRouterMemo(memo)) return null
+        if (memo.isNullOrEmpty()) return null
         val expiration = BigInteger.valueOf(Clock.System.now().epochSeconds + ROUTER_EXPIRATION_PAD)
         val estimate =
             try {
@@ -693,14 +702,6 @@ constructor(
             chain == Chain.BscChain ||
             chain == Chain.Arbitrum ||
             chain == Chain.Optimism
-
-    private fun looksLikeThorchainRouterMemo(memo: String): Boolean {
-        val trimmed = memo.trimStart()
-        return trimmed.startsWith("+:") ||
-            trimmed.startsWith("=:") ||
-            trimmed.startsWith("SWAP:", ignoreCase = true) ||
-            trimmed.startsWith("ADD:", ignoreCase = true)
-    }
 
     companion object {
         private const val TON_WALLET_STATE_UNINITIALIZED = "uninit"
