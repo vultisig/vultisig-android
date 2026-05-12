@@ -9,11 +9,8 @@ import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinReshareRequestJson
 import com.vultisig.wallet.data.api.models.signer.MigrateRequest
 import com.vultisig.wallet.data.api.utils.HttpException
-import com.vultisig.wallet.data.utils.NetworkException
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 
 sealed class PasswordCheckResult {
@@ -30,8 +27,8 @@ sealed class PasswordCheckResult {
  * Result of verifying a Fast Vault PIN against the VultiSigner `/vault/verify` endpoint.
  *
  * Only an explicit bad-code response from the server (HTTP 400/401) maps to [Invalid]. Transport
- * failures, timeouts, and server errors map to [NetworkError] / [ServerError] so the UI can show a
- * retry affordance instead of misreporting a correct PIN as wrong.
+ * failures and other server errors map to [NetworkError] so the UI can show a retry affordance
+ * instead of misreporting a correct PIN as wrong.
  */
 sealed class BackupCodeVerifyResult {
     /** Server confirmed the code is correct. */
@@ -40,11 +37,8 @@ sealed class BackupCodeVerifyResult {
     /** Server explicitly rejected the code (HTTP 400/401). */
     data object Invalid : BackupCodeVerifyResult()
 
-    /** Transport-level failure (DNS, TLS, timeout, no connection). */
+    /** Transport-level failure, timeout, or non-400/401 server error. */
     data object NetworkError : BackupCodeVerifyResult()
-
-    /** Server returned a non-2xx response that is not 400/401 (e.g. 5xx, 429). */
-    data class ServerError(val httpStatusCode: Int) : BackupCodeVerifyResult()
 }
 
 /** Result of a server backup request to the VultiSigner `/vault/resend` endpoint. */
@@ -181,33 +175,19 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
         code: String,
     ): BackupCodeVerifyResult {
         return try {
-            withTimeout(BACKUP_CODE_VERIFY_TIMEOUT_MS) {
-                api.verifyBackupCode(publicKeyEcdsa, code)
-            }
+            api.verifyBackupCode(publicKeyEcdsa, code)
             BackupCodeVerifyResult.Valid
-        } catch (e: TimeoutCancellationException) {
-            Timber.e(e, "verifyBackupCode timed out")
-            BackupCodeVerifyResult.NetworkError
         } catch (e: HttpException) {
             if (e.statusCode == 400 || e.statusCode == 401) {
                 BackupCodeVerifyResult.Invalid
             } else {
                 Timber.e(e, "verifyBackupCode failed with HTTP %d", e.statusCode)
-                BackupCodeVerifyResult.ServerError(e.statusCode)
-            }
-        } catch (e: NetworkException) {
-            Timber.e(e, "verifyBackupCode network failure")
-            if (e.httpStatusCode == 0) {
                 BackupCodeVerifyResult.NetworkError
-            } else if (e.httpStatusCode == 400 || e.httpStatusCode == 401) {
-                BackupCodeVerifyResult.Invalid
-            } else {
-                BackupCodeVerifyResult.ServerError(e.httpStatusCode)
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "verifyBackupCode unexpected failure")
+            Timber.e(e, "verifyBackupCode failure")
             BackupCodeVerifyResult.NetworkError
         }
     }
@@ -245,8 +225,4 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
                 }
             ServerBackupResult.Error(errorType)
         }
-
-    private companion object {
-        const val BACKUP_CODE_VERIFY_TIMEOUT_MS = 30_000L
-    }
 }

@@ -151,7 +151,6 @@ internal fun FastVaultVerificationScreen(
                             when (state.verifyPinState) {
                                 VerifyPinState.Success -> VsCodeInputFieldState.Success
                                 VerifyPinState.Error -> VsCodeInputFieldState.Error
-                                VerifyPinState.NetworkError -> VsCodeInputFieldState.Default
                                 else -> VsCodeInputFieldState.Default
                             },
                         modifier = Modifier.testTag("FastVaultVerificationScreen.codeField"),

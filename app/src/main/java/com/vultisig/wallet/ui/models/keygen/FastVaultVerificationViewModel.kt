@@ -126,94 +126,95 @@ constructor(
 
                 val verifyResult =
                     verifyFastVaultBackupCode(publicKeyEcdsa = args.pubKeyEcdsa, code = code)
-                if (verifyResult == BackupCodeVerifyResult.Valid) {
-                    try {
-                        updateVerifyState(VerifyPinState.Success)
+                when (verifyResult) {
+                    BackupCodeVerifyResult.Valid ->
+                        try {
+                            updateVerifyState(VerifyPinState.Success)
 
-                        val vaultId = args.vaultId
+                            val vaultId = args.vaultId
 
-                        if (isSingleKeygen) {
-                            // MLDSA keygen on existing fast vault: merge MLDSA
-                            // data into existing vault and auto-enable QBTC
-                            val tempVault = temporaryVaultRepository.getById(vaultId)
-                            val existingVault =
-                                vaultRepository.get(vaultId)
-                                    ?: error(
-                                        "No vault with id $vaultId exists for SingleKeygen save"
+                            if (isSingleKeygen) {
+                                // MLDSA keygen on existing fast vault: merge MLDSA
+                                // data into existing vault and auto-enable QBTC
+                                val tempVault = temporaryVaultRepository.getById(vaultId)
+                                val existingVault =
+                                    vaultRepository.get(vaultId)
+                                        ?: error(
+                                            "No vault with id $vaultId exists for SingleKeygen save"
+                                        )
+                                existingVault.pubKeyMLDSA = tempVault.vault.pubKeyMLDSA
+                                existingVault.keyshares = tempVault.vault.keyshares
+                                saveVault(existingVault, true)
+
+                                val qbtcToken = Coins.Qbtc.QBTC
+                                val (address, pubKey) =
+                                    chainAccountAddressRepository.getAddress(
+                                        qbtcToken,
+                                        existingVault,
                                     )
-                            existingVault.pubKeyMLDSA = tempVault.vault.pubKeyMLDSA
-                            existingVault.keyshares = tempVault.vault.keyshares
-                            saveVault(existingVault, true)
+                                vaultRepository.addTokenToVault(
+                                    vaultId,
+                                    qbtcToken.copy(address = address, hexPublicKey = pubKey),
+                                )
 
-                            val qbtcToken = Coins.Qbtc.QBTC
-                            val (address, pubKey) =
-                                chainAccountAddressRepository.getAddress(qbtcToken, existingVault)
-                            vaultRepository.addTokenToVault(
-                                vaultId,
-                                qbtcToken.copy(address = address, hexPublicKey = pubKey),
-                            )
+                                delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
+                                navigator.route(
+                                    route =
+                                        Route.BackupVault(
+                                            vaultId = vaultId,
+                                            vaultType = VaultType.Fast,
+                                            action = args.tssAction,
+                                            passwordType =
+                                                BackupPasswordType.VultiServerPassword(
+                                                    password = args.password
+                                                ),
+                                        )
+                                )
+                            } else {
+                                val vault = temporaryVaultRepository.getById(vaultId)
+                                val shouldOverride = args.tssAction == TssAction.Migrate
+                                saveVault(vault.vault, shouldOverride)
 
-                            delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
-                            navigator.route(
-                                route =
-                                    Route.BackupVault(
+                                vault.hint?.let {
+                                    vaultDataStoreRepository.setFastSignHint(
                                         vaultId = vaultId,
-                                        vaultType = VaultType.Fast,
-                                        action = args.tssAction,
-                                        passwordType =
-                                            BackupPasswordType.VultiServerPassword(
-                                                password = args.password
-                                            ),
+                                        hint = it,
                                     )
-                            )
-                        } else {
-                            val vault = temporaryVaultRepository.getById(vaultId)
-                            val shouldOverride = args.tssAction == TssAction.Migrate
-                            saveVault(vault.vault, shouldOverride)
+                                }
 
-                            vault.hint?.let {
-                                vaultDataStoreRepository.setFastSignHint(
+                                if (context.canAuthenticateBiometric()) {
+                                    vaultPasswordRepository.savePassword(vaultId, vault.password)
+                                }
+
+                                vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
                                     vaultId = vaultId,
-                                    hint = it,
+                                    date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                                )
+
+                                delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
+                                navigator.route(
+                                    route =
+                                        Route.BackupVault(
+                                            vaultId = args.vaultId,
+                                            vaultType = VaultType.Fast,
+                                            action = args.tssAction,
+                                            passwordType =
+                                                BackupPasswordType.VultiServerPassword(
+                                                    password = args.password
+                                                ),
+                                        )
                                 )
                             }
-
-                            if (context.canAuthenticateBiometric()) {
-                                vaultPasswordRepository.savePassword(vaultId, vault.password)
-                            }
-
-                            vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
-                                vaultId = vaultId,
-                                date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                            )
-
-                            delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
-                            navigator.route(
-                                route =
-                                    Route.BackupVault(
-                                        vaultId = args.vaultId,
-                                        vaultType = VaultType.Fast,
-                                        action = args.tssAction,
-                                        passwordType =
-                                            BackupPasswordType.VultiServerPassword(
-                                                password = args.password
-                                            ),
-                                    )
-                            )
+                        } catch (e: Exception) {
+                            if (e is CancellationException) throw e
+                            Timber.e(e, "FastVaultVerification: save vault failed")
+                            updateVerifyState(VerifyPinState.Error)
                         }
-                    } catch (e: Exception) {
-                        if (e is CancellationException) throw e
-                        Timber.e(e, "FastVaultVerification: save vault failed")
-                        updateVerifyState(VerifyPinState.Error)
-                    }
-                } else {
-                    when (verifyResult) {
-                        BackupCodeVerifyResult.Invalid -> updateVerifyState(VerifyPinState.Error)
-                        BackupCodeVerifyResult.NetworkError,
-                        is BackupCodeVerifyResult.ServerError ->
-                            updateVerifyState(VerifyPinState.NetworkError)
-                        BackupCodeVerifyResult.Valid -> Unit
-                    }
+
+                    BackupCodeVerifyResult.Invalid -> updateVerifyState(VerifyPinState.Error)
+
+                    BackupCodeVerifyResult.NetworkError ->
+                        updateVerifyState(VerifyPinState.NetworkError)
                 }
             } else {
                 updateVerifyState(VerifyPinState.Error)
