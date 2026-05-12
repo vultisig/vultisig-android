@@ -1082,6 +1082,10 @@ constructor(
     private fun selectToken(token: Coin) {
         Timber.d("selectToken(token = $token)")
 
+        // Preempt any in-flight percentage calc — otherwise it can resume after the token
+        // switch and write the old token's amount into tokenAmountFieldState (e.g. the
+        // autocompound toggle hits this same race that setTronResourceType already preempts).
+        amountFractionManager.cancel()
         amountManager.resetUserInputCache()
         selectedToken.value = token
     }

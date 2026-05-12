@@ -57,10 +57,15 @@ internal class AmountFractionManager(
      * Cancels any in-flight percentage/max calculation so callers (e.g. the Tron resource toggle)
      * can clear amount fields without an older calc resuming and clobbering them after the
      * suspension point in `calculatePercentageWithAccurateFee`.
+     *
+     * Also clears `isAmountSelectionLoading` directly — the cancelled job's `finally` skips the
+     * reset (the `isActive` guard is false for cancelled jobs), so external cancellers would
+     * otherwise leave the spinner stuck on.
      */
     fun cancel() {
         chooseAmountFractionJob?.cancel()
         chooseAmountFractionJob = null
+        uiState.update { it.copy(isAmountSelectionLoading = false) }
     }
 
     fun chooseMaxTokenAmount() {
