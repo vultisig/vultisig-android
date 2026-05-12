@@ -38,6 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
@@ -177,7 +178,7 @@ internal fun TronFreezePositionCard(
                     title = stringResource(R.string.tron_defi_unfreeze),
                     icon = R.drawable.circle_minus,
                     background = Theme.v2.colors.backgrounds.tertiary_2,
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.03f)),
+                    border = BorderStroke(Dp.Hairline, Color.White.copy(alpha = 0.03f)),
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = TronFreezeCardIconCircleColor,
                     enabled = !isLoading && isUnfreezeEnabled,
@@ -188,7 +189,7 @@ internal fun TronFreezePositionCard(
                     title = stringResource(R.string.tron_defi_freeze),
                     icon = R.drawable.circle_plus,
                     background = Theme.v2.colors.buttons.ctaPrimary,
-                    border = BorderStroke(1.dp, Theme.v2.colors.primary.accent3),
+                    border = BorderStroke(Dp.Hairline, Theme.v2.colors.primary.accent3),
                     contentColor = Theme.v2.colors.text.primary,
                     iconCircleColor = TronFreezeCardIconCircleColor,
                     enabled = isFreezeEnabled && !isLoading,
