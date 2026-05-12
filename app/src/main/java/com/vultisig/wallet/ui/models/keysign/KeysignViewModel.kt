@@ -751,13 +751,9 @@ constructor(
                         )
                     when (statusResult) {
                         TransactionResult.Confirmed,
-                        is TransactionResult.Failed -> {
+                        is TransactionResult.Failed,
+                        TransactionResult.TimedOut -> {
                             tryUpdateEvmActualFee(txHash, chain)
-                            transactionStatusServiceManager.stopPolling()
-                            pollingTxStatusJob?.cancel()
-                        }
-
-                        TransactionResult.NotFound -> {
                             transactionStatusServiceManager.stopPolling()
                             pollingTxStatusJob?.cancel()
                         }
@@ -859,9 +855,9 @@ constructor(
         when (this) {
             TransactionResult.Confirmed -> TransactionStatus.Confirmed
             is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
-            TransactionResult.NotFound ->
+            TransactionResult.TimedOut ->
                 TransactionStatus.Failed("Confirmation taking longer than expected".asUiText())
-
+            TransactionResult.NotFound,
             TransactionResult.Pending -> TransactionStatus.Pending
         }
 

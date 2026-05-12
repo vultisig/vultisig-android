@@ -28,7 +28,7 @@ constructor(
 
         while (currentCoroutineContext().isActive) {
             if (System.currentTimeMillis() - startTime >= timeoutMillis) {
-                emit(TransactionResult.NotFound)
+                emit(TransactionResult.TimedOut)
                 return@flow
             }
 
