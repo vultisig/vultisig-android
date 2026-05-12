@@ -690,7 +690,9 @@ constructor(
         chain == Chain.Ethereum ||
             chain == Chain.Base ||
             chain == Chain.Avalanche ||
-            chain == Chain.BscChain
+            chain == Chain.BscChain ||
+            chain == Chain.Arbitrum ||
+            chain == Chain.Optimism
 
     private fun looksLikeThorchainRouterMemo(memo: String): Boolean {
         val trimmed = memo.trimStart()

@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.bodyOrThrow
+import com.vultisig.wallet.data.utils.toSafeByteArray
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -355,9 +356,9 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
         val function = EthereumAbiFunction("depositWithExpiry")
         function.addParamAddress(vault.data(), false)
         function.addParamAddress(asset.data(), false)
-        function.addParamUInt256(amount.toByteArray(), false)
+        function.addParamUInt256(amount.toSafeByteArray(), false)
         function.addParamString(memo, false)
-        function.addParamUInt256(expiration.toByteArray(), false)
+        function.addParamUInt256(expiration.toSafeByteArray(), false)
         val encoded = EthereumAbi.encode(function)
         return "0x" + encoded.joinToString(separator = "") { "%02x".format(it) }
     }
