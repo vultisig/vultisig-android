@@ -64,17 +64,17 @@ internal class ThorchainMemoParserImpl @Inject constructor() : ThorchainMemoPars
             "BOND" ->
                 ParsedThorchainMemo(
                     operation = OPERATION_BOND,
-                    nodeAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
+                    nodeAddress = parts.extractNodeAddress(),
                 )
             "UNBOND" ->
                 ParsedThorchainMemo(
                     operation = OPERATION_UNBOND,
-                    nodeAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
+                    nodeAddress = parts.extractNodeAddress(),
                 )
             "LEAVE" ->
                 ParsedThorchainMemo(
                     operation = OPERATION_LEAVE,
-                    nodeAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
+                    nodeAddress = parts.extractNodeAddress(),
                 )
             "LOAN+",
             "\$+" ->
@@ -92,7 +92,9 @@ internal class ThorchainMemoParserImpl @Inject constructor() : ThorchainMemoPars
         }
     }
 
-    private fun String.takeIfThorAddress(): String =
-        if (startsWith("thor1", ignoreCase = true) || startsWith("maya1", ignoreCase = true)) this
-        else ""
+    private fun List<String>.extractNodeAddress(): String =
+        drop(1).firstOrNull { it.isThorAddress() }.orEmpty()
+
+    private fun String.isThorAddress(): Boolean =
+        startsWith("thor1", ignoreCase = true) || startsWith("maya1", ignoreCase = true)
 }

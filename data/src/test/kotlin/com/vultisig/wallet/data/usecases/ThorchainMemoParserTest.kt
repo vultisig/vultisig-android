@@ -75,11 +75,11 @@ class ThorchainMemoParserTest {
     }
 
     @Test
-    fun `maya bond memo with asset segment does not mistake asset for nodeAddress`() {
+    fun `maya bond memo extracts nodeAddress from later segment past asset and units`() {
         val parsed = parser.parse("BOND:MAYA.CACAO:100:maya1nodeaddress:maya1provider")
 
         assertEquals(OPERATION_BOND, parsed?.operation)
-        assertEquals("", parsed?.nodeAddress)
+        assertEquals("maya1nodeaddress", parsed?.nodeAddress)
         assertEquals("", parsed?.pairedAddress)
     }
 
@@ -93,11 +93,11 @@ class ThorchainMemoParserTest {
     }
 
     @Test
-    fun `maya unbond memo with asset segment does not mistake asset for nodeAddress`() {
+    fun `maya unbond memo extracts nodeAddress from later segment past asset and units`() {
         val parsed = parser.parse("UNBOND:MAYA.CACAO:100:maya1nodeaddress")
 
         assertEquals(OPERATION_UNBOND, parsed?.operation)
-        assertEquals("", parsed?.nodeAddress)
+        assertEquals("maya1nodeaddress", parsed?.nodeAddress)
         assertEquals("", parsed?.pairedAddress)
     }
 
