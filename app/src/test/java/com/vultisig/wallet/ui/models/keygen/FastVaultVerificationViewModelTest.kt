@@ -27,7 +27,6 @@ import io.mockk.unmockkStatic
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -39,14 +38,12 @@ import org.junit.jupiter.api.Test
 
 internal class FastVaultVerificationViewModelTest {
 
-    private val scheduler = TestCoroutineScheduler()
-    private val mainDispatcher = UnconfinedTestDispatcher(scheduler)
+    private val testDispatcher = UnconfinedTestDispatcher()
 
-    private val savedStateHandle: SavedStateHandle = mockk(relaxed = true)
     private val context: Context = mockk(relaxed = true)
     private val navigator: Navigator<Destination> = mockk(relaxed = true)
     private val saveVault: SaveVaultUseCase = mockk(relaxed = true)
-    private val verifyUseCase: VerifyFastVaultBackupCodeUseCase = mockk()
+    private val verifyUseCase: VerifyFastVaultBackupCodeUseCase = mockk(relaxed = true)
     private val temporaryVaultRepository: TemporaryVaultRepository = mockk(relaxed = true)
     private val vaultDataStoreRepository: VaultDataStoreRepository = mockk(relaxed = true)
     private val vaultPasswordRepository: VaultPasswordRepository = mockk(relaxed = true)
@@ -56,9 +53,9 @@ internal class FastVaultVerificationViewModelTest {
 
     @BeforeEach
     fun setUp() {
-        Dispatchers.setMain(mainDispatcher)
+        Dispatchers.setMain(testDispatcher)
         mockkStatic("androidx.navigation.SavedStateHandleKt")
-        every { savedStateHandle.toRoute<Route.FastVaultVerification>() } returns
+        every { any<SavedStateHandle>().toRoute<Route.FastVaultVerification>() } returns
             Route.FastVaultVerification(
                 vaultId = "vault",
                 pubKeyEcdsa = "pub",
@@ -76,48 +73,51 @@ internal class FastVaultVerificationViewModelTest {
     }
 
     @Test
-    fun `verify maps Invalid result to Error state`() = runTest {
-        coEvery { verifyUseCase.invoke("pub", "1234") } returns BackupCodeVerifyResult.Invalid
-        val vm = buildViewModel()
+    fun `verify maps Invalid result to Error state`() =
+        runTest(testDispatcher) {
+            coEvery { verifyUseCase(any(), any()) } returns BackupCodeVerifyResult.Invalid
+            val vm = buildViewModel()
 
-        vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
-        vm.processCode("1234")
-        advanceUntilIdle()
+            vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
+            vm.processCode("1234")
+            advanceUntilIdle()
 
-        assertEquals(VerifyPinState.Error, vm.state.value.verifyPinState)
-    }
-
-    @Test
-    fun `verify maps NetworkError result to NetworkError state`() = runTest {
-        coEvery { verifyUseCase.invoke("pub", "1234") } returns BackupCodeVerifyResult.NetworkError
-        val vm = buildViewModel()
-
-        vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
-        vm.processCode("1234")
-        advanceUntilIdle()
-
-        assertEquals(VerifyPinState.NetworkError, vm.state.value.verifyPinState)
-    }
+            assertEquals(VerifyPinState.Error, vm.state.value.verifyPinState)
+        }
 
     @Test
-    fun `retry re-runs verify after a network failure`() = runTest {
-        coEvery { verifyUseCase.invoke("pub", "1234") } returnsMany
-            listOf(BackupCodeVerifyResult.NetworkError, BackupCodeVerifyResult.Invalid)
-        val vm = buildViewModel()
+    fun `verify maps NetworkError result to NetworkError state`() =
+        runTest(testDispatcher) {
+            coEvery { verifyUseCase(any(), any()) } returns BackupCodeVerifyResult.NetworkError
+            val vm = buildViewModel()
 
-        vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
-        vm.processCode("1234")
-        advanceUntilIdle()
-        assertEquals(VerifyPinState.NetworkError, vm.state.value.verifyPinState)
+            vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
+            vm.processCode("1234")
+            advanceUntilIdle()
 
-        vm.retry()
-        advanceUntilIdle()
-        assertEquals(VerifyPinState.Error, vm.state.value.verifyPinState)
-    }
+            assertEquals(VerifyPinState.NetworkError, vm.state.value.verifyPinState)
+        }
+
+    @Test
+    fun `retry re-runs verify after a network failure`() =
+        runTest(testDispatcher) {
+            coEvery { verifyUseCase(any(), any()) } returnsMany
+                listOf(BackupCodeVerifyResult.NetworkError, BackupCodeVerifyResult.Invalid)
+            val vm = buildViewModel()
+
+            vm.codeFieldState.setTextAndPlaceCursorAtEnd("1234")
+            vm.processCode("1234")
+            advanceUntilIdle()
+            assertEquals(VerifyPinState.NetworkError, vm.state.value.verifyPinState)
+
+            vm.retry()
+            advanceUntilIdle()
+            assertEquals(VerifyPinState.Error, vm.state.value.verifyPinState)
+        }
 
     private fun buildViewModel(): FastVaultVerificationViewModel =
         FastVaultVerificationViewModel(
-            savedStateHandle = savedStateHandle,
+            savedStateHandle = SavedStateHandle(),
             context = context,
             navigator = navigator,
             saveVault = saveVault,
