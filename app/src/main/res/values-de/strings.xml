@@ -942,6 +942,7 @@
     <string name="amount_to_withdraw">Auszuzahlender Betrag (Guthaben: %1$s)</string>
     <string name="mint_secured_asset_secure">Gesichertes Asset erstellen (SECURE+)</string>
     <string name="target_asset">Zielvermögen: %1$s-%2$s</string>
+    <string name="thor_address">THORChain-Adresse</string>
     <string name="paired_address">Gepaarte Adresse</string>
     <string name="operation">Operation</string>
     <string name="pool">Pool</string>

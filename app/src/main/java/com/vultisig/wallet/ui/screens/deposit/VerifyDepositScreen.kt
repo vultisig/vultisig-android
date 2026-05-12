@@ -187,8 +187,15 @@ internal fun VerifyDepositScreen(
                     }
                     if (tx.thorAddress.isNotEmpty()) {
                         VerifyCardDetails(
-                            title = stringResource(R.string.paired_address),
+                            title = stringResource(R.string.thor_address),
                             subtitle = tx.thorAddress,
+                        )
+                        VerifyCardDivider(0.dp)
+                    }
+                    if (tx.operation.isNotEmpty()) {
+                        VerifyCardDetails(
+                            title = stringResource(R.string.operation),
+                            subtitle = tx.operation,
                         )
                         VerifyCardDivider(0.dp)
                     }

@@ -41,7 +41,7 @@ object ThorchainMemoParser {
                 ParsedThorchainMemo(
                     operation = OPERATION_MINT,
                     pool = parts.getOrNull(1).orEmpty(),
-                    thorAddress = parts.getOrNull(2).orEmpty(),
+                    thorAddress = parts.getOrNull(2).orEmpty().takeIfThorAddress(),
                 )
             "-",
             "WITHDRAW",
@@ -51,14 +51,20 @@ object ThorchainMemoParser {
                     pool = parts.getOrNull(1).orEmpty(),
                 )
             "BOND" ->
-                ParsedThorchainMemo(operation = "Bond", thorAddress = parts.getOrNull(1).orEmpty())
+                ParsedThorchainMemo(
+                    operation = "Bond",
+                    thorAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
+                )
             "UNBOND" ->
                 ParsedThorchainMemo(
                     operation = "Unbond",
-                    thorAddress = parts.getOrNull(1).orEmpty(),
+                    thorAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
                 )
             "LEAVE" ->
-                ParsedThorchainMemo(operation = "Leave", thorAddress = parts.getOrNull(1).orEmpty())
+                ParsedThorchainMemo(
+                    operation = "Leave",
+                    thorAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
+                )
             "LOAN+",
             "\$+" ->
                 ParsedThorchainMemo(operation = "Loan Open", pool = parts.getOrNull(1).orEmpty())
@@ -68,4 +74,8 @@ object ThorchainMemoParser {
             else -> null
         }
     }
+
+    private fun String.takeIfThorAddress(): String =
+        if (startsWith("thor1", ignoreCase = true) || startsWith("maya1", ignoreCase = true)) this
+        else ""
 }

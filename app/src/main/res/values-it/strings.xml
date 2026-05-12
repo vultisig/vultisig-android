@@ -940,6 +940,7 @@
     <string name="amount_to_withdraw">Importo da prelevare (Saldo: %1$s)</string>
     <string name="mint_secured_asset_secure">Asset garantito Mint (SECURE+)</string>
     <string name="target_asset">Risorsa di destinazione: %1$s-%2$s</string>
+    <string name="thor_address">Indirizzo THORChain</string>
     <string name="paired_address">Indirizzo accoppiato</string>
     <string name="operation">Operazione</string>
     <string name="pool">Pool</string>
