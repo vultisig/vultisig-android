@@ -223,6 +223,7 @@ private fun FastVaultVerificationPreview() {
         onCodeChanged = {},
         onPasteClick = {},
         onChangeEmailClick = {},
+        onRetryClick = {},
     )
 }
 
