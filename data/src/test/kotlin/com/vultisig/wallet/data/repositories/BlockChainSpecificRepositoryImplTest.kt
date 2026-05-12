@@ -112,6 +112,87 @@ internal class BlockChainSpecificRepositoryImplTest {
     }
 
     @Test
+    fun `ERC20 router deposit memo applies 200k floor when router estimate is low`() = runTest {
+        val router = "0xD37BbE5744D730a1d98d8DC97c42F0Ca46aD7146"
+        val coin =
+            evmCoin(chain = Chain.Ethereum, isNativeToken = false, contractAddress = "0xusdt")
+        val result =
+            repository(
+                    evmApi =
+                        evmApi(
+                            erc20GasByRecipient = mapOf(router to BigInteger("50000")),
+                            routerDepositGasByRouter = mapOf(router to BigInteger("80000")),
+                        ),
+                    evmFeeService =
+                        evmFeeService(
+                            feesByRecipient =
+                                mapOf(router to (BigInteger("111") to BigInteger("22")))
+                        ),
+                )
+                .getSpecific(
+                    chain = Chain.Ethereum,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                    dstAddress = router,
+                    tokenAmountValue = BigInteger("300000"),
+                    memo = "+:ETH.USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7:thor1abc",
+                )
+
+        // estimate=80k → ×1.3=104k, floored at 200k. Existing ERC-20 path would give max(150k,
+        // 50k*1.5=75k)=150k. We take max → 200k.
+        assertEthereumSpecific(
+            result = result,
+            gasLimit = BigInteger("200000"),
+            maxFeePerGas = BigInteger("111"),
+            priorityFee = BigInteger("22"),
+        )
+    }
+
+    @Test
+    fun `ERC20 router deposit memo applies 1_3x multiplier when estimate is high`() = runTest {
+        val router = "0xD37BbE5744D730a1d98d8DC97c42F0Ca46aD7146"
+        val coin =
+            evmCoin(chain = Chain.Ethereum, isNativeToken = false, contractAddress = "0xusdt")
+        val result =
+            repository(
+                    evmApi =
+                        evmApi(
+                            erc20GasByRecipient = mapOf(router to BigInteger("50000")),
+                            routerDepositGasByRouter = mapOf(router to BigInteger("250000")),
+                        ),
+                    evmFeeService =
+                        evmFeeService(
+                            feesByRecipient =
+                                mapOf(router to (BigInteger("111") to BigInteger("22")))
+                        ),
+                )
+                .getSpecific(
+                    chain = Chain.Ethereum,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                    dstAddress = router,
+                    tokenAmountValue = BigInteger("300000"),
+                    memo = "+:ETH.USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7:thor1abc",
+                )
+
+        // estimate=250k → ×1.3=325k, which is above both 200k floor and the legacy 150k path.
+        assertEthereumSpecific(
+            result = result,
+            gasLimit = BigInteger("325000"),
+            maxFeePerGas = BigInteger("111"),
+            priorityFee = BigInteger("22"),
+        )
+    }
+
+    @Test
     fun `zkSync estimation uses destination address in returned dto`() = runTest {
         val destination = "0xzkrecipient"
         val coin = evmCoin(chain = Chain.ZkSync, isNativeToken = true)
@@ -381,6 +462,7 @@ internal class BlockChainSpecificRepositoryImplTest {
         nativeGasByRecipient: Map<String, BigInteger> = emptyMap(),
         erc20GasByRecipient: Map<String, BigInteger> = emptyMap(),
         zkFeesByRecipient: Map<String, ZkGasFee> = emptyMap(),
+        routerDepositGasByRouter: Map<String, BigInteger> = emptyMap(),
     ): EvmApi = mockk {
         coEvery { getNonce(any()) } returns NONCE
 
@@ -394,6 +476,14 @@ internal class BlockChainSpecificRepositoryImplTest {
             {
                 val recipient = invocation.args[2] as String
                 erc20GasByRecipient[recipient] ?: BigInteger("50000")
+            }
+
+        coEvery {
+            estimateGasForThorchainRouterDeposit(any(), any(), any(), any(), any(), any(), any())
+        } answers
+            {
+                val router = invocation.args[1] as String
+                routerDepositGasByRouter[router] ?: BigInteger.ZERO
             }
 
         coEvery { zkEstimateFee(any(), any(), any()) } answers

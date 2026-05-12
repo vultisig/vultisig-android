@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.DashApi
+import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
@@ -193,9 +194,23 @@ constructor(
                                 ) // keep it consistent with how we calculate default gas limit in
                     // EthereumFeeService
 
+                    val routerDepositGasLimit =
+                        estimateThorchainRouterDepositGas(
+                            evmApi = evmApi,
+                            chain = chain,
+                            token = token,
+                            dstAddress = dstAddress,
+                            tokenAmountValue = tokenAmountValue,
+                            memo = memo,
+                        )
+
                     val nonce = evmApi.getNonce(address)
 
-                    val gasLimitFee = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
+                    val baseGasLimit = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
+                    val gasLimitFee =
+                        if (gasLimit == null && routerDepositGasLimit != null)
+                            max(baseGasLimit, routerDepositGasLimit)
+                        else baseGasLimit
                     val fees =
                         if (isSwap) {
                             feeServiceComposite.calculateDefaultFees(
@@ -629,9 +644,69 @@ constructor(
             }
         }
 
+    /**
+     * Re-estimates gas for THORChain-style ERC-20 router deposits (LP add, swap-in) so the limit
+     * reflects the cost of `depositWithExpiry` rather than a bare ERC-20 transfer. Non-standard
+     * tokens like USDT push the router call past the bare-transfer estimate, causing OOG reverts
+     * under the old cap.
+     *
+     * Returns `null` when the call doesn't look like a router deposit, the destination is unknown,
+     * or the RPC estimate fails — in which case callers keep the legacy gas computation.
+     */
+    private suspend fun estimateThorchainRouterDepositGas(
+        evmApi: EvmApi,
+        chain: Chain,
+        token: Coin,
+        dstAddress: String?,
+        tokenAmountValue: BigInteger?,
+        memo: String?,
+    ): BigInteger? {
+        if (token.isNativeToken) return null
+        if (!isThorchainRouterChain(chain)) return null
+        if (dstAddress.isNullOrEmpty()) return null
+        if (memo.isNullOrEmpty() || !looksLikeThorchainRouterMemo(memo)) return null
+        val expiration = BigInteger.valueOf(Clock.System.now().epochSeconds + ROUTER_EXPIRATION_PAD)
+        val estimate =
+            try {
+                evmApi.estimateGasForThorchainRouterDeposit(
+                    senderAddress = token.address,
+                    routerAddress = dstAddress,
+                    vaultAddress = dstAddress,
+                    assetAddress = token.contractAddress,
+                    amount = tokenAmountValue ?: BigInteger.ZERO,
+                    memo = memo,
+                    expiration = expiration,
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(e, "thorchain router gas estimation failed; using floor")
+                BigInteger.ZERO
+            }
+        return max(estimate.increaseByPercent(30), THORCHAIN_ROUTER_DEPOSIT_FLOOR)
+    }
+
+    private fun isThorchainRouterChain(chain: Chain): Boolean =
+        chain == Chain.Ethereum ||
+            chain == Chain.Base ||
+            chain == Chain.Avalanche ||
+            chain == Chain.BscChain
+
+    private fun looksLikeThorchainRouterMemo(memo: String): Boolean {
+        val trimmed = memo.trimStart()
+        return trimmed.startsWith("+:") ||
+            trimmed.startsWith("=:") ||
+            trimmed.startsWith("SWAP:", ignoreCase = true) ||
+            trimmed.startsWith("ADD:", ignoreCase = true)
+    }
+
     companion object {
         private const val TON_WALLET_STATE_UNINITIALIZED = "uninit"
 
         private const val ENERGY_TO_SUN_FACTOR = 280
+
+        private const val ROUTER_EXPIRATION_PAD = 3600L
+
+        private val THORCHAIN_ROUTER_DEPOSIT_FLOOR = BigInteger.valueOf(200_000)
     }
 }

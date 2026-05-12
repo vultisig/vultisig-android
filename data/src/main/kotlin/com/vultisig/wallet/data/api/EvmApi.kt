@@ -38,6 +38,8 @@ import kotlinx.serialization.json.put
 import timber.log.Timber
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
+import wallet.core.jni.EthereumAbi
+import wallet.core.jni.EthereumAbiFunction
 
 interface EvmApi {
     suspend fun getBalance(coin: Coin): BigInteger
@@ -74,6 +76,22 @@ interface EvmApi {
         contractAddress: String,
         recipientAddress: String,
         value: BigInteger,
+    ): BigInteger
+
+    /**
+     * Calls `eth_estimateGas` against a THORChain-style router's `depositWithExpiry(vault, asset,
+     * amount, memo, expiration)` invocation.
+     *
+     * @return the node's gas estimate, or [BigInteger.ZERO] if the call fails.
+     */
+    suspend fun estimateGasForThorchainRouterDeposit(
+        senderAddress: String,
+        routerAddress: String,
+        vaultAddress: String,
+        assetAddress: String,
+        amount: BigInteger,
+        memo: String,
+        expiration: BigInteger,
     ): BigInteger
 
     suspend fun getBalances(address: String): VultisigBalanceJson
@@ -293,6 +311,55 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
             value = "0x0",
             callData = data,
         )
+    }
+
+    override suspend fun estimateGasForThorchainRouterDeposit(
+        senderAddress: String,
+        routerAddress: String,
+        vaultAddress: String,
+        assetAddress: String,
+        amount: BigInteger,
+        memo: String,
+        expiration: BigInteger,
+    ): BigInteger {
+        val callData =
+            try {
+                encodeDepositWithExpiryCallData(
+                    vaultAddress = vaultAddress,
+                    assetAddress = assetAddress,
+                    amount = amount,
+                    memo = memo,
+                    expiration = expiration,
+                )
+            } catch (e: Exception) {
+                Timber.w(e, "failed to encode depositWithExpiry calldata for gas estimation")
+                return BigInteger.ZERO
+            }
+        return estimateGasForCallDataTransfer(
+            senderAddress = senderAddress,
+            recipientAddress = routerAddress,
+            value = "0x0",
+            callData = callData,
+        )
+    }
+
+    private fun encodeDepositWithExpiryCallData(
+        vaultAddress: String,
+        assetAddress: String,
+        amount: BigInteger,
+        memo: String,
+        expiration: BigInteger,
+    ): String {
+        val vault = AnyAddress(vaultAddress, CoinType.ETHEREUM)
+        val asset = AnyAddress(assetAddress, CoinType.ETHEREUM)
+        val function = EthereumAbiFunction("depositWithExpiry")
+        function.addParamAddress(vault.data(), false)
+        function.addParamAddress(asset.data(), false)
+        function.addParamUInt256(amount.toByteArray(), false)
+        function.addParamString(memo, false)
+        function.addParamUInt256(expiration.toByteArray(), false)
+        val encoded = EthereumAbi.encode(function)
+        return "0x" + encoded.joinToString(separator = "") { "%02x".format(it) }
     }
 
     private fun constructERC20TransferData(recipientAddress: String, value: BigInteger): String {
