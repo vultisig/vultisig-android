@@ -6,6 +6,7 @@ import android.Manifest
 import android.content.Intent
 import android.graphics.BlurMaskFilter
 import android.graphics.BlurMaskFilter.Blur
+import android.graphics.Paint
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -45,9 +46,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
@@ -424,20 +425,18 @@ private fun ScanViewport(
                     val cornerRadius = cornerRadius.toPx()
                     drawIntoCanvas { canvas ->
                         val paint =
-                            Paint().also { p ->
-                                p.asFrameworkPaint().apply {
-                                    this.color = shadowColor.toArgb()
-                                    this.maskFilter = BlurMaskFilter(blurRadius, Blur.NORMAL)
-                                }
+                            Paint().apply {
+                                color = shadowColor.toArgb()
+                                maskFilter = BlurMaskFilter(blurRadius, Blur.NORMAL)
                             }
-                        canvas.drawRoundRect(
-                            left = 0f,
-                            top = offsetY,
-                            right = size.width,
-                            bottom = size.height + offsetY,
-                            radiusX = cornerRadius,
-                            radiusY = cornerRadius,
-                            paint = paint,
+                        canvas.nativeCanvas.drawRoundRect(
+                            0f,
+                            offsetY,
+                            size.width,
+                            size.height + offsetY,
+                            cornerRadius,
+                            cornerRadius,
+                            paint,
                         )
                     }
                 }

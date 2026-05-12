@@ -8,6 +8,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -52,7 +53,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -143,6 +144,7 @@ constructor(
     private val remoteNFTService: TierRemoteNFTService,
     private val pushNotificationManager: PushNotificationManager,
     private val snackbarFlow: SnackbarFlow,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle.toRoute<Route.Home>().openVaultId
@@ -225,7 +227,7 @@ constructor(
                 // fetch NFT
                 val ethAddress = vault.coins.find { it.id == Coins.Ethereum.ETH.id }?.address
                 if (ethAddress != null) {
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         val balance = remoteNFTService.checkNFTBalance(ethAddress)
                         tiersNFTRepository.saveTierNFT(vaultId, balance)
                     }
@@ -245,9 +247,7 @@ constructor(
             return false
         }
         return try {
-            withContext(Dispatchers.IO) {
-                enableTokenUseCase(vault.id, Coins.Ethereum.VULT) != null
-            }
+            withContext(ioDispatcher) { enableTokenUseCase(vault.id, Coins.Ethereum.VULT) != null }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -308,8 +308,7 @@ constructor(
     fun buyVult() {
         val vaultId = vaultId ?: return
         viewModelScope.launch {
-            val vault =
-                withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: return@launch
+            val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) } ?: return@launch
             if (!ensureVultEnabled(vault)) {
                 Timber.w("VULT setup unavailable, skipping swap navigation")
                 return@launch

@@ -6,6 +6,12 @@ import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.junit.Assert.*
 import org.junit.Test
@@ -14,7 +20,16 @@ class ParseCosmosMessageTest {
 
     private val protoBuf = ProtoBuf { encodeDefaults = false }
 
-    private val parseCosmosMessageUseCaseImpl = ParseCosmosMessageUseCaseImpl(protoBuf)
+    // Stub thor bech32 encoder so unit tests don't depend on the WalletCore JNI library.
+    // Produces a `thor1`-prefixed 43-char string deterministically derived from the input bytes,
+    // satisfying the prefix/length/uniqueness assertions in the address tests below.
+    private val testThorEncoder: (ByteArray) -> String = { bytes ->
+        val hex = bytes.joinToString("") { "%02x".format(it.toInt() and 0xff) }
+        "thor1" + (hex + "q".repeat(38)).take(38)
+    }
+
+    private val parseCosmosMessageUseCaseImpl =
+        ParseCosmosMessageUseCaseImpl(protoBuf, testThorEncoder)
 
     @Test
     fun `parseCosmosMessage should successfully parse valid input`() {
@@ -519,11 +534,11 @@ class ParseCosmosMessageTest {
     }
 
     @Test
-    fun `Message value should be properly base64 encoded`() {
+    fun `unknown typeUrl should fall back to base64 JsonPrimitive`() {
         val originalBytes = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
         val txBody =
             TxBody(
-                messages = listOf(ProtobufAny("/cosmos.bank.v1beta1.MsgSend", originalBytes)),
+                messages = listOf(ProtobufAny("/some.unknown.TypeUrl", originalBytes)),
                 memo = "test",
             )
         val authInfo = createValidAuthInfo()
@@ -537,8 +552,361 @@ class ParseCosmosMessageTest {
             )
 
         val result = parseCosmosMessage(signDirect)
-        val decodedValue = Base64.decode(result.messages[0].value)
-        assertArrayEquals(originalBytes, decodedValue)
+        val value = result.messages[0].value
+        val base64String = (value as JsonPrimitive).contentOrNull
+        assertNotNull(base64String)
+        assertArrayEquals(originalBytes, Base64.decode(base64String!!))
+    }
+
+    @Test
+    fun `MsgSend value should be decoded into nested JSON object`() {
+        val msgSend =
+            MsgSendBody(
+                fromAddress = "thor1from",
+                toAddress = "thor1to",
+                amount = listOf(Coin(denom = "rune", amount = "100000000")),
+            )
+        val msgBytes = protoBuf.encodeToByteArray(MsgSendBody.serializer(), msgSend)
+        val txBody =
+            TxBody(
+                messages = listOf(ProtobufAny("/cosmos.bank.v1beta1.MsgSend", msgBytes)),
+                memo = "test",
+            )
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        assertEquals("thor1from", value["fromAddress"]!!.jsonPrimitive.content)
+        assertEquals("thor1to", value["toAddress"]!!.jsonPrimitive.content)
+        val amounts = value["amount"]!!.jsonArray
+        assertEquals(1, amounts.size)
+        assertEquals("rune", amounts[0].jsonObject["denom"]!!.jsonPrimitive.content)
+        assertEquals("100000000", amounts[0].jsonObject["amount"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `types MsgSend value should be decoded with thor1 bech32 addresses`() {
+        // 20-byte address payloads -> standard length thor1... bech32 (BIP-0173)
+        val fromBytes = ByteArray(20) { it.toByte() }
+        val toBytes = ByteArray(20) { (0xFF - it).toByte() }
+        val msgSend =
+            ThorMsgSendBody(
+                fromAddress = fromBytes,
+                toAddress = toBytes,
+                amount = listOf(Coin(denom = "rune", amount = "100000000")),
+            )
+        val msgBytes = protoBuf.encodeToByteArray(ThorMsgSendBody.serializer(), msgSend)
+        val txBody =
+            TxBody(messages = listOf(ProtobufAny("/types.MsgSend", msgBytes)), memo = "test")
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        val from = value["fromAddress"]!!.jsonPrimitive.content
+        val to = value["toAddress"]!!.jsonPrimitive.content
+        assertTrue("expected thor1 prefix, got $from", from.startsWith("thor1"))
+        assertTrue("expected thor1 prefix, got $to", to.startsWith("thor1"))
+        // 20-byte payload -> 32 data chars + 6 checksum chars + "thor1" prefix = 43
+        assertEquals(43, from.length)
+        assertEquals(43, to.length)
+        assertNotEquals(from, to)
+        val amounts = value["amount"]!!.jsonArray
+        assertEquals(1, amounts.size)
+        assertEquals("rune", amounts[0].jsonObject["denom"]!!.jsonPrimitive.content)
+        assertEquals("100000000", amounts[0].jsonObject["amount"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `types MsgDeposit value should decode coins with Asset structure and thor1 signer`() {
+        // common.Coin in THORChain is (Asset asset, string amount, int64 decimals) — NOT (denom,
+        // amount).
+        val signerBytes = ByteArray(20) { (it + 1).toByte() }
+        val coin =
+            ThorChainCoin(
+                asset =
+                    ThorChainAsset(
+                        chain = "LTC",
+                        symbol = "LTC",
+                        ticker = "LTC",
+                        synth = false,
+                        trade = false,
+                        secured = false,
+                    ),
+                amount = "12345",
+                decimals = 8L,
+            )
+        val msgDeposit =
+            ThorMsgDepositBody(
+                coins = listOf(coin),
+                memo = "swap:BTC.BTC:bc1qaddr",
+                signer = signerBytes,
+            )
+        val msgBytes = protoBuf.encodeToByteArray(ThorMsgDepositBody.serializer(), msgDeposit)
+        val txBody =
+            TxBody(messages = listOf(ProtobufAny("/types.MsgDeposit", msgBytes)), memo = "test")
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        val signer = value["signer"]!!.jsonPrimitive.content
+        assertTrue("expected thor1 prefix, got $signer", signer.startsWith("thor1"))
+        assertEquals(43, signer.length)
+        assertEquals("swap:BTC.BTC:bc1qaddr", value["memo"]!!.jsonPrimitive.content)
+        val coins = value["coins"]!!.jsonArray
+        assertEquals(1, coins.size)
+        val coin0 = coins[0].jsonObject
+        val asset = coin0["asset"]!!.jsonObject
+        assertEquals("LTC", asset["chain"]!!.jsonPrimitive.content)
+        assertEquals("LTC", asset["symbol"]!!.jsonPrimitive.content)
+        assertEquals("LTC", asset["ticker"]!!.jsonPrimitive.content)
+        assertEquals("12345", coin0["amount"]!!.jsonPrimitive.content)
+        assertEquals("8", coin0["decimals"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `cross-typeUrl bytes should fall back to base64 when shape validation rejects them`() {
+        // Construct a payload that successfully decodes into ThorMsgSendBody (so the shape
+        // check, not decodeFromByteArray, is the gate) but carries cross-decoded garbage:
+        // a cosmos.bank MsgSend has bech32-string fromAddress/toAddress (wire-type 2,
+        // typically ~45 ASCII bytes). Decoded as ThorMsgSendBody those become ~45-byte
+        // ByteArrays — far from the 20-byte canonical Thor address length. The shape check
+        // must reject and fall back to base64 rather than render gibberish addresses.
+        val wrongShape =
+            MsgSendBody(
+                fromAddress = "cosmos1sendersomethinglongerthantwentyascii",
+                toAddress = "cosmos1receiversomethinglongerthantwentyascii",
+                amount = emptyList(),
+            )
+        val msgBytes = protoBuf.encodeToByteArray(MsgSendBody.serializer(), wrongShape)
+        val txBody =
+            TxBody(messages = listOf(ProtobufAny("/types.MsgSend", msgBytes)), memo = "test")
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value
+        val base64String = (value as JsonPrimitive).contentOrNull
+        assertNotNull(base64String)
+        assertArrayEquals(msgBytes, Base64.decode(base64String!!))
+    }
+
+    @Test
+    fun `types MsgDeposit with explicit zero default fields should decode without falling back`() {
+        // Real on-chain THORChain deposits carry explicit zero-valued scalars
+        // (Asset.synth=0, Asset.trade=0, Asset.secured=0, ThorChainCoin.decimals=0) on the
+        // wire even when the logical value is false/0. This mirrors the body_bytes shape in
+        // the cross-platform cosmos-sdk-sign-direct fixture used by other vultisig clients.
+        // The decoder must accept these and render the inner fields — a byte-equality
+        // round-trip would have wrongly rejected them since the default ProtoBuf instance
+        // re-encodes with encodeDefaults=false (dropping the explicit zeros and producing
+        // shorter bytes).
+        val producer = ProtoBuf { encodeDefaults = true }
+        val signerBytes = ByteArray(20) { (it + 1).toByte() }
+        val msgDeposit =
+            ThorMsgDepositBody(
+                coins =
+                    listOf(
+                        ThorChainCoin(
+                            asset =
+                                ThorChainAsset(
+                                    chain = "LTC",
+                                    symbol = "LTC",
+                                    ticker = "LTC",
+                                    synth = false,
+                                    trade = false,
+                                    secured = false,
+                                ),
+                            amount = "12345",
+                            decimals = 0L,
+                        )
+                    ),
+                memo = "swap:BTC.BTC:bc1qaddr",
+                signer = signerBytes,
+            )
+        val msgBytes = producer.encodeToByteArray(ThorMsgDepositBody.serializer(), msgDeposit)
+        val txBody =
+            TxBody(messages = listOf(ProtobufAny("/types.MsgDeposit", msgBytes)), memo = "test")
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value
+        assertTrue("expected JsonObject (decoded), got: $value", value is JsonObject)
+        val obj = value as JsonObject
+        assertEquals("swap:BTC.BTC:bc1qaddr", obj["memo"]!!.jsonPrimitive.content)
+        val signer = obj["signer"]!!.jsonPrimitive.content
+        assertTrue("expected thor1 prefix, got $signer", signer.startsWith("thor1"))
+        val coin0 = obj["coins"]!!.jsonArray[0].jsonObject
+        assertEquals("LTC", coin0["asset"]!!.jsonObject["chain"]!!.jsonPrimitive.content)
+        assertEquals("12345", coin0["amount"]!!.jsonPrimitive.content)
+        assertEquals("0", coin0["decimals"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `MsgExecuteContract value should be decoded with sender, contract, msg, funds`() {
+        val body =
+            MsgExecuteContractBody(
+                sender = "osmo1sender",
+                contract = "osmo1contract",
+                msg = "{\"swap\":{\"amount\":\"1\"}}".toByteArray(),
+                funds = listOf(Coin(denom = "uosmo", amount = "1000")),
+            )
+        val msgBytes = protoBuf.encodeToByteArray(MsgExecuteContractBody.serializer(), body)
+        val txBody =
+            TxBody(
+                messages = listOf(ProtobufAny("/cosmwasm.wasm.v1.MsgExecuteContract", msgBytes)),
+                memo = "",
+            )
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "osmosis-1",
+                accountNumber = "1",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        assertEquals("osmo1sender", value["sender"]!!.jsonPrimitive.content)
+        assertEquals("osmo1contract", value["contract"]!!.jsonPrimitive.content)
+        assertEquals("{\"swap\":{\"amount\":\"1\"}}", value["msg"]!!.jsonPrimitive.content)
+        val funds = value["funds"]!!.jsonArray
+        assertEquals(1, funds.size)
+        assertEquals("uosmo", funds[0].jsonObject["denom"]!!.jsonPrimitive.content)
+        assertEquals("1000", funds[0].jsonObject["amount"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `MsgTransfer value should be decoded with sender, receiver, token`() {
+        val body =
+            MsgTransferBody(
+                sourcePort = "transfer",
+                sourceChannel = "channel-0",
+                token = Coin(denom = "uatom", amount = "5000"),
+                sender = "cosmos1sender",
+                receiver = "osmo1receiver",
+                timeoutTimestamp = 1700000000000000000UL,
+            )
+        val msgBytes = protoBuf.encodeToByteArray(MsgTransferBody.serializer(), body)
+        val txBody =
+            TxBody(
+                messages =
+                    listOf(ProtobufAny("/ibc.applications.transfer.v1.MsgTransfer", msgBytes)),
+                memo = "",
+            )
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "cosmoshub-4",
+                accountNumber = "1",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value as JsonObject
+        assertEquals("transfer", value["sourcePort"]!!.jsonPrimitive.content)
+        assertEquals("channel-0", value["sourceChannel"]!!.jsonPrimitive.content)
+        assertEquals("cosmos1sender", value["sender"]!!.jsonPrimitive.content)
+        assertEquals("osmo1receiver", value["receiver"]!!.jsonPrimitive.content)
+        val token = value["token"]!!.jsonObject
+        assertEquals("uatom", token["denom"]!!.jsonPrimitive.content)
+        assertEquals("5000", token["amount"]!!.jsonPrimitive.content)
+    }
+
+    @Test
+    fun `known typeUrl with malformed bytes should fall back to base64 JsonPrimitive`() {
+        val malformedBytes = byteArrayOf(0xFF.toByte(), 0xFF.toByte(), 0xFF.toByte())
+        val txBody =
+            TxBody(
+                messages = listOf(ProtobufAny("/cosmos.bank.v1beta1.MsgSend", malformedBytes)),
+                memo = "test",
+            )
+        val authInfo = createValidAuthInfo()
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "cosmoshub-4",
+                accountNumber = "12345",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        val value = result.messages[0].value
+        val base64String = (value as JsonPrimitive).contentOrNull
+        assertNotNull(base64String)
+        assertArrayEquals(malformedBytes, Base64.decode(base64String!!))
+    }
+
+    @Test
+    fun `Fee should include gasLimit from AuthInfoFee`() {
+        val txBody = createValidTxBody()
+        val authInfo =
+            AuthInfo(
+                signerInfos =
+                    listOf(
+                        SignerInfo(
+                            publicKey =
+                                ProtobufAny("/cosmos.crypto.secp256k1.PubKey", ByteArray(33)),
+                            modeInfo = ModeInfo(single = ModeInfoSingle(mode = 1)),
+                            sequence = 42UL,
+                        )
+                    ),
+                authInfoFee = AuthInfoFee(amount = listOf(Coin("rune", "0")), gasLimit = 99368UL),
+            )
+
+        val signDirect =
+            SignDirectProto(
+                chainId = "thorchain-1",
+                accountNumber = "108706",
+                bodyBytes = encodeTxBody(txBody),
+                authInfoBytes = encodeAuthInfo(authInfo),
+            )
+
+        val result = parseCosmosMessage(signDirect)
+        assertEquals("99368", result.authInfoFee.gasLimit)
     }
 
     private fun encodeTxBody(txBody: TxBody): String {
