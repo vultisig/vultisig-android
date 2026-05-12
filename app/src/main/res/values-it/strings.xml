@@ -848,6 +848,8 @@
     <string name="select_vault_type_fast">Veloce</string>
     <string name="vault_backup_screen_paste">Incolla</string>
     <string name="vault_backup_error_pin">Errore durante la verifica del codice, riprova</string>
+    <string name="vault_backup_network_error">Impossibile contattare il server, riprova</string>
+    <string name="vault_backup_try_again">Riprova</string>
     <string name="tx_overview_screen_tx_hash">Hash della transazione</string>
     <string name="tx_overview_screen_tx_from">Da</string>
     <string name="swap_swap_button">Scambia</string>

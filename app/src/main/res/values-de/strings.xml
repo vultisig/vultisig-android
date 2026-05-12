@@ -850,6 +850,8 @@
     <string name="select_vault_type_fast">Schnell</string>
     <string name="vault_backup_screen_paste">Einfügen</string>
     <string name="vault_backup_error_pin">Fehler beim Überprüfen des Codes. Bitte versuchen Sie es erneut.</string>
+    <string name="vault_backup_network_error">Server nicht erreichbar, bitte erneut versuchen</string>
+    <string name="vault_backup_try_again">Erneut versuchen</string>
     <string name="tx_overview_screen_tx_hash">Transaktions-Hash</string>
     <string name="tx_overview_screen_tx_from">Von</string>
     <string name="swap_swap_button">Tauschen</string>
