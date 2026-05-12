@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -52,7 +53,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
-import java.math.BigInteger
+import java.math.BigDecimal
 
 @Composable
 internal fun VerifyDepositScreen(
@@ -145,6 +146,20 @@ internal fun VerifyDepositScreen(
 
                     SwapToken(valuedToken = tx.token, isLoading = state.isLoading)
 
+                    if (tx.operation == OPERATION_MINT && tx.pool.isNotEmpty()) {
+                        UiSpacer(8.dp)
+                        Text(
+                            text =
+                                stringResource(
+                                    R.string.lp_destination_format,
+                                    tx.pool.substringBefore('-'),
+                                    tx.token.token.ticker,
+                                ),
+                            style = Theme.brockmann.headings.title3,
+                            color = Theme.v2.colors.text.primary,
+                        )
+                    }
+
                     UiSpacer(12.dp)
 
                     VerifyCardDivider(8.dp)
@@ -164,6 +179,24 @@ internal fun VerifyDepositScreen(
                         VerifyCardDetails(
                             title = stringResource(R.string.verify_transaction_to_title),
                             subtitle = tx.dstAddress,
+                        )
+                        VerifyCardDivider(0.dp)
+                    }
+                    if (tx.pool.isNotEmpty()) {
+                        VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
+                        VerifyCardDivider(0.dp)
+                    }
+                    if (tx.nodeAddress.isNotEmpty()) {
+                        VerifyCardDetails(
+                            title = stringResource(R.string.node_address),
+                            subtitle = tx.nodeAddress,
+                        )
+                        VerifyCardDivider(0.dp)
+                    }
+                    if (tx.pairedAddress.isNotEmpty()) {
+                        VerifyCardDetails(
+                            title = stringResource(R.string.paired_address),
+                            subtitle = tx.pairedAddress,
                         )
                         VerifyCardDivider(0.dp)
                     }
@@ -195,7 +228,7 @@ internal fun VerifyDepositScreen(
                     if (
                         tx.token.value.isNotEmpty() &&
                             try {
-                                tx.token.value.toBigInteger() > BigInteger.ZERO
+                                tx.token.value.toBigDecimal() > BigDecimal.ZERO
                             } catch (e: Exception) {
                                 false
                             }

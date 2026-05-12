@@ -67,6 +67,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
+import com.vultisig.wallet.data.usecases.ThorchainMemoParser
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -220,6 +221,7 @@ constructor(
     private val keysignViewModelFactory: KeysignViewModel.Factory,
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
+    private val thorchainMemoParser: ThorchainMemoParser,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -899,6 +901,8 @@ constructor(
                             )
                         )
 
+                    val parsedThorMemo = thorchainMemoParser.parse(payload.memo ?: "")
+
                     val depositTransaction =
                         DepositTransaction(
                             id = UUID.randomUUID().toString(),
@@ -911,6 +915,11 @@ constructor(
                             estimatedFees = estimatedTokenFees,
                             estimateFeesFiat = totalGasAndFee.formattedFiatValue,
                             blockChainSpecific = payload.blockChainSpecific,
+                            operation = parsedThorMemo?.operation.orEmpty(),
+                            nodeAddress = parsedThorMemo?.nodeAddress.orEmpty(),
+                            pairedAddress = parsedThorMemo?.pairedAddress.orEmpty(),
+                            thorAddress = parsedThorMemo?.thorAddress.orEmpty(),
+                            pool = parsedThorMemo?.pool.orEmpty(),
                         )
                     val depositTransactionUiModel =
                         mapDepositTransactionToUiModel(depositTransaction)

@@ -18,9 +18,17 @@ data class DepositTransaction(
     val wasmExecuteContractPayload: WasmExecuteContractPayload? = null,
     val operation: String = "",
     val thorAddress: String = "",
+    val nodeAddress: String = "",
+    val pairedAddress: String = "",
+    val pool: String = "",
     val utxos: List<UtxoInfo> = emptyList(),
 )
 
 const val OPERATION_MINT = "Mint"
 const val OPERATION_WITHDRAW = "Withdraw"
+const val OPERATION_BOND = "Bond"
+const val OPERATION_UNBOND = "Unbond"
+const val OPERATION_LEAVE = "Leave"
+const val OPERATION_LOAN_OPEN = "Loan Open"
+const val OPERATION_LOAN_CLOSE = "Loan Close"
 const val OPERATION_CIRCLE_WITHDRAW = "DepositUSDCCircle"

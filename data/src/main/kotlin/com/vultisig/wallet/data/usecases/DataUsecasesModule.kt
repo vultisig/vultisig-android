@@ -229,4 +229,8 @@ internal interface DataUsecasesModule {
     fun bindGetThorChainLpPositionUseCase(
         impl: GetThorChainLpPositionUseCaseImpl
     ): GetThorChainLpPositionUseCase
+
+    @Binds
+    @Singleton
+    fun bindThorchainMemoParser(impl: ThorchainMemoParserImpl): ThorchainMemoParser
 }
