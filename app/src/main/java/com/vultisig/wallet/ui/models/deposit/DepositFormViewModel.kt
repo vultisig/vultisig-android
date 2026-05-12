@@ -29,7 +29,10 @@ import com.vultisig.wallet.data.models.DepositMemo.Unbond
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.GasFeeParams
+import com.vultisig.wallet.data.models.OPERATION_BOND
+import com.vultisig.wallet.data.models.OPERATION_LEAVE
 import com.vultisig.wallet.data.models.OPERATION_MINT
+import com.vultisig.wallet.data.models.OPERATION_UNBOND
 import com.vultisig.wallet.data.models.OPERATION_WITHDRAW
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -2034,6 +2037,8 @@ constructor(
             estimatedFees = gasFee,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
+            operation = OPERATION_BOND,
+            nodeAddress = nodeAddress,
         )
     }
 
@@ -2160,6 +2165,8 @@ constructor(
             estimatedFees = gasFee,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
             blockChainSpecific = specific.blockChainSpecific,
+            operation = OPERATION_UNBOND,
+            nodeAddress = nodeAddress,
         )
     }
 
@@ -2223,6 +2230,8 @@ constructor(
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            operation = OPERATION_LEAVE,
+            nodeAddress = nodeAddress,
         )
     }
 

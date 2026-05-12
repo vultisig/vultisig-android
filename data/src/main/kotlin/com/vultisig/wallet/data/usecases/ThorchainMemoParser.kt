@@ -62,6 +62,12 @@ internal class ThorchainMemoParserImpl @Inject constructor() : ThorchainMemoPars
                     thorAddress =
                         parts.getOrNull(1).orEmpty().takeIf { it.isThorAddress() }.orEmpty(),
                 )
+            "SECURE-" ->
+                ParsedThorchainMemo(
+                    operation = OPERATION_WITHDRAW,
+                    thorAddress =
+                        parts.getOrNull(1).orEmpty().takeIf { it.isThorAddress() }.orEmpty(),
+                )
             "-",
             "WITHDRAW",
             "WD" ->

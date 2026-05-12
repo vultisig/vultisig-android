@@ -130,6 +130,17 @@ class ThorchainMemoParserTest {
     }
 
     @Test
+    fun `secure withdraw memo parses to withdraw operation`() {
+        val parsed = parser.parse("SECURE-:0xdestinationchainaddress")
+
+        assertEquals(OPERATION_WITHDRAW, parsed?.operation)
+        assertEquals("", parsed?.thorAddress)
+        assertEquals("", parsed?.pool)
+        assertEquals("", parsed?.nodeAddress)
+        assertEquals("", parsed?.pairedAddress)
+    }
+
+    @Test
     fun `loan open memo parses with pool`() {
         val parsed = parser.parse("LOAN+:BTC.BTC:thor1abc")
 
