@@ -8,12 +8,15 @@ import com.vultisig.wallet.data.models.OPERATION_WITHDRAW
  *
  * @property operation Display label for the action (e.g. "Mint", "Withdraw", "Bond").
  * @property pool Pool identifier from the memo, when present.
- * @property thorAddress Paired/recipient address embedded in the memo, when present.
+ * @property thorAddress Address embedded in the memo when it is a thor1/maya1 address.
+ * @property pairedAddress Address embedded in the memo when it is on a non-thor chain (e.g. EVM,
+ *   BTC).
  */
 data class ParsedThorchainMemo(
     val operation: String,
     val pool: String = "",
     val thorAddress: String = "",
+    val pairedAddress: String = "",
 )
 
 /**
@@ -37,12 +40,15 @@ object ThorchainMemoParser {
 
         return when (tag) {
             "+",
-            "ADD" ->
+            "ADD" -> {
+                val addr = parts.getOrNull(2).orEmpty()
                 ParsedThorchainMemo(
                     operation = OPERATION_MINT,
                     pool = parts.getOrNull(1).orEmpty(),
-                    thorAddress = parts.getOrNull(2).orEmpty().takeIfThorAddress(),
+                    thorAddress = addr.takeIfThorAddress(),
+                    pairedAddress = addr.takeIfNonThorAddress(),
                 )
+            }
             "-",
             "WITHDRAW",
             "WD" ->
@@ -50,21 +56,30 @@ object ThorchainMemoParser {
                     operation = OPERATION_WITHDRAW,
                     pool = parts.getOrNull(1).orEmpty(),
                 )
-            "BOND" ->
+            "BOND" -> {
+                val addr = parts.getOrNull(1).orEmpty()
                 ParsedThorchainMemo(
                     operation = "Bond",
-                    thorAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
+                    thorAddress = addr.takeIfThorAddress(),
+                    pairedAddress = addr.takeIfNonThorAddress(),
                 )
-            "UNBOND" ->
+            }
+            "UNBOND" -> {
+                val addr = parts.getOrNull(1).orEmpty()
                 ParsedThorchainMemo(
                     operation = "Unbond",
-                    thorAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
+                    thorAddress = addr.takeIfThorAddress(),
+                    pairedAddress = addr.takeIfNonThorAddress(),
                 )
-            "LEAVE" ->
+            }
+            "LEAVE" -> {
+                val addr = parts.getOrNull(1).orEmpty()
                 ParsedThorchainMemo(
                     operation = "Leave",
-                    thorAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
+                    thorAddress = addr.takeIfThorAddress(),
+                    pairedAddress = addr.takeIfNonThorAddress(),
                 )
+            }
             "LOAN+",
             "\$+" ->
                 ParsedThorchainMemo(operation = "Loan Open", pool = parts.getOrNull(1).orEmpty())
@@ -75,7 +90,11 @@ object ThorchainMemoParser {
         }
     }
 
-    private fun String.takeIfThorAddress(): String =
-        if (startsWith("thor1", ignoreCase = true) || startsWith("maya1", ignoreCase = true)) this
-        else ""
+    private fun String.isThorAddress(): Boolean =
+        startsWith("thor1", ignoreCase = true) || startsWith("maya1", ignoreCase = true)
+
+    private fun String.takeIfThorAddress(): String = if (isThorAddress()) this else ""
+
+    private fun String.takeIfNonThorAddress(): String =
+        if (isNotEmpty() && !isThorAddress()) this else ""
 }

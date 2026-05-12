@@ -18,6 +18,7 @@ data class DepositTransaction(
     val wasmExecuteContractPayload: WasmExecuteContractPayload? = null,
     val operation: String = "",
     val thorAddress: String = "",
+    val pairedAddress: String = "",
     val pool: String = "",
     val utxos: List<UtxoInfo> = emptyList(),
 )

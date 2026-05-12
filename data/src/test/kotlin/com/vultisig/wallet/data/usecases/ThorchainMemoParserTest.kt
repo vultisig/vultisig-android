@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 class ThorchainMemoParserTest {
 
     @Test
-    fun `add liquidity memo with non-thor paired address leaves thorAddress empty`() {
+    fun `add liquidity memo with non-thor paired address populates pairedAddress`() {
         val parsed =
             ThorchainMemoParser.parse(
                 "+:BASE.VVV-0X1234567890ABCDEF:0x14F6abcdef0123456789ABCDEF0123456789ABCDEF"
@@ -18,6 +18,7 @@ class ThorchainMemoParserTest {
         assertEquals(OPERATION_MINT, parsed?.operation)
         assertEquals("BASE.VVV-0X1234567890ABCDEF", parsed?.pool)
         assertEquals("", parsed?.thorAddress)
+        assertEquals("0x14F6abcdef0123456789ABCDEF0123456789ABCDEF", parsed?.pairedAddress)
     }
 
     @Test
@@ -27,6 +28,7 @@ class ThorchainMemoParserTest {
         assertEquals(OPERATION_MINT, parsed?.operation)
         assertEquals("BTC.BTC", parsed?.pool)
         assertEquals("thor1abcdef0123456789", parsed?.thorAddress)
+        assertEquals("", parsed?.pairedAddress)
     }
 
     @Test

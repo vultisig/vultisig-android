@@ -916,6 +916,7 @@ constructor(
                             blockChainSpecific = payload.blockChainSpecific,
                             operation = parsedThorMemo?.operation.orEmpty(),
                             thorAddress = parsedThorMemo?.thorAddress.orEmpty(),
+                            pairedAddress = parsedThorMemo?.pairedAddress.orEmpty(),
                             pool = parsedThorMemo?.pool.orEmpty(),
                         )
                     val depositTransactionUiModel =
