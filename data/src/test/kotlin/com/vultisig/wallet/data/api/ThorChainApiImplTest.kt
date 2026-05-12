@@ -137,6 +137,50 @@ class ThorChainApiImplTest {
     }
 
     @Test
+    fun `existsReferralCode returns false when aliases is null in API response`() = runBlocking {
+        val body =
+            """
+            {
+              "name": "maya",
+              "expire_block_height": 36942828,
+              "owner": "thor19d9fem39wayv4ydpp7kgufda940acvepjqmqtl",
+              "preferred_asset": ".",
+              "preferred_asset_swap_threshold_rune": "0",
+              "affiliate_collector_rune": "0",
+              "aliases": null
+            }
+            """
+                .trimIndent()
+        val api = newApi(HttpStatusCode.OK, body)
+
+        val result = api.existsReferralCode("maya")
+
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun `existsReferralCode returns true when aliases contains THOR chain entry`() = runBlocking {
+        val body =
+            """
+            {
+              "name": "vultisig",
+              "expire_block_height": 36942828,
+              "owner": "thor19d9fem39wayv4ydpp7kgufda940acvepjqmqtl",
+              "preferred_asset": ".",
+              "preferred_asset_swap_threshold_rune": "0",
+              "affiliate_collector_rune": "0",
+              "aliases": [{"chain": "THOR", "address": "thor1abc"}]
+            }
+            """
+                .trimIndent()
+        val api = newApi(HttpStatusCode.OK, body)
+
+        val result = api.existsReferralCode("vultisig")
+
+        assertEquals(true, result)
+    }
+
+    @Test
     fun `broadcastTransaction throws on non-zero non-mempool-cache code`() {
         val body =
             """
