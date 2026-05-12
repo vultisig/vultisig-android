@@ -26,6 +26,7 @@ import com.vultisig.wallet.ui.models.send.SendFocusField
 import com.vultisig.wallet.ui.models.send.SendSections
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
 import io.mockk.every
@@ -78,6 +79,8 @@ internal class DefaultSendStrategyTest {
     private var expandedSection: SendSections? = null
     private var emittedFocusField: SendFocusField? = null
     private var lastError: UiText? = null
+    private var defiType: DeFiNavActions? = null
+    private val accounts = MutableStateFlow<List<Account>>(emptyList())
 
     @BeforeEach
     fun setUp() {
@@ -158,6 +161,7 @@ internal class DefaultSendStrategyTest {
                     dstAddress = any(),
                     tokenAmountValue = any(),
                     memo = any(),
+                    isThorchainRouterDeposit = any(),
                 )
             } returns
                 BlockChainSpecificAndUtxo(
@@ -196,6 +200,107 @@ internal class DefaultSendStrategyTest {
         }
     }
 
+    /**
+     * Production regression for #4152: when the user reaches the Send form via the THORChain LP
+     * "Add LP → ETH.<token>" navigation, the resulting non-native EVM Send must pass
+     * `isThorchainRouterDeposit = true` so the helper bumps the gas limit past the bare-transfer
+     * 150k ceiling. Without this, `depositWithExpiry` reverts on non-standard ERC-20s like USDT.
+     */
+    @Test
+    fun `ADD_LP defi non-native EVM Send flags getSpecific as thorchain router deposit`() =
+        runTest {
+            mockkStatic(Dispatchers::class)
+            every { Dispatchers.IO } returns mainDispatcher
+            try {
+                val usdtCoin = usdtCoin()
+                val account =
+                    Account(
+                        token = usdtCoin,
+                        tokenValue = TokenValue(BigInteger("1000000000"), usdtCoin),
+                        fiatValue = null,
+                        price = null,
+                    )
+                vaultId = "vault-1"
+                selectedAccount = account
+                defiType = DeFiNavActions.ADD_LP
+                addressFieldState.setTextAndPlaceCursorAtEnd("0xrouter")
+                tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.30")
+                memoFieldState.setTextAndPlaceCursorAtEnd("+:ETH.USDT-0xdac17:thor1abc")
+                coEvery { accountValidator.validate() } returns
+                    ValidatedAccount(
+                        vaultId = "vault-1",
+                        selectedAccount = account,
+                        chain = Chain.Ethereum,
+                        gasFee = TokenValue(BigInteger.valueOf(21_000), usdtCoin),
+                        dstAddress = "0xrouter",
+                    )
+                coEvery { chainAccountAddressRepository.isValid(any(), any()) } returns true
+                accounts.value =
+                    listOf(
+                        Account(
+                            token = ethCoin(),
+                            tokenValue = TokenValue(BigInteger("1000000000000000000"), ethCoin()),
+                            fiatValue = null,
+                            price = null,
+                        )
+                    )
+
+                val flagSlot = slot<Boolean>()
+                coEvery {
+                    blockChainSpecificRepository.getSpecific(
+                        chain = any(),
+                        address = any(),
+                        token = any(),
+                        gasFee = any(),
+                        isSwap = any(),
+                        isMaxAmountEnabled = any(),
+                        isDeposit = any(),
+                        dstAddress = any(),
+                        tokenAmountValue = any(),
+                        memo = any(),
+                        isThorchainRouterDeposit = capture(flagSlot),
+                    )
+                } returns
+                    BlockChainSpecificAndUtxo(
+                        BlockChainSpecific.Ethereum(
+                            maxFeePerGasWei = BigInteger.ONE,
+                            priorityFeeWei = BigInteger.ONE,
+                            nonce = BigInteger.ZERO,
+                            gasLimit = BigInteger.valueOf(200_000),
+                        )
+                    )
+                every { amountManager.currentMaxAmount } returns BigDecimal.ONE
+                coEvery { gasFeeToEstimatedFee(any()) } returns
+                    EstimatedGasFee(
+                        formattedFiatValue = "$0.10",
+                        formattedTokenValue = "0.0001 ETH",
+                        tokenValue = TokenValue(BigInteger.ONE, ethCoin()),
+                        fiatValue = mockk(relaxed = true),
+                    )
+                coEvery { transactionRepository.addTransaction(any()) } returns Unit
+
+                build(this).submit()
+                advanceUntilIdle()
+
+                assertEquals(true, flagSlot.captured)
+            } finally {
+                unmockkStatic(Dispatchers::class)
+            }
+        }
+
+    private fun usdtCoin(): Coin =
+        Coin(
+            chain = Chain.Ethereum,
+            ticker = "USDT",
+            logo = "",
+            address = "0xself",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            isNativeToken = false,
+        )
+
     private fun ethCoin(): Coin =
         Coin(
             chain = Chain.Ethereum,
@@ -229,11 +334,11 @@ internal class DefaultSendStrategyTest {
             gasSettings = MutableStateFlow<GasSettings?>(null),
             planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null),
             planFee = MutableStateFlow<Long?>(null),
-            accounts = MutableStateFlow<List<Account>>(emptyList()),
+            accounts = accounts,
             appCurrency = MutableStateFlow(AppCurrency.USD),
             vaultIdProvider = { vaultId },
             selectedAccountProvider = { selectedAccount },
-            defiTypeProvider = { null },
+            defiTypeProvider = { defiType },
             currentTronFrozenBalanceProvider = { null },
             navigator = mockk<Navigator<Destination>>(relaxed = true),
             expandSection = { expandedSection = it },

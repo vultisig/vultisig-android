@@ -1768,8 +1768,17 @@ internal class SwapFormViewModelTest {
                         ),
                     chain = Chain.Bitcoin,
                 )
-            coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } throws
-                RuntimeException("network error")
+            coEvery {
+                swapGasCalculator.getSpecificAndUtxo(
+                    srcToken = any(),
+                    srcAddress = any(),
+                    gasFee = any(),
+                    isThorchainRouterDeposit = any(),
+                    dstAddress = any(),
+                    memo = any(),
+                    tokenAmountValue = any(),
+                )
+            } throws RuntimeException("network error")
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
                 listOf(SwapProvider.THORCHAIN)
             coEvery {
