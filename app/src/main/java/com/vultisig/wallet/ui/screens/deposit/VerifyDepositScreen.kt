@@ -53,7 +53,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
-import java.math.BigInteger
+import java.math.BigDecimal
 
 @Composable
 internal fun VerifyDepositScreen(
@@ -214,7 +214,7 @@ internal fun VerifyDepositScreen(
                     if (
                         tx.token.value.isNotEmpty() &&
                             try {
-                                tx.token.value.toBigInteger() > BigInteger.ZERO
+                                tx.token.value.toBigDecimal() > BigDecimal.ZERO
                             } catch (e: Exception) {
                                 false
                             }

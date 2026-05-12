@@ -17,12 +17,14 @@ import javax.inject.Inject
  * @property pool Pool identifier from the memo, when present.
  * @property nodeAddress Validator node thor1/maya1 address from BOND/UNBOND/LEAVE memos.
  * @property pairedAddress Asset-side address from LP ADD memos (any chain).
+ * @property thorAddress User thor1/maya1 address from SECURE+ mint memos.
  */
 data class ParsedThorchainMemo(
     val operation: String,
     val pool: String = "",
     val nodeAddress: String = "",
     val pairedAddress: String = "",
+    val thorAddress: String = "",
 )
 
 /**
@@ -53,6 +55,12 @@ internal class ThorchainMemoParserImpl @Inject constructor() : ThorchainMemoPars
                     operation = OPERATION_MINT,
                     pool = parts.getOrNull(1).orEmpty(),
                     pairedAddress = parts.getOrNull(2).orEmpty(),
+                )
+            "SECURE+" ->
+                ParsedThorchainMemo(
+                    operation = OPERATION_MINT,
+                    thorAddress =
+                        parts.getOrNull(1).orEmpty().takeIf { it.isThorAddress() }.orEmpty(),
                 )
             "-",
             "WITHDRAW",

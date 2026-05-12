@@ -111,6 +111,25 @@ class ThorchainMemoParserTest {
     }
 
     @Test
+    fun `secure mint memo populates thorAddress`() {
+        val parsed = parser.parse("SECURE+:thor1abcdef0123456789")
+
+        assertEquals(OPERATION_MINT, parsed?.operation)
+        assertEquals("thor1abcdef0123456789", parsed?.thorAddress)
+        assertEquals("", parsed?.pool)
+        assertEquals("", parsed?.nodeAddress)
+        assertEquals("", parsed?.pairedAddress)
+    }
+
+    @Test
+    fun `secure mint memo with non-thor address leaves thorAddress empty`() {
+        val parsed = parser.parse("SECURE+:0x14F6abcdef")
+
+        assertEquals(OPERATION_MINT, parsed?.operation)
+        assertEquals("", parsed?.thorAddress)
+    }
+
+    @Test
     fun `loan open memo parses with pool`() {
         val parsed = parser.parse("LOAN+:BTC.BTC:thor1abc")
 

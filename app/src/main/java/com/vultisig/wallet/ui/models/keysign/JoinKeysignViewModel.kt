@@ -918,6 +918,7 @@ constructor(
                             operation = parsedThorMemo?.operation.orEmpty(),
                             nodeAddress = parsedThorMemo?.nodeAddress.orEmpty(),
                             pairedAddress = parsedThorMemo?.pairedAddress.orEmpty(),
+                            thorAddress = parsedThorMemo?.thorAddress.orEmpty(),
                             pool = parsedThorMemo?.pool.orEmpty(),
                         )
                     val depositTransactionUiModel =
