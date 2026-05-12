@@ -107,7 +107,7 @@ class TransactionStatusService : Service() {
                     when (result) {
                         is TransactionResult.Confirmed,
                         is TransactionResult.Failed,
-                        TransactionResult.NotFound -> {
+                        TransactionResult.TimedOut -> {
                             updateNotification(
                                 contentText = result.toNotificationMessage(),
                                 ongoing = false,
@@ -115,7 +115,8 @@ class TransactionStatusService : Service() {
                             stopPolling()
                             stopForegroundAndService(detachNotification = true)
                         }
-                        TransactionResult.Pending -> {
+                        TransactionResult.Pending,
+                        TransactionResult.NotFound -> {
                             updateNotification(
                                 contentText = result.toNotificationMessage(),
                                 ongoing = true,
@@ -213,7 +214,8 @@ class TransactionStatusService : Service() {
         when (this) {
             TransactionResult.Confirmed -> getString(R.string.transaction_status_confirmed)
             is TransactionResult.Failed -> getString(R.string.transaction_status_failed)
-            TransactionResult.NotFound -> getString(R.string.transaction_status_not_found)
+            TransactionResult.NotFound -> getString(R.string.transaction_status_pending)
+            TransactionResult.TimedOut -> getString(R.string.transaction_status_not_found)
             TransactionResult.Pending -> getString(R.string.transaction_status_pending)
         }
 }
