@@ -595,6 +595,8 @@
     <string name="vault_backup_screen_paste">Paste</string>
     <string name="vault_backup_error_pin">Error verifying code, please re-try</string>
     <string name="vault_backup_verifying_pin">Verifying code, please wait</string>
+    <string name="vault_backup_network_error">Couldn’t reach server, try again</string>
+    <string name="vault_backup_try_again">Try again</string>
     <string name="vault_backup_screen_email_sent_to">Sent to %s.</string>
     <string name="vault_backup_screen_donot_receive_email">Didn’t receive an email?</string>
     <string name="vault_backup_screen_restart_keygen">Restart keygen</string>

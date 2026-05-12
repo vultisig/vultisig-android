@@ -853,6 +853,8 @@
     <string name="select_vault_type_fast">Brzo</string>
     <string name="vault_backup_screen_paste">Zalijepi</string>
     <string name="vault_backup_error_pin">Pogreška pri provjeri koda, pokušajte ponovno</string>
+    <string name="vault_backup_network_error">Nije moguće povezati se s poslužiteljem, pokušajte ponovno</string>
+    <string name="vault_backup_try_again">Pokušajte ponovno</string>
     <string name="tx_overview_screen_tx_hash">Hash transakcije</string>
     <string name="tx_overview_screen_tx_from">Od</string>
     <string name="swap_swap_button">Zamijeni</string>

@@ -845,6 +845,8 @@
     <string name="select_vault_type_fast">Snel</string>
     <string name="vault_backup_screen_paste">Plakken</string>
     <string name="vault_backup_error_pin">Fout bij het verifiëren van de code, probeer het opnieuw</string>
+    <string name="vault_backup_network_error">Server niet bereikbaar, probeer het opnieuw</string>
+    <string name="vault_backup_try_again">Probeer opnieuw</string>
     <string name="tx_overview_screen_tx_hash">Transactiehash</string>
     <string name="tx_overview_screen_tx_from">Van</string>
     <string name="swap_swap_button">Wisselen</string>

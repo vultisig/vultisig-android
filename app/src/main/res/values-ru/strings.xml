@@ -853,6 +853,8 @@
     <string name="select_vault_type_fast">Быстрый</string>
     <string name="vault_backup_screen_paste">Вставить</string>
     <string name="vault_backup_error_pin">Ошибка подтверждения кода. Повторите попытку.</string>
+    <string name="vault_backup_network_error">Не удалось подключиться к серверу. Повторите попытку.</string>
+    <string name="vault_backup_try_again">Повторить</string>
     <string name="tx_overview_screen_tx_hash">Хэш транзакции</string>
     <string name="tx_overview_screen_tx_from">Из</string>
     <string name="swap_swap_button">Обмен</string>

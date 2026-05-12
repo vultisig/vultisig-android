@@ -75,6 +75,7 @@ internal fun FastVaultVerificationScreen(model: FastVaultVerificationViewModel =
             onCodeChanged = model::processCode,
             onPasteClick = model::paste,
             onChangeEmailClick = model::changeEmail,
+            onRetryClick = model::retry,
         )
     }
 }
@@ -87,6 +88,7 @@ internal fun FastVaultVerificationScreen(
     onCodeChanged: (String) -> Unit,
     onPasteClick: (String) -> Unit,
     onChangeEmailClick: () -> Unit,
+    onRetryClick: () -> Unit,
 ) {
     val textToPaste by rememberClipboardText {
         // isDigitsOnly return true for empty string! ("".isDigitsOnly == true)
@@ -149,6 +151,7 @@ internal fun FastVaultVerificationScreen(
                             when (state.verifyPinState) {
                                 VerifyPinState.Success -> VsCodeInputFieldState.Success
                                 VerifyPinState.Error -> VsCodeInputFieldState.Error
+                                VerifyPinState.NetworkError -> VsCodeInputFieldState.Default
                                 else -> VsCodeInputFieldState.Default
                             },
                         modifier = Modifier.testTag("FastVaultVerificationScreen.codeField"),
@@ -215,6 +218,17 @@ internal fun FastVaultVerificationScreen(
                                 text = stringResource(R.string.vault_backup_error_pin),
                                 color = Theme.v2.colors.alerts.error,
                                 style = Theme.brockmann.supplementary.footnote,
+                            )
+                        }
+
+                        VerifyPinState.NetworkError -> {
+                            Text(
+                                text = stringResource(R.string.vault_backup_network_error),
+                                color = Theme.v2.colors.alerts.error,
+                                style = Theme.brockmann.supplementary.footnote,
+                                textAlign = TextAlign.Center,
+                                modifier =
+                                    Modifier.testTag("FastVaultVerificationScreen.networkErrorText"),
                             )
                         }
                     }
@@ -308,6 +322,37 @@ internal fun FastVaultVerificationScreen(
                                 )
                             }
                         }
+
+                        VerifyPinState.NetworkError -> {
+                            Column(
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.vault_backup_try_again),
+                                    color = Theme.v2.colors.text.button.primary,
+                                    style = Theme.brockmann.button.medium.medium,
+                                    modifier =
+                                        Modifier.border(
+                                                width = 1.dp,
+                                                color = Theme.v2.colors.variables.bordersExtraLight,
+                                                shape = RoundedCornerShape(12.dp),
+                                            )
+                                            .background(
+                                                color = Theme.v2.colors.buttons.secondary,
+                                                shape = RoundedCornerShape(12.dp),
+                                            )
+                                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                                            .testTag("FastVaultVerificationScreen.retryButton")
+                                            .clickOnce(
+                                                onClick = onRetryClick,
+                                                coolDownPeriod = 1000L,
+                                            ),
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -326,5 +371,6 @@ private fun VaultBackupScreenPreview() {
         onCodeChanged = {},
         onPasteClick = {},
         onChangeEmailClick = {},
+        onRetryClick = {},
     )
 }

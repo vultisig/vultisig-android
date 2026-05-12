@@ -1179,6 +1179,8 @@
     <string name="select_vault_type_fast">快速</string>
     <string name="vault_backup_screen_paste">粘贴</string>
     <string name="vault_backup_error_pin">验证码出错，请重试</string>
+    <string name="vault_backup_network_error">无法连接到服务器，请重试</string>
+    <string name="vault_backup_try_again">重试</string>
     <string name="tx_overview_screen_tx_hash">交易哈希</string>
     <string name="tx_overview_screen_tx_from">从</string>
     <string name="swap_swap_button">交换</string>

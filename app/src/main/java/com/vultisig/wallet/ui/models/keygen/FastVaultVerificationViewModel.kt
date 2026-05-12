@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.BackupCodeVerifyResult
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -43,6 +44,7 @@ internal enum class VerifyPinState {
     Loading,
     Success,
     Error,
+    NetworkError,
 }
 
 internal data class VaultBackupState(
@@ -108,6 +110,12 @@ constructor(
         }
     }
 
+    fun retry() {
+        if (state.value.verifyPinState == VerifyPinState.Loading) return
+        updateVerifyState(VerifyPinState.Idle)
+        verify()
+    }
+
     private fun verify() {
         if (state.value.verifyPinState == VerifyPinState.Loading) return
         viewModelScope.launch {
@@ -116,9 +124,9 @@ constructor(
             if (isCodeTemplateValid(code)) {
                 updateVerifyState(VerifyPinState.Loading)
 
-                val isCodeValid =
+                val verifyResult =
                     verifyFastVaultBackupCode(publicKeyEcdsa = args.pubKeyEcdsa, code = code)
-                if (isCodeValid) {
+                if (verifyResult == BackupCodeVerifyResult.Valid) {
                     try {
                         updateVerifyState(VerifyPinState.Success)
 
@@ -199,7 +207,13 @@ constructor(
                         updateVerifyState(VerifyPinState.Error)
                     }
                 } else {
-                    updateVerifyState(VerifyPinState.Error)
+                    when (verifyResult) {
+                        BackupCodeVerifyResult.Invalid -> updateVerifyState(VerifyPinState.Error)
+                        BackupCodeVerifyResult.NetworkError,
+                        is BackupCodeVerifyResult.ServerError ->
+                            updateVerifyState(VerifyPinState.NetworkError)
+                        BackupCodeVerifyResult.Valid -> Unit
+                    }
                 }
             } else {
                 updateVerifyState(VerifyPinState.Error)

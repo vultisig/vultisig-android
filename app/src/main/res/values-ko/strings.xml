@@ -587,6 +587,8 @@
     <string name="vault_backup_screen_paste">붙여넣기</string>
     <string name="vault_backup_error_pin">코드 확인 오류, 다시 시도해 주세요</string>
     <string name="vault_backup_verifying_pin">코드 확인 중, 잠시 기다려 주세요</string>
+    <string name="vault_backup_network_error">서버에 연결할 수 없습니다. 다시 시도해 주세요</string>
+    <string name="vault_backup_try_again">다시 시도</string>
     <string name="vault_backup_screen_email_sent_to">%s(으)로 전송됨.</string>
     <string name="vault_backup_screen_donot_receive_email">이메일을 받지 못하셨나요?</string>
     <string name="vault_backup_screen_restart_keygen">키 생성 재시작</string>

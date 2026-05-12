@@ -847,6 +847,8 @@
     <string name="select_vault_type_fast">Rápida</string>
     <string name="vault_backup_screen_paste">Cole</string>
     <string name="vault_backup_error_pin">Erro ao verificar o código. Tente novamente.</string>
+    <string name="vault_backup_network_error">Não foi possível acessar o servidor. Tente novamente.</string>
+    <string name="vault_backup_try_again">Tente novamente</string>
     <string name="tx_overview_screen_tx_hash">Hash da transação</string>
     <string name="tx_overview_screen_tx_from">De</string>
     <string name="swap_swap_button">Trocar</string>
