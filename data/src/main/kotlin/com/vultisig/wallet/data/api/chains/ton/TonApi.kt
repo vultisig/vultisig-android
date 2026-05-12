@@ -56,10 +56,14 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
                 }
                 .bodyOrThrow<TonBroadcastTransactionResponseJson>()
         if (response.error != null) {
-            // Returning null for duplicate-message lets the caller fall back to the
-            // already-known hash via orKnownHash; treating it as an error would surface
-            // a spurious failure on retried broadcasts.
-            if (response.error.lowercase().contains(DUPLICATE_MESSAGE_MARKER)) {
+            // Returning null for these cases lets the caller fall back to the already-known hash
+            // via orKnownHash. Both errors indicate the tx (or an equivalent one with the same
+            // seqno) was already accepted — typically two devices broadcasting simultaneously.
+            val lowerError = response.error.lowercase()
+            if (
+                lowerError.contains(DUPLICATE_MESSAGE_MARKER) ||
+                    lowerError.contains(DUPLICATE_SEQNO_MARKER)
+            ) {
                 return null
             }
             error("Error broadcasting transaction: ${response.error}")
@@ -115,5 +119,6 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
     private companion object {
         const val BASE_URL = "https://api.vultisig.com/ton"
         const val DUPLICATE_MESSAGE_MARKER = "duplicate message"
+        const val DUPLICATE_SEQNO_MARKER = "duplicate msg_seqno"
     }
 }
