@@ -947,6 +947,7 @@
     <string name="target_asset">Ciljana imovina: %1$s-%2$s</string>
     <string name="thor_address">THORChain adresa</string>
     <string name="paired_address">Uparena adresa</string>
+    <string name="node_address">Adresa čvora</string>
     <string name="operation">Operacija</string>
     <string name="pool">Pool</string>
     <string name="lp_destination_format">→ %1$s LP %2$s</string>

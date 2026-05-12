@@ -947,6 +947,7 @@
     <string name="target_asset">Целевой актив: %1$s-%2$s</string>
     <string name="thor_address">Адрес THORChain</string>
     <string name="paired_address">Парный адрес</string>
+    <string name="node_address">Адрес узла</string>
     <string name="operation">Операция</string>
     <string name="pool">Пул</string>
     <string name="lp_destination_format">→ %1$s LP %2$s</string>

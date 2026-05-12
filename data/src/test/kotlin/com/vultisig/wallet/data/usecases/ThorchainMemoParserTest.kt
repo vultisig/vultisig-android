@@ -17,18 +17,18 @@ class ThorchainMemoParserTest {
 
         assertEquals(OPERATION_MINT, parsed?.operation)
         assertEquals("BASE.VVV-0X1234567890ABCDEF", parsed?.pool)
-        assertEquals("", parsed?.thorAddress)
+        assertEquals("", parsed?.nodeAddress)
         assertEquals("0x14F6abcdef0123456789ABCDEF0123456789ABCDEF", parsed?.pairedAddress)
     }
 
     @Test
-    fun `add liquidity memo with thor paired address populates thorAddress`() {
+    fun `add liquidity memo with thor paired address still populates pairedAddress`() {
         val parsed = ThorchainMemoParser.parse("+:BTC.BTC:thor1abcdef0123456789")
 
         assertEquals(OPERATION_MINT, parsed?.operation)
         assertEquals("BTC.BTC", parsed?.pool)
-        assertEquals("thor1abcdef0123456789", parsed?.thorAddress)
-        assertEquals("", parsed?.pairedAddress)
+        assertEquals("", parsed?.nodeAddress)
+        assertEquals("thor1abcdef0123456789", parsed?.pairedAddress)
     }
 
     @Test
@@ -37,7 +37,7 @@ class ThorchainMemoParserTest {
 
         assertEquals(OPERATION_MINT, parsed?.operation)
         assertEquals("BTC.BTC", parsed?.pool)
-        assertEquals("thor1abcdef", parsed?.thorAddress)
+        assertEquals("thor1abcdef", parsed?.pairedAddress)
     }
 
     @Test
@@ -46,31 +46,41 @@ class ThorchainMemoParserTest {
 
         assertEquals(OPERATION_WITHDRAW, parsed?.operation)
         assertEquals("BTC.BTC", parsed?.pool)
-        assertEquals("", parsed?.thorAddress)
+        assertEquals("", parsed?.nodeAddress)
+        assertEquals("", parsed?.pairedAddress)
     }
 
     @Test
-    fun `bond memo parses with thor address`() {
+    fun `bond memo populates nodeAddress`() {
         val parsed = ThorchainMemoParser.parse("BOND:thor1abcdef")
 
         assertEquals("Bond", parsed?.operation)
-        assertEquals("thor1abcdef", parsed?.thorAddress)
+        assertEquals("thor1abcdef", parsed?.nodeAddress)
+        assertEquals("", parsed?.pairedAddress)
     }
 
     @Test
-    fun `unbond memo parses with thor address`() {
+    fun `bond memo with non-thor address leaves nodeAddress empty`() {
+        val parsed = ThorchainMemoParser.parse("BOND:0xabcdef0123")
+
+        assertEquals("Bond", parsed?.operation)
+        assertEquals("", parsed?.nodeAddress)
+    }
+
+    @Test
+    fun `unbond memo populates nodeAddress`() {
         val parsed = ThorchainMemoParser.parse("UNBOND:thor1abcdef:1000")
 
         assertEquals("Unbond", parsed?.operation)
-        assertEquals("thor1abcdef", parsed?.thorAddress)
+        assertEquals("thor1abcdef", parsed?.nodeAddress)
     }
 
     @Test
-    fun `leave memo parses with thor address`() {
+    fun `leave memo populates nodeAddress`() {
         val parsed = ThorchainMemoParser.parse("LEAVE:thor1abcdef")
 
         assertEquals("Leave", parsed?.operation)
-        assertEquals("thor1abcdef", parsed?.thorAddress)
+        assertEquals("thor1abcdef", parsed?.nodeAddress)
     }
 
     @Test
@@ -122,7 +132,7 @@ class ThorchainMemoParserTest {
 
         assertEquals(OPERATION_MINT, parsed?.operation)
         assertEquals("BTC.BTC", parsed?.pool)
-        assertEquals("thor1abc", parsed?.thorAddress)
+        assertEquals("thor1abc", parsed?.pairedAddress)
     }
 
     @Test
@@ -133,7 +143,7 @@ class ThorchainMemoParserTest {
         assertEquals(OPERATION_WITHDRAW, alias?.operation)
         assertEquals(canonical?.operation, alias?.operation)
         assertEquals(canonical?.pool, alias?.pool)
-        assertEquals(canonical?.thorAddress, alias?.thorAddress)
+        assertEquals(canonical?.pairedAddress, alias?.pairedAddress)
     }
 
     @Test
@@ -144,7 +154,7 @@ class ThorchainMemoParserTest {
         assertEquals(OPERATION_WITHDRAW, alias?.operation)
         assertEquals(canonical?.operation, alias?.operation)
         assertEquals(canonical?.pool, alias?.pool)
-        assertEquals(canonical?.thorAddress, alias?.thorAddress)
+        assertEquals(canonical?.pairedAddress, alias?.pairedAddress)
     }
 
     @Test
@@ -155,7 +165,6 @@ class ThorchainMemoParserTest {
         assertEquals("Loan Open", alias?.operation)
         assertEquals(canonical?.operation, alias?.operation)
         assertEquals(canonical?.pool, alias?.pool)
-        assertEquals(canonical?.thorAddress, alias?.thorAddress)
     }
 
     @Test
@@ -166,6 +175,5 @@ class ThorchainMemoParserTest {
         assertEquals("Loan Close", alias?.operation)
         assertEquals(canonical?.operation, alias?.operation)
         assertEquals(canonical?.pool, alias?.pool)
-        assertEquals(canonical?.thorAddress, alias?.thorAddress)
     }
 }

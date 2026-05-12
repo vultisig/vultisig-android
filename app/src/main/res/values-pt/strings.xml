@@ -941,6 +941,7 @@
     <string name="target_asset">Ativo alvo: %1$s-%2$s</string>
     <string name="thor_address">Endereço THORChain</string>
     <string name="paired_address">Endereço emparelhado</string>
+    <string name="node_address">Endereço do nó</string>
     <string name="operation">Operação</string>
     <string name="pool">Pool</string>
     <string name="lp_destination_format">→ %1$s LP %2$s</string>

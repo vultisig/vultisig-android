@@ -975,6 +975,7 @@
     <string name="target_asset">대상 자산: %1$s-%2$s</string>
     <string name="thor_address">Thor 주소</string>
     <string name="paired_address">페어링된 주소</string>
+    <string name="node_address">노드 주소</string>
     <string name="operation">작업</string>
     <string name="pool">풀</string>
     <string name="lp_destination_format">→ %1$s LP %2$s</string>

@@ -939,6 +939,7 @@
     <string name="target_asset">Doelactiva: %1$s-%2$s</string>
     <string name="thor_address">THORChain-adres</string>
     <string name="paired_address">Gekoppeld adres</string>
+    <string name="node_address">Node-adres</string>
     <string name="operation">Operatie</string>
     <string name="pool">Pool</string>
     <string name="lp_destination_format">→ %1$s LP %2$s</string>

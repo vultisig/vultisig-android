@@ -942,6 +942,7 @@
     <string name="target_asset">Activo objetivo: %1$s-%2$s</string>
     <string name="thor_address">Dirección de Thor</string>
     <string name="paired_address">Dirección emparejada</string>
+    <string name="node_address">Dirección del nodo</string>
     <string name="operation">Operación</string>
     <string name="pool">Pool</string>
     <string name="lp_destination_format">→ %1$s LP %2$s</string>

@@ -1000,6 +1000,7 @@
     <string name="target_asset">Target Asset: %1$s-%2$s</string>
     <string name="thor_address">Thor Address</string>
     <string name="paired_address">Paired Address</string>
+    <string name="node_address">Node Address</string>
     <string name="operation">Operation</string>
     <string name="pool">Pool</string>
     <string name="lp_destination_format">→ %1$s LP %2$s</string>

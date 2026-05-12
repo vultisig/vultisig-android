@@ -915,7 +915,7 @@ constructor(
                             estimateFeesFiat = totalGasAndFee.formattedFiatValue,
                             blockChainSpecific = payload.blockChainSpecific,
                             operation = parsedThorMemo?.operation.orEmpty(),
-                            thorAddress = parsedThorMemo?.thorAddress.orEmpty(),
+                            nodeAddress = parsedThorMemo?.nodeAddress.orEmpty(),
                             pairedAddress = parsedThorMemo?.pairedAddress.orEmpty(),
                             pool = parsedThorMemo?.pool.orEmpty(),
                         )

@@ -1273,6 +1273,7 @@
     <string name="target_asset">目标资产：%1$s-%2$s</string>
     <string name="thor_address">Thor 地址</string>
     <string name="paired_address">配对地址</string>
+    <string name="node_address">节点地址</string>
     <string name="operation">操作</string>
     <string name="pool">池</string>
     <string name="lp_destination_format">→ %1$s LP %2$s</string>

@@ -942,6 +942,7 @@
     <string name="target_asset">Risorsa di destinazione: %1$s-%2$s</string>
     <string name="thor_address">Indirizzo THORChain</string>
     <string name="paired_address">Indirizzo accoppiato</string>
+    <string name="node_address">Indirizzo del nodo</string>
     <string name="operation">Operazione</string>
     <string name="pool">Pool</string>
     <string name="lp_destination_format">→ %1$s LP %2$s</string>
