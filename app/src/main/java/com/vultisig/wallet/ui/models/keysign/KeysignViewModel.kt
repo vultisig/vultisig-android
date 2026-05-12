@@ -691,7 +691,7 @@ constructor(
         }
     }
 
-    private suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
+    internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
         transactionHistoryData?.let {
             runCatching {
                 val now = System.currentTimeMillis()
@@ -701,7 +701,7 @@ constructor(
                         txHash = txHash,
                         chain = chain.raw,
                         timestamp = now,
-                        explorerUrl = txLink.value,
+                        explorerUrl = swapProgressLink.value ?: txLink.value,
                         status = BROADCASTED,
                         type =
                             when (it) {
