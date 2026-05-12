@@ -451,9 +451,9 @@ constructor(
 
         val thorName = response.bodyOrThrow<ThorOwnerData>()
 
-        return thorName.aliases.any { alias ->
+        return thorName.aliases?.any { alias ->
             alias.chain.equals(THOR_CHAIN_NAME, ignoreCase = true) && alias.address.isNotBlank()
-        }
+        } ?: false
     }
 
     override suspend fun getReferralCodeInfo(code: String): ThorOwnerData {

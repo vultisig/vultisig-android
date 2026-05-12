@@ -12,7 +12,7 @@ data class ThorOwnerData(
     @SerialName("preferred_asset") val preferredAsset: String,
     @SerialName("preferred_asset_swap_threshold_rune") val preferredAssetSwapThresholdRune: String,
     @SerialName("affiliate_collector_rune") val affiliateCollectorRune: String,
-    @SerialName("aliases") val aliases: List<Aliases> = emptyList(),
+    @SerialName("aliases") val aliases: List<Aliases>? = null,
 ) {
     /** A chain-specific alias address registered under a THORName. */
     @Serializable data class Aliases(val chain: String, val address: String)
