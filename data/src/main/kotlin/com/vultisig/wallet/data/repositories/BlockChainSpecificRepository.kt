@@ -174,30 +174,9 @@ constructor(
                             else -> DEFAULT_TOKEN_TRANSFER_LIMIT
                         }
 
-                    val estimateGasLimit =
-                        if (token.isNativeToken)
-                            evmApi.estimateGasForEthTransaction(
-                                senderAddress = token.address,
-                                recipientAddress = recipientAddress,
-                                value = tokenAmountValue ?: BigInteger.ZERO,
-                                memo = memo,
-                            )
-                        else
-                            evmApi
-                                .estimateGasForERC20Transfer(
-                                    senderAddress = token.address,
-                                    recipientAddress = recipientAddress,
-                                    contractAddress = token.contractAddress,
-                                    value = tokenAmountValue ?: BigInteger.ZERO,
-                                )
-                                .increaseByPercent(
-                                    50
-                                ) // keep it consistent with how we calculate default gas limit in
-                    // EthereumFeeService
-
                     // ERC-20 router deposits need depositWithExpiry headroom, but
                     // eth_estimateGas reverts when the router hasn't been approved yet —
-                    // so we hardcode the limit instead of estimating.
+                    // so we hardcode the limit and skip the estimate RPC.
                     val routerDepositGasLimit =
                         if (
                             isThorchainRouterDeposit &&
@@ -207,13 +186,33 @@ constructor(
                             THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT
                         else null
 
+                    val estimateGasLimit =
+                        when {
+                            routerDepositGasLimit != null -> routerDepositGasLimit
+                            token.isNativeToken ->
+                                evmApi.estimateGasForEthTransaction(
+                                    senderAddress = token.address,
+                                    recipientAddress = recipientAddress,
+                                    value = tokenAmountValue ?: BigInteger.ZERO,
+                                    memo = memo,
+                                )
+                            else ->
+                                evmApi
+                                    .estimateGasForERC20Transfer(
+                                        senderAddress = token.address,
+                                        recipientAddress = recipientAddress,
+                                        contractAddress = token.contractAddress,
+                                        value = tokenAmountValue ?: BigInteger.ZERO,
+                                    )
+                                    .increaseByPercent(
+                                        50
+                                    ) // keep it consistent with how we calculate default gas
+                        // limit in EthereumFeeService
+                        }
+
                     val nonce = evmApi.getNonce(address)
 
-                    val baseGasLimit = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
-                    val gasLimitFee =
-                        if (gasLimit == null && routerDepositGasLimit != null)
-                            max(baseGasLimit, routerDepositGasLimit)
-                        else baseGasLimit
+                    val gasLimitFee = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
                     val fees =
                         if (isSwap) {
                             feeServiceComposite.calculateDefaultFees(
