@@ -125,7 +125,7 @@ private val ActionButtonBevelBottomColor = Color(0xFF0F1C3E)
  * Figma `DeFi Button` bevel spec. Applies a 0.5 alpha multiplier when [enabled] is `false` so the
  * bevel dims with the rest of the disabled-state styling.
  */
-private fun Modifier.actionButtonInnerBevel(enabled: Boolean): Modifier = drawWithContent {
+internal fun Modifier.actionButtonInnerBevel(enabled: Boolean): Modifier = drawWithContent {
     drawContent()
     val alphaMultiplier = if (enabled) 1f else 0.5f
     val strokePx = 1.dp.toPx()
