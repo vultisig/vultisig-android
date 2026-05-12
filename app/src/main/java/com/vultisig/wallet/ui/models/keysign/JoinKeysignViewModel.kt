@@ -221,6 +221,7 @@ constructor(
     private val keysignViewModelFactory: KeysignViewModel.Factory,
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
+    private val thorchainMemoParser: ThorchainMemoParser,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -900,7 +901,7 @@ constructor(
                             )
                         )
 
-                    val parsedThorMemo = ThorchainMemoParser.parse(payload.memo ?: "")
+                    val parsedThorMemo = thorchainMemoParser.parse(payload.memo ?: "")
 
                     val depositTransaction =
                         DepositTransaction(

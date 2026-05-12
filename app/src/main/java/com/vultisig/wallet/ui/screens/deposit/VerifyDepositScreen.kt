@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -145,7 +146,7 @@ internal fun VerifyDepositScreen(
 
                     SwapToken(valuedToken = tx.token, isLoading = state.isLoading)
 
-                    if (tx.pool.isNotEmpty()) {
+                    if (tx.operation == OPERATION_MINT && tx.pool.isNotEmpty()) {
                         UiSpacer(8.dp)
                         Text(
                             text =
@@ -185,13 +186,6 @@ internal fun VerifyDepositScreen(
                         VerifyCardDetails(title = stringResource(R.string.pool), subtitle = tx.pool)
                         VerifyCardDivider(0.dp)
                     }
-                    if (tx.thorAddress.isNotEmpty()) {
-                        VerifyCardDetails(
-                            title = stringResource(R.string.thor_address),
-                            subtitle = tx.thorAddress,
-                        )
-                        VerifyCardDivider(0.dp)
-                    }
                     if (tx.nodeAddress.isNotEmpty()) {
                         VerifyCardDetails(
                             title = stringResource(R.string.node_address),
@@ -203,13 +197,6 @@ internal fun VerifyDepositScreen(
                         VerifyCardDetails(
                             title = stringResource(R.string.paired_address),
                             subtitle = tx.pairedAddress,
-                        )
-                        VerifyCardDivider(0.dp)
-                    }
-                    if (tx.operation.isNotEmpty()) {
-                        VerifyCardDetails(
-                            title = stringResource(R.string.operation),
-                            subtitle = tx.operation,
                         )
                         VerifyCardDivider(0.dp)
                     }

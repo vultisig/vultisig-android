@@ -1,7 +1,14 @@
 package com.vultisig.wallet.data.usecases
 
+import com.vultisig.wallet.data.models.OPERATION_BOND
+import com.vultisig.wallet.data.models.OPERATION_LEAVE
+import com.vultisig.wallet.data.models.OPERATION_LOAN_CLOSE
+import com.vultisig.wallet.data.models.OPERATION_LOAN_OPEN
 import com.vultisig.wallet.data.models.OPERATION_MINT
+import com.vultisig.wallet.data.models.OPERATION_UNBOND
 import com.vultisig.wallet.data.models.OPERATION_WITHDRAW
+import java.util.Locale
+import javax.inject.Inject
 
 /**
  * Result of parsing a THORChain/MayaChain memo into deposit-screen fields.
@@ -21,21 +28,23 @@ data class ParsedThorchainMemo(
 /**
  * Parses THORChain/MayaChain memo strings into deposit-screen fields so the joined-device verify
  * screen can render LP/bond/loan layouts on par with the initiator.
- *
- * Returns `null` for swaps and unrecognised memos so the caller can fall back to the default
- * deposit layout without inventing fields.
  */
-object ThorchainMemoParser {
+interface ThorchainMemoParser {
 
     /**
      * Parses [memo] and returns the extracted deposit metadata, or `null` for memos that are not
      * deposit-shaped (swaps, blank, unknown prefixes).
      */
-    fun parse(memo: String): ParsedThorchainMemo? {
+    fun parse(memo: String): ParsedThorchainMemo?
+}
+
+internal class ThorchainMemoParserImpl @Inject constructor() : ThorchainMemoParser {
+
+    override fun parse(memo: String): ParsedThorchainMemo? {
         val normalized = memo.trim()
         if (normalized.isEmpty()) return null
         val parts = normalized.split(":")
-        val tag = parts[0].uppercase()
+        val tag = parts[0].uppercase(Locale.ROOT)
 
         return when (tag) {
             "+",
@@ -54,25 +63,31 @@ object ThorchainMemoParser {
                 )
             "BOND" ->
                 ParsedThorchainMemo(
-                    operation = "Bond",
+                    operation = OPERATION_BOND,
                     nodeAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
                 )
             "UNBOND" ->
                 ParsedThorchainMemo(
-                    operation = "Unbond",
+                    operation = OPERATION_UNBOND,
                     nodeAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
                 )
             "LEAVE" ->
                 ParsedThorchainMemo(
-                    operation = "Leave",
+                    operation = OPERATION_LEAVE,
                     nodeAddress = parts.getOrNull(1).orEmpty().takeIfThorAddress(),
                 )
             "LOAN+",
             "\$+" ->
-                ParsedThorchainMemo(operation = "Loan Open", pool = parts.getOrNull(1).orEmpty())
+                ParsedThorchainMemo(
+                    operation = OPERATION_LOAN_OPEN,
+                    pool = parts.getOrNull(1).orEmpty(),
+                )
             "LOAN-",
             "\$-" ->
-                ParsedThorchainMemo(operation = "Loan Close", pool = parts.getOrNull(1).orEmpty())
+                ParsedThorchainMemo(
+                    operation = OPERATION_LOAN_CLOSE,
+                    pool = parts.getOrNull(1).orEmpty(),
+                )
             else -> null
         }
     }

@@ -1762,6 +1762,9 @@ constructor(
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            operation = OPERATION_MINT,
+            pool = poolId,
+            pairedAddress = pairedAddress.orEmpty(),
         )
     }
 
@@ -1845,6 +1848,8 @@ constructor(
             estimatedFees = gasFee,
             blockChainSpecific = specific.blockChainSpecific,
             estimateFeesFiat = gasFeeFiat.formattedFiatValue,
+            operation = OPERATION_WITHDRAW,
+            pool = poolId,
         )
     }
 

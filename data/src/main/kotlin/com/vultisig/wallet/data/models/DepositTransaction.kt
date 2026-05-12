@@ -26,4 +26,9 @@ data class DepositTransaction(
 
 const val OPERATION_MINT = "Mint"
 const val OPERATION_WITHDRAW = "Withdraw"
+const val OPERATION_BOND = "Bond"
+const val OPERATION_UNBOND = "Unbond"
+const val OPERATION_LEAVE = "Leave"
+const val OPERATION_LOAN_OPEN = "Loan Open"
+const val OPERATION_LOAN_CLOSE = "Loan Close"
 const val OPERATION_CIRCLE_WITHDRAW = "DepositUSDCCircle"
