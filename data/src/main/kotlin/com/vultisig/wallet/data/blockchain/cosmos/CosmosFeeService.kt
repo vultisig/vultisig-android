@@ -7,6 +7,11 @@ import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.models.Chain
 
 class CosmosFeeService : FeeService {
+
+    companion object {
+        internal const val OSMOSIS_MIN_FEE_UOSMO = 25_000L
+    }
+
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
         return calculateDefaultFees(transaction)
     }
@@ -23,9 +28,12 @@ class CosmosFeeService : FeeService {
             }
         return when (chain) {
             Chain.Osmosis -> {
-                // Osmosis uses EIP-1559 dynamic fees; 25,000 uosmo matches iOS and covers the
-                // 300k gas × 0.03 uosmo/gas minimum with headroom for base fee spikes.
-                GasFees(limit = gasLimit.toBigInteger(), amount = 25000.toBigInteger())
+                // Osmosis uses EIP-1559 dynamic fees; OSMOSIS_MIN_FEE_UOSMO matches iOS and covers
+                // the 300k gas × 0.03 uosmo/gas minimum with headroom for base fee spikes.
+                GasFees(
+                    limit = gasLimit.toBigInteger(),
+                    amount = OSMOSIS_MIN_FEE_UOSMO.toBigInteger(),
+                )
             }
             Chain.GaiaChain,
             Chain.Kujira,
