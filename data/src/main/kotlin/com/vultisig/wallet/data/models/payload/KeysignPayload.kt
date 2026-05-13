@@ -30,6 +30,11 @@ data class KeysignPayload(
     val signDirect: SignDirectProto? = null,
     val signSolana: SignSolana? = null,
     val signTon: SignTon? = null,
+    /**
+     * Structured Bitcoin PSBT payload supplied by an external dApp for co-signing. When present,
+     * the UTXO signing path uses these inputs/outputs directly and bypasses WalletCore tx planning;
+     * `utxos` and the UTXO `blockChainSpecific` slot are unused.
+     */
     val signBitcoin: SignBitcoin? = null,
     val tronTransferContractPayload: TronTransferContractPayload? = null,
     val tronTriggerSmartContractPayload: TronTriggerSmartContractPayload? = null,
