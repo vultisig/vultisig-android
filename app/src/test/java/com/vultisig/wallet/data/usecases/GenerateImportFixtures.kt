@@ -35,13 +35,16 @@ internal class GenerateImportFixtures {
     @Disabled("Fixture generator. Remove @Disabled to run.")
     @Test
     fun generate() {
-        val dir =
-            File(OUTPUT_DIR).apply {
-                deleteRecursively()
-                mkdirs()
-            }
+        val dir = File(OUTPUT_DIR).canonicalFile
+        require(dir.name == OUTPUT_DIR_NAME) {
+            "Refusing to clean unexpected directory: $dir (expected name '$OUTPUT_DIR_NAME')"
+        }
+        if (dir.exists()) {
+            check(dir.deleteRecursively()) { "Failed to clean $dir" }
+        }
+        check(dir.mkdirs() || dir.isDirectory) { "Failed to create $dir" }
         fixtures.forEach { it.writeTo(dir) }
-        println("Wrote ${fixtures.size} fixtures to ${dir.absoluteFile.canonicalFile}:")
+        println("Wrote ${fixtures.size} fixtures to $dir:")
         dir.listFiles()
             ?.sortedBy { it.name }
             ?.forEach { println("  ${it.name.padEnd(32)} ${it.length()}B") }
@@ -181,7 +184,8 @@ internal class GenerateImportFixtures {
         }
 
     companion object {
-        private const val OUTPUT_DIR = "../import-fixtures"
+        private const val OUTPUT_DIR_NAME = "import-fixtures"
+        private const val OUTPUT_DIR = "../$OUTPUT_DIR_NAME"
         private const val PASSWORD = "test123"
     }
 }
