@@ -1008,6 +1008,7 @@
     <string name="transaction_history_clear_filters">Сбросить фильтры</string>
     <string name="transaction_status_confirmed_label">Успешно</string>
     <string name="transaction_status_failed_label">Ошибка</string>
+    <string name="transaction_status_refunded_label">Возвращено</string>
     <string name="transaction_status_in_progress_label">В процессе…</string>
     <string name="transaction_history_to_label">На</string>
     <string name="transaction_history_via_prefix">через</string>

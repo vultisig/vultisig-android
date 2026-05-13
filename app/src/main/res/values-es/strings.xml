@@ -1001,6 +1001,7 @@
     <string name="transaction_history_clear_filters">Borrar filtros</string>
     <string name="transaction_status_confirmed_label">Confirmada</string>
     <string name="transaction_status_failed_label">Fallida</string>
+    <string name="transaction_status_refunded_label">Reembolsada</string>
     <string name="transaction_status_in_progress_label">En progreso…</string>
     <string name="transaction_history_to_label">Para</string>
     <string name="transaction_history_via_prefix">vía</string>

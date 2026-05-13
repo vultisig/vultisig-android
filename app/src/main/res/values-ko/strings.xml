@@ -1033,6 +1033,7 @@
     <string name="transaction_history_clear_filters">필터 초기화</string>
     <string name="transaction_status_confirmed_label">성공</string>
     <string name="transaction_status_failed_label">오류</string>
+    <string name="transaction_status_refunded_label">환불됨</string>
     <string name="transaction_status_in_progress_label">진행 중…</string>
     <string name="transaction_history_to_label">수신</string>
     <string name="transaction_history_via_prefix">경유</string>

@@ -1081,6 +1081,7 @@
     <string name="transaction_history_clear_filters">Clear filters</string>
     <string name="transaction_status_confirmed_label">Successful</string>
     <string name="transaction_status_failed_label">Error</string>
+    <string name="transaction_status_refunded_label">Refunded</string>
     <string name="transaction_status_in_progress_label">In progress…</string>
     <string name="transaction_history_to_label">To</string>
     <string name="transaction_history_via_prefix">via</string>

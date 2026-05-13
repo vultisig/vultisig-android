@@ -93,6 +93,10 @@ internal fun TransactionStatusWidget(
                     stringResource(R.string.transaction_status_failed_label) to
                         Theme.v2.colors.alerts.error
 
+                is TransactionStatusUiModel.Refunded ->
+                    stringResource(R.string.transaction_status_refunded_label) to
+                        Theme.v2.colors.alerts.warning
+
                 else -> "" to Theme.v2.colors.text.tertiary
             }
         if (label.isNotEmpty()) {

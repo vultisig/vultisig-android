@@ -1002,6 +1002,7 @@
     <string name="transaction_history_clear_filters">Limpar filtros</string>
     <string name="transaction_status_confirmed_label">Bem-sucedida</string>
     <string name="transaction_status_failed_label">Erro</string>
+    <string name="transaction_status_refunded_label">Reembolsada</string>
     <string name="transaction_status_in_progress_label">Em andamento…</string>
     <string name="transaction_history_to_label">Para</string>
     <string name="transaction_history_via_prefix">via</string>

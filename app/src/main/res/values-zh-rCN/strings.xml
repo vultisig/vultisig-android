@@ -1333,6 +1333,7 @@
     <string name="transaction_history_clear_filters">清除筛选</string>
     <string name="transaction_status_confirmed_label">成功</string>
     <string name="transaction_status_failed_label">错误</string>
+    <string name="transaction_status_refunded_label">已退款</string>
     <string name="transaction_status_in_progress_label">进行中…</string>
     <string name="transaction_history_to_label">至</string>
     <string name="transaction_history_via_prefix">通过</string>
