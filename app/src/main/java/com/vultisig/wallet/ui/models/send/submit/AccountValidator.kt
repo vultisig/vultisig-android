@@ -72,7 +72,6 @@ internal class AccountValidator(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
                 throw InvalidTransactionDataException(
                     UiText.StringResource(R.string.failed_to_resolve_address)

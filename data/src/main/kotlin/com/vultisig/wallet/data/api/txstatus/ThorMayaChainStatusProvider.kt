@@ -54,7 +54,6 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.w(e, "THOR/Maya status check failed for %s on %s", txHash, chain)
             TransactionResult.Pending
         }

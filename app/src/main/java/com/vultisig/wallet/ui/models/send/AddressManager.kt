@@ -114,7 +114,6 @@ internal class AddressManager(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             // Resolver failures are non-fatal (the user can retry), but log at warning so a
             // genuine bug in the resolver surface — RPC, parsing, etc. — isn't silently buried.
             Timber.w(e, "Failed to resolve address %s on %s", addressStr, chain)

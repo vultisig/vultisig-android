@@ -236,7 +236,6 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error deserializing THORChain swap quote")
             THORChainSwapQuoteDeserialized.Error(
                 THORChainSwapQuoteError(HttpStatusCode.fromValue(response.status.value).description)

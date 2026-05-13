@@ -18,7 +18,6 @@ class CosmosStatusProvider @Inject constructor(private val cosmosApiFactory: Cos
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.w(e, "Cosmos status check failed for %s on %s", txHash, chain)
                 return TransactionResult.Pending
             } ?: return TransactionResult.NotFound

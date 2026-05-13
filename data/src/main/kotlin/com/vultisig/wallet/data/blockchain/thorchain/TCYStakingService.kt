@@ -74,6 +74,7 @@ constructor(
                     try {
                         getStakingDetailsFromNetwork(address)
                     } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.e(
                             e,
                             "TCYStakingService: Error fetching TCY staking details for vault $vaultId",

@@ -173,7 +173,6 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.w(e, "Failed to resolve logo for coin %s", coinEntity.id)
                             ""
                         }

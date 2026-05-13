@@ -214,7 +214,6 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
                 Timber.e("Retry setup-message cancelled exceptions")
                 throw e
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e("Retry setup-message request failed")
                 lastException = e
             }

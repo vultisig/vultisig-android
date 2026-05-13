@@ -1169,7 +1169,6 @@ constructor(
         } catch (ce: CancellationException) {
             throw ce
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             _state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
         }
     }
@@ -2814,7 +2813,6 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.d("Failed to get price for token %s", token)
             null
         }

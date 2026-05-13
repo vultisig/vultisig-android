@@ -235,7 +235,6 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "Failed to auto-enable VULT token")
             }
         }
@@ -252,7 +251,6 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to enable VULT token")
             false
         }

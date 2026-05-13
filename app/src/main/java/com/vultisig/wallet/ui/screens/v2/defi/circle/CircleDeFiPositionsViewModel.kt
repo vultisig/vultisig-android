@@ -196,7 +196,6 @@ constructor(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (t: Throwable) {
-                    if (t is kotlinx.coroutines.CancellationException) throw t
                     Timber.e(t)
                     _state.update { currentState ->
                         currentState.copy(

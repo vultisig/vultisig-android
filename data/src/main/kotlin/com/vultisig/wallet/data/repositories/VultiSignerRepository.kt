@@ -197,7 +197,6 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "verifyBackupCode failure")
             BackupCodeVerifyResult.NetworkError
         }

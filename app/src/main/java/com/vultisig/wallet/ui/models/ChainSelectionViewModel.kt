@@ -108,7 +108,6 @@ constructor(
                     // otherwise swallow it.
                     throw e
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     // Covers `require(...)`/`error(...)`, `hexToByteArray` parse errors, Trust
                     // Wallet Core's `PublicKey` JNI constructor `InvalidParameterException`, and
                     // the gomobile `Tss.getDerivedPubKey` checked `Exception` reachable from the

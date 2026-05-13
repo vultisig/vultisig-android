@@ -502,7 +502,6 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             true // fail-closed: show warning on error
         } finally {
             uiState.update { it.copy(isLoading = false) }

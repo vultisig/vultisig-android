@@ -47,6 +47,7 @@ constructor(
 
                     emit(freshDetails)
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(
                         e,
                         "DefaultStakingPositionService: Error fetching staking details for vault $vaultId",

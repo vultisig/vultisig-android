@@ -38,7 +38,6 @@ constructor(
             Timber.e(e, "FeeServiceComposite: Coroutine has been cancelled")
             throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to calculate fees for ${chain.name}, falling back to default")
             calculateDefaultFees(transaction)
         }
