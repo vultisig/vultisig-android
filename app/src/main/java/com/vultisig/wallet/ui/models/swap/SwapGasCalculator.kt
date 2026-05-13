@@ -146,7 +146,15 @@ constructor(
         return utxo.getBitcoinTransactionPlan(keysignPayload)
     }
 
-    suspend fun getSpecificAndUtxo(srcToken: Coin, srcAddress: String, gasFee: TokenValue) =
+    suspend fun getSpecificAndUtxo(
+        srcToken: Coin,
+        srcAddress: String,
+        gasFee: TokenValue,
+        isThorchainRouterDeposit: Boolean = false,
+        dstAddress: String? = null,
+        memo: String? = null,
+        tokenAmountValue: BigInteger? = null,
+    ) =
         try {
             blockChainSpecificRepository.getSpecific(
                 chain = srcToken.chain,
@@ -157,6 +165,10 @@ constructor(
                 isMaxAmountEnabled = false,
                 isDeposit = srcToken.chain == Chain.MayaChain,
                 gasLimit = getGasLimit(srcToken),
+                isThorchainRouterDeposit = isThorchainRouterDeposit,
+                dstAddress = dstAddress,
+                memo = memo,
+                tokenAmountValue = tokenAmountValue,
             )
         } catch (e: Exception) {
             if (e is kotlin.coroutines.cancellation.CancellationException) throw e

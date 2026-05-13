@@ -325,15 +325,23 @@ constructor(
                     val transaction =
                         when (quote) {
                             is SwapQuote.ThorChain -> {
-                                val specificAndUtxo =
-                                    swapGasCalculator.getSpecificAndUtxo(
-                                        srcToken,
-                                        srcAddress,
-                                        gasFee,
-                                    )
-
                                 val dstAddress =
                                     quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                                val isRouterDeposit =
+                                    !srcToken.isNativeToken &&
+                                        srcToken.chain.standard == TokenStandard.EVM &&
+                                        !quote.data.router.isNullOrEmpty()
+                                val specificAndUtxo =
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken = srcToken,
+                                        srcAddress = srcAddress,
+                                        gasFee = gasFee,
+                                        isThorchainRouterDeposit = isRouterDeposit,
+                                        dstAddress = if (isRouterDeposit) dstAddress else null,
+                                        memo = if (isRouterDeposit) quote.data.memo else null,
+                                        tokenAmountValue =
+                                            if (isRouterDeposit) srcTokenValue.value else null,
+                                    )
                                 val allowance =
                                     allowanceRepository.getAllowance(
                                         chain = srcToken.chain,
@@ -387,13 +395,10 @@ constructor(
                             }
 
                             is SwapQuote.MayaChain -> {
-                                val specificAndUtxo =
-                                    swapGasCalculator.getSpecificAndUtxo(
-                                        srcToken,
-                                        srcAddress,
-                                        gasFee,
-                                    )
-
+                                val isRouterDeposit =
+                                    !srcToken.isNativeToken &&
+                                        srcToken.chain.standard == TokenStandard.EVM &&
+                                        !quote.data.router.isNullOrEmpty()
                                 val dstAddress =
                                     if (
                                         !srcToken.isNativeToken &&
@@ -403,6 +408,17 @@ constructor(
                                     } else {
                                         quote.data.inboundAddress ?: srcAddress
                                     }
+                                val specificAndUtxo =
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken = srcToken,
+                                        srcAddress = srcAddress,
+                                        gasFee = gasFee,
+                                        isThorchainRouterDeposit = isRouterDeposit,
+                                        dstAddress = if (isRouterDeposit) dstAddress else null,
+                                        memo = if (isRouterDeposit) quote.data.memo else null,
+                                        tokenAmountValue =
+                                            if (isRouterDeposit) srcTokenValue.value else null,
+                                    )
 
                                 val allowance =
                                     allowanceRepository.getAllowance(

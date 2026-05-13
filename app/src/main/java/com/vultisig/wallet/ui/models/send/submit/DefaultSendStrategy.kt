@@ -156,6 +156,11 @@ internal class DefaultSendStrategy(
                         }
                     }
 
+                    val isThorchainRouterDeposit =
+                        defiTypeProvider() == DeFiNavActions.ADD_LP &&
+                            !selectedToken.isNativeToken &&
+                            selectedToken.chain.standard == TokenStandard.EVM
+
                     val specific =
                         withContext(Dispatchers.IO) {
                                 blockChainSpecificRepository.getSpecific(
@@ -170,6 +175,7 @@ internal class DefaultSendStrategy(
                                     isMaxAmountEnabled = isMaxAmount,
                                     isDeposit = false,
                                     dstAddress = dstAddress,
+                                    isThorchainRouterDeposit = isThorchainRouterDeposit,
                                 )
                             }
                             .let { applyGasSettings(it) }

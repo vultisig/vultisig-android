@@ -71,6 +71,7 @@ interface BlockChainSpecificRepository {
         tokenAmountValue: BigInteger? = null,
         memo: String? = null,
         transactionType: TransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+        isThorchainRouterDeposit: Boolean = false,
     ): BlockChainSpecificAndUtxo
 }
 
@@ -107,6 +108,7 @@ constructor(
         tokenAmountValue: BigInteger?,
         memo: String?,
         transactionType: TransactionType,
+        isThorchainRouterDeposit: Boolean,
     ): BlockChainSpecificAndUtxo =
         when (chain.standard) {
             TokenStandard.THORCHAIN -> {
@@ -172,26 +174,41 @@ constructor(
                             else -> DEFAULT_TOKEN_TRANSFER_LIMIT
                         }
 
+                    // ERC-20 router deposits need depositWithExpiry headroom, but
+                    // eth_estimateGas reverts when the router hasn't been approved yet —
+                    // so we hardcode the limit and skip the estimate RPC.
+                    val routerDepositGasLimit =
+                        if (
+                            isThorchainRouterDeposit &&
+                                !token.isNativeToken &&
+                                isThorchainRouterChain(chain)
+                        )
+                            THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT
+                        else null
+
                     val estimateGasLimit =
-                        if (token.isNativeToken)
-                            evmApi.estimateGasForEthTransaction(
-                                senderAddress = token.address,
-                                recipientAddress = recipientAddress,
-                                value = tokenAmountValue ?: BigInteger.ZERO,
-                                memo = memo,
-                            )
-                        else
-                            evmApi
-                                .estimateGasForERC20Transfer(
+                        when {
+                            routerDepositGasLimit != null -> routerDepositGasLimit
+                            token.isNativeToken ->
+                                evmApi.estimateGasForEthTransaction(
                                     senderAddress = token.address,
                                     recipientAddress = recipientAddress,
-                                    contractAddress = token.contractAddress,
                                     value = tokenAmountValue ?: BigInteger.ZERO,
+                                    memo = memo,
                                 )
-                                .increaseByPercent(
-                                    50
-                                ) // keep it consistent with how we calculate default gas limit in
-                    // EthereumFeeService
+                            else ->
+                                evmApi
+                                    .estimateGasForERC20Transfer(
+                                        senderAddress = token.address,
+                                        recipientAddress = recipientAddress,
+                                        contractAddress = token.contractAddress,
+                                        value = tokenAmountValue ?: BigInteger.ZERO,
+                                    )
+                                    .increaseByPercent(
+                                        50
+                                    ) // keep it consistent with how we calculate default gas
+                        // limit in EthereumFeeService
+                        }
 
                     val nonce = evmApi.getNonce(address)
 
@@ -629,9 +646,19 @@ constructor(
             }
         }
 
+    private fun isThorchainRouterChain(chain: Chain): Boolean =
+        chain == Chain.Ethereum ||
+            chain == Chain.Base ||
+            chain == Chain.Avalanche ||
+            chain == Chain.BscChain ||
+            chain == Chain.Arbitrum ||
+            chain == Chain.Optimism
+
     companion object {
         private const val TON_WALLET_STATE_UNINITIALIZED = "uninit"
 
         private const val ENERGY_TO_SUN_FACTOR = 280
+
+        private val THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT = BigInteger.valueOf(200_000)
     }
 }
