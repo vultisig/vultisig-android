@@ -368,7 +368,6 @@ constructor(
                     try {
                         BigDecimal(staker.amount)
                     } catch (e: Exception) {
-                        if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.e(e)
                         BigDecimal.ZERO
                     }

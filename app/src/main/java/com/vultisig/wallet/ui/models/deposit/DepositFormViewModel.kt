@@ -2819,7 +2819,7 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.d("Failed to get price for token %s", token)
+            Timber.d(e, "Failed to get price for token %s", token.ticker)
             null
         }
     }

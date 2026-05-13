@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.common.decrypt
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -77,7 +78,7 @@ class TssMessagePuller(
                 }
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+            if (e is CancellationException) throw e
             Timber.tag(TAG).e(e, "Failed to get messages from server")
         }
     }

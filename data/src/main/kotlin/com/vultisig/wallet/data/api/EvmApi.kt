@@ -162,7 +162,6 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
             try {
                 EthereumFunction.balanceErc20Decoder(it)
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: $e")
                 BigInteger.ZERO
             }

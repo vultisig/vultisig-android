@@ -1001,8 +1001,6 @@ constructor(
                                         try {
                                             json.parseToJsonElement(cosmosMsg.value)
                                         } catch (e: Exception) {
-                                            if (e is kotlinx.coroutines.CancellationException)
-                                                throw e
                                             kotlinx.serialization.json.JsonPrimitive(
                                                 cosmosMsg.value
                                             )
