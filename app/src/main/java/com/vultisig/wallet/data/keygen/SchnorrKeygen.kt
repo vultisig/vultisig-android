@@ -571,7 +571,6 @@ class SchnorrKeygen(
                 delay(500) // slightly delay to give local party time to process outbound messages
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.d("Failed to reshare key, error: ${e.localizedMessage}")
             if (attempt < 3) {
                 Timber.d("keygen/reshare retry, attempt: $attempt")
