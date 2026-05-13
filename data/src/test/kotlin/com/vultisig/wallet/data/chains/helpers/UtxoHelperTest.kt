@@ -418,6 +418,68 @@ class UtxoHelperTest {
     }
 
     @Test
+    fun `getBitcoinTransactionPlanFromSignBitcoin - rejects payload where outputs exceed inputs`() {
+        val helper = newHelper()
+        val signBitcoin =
+            SignBitcoin(
+                version = 2u,
+                locktime = 0u,
+                inputs =
+                    listOf(
+                        BitcoinInput(
+                            hash =
+                                "0000000000000000000000000000000000000000000000000000000000000001",
+                            index = 0u,
+                            amount = 100L,
+                            scriptPubKey = "0014" + "11".repeat(20),
+                            scriptType = "p2wpkh",
+                            isOurs = true,
+                        )
+                    ),
+                outputs =
+                    listOf(BitcoinOutput(amount = 200L, scriptPubKey = "0014" + "22".repeat(20))),
+            )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            helper.getBitcoinTransactionPlanFromSignBitcoin(signBitcoin)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects non-SIGHASH_ALL inputs`() {
+        val helper = newHelper()
+        val signBitcoin =
+            SignBitcoin(
+                version = 2u,
+                locktime = 0u,
+                inputs =
+                    listOf(
+                        BitcoinInput(
+                            hash =
+                                "0000000000000000000000000000000000000000000000000000000000000001",
+                            index = 0u,
+                            amount = 100_000L,
+                            scriptPubKey = "0014" + "11".repeat(20),
+                            scriptType = "p2wpkh",
+                            isOurs = true,
+                            // SIGHASH_SINGLE — would require per-input hashOutputs recomputation
+                            sighashType = 0x03u,
+                        )
+                    ),
+                outputs =
+                    listOf(BitcoinOutput(amount = 90_000L, scriptPubKey = "0014" + "22".repeat(20))),
+            )
+
+        try {
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(signBitcoin)
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
     fun `getBitcoinTransactionPlan - dispatches to PSBT helper when signBitcoin is present`() {
         val helper = newHelper()
         val signBitcoin =

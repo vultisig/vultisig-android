@@ -336,6 +336,9 @@ class UtxoHelper(
         val change = outputs.filter { it.isChange }.sumOf { it.amount }
         val sent = outputs.filterNot { it.isChange }.sumOf { it.amount }
         val fee = available - (sent + change)
+        require(fee >= 0) {
+            "Invalid SignBitcoin payload: outputs ($sent + change $change) exceed inputs ($available)"
+        }
         return Bitcoin.TransactionPlan.newBuilder()
             .setAmount(sent)
             .setAvailableAmount(available)
@@ -420,6 +423,14 @@ class UtxoHelper(
             val pubKeyHash = extractWitnessPubKeyHash(input)
             val scriptCode = buildP2WPKHScriptCode(pubKeyHash)
             val sighashFlag = (input.sighashType ?: SIGHASH_ALL.toUInt()).toInt()
+            // hashPrevouts/hashSequence/hashOutputs above are computed with SIGHASH_ALL
+            // semantics. SIGHASH_NONE/SIGHASH_SINGLE/SIGHASH_ANYONECANPAY would require
+            // per-input recomputation per BIP-143; reject them here rather than emit a
+            // sighash the verifier would reject.
+            require(sighashFlag == SIGHASH_ALL) {
+                "Unsupported sighash type 0x${sighashFlag.toString(16)} for PSBT input " +
+                    "${input.hash}:${input.index}; only SIGHASH_ALL is supported"
+            }
             val sequence = (input.sequence ?: 0xFFFFFFFFu).toInt()
             val preimage =
                 buildBip143Preimage(
