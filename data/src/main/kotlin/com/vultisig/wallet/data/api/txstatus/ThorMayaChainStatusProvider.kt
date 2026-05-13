@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
+import io.ktor.client.request.parameter
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.SerialName
@@ -47,7 +48,7 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
         val baseUrl = midgardUrls[chain] ?: return TransactionResult.Failed("Unknown chain")
         return try {
             val response: MidgardActionsResponse =
-                httpClient.get("$baseUrl?txid=$txHash").bodyOrThrow()
+                httpClient.get(baseUrl) { parameter(MIDGARD_TXID_PARAM, txHash) }.bodyOrThrow()
             val action = response.actions.firstOrNull() ?: return TransactionResult.Pending
             mapAction(action)
         } catch (e: CancellationException) {
@@ -79,6 +80,7 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
         value?.takeUnless { it.isBlank() } ?: default
 
     private companion object {
+        const val MIDGARD_TXID_PARAM = "txid"
         const val ACTION_TYPE_REFUND = "refund"
         const val ACTION_TYPE_FAILED = "failed"
         const val ACTION_STATUS_SUCCESS = "success"
