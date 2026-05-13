@@ -21,6 +21,7 @@ import vultisig.keysign.v1.BitcoinInput
 import vultisig.keysign.v1.BitcoinOutput
 import vultisig.keysign.v1.SignBitcoin
 import wallet.core.jni.CoinType
+import wallet.core.jni.proto.Common.SigningError
 
 /**
  * Tests for [UtxoHelper] — dust thresholds (no JNI) and plan/memo behaviour (JNI, skipped when
@@ -364,6 +365,105 @@ class UtxoHelperTest {
         } catch (e: Throwable) {
             skipIfJniUnavailable(e)
         }
+    }
+
+    // Synthetic transaction-plan tests for the PSBT path. The structured-payload variant must
+    // bypass WalletCore (whose planner sees zero utxos and bails out with
+    // Error_missing_input_utxos) and derive fee/amount/change from `signBitcoin.inputs/outputs`.
+
+    @Test
+    fun `getBitcoinTransactionPlanFromSignBitcoin - fee equals inputs minus outputs`() {
+        val helper = newHelper()
+        // Mirrors the example in PR #4478: 1 input of 564 sats, outputs 30 + 82 (change) + 0
+        // (OP_RETURN) => fee = 452 sats.
+        val signBitcoin =
+            SignBitcoin(
+                version = 2u,
+                locktime = 0u,
+                inputs =
+                    listOf(
+                        BitcoinInput(
+                            hash =
+                                "0000000000000000000000000000000000000000000000000000000000000001",
+                            index = 0u,
+                            amount = 564L,
+                            scriptPubKey = "0014" + "11".repeat(20),
+                            scriptType = "p2wpkh",
+                            isOurs = true,
+                        )
+                    ),
+                outputs =
+                    listOf(
+                        BitcoinOutput(
+                            amount = 30L,
+                            scriptPubKey = "0014" + "22".repeat(20),
+                            isChange = false,
+                        ),
+                        BitcoinOutput(
+                            amount = 82L,
+                            scriptPubKey = "0014" + "11".repeat(20),
+                            isChange = true,
+                        ),
+                        BitcoinOutput(amount = 0L, scriptPubKey = "6a04deadbeef", isChange = false),
+                    ),
+            )
+
+        val plan = helper.getBitcoinTransactionPlanFromSignBitcoin(signBitcoin)
+
+        assertEquals(SigningError.OK, plan.error)
+        assertEquals(564L, plan.availableAmount)
+        assertEquals(30L, plan.amount)
+        assertEquals(82L, plan.change)
+        assertEquals(452L, plan.fee)
+    }
+
+    @Test
+    fun `getBitcoinTransactionPlan - dispatches to PSBT helper when signBitcoin is present`() {
+        val helper = newHelper()
+        val signBitcoin =
+            SignBitcoin(
+                version = 2u,
+                locktime = 0u,
+                inputs =
+                    listOf(
+                        BitcoinInput(
+                            hash =
+                                "0000000000000000000000000000000000000000000000000000000000000001",
+                            index = 0u,
+                            amount = 100_000L,
+                            scriptPubKey = "0014" + "11".repeat(20),
+                            scriptType = "p2wpkh",
+                            isOurs = true,
+                        )
+                    ),
+                outputs =
+                    listOf(
+                        BitcoinOutput(
+                            amount = 60_000L,
+                            scriptPubKey = "0014" + "22".repeat(20),
+                            isChange = false,
+                        ),
+                        BitcoinOutput(
+                            amount = 39_500L,
+                            scriptPubKey = "0014" + "11".repeat(20),
+                            isChange = true,
+                        ),
+                    ),
+            )
+        val payload =
+            utxoPayload(utxoAmount = 100_000L, toAmount = BigInteger.valueOf(60_000L))
+                .copy(utxos = emptyList(), signBitcoin = signBitcoin)
+
+        val plan = helper.getBitcoinTransactionPlan(payload)
+
+        // The empty `utxos` list would force the WalletCore planner to
+        // Error_missing_input_utxos; the dispatch to the structured-payload
+        // helper bypasses that path entirely.
+        assertEquals(SigningError.OK, plan.error)
+        assertEquals(500L, plan.fee)
+        assertEquals(60_000L, plan.amount)
+        assertEquals(100_000L, plan.availableAmount)
+        assertEquals(39_500L, plan.change)
     }
 
     private fun newHelper(): UtxoHelper = UtxoHelper(CoinType.BITCOIN, "", "")

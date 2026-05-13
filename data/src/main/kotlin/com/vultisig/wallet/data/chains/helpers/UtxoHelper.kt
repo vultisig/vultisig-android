@@ -25,6 +25,7 @@ import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 import wallet.core.jni.TransactionCompiler
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 class UtxoHelper(
     val coinType: CoinType,
@@ -310,10 +311,38 @@ class UtxoHelper(
     }
 
     fun getBitcoinTransactionPlan(keysignPayload: KeysignPayload): Bitcoin.TransactionPlan {
+        keysignPayload.signBitcoin?.let {
+            return getBitcoinTransactionPlanFromSignBitcoin(it)
+        }
         val signingInput = getBitcoinSigningInput(keysignPayload)
         val plan: Bitcoin.TransactionPlan =
             AnySigner.plan(signingInput.build(), coinType, Bitcoin.TransactionPlan.parser())
         return plan
+    }
+
+    /**
+     * Builds a synthetic [Bitcoin.TransactionPlan] from a structured PSBT payload. PSBT co-signing
+     * bypasses WalletCore tx planning (UTXOs live in `signBitcoin.inputs`, not
+     * `keysignPayload.utxos`), so callers that previously relied on `getBitcoinTransactionPlan` for
+     * fee/amount would otherwise hit `Error_missing_input_utxos` with a zero fee. The fee is
+     * derived as `sum(inputs.amount) - sum(non_change_outputs + change_outputs)`.
+     */
+    fun getBitcoinTransactionPlanFromSignBitcoin(
+        signBitcoin: SignBitcoin
+    ): Bitcoin.TransactionPlan {
+        val inputs = signBitcoin.inputs.filterNotNull()
+        val outputs = signBitcoin.outputs.filterNotNull()
+        val available = inputs.sumOf { it.amount }
+        val change = outputs.filter { it.isChange }.sumOf { it.amount }
+        val sent = outputs.filterNot { it.isChange }.sumOf { it.amount }
+        val fee = available - (sent + change)
+        return Bitcoin.TransactionPlan.newBuilder()
+            .setAmount(sent)
+            .setAvailableAmount(available)
+            .setFee(fee)
+            .setChange(change)
+            .setError(SigningError.OK)
+            .build()
     }
 
     /**
