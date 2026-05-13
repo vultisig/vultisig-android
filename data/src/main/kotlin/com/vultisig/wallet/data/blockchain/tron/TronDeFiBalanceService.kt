@@ -86,7 +86,6 @@ class TronDeFiBalanceService(
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
             throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "TronDeFiBalanceService: Failed to persist frozen TRX balance")
         }
     }

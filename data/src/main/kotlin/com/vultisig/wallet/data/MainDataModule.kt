@@ -193,7 +193,6 @@ private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPr
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
             )
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             // Broad catch is intentional: Tink on some OEM ROMs throws IllegalStateException,
             // SecurityException, or NPE in addition to GeneralSecurityException / IOException.
             // Losing legacy data is acceptable here; a startup crash is not.
@@ -206,7 +205,6 @@ private fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedPr
         try {
             legacyPrefs.all
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Cannot read legacy encrypted prefs; discarding legacy data")
             legacyFile.delete()
             return

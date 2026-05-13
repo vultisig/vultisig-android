@@ -1169,7 +1169,14 @@ constructor(
         } catch (ce: CancellationException) {
             throw ce
         } catch (e: Exception) {
-            _state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
+            Timber.w(e, "Whitelist check failed for node %s", nodeAddress)
+            _state.update {
+                it.copy(
+                    nodeAddressError = UiText.StringResource(R.string.dialog_default_error_body),
+                    isCheckingWhitelist = false,
+                    isWhitelistFailed = true,
+                )
+            }
         }
     }
 

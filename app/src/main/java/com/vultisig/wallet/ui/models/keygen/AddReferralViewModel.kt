@@ -102,7 +102,6 @@ constructor(
                     state.update { it.copy(isLoading = false) }
                     throw e
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     state.update {
                         it.copy(
                             isLoading = false,
