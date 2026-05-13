@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.utils.convertParameter
 import com.vultisig.wallet.data.utils.decodeGeneric
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.jsonArray
@@ -21,12 +22,16 @@ internal class FourByteRepositoryImpl
 constructor(private val fourByteApi: FourByteApi, @param:PrettyJson private val json: Json) :
     FourByteRepository {
     override suspend fun decodeFunction(memo: String): String? {
-        if (memo.length < 8) return null
-        try {
-            val hash = memo.stripHexPrefix().substring(0, 8)
-            return fourByteApi.decodeFunction(hash)
+        val hash = memo.stripHexPrefix()
+        if (hash.length < 8) return null
+        val selector = hash.substring(0, 8)
+        if (!HEX_SELECTOR.matches(selector)) return null
+        return try {
+            EvmCommonSelectors.lookup(selector) ?: fourByteApi.decodeFunction(selector)
+        } catch (e: CancellationException) {
+            throw e
         } catch (_: Exception) {
-            return null
+            null
         }
     }
 
@@ -44,5 +49,9 @@ constructor(private val fourByteApi: FourByteApi, @param:PrettyJson private val 
         val inputs = root["inputs"]?.jsonArray.orEmpty()
         val transformed = inputs.map { input -> convertParameter(input.jsonObject) }
         return json.encodeToString(JsonArray(transformed))
+    }
+
+    private companion object {
+        private val HEX_SELECTOR = Regex("^[0-9a-fA-F]{8}$")
     }
 }

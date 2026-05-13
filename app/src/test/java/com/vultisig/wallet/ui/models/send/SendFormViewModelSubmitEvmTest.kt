@@ -72,7 +72,7 @@ internal class SendFormViewModelSubmitEvmTest {
         advanceUntilIdle()
         // tokenAmountFieldState is blank too, but the address check runs first.
 
-        vm.send()
+        vm.onClickContinue()
         advanceUntilIdle()
 
         assertEquals(SendSections.Address, vm.uiState.value.expandedSection)
@@ -87,7 +87,7 @@ internal class SendFormViewModelSubmitEvmTest {
             advanceUntilIdle()
             vm.addressFieldState.setTextAndPlaceCursorAtEnd("0xabc")
 
-            vm.send()
+            vm.onClickContinue()
             advanceUntilIdle()
 
             assertEquals(SendSections.Amount, vm.uiState.value.expandedSection)
@@ -102,27 +102,13 @@ internal class SendFormViewModelSubmitEvmTest {
         vm.addressFieldState.setTextAndPlaceCursorAtEnd("0xabc")
         vm.tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.1")
 
-        vm.send()
+        vm.onClickContinue()
         advanceUntilIdle()
 
         assertNotNull(vm.uiState.value.errorText)
         assertFalse(vm.uiState.value.isLoading)
         coVerify(exactly = 0) { navigator.route(any(), any()) }
         coVerify(exactly = 0) { transactionRepository.addTransaction(any()) }
-    }
-
-    @Test
-    fun `onClickContinue with no defiType routes to send (validation path)`() = runTest {
-        // Indirectly verifies the dispatch table: with defiType = null and blank inputs,
-        // onClickContinue must reach send() — observable via the same expandSection(Address)
-        // behavior tested above.
-        val vm = buildViewModel()
-        advanceUntilIdle()
-
-        vm.onClickContinue()
-        advanceUntilIdle()
-
-        assertEquals(SendSections.Address, vm.uiState.value.expandedSection)
     }
 
     private fun buildViewModel(): SendFormViewModel {

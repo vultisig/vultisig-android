@@ -5,14 +5,8 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import javax.inject.Inject
 
-/**
- * Routing table for swap providers. Maps a chain + ticker to the set of providers that can quote
- * it, and resolves a single provider for a src/dst pair (applying cross-chain restrictions).
- */
 interface SwapProviderTable {
     fun providersFor(coin: Coin): Set<SwapProvider>
-
-    fun providerFor(srcToken: Coin, dstToken: Coin): SwapProvider?
 
     fun eligibleProvidersFor(srcToken: Coin, dstToken: Coin): List<SwapProvider>
 }
@@ -135,9 +129,6 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             Chain.Qbtc -> emptySet()
         }
     }
-
-    override fun providerFor(srcToken: Coin, dstToken: Coin): SwapProvider? =
-        eligibleProvidersFor(srcToken, dstToken).firstOrNull()
 
     override fun eligibleProvidersFor(srcToken: Coin, dstToken: Coin): List<SwapProvider> {
         val shared = providersFor(srcToken).intersect(providersFor(dstToken))

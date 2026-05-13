@@ -54,6 +54,7 @@ private val TRON_STAKE_POSITIONS_DIALOG =
 
 private val TRON_DEFAULT_SELECTED_POSITIONS = listOf(TRON_KEY)
 
+/** UI model for the Tron staking/freeze position screen. */
 @Immutable
 internal data class TronStakingUiModel(
     val totalAmountPrice: String = "",
@@ -65,11 +66,17 @@ internal data class TronStakingUiModel(
     val totalEnergy: Long = 0L,
     val pendingWithdrawals: List<TronPendingWithdrawalUiModel> = emptyList(),
     val hasFrozenBalance: Boolean = false,
+    val hasAvailableBalance: Boolean = false,
 )
 
+/** UI state for the Tron DeFi positions screen. */
 @Immutable
 internal sealed interface TronDeFiUiState {
-    data object Loading : TronDeFiUiState
+    /**
+     * Loading state; carries [previousSuccess] so the UI can show skeleton placeholders sized to
+     * real data.
+     */
+    data class Loading(val previousSuccess: Success? = null) : TronDeFiUiState
 
     @Immutable data class Error(val error: UiText) : TronDeFiUiState
 
@@ -109,7 +116,7 @@ constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<TronDeFiUiState>(TronDeFiUiState.Loading)
+    private val _state = MutableStateFlow<TronDeFiUiState>(TronDeFiUiState.Loading())
     val state: StateFlow<TronDeFiUiState> = _state.asStateFlow()
 
     private var vaultId: VaultId = ""
@@ -135,7 +142,10 @@ constructor(
                         TronDeFiUiState.Error(R.string.error_view_default_description.asUiText())
                 }
             ) {
-                _state.value = TronDeFiUiState.Loading
+                val previousSuccess =
+                    (_state.value as? TronDeFiUiState.Success)
+                        ?: (_state.value as? TronDeFiUiState.Loading)?.previousSuccess
+                _state.value = TronDeFiUiState.Loading(previousSuccess = previousSuccess)
 
                 // Resolve the TRX coin for this vault
                 val trxCoin = findTrxCoin(vaultId)
@@ -196,6 +206,7 @@ constructor(
             totalEnergy = stats.totalEnergy,
             pendingWithdrawals = pendingWithdrawals,
             hasFrozenBalance = frozenTotal > BigDecimal.ZERO,
+            hasAvailableBalance = availableBalanceTrx > BigDecimal.ZERO,
         )
     }
 
@@ -283,9 +294,5 @@ constructor(
                 )
             )
         }
-    }
-
-    fun onBackClick() {
-        viewModelScope.safeLaunch { navigator.navigate(Destination.Back) }
     }
 }

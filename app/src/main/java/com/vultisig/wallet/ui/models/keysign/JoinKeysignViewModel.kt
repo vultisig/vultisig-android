@@ -11,8 +11,10 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
@@ -45,7 +47,9 @@ import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.swapAssetComparisonName
+import com.vultisig.wallet.data.models.swapProviderFromWireId
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -57,15 +61,13 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.securityscanner.BLOCKAID_PROVIDER
 import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
-import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidKeysignScanResult
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.DecompressQrUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
-import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
-import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
+import com.vultisig.wallet.data.usecases.ThorchainMemoParser
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
@@ -94,12 +96,15 @@ import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.util.decodeBase64Bytes
 import java.math.BigInteger
+import java.net.SocketException
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -113,6 +118,8 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
@@ -211,10 +218,10 @@ constructor(
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val parseCosmosMessage: ParseCosmosMessageUseCase,
-    private val resolveProviderUseCase: ResolveProviderUseCase,
     private val keysignViewModelFactory: KeysignViewModel.Factory,
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
+    private val thorchainMemoParser: ThorchainMemoParser,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -372,8 +379,19 @@ constructor(
                 } else {
                     currentState.value = JoinKeysignState.DiscoverService
                 }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: SwapException.NetworkConnection) {
+                Timber.d(e, "Network connection failure during QR scan")
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: UnknownHostException) {
                 Timber.d(e, "Failed to resolve request")
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+            } catch (e: SocketException) {
+                Timber.d(e, "Socket failure during QR scan")
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+            } catch (e: SocketTimeoutException) {
+                Timber.d(e, "Socket timeout during QR scan")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
                 Timber.d(e, "Failed to parse QR code")
@@ -497,7 +515,6 @@ constructor(
     private suspend fun loadTransaction(payload: KeysignPayload) {
         val swapPayload = payload.swapPayload
         val currency = appCurrencyRepository.currency.first()
-
         when {
             swapPayload != null -> {
                 val srcToken = swapPayload.srcToken
@@ -524,7 +541,7 @@ constructor(
                             TokenValue(
                                 value =
                                     blockChainSpecific.maxFeePerGasWei *
-                                        blockChainSpecific.gasLimit,
+                                        defaultEvmSwapGasLimit(chain),
                                 token = nativeToken,
                             )
                         blockChainSpecific is BlockChainSpecific.THORChain ->
@@ -565,64 +582,14 @@ constructor(
 
                 val vaultName = _currentVault.name
 
-                val resolvedProvider =
-                    runCatching {
-                            resolveProviderUseCase(
-                                SwapSelectionContext(srcToken, dstToken, srcTokenValue)
-                            )
-                        }
-                        .onFailure { Timber.w(it, "Failed to resolve swap provider in join flow") }
-                        .getOrNull()
-                val provider = resolvedProvider?.getSwapProviderId().orEmpty()
-
-                suspend fun buildSwapUiModel(
-                    providerFee: TokenValue,
-                    providerFeeToken: Coin,
-                ): SwapTransactionUiModel {
-                    val estimatedFee =
-                        convertTokenValueToFiat(providerFeeToken, providerFee, currency)
-                    return SwapTransactionUiModel(
-                        src =
-                            ValuedToken(
-                                value = mapTokenValueToDecimalUiString(srcTokenValue),
-                                token = srcToken,
-                                fiatValue =
-                                    fiatValueToStringMapper(
-                                        convertTokenValueToFiat(srcToken, srcTokenValue, currency)
-                                    ),
-                            ),
-                        dst =
-                            ValuedToken(
-                                value = mapTokenValueToDecimalUiString(dstTokenValue),
-                                token = dstToken,
-                                fiatValue =
-                                    fiatValueToStringMapper(
-                                        convertTokenValueToFiat(dstToken, dstTokenValue, currency)
-                                    ),
-                            ),
-                        networkFee =
-                            ValuedToken(
-                                token = srcToken,
-                                value =
-                                    mapTokenValueToDecimalUiString(
-                                        estimatedNetworkGasFee.tokenValue
-                                    ),
-                                fiatValue =
-                                    fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
-                            ),
-                        providerFee =
-                            ValuedToken(
-                                token = providerFeeToken,
-                                value = providerFee.value.toString(),
-                                fiatValue = fiatValueToStringMapper(estimatedFee),
-                            ),
-                        networkFeeFormatted =
-                            mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
-                                " ${estimatedNetworkGasFee.tokenValue.unit}",
-                        totalFee = fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
-                        provider = provider,
-                    )
-                }
+                val provider =
+                    when (swapPayload) {
+                        is SwapPayload.ThorChain -> SwapProvider.THORCHAIN.getSwapProviderId()
+                        is SwapPayload.MayaChain -> SwapProvider.MAYA.getSwapProviderId()
+                        is SwapPayload.EVM ->
+                            swapProviderFromWireId(swapPayload.data.provider)?.getSwapProviderId()
+                                ?: swapPayload.data.provider
+                    }
 
                 when (swapPayload) {
                     is SwapPayload.EVM -> {
@@ -630,10 +597,9 @@ constructor(
                         val hasJupiterSwapProvider =
                             srcToken.chain == Chain.Solana && dstToken.chain == Chain.Solana
                         // LI.FI is the only aggregator that produces cross-chain EVM swaps, so
-                        // treat src.chain != dst.chain as LI.FI even if provider resolution
-                        // failed in this flow.
+                        // treat src.chain != dst.chain as LI.FI.
                         val isLiFi =
-                            resolvedProvider == SwapProvider.LIFI ||
+                            provider == SwapProvider.LIFI.getSwapProviderId() ||
                                 srcToken.chain != dstToken.chain
 
                         val feeToken =
@@ -743,9 +709,16 @@ constructor(
                         ) {
                             val lpAddUiModel =
                                 buildSwapUiModel(
+                                    srcToken = srcToken,
+                                    srcTokenValue = srcTokenValue,
+                                    dstToken = dstToken,
+                                    dstTokenValue = dstTokenValue,
+                                    estimatedNetworkGasFee = estimatedNetworkGasFee,
+                                    provider = provider,
                                     providerFee =
                                         TokenValue(value = BigInteger.ZERO, token = srcToken),
                                     providerFeeToken = srcToken,
+                                    currency = currency,
                                 )
                             transactionTypeUiModel = TransactionTypeUiModel.Swap(lpAddUiModel)
                             transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel)
@@ -767,7 +740,18 @@ constructor(
                                     ),
                                 )
                                 .expectNative(SwapProvider.THORCHAIN)
-                        val swapTransactionUiModel = buildSwapUiModel(quote.fees, dstToken)
+                        val swapTransactionUiModel =
+                            buildSwapUiModel(
+                                srcToken = srcToken,
+                                srcTokenValue = srcTokenValue,
+                                dstToken = dstToken,
+                                dstTokenValue = dstTokenValue,
+                                estimatedNetworkGasFee = estimatedNetworkGasFee,
+                                provider = provider,
+                                providerFee = quote.fees,
+                                providerFeeToken = dstToken,
+                                currency = currency,
+                            )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
                             mapSwapTransactionToHistoryData(swapTransactionUiModel)
@@ -786,9 +770,16 @@ constructor(
                         ) {
                             val lpAddUiModel =
                                 buildSwapUiModel(
+                                    srcToken = srcToken,
+                                    srcTokenValue = srcTokenValue,
+                                    dstToken = dstToken,
+                                    dstTokenValue = dstTokenValue,
+                                    estimatedNetworkGasFee = estimatedNetworkGasFee,
+                                    provider = provider,
                                     providerFee =
                                         TokenValue(value = BigInteger.ZERO, token = srcToken),
                                     providerFeeToken = srcToken,
+                                    currency = currency,
                                 )
                             transactionTypeUiModel = TransactionTypeUiModel.Swap(lpAddUiModel)
                             transactionHistoryData = mapSwapTransactionToHistoryData(lpAddUiModel)
@@ -811,7 +802,18 @@ constructor(
                                     ),
                                 )
                                 .expectNative(SwapProvider.MAYA)
-                        val swapTransactionUiModel = buildSwapUiModel(quote.fees, dstToken)
+                        val swapTransactionUiModel =
+                            buildSwapUiModel(
+                                srcToken = srcToken,
+                                srcTokenValue = srcTokenValue,
+                                dstToken = dstToken,
+                                dstTokenValue = dstTokenValue,
+                                estimatedNetworkGasFee = estimatedNetworkGasFee,
+                                provider = provider,
+                                providerFee = quote.fees,
+                                providerFeeToken = dstToken,
+                                currency = currency,
+                            )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
                             mapSwapTransactionToHistoryData(swapTransactionUiModel)
@@ -879,13 +881,16 @@ constructor(
                             isMax = false,
                         )
 
-                    val fees =
-                        withContext(Dispatchers.IO) {
-                            feeServiceComposite.calculateFees(blockchainTransaction)
-                        }
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-                    val estimatedTokenFees = TokenValue(value = fees.amount, token = nativeCoin)
+                    val fallbackFeeAmount =
+                        resolveFallbackFeeAmount(payload.blockChainSpecific, blockchainTransaction)
+                    val estimatedTokenFees =
+                        computeJoinKeysignNetworkFee(
+                            blockChainSpecific = payload.blockChainSpecific,
+                            nativeCoin = nativeCoin,
+                            fallbackFeeAmount = fallbackFeeAmount,
+                        )
 
                     val totalGasAndFee =
                         gasFeeToEstimatedFee(
@@ -895,6 +900,8 @@ constructor(
                                 selectedToken = payload.coin,
                             )
                         )
+
+                    val parsedThorMemo = thorchainMemoParser.parse(payload.memo ?: "")
 
                     val depositTransaction =
                         DepositTransaction(
@@ -908,6 +915,11 @@ constructor(
                             estimatedFees = estimatedTokenFees,
                             estimateFeesFiat = totalGasAndFee.formattedFiatValue,
                             blockChainSpecific = payload.blockChainSpecific,
+                            operation = parsedThorMemo?.operation.orEmpty(),
+                            nodeAddress = parsedThorMemo?.nodeAddress.orEmpty(),
+                            pairedAddress = parsedThorMemo?.pairedAddress.orEmpty(),
+                            thorAddress = parsedThorMemo?.thorAddress.orEmpty(),
+                            pool = parsedThorMemo?.pool.orEmpty(),
                         )
                     val depositTransactionUiModel =
                         mapDepositTransactionToUiModel(depositTransaction)
@@ -946,10 +958,6 @@ constructor(
                             isMax = false,
                         )
 
-                    val fees =
-                        withContext(Dispatchers.IO) {
-                            feeServiceComposite.calculateFees(blockchainTransaction)
-                        }
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
                     val gasFee =
@@ -961,7 +969,16 @@ constructor(
                             }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                         } else {
-                            TokenValue(value = fees.amount, token = nativeCoin)
+                            val fallbackFeeAmount =
+                                resolveFallbackFeeAmount(
+                                    payload.blockChainSpecific,
+                                    blockchainTransaction,
+                                )
+                            computeJoinKeysignNetworkFee(
+                                blockChainSpecific = payload.blockChainSpecific,
+                                nativeCoin = nativeCoin,
+                                fallbackFeeAmount = fallbackFeeAmount,
+                            )
                         }
 
                     val totalGasAndFee =
@@ -1063,6 +1080,44 @@ constructor(
                                 .getOrNull()
                         } else null
 
+                    val isUnlimitedApproval =
+                        functionInfo != null &&
+                            isUnlimitedApproval(functionInfo.signature, functionInfo.inputs, json)
+                    val approvalSpender =
+                        if (isUnlimitedApproval) {
+                            val spenderIdx = approvalSpenderArgIndex(functionInfo?.signature ?: "")
+                            if (spenderIdx != null) {
+                                runCatching {
+                                        json
+                                            .parseToJsonElement(functionInfo?.inputs ?: "[]")
+                                            .jsonArray
+                                            .getOrNull(spenderIdx)
+                                            ?.jsonPrimitive
+                                            ?.content
+                                            ?.trim()
+                                            ?.takeIf { it.isNotEmpty() }
+                                    }
+                                    .onFailure { if (it is CancellationException) throw it }
+                                    .getOrNull()
+                            } else null
+                        } else null
+                    val approvalTokenTicker =
+                        if (
+                            isUnlimitedApproval &&
+                                isTokenContractApproval(functionInfo?.signature ?: "")
+                        ) {
+                            allVaults
+                                .flatMap { it.coins }
+                                .firstOrNull { coin ->
+                                    coin.chain == chain &&
+                                        coin.contractAddress.equals(
+                                            payload.toAddress,
+                                            ignoreCase = true,
+                                        )
+                                }
+                                ?.ticker
+                        } else null
+
                     val namedTransactionUiModel =
                         transactionToUiModel.copy(
                             srcVaultName = srcVaultName,
@@ -1071,6 +1126,9 @@ constructor(
                             functionSignature = functionInfo?.signature,
                             functionInputs = functionInfo?.inputs,
                             functionName = functionInfo?.functionName,
+                            isUnlimitedApproval = isUnlimitedApproval,
+                            approvalSpender = approvalSpender,
+                            approvalTokenTicker = approvalTokenTicker,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)
@@ -1091,6 +1149,57 @@ constructor(
                 }
             }
         }
+    }
+
+    private suspend fun buildSwapUiModel(
+        srcToken: Coin,
+        srcTokenValue: TokenValue,
+        dstToken: Coin,
+        dstTokenValue: TokenValue,
+        estimatedNetworkGasFee: EstimatedGasFee,
+        provider: String,
+        providerFee: TokenValue,
+        providerFeeToken: Coin,
+        currency: AppCurrency,
+    ): SwapTransactionUiModel {
+        val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
+        return SwapTransactionUiModel(
+            src =
+                ValuedToken(
+                    value = mapTokenValueToDecimalUiString(srcTokenValue),
+                    token = srcToken,
+                    fiatValue =
+                        fiatValueToStringMapper(
+                            convertTokenValueToFiat(srcToken, srcTokenValue, currency)
+                        ),
+                ),
+            dst =
+                ValuedToken(
+                    value = mapTokenValueToDecimalUiString(dstTokenValue),
+                    token = dstToken,
+                    fiatValue =
+                        fiatValueToStringMapper(
+                            convertTokenValueToFiat(dstToken, dstTokenValue, currency)
+                        ),
+                ),
+            networkFee =
+                ValuedToken(
+                    token = srcToken,
+                    value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
+                    fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
+                ),
+            providerFee =
+                ValuedToken(
+                    token = providerFeeToken,
+                    value = providerFee.value.toString(),
+                    fiatValue = fiatValueToStringMapper(estimatedFee),
+                ),
+            networkFeeFormatted =
+                mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
+                    " ${estimatedNetworkGasFee.tokenValue.unit}",
+            totalFee = fiatValueToStringMapper(estimatedFee + estimatedNetworkGasFee.fiatValue),
+            provider = provider,
+        )
     }
 
     /**
@@ -1422,6 +1531,108 @@ constructor(
             )
         }
     }
+
+    /**
+     * Returns ZERO for EVM/THORChain (fee is read from [BlockChainSpecific]) or fetches via the fee
+     * service otherwise.
+     */
+    private suspend fun resolveFallbackFeeAmount(
+        blockChainSpecific: BlockChainSpecific,
+        blockchainTransaction: Transfer,
+    ): BigInteger =
+        if (
+            blockChainSpecific is BlockChainSpecific.Ethereum ||
+                blockChainSpecific is BlockChainSpecific.THORChain
+        ) {
+            BigInteger.ZERO
+        } else {
+            withContext(Dispatchers.IO) { feeServiceComposite.calculateFees(blockchainTransaction) }
+                .amount
+        }
+}
+
+/**
+ * ERC-20 approval functions that can grant unlimited token allowances. Mirrors iOS
+ * `ContractCallExtractor.unlimitedApprovalFunctions` and the Windows companion list.
+ */
+private val UNLIMITED_APPROVAL_FUNCTIONS = setOf("approve", "permit", "permitsingle", "permitbatch")
+
+/**
+ * Any allowance at or above 2^96 tokens is treated as effectively unlimited. This threshold covers
+ * MAX_UINT256, `type(uint160).max` (used by Permit2), and any other value that would exhaust a
+ * realistic token supply many times over, while not firing on ordinary large-but-bounded amounts.
+ */
+private val UNLIMITED_APPROVAL_THRESHOLD: BigInteger = BigInteger.ONE.shiftLeft(96)
+
+/**
+ * Returns the index of the first `uint` or `uint256` parameter in [signature], or null if none.
+ * Parsing the signature dynamically means this works for `approve(address,uint256)` (index 1) and
+ * `permit(address,address,uint256,…)` (index 2) without hard-coding positions.
+ */
+internal fun firstUintParamIndex(signature: String): Int? {
+    val params =
+        signature
+            .substringAfter('(', "")
+            .substringBefore(')')
+            .takeIf { it.isNotEmpty() }
+            ?.split(',') ?: return null
+    return params.indexOfFirst { it.trim().startsWith("uint") }.takeIf { it >= 0 }
+}
+
+/**
+ * Returns the args-array index of the spender address for known approval call shapes, or null when
+ * the spender cannot be read as a simple flat element (e.g., Permit2 tuples).
+ * - `approve(address spender, uint256)` → 0
+ * - `permit(address owner, address spender, uint256, …)` → 1
+ * - `permitSingle` / `permitBatch` → null (spender is inside a `PermitDetails` tuple)
+ */
+internal fun approvalSpenderArgIndex(signature: String): Int? {
+    return when (signature.replace(" ", "").lowercase(Locale.ROOT).substringBefore('(')) {
+        "approve" -> 0
+        "permit" -> 1
+        else -> null
+    }
+}
+
+/**
+ * Returns true when the contract at [toAddress] is the ERC-20 token itself. For `approve` and
+ * EIP-2612 `permit`, the call target is the token contract. For Permit2 (`permitSingle` /
+ * `permitBatch`), the call target is the Permit2 router — not the token.
+ */
+internal fun isTokenContractApproval(signature: String): Boolean {
+    val name = signature.replace(" ", "").lowercase(Locale.ROOT).substringBefore('(')
+    return name == "approve" || name == "permit"
+}
+
+/**
+ * Returns true when [signature] is an ERC-20 approval function (`approve`, `permit`,
+ * `permitSingle`, or `permitBatch`) and the first uint parameter in [inputs] is at or above
+ * [UNLIMITED_APPROVAL_THRESHOLD], indicating an effectively unbounded allowance.
+ */
+internal fun isUnlimitedApproval(signature: String, inputs: String?, json: Json): Boolean {
+    val normalized = signature.replace(" ", "").lowercase(Locale.ROOT)
+    if (normalized.substringBefore('(') !in UNLIMITED_APPROVAL_FUNCTIONS) return false
+    val amountIndex = firstUintParamIndex(normalized) ?: return false
+    val amount =
+        runCatching {
+                val rawAmount =
+                    json
+                        .parseToJsonElement(inputs ?: "[]")
+                        .jsonArray
+                        .getOrNull(amountIndex)
+                        ?.jsonPrimitive
+                        ?.content
+                        ?.trim()
+                when {
+                    rawAmount.isNullOrEmpty() -> null
+                    rawAmount.startsWith("0x", ignoreCase = true) ->
+                        BigInteger(rawAmount.substring(2), 16)
+                    else -> BigInteger(rawAmount)
+                }
+            }
+            .onFailure { if (it is CancellationException) throw it }
+            .getOrNull() ?: return false
+    return amount >= UNLIMITED_APPROVAL_THRESHOLD
 }
 
 /** camelCase + acronym→word boundary, e.g. `supplyWithPermit` and `WBTCSwap`. */
@@ -1455,6 +1666,21 @@ private fun isUnsafeDisplayCodePoint(cp: Int): Boolean {
 }
 
 /**
+ * Strips bidi/zero-width/control codepoints from [input] so attacker-controlled text relayed via
+ * the keysign payload (e.g. a crafted ticker carrying U+202E) cannot smuggle reordering or
+ * invisible content into the signing UI. Mirrors `BlockaidSimulationParser.sanitisedTicker`.
+ */
+internal fun sanitizeDisplayString(input: String): String =
+    buildString(input.length) {
+        var i = 0
+        while (i < input.length) {
+            val cp = input.codePointAt(i)
+            if (!isUnsafeDisplayCodePoint(cp)) appendCodePoint(cp)
+            i += Character.charCount(cp)
+        }
+    }
+
+/**
  * Extract a display-friendly function name from an ABI signature.
  * - `supplyWithPermit(...)` → `"Supply With Permit"`
  * - `WBTCSwap(...)` → `"WBTC Swap"`
@@ -1483,3 +1709,27 @@ internal fun prettifyEvmFunctionName(signature: String): String? {
         it.replaceFirstChar { ch -> ch.titlecase(Locale.ROOT) }
     }
 }
+
+internal fun computeJoinKeysignNetworkFee(
+    blockChainSpecific: BlockChainSpecific,
+    nativeCoin: Coin,
+    fallbackFeeAmount: BigInteger,
+): TokenValue =
+    when (blockChainSpecific) {
+        is BlockChainSpecific.Ethereum ->
+            TokenValue(
+                value = blockChainSpecific.maxFeePerGasWei * blockChainSpecific.gasLimit,
+                token = nativeCoin,
+            )
+        is BlockChainSpecific.THORChain ->
+            TokenValue(value = blockChainSpecific.fee, token = nativeCoin)
+        else -> TokenValue(value = fallbackFeeAmount, token = nativeCoin)
+    }
+
+// The initiator's swap path always displays maxFeePerGas * DEFAULT_SWAP_LIMIT (via
+// EthereumFeeService.calculateDefaultFees(Swap)), ignoring BlockChainSpecific.gasLimit —
+// which can be as low as 40k for native ETH/Arb swaps. Mirror that here so joiner output
+// matches initiator output instead of being ~15× lower.
+internal fun defaultEvmSwapGasLimit(chain: Chain): BigInteger =
+    if (chain == Chain.Mantle) EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
+    else EthereumFeeService.DEFAULT_SWAP_LIMIT

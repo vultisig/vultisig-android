@@ -186,6 +186,8 @@
     <string name="verify_swap_agree_receive_amount">Ich bin mit dem Mindestbetrag einverstanden, den ich erhalte</string>
     <string name="vault_settings_success_backup_file">Datei gespeichert in Downloads/%1$s</string>
     <string name="swap_form_estimated_fees_title">Swap Gebühr</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Swap Gebühr (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Ausgehende Gebühr</string>
     <string name="keysign_screen_error_please_try_again">Fehler! Bitte versuchen Sie es erneut. %1$s</string>
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_keysign_discovery_service">Service entdecken</string>
@@ -278,6 +280,7 @@
     <string name="signing_error_mixed_reshare">Gemischte Reshare-Signatur.\nBitte verwenden Sie Vault-Freigaben aus dem gleichen Reshare-Zyklus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Schnelle Signatur</string>
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
+    <string name="sign_transaction">Transaktion signieren</string>
     <string name="keysign_password_title">Passwort</string>
     <string name="start_screen_new">NEU</string>
     <string name="start_screen_import_seedphrase">Seed-Phrase importieren</string>
@@ -417,7 +420,7 @@
     <string name="withdraw_amount">%s abheben</string>
     <string name="deposit_form_unstake_percentage_hint">Prozentsatz zum Unstaking eingeben</string>
     <string name="scan_qr_screen_title">QR-Code scannen</string>
-    <string name="verify_transaction_function_inputs_title">Funktionseingänge</string>
+    <string name="verify_transaction_function_inputs_title">Funktionsargumente</string>
     <string name="dapp_hero_unverified_function_title">Nicht verifizierte Funktion</string>
     <string name="dapp_hero_unverified_function_subtitle">Überprüfen Sie die Details unten, bevor Sie signieren</string>
     <string name="send_shares_currency_hint">Anteile eingeben</string>
@@ -667,6 +670,7 @@
     <string name="chain_selection_select_defi_chains">DeFi-Blockchains auswählen</string>
     <string name="chain_selection_no_chains_found">Keine Blockchains gefunden</string>
     <string name="chain_selection_key_import_warning">Aufgrund technischer Einschränkungen von Schlüsselimport- und Seed-basierten Wallets können nur vorab generierte Blockchains ausgewählt werden.</string>
+    <string name="chain_selection_enable_failed">Aktivieren fehlgeschlagen: %1$s</string>
     <string name="transaction_type_button_functions">Funktionen</string>
     <string name="copy_address">Adresse kopieren</string>
     <string name="chain_tokens_qr_receive_label">Empfange %1$s</string>
@@ -682,6 +686,7 @@
     <string name="invite_to_x_banner_title">Vultisig entwickelt mit Ihnen.</string>
     <string name="invite_to_x_banner_desc">Folgen Sie uns auf X</string>
     <string name="invite_to_x_banner_button">Folgen Sie %s</string>
+    <string name="buy_vult_banner_desc">Und sparen Sie Swap-Gebühren</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Sie sind bereit für den neuen Wallet-Standard.</string>
     <string name="vault_detail_vault_info">Tresorinformationen</string>
     <string name="vault_details_keys">Schlüssel</string>
@@ -845,6 +850,8 @@
     <string name="select_vault_type_fast">Schnell</string>
     <string name="vault_backup_screen_paste">Einfügen</string>
     <string name="vault_backup_error_pin">Fehler beim Überprüfen des Codes. Bitte versuchen Sie es erneut.</string>
+    <string name="vault_backup_network_error">Server nicht erreichbar, bitte erneut versuchen</string>
+    <string name="vault_backup_try_again">Erneut versuchen</string>
     <string name="tx_overview_screen_tx_hash">Transaktions-Hash</string>
     <string name="tx_overview_screen_tx_from">Von</string>
     <string name="swap_swap_button">Tauschen</string>
@@ -938,7 +945,11 @@
     <string name="mint_secured_asset_secure">Gesichertes Asset erstellen (SECURE+)</string>
     <string name="target_asset">Zielvermögen: %1$s-%2$s</string>
     <string name="thor_address">THORChain-Adresse</string>
+    <string name="paired_address">Gepaarte Adresse</string>
+    <string name="node_address">Node-Adresse</string>
     <string name="operation">Operation</string>
+    <string name="pool">Pool</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">Die THORChain-Adresse wurde im Tresor nicht gefunden. Bitte stellen Sie sicher, dass sich RUNE in Ihrem Tresor befindet.</string>
     <string name="deposit_error_not_secured_asset">Das ausgewählte Asset ist nicht gesichert und kann nicht verarbeitet werden.</string>
     <string name="keysign_password_hide_hint">Hinweis ausblenden</string>
@@ -1181,4 +1192,6 @@
     <string name="key_import_error_title">Schlüsselimport fehlgeschlagen</string>
     <string name="key_import_error_description">Der Tresor konnte nicht aus der Seed-Phrase importiert werden. Bitte überprüfen Sie Ihre Seed-Phrase und versuchen Sie es erneut.</string>
     <string name="key_import_error_no_mnemonic_description">Keine Seed-Phrase gefunden. Bitte geben Sie Ihre Seed-Phrase erneut ein und versuchen Sie es noch einmal.</string>
+    <string name="erc20_approval_unlimited_amount">Unbegrenzte %1$s-Freigabe</string>
+    <string name="erc20_approval_spender">Begünstigter</string>
 </resources>

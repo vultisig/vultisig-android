@@ -43,7 +43,9 @@ data class Coin(
 val Coin.isLpToken: Boolean
     get() =
         when (chain) {
-            Chain.ThorChain -> contractAddress.startsWith("x/")
+            Chain.ThorChain ->
+                contractAddress.startsWith("x/staking-") ||
+                    contractAddress.startsWith("x/nami-index-")
             Chain.MayaChain ->
                 contractAddress.startsWith("x/bow-") ||
                     contractAddress.startsWith("x/ghost-vault/") ||
@@ -104,8 +106,7 @@ fun Coin.swapAssetName(): String =
         ) {
             "${chain.swapAssetName()}.${ticker}"
         } else if (chain == Chain.ThorChain) {
-            if (contractAddress.contains(Regex("""^\w+-\w+$"""))) contractAddress
-            else "${chain.swapAssetName()}.${ticker}"
+            if (isSecuredAsset()) contractAddress else "${chain.swapAssetName()}.${ticker}"
         } else {
             "${chain.swapAssetName()}.${ticker}-${contractAddress}"
         }

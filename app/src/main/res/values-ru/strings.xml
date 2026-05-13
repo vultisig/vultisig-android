@@ -184,6 +184,8 @@
     <string name="biometry_auth_login_button">Вход с использованием биометрии</string>
     <string name="swap_form_from_title">Из</string>
     <string name="swap_form_estimated_fees_title">Комиссия за обмен</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Комиссия за обмен (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Исходящая комиссия</string>
     <string name="swap_form_dst_token_title">В</string>
     <string name="transaction_type_button_swap">Обмен</string>
     <string name="swap_form_gas_title">Сетевой сбор</string>
@@ -277,6 +279,7 @@
     <string name="signing_error_mixed_reshare">Смешанное подписание Reshare.\nПожалуйста, используйте общие ресурсы хранилища одного и того же цикла Reshare.</string>
     <string name="verify_transaction_fast_sign_btn_title">Быстрая подпись</string>
     <string name="keysign_sign_transaction">Подписать транзакцию</string>
+    <string name="sign_transaction">Подписать транзакцию</string>
     <string name="keysign_password_title">Пароль</string>
     <string name="start_screen_new">НОВОЕ</string>
     <string name="start_screen_import_seedphrase">Импортировать сид-фразу</string>
@@ -418,7 +421,7 @@
     <string name="withdraw_amount">Вывести %s</string>
     <string name="deposit_form_unstake_percentage_hint">Введите процент для вывода из стейкинга</string>
     <string name="scan_qr_screen_title">Сканировать QR-код</string>
-    <string name="verify_transaction_function_inputs_title">Входные данные функции</string>
+    <string name="verify_transaction_function_inputs_title">Аргументы функции</string>
     <string name="dapp_hero_unverified_function_title">Непроверенная функция</string>
     <string name="dapp_hero_unverified_function_subtitle">Просмотрите детали ниже перед подписанием</string>
     <string name="send_shares_currency_hint">Введите доли</string>
@@ -668,6 +671,7 @@
     <string name="chain_selection_select_defi_chains">Выбрать DeFi сети</string>
     <string name="chain_selection_no_chains_found">Сети не найдены</string>
     <string name="chain_selection_key_import_warning">Из-за технических ограничений импорта ключей и кошельков на основе сид-фразы можно выбрать только предварительно сгенерированные сети.</string>
+    <string name="chain_selection_enable_failed">Не удалось включить: %1$s</string>
     <string name="transaction_type_button_functions">Функции</string>
     <string name="copy_address">Копировать адрес</string>
     <string name="chain_tokens_qr_receive_label">Получить %1$s</string>
@@ -681,6 +685,7 @@
     <string name="invite_to_x_banner_title">Vultisig строит вместе с вами.</string>
     <string name="invite_to_x_banner_desc">Подпишитесь на нас в X</string>
     <string name="invite_to_x_banner_button">Подписаться на %s</string>
+    <string name="buy_vult_banner_desc">И экономьте на комиссиях за обмен</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Вы готовы использовать новый стандарт кошелька.</string>
     <string name="vault_detail_vault_info">Информация о хранилище</string>
     <string name="vault_details_keys">Ключи</string>
@@ -848,6 +853,8 @@
     <string name="select_vault_type_fast">Быстрый</string>
     <string name="vault_backup_screen_paste">Вставить</string>
     <string name="vault_backup_error_pin">Ошибка подтверждения кода. Повторите попытку.</string>
+    <string name="vault_backup_network_error">Не удалось подключиться к серверу. Повторите попытку.</string>
+    <string name="vault_backup_try_again">Повторить</string>
     <string name="tx_overview_screen_tx_hash">Хэш транзакции</string>
     <string name="tx_overview_screen_tx_from">Из</string>
     <string name="swap_swap_button">Обмен</string>
@@ -941,7 +948,11 @@
     <string name="mint_secured_asset_secure">Чеканка обеспеченного актива (SECURE+)</string>
     <string name="target_asset">Целевой актив: %1$s-%2$s</string>
     <string name="thor_address">Адрес THORChain</string>
+    <string name="paired_address">Парный адрес</string>
+    <string name="node_address">Адрес узла</string>
     <string name="operation">Операция</string>
+    <string name="pool">Пул</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">Адрес THORChain не найден в хранилище. Убедитесь, что в вашем хранилище есть RUNE.</string>
     <string name="deposit_error_not_secured_asset">Выбранный актив не является обеспеченным и не может быть обработан.</string>
     <string name="keysign_password_hide_hint">Скрыть подсказку</string>
@@ -1191,4 +1202,6 @@
     <string name="key_import_error_title">Ошибка импорта ключа</string>
     <string name="key_import_error_description">Не удалось импортировать хранилище из seed-фразы. Пожалуйста, проверьте вашу seed-фразу и попробуйте снова.</string>
     <string name="key_import_error_no_mnemonic_description">Seed-фраза не найдена. Пожалуйста, введите заново вашу seed-фразу и попробуйте снова.</string>
+    <string name="erc20_approval_unlimited_amount">Неограниченное одобрение %1$s</string>
+    <string name="erc20_approval_spender">Получатель</string>
 </resources>

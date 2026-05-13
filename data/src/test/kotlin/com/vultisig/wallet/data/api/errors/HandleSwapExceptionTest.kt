@@ -114,6 +114,27 @@ class HandleSwapExceptionTest {
     }
 
     @Test
+    fun `no internet connection maps to NetworkConnection`() {
+        val result = SwapException.handleSwapException("No internet connection")
+        assertInstanceOf(SwapException.NetworkConnection::class.java, result)
+    }
+
+    @Test
+    fun `no internet connection is case insensitive`() {
+        val result = SwapException.handleSwapException("NO INTERNET CONNECTION")
+        assertInstanceOf(SwapException.NetworkConnection::class.java, result)
+    }
+
+    @Test
+    fun `no internet connection embedded in longer message maps to NetworkConnection`() {
+        val result =
+            SwapException.handleSwapException(
+                "Request failed: no internet connection available, please retry"
+            )
+        assertInstanceOf(SwapException.NetworkConnection::class.java, result)
+    }
+
+    @Test
     fun `zero amount maps to AmountCannotBeZero`() {
         val result = SwapException.handleSwapException("Amount cannot be zero")
         assertInstanceOf(SwapException.AmountCannotBeZero::class.java, result)

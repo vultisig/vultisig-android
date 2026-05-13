@@ -12,8 +12,6 @@ interface SwapQuoteRepository {
 
     suspend fun getQuote(provider: SwapProvider, request: SwapQuoteRequest): SwapQuoteResult
 
-    fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider?
-
     fun getEligibleProviders(srcToken: Coin, dstToken: Coin): List<SwapProvider>
 }
 
@@ -31,9 +29,6 @@ constructor(
         val source = sources[provider] ?: error("No SwapQuoteSource registered for $provider")
         return source.fetch(request)
     }
-
-    override fun resolveProvider(srcToken: Coin, dstToken: Coin): SwapProvider? =
-        providerTable.providerFor(srcToken, dstToken)
 
     override fun getEligibleProviders(srcToken: Coin, dstToken: Coin): List<SwapProvider> =
         providerTable.eligibleProvidersFor(srcToken, dstToken)

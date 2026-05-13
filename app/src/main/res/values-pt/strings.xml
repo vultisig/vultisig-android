@@ -186,6 +186,8 @@
     <string name="verify_swap_agree_receive_amount">Concordo com o valor mínimo que receberei</string>
     <string name="vault_settings_success_backup_file">arquivo salvo em Downloads/%1$s</string>
     <string name="swap_form_estimated_fees_title">Taxa de swap</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Taxa de swap (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Taxa de saída</string>
     <string name="keysign_screen_error_please_try_again">Erro! Por favor, tente novamente. %1$s</string>
     <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>
     <string name="join_keysign_discovery_service">Descobrindo o Serviço</string>
@@ -278,6 +280,7 @@
     <string name="signing_error_mixed_reshare">Assinatura mista de nova partilha. \nUtilizar partilhas do cofre do mesmo ciclo de nova partilha.</string>
     <string name="verify_transaction_fast_sign_btn_title">Sinal rápido</string>
     <string name="keysign_sign_transaction">Assinar transação</string>
+    <string name="sign_transaction">Assinar transação</string>
     <string name="keysign_password_title">Palavra-passe</string>
     <string name="start_screen_new">NOVO</string>
     <string name="start_screen_import_seedphrase">Importar frase-semente</string>
@@ -417,7 +420,7 @@
     <string name="withdraw_amount">Sacar %s</string>
     <string name="deposit_form_unstake_percentage_hint">Insira a percentagem para desbloquear</string>
     <string name="scan_qr_screen_title">Digitalize o código QR</string>
-    <string name="verify_transaction_function_inputs_title">Entradas de função</string>
+    <string name="verify_transaction_function_inputs_title">Argumentos de função</string>
     <string name="dapp_hero_unverified_function_title">Função não verificada</string>
     <string name="dapp_hero_unverified_function_subtitle">Reveja os detalhes antes de assinar</string>
     <string name="send_shares_currency_hint">Insira cotas</string>
@@ -664,6 +667,7 @@
     <string name="chain_selection_select_defi_chains">Selecionar correntes DeFi</string>
     <string name="chain_selection_no_chains_found">Nenhuma corrente encontrada</string>
     <string name="chain_selection_key_import_warning">Devido a limitações técnicas da importação de chaves e carteiras baseadas em seed, apenas correntes pré-geradas podem ser selecionadas.</string>
+    <string name="chain_selection_enable_failed">Falha ao ativar: %1$s</string>
     <string name="transaction_type_button_functions">Funções</string>
     <string name="copy_address">Copiar endereço</string>
     <string name="chain_tokens_qr_receive_label">Receber %1$s</string>
@@ -679,6 +683,7 @@
     <string name="invite_to_x_banner_title">A Vultisig está a construir consigo.</string>
     <string name="invite_to_x_banner_desc">Siga-nos no X</string>
     <string name="invite_to_x_banner_button">Siga %s</string>
+    <string name="buy_vult_banner_desc">E poupe nas taxas de troca</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Está pronto para usar um novo padrão de carteira.</string>
     <string name="vault_detail_vault_info">Informações do Cofre</string>
     <string name="vault_details_keys">Chaves</string>
@@ -842,6 +847,8 @@
     <string name="select_vault_type_fast">Rápida</string>
     <string name="vault_backup_screen_paste">Cole</string>
     <string name="vault_backup_error_pin">Erro ao verificar o código. Tente novamente.</string>
+    <string name="vault_backup_network_error">Não foi possível acessar o servidor. Tente novamente.</string>
+    <string name="vault_backup_try_again">Tente novamente</string>
     <string name="tx_overview_screen_tx_hash">Hash da transação</string>
     <string name="tx_overview_screen_tx_from">De</string>
     <string name="swap_swap_button">Trocar</string>
@@ -935,7 +942,11 @@
     <string name="mint_secured_asset_secure">Ativo garantido Mint (SECURE+)</string>
     <string name="target_asset">Ativo alvo: %1$s-%2$s</string>
     <string name="thor_address">Endereço THORChain</string>
+    <string name="paired_address">Endereço emparelhado</string>
+    <string name="node_address">Endereço do nó</string>
     <string name="operation">Operação</string>
+    <string name="pool">Pool</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">Endereço THORChain não encontrado no cofre. Certifique-se de que tem RUNE no seu cofre.</string>
     <string name="deposit_error_not_secured_asset">O ativo selecionado não é um ativo garantido e não pode ser processado.</string>
     <string name="keysign_password_hide_hint">Ocultar dica</string>
@@ -1177,4 +1188,6 @@
     <string name="key_import_error_title">Importação de Chave Falhou</string>
     <string name="key_import_error_description">Não é possível importar o cofre a partir da frase-semente. Verifique sua frase-semente e tente novamente.</string>
     <string name="key_import_error_no_mnemonic_description">Nenhuma frase-semente encontrada. Por favor, insira novamente sua frase-semente e tente novamente.</string>
+    <string name="erc20_approval_unlimited_amount">Aprovação ilimitada de %1$s</string>
+    <string name="erc20_approval_spender">Destinatário</string>
 </resources>

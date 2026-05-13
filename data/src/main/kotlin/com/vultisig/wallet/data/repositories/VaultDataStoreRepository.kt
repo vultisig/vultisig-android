@@ -22,6 +22,10 @@ interface VaultDataStoreRepository {
     suspend fun setGlobalBackupReminderStatus(month: Int)
 
     suspend fun readGlobalBackupReminderStatus(): Flow<Int>
+
+    suspend fun setBuyVultBannerDismissed(dismissed: Boolean)
+
+    fun readBuyVultBannerDismissed(): Flow<Boolean>
 }
 
 internal class VaultDataStoreRepositoryImpl
@@ -57,6 +61,15 @@ constructor(private val appDataStore: AppDataStore) : VaultDataStoreRepository {
         )
     }
 
+    override suspend fun setBuyVultBannerDismissed(dismissed: Boolean) {
+        appDataStore.editData { preferences ->
+            preferences[onBuyVultBannerDismissedKey()] = dismissed
+        }
+    }
+
+    override fun readBuyVultBannerDismissed(): Flow<Boolean> =
+        appDataStore.readData(onBuyVultBannerDismissedKey(), false)
+
     private companion object PreferencesKey {
         fun onVaultBackupStatusKey(vaultId: String) =
             booleanPreferencesKey(name = "vault_backup/$vaultId")
@@ -66,5 +79,8 @@ constructor(private val appDataStore: AppDataStore) : VaultDataStoreRepository {
 
         fun onGlobalBackupReminderStatusKey() =
             intPreferencesKey(name = "global_backup_reminder_status")
+
+        fun onBuyVultBannerDismissedKey() =
+            booleanPreferencesKey(name = "buy_vult_banner_dismissed")
     }
 }

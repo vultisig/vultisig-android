@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
@@ -42,6 +43,7 @@ import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.clearMocks
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -120,6 +122,7 @@ internal class VaultAccountsViewModelTest {
         every { cryptoConnectionTypeRepository.activeCryptoConnectionFlow } returns
             MutableStateFlow(CryptoConnectionType.Wallet)
         every { lastOpenedVaultRepository.lastOpenedVaultId } returns emptyFlow()
+        every { vaultDataStoreRepository.readBuyVultBannerDismissed() } returns flowOf(true)
         // Function-type-interface mocks need explicit return-type stubs; relaxed mode auto-stubs
         // to a generic Object that fails the implicit cast at the VM call site.
         coEvery { isGlobalBackupReminderRequired() } returns false
@@ -156,6 +159,7 @@ internal class VaultAccountsViewModelTest {
             remoteNFTService = remoteNFTService,
             pushNotificationManager = pushNotificationManager,
             snackbarFlow = snackbarFlow,
+            ioDispatcher = testDispatcher,
         )
 
     /** Verifies dismissBackupReminder sets showMonthlyBackupReminder to false. */
@@ -321,6 +325,163 @@ internal class VaultAccountsViewModelTest {
             vm.uiState.value.isRefreshing.shouldBeFalse()
             vm.uiState.value.accounts.isEmpty().shouldBeTrue()
             verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1", any()) }
+        }
+
+    /** Verifies dismissBuyVultBanner persists the dismissed flag. */
+    @Test
+    fun `dismissBuyVultBanner persists dismissed flag`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.dismissBuyVultBanner()
+            advanceUntilIdle()
+            coVerify { vaultDataStoreRepository.setBuyVultBannerDismissed(true) }
+        }
+
+    /** Verifies showBuyVultBanner reflects the persisted dismissed flag (dismissed=false). */
+    @Test
+    fun `showBuyVultBanner is true when dismissed flag is false`() =
+        runTest(testDispatcher) {
+            every { vaultDataStoreRepository.readBuyVultBannerDismissed() } returns flowOf(false)
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.showBuyVultBanner.shouldBeTrue()
+        }
+
+    /** Verifies showBuyVultBanner is false when the persisted dismissed flag is true. */
+    @Test
+    fun `showBuyVultBanner is false when dismissed flag is true`() =
+        runTest(testDispatcher) {
+            every { vaultDataStoreRepository.readBuyVultBannerDismissed() } returns flowOf(true)
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.showBuyVultBanner.shouldBeFalse()
+        }
+
+    /** Verifies buyVult navigates to Swap with VULT preselected when vault already has VULT. */
+    @Test
+    fun `buyVult navigates to Swap with VULT preselected when vault has VULT`() =
+        runTest(testDispatcher) {
+            val vault =
+                Vault(
+                    id = "vault-1",
+                    name = "Test",
+                    coins = listOf(Coins.Ethereum.VULT.copy(address = "0x1")),
+                )
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns vault
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            clearMocks(navigator, enableTokenUseCase, answers = false)
+
+            vm.buyVult()
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { enableTokenUseCase(any(), any()) }
+            coVerify(exactly = 1) {
+                navigator.route(
+                    Route.Swap(
+                        vaultId = "vault-1",
+                        chainId = Chain.Ethereum.id,
+                        dstTokenId = Coins.Ethereum.VULT.id,
+                    )
+                )
+            }
+        }
+
+    /** Verifies buyVult skips navigation when vault has no Ethereum chain. */
+    @Test
+    fun `buyVult skips navigation when vault has no Ethereum chain`() =
+        runTest(testDispatcher) {
+            val vault = Vault(id = "vault-1", name = "Test", coins = emptyList())
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns vault
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            clearMocks(navigator, enableTokenUseCase, answers = false)
+
+            vm.buyVult()
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { enableTokenUseCase(any(), any()) }
+            coVerify(exactly = 0) { navigator.route(any<Route.Swap>()) }
+        }
+
+    /** Verifies buyVult enables VULT then navigates when vault has Ethereum but no VULT. */
+    @Test
+    fun `buyVult enables VULT and navigates when vault has Ethereum but no VULT`() =
+        runTest(testDispatcher) {
+            val ethCoin =
+                Coin(
+                    chain = Chain.Ethereum,
+                    ticker = "ETH",
+                    logo = "",
+                    address = "0xabc",
+                    decimal = 18,
+                    hexPublicKey = "",
+                    priceProviderID = "",
+                    contractAddress = "",
+                    isNativeToken = true,
+                )
+            val vault = Vault(id = "vault-1", name = "Test", coins = listOf(ethCoin))
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns vault
+            coEvery { enableTokenUseCase("vault-1", Coins.Ethereum.VULT) } returns
+                Coins.Ethereum.VULT.id
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            clearMocks(navigator, answers = false)
+
+            vm.buyVult()
+            advanceUntilIdle()
+
+            coVerify(atLeast = 1) { enableTokenUseCase("vault-1", Coins.Ethereum.VULT) }
+            coVerify(exactly = 1) {
+                navigator.route(
+                    Route.Swap(
+                        vaultId = "vault-1",
+                        chainId = Chain.Ethereum.id,
+                        dstTokenId = Coins.Ethereum.VULT.id,
+                    )
+                )
+            }
+        }
+
+    /**
+     * Verifies buyVult skips navigation when enableTokenUseCase returns null (e.g. row rejected by
+     * SQLiteConstraintException) — the swap form would otherwise open with src and dst both
+     * resolving to native ETH, triggering SwapException.SameAssets.
+     */
+    @Test
+    fun `buyVult skips navigation when enableTokenUseCase returns null`() =
+        runTest(testDispatcher) {
+            val ethCoin =
+                Coin(
+                    chain = Chain.Ethereum,
+                    ticker = "ETH",
+                    logo = "",
+                    address = "0xabc",
+                    decimal = 18,
+                    hexPublicKey = "",
+                    priceProviderID = "",
+                    contractAddress = "",
+                    isNativeToken = true,
+                )
+            val vault = Vault(id = "vault-1", name = "Test", coins = listOf(ethCoin))
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns vault
+            coEvery { enableTokenUseCase("vault-1", Coins.Ethereum.VULT) } returns null
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            clearMocks(navigator, answers = false)
+
+            vm.buyVult()
+            advanceUntilIdle()
+
+            coVerify(exactly = 0) { navigator.route(any<Route.Swap>()) }
         }
 
     private fun buildTestAddress(chain: Chain, address: String): Address {

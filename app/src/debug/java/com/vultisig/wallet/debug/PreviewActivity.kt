@@ -17,10 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
@@ -38,6 +41,9 @@ import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.hero.HeroCoinAmount
 import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.v2.fastselection.SelectPopupUiModel
+import com.vultisig.wallet.ui.components.v2.fastselection.components.ChainSelectorPickerItem
+import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectPopup
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
@@ -52,6 +58,7 @@ import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
@@ -134,6 +141,7 @@ class PreviewActivity : ComponentActivity() {
                     "blockaid_hero_done_unverified" -> BlockaidHeroDoneUnverifiedPreview()
                     "blockaid_popup_high" -> BlockaidPopupHighRiskPreview()
                     "blockaid_popup_medium" -> BlockaidPopupMediumRiskPreview()
+                    "select_chain_popup" -> SelectChainPopupPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -215,6 +223,7 @@ private fun FastVaultVerificationPreview() {
         onCodeChanged = {},
         onPasteClick = {},
         onChangeEmailClick = {},
+        onRetryClick = {},
     )
 }
 
@@ -997,6 +1006,44 @@ private fun blockaidHeroUnverifiedState() =
         // body / network failure).
         txScanStatus = TransactionScanStatus.NotStarted,
     )
+
+@Composable
+private fun SelectChainPopupPreview() {
+    val density = LocalDensity.current
+    val configuration = LocalConfiguration.current
+
+    val networks =
+        listOf(
+            Chain.Ethereum.toNetworkUiModel(),
+            Chain.Bitcoin.toNetworkUiModel(),
+            Chain.Solana.toNetworkUiModel(),
+            Chain.ThorChain.toNetworkUiModel(),
+            Chain.MayaChain.toNetworkUiModel(),
+            Chain.BitcoinCash.toNetworkUiModel(),
+            Chain.Hyperliquid.toNetworkUiModel(),
+            Chain.TerraClassic.toNetworkUiModel(),
+        )
+
+    val pressX = with(density) { (configuration.screenWidthDp.dp / 2).toPx() }
+    val pressY = with(density) { (configuration.screenHeightDp.dp / 2).toPx() }
+
+    SwapScreen(state = SwapFormUiModel(), srcAmountTextFieldState = TextFieldState())
+
+    SelectPopup(
+        uiModel =
+            SelectPopupUiModel(
+                items = networks,
+                initialIndex = 2,
+                isLongPressActive = true,
+                pressPosition = Offset(pressX, pressY),
+            ),
+        key = { it.chain },
+        onItemSelected = {},
+        itemContent = { item, distanceFromCenter ->
+            ChainSelectorPickerItem(item = item, distanceFromCenter = distanceFromCenter)
+        },
+    )
+}
 
 @Composable
 private fun ShareQrPreview(info: QrShareInfo) {

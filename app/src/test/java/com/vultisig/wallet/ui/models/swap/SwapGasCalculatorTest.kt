@@ -33,6 +33,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -255,6 +256,157 @@ internal class SwapGasCalculatorTest {
             )
         }
     }
+
+    // ── computeUtxoPlanFeeResult tests ──────────────────────────────────────
+
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(
+        value = Chain::class,
+        names = ["Bitcoin", "BitcoinCash", "Litecoin", "Dogecoin", "Dash", "Zcash"],
+    )
+    fun `computeUtxoPlanFeeResult returns plan fee for UTXO chain`(chain: Chain) = runTest {
+        val planFee = 3936L
+        val nativeCoin = nativeCoinFor(chain)
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault()
+        coEvery { tokenRepository.getNativeToken(chain.id) } returns nativeCoin
+
+        val utxoHelper = mockk<UtxoHelper>()
+        every { UtxoHelper.getHelper(any(), any()) } returns utxoHelper
+        every { utxoHelper.getBitcoinTransactionPlan(any()) } returns
+            Bitcoin.TransactionPlan.newBuilder().setFee(planFee).setError(SigningError.OK).build()
+
+        val capturedParams = slot<GasFeeParams>()
+        val expected = estimatedFee(nativeCoin, BigInteger.valueOf(planFee))
+        coEvery { gasFeeToEstimatedFee(capture(capturedParams)) } returns expected
+
+        val result =
+            calculator.computeUtxoPlanFeeResult(
+                vaultId = VAULT_ID,
+                srcToken = nativeCoin,
+                dstAddress = "dstAddr",
+                tokenAmountInt = BigInteger("100000"),
+                specificAndUtxo = utxoSpecific(),
+                memo = "SWAP:ETH.ETH",
+            )
+
+        requireNotNull(result)
+        assertEquals(BigInteger.valueOf(planFee), capturedParams.captured.gasFee.value)
+        assertEquals(expected, result.estimated)
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(
+        value = Chain::class,
+        names = ["Bitcoin", "BitcoinCash", "Litecoin", "Dogecoin", "Dash", "Zcash"],
+    )
+    fun `computeUtxoPlanFeeResult throws InsufficientUtxosException on Error_not_enough_utxos`(
+        chain: Chain
+    ) = runTest {
+        val nativeCoin = nativeCoinFor(chain)
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault()
+
+        val utxoHelper = mockk<UtxoHelper>()
+        every { UtxoHelper.getHelper(any(), any()) } returns utxoHelper
+        every { utxoHelper.getBitcoinTransactionPlan(any()) } returns
+            Bitcoin.TransactionPlan.newBuilder()
+                .setFee(0L)
+                .setError(SigningError.Error_not_enough_utxos)
+                .build()
+
+        var threw = false
+        try {
+            calculator.computeUtxoPlanFeeResult(
+                vaultId = VAULT_ID,
+                srcToken = nativeCoin,
+                dstAddress = "dstAddr",
+                tokenAmountInt = BigInteger("100000"),
+                specificAndUtxo = utxoSpecific(),
+                memo = null,
+            )
+        } catch (e: InsufficientUtxosException) {
+            threw = true
+        }
+        assertTrue(threw)
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(
+        value = Chain::class,
+        names = ["Bitcoin", "BitcoinCash", "Litecoin", "Dogecoin", "Dash", "Zcash"],
+    )
+    fun `computeUtxoPlanFeeResult returns null on other plan errors`(chain: Chain) = runTest {
+        val nativeCoin = nativeCoinFor(chain)
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault()
+
+        val utxoHelper = mockk<UtxoHelper>()
+        every { UtxoHelper.getHelper(any(), any()) } returns utxoHelper
+        every { utxoHelper.getBitcoinTransactionPlan(any()) } returns
+            Bitcoin.TransactionPlan.newBuilder()
+                .setFee(0L)
+                .setError(SigningError.Error_general)
+                .build()
+
+        val result =
+            calculator.computeUtxoPlanFeeResult(
+                vaultId = VAULT_ID,
+                srcToken = nativeCoin,
+                dstAddress = "dstAddr",
+                tokenAmountInt = BigInteger("100000"),
+                specificAndUtxo = utxoSpecific(),
+                memo = null,
+            )
+
+        assertNull(result)
+    }
+
+    @Test
+    fun `computeUtxoPlanFeeResult returns null for non-UTXO chain`() = runTest {
+        val coin = nativeCoinFor(Chain.Ethereum)
+        val result =
+            calculator.computeUtxoPlanFeeResult(
+                vaultId = VAULT_ID,
+                srcToken = coin,
+                dstAddress = "0xDest",
+                tokenAmountInt = BigInteger("1000000000000000000"),
+                specificAndUtxo =
+                    BlockChainSpecificAndUtxo(
+                        blockChainSpecific = BlockChainSpecific.UTXO(BigInteger.ONE, false),
+                        utxos = emptyList(),
+                    ),
+                memo = null,
+            )
+
+        assertNull(result)
+        verify(exactly = 0) { UtxoHelper.getHelper(any(), any()) }
+    }
+
+    @Test
+    fun `computeUtxoPlanFeeResult returns null for Cardano`() = runTest {
+        val coin = nativeCoinFor(Chain.Cardano)
+        val result =
+            calculator.computeUtxoPlanFeeResult(
+                vaultId = VAULT_ID,
+                srcToken = coin,
+                dstAddress = "adaAddr",
+                tokenAmountInt = BigInteger("1000000"),
+                specificAndUtxo =
+                    BlockChainSpecificAndUtxo(
+                        blockChainSpecific = BlockChainSpecific.UTXO(BigInteger.ONE, false),
+                        utxos = emptyList(),
+                    ),
+                memo = null,
+            )
+
+        assertNull(result)
+        verify(exactly = 0) { UtxoHelper.getHelper(any(), any()) }
+    }
+
+    private fun utxoSpecific() =
+        BlockChainSpecificAndUtxo(
+            blockChainSpecific =
+                BlockChainSpecific.UTXO(byteFee = BigInteger("15"), sendMaxAmount = false),
+            utxos = emptyList(),
+        )
 
     private fun stubCommon(chain: Chain, nativeCoin: Coin, fee: BasicFee) {
         coEvery { vaultRepository.get(VAULT_ID) } returns vault()

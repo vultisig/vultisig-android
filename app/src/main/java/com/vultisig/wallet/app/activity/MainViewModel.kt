@@ -8,6 +8,7 @@ import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.install.model.UpdateAvailability
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.DeepLinkHelper
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SendDeeplinkData
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
@@ -24,6 +25,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -40,6 +42,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -98,10 +102,26 @@ constructor(
             _startDestination.value = resolveStartDestination()
             _isLoading.value = false
 
-            snackbarFlow.collectMessage { (message, type) -> snakeBarHostState.show(message, type) }
+            snackbarFlow.collectMessage { (message, type) ->
+                val resolved = message.asString(context)
+                if (resolved.isBlank()) return@collectMessage
+                snakeBarHostState.show(resolved, type)
+            }
         }
 
-        viewModelScope.safeLaunch { initializeThorChainNetworkId() }
+        viewModelScope.safeLaunch {
+            // Re-trigger after THORChain first appears in any vault, so adding a
+            // THORChain coin (or importing a THORChain vault) mid-session still
+            // initializes the live network id instead of relying on the default.
+            // Uses the lightweight DAO `EXISTS` flow so the cold-start path doesn't
+            // hydrate the full vault graph for non-THORChain users.
+            vaultRepository
+                .observeHasAnyCoinOnChain(Chain.ThorChain)
+                .distinctUntilChanged()
+                .filter { it }
+                .first()
+            initializeThorChainNetworkId()
+        }
 
         networkUtils
             .observeConnectivityAsFlow()

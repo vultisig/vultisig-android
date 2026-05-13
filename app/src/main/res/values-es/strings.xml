@@ -176,6 +176,8 @@
     <string name="biometry_auth_login_button">Iniciar sesión con biometría</string>
     <string name="swap_form_from_title">De</string>
     <string name="swap_form_estimated_fees_title">Tarifa de intercambio</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Tarifa de intercambio (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Tarifa de salida</string>
     <string name="swap_form_dst_token_title">A</string>
     <string name="transaction_type_button_swap">Intercambiar</string>
     <string name="swap_form_gas_title">Tarifa de red</string>
@@ -278,6 +280,7 @@
     <string name="signing_error_mixed_reshare">Firma de recompartición mixta.\n Utilice recursos compartidos de bóveda del mismo ciclo de recompartición.</string>
     <string name="verify_transaction_fast_sign_btn_title">Firma rápida</string>
     <string name="keysign_sign_transaction">Firmar transacción</string>
+    <string name="sign_transaction">Firmar transacción</string>
     <string name="keysign_password_title">Contraseña</string>
     <string name="start_screen_new">NUEVO</string>
     <string name="start_screen_import_seedphrase">Importar frase semilla</string>
@@ -417,7 +420,7 @@
     <string name="withdraw_amount">Retirar %s</string>
     <string name="deposit_form_unstake_percentage_hint">Ingrese el porcentaje a desbloquear</string>
     <string name="scan_qr_screen_title">Escanear código QR</string>
-    <string name="verify_transaction_function_inputs_title">Entradas de función</string>
+    <string name="verify_transaction_function_inputs_title">Argumentos de función</string>
     <string name="dapp_hero_unverified_function_title">Función no verificada</string>
     <string name="dapp_hero_unverified_function_subtitle">Revisa los detalles antes de firmar</string>
     <string name="send_shares_currency_hint">Introduce acciones</string>
@@ -667,6 +670,7 @@
     <string name="chain_selection_select_defi_chains">Seleccionar cadenas DeFi</string>
     <string name="chain_selection_no_chains_found">No se encontraron cadenas</string>
     <string name="chain_selection_key_import_warning">Debido a limitaciones técnicas de la importación de claves y las billeteras basadas en semillas, solo se pueden seleccionar cadenas pregeneradas.</string>
+    <string name="chain_selection_enable_failed">Error al habilitar: %1$s</string>
     <string name="transaction_type_button_functions">Funciones</string>
     <string name="copy_address">Copiar dirección</string>
     <string name="chain_tokens_qr_receive_label">Recibir %1$s</string>
@@ -680,6 +684,7 @@
     <string name="invite_to_x_banner_title">Vultisig construye contigo.</string>
     <string name="invite_to_x_banner_desc">Síguenos en X</string>
     <string name="invite_to_x_banner_button">Sigue a %s</string>
+    <string name="buy_vult_banner_desc">Y ahorra en comisiones de intercambio</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Listo para usar un nuevo estándar de billetera.</string>
     <string name="vault_detail_vault_info">Información de la bóveda</string>
     <string name="vault_details_keys">Claves</string>
@@ -843,6 +848,8 @@
     <string name="select_vault_type_fast">Rápida</string>
     <string name="vault_backup_screen_paste">Pegar</string>
     <string name="vault_backup_error_pin">Error al verificar el código, inténtalo de nuevo</string>
+    <string name="vault_backup_network_error">No se pudo conectar al servidor, inténtalo de nuevo</string>
+    <string name="vault_backup_try_again">Inténtalo de nuevo</string>
     <string name="tx_overview_screen_tx_hash">Hash de la transacción</string>
     <string name="tx_overview_screen_tx_from">De</string>
     <string name="swap_swap_button">Intercambiar</string>
@@ -936,7 +943,11 @@
     <string name="mint_secured_asset_secure">Acuñar activo garantizado (SECURE+)</string>
     <string name="target_asset">Activo objetivo: %1$s-%2$s</string>
     <string name="thor_address">Dirección de Thor</string>
+    <string name="paired_address">Dirección emparejada</string>
+    <string name="node_address">Dirección del nodo</string>
     <string name="operation">Operación</string>
+    <string name="pool">Pool</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">No se encontró la dirección de THORChain en la bóveda. Asegúrate de tener RUNE en tu bóveda.</string>
     <string name="deposit_error_not_secured_asset">El activo seleccionado no está protegido y no se puede procesar.</string>
     <string name="keysign_password_hide_hint">Ocultar pista</string>
@@ -1179,4 +1190,6 @@
     <string name="key_import_error_title">Importación de Clave Fallida</string>
     <string name="key_import_error_description">No se puede importar la billetera desde la frase semilla. Por favor, verifique su frase semilla e inténtelo de nuevo.</string>
     <string name="key_import_error_no_mnemonic_description">No se encontró frase semilla. Por favor, vuelva a ingresar su frase semilla e inténtelo de nuevo.</string>
+    <string name="erc20_approval_unlimited_amount">Aprobación ilimitada de %1$s</string>
+    <string name="erc20_approval_spender">Gastador</string>
 </resources>

@@ -327,6 +327,8 @@
     <!-- Swap Form -->
     <string name="swap_form_from_title">从</string>
     <string name="swap_form_estimated_fees_title">交换费用</string>
+    <string name="swap_form_estimated_fees_with_percent_title">交换费用 (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">出金手续费</string>
     <string name="swap_form_dst_token_title">至</string>
     <string name="transaction_type_button_swap">交换</string>
     <string name="swap_form_gas_title">网络费用</string>
@@ -525,6 +527,7 @@
 
     <!-- Keysign -->
     <string name="keysign_sign_transaction">签署交易</string>
+    <string name="sign_transaction">签署交易</string>
     <string name="keysign_password_title">密码</string>
 
     <!-- Home Screen -->
@@ -699,7 +702,7 @@
     <string name="scan_qr_screen_title">扫描二维码</string>
 
     <!-- Verify Transaction -->
-    <string name="verify_transaction_function_inputs_title">功能输入</string>
+    <string name="verify_transaction_function_inputs_title">函数参数</string>
     <string name="dapp_hero_unverified_function_title">未验证的功能</string>
     <string name="dapp_hero_unverified_function_subtitle">请在签名前查看下方详情</string>
 
@@ -1044,6 +1047,7 @@
     <string name="chain_selection_select_defi_chains">选择 DeFi 区块链</string>
     <string name="chain_selection_no_chains_found">未找到区块链</string>
     <string name="chain_selection_key_import_warning">由于密钥导入和基于助记词的钱包的技术限制，只能选择预生成的区块链。</string>
+    <string name="chain_selection_enable_failed">启用失败：%1$s</string>
 
     <!-- Transaction Type -->
     <string name="transaction_type_button_send">发送</string>
@@ -1079,6 +1083,7 @@
     <string name="invite_to_x_banner_title">Vultisig 正在与您一起构建。</string>
     <string name="invite_to_x_banner_desc">在 X 上关注我们</string>
     <string name="invite_to_x_banner_button">关注 %s</string>
+    <string name="buy_vult_banner_desc">并节省交换费用</string>
     <string name="rename_vault_screen_rename_vault">改名</string>
     <string name="custom_token_screen_finding_token">查找代币</string>
     <string name="retry">重试</string>
@@ -1174,6 +1179,8 @@
     <string name="select_vault_type_fast">快速</string>
     <string name="vault_backup_screen_paste">粘贴</string>
     <string name="vault_backup_error_pin">验证码出错，请重试</string>
+    <string name="vault_backup_network_error">无法连接到服务器，请重试</string>
+    <string name="vault_backup_try_again">重试</string>
     <string name="tx_overview_screen_tx_hash">交易哈希</string>
     <string name="tx_overview_screen_tx_from">从</string>
     <string name="swap_swap_button">交换</string>
@@ -1267,7 +1274,11 @@
     <string name="mint_secured_asset_secure">铸造担保资产（SECURE+）</string>
     <string name="target_asset">目标资产：%1$s-%2$s</string>
     <string name="thor_address">Thor 地址</string>
+    <string name="paired_address">配对地址</string>
+    <string name="node_address">节点地址</string>
     <string name="operation">操作</string>
+    <string name="pool">池</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">您的保险库中未找到 THORChain 地址。请确保您的保险库中拥有 RUNE。</string>
     <string name="deposit_error_not_secured_asset">所选资产并非安全资产，因此无法处理。</string>
     <string name="keysign_password_hide_hint">隐藏提示</string>
@@ -1504,4 +1515,6 @@
     <string name="key_import_error_title">密钥导入失败</string>
     <string name="key_import_error_description">无法从助记词导入钱包。请检查您的助记词并重试。</string>
     <string name="key_import_error_no_mnemonic_description">未找到助记词。请重新输入您的助记词并重试。</string>
+    <string name="erc20_approval_unlimited_amount">无限制 %1$s 授权</string>
+    <string name="erc20_approval_spender">接收方</string>
 </resources>

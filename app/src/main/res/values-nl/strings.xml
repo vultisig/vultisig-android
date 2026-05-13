@@ -184,6 +184,8 @@
     <string name="biometry_auth_login_button">Inloggen met biometrie</string>
     <string name="swap_form_from_title">Van</string>
     <string name="swap_form_estimated_fees_title">Wisselkosten</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Wisselkosten (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Uitgaande vergoeding</string>
     <string name="swap_form_dst_token_title">Aan</string>
     <string name="transaction_type_button_swap">Wisselen</string>
     <string name="swap_form_gas_title">Netwerkkosten</string>
@@ -277,6 +279,7 @@
     <string name="signing_error_mixed_reshare">Gemengde Reshare-ondertekening.\nGebruik kluisshares van dezelfde Reshare-cyclus.</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>
+    <string name="sign_transaction">Transactie ondertekenen</string>
     <string name="keysign_password_title">Wachtwoord</string>
     <string name="start_screen_new">NIEUW</string>
     <string name="start_screen_import_seedphrase">Seedphrase importeren</string>
@@ -416,7 +419,7 @@
     <string name="withdraw_amount">%s opnemen</string>
     <string name="deposit_form_unstake_percentage_hint">Voer percentage in om te unstaken</string>
     <string name="scan_qr_screen_title">QR-code scannen</string>
-    <string name="verify_transaction_function_inputs_title">Functie-ingangen</string>
+    <string name="verify_transaction_function_inputs_title">Functie-argumenten</string>
     <string name="dapp_hero_unverified_function_title">Niet-geverifieerde functie</string>
     <string name="dapp_hero_unverified_function_subtitle">Bekijk de details hieronder voordat je ondertekent</string>
     <string name="send_shares_currency_hint">Voer aandelen in</string>
@@ -662,6 +665,7 @@
     <string name="chain_selection_select_defi_chains">Selecteer DeFi ketens</string>
     <string name="chain_selection_no_chains_found">Geen ketens gevonden</string>
     <string name="chain_selection_key_import_warning">Vanwege technische beperkingen van sleutelimport en seed-gebaseerde wallets kunnen alleen vooraf gegenereerde ketens worden geselecteerd.</string>
+    <string name="chain_selection_enable_failed">Inschakelen mislukt: %1$s</string>
     <string name="transaction_type_button_functions">Functies</string>
     <string name="copy_address">Kopieer adres</string>
     <string name="chain_tokens_qr_receive_label">Ontvang %1$s</string>
@@ -677,6 +681,7 @@
     <string name="invite_to_x_banner_title">Vultisig bouwt met je mee.</string>
     <string name="invite_to_x_banner_desc">Volg ons op X</string>
     <string name="invite_to_x_banner_button">Volg %s</string>
+    <string name="buy_vult_banner_desc">En bespaar op wisselkosten</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Je bent klaar om een ​​nieuwe walletstandaard te gebruiken.</string>
     <string name="vault_detail_vault_info">Kluisinfo</string>
     <string name="vault_details_keys">Sleutels</string>
@@ -840,6 +845,8 @@
     <string name="select_vault_type_fast">Snel</string>
     <string name="vault_backup_screen_paste">Plakken</string>
     <string name="vault_backup_error_pin">Fout bij het verifiëren van de code, probeer het opnieuw</string>
+    <string name="vault_backup_network_error">Server niet bereikbaar, probeer het opnieuw</string>
+    <string name="vault_backup_try_again">Probeer opnieuw</string>
     <string name="tx_overview_screen_tx_hash">Transactiehash</string>
     <string name="tx_overview_screen_tx_from">Van</string>
     <string name="swap_swap_button">Wisselen</string>
@@ -933,7 +940,11 @@
     <string name="mint_secured_asset_secure">Mint Gedekte activa (SECURE+)</string>
     <string name="target_asset">Doelactiva: %1$s-%2$s</string>
     <string name="thor_address">THORChain-adres</string>
+    <string name="paired_address">Gekoppeld adres</string>
+    <string name="node_address">Node-adres</string>
     <string name="operation">Operatie</string>
+    <string name="pool">Pool</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">THORChain-adres niet gevonden in de kluis. Zorg ervoor dat RUNE in uw kluis staat.</string>
     <string name="deposit_error_not_secured_asset">Het geselecteerde item is geen gedekte activa en kan niet worden verwerkt.</string>
     <string name="keysign_password_hide_hint">Verberg hint</string>
@@ -1173,4 +1184,6 @@
     <string name="key_import_error_title">Sleutelimport Mislukt</string>
     <string name="key_import_error_description">Kan kluis niet importeren vanuit de zaadzin. Controleer uw zaadzin en probeer het opnieuw.</string>
     <string name="key_import_error_no_mnemonic_description">Geen zaadzin gevonden. Voer uw zaadzin opnieuw in en probeer het opnieuw.</string>
+    <string name="erc20_approval_unlimited_amount">Onbeperkte goedkeuring van %1$s</string>
+    <string name="erc20_approval_spender">Ontvanger</string>
 </resources>

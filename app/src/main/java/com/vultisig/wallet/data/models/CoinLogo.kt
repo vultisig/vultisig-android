@@ -5,10 +5,12 @@ import com.vultisig.wallet.R
 internal fun getProviderLogo(providerName: String): ImageModel? {
     return when (providerName.lowercase()) {
         "thorchain" -> R.drawable.rune
-        "maya" -> R.drawable.maya
+        "maya",
+        "mayachain" -> R.drawable.maya
         "jupiter" -> R.drawable.jup
         "uni" -> R.drawable.uni
         "1inch" -> R.drawable.oneinch
+        "kyber",
         "kyberswap" -> R.drawable.kyberswap
         "li.fi" -> R.drawable.lifi
         else -> null

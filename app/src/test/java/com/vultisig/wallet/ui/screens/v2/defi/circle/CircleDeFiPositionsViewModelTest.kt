@@ -148,7 +148,7 @@ internal class CircleDeFiPositionsViewModelTest {
      */
     private fun snackbarTypeShownBy(action: () -> Unit): SnackbarType {
         val captured = slot<SnackbarType>()
-        coEvery { snackbarFlow.showMessage(any(), capture(captured)) } just Runs
+        coEvery { snackbarFlow.showMessage(any<String>(), capture(captured)) } just Runs
         action()
         return captured.captured
     }

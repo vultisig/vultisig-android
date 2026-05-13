@@ -11,6 +11,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.v2.pager.VsPager
 import com.vultisig.wallet.ui.components.v2.pager.indicator.VsPagerIndicator
 import com.vultisig.wallet.ui.components.v2.pager.utils.rememberVsPagerState
+import com.vultisig.wallet.ui.screens.v2.home.pager.banner.BuyVultBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.FollowXBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.UpgradeBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.container.HomePagePagerContainer
@@ -22,6 +23,8 @@ internal fun HomepagePager(
     onCloseClick: () -> Unit,
     onUpgradeClick: () -> Unit,
     onFollowXClick: () -> Unit,
+    onBuyVultClick: () -> Unit,
+    onBuyVultDismiss: () -> Unit,
 ) {
     val state = rememberVsPagerState(key = params)
 
@@ -30,18 +33,26 @@ internal fun HomepagePager(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         VsPager(state = state) {
-            if (params.hasMigration)
+            if (params.hasMigration && params.showSessionBanners)
                 item {
                     HomePagePagerContainer(onCloseClick = onCloseClick) {
                         UpgradeBanner(onUpgradeClick = onUpgradeClick)
                     }
                 }
 
-            item {
-                HomePagePagerContainer(onCloseClick = onCloseClick) {
-                    FollowXBanner(onFollowXClick = onFollowXClick)
+            if (params.showSessionBanners)
+                item {
+                    HomePagePagerContainer(onCloseClick = onCloseClick) {
+                        FollowXBanner(onFollowXClick = onFollowXClick)
+                    }
                 }
-            }
+
+            if (params.showBuyVult)
+                item {
+                    HomePagePagerContainer(onCloseClick = onBuyVultDismiss) {
+                        BuyVultBanner(onBuyVultClick = onBuyVultClick)
+                    }
+                }
         }
 
         if (state.pageCount > 1) {
@@ -61,11 +72,18 @@ internal fun HomepagePager(
 @Composable
 private fun HomepagePagerPreview() {
     HomepagePager(
-        params = HomepagePagerParams(hasMigration = true),
+        params =
+            HomepagePagerParams(hasMigration = true, showSessionBanners = true, showBuyVult = true),
         onCloseClick = {},
         onUpgradeClick = {},
         onFollowXClick = {},
+        onBuyVultClick = {},
+        onBuyVultDismiss = {},
     )
 }
 
-internal data class HomepagePagerParams(val hasMigration: Boolean)
+internal data class HomepagePagerParams(
+    val hasMigration: Boolean,
+    val showSessionBanners: Boolean,
+    val showBuyVult: Boolean,
+)

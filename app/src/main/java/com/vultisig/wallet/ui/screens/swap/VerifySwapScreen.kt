@@ -36,6 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -45,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.swapAssetName
@@ -260,6 +262,10 @@ private fun VerifySwapScreen(
                     )
 
                     VerifyCardDivider(size = 20.dp)
+
+                    if (tx.provider.isNotBlank()) {
+                        VerifyProviderRow(provider = tx.provider)
+                    }
 
                     EstimatedNetworkFee(
                         tokenGas = tx.networkFeeFormatted,
@@ -568,6 +574,51 @@ internal fun VerifyVaultDetails(
 }
 
 @Composable
+internal fun VerifyProviderRow(provider: String, modifier: Modifier = Modifier) {
+    val logo = remember(provider) { getProviderLogo(provider) }
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.swap_screen_provider_title),
+            style = Theme.brockmann.supplementary.footnote,
+            color = Theme.v2.colors.text.tertiary,
+            maxLines = 1,
+            modifier = Modifier.defaultMinSize(minWidth = 52.dp),
+        )
+
+        UiSpacer(weight = 1f)
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (logo != null) {
+                TokenLogo(
+                    logo = logo,
+                    title = provider,
+                    errorLogoModifier = Modifier.size(16.dp).clip(CircleShape),
+                    modifier =
+                        Modifier.size(16.dp)
+                            .border(
+                                width = 1.dp,
+                                color = Theme.v2.colors.border.light,
+                                shape = CircleShape,
+                            ),
+                )
+            }
+            Text(
+                text = provider,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
+@Composable
 internal fun VerifyCardJsonDetails(title: String, subtitle: String, modifier: Modifier = Modifier) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -582,8 +633,8 @@ internal fun VerifyCardJsonDetails(title: String, subtitle: String, modifier: Mo
 
         Text(
             text = subtitle,
-            style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.primary,
+            style = Theme.brockmann.body.m.medium.copy(fontFamily = FontFamily.Monospace),
+            color = Theme.v2.colors.alerts.success,
             textAlign = TextAlign.Start,
             modifier = Modifier.horizontalScroll(rememberScrollState()),
         )

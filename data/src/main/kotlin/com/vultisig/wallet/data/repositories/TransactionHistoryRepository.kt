@@ -75,8 +75,10 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
                     status = TransactionStatus.PENDING,
                     lastCheckedAt = now,
                 )
-            // NotFound is transient (indexer lag, mempool delay) — row stays pollable.
-            TransactionResult.NotFound ->
+            // NotFound is transient (indexer lag); TimedOut means the foreground poller gave up
+            // but the tx may still confirm — both keep the row pollable for the background poller.
+            TransactionResult.NotFound,
+            TransactionResult.TimedOut ->
                 dao.updateStatus(
                     txHash = txHash,
                     status = TransactionStatus.NotFound,

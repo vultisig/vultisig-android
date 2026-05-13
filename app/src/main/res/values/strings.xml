@@ -267,6 +267,8 @@
     <string name="biometry_auth_login_button">Login with biometry</string>
     <string name="swap_form_from_title">From</string>
     <string name="swap_form_estimated_fees_title">Swap Fee</string>
+    <string name="swap_form_estimated_fees_with_percent_title">Swap Fee (%1$s)</string>
+    <string name="swap_form_outbound_fee_title">Outbound Fee</string>
     <string name="swap_form_dst_token_title">To</string>
     <string name="transaction_type_button_swap">Swap</string>
     <string name="swap_form_gas_title">Network Fee</string>
@@ -380,6 +382,7 @@
     <string name="signing_error_mixed_reshare">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
     <string name="keysign_sign_transaction">Sign transaction</string>
+    <string name="sign_transaction">Sign Transaction</string>
     <string name="keysign_password_title">Password</string>
     <string name="start_screen_new">NEW</string>
     <string name="start_screen_import_seedphrase">Import seedphrase</string>
@@ -592,6 +595,8 @@
     <string name="vault_backup_screen_paste">Paste</string>
     <string name="vault_backup_error_pin">Error verifying code, please re-try</string>
     <string name="vault_backup_verifying_pin">Verifying code, please wait</string>
+    <string name="vault_backup_network_error">Couldn’t reach server, try again</string>
+    <string name="vault_backup_try_again">Try again</string>
     <string name="vault_backup_screen_email_sent_to">Sent to %s.</string>
     <string name="vault_backup_screen_donot_receive_email">Didn’t receive an email?</string>
     <string name="vault_backup_screen_restart_keygen">Restart keygen</string>
@@ -628,7 +633,7 @@
     <string name="merge_account_doesnt_exist">Selected token is not found for this address</string>
     <string name="keygen_email_error">Incorrect email, please check</string>
     <string name="scan_qr_screen_title">Scan QR Code</string>
-    <string name="verify_transaction_function_inputs_title">Function Inputs</string>
+    <string name="verify_transaction_function_inputs_title">Function Arguments</string>
     <string name="dapp_hero_unverified_function_title">Unverified function</string>
     <string name="dapp_hero_unverified_function_subtitle">Review the details below before signing</string>
     <string name="fast_vault_password_reminder_title">Verify your password for:</string>
@@ -860,6 +865,7 @@
     <string name="chain_selection_select_defi_chains">Select DeFi chains</string>
     <string name="chain_selection_no_chains_found">No chains found</string>
     <string name="chain_selection_key_import_warning">Due to technical limitations of key import and seed-based wallets, only pre-generated chains can be selected.</string>
+    <string name="chain_selection_enable_failed">Failed to enable: %1$s</string>
     <string name="transaction_type_button_send">Send</string>
     <string name="transaction_type_button_functions">Function</string>
     <string name="copy_address">Copy Address</string>
@@ -880,6 +886,9 @@
     <string name="invite_to_x_banner_title">Vultisig is building with you.</string>
     <string name="invite_to_x_banner_desc">Follow us on X</string>
     <string name="invite_to_x_banner_button">Follow @%s</string>
+    <string name="buy_vult_banner_title" translatable="false">Buy $VULT</string>
+    <string name="buy_vult_banner_desc">And save on swap fees</string>
+    <string name="buy_vult_banner_button" translatable="false">Buy $VULT</string>
     <string name="home_defi_portfolio">DeFi Portfolio</string>
     <string name="home_page_no_chains_enabled">No chains enabled</string>
     <string name="home_page_no_chain_enabled_desc">You’ve disabled all chains. Make sure that at least one chain is enabled.</string>
@@ -992,7 +1001,11 @@
     <string name="mint_secured_asset_secure">Mint Secured Asset (SECURE+)</string>
     <string name="target_asset">Target Asset: %1$s-%2$s</string>
     <string name="thor_address">Thor Address</string>
+    <string name="paired_address">Paired Address</string>
+    <string name="node_address">Node Address</string>
     <string name="operation">Operation</string>
+    <string name="pool">Pool</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">THORChain address not found in vault. Please ensure you have RUNE in your vault</string>
     <string name="deposit_error_not_secured_asset">The selected asset is not a secured asset and cannot be processed</string>
     <string name="keysign_password_hide_hint">Hide hint</string>
@@ -1228,4 +1241,6 @@
     <string name="staked_yrune_header">Staked yRUNE</string>
     <string name="compounded_tcy_header">Compounded TCY</string>
     <string name="unknown_error">Unknown error</string>
+    <string name="erc20_approval_unlimited_amount">Unlimited %1$s approval</string>
+    <string name="erc20_approval_spender">Spender</string>
 </resources>
