@@ -969,6 +969,7 @@
     <string name="amino_direct">Izravni potpis</string>
     <string name="transaction_status_confirmed">Transakcija potvrđena</string>
     <string name="transaction_status_failed">Transakcija nije uspjela</string>
+    <string name="transaction_status_refunded">Transakcija vraćena</string>
     <string name="transaction_status_not_found">Transakcija nije pronađena</string>
     <string name="transaction_status_pending">Transakcija na čekanju…</string>
     <string name="transaction_status_notification_title">Status transakcije</string>

@@ -969,6 +969,7 @@
     <string name="amino_direct">Прямая подпись</string>
     <string name="transaction_status_confirmed">Транзакция подтверждена</string>
     <string name="transaction_status_failed">Транзакция не удалась</string>
+    <string name="transaction_status_refunded">Транзакция возвращена</string>
     <string name="transaction_status_not_found">Транзакция не найдена</string>
     <string name="transaction_status_pending">Транзакция в ожидании…</string>
     <string name="transaction_status_notification_title">Статус транзакции</string>
