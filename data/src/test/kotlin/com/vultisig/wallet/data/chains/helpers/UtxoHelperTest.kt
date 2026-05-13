@@ -13,9 +13,13 @@ import com.vultisig.wallet.data.models.payload.UtxoInfo
 import java.math.BigDecimal
 import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
+import vultisig.keysign.v1.BitcoinInput
+import vultisig.keysign.v1.BitcoinOutput
+import vultisig.keysign.v1.SignBitcoin
 import wallet.core.jni.CoinType
 
 /**
@@ -169,6 +173,200 @@ class UtxoHelperTest {
             skipIfJniUnavailable(e)
         }
     }
+
+    // BIP-143 sighash tests — exercise the new from-scratch PSBT signing path against the
+    // canonical test vectors from https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
+
+    /**
+     * BIP-143 "Native P2WPKH" vector. Two-input tx where input #1 is a P2WPKH output we own. The
+     * expected sighash for that input is documented in the BIP itself.
+     */
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - BIP-143 native P2WPKH vector`() {
+        val helper = newHelper()
+        val signBitcoin =
+            SignBitcoin(
+                version = 1u,
+                locktime = 17u,
+                inputs =
+                    listOf(
+                        // Input 0: P2PK, not ours — included in hashPrevouts/hashSequence only.
+                        BitcoinInput(
+                            hash =
+                                "9f96ade4b41d5433f4eda31e1738ec2b36f6e7d1420d94a6af99801a88f7f7ff",
+                            index = 0u,
+                            amount = 625_000_000L,
+                            scriptPubKey =
+                                "2103c9f4836b9a4f77fc0d81f7bcb01b7f1b35916864b9476c241ce9fc198bd25432ac",
+                            scriptType = "p2pk",
+                            isOurs = false,
+                            sequence = 0xFFFFFFEEu,
+                        ),
+                        // Input 1: P2WPKH, ours — the input we co-sign.
+                        BitcoinInput(
+                            hash =
+                                "8ac60eb9575db5b2d987e29f301b5b819ea83a5c6579d282d189cc04b8e151ef",
+                            index = 1u,
+                            amount = 600_000_000L,
+                            scriptPubKey = "00141d0f172a0ecb48aee1be1f2687d2963ae33f71a1",
+                            scriptType = "p2wpkh",
+                            isOurs = true,
+                            sequence = 0xFFFFFFFFu,
+                        ),
+                    ),
+                outputs =
+                    listOf(
+                        BitcoinOutput(
+                            amount = 112_340_000L,
+                            scriptPubKey = "76a9148280b37df378db99f66f85c95a783a76ac7a6d5988ac",
+                        ),
+                        BitcoinOutput(
+                            amount = 223_450_000L,
+                            scriptPubKey = "76a9143bde42dbee7e4dbe6a21b2d50ce2f0167faa815988ac",
+                        ),
+                    ),
+            )
+
+        try {
+            val hashes = helper.getPreSignedImageHashFromSignBitcoin(signBitcoin)
+            assertEquals(1, hashes.size, "Only the is_ours input should produce a sighash")
+            assertEquals(
+                "c37af31116d1b27caf68aae9e3ac82f1477929014d5b917657d0eb49478cb670",
+                hashes[0],
+            )
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    /**
+     * BIP-143 "P2SH-P2WPKH" vector. Single-input tx wrapped in P2SH; sighash uses the embedded
+     * witness program from the redeem script, not the outer scriptPubKey.
+     */
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - BIP-143 P2SH-P2WPKH vector`() {
+        val helper = newHelper()
+        val signBitcoin =
+            SignBitcoin(
+                version = 1u,
+                locktime = 1170u,
+                inputs =
+                    listOf(
+                        BitcoinInput(
+                            hash =
+                                "77541aeb3c4dac9260b68f74f44c973081a9d4cb2ebe8038b2d70faa201b6bdb",
+                            index = 1u,
+                            amount = 1_000_000_000L,
+                            scriptPubKey = "a9144733f37cf4db86fbc2efed2500b4f4e49f31202387",
+                            scriptType = "p2sh-p2wpkh",
+                            redeemScript = "001479091972186c449eb1ded22b78e40d009bdf0089",
+                            isOurs = true,
+                            sequence = 0xFFFFFFFEu,
+                        )
+                    ),
+                outputs =
+                    listOf(
+                        BitcoinOutput(
+                            amount = 199_996_600L,
+                            scriptPubKey = "76a914a457b684d7f0d539a46a45bbc043f35b59d0d96388ac",
+                        ),
+                        BitcoinOutput(
+                            amount = 800_000_000L,
+                            scriptPubKey = "76a914fd270b1ee6abcaea97fea7ad0402e8bd8ad6d77c88ac",
+                        ),
+                    ),
+            )
+
+        try {
+            val hashes = helper.getPreSignedImageHashFromSignBitcoin(signBitcoin)
+            assertEquals(1, hashes.size)
+            assertEquals(
+                "64f3b0f4dd2bb3aa1ce8566d220cc74dda9df97d8490cc81d89d735c92e59fb6",
+                hashes[0],
+            )
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - sighashes are returned in sorted hex order`() {
+        val helper = newHelper()
+        // Two P2WPKH inputs we own; differ by index, scriptPubKey, and amount so sighashes differ.
+        val signBitcoin =
+            SignBitcoin(
+                version = 2u,
+                locktime = 0u,
+                inputs =
+                    listOf(
+                        BitcoinInput(
+                            hash =
+                                "0000000000000000000000000000000000000000000000000000000000000001",
+                            index = 0u,
+                            amount = 100_000L,
+                            scriptPubKey = "0014" + "11".repeat(20),
+                            scriptType = "p2wpkh",
+                            isOurs = true,
+                        ),
+                        BitcoinInput(
+                            hash =
+                                "0000000000000000000000000000000000000000000000000000000000000002",
+                            index = 1u,
+                            amount = 200_000L,
+                            scriptPubKey = "0014" + "22".repeat(20),
+                            scriptType = "p2wpkh",
+                            isOurs = true,
+                        ),
+                    ),
+                outputs =
+                    listOf(
+                        BitcoinOutput(amount = 250_000L, scriptPubKey = "0014" + "33".repeat(20))
+                    ),
+            )
+
+        try {
+            val hashes = helper.getPreSignedImageHashFromSignBitcoin(signBitcoin)
+            assertEquals(2, hashes.size)
+            assertEquals(hashes.sorted(), hashes, "Sighashes must be returned sorted")
+            assertTrue(hashes.all { it.length == 64 }, "Each sighash must be 32 bytes (64 hex)")
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - P2TR is rejected`() {
+        val helper = newHelper()
+        val signBitcoin =
+            SignBitcoin(
+                version = 2u,
+                locktime = 0u,
+                inputs =
+                    listOf(
+                        BitcoinInput(
+                            hash =
+                                "0000000000000000000000000000000000000000000000000000000000000001",
+                            index = 0u,
+                            amount = 100_000L,
+                            scriptPubKey = "5120" + "aa".repeat(32),
+                            scriptType = "p2tr",
+                            isOurs = true,
+                        )
+                    ),
+                outputs =
+                    listOf(BitcoinOutput(amount = 90_000L, scriptPubKey = "0014" + "bb".repeat(20))),
+            )
+
+        try {
+            assertThrows(IllegalStateException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(signBitcoin)
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    private fun newHelper(): UtxoHelper = UtxoHelper(CoinType.BITCOIN, "", "")
 
     private fun skipIfJniUnavailable(e: Throwable) {
         if (
