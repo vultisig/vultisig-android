@@ -11,8 +11,10 @@ import org.junit.jupiter.api.Test
 /**
  * Verifies the Midgard-driven status mapping for THORChain/MayaChain inbound transactions:
  * - `type == "refund"` → [TransactionResult.Refunded] carrying the human-readable reason.
- * - `type == "failed"` → [TransactionResult.Refunded] (same end state — funds refunded after
- *   network rejected the action, e.g. deposits paused).
+ * - `type == "failed"` with a non-blank outbound txID → [TransactionResult.Refunded] (refund
+ *   observed).
+ * - `type == "failed"` with no outbound tx yet → [TransactionResult.Failed] (network rejected the
+ *   action; refund is a separate outbound that hasn't been observed).
  * - `status == "success"` (non-refund/failed) → [TransactionResult.Confirmed].
  * - empty actions array → [TransactionResult.Pending] (indexer lag).
  * - network/parse failure → [TransactionResult.Pending] (so polling keeps running).
@@ -83,10 +85,10 @@ class ThorMayaChainStatusProviderTest {
     }
 
     @Test
-    fun `failed action returns Refunded with reason from metadata`() = runTest {
-        // Real Midgard payload shape for a paused-pool LP add-liquidity:
-        // network accepts the tx (status=success) but cannot execute it (type=failed)
-        // and refunds the inbound funds.
+    fun `failed action without observed outbound refund returns Failed`() = runTest {
+        // Real Midgard payload shape for a paused-pool LP add-liquidity at the moment of
+        // status check: network accepts the tx (status=success) but cannot execute it
+        // (type=failed) and `out` is still empty — no outbound refund has been observed yet.
         val body =
             """
             {
@@ -94,6 +96,7 @@ class ThorMayaChainStatusProviderTest {
                 {
                   "type": "failed",
                   "status": "success",
+                  "out": [],
                   "metadata": {
                     "failed": {
                       "code": "99",
@@ -112,14 +115,67 @@ class ThorMayaChainStatusProviderTest {
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
         result shouldBe
-            TransactionResult.Refunded(
+            TransactionResult.Failed(
                 "failed to execute message; message index: 0: unable to add liquidity, " +
                     "deposits are paused for asset (ETH.USDT-…): internal error"
             )
     }
 
     @Test
-    fun `failed action without metadata falls back to default reason`() = runTest {
+    fun `failed action with observed outbound refund returns Refunded`() = runTest {
+        // Once Midgard has observed the network's refund outbound, the action's `out` array
+        // carries the refund txID — at that point we promote the result to Refunded.
+        val body =
+            """
+            {
+              "actions": [
+                {
+                  "type": "failed",
+                  "status": "success",
+                  "out": [ { "txID": "REFUND_TX_ID_ABC" } ],
+                  "metadata": {
+                    "failed": { "reason": "deposits are paused" }
+                  }
+                }
+              ]
+            }
+            """
+                .trimIndent()
+        val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
+        val provider = ThorMayaChainStatusProvider(client)
+
+        val result = provider.checkStatus("hash", Chain.ThorChain)
+
+        result shouldBe TransactionResult.Refunded("deposits are paused")
+    }
+
+    @Test
+    fun `failed action with blank outbound txID stays Failed`() = runTest {
+        // An `out` entry with a blank txID doesn't count as an observed refund.
+        val body =
+            """
+            {
+              "actions": [
+                {
+                  "type": "failed",
+                  "status": "success",
+                  "out": [ { "txID": "" } ],
+                  "metadata": { "failed": { "reason": "deposits are paused" } }
+                }
+              ]
+            }
+            """
+                .trimIndent()
+        val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
+        val provider = ThorMayaChainStatusProvider(client)
+
+        val result = provider.checkStatus("hash", Chain.ThorChain)
+
+        result shouldBe TransactionResult.Failed("deposits are paused")
+    }
+
+    @Test
+    fun `failed action without metadata falls back to default failed reason`() = runTest {
         val body =
             """
             { "actions": [ { "type": "failed", "status": "success" } ] }
@@ -130,7 +186,7 @@ class ThorMayaChainStatusProviderTest {
 
         val result = provider.checkStatus("hash", Chain.ThorChain)
 
-        result shouldBe TransactionResult.Refunded("Transaction refunded")
+        result shouldBe TransactionResult.Failed("Transaction failed")
     }
 
     @Test

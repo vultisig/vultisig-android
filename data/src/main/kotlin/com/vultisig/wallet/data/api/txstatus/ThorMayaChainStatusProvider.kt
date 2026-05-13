@@ -21,9 +21,12 @@ import timber.log.Timber
  * Midgard's `actions` endpoint exposes the action `type` ("refund"/"failed" vs
  * "swap"/"addLiquidity"/…) and a human-readable reason in `metadata.refund.reason` or
  * `metadata.failed.reason`, which is what we surface in the UI. `type == "failed"` (e.g. deposits
- * paused, slip-limit hit) is reported with `status == "success"` by Midgard but the user's funds
- * were refunded after the failure — same user-visible end state as a regular refund, so we funnel
- * both through [TransactionResult.Refunded].
+ * paused, slip-limit hit) is reported with `status == "success"` by Midgard; the network usually
+ * refunds those, but the refund is a separate outbound tx and isn't observable until it appears in
+ * `action.out`. We therefore only classify `type == "failed"` as [TransactionResult.Refunded] once
+ * at least one outbound tx with a non-blank txID is present; otherwise we report
+ * [TransactionResult.Failed] so we don't tell the user their funds are back while they're still in
+ * flight (or were never refunded).
  */
 class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: HttpClient) :
     TransactionStatusProvider {
@@ -53,25 +56,28 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
         when {
             action.type == ACTION_TYPE_REFUND ->
                 TransactionResult.Refunded(
-                    reason =
-                        action.metadata?.refund?.reason?.takeUnless { it.isBlank() }
-                            ?: DEFAULT_REFUND_REASON
+                    reason = nonBlankOr(action.metadata?.refund?.reason, DEFAULT_REFUND_REASON)
                 )
-            action.type == ACTION_TYPE_FAILED ->
-                TransactionResult.Refunded(
-                    reason =
-                        action.metadata?.failed?.reason?.takeUnless { it.isBlank() }
-                            ?: DEFAULT_REFUND_REASON
-                )
+            action.type == ACTION_TYPE_FAILED -> {
+                val failed = action.metadata?.failed
+                Timber.w("Midgard reported failure: code=%s memo=%s", failed?.code, failed?.memo)
+                val reason = nonBlankOr(failed?.reason, DEFAULT_FAILED_REASON)
+                if (action.out.any { !it.txID.isNullOrBlank() }) TransactionResult.Refunded(reason)
+                else TransactionResult.Failed(reason)
+            }
             action.status == ACTION_STATUS_SUCCESS -> TransactionResult.Confirmed
             else -> TransactionResult.Pending
         }
+
+    private fun nonBlankOr(value: String?, default: String): String =
+        value?.takeUnless { it.isBlank() } ?: default
 
     private companion object {
         const val ACTION_TYPE_REFUND = "refund"
         const val ACTION_TYPE_FAILED = "failed"
         const val ACTION_STATUS_SUCCESS = "success"
         const val DEFAULT_REFUND_REASON = "Transaction refunded"
+        const val DEFAULT_FAILED_REASON = "Transaction failed"
     }
 }
 
@@ -82,8 +88,11 @@ internal data class MidgardActionsResponse(val actions: List<MidgardAction> = em
 internal data class MidgardAction(
     @SerialName("type") val type: String? = null,
     @SerialName("status") val status: String? = null,
+    @SerialName("out") val out: List<MidgardTransaction> = emptyList(),
     @SerialName("metadata") val metadata: MidgardActionMetadata? = null,
 )
+
+@Serializable internal data class MidgardTransaction(@SerialName("txID") val txID: String? = null)
 
 @Serializable
 internal data class MidgardActionMetadata(
