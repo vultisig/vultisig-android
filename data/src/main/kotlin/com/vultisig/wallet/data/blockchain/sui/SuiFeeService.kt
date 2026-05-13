@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.crypto.SuiHelper
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
@@ -48,8 +49,14 @@ import vultisig.keysign.v1.SuiCoin
  */
 class SuiFeeService @Inject constructor(private val suiApi: SuiApi) : FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee = coroutineScope {
+        // Sui dry-run requires a fully built Transfer extrinsic. A Swap carries opaque callData,
+        // so fall back to the constant budget — good enough for UI, and Sui has no live swap
+        // provider today.
+        if (transaction is Swap) {
+            return@coroutineScope calculateDefaultFees(transaction)
+        }
         require(transaction is Transfer) {
-            "Invalid Transfer type: ${transaction::class.simpleName}"
+            "Invalid Transaction type: ${transaction::class.simpleName}"
         }
         val fromAddress = transaction.coin.address
 

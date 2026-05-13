@@ -21,6 +21,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import timber.log.Timber
 import vultisig.keysign.v1.SuiCoin
 
 interface SuiApi {
@@ -146,33 +147,35 @@ constructor(private val http: HttpClient, private val json: Json) : SuiApi {
     }
 
     override suspend fun checkStatus(txHash: String): SuiTransactionBlockResponse? {
-        return runCatching {
-                val response =
-                    http.postRpc<EvmRpcResponseJson<SuiTransactionBlockResponse>>(
-                        url = rpcUrl,
-                        method = "sui_getTransactionBlock",
-                        params =
-                            buildJsonArray {
-                                add(txHash)
-                                add(json.encodeToJsonElement(SuiTransactionBlockOptions()))
-                            },
-                    )
-                response.result
-            }
-            .getOrNull()
+        val response =
+            http.postRpc<EvmRpcResponseJson<SuiTransactionBlockResponse>>(
+                url = rpcUrl,
+                method = "sui_getTransactionBlock",
+                params =
+                    buildJsonArray {
+                        add(txHash)
+                        add(json.encodeToJsonElement(SuiTransactionBlockOptions()))
+                    },
+            )
+        if (response.result == null) {
+            Timber.d("checkStatus error: ${response.error?.message}")
+            return null
+        }
+        return response.result
     }
 
     override suspend fun getLatestCheckpointSequenceNumber(): Long? {
-        return runCatching {
-                val response =
-                    http.postRpc<EvmRpcResponseJson<String>>(
-                        url = rpcUrl,
-                        method = "sui_getLatestCheckpointSequenceNumber",
-                        params = JsonArray(emptyList()),
-                    )
-                response.result.toLongOrNull()
-            }
-            .getOrNull()
+        val response =
+            http.postRpc<EvmRpcResponseJson<String>>(
+                url = rpcUrl,
+                method = "sui_getLatestCheckpointSequenceNumber",
+                params = JsonArray(emptyList()),
+            )
+        if (response.result == null) {
+            Timber.d("getLatestCheckpointSequenceNumber error: ${response.error?.message}")
+            return null
+        }
+        return response.result.toLongOrNull()
     }
 }
 

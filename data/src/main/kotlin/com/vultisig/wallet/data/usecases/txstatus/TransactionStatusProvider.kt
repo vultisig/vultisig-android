@@ -11,6 +11,8 @@ sealed class TransactionResult {
 
     data object NotFound : TransactionResult()
 
+    data object TimedOut : TransactionResult()
+
     data class Failed(val reason: String) : TransactionResult()
 }
 

@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
@@ -19,23 +19,21 @@ internal fun AccountList(
     snackbarState: VSSnackbarState,
     accounts: List<AccountUiModel>,
     isBalanceVisible: Boolean,
+    showAddress: Boolean = true,
 ) {
-    val context = LocalContext.current
-
     Column {
         accounts.forEachIndexed { index, account ->
             key(account.chainName) {
+                val addressCopiedMessage =
+                    stringResource(R.string.address_copied, account.chainName)
                 Column {
                     AccountItem(
                         modifier = Modifier.Companion.padding(horizontal = 16.dp, vertical = 12.dp),
                         account = account,
                         isBalanceVisible = isBalanceVisible,
+                        showAddress = showAddress,
                         onClick = { onAccountClick(account) },
-                        onCopy = {
-                            snackbarState.show(
-                                context.getString(R.string.address_copied, account.chainName)
-                            )
-                        },
+                        onCopy = { snackbarState.show(addressCopiedMessage) },
                     )
 
                     if (index != accounts.lastIndex) {

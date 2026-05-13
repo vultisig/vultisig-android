@@ -38,7 +38,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
             ParseVaultFromStringUseCaseImpl(
                 vaultFromOldJsonMapper = mockk<VaultFromOldJsonMapper>(),
                 mapHexToPlainString = mockk<MapHexToPlainString>(),
-                encryption = mockk<Encryption>(),
+                encryption = mockk<VaultBackupEncryption>(),
                 protoBuf = protoBuf,
                 json = mockk(),
             )
@@ -237,7 +237,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
     @Test
     fun `decrypts encrypted old-format wrapper end-to-end with correct password`() {
         // End-to-end legacy path: base64 → AES-CBC decrypt → hex-to-plain → OldJsonVaultRoot.
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         val mapper = mockk<VaultFromOldJsonMapper>()
         val hexMapper = mockk<MapHexToPlainString>()
         val expectedVault = Vault(id = "id", name = "LegacyVault")
@@ -282,7 +282,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `decrypts encrypted new-format container with correct password`() {
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         val innerVault = testVaultProto(name = "DecryptedVault")
         val innerVaultBytes = protoBuf.encodeToByteArray(innerVault)
         // Inside the container `vault` is base64-encoded ciphertext; for this test we use
@@ -307,7 +307,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `throws WrongPasswordException when encrypted new-format container decrypt returns null`() {
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
         val input = encodeEncryptedContainer(ciphertext)
         every { encryption.decrypt(any(), any()) } returns null
@@ -329,7 +329,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
         // Regression: on a real device with a wrong password, AesEncryption's GCM->CBC fallback
         // can throw IllegalBlockSizeException instead of returning null. That must map to
         // WrongPassword, not bubble up as a generic Failed ("Something went wrong").
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
         val input = encodeEncryptedContainer(ciphertext)
         every { encryption.decrypt(any(), any()) } throws
@@ -361,7 +361,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `throws MalformedVaultException when decrypted bytes are not a valid VaultProto`() {
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
         val input = encodeEncryptedContainer(ciphertext)
         // Decrypt "succeeds" but returns garbage bytes that won't parse as a VaultProto.
@@ -417,7 +417,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `throws WrongPasswordException when old-format encrypted wrapper decrypt returns null`() {
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         every { encryption.decrypt(any(), any()) } returns null
 
         val parser =
@@ -440,7 +440,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
     fun `throws WrongPasswordException when old-format encrypted wrapper decrypt throws`() {
         // Regression mirror of the new-format case: IllegalBlockSizeException from the
         // GCM→CBC fallback must not bubble up as a generic Failed.
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         every { encryption.decrypt(any(), any()) } throws
             javax.crypto.IllegalBlockSizeException("WRONG_FINAL_BLOCK_LENGTH")
 
@@ -477,7 +477,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `throws MalformedVaultException when old-format decrypt succeeds but output is not hex`() {
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         val hexMapper = mockk<MapHexToPlainString>()
         // Decrypt returns plaintext bytes, but they aren't valid hex — hexMapper throws.
         every { encryption.decrypt(any(), any()) } returns byteArrayOf(0x7A, 0x7B, 0x7C)
@@ -497,7 +497,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `throws MalformedVaultException when old-format decrypt succeeds but output is not JSON`() {
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         val hexMapper = mockk<MapHexToPlainString>()
         every { encryption.decrypt(any(), any()) } returns byteArrayOf(0x7A, 0x7B, 0x7C)
         every { hexMapper(any()) } returns "plain text, not json"
@@ -516,7 +516,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `propagates CancellationException from encryption layer`() {
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         val ciphertext = byteArrayOf(0x01, 0x02, 0x03, 0x04)
         val input = encodeEncryptedContainer(ciphertext)
         every { encryption.decrypt(any(), any()) } throws CancellationException("cancelled")
@@ -537,7 +537,7 @@ internal class ParseVaultFromStringUseCaseImplTest {
 
     @Test
     fun `propagates CancellationException from old-format path`() {
-        val encryption = mockk<Encryption>()
+        val encryption = mockk<VaultBackupEncryption>()
         every { encryption.decrypt(any(), any()) } throws CancellationException("cancelled")
 
         val parser =

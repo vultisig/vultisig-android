@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.FeatureFlagRepository
 import com.vultisig.wallet.data.repositories.KeyImportRepository
 import com.vultisig.wallet.data.repositories.QrHelperModalRepository
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
@@ -24,6 +25,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -61,6 +63,7 @@ internal class KeygenPeerDiscoveryViewModelTest {
     private lateinit var generateServerPartyId: GenerateServerPartyId
     private lateinit var secretSettingsRepository: SecretSettingsRepository
     private lateinit var vultiSignerRepository: VultiSignerRepository
+    private lateinit var featureFlagRepository: FeatureFlagRepository
     private lateinit var qrHelperModalRepository: QrHelperModalRepository
     private lateinit var vaultRepository: VaultRepository
     private lateinit var keyImportRepository: KeyImportRepository
@@ -84,6 +87,7 @@ internal class KeygenPeerDiscoveryViewModelTest {
         generateServerPartyId = mockk(relaxed = true)
         secretSettingsRepository = mockk(relaxed = true)
         vultiSignerRepository = mockk(relaxed = true)
+        featureFlagRepository = mockk(relaxed = true)
         qrHelperModalRepository = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
         keyImportRepository = mockk(relaxed = true)
@@ -131,6 +135,7 @@ internal class KeygenPeerDiscoveryViewModelTest {
             generateServerPartyId = generateServerPartyId,
             secretSettingsRepository = secretSettingsRepository,
             vultiSignerRepository = vultiSignerRepository,
+            featureFlagRepository = featureFlagRepository,
             qrHelperModalRepository = qrHelperModalRepository,
             vaultRepository = vaultRepository,
             keyImportRepository = keyImportRepository,
@@ -373,5 +378,30 @@ internal class KeygenPeerDiscoveryViewModelTest {
         assertEquals(2, vm.state.value.selectedDevices.size)
         assertTrue(vm.state.value.selectedDevices.contains("d1"))
         assertTrue(vm.state.value.selectedDevices.contains("d2"))
+    }
+
+    // --- Crash path tests ---
+
+    @Test
+    fun `when toRoute throws, init navigates back`() {
+        every { any<SavedStateHandle>().toRoute<Route.Keygen.PeerDiscovery>() } throws
+            IllegalStateException("deserialization failed")
+
+        createViewModel()
+
+        coVerify { navigator.navigate(Destination.Back) }
+    }
+
+    @Test
+    fun `tryAgain does nothing when args is null`() {
+        every { any<SavedStateHandle>().toRoute<Route.Keygen.PeerDiscovery>() } throws
+            IllegalStateException("deserialization failed")
+
+        val vm = createViewModel()
+        // args is null; tryAgain should be a no-op and not crash
+        vm.tryAgain()
+
+        // navigate(Back) called exactly once (from init), not a second time from tryAgain
+        coVerify(exactly = 1) { navigator.navigate(Destination.Back) }
     }
 }

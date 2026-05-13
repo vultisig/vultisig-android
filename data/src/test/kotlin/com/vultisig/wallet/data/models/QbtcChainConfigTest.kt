@@ -157,9 +157,4 @@ class QbtcChainConfigTest {
     fun `QBTC coin has empty price provider`() {
         assertEquals("", Coins.Qbtc.QBTC.priceProviderID)
     }
-
-    companion object {
-        // Must match Vault.kt LOCAL_PARTY_ID_PREFIX
-        private const val LOCAL_PARTY_ID_PREFIX = "Server"
-    }
 }

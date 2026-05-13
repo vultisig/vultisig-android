@@ -5,8 +5,8 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.data.api.MergeAccount
 import com.vultisig.wallet.data.api.models.ResourceUsage
+import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -28,13 +28,13 @@ import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.TokenSelectionViewModel.Companion.REFRESH_TOKEN_DATA
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigInteger
@@ -114,8 +114,8 @@ constructor(
     private var loadDataJob: Job? = null
 
     private fun updateBalanceVisibility() {
-        viewModelScope.launch {
-            val vaultId = vaultId ?: return@launch
+        viewModelScope.safeLaunch {
+            val vaultId = vaultId ?: return@safeLaunch
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
             uiState.update { it.copy(isBalanceVisible = isBalanceVisible) }
         }
@@ -207,7 +207,7 @@ constructor(
 
         loadDataJob?.cancel()
         loadDataJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 if (isRefresh) {
                     updateRefreshing(true)
                 }
@@ -300,13 +300,13 @@ constructor(
     }
 
     private fun collectTronResourceStats(chain: Chain) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             if (chain == Chain.Tron) {
                 val address = currentVault?.coins?.firstOrNull { it.chain == chain }?.address
 
                 if (address == null) {
                     Timber.w("No TRON address for chain %s in vault %s", chainRaw, vaultId)
-                    return@launch
+                    return@safeLaunch
                 }
                 balanceRepository
                     .getTronResourceDataSource(address)
@@ -347,10 +347,6 @@ constructor(
         } else {
             bottomBarVisibility.showBottomBar()
         }
-    }
-
-    fun back() {
-        viewModelScope.launch { navigator.back() }
     }
 
     private fun fetchMergeBalanceFlow(chain: Chain): Flow<List<MergeAccount>> = flow {

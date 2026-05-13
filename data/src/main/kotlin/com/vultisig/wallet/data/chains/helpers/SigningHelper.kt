@@ -11,6 +11,8 @@ import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.TssKeyType
+import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
@@ -37,7 +39,15 @@ object SigningHelper {
             } else {
                 messagePayload.message.toByteArray()
             }
-        return listOf(processedBytes.toKeccak256ByteArray().toHexString())
+        val isEddsa =
+            messagePayload.chain?.let { raw ->
+                runCatching { Chain.fromRaw(raw).TssKeysignType == TssKeyType.EDDSA }
+                    .getOrDefault(false)
+            } ?: false
+        // EdDSA chains (e.g. TON) deliver the precomputed digest directly; signing it again
+        // through keccak256 would diverge from the initiator's hash list.
+        val bytes = if (isEddsa) processedBytes else processedBytes.toKeccak256ByteArray()
+        return listOf(bytes.toHexString())
     }
 
     @OptIn(ExperimentalStdlibApi::class)

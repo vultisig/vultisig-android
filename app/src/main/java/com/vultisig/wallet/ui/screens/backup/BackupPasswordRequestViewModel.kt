@@ -34,12 +34,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.reflect.typeOf
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal data class BackupPasswordState(
     val mimeType: MimeType = OCTET_STREAM,
@@ -154,19 +156,23 @@ constructor(
 
     private suspend fun backupCurrentVault(uri: Uri): Boolean {
         val vault = vault.value ?: return false
-        val vaultBackupData = createVaultBackup(mapVaultToProto(vault), null) ?: return false
+        val vaultBackupData =
+            withContext(Dispatchers.Default) { createVaultBackup(mapVaultToProto(vault), null) }
+                ?: return false
 
         return context.saveContentToUri(uri, vaultBackupData)
     }
 
     private suspend fun backupAllVaults(uri: Uri): Boolean {
         val content =
-            vaults.map { vault ->
-                val vaultBackupData =
-                    createVaultBackup(mapVaultToProto(vault), null) ?: return false
-                val fileName = createVaultBackupFileName(vault)
-                AppZipEntry(fileName, vaultBackupData)
-            }
+            withContext(Dispatchers.Default) {
+                vaults.map { vault ->
+                    val vaultBackupData =
+                        createVaultBackup(mapVaultToProto(vault), null) ?: return@withContext null
+                    val fileName = createVaultBackupFileName(vault)
+                    AppZipEntry(fileName, vaultBackupData)
+                }
+            } ?: return false
 
         return context.saveContentToUri(uri, content)
     }

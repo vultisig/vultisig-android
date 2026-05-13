@@ -1,11 +1,11 @@
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.api.BondedNodesResponse
-import com.vultisig.wallet.data.api.ChurnEntry
-import com.vultisig.wallet.data.api.MidgardHealth
-import com.vultisig.wallet.data.api.MidgardNetworkData
-import com.vultisig.wallet.data.api.NodeDetailsResponse
 import com.vultisig.wallet.data.api.ThorChainApi
+import com.vultisig.wallet.data.api.models.thorchain.BondedNodesResponse
+import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
+import com.vultisig.wallet.data.api.models.thorchain.MidgardHealth
+import com.vultisig.wallet.data.api.models.thorchain.MidgardNetworkData
+import com.vultisig.wallet.data.api.models.thorchain.NodeDetailsResponse
 import com.vultisig.wallet.data.utils.SimpleCache
 import javax.inject.Inject
 import javax.inject.Singleton

@@ -48,6 +48,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             signAmino = from.signAmino,
             signDirect = from.signDirect,
             signSolana = from.signSolana,
+            signTon = from.signTon,
             swapPayload =
                 when {
                     from.oneinchSwapPayload != null ->

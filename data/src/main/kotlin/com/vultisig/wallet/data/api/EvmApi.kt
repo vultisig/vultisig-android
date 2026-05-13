@@ -18,7 +18,9 @@ import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.common.toKeccak256
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.Numeric
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -124,6 +126,13 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
             else getERC20Balance(coin.address, coin.contractAddress)
         } catch (e: SocketTimeoutException) {
             Timber.d("request time out, message: ${e.message}")
+            BigInteger.ZERO
+        } catch (e: NetworkException) {
+            Timber.d(
+                "RPC error fetching balance: status=%d message=%s",
+                e.httpStatusCode,
+                e.message,
+            )
             BigInteger.ZERO
         }
     }
@@ -412,7 +421,11 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
                         add(false)
                     },
             )
-        return response.result.baseFeePerGas.convertToBigIntegerOrZero()
+        if (response.error != null) {
+            Timber.d("get base fee error: ${response.error.message}")
+            return BigInteger.ZERO
+        }
+        return response.result?.baseFeePerGas.convertToBigIntegerOrZero()
     }
 
     override suspend fun getFeeHistory(): List<BigInteger> {
@@ -483,7 +496,9 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
         params: JsonArray,
         id: Int = 1,
     ): T =
-        http.post(rpcUrl) { setBody(RpcPayload(method = method, params = params, id = id)) }.body()
+        http
+            .post(rpcUrl) { setBody(RpcPayload(method = method, params = params, id = id)) }
+            .bodyOrThrow()
 
     private fun generateCustomTokenPayload(contractAddress: String): Pair<RpcPayload, RpcPayload> {
         val payload1 =

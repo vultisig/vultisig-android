@@ -1,15 +1,13 @@
 package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
-import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransaction
 import com.vultisig.wallet.data.models.getSwapProviderId
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
-import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
-import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import javax.inject.Inject
@@ -25,25 +23,27 @@ constructor(
     private val fiatValueToStringMapper: FiatValueToStringMapper,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val appCurrencyRepository: AppCurrencyRepository,
-    private val resolveProviderUseCase: ResolveProviderUseCase,
     private val tokenRepository: TokenRepository,
 ) : SwapTransactionToUiModelMapper {
     override suspend fun invoke(from: SwapTransaction): SwapTransactionUiModel {
         val currency = appCurrencyRepository.currency.first()
-        val provider =
-            resolveProviderUseCase(
-                SwapSelectionContext(from.srcToken, from.dstToken, from.srcTokenValue)
-            ) ?: error("provider not found")
+        val provider: SwapProvider =
+            when (val payload = from.payload) {
+                is SwapPayload.ThorChain -> SwapProvider.THORCHAIN
+                is SwapPayload.MayaChain -> SwapProvider.MAYA
+                is SwapPayload.EVM ->
+                    SwapProvider.entries.find { it.getSwapProviderId() == payload.data.provider }
+                        ?: error("Unknown EVM provider: ${payload.data.provider}")
+            }
 
         val tokenValue =
             when (provider) {
                 SwapProvider.THORCHAIN,
-                SwapProvider.MAYA -> from.dstToken
+                SwapProvider.MAYA,
+                SwapProvider.LIFI -> from.dstToken
 
                 SwapProvider.ONEINCH,
                 SwapProvider.KYBER -> tokenRepository.getNativeToken(from.srcToken.chain.id)
-
-                SwapProvider.LIFI -> getLiFiProviderFee(from)
 
                 SwapProvider.JUPITER -> from.srcToken
             }
@@ -91,16 +91,5 @@ constructor(
             totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue),
             provider = provider.getSwapProviderId(),
         )
-    }
-
-    private suspend fun getLiFiProviderFee(from: SwapTransaction): Coin {
-        val estimateFeesUnit = from.estimatedFees.unit
-        val nativeCoin = tokenRepository.getNativeToken(from.srcToken.chain.id)
-
-        return if (estimateFeesUnit.equals(nativeCoin.ticker, true)) {
-            return nativeCoin
-        } else {
-            from.srcToken
-        }
     }
 }

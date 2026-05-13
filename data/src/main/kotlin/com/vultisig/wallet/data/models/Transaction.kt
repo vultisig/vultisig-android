@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import vultisig.keysign.v1.SignTon
 
 typealias TransactionId = String
 
@@ -21,6 +22,7 @@ data class Transaction(
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,
+    val signTon: SignTon? = null,
     val estimatedFee: String,
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),

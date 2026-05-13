@@ -2,8 +2,8 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.SuiApiImpl
-import com.vultisig.wallet.data.api.chains.TonApi
-import com.vultisig.wallet.data.api.chains.TonApiImpl
+import com.vultisig.wallet.data.api.chains.ton.TonApi
+import com.vultisig.wallet.data.api.chains.ton.TonApiImpl
 import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.api.swapAggregators.KyberApiImpl
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi

@@ -124,11 +124,15 @@ internal fun RemoveLpScreenContent(
                     Text(
                         text =
                             if (state.removeLpCacaoDisplay.isEmpty())
-                                stringResource(R.string.remove_pool_zero_cacao)
+                                stringResource(
+                                    R.string.remove_pool_zero_amount,
+                                    state.removeLpTokenSymbol,
+                                )
                             else
                                 stringResource(
-                                    R.string.remove_pool_cacao_amount_format,
+                                    R.string.remove_pool_amount_format,
                                     state.removeLpCacaoDisplay,
+                                    state.removeLpTokenSymbol,
                                 ),
                         style = Theme.brockmann.headings.largeTitle,
                         color = Theme.v2.colors.text.primary,
@@ -151,7 +155,7 @@ internal fun RemoveLpScreenContent(
             RemoveLpSlider(
                 percent = state.removeLpPercent,
                 onPercentChanged = onPercentChanged,
-                enabled = state.availableLpUnits != null && state.selectedPoolTotalLpUnits > 0L,
+                enabled = state.availableLpUnits != null && state.removeLpUnitsDivisor.signum() > 0,
                 modifier = Modifier.fillMaxWidth(),
             )
 
@@ -274,10 +278,11 @@ private fun RemoveLpScreenContentPreview() {
                 DepositFormUiModel(
                     removeLpPercent = 0f,
                     removeLpCacaoDisplay = "5.000",
+                    removeLpTokenSymbol = "CACAO",
                     availableLpUnits = "1000000",
                     balance = UiText.DynamicString("24,000 CACAO"),
-                    selectedPoolTotalLpUnits = 5_000_000L,
-                    selectedPoolCacaoDepth = 25_000_000L,
+                    removeLpUnitsDivisor = java.math.BigInteger.valueOf(5_000_000L),
+                    removeLpPoolDepth = java.math.BigInteger.valueOf(25_000_000L),
                 )
         )
     }

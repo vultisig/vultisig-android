@@ -13,6 +13,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.serialization.json.add
@@ -171,11 +172,9 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
 
     override suspend fun getTxStatus(txHash: String): TaostatsExtrinsicData? {
         val hash = if (txHash.startsWith("0x")) txHash else "0x$txHash"
-        val response =
-            httpClient
-                .get("${TAOSTATS_PROXY_URL}/extrinsic/v1?hash=$hash")
-                .body<TaostatsExtrinsicResponse>()
-        return response.data?.firstOrNull()
+        val response = httpClient.get("${TAOSTATS_PROXY_URL}/extrinsic/v1?hash=$hash")
+        if (response.status == HttpStatusCode.NotFound) return null
+        return response.body<TaostatsExtrinsicResponse>().data?.firstOrNull()
     }
 
     private companion object {

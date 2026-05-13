@@ -50,7 +50,9 @@ private fun LanguageSettingScreen(
     ) {
         V2Container(type = ContainerType.SECONDARY, borderType = ContainerBorderType.Borderless) {
             LazyColumn {
-                itemsIndexed(state.languages) { index, language ->
+                itemsIndexed(state.languages, key = { _, language -> language.mainName }) {
+                    index,
+                    language ->
                     LanguageSettingItem(
                         name = language.mainName,
                         englishName = language.englishName,

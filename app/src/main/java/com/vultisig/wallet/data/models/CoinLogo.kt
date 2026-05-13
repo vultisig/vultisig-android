@@ -5,10 +5,12 @@ import com.vultisig.wallet.R
 internal fun getProviderLogo(providerName: String): ImageModel? {
     return when (providerName.lowercase()) {
         "thorchain" -> R.drawable.rune
-        "maya" -> R.drawable.maya
+        "maya",
+        "mayachain" -> R.drawable.maya
         "jupiter" -> R.drawable.jup
         "uni" -> R.drawable.uni
         "1inch" -> R.drawable.oneinch
+        "kyber",
         "kyberswap" -> R.drawable.kyberswap
         "li.fi" -> R.drawable.lifi
         else -> null
@@ -143,3 +145,8 @@ internal fun getCoinLogo(logoName: String): ImageModel {
         else -> logoName
     }
 }
+
+// Returns a drawable resource id for the coin's logo. Falls back to the chain's native logo when
+// the coin's `logo` string is not in the predefined mapping (e.g. for arbitrary ERC20s where
+// `logo` would otherwise be a URL).
+internal fun Coin.tokenLogoRes(): Int = (getCoinLogo(logo) as? Int) ?: chain.logo

@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.DefaultDispatcher
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
@@ -42,9 +43,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 internal data class ImportFileState(
@@ -77,6 +80,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val snackBarFlow: SnackbarFlow,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.ImportVault>()
@@ -125,7 +129,9 @@ constructor(
 
     private suspend fun saveToDb(fileContent: String, password: String?): SaveResult =
         try {
-            insertVaultToDb(parseVaultFromString(fileContent, password))
+            val vault =
+                withContext(defaultDispatcher) { parseVaultFromString(fileContent, password) }
+            insertVaultToDb(vault)
             SaveResult.Success
         } catch (e: CancellationException) {
             throw e
@@ -283,6 +289,18 @@ constructor(
         val uri = uiModel.value.fileUri ?: return
         viewModelScope.launch {
             val fileContent = uri.fileContent(context)
+            if (fileContent == null) {
+                uiModel.update {
+                    it.copy(
+                        fileUri = null,
+                        fileName = null,
+                        fileContent = null,
+                        isZip = null,
+                        error = UiText.StringResource(R.string.import_file_not_supported),
+                    )
+                }
+                return@launch
+            }
             uiModel.update { it.copy(fileContent = fileContent) }
             parseFileContent()
         }

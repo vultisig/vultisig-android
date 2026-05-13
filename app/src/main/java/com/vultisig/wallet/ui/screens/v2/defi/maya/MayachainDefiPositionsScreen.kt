@@ -8,13 +8,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,13 +35,13 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsViewModel
 import com.vultisig.wallet.ui.models.defi.MayachainDefiUiState
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
+import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
@@ -51,37 +57,54 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions.ADD_LP
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions.REMOVE_LP
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * Entry point for the Mayachain DeFi positions screen; wires ViewModel state and pull-to-refresh.
+ */
 @Composable
 internal fun MayachainDefiPositionsScreen(
     vaultId: VaultId,
     model: MayachainDefiPositionsViewModel = hiltViewModel(),
 ) {
     val uiState by model.state.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    val successData = (uiState as? MayachainDefiUiState.Success)?.data
+    LaunchedEffect(successData?.bonded?.isLoading) {
+        if (isRefreshing && successData?.bonded?.isLoading == false) {
+            isRefreshing = false
+        }
+    }
 
     LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
+
+    RegisterChainDashboardTopBarAction(
+        icon = R.drawable.ic_shapes_plus_x_square_circle,
+        onClick = { model.setPositionSelectionDialogVisibility(true) },
+    )
 
     when (val s = uiState) {
         is MayachainDefiUiState.Loading -> Unit
 
         is MayachainDefiUiState.Error ->
-            V2Scaffold(onBackClick = model::onBackClick) {
-                Box(
-                    modifier =
-                        Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = s.message,
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.secondary,
-                    )
-                }
+            Box(
+                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = s.message,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.secondary,
+                )
             }
 
         is MayachainDefiUiState.Success ->
             MayachainDefiPositionsScreenContent(
                 state = s.data,
-                onBackClick = model::onBackClick,
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    model.setData(vaultId)
+                },
                 onClickBondToNode = model::bondToNode,
                 onClickBond = { model.onClickBond(it) },
                 onClickUnbond = { model.onClickUnBond(it) },
@@ -100,10 +123,13 @@ internal fun MayachainDefiPositionsScreen(
 
 private val MAYA_DEFI_TABS = listOf(DeFiTab.BONDED, DeFiTab.STAKED, DeFiTab.LP)
 
+/** Stateless content for the Mayachain DeFi positions screen with pull-to-refresh support. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun MayachainDefiPositionsScreenContent(
     state: MayachainDefiPositionsUiModel = MayachainDefiPositionsUiModel(),
-    onBackClick: () -> Unit = {},
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
     onClickBondToNode: () -> Unit = {},
     onClickBond: (String) -> Unit = {},
     onClickUnbond: (String) -> Unit = {},
@@ -120,11 +146,13 @@ internal fun MayachainDefiPositionsScreenContent(
     val searchTextFieldState = remember { TextFieldState() }
     val tabs = MAYA_DEFI_TABS
 
-    V2Scaffold(onBackClick = onBackClick) {
+    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Column(
-            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+            modifier =
+                Modifier.fillMaxSize()
+                    .background(Theme.v2.colors.backgrounds.primary)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BalanceBanner(
                 title = Chain.MayaChain.raw,
@@ -133,6 +161,8 @@ internal fun MayachainDefiPositionsScreenContent(
                 image = R.drawable.maya_defi_banner,
                 isBalanceVisible = state.isBalanceVisible,
             )
+
+            UiSpacer(16.dp)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -164,6 +194,8 @@ internal fun MayachainDefiPositionsScreenContent(
                 }
             }
 
+            UiSpacer(16.dp)
+
             if (state.showPositionSelectionDialog) {
                 PositionsSelectionDialog(
                     bondPositions = state.bondPositionsDialog,
@@ -177,61 +209,64 @@ internal fun MayachainDefiPositionsScreenContent(
                 )
             }
 
-            when (state.selectedTab) {
-                DeFiTab.BONDED.displayNameRes -> {
-                    if (!state.selectedPositions.hasBondPositions()) {
-                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                    } else {
-                        BondedTabContent(
-                            bondToNodeOnClick = onClickBondToNode,
-                            state =
-                                ThorchainDefiPositionsUiModel(
-                                    bonded = state.bonded,
-                                    isBalanceVisible = state.isBalanceVisible,
-                                    totalAmountPrice = state.totalAmountPrice,
-                                    isTotalAmountLoading = state.isTotalAmountLoading,
-                                ),
-                            onClickBond = onClickBond,
-                            onClickUnbond = onClickUnbond,
-                            coinName = "CACAO",
-                            coinIconRes = R.drawable.cacao,
-                        )
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                when (state.selectedTab) {
+                    DeFiTab.BONDED.displayNameRes -> {
+                        if (!state.selectedPositions.hasBondPositions()) {
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        } else {
+                            BondedTabContent(
+                                bondToNodeOnClick = onClickBondToNode,
+                                state =
+                                    ThorchainDefiPositionsUiModel(
+                                        bonded = state.bonded,
+                                        isBalanceVisible = state.isBalanceVisible,
+                                        totalAmountPrice = state.totalAmountPrice,
+                                        isTotalAmountLoading = state.isTotalAmountLoading,
+                                    ),
+                                onClickBond = onClickBond,
+                                onClickUnbond = onClickUnbond,
+                                coinName = "CACAO",
+                                coinIconRes = R.drawable.cacao,
+                            )
+                        }
+                    }
+
+                    DeFiTab.STAKED.displayNameRes -> {
+                        if (!state.selectedPositions.hasMayaStakingPositions()) {
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        } else {
+                            StakingTabContent(
+                                state = state.staking,
+                                onClickStake = onClickStake,
+                                onClickUnstake = onClickUnstake,
+                                onClickWithdraw = {},
+                                onClickTransfer = {},
+                                isBalanceVisible = state.isBalanceVisible,
+                            )
+                        }
+                    }
+
+                    DeFiTab.LP.displayNameRes -> {
+                        if (!state.selectedPositions.hasLpPositions(state.lpPositionsDialog)) {
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        } else {
+                            LpTabContent(
+                                state = state.lp,
+                                onClickAdd = onClickAddLp,
+                                onClickRemove = onClickRemoveLp,
+                            )
+                        }
                     }
                 }
 
-                DeFiTab.STAKED.displayNameRes -> {
-                    if (!state.selectedPositions.hasMayaStakingPositions()) {
-                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                    } else {
-                        StakingTabContent(
-                            state = state.staking,
-                            onClickStake = onClickStake,
-                            onClickUnstake = onClickUnstake,
-                            onClickWithdraw = {},
-                            onClickTransfer = {},
-                            isBalanceVisible = state.isBalanceVisible,
-                        )
-                    }
-                }
-
-                DeFiTab.LP.displayNameRes -> {
-                    if (!state.selectedPositions.hasLpPositions(state.lpPositionsDialog)) {
-                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                    } else {
-                        LpTabContent(
-                            state = state.lp,
-                            onClickAdd = onClickAddLp,
-                            onClickRemove = onClickRemoveLp,
-                        )
-                    }
-                }
+                UiSpacer(size = 16.dp)
             }
-
-            UiSpacer(size = 16.dp)
         }
     }
 }
 
+/** Preview for [MayachainDefiPositionsScreenContent] on the bonded tab. */
 @Preview(showBackground = true)
 @Composable
 private fun MayachainDefiPositionsScreenBondedTabPreview() {
@@ -240,6 +275,7 @@ private fun MayachainDefiPositionsScreenBondedTabPreview() {
     )
 }
 
+/** Preview for [MayachainDefiPositionsScreenContent] on the staked tab. */
 @Preview(showBackground = true)
 @Composable
 private fun MayachainDefiPositionsScreenStakedTabPreview() {
@@ -248,6 +284,7 @@ private fun MayachainDefiPositionsScreenStakedTabPreview() {
     )
 }
 
+/** Preview for [MayachainDefiPositionsScreenContent] on the LP tab. */
 @Preview(showBackground = true)
 @Composable
 private fun MayachainDefiPositionsScreenLpTabPreview() {

@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.models.VaultId
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
@@ -39,6 +38,10 @@ interface VaultRepository {
     fun getAllAsFlow(): Flow<List<Vault>>
 
     suspend fun hasVaults(): Boolean
+
+    suspend fun hasAnyCoinOnChain(chain: Chain): Boolean
+
+    fun observeHasAnyCoinOnChain(chain: Chain): Flow<Boolean>
 
     suspend fun isNameTaken(name: String, excludeId: VaultId): Boolean
 
@@ -64,13 +67,12 @@ internal class VaultRepositoryImpl
 constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRepository) :
     VaultRepository {
 
-    override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> = flow {
-        emit(requireNotNull(get(vaultId)?.coins))
-    }
+    override fun getEnabledTokens(vaultId: String): Flow<List<Coin>> =
+        getAsFlow(vaultId).map { it?.coins.orEmpty() }
 
     override fun getEnabledChains(vaultId: String): Flow<Set<Chain>> =
-        getEnabledTokens(vaultId).map { enabledTokens ->
-            enabledTokens.asSequence().filter { it.isNativeToken }.map { it.chain }.toSet()
+        getEnabledTokens(vaultId).map { tokens ->
+            tokens.asSequence().filter { it.isNativeToken }.map { it.chain }.toSet()
         }
 
     override suspend fun getDisabledCoinIds(vaultId: VaultId) =
@@ -91,6 +93,12 @@ constructor(private val vaultDao: VaultDao, private val tokenRepository: TokenRe
     override suspend fun getAll(): List<Vault> = vaultDao.loadAll().map { it.toVault() }
 
     override suspend fun hasVaults(): Boolean = vaultDao.hasVaults()
+
+    override suspend fun hasAnyCoinOnChain(chain: Chain): Boolean =
+        vaultDao.hasCoinOnChain(chain.id)
+
+    override fun observeHasAnyCoinOnChain(chain: Chain): Flow<Boolean> =
+        vaultDao.observeHasCoinOnChain(chain.id)
 
     override suspend fun isNameTaken(name: String, excludeId: VaultId): Boolean =
         vaultDao.countByNameExcluding(name, excludeId) > 0

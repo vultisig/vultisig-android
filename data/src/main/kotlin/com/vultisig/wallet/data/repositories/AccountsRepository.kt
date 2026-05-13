@@ -2,7 +2,7 @@
 
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.api.MergeAccount
+import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.mappers.ChainAndTokens
 import com.vultisig.wallet.data.mappers.ChainAndTokensToAddressMapper
 import com.vultisig.wallet.data.models.Account

@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.toHexString
 import com.vultisig.wallet.data.utils.toUnit
 import tss.KeysignResponse
+import vultisig.keysign.v1.TonMessage
 import wallet.core.java.AnySigner
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.CoinType
@@ -26,7 +27,7 @@ import wallet.core.jni.proto.TheOpenNetwork
 
 object TonHelper {
 
-    private fun getPreSignedInputData(payload: KeysignPayload): ByteArray {
+    fun getPreSignedInputData(payload: KeysignPayload): ByteArray {
         require(payload.coin.chain == Chain.Ton) { "Coin is not TON" }
 
         val tonSpecific =
@@ -35,21 +36,73 @@ object TonHelper {
 
         val publicKey = PublicKey(payload.coin.hexPublicKey.hexToByteArray(), PublicKeyType.ED25519)
 
-        val transfer =
-            if (payload.coin.isNativeToken) {
-                buildNativeTransfer(payload, tonSpecific)
-            } else {
-                buildJettonTransfer(payload, tonSpecific)
+        val builder =
+            TheOpenNetwork.SigningInput.newBuilder()
+                .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
+                .setExpireAt(tonSpecific.expireAt.toInt())
+                .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
+                .setPublicKey(ByteString.copyFrom(publicKey.data()))
+
+        addTransfersTo(builder, payload, tonSpecific)
+
+        return builder.build().toByteArray()
+    }
+
+    private fun addTransfersTo(
+        builder: TheOpenNetwork.SigningInput.Builder,
+        payload: KeysignPayload,
+        tonSpecific: BlockChainSpecific.Ton,
+    ) {
+        payload.signTon?.let { signTon ->
+            val messages = signTon.tonMessages.filterNotNull()
+            require(messages.isNotEmpty()) { "SignTon must have at least one message" }
+            require(messages.size <= MAX_TON_MESSAGES) {
+                "SignTon supports at most $MAX_TON_MESSAGES messages, got ${messages.size}"
+            }
+            messages.forEach { msg ->
+                val amount = msg.amount.toLongOrNull() ?: 0L
+                require(amount > 0) { "TonMessage amount must be positive, got ${msg.amount}" }
+                builder.addMessages(buildTonConnectTransfer(msg, tonSpecific))
+            }
+        }
+            ?: run {
+                val transfer =
+                    if (payload.coin.isNativeToken) {
+                        buildNativeTransfer(payload, tonSpecific)
+                    } else {
+                        buildJettonTransfer(payload, tonSpecific)
+                    }
+                builder.addMessages(transfer)
+            }
+    }
+
+    private fun buildTonConnectTransfer(
+        msg: TonMessage,
+        tonSpecific: BlockChainSpecific.Ton,
+    ): TheOpenNetwork.Transfer {
+        val toAddress = AnyAddress(msg.to, CoinType.TON)
+        val amount = msg.amount.toLongOrNull() ?: 0L
+        val mode = calculateSendMode(sendMaxAmount = false)
+        // TonConnect addresses encode bounceability in the user-friendly prefix:
+        // EQ = bounceable, UQ = non-bounceable. Raw "workchain:hex" form has no flag,
+        // so fall back to the wallet's default.
+        val bounceable =
+            when {
+                msg.to.startsWith("EQ") -> true
+                msg.to.startsWith("UQ") -> false
+                else -> tonSpecific.bounceable
             }
 
-        return TheOpenNetwork.SigningInput.newBuilder()
-            .addMessages(transfer)
-            .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
-            .setExpireAt(tonSpecific.expireAt.toInt())
-            .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
-            .setPublicKey(ByteString.copyFrom(publicKey.data()))
+        return TheOpenNetwork.Transfer.newBuilder()
+            .setDest(toAddress.description())
+            .setAmount(ByteString.copyFrom(amount.toHexString().toHexByteArray()))
+            .setMode(mode)
+            .setBounceable(bounceable)
+            .apply {
+                msg.payload?.takeIf { it.isNotEmpty() }?.let { setCustomPayload(it) }
+                msg.stateInit?.takeIf { it.isNotEmpty() }?.let { setStateInit(it) }
+            }
             .build()
-            .toByteArray()
     }
 
     private fun buildNativeTransfer(
@@ -141,25 +194,18 @@ object TonHelper {
             payload.blockChainSpecific as? BlockChainSpecific.Ton
                 ?: throw RuntimeException("Failed to get TON chain specific data")
 
-        val transfer =
-            if (payload.coin.isNativeToken) {
-                buildNativeTransfer(payload, tonSpecific)
-            } else {
-                buildJettonTransfer(payload, tonSpecific)
-            }
-
-        val signingInput =
+        val builder =
             TheOpenNetwork.SigningInput.newBuilder()
-                .addMessages(transfer)
                 .setSequenceNumber(tonSpecific.sequenceNumber.toInt())
                 .setExpireAt(tonSpecific.expireAt.toInt())
                 .setWalletVersion(TheOpenNetwork.WalletVersion.WALLET_V4_R2)
                 .setPublicKey(ByteString.copyFrom(dummyPublicKey.data()))
                 .setPrivateKey(ByteString.copyFrom(dummyPrivateKey.data()))
-                .build()
+
+        addTransfersTo(builder, payload, tonSpecific)
 
         val output =
-            AnySigner.sign(signingInput, CoinType.TON, TheOpenNetwork.SigningOutput.parser())
+            AnySigner.sign(builder.build(), CoinType.TON, TheOpenNetwork.SigningOutput.parser())
 
         return output.encoded
     }
@@ -204,4 +250,6 @@ object TonHelper {
     }
 
     val RECOMMENDED_JETTONS_AMOUNT = CoinType.TON.toUnit("0.08".toBigDecimal()).toLong()
+
+    private const val MAX_TON_MESSAGES = 4
 }

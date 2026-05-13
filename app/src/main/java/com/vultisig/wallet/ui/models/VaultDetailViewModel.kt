@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.share
 import com.vultisig.wallet.ui.utils.shareVaultDetailName
@@ -44,7 +45,7 @@ constructor(savedStateHandle: SavedStateHandle, private val vaultRepository: Vau
     val uiModel = MutableStateFlow(VaultDetailUiModel())
 
     init {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             Timber.d("loadVaultDetail($vaultId)")
             vaultRepository.get(vaultId)?.let { vault ->
                 uiModel.update { it ->

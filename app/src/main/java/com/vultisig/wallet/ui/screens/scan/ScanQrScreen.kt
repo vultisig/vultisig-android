@@ -6,14 +6,13 @@ import android.Manifest
 import android.content.Intent
 import android.graphics.BlurMaskFilter
 import android.graphics.BlurMaskFilter.Blur
+import android.graphics.Paint
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.activity.result.contract.ActivityResultContracts.GetContent
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -47,16 +46,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -78,8 +76,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.vultisig.wallet.R
-import com.vultisig.wallet.R.drawable.vs_camera_frame
-import com.vultisig.wallet.R.drawable.vs_camera_frame_highlight
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.banners.Banner
 import com.vultisig.wallet.ui.components.banners.BannerVariant
@@ -151,6 +147,7 @@ private fun ScanQrScreen(
     var isScanned by remember { mutableStateOf(false) }
     var isPickerLaunched by remember { mutableStateOf(false) }
     var hasRequestedPermission by remember { mutableStateOf(false) }
+    val noBarcodeFoundMessage = stringResource(R.string.no_barcodes_found)
 
     val onSuccess: (List<Barcode>) -> Unit = { barcodes ->
         if (barcodes.isNotEmpty()) {
@@ -158,13 +155,13 @@ private fun ScanQrScreen(
                 isScanned = true
                 val barcode = barcodes.first()
                 val barcodeValue = barcode.rawValue
-                Timber.d(context.getString(R.string.successfully_scanned_barcode, barcodeValue))
+                Timber.d("Successfully scanned barcode: %s", barcodeValue)
                 if (barcodeValue != null) {
                     onScanSuccess(barcodeValue)
                 }
             }
         } else {
-            onError(context.getString(R.string.no_barcodes_found))
+            onError(noBarcodeFoundMessage)
         }
     }
 
@@ -173,7 +170,7 @@ private fun ScanQrScreen(
     DisposableEffect(Unit) { onDispose { executor.shutdownNow() } }
 
     val pickMedia =
-        rememberLauncherForActivityResult(PickVisualMedia()) { uri ->
+        rememberLauncherForActivityResult(GetContent()) { uri ->
             isPickerLaunched = false
             coroutineScope.launch {
                 if (uri != null) {
@@ -193,14 +190,14 @@ private fun ScanQrScreen(
                                     if (retry.barcodes.isNotEmpty()) {
                                         onSuccess(retry.barcodes)
                                     } else {
-                                        onError(context.getString(R.string.no_barcodes_found))
+                                        onError(noBarcodeFoundMessage)
                                     }
                                 is ScanResult.Failure -> {
                                     Timber.e(
                                         "Scan failed: %s",
                                         (first as? ScanResult.Failure)?.message ?: retry.message,
                                     )
-                                    onError(context.getString(R.string.no_barcodes_found))
+                                    onError(noBarcodeFoundMessage)
                                 }
                             }
                         }
@@ -208,7 +205,7 @@ private fun ScanQrScreen(
                         throw e
                     } catch (e: Exception) {
                         Timber.e(e, "Failed to scan image from gallery")
-                        onError(context.getString(R.string.no_barcodes_found))
+                        onError(noBarcodeFoundMessage)
                     }
                 }
             }
@@ -219,7 +216,7 @@ private fun ScanQrScreen(
     val onUploadQr: () -> Unit = {
         if (!isPickerLaunched) {
             isPickerLaunched = true
-            pickMedia.launch(PickVisualMediaRequest(PickVisualMedia.ImageOnly))
+            pickMedia.launch("image/*")
         }
     }
 
@@ -428,20 +425,18 @@ private fun ScanViewport(
                     val cornerRadius = cornerRadius.toPx()
                     drawIntoCanvas { canvas ->
                         val paint =
-                            Paint().also { p ->
-                                p.asFrameworkPaint().apply {
-                                    this.color = shadowColor.toArgb()
-                                    this.maskFilter = BlurMaskFilter(blurRadius, Blur.NORMAL)
-                                }
+                            Paint().apply {
+                                color = shadowColor.toArgb()
+                                maskFilter = BlurMaskFilter(blurRadius, Blur.NORMAL)
                             }
-                        canvas.drawRoundRect(
-                            left = 0f,
-                            top = offsetY,
-                            right = size.width,
-                            bottom = size.height + offsetY,
-                            radiusX = cornerRadius,
-                            radiusY = cornerRadius,
-                            paint = paint,
+                        canvas.nativeCanvas.drawRoundRect(
+                            0f,
+                            offsetY,
+                            size.width,
+                            size.height + offsetY,
+                            cornerRadius,
+                            cornerRadius,
+                            paint,
                         )
                     }
                 }
@@ -453,11 +448,6 @@ private fun ScanViewport(
                 )
     ) {
         content()
-
-        CenterFrame(
-            modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(40.dp),
-            isFrameHighlighted = isFrameHighlighted,
-        )
     }
 }
 
@@ -518,20 +508,6 @@ private fun QrCameraScreen(
             },
         )
     }
-}
-
-@Composable
-private fun CenterFrame(isFrameHighlighted: Boolean, modifier: Modifier = Modifier) {
-    Image(
-        modifier = modifier,
-        painter =
-            if (isFrameHighlighted) {
-                painterResource(id = vs_camera_frame_highlight)
-            } else {
-                painterResource(id = vs_camera_frame)
-            },
-        contentDescription = null,
-    )
 }
 
 fun createScanner() =

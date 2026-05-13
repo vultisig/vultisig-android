@@ -129,6 +129,8 @@ internal fun VaultAccountsScreen(viewModel: VaultAccountsViewModel = hiltViewMod
         onChooseChains = viewModel::openAddChainAccount,
         onMigrateClick = viewModel::migrate,
         onDismissBanner = viewModel::tempRemoveBanner,
+        onBuyVultClick = viewModel::buyVult,
+        onBuyVultDismiss = viewModel::dismissBuyVultBanner,
         onCryptoConnectionTypeClick = viewModel::setCryptoConnectionType,
     )
 }
@@ -151,6 +153,8 @@ internal fun VaultAccountsScreen(
     onOpenSettingsClick: () -> Unit = {},
     onChooseChains: () -> Unit = {},
     onDismissBanner: () -> Unit = {},
+    onBuyVultClick: () -> Unit = {},
+    onBuyVultDismiss: () -> Unit = {},
     onCryptoConnectionTypeClick: (CryptoConnectionType) -> Unit = {},
 ) {
 
@@ -275,7 +279,7 @@ internal fun VaultAccountsScreen(
                     item {
                         AnimatedVisibility(
                             visible =
-                                state.isBannerVisible &&
+                                (state.isBannerVisible || state.showBuyVultBanner) &&
                                     state.cryptoConnectionType == CryptoConnectionType.Wallet,
                             enter = fadeIn() + expandVertically(),
                             exit = fadeOut() + shrinkVertically(),
@@ -284,7 +288,11 @@ internal fun VaultAccountsScreen(
                                 modifier =
                                     Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp),
                                 hasMigration = state.showMigration,
+                                showSessionBanners = state.isBannerVisible,
+                                showBuyVult = state.showBuyVultBanner,
                                 onMigrateClick = onMigrateClick,
+                                onBuyVultClick = onBuyVultClick,
+                                onBuyVultDismiss = onBuyVultDismiss,
                                 context = context,
                                 onDismissBanner = onDismissBanner,
                             )
@@ -323,6 +331,7 @@ internal fun VaultAccountsScreen(
                                         snackbarState = snackbarState,
                                         isBalanceVisible = state.isBalanceValueVisible,
                                         accounts = state.getAccounts,
+                                        showAddress = isWallet,
                                     )
                                 }
                             }

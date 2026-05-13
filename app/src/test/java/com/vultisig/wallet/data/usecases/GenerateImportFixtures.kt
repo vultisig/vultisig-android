@@ -175,7 +175,7 @@ internal class GenerateImportFixtures {
     private fun randomBytes(size: Int): ByteArray = ByteArray(size).also(SecureRandom()::nextBytes)
 
     private fun bitflipLastFifth(bytes: ByteArray): ByteArray =
-        bytes.also {
+        bytes.copyOf().also {
             val i = (it.size * 4) / 5
             it[i] = (it[i].toInt() xor 0xFF).toByte()
         }

@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -64,6 +65,7 @@ import com.vultisig.wallet.ui.utils.showReviewPopUp
 internal fun ChainTokensScreen(
     vaultId: VaultId,
     chainId: ChainId,
+    onBackClick: () -> Unit,
     viewModel: ChainTokensViewModel = hiltViewModel<ChainTokensViewModel>(),
 ) {
     val uiModel by viewModel.uiState.collectAsState()
@@ -76,6 +78,7 @@ internal fun ChainTokensScreen(
 
     ChainTokensScreen(
         uiModel = uiModel,
+        onBackClick = onBackClick,
         onRefresh = viewModel::refresh,
         onSend = viewModel::send,
         onSwap = viewModel::swap,
@@ -84,7 +87,6 @@ internal fun ChainTokensScreen(
         onReceive = viewModel::openAddressQr,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
-        onBackClick = viewModel::back,
         onHideSearchBar = viewModel::hideSearchBar,
         onShowSearchBar = viewModel::showSearchBar,
         onShowReviewPopUp = { reviewManager.showReviewPopUp(context) },
@@ -95,6 +97,7 @@ internal fun ChainTokensScreen(
 @Composable
 internal fun ChainTokensScreen(
     uiModel: ChainTokensUiModel,
+    onBackClick: () -> Unit,
     onRefresh: () -> Unit,
     onShowSearchBar: () -> Unit,
     onHideSearchBar: () -> Unit,
@@ -105,12 +108,11 @@ internal fun ChainTokensScreen(
     onReceive: () -> Unit,
     onSelectTokens: () -> Unit,
     onTokenClick: (ChainTokenUiModel) -> Unit,
-    onBackClick: () -> Unit,
     onShowReviewPopUp: () -> Unit,
 ) {
     val snackbarState = rememberVsSnackbarState()
     val uriHandler = VsUriHandler()
-    val context = LocalContext.current
+    val addressCopiedMessage = stringResource(R.string.address_copied, uiModel.chainName)
 
     var isAddressBottomSheetVisible by remember { mutableStateOf(false) }
 
@@ -129,7 +131,7 @@ internal fun ChainTokensScreen(
                 shineSpotRadiusRatio = 0.45f,
             ) {
                 Row(
-                    Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -177,9 +179,7 @@ internal fun ChainTokensScreen(
                 CopiableAddress(
                     address = uiModel.chainAddress,
                     onAddressCopied = {
-                        snackbarState.show(
-                            context.getString(R.string.address_copied, uiModel.chainName)
-                        )
+                        snackbarState.show(addressCopiedMessage)
                         onShowReviewPopUp()
                     },
                     modifier =
@@ -273,7 +273,9 @@ internal fun ChainTokensScreen(
 
                     TopShineContainer(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         LazyColumn {
-                            itemsIndexed(items = uiModel.tokens) { index, token ->
+                            itemsIndexed(items = uiModel.tokens, key = { _, token -> token.id }) {
+                                index,
+                                token ->
                                 Column {
                                     ChainAccount(
                                         title = token.name,
@@ -317,21 +319,32 @@ private fun PreviewChainCoinScreen1() {
                 tokens =
                     listOf(
                         ChainTokenUiModel(
+                            id = "usdt-1",
                             name = "USDT",
-                            balance = "0.000",
-                            fiatBalance = "$0.000000",
+                            balance = "1,250.42",
+                            fiatBalance = "$1,250.42",
                             tokenLogo = R.drawable.usdt,
                             chainLogo = R.drawable.ethereum,
                         ),
                         ChainTokenUiModel(
-                            name = "USDT",
-                            balance = "0.000",
-                            fiatBalance = "$0.000000",
-                            tokenLogo = R.drawable.usdt,
+                            id = "eth-1",
+                            name = "ETH",
+                            balance = "0.875",
+                            fiatBalance = "$2,840.10",
+                            tokenLogo = R.drawable.ethereum,
+                            chainLogo = R.drawable.ethereum,
+                        ),
+                        ChainTokenUiModel(
+                            id = "dai-1",
+                            name = "DAI",
+                            balance = "320.00",
+                            fiatBalance = "$320.00",
+                            tokenLogo = R.drawable.dai,
                             chainLogo = R.drawable.ethereum,
                         ),
                     ),
             ),
+        onBackClick = {},
         onRefresh = {},
         onShowSearchBar = {},
         onHideSearchBar = {},
@@ -342,7 +355,6 @@ private fun PreviewChainCoinScreen1() {
         onReceive = {},
         onSelectTokens = {},
         onTokenClick = {},
-        onBackClick = {},
         onShowReviewPopUp = {},
     )
 }

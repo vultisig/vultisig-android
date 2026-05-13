@@ -6,6 +6,8 @@ import com.vultisig.wallet.data.repositories.OnChainSecurityScannerRepository
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClient
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidRpcClientContract
 import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidScannerService
+import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationService
+import com.vultisig.wallet.data.securityscanner.blockaid.BlockaidSimulationServiceImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -53,5 +55,15 @@ object SecurityScannerModule {
             onChainSecurityScannerRepository,
             securityScannerTransactionFactory,
         )
+    }
+
+    @Singleton
+    @Provides
+    fun provideBlockaidSimulationService(
+        blockaidRpcClient: BlockaidRpcClientContract
+    ): BlockaidSimulationService {
+        // Singleton-scoped on purpose: the cache is the contract — verify and
+        // done screens own different ViewModels but must see the same scan.
+        return BlockaidSimulationServiceImpl(blockaidRpcClient)
     }
 }

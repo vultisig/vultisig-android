@@ -7,12 +7,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -29,37 +35,58 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsUiModel
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
+import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.BondedTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.LpTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.screens.v2.defi.StakingTabContent
 import com.vultisig.wallet.ui.screens.v2.defi.hasBondPositions
+import com.vultisig.wallet.ui.screens.v2.defi.hasLpPositions
 import com.vultisig.wallet.ui.screens.v2.defi.hasStakingPositions
 import com.vultisig.wallet.ui.screens.v2.defi.model.BondNodeState
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * Entry point for the THORChain DeFi positions screen; wires ViewModel state and pull-to-refresh.
+ */
 @Composable
 internal fun ThorchainDefiPositionsScreen(
     vaultId: VaultId,
     model: ThorchainDefiPositionsViewModel = hiltViewModel<ThorchainDefiPositionsViewModel>(),
 ) {
     val state by model.state.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { model.setData(vaultId = vaultId) }
+    LaunchedEffect(state.bonded.isLoading) {
+        if (isRefreshing && !state.bonded.isLoading) {
+            isRefreshing = false
+        }
+    }
+
+    LaunchedEffect(vaultId) { model.setData(vaultId = vaultId) }
+
+    RegisterChainDashboardTopBarAction(
+        icon = R.drawable.ic_shapes_plus_x_square_circle,
+        onClick = { model.setPositionSelectionDialogVisibility(true) },
+    )
 
     ThorchainDefiPositionScreenContent(
         state = state,
-        onBackClick = model::onBackClick,
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            model.setData(vaultId)
+        },
         onClickBondToNode = model::bondToNode,
         onClickUnbond = { model.onClickUnBond(it) },
         onClickBond = { model.onClickBond(it) },
@@ -72,13 +99,18 @@ internal fun ThorchainDefiPositionsScreen(
         onClickStake = { model.onNavigateToFunctions(it) },
         onClickUnstake = { model.onNavigateToFunctions(it) },
         onClickTransfer = { model.onClickTransfer() },
+        onClickAddLp = model::onClickAddLp,
+        onClickRemoveLp = model::onClickRemoveLp,
     )
 }
 
+/** Stateless content for the THORChain DeFi positions screen with pull-to-refresh support. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ThorchainDefiPositionScreenContent(
     state: ThorchainDefiPositionsUiModel = ThorchainDefiPositionsUiModel(),
-    onBackClick: () -> Unit,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
     onClickBondToNode: () -> Unit,
     onClickUnbond: (String) -> Unit,
     onClickBond: (String) -> Unit,
@@ -91,16 +123,20 @@ internal fun ThorchainDefiPositionScreenContent(
     onClickStake: (DeFiNavActions) -> Unit = {},
     onClickUnstake: (DeFiNavActions) -> Unit = {},
     onClickTransfer: () -> Unit = {},
+    onClickAddLp: (String) -> Unit = {},
+    onClickRemoveLp: (String) -> Unit = {},
 ) {
     val searchTextFieldState = remember { TextFieldState() }
 
-    val tabs = listOf(DeFiTab.BONDED, DeFiTab.STAKED)
+    val tabs = listOf(DeFiTab.BONDED, DeFiTab.STAKED, DeFiTab.LP)
 
-    V2Scaffold(onBackClick = onBackClick) {
+    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Column(
-            modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+            modifier =
+                Modifier.fillMaxSize()
+                    .background(Theme.v2.colors.backgrounds.primary)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BalanceBanner(
                 title = Chain.ThorChain.raw,
@@ -109,6 +145,8 @@ internal fun ThorchainDefiPositionScreenContent(
                 image = R.drawable.referral_data_banner,
                 isBalanceVisible = state.isBalanceVisible,
             )
+
+            UiSpacer(16.dp)
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -129,22 +167,24 @@ internal fun ThorchainDefiPositionScreenContent(
                 V2Container(
                     type = ContainerType.SECONDARY,
                     cornerType = CornerType.Circular,
-                    modifier = Modifier.clickOnce(onClick = {}),
+                    modifier = Modifier.clickOnce(onClick = onEditPositionClick),
                 ) {
                     UiIcon(
                         drawableResId = R.drawable.edit_chain,
                         size = 16.dp,
                         modifier = Modifier.padding(all = 12.dp),
                         tint = Theme.v2.colors.primary.accent4,
-                        onClick = onEditPositionClick,
                     )
                 }
             }
+
+            UiSpacer(16.dp)
 
             if (state.showPositionSelectionDialog) {
                 PositionsSelectionDialog(
                     bondPositions = state.bondPositionsDialog,
                     stakePositions = state.stakingPositionsDialog,
+                    lpPositions = state.lpPositionsDialog,
                     selectedPositions = state.tempSelectedPositions,
                     searchTextFieldState = searchTextFieldState,
                     onPositionSelectionChange = onPositionSelectionChange,
@@ -153,50 +193,73 @@ internal fun ThorchainDefiPositionScreenContent(
                 )
             }
 
-            when (state.selectedTab) {
-                DeFiTab.BONDED.displayNameRes -> {
-                    if (!state.selectedPositions.hasBondPositions()) {
-                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                    } else {
-                        BondedTabContent(
-                            bondToNodeOnClick = onClickBondToNode,
-                            state = state,
-                            onClickUnbond = onClickUnbond,
-                            onClickBond = onClickBond,
-                        )
+            Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                when (state.selectedTab) {
+                    DeFiTab.BONDED.displayNameRes -> {
+                        if (!state.selectedPositions.hasBondPositions()) {
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        } else {
+                            BondedTabContent(
+                                bondToNodeOnClick = onClickBondToNode,
+                                state = state,
+                                onClickUnbond = onClickUnbond,
+                                onClickBond = onClickBond,
+                            )
+                        }
+                    }
+
+                    DeFiTab.STAKED.displayNameRes -> {
+                        if (!state.selectedPositions.hasStakingPositions()) {
+                            NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                        } else {
+                            StakingTabContent(
+                                state = state.staking,
+                                onClickStake = onClickStake,
+                                onClickUnstake = onClickUnstake,
+                                onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) },
+                                onClickTransfer = onClickTransfer,
+                                isBalanceVisible = state.isBalanceVisible,
+                            )
+                        }
+                    }
+
+                    DeFiTab.LP.displayNameRes -> {
+                        // Until the dialog dataset has loaded, treat the LP tab as still
+                        // loading
+                        // rather than flashing the no-positions container — the
+                        // lpPositionsDialog
+                        // list arrives asynchronously and "no match" is meaningless before
+                        // then.
+                        when {
+                            !state.lpDialogLoaded ->
+                                LpTabContent(
+                                    state = state.lp.copy(isLoading = true),
+                                    onClickAdd = onClickAddLp,
+                                    onClickRemove = onClickRemoveLp,
+                                )
+                            !state.selectedPositions.hasLpPositions(state.lpPositionsDialog) ->
+                                NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
+                            else ->
+                                LpTabContent(
+                                    state = state.lp,
+                                    onClickAdd = onClickAddLp,
+                                    onClickRemove = onClickRemoveLp,
+                                )
+                        }
                     }
                 }
 
-                DeFiTab.STAKED.displayNameRes -> {
-                    if (!state.selectedPositions.hasStakingPositions()) {
-                        NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                    } else {
-                        StakingTabContent(
-                            state = state.staking,
-                            onClickStake = onClickStake,
-                            onClickUnstake = onClickUnstake,
-                            onClickWithdraw = { onClickWithdraw(DeFiNavActions.WITHDRAW_RUJI) },
-                            onClickTransfer = onClickTransfer,
-                            isBalanceVisible = state.isBalanceVisible,
-                        )
-                    }
-                }
-
-                DeFiTab.LP.displayNameRes -> {
-                    NoPositionsContainer(onManagePositionsClick = onEditPositionClick)
-                }
+                UiSpacer(size = 16.dp)
             }
-
-            UiSpacer(size = 16.dp)
         }
     }
 }
 
+/** Preview for [ThorchainDefiPositionScreenContent] with empty state. */
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - Empty")
 private fun ThorchainDefiPositionsScreenPreviewEmpty() {
     ThorchainDefiPositionScreenContent(
-        onBackClick = {},
         state = ThorchainDefiPositionsUiModel(),
         onClickBond = {},
         onClickUnbond = {},
@@ -205,6 +268,7 @@ private fun ThorchainDefiPositionsScreenPreviewEmpty() {
     )
 }
 
+/** Preview for [ThorchainDefiPositionScreenContent] with sample data. */
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - With Data")
 private fun ThorchainDefiPositionsScreenPreviewWithData() {
@@ -240,7 +304,6 @@ private fun ThorchainDefiPositionsScreenPreviewWithData() {
         )
 
     ThorchainDefiPositionScreenContent(
-        onBackClick = {},
         state =
             ThorchainDefiPositionsUiModel(
                 totalAmountPrice = "$3,250.00",
@@ -259,11 +322,11 @@ private fun ThorchainDefiPositionsScreenPreviewWithData() {
     )
 }
 
+/** Preview for [ThorchainDefiPositionScreenContent] in loading state. */
 @Composable
 @Preview(showBackground = true, name = "DeFi Positions - Loading")
 private fun ThorchainDefiPositionsScreenPreviewLoading() {
     ThorchainDefiPositionScreenContent(
-        onBackClick = {},
         state = ThorchainDefiPositionsUiModel(bonded = BondedTabUiModel(isLoading = true)),
         onClickBond = {},
         onClickUnbond = {},

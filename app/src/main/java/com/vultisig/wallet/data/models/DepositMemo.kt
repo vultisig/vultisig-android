@@ -109,8 +109,15 @@ internal interface DepositMemo {
         override fun toString(): String = "POOL+"
     }
 
-    data class AddLiquidity(val pool: String) : DepositMemo {
-        override fun toString(): String = "+:$pool"
+    data class AddLiquidity(val pool: String, val pairedAddress: String? = null) : DepositMemo {
+        override fun toString(): String = buildString {
+            append("+:")
+            append(pool)
+            if (!pairedAddress.isNullOrBlank()) {
+                append(":")
+                append(pairedAddress)
+            }
+        }
     }
 
     data class RemoveLiquidity(val pool: String, val basisPoints: Int) : DepositMemo {

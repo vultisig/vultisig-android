@@ -5,6 +5,7 @@ package com.vultisig.wallet.ui.models.swap
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
@@ -23,10 +24,12 @@ import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
+import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
-import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
+import com.vultisig.wallet.ui.models.findCurrentSrc
+import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
@@ -51,6 +54,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -69,12 +73,13 @@ internal class SwapFormViewModelTest {
 
     private val scheduler = TestCoroutineScheduler()
     private val mainDispatcher = UnconfinedTestDispatcher(scheduler)
+    private val createdViewModels = mutableListOf<SwapFormViewModel>()
 
     private lateinit var savedStateHandle: SavedStateHandle
     private lateinit var navigator: Navigator<Destination>
     private lateinit var fiatValueToString: FiatValueToStringMapper
     private lateinit var convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase
-    private lateinit var resolveProvider: ResolveProviderUseCase
+    private lateinit var swapQuoteRepository: SwapQuoteRepository
     private lateinit var allowanceRepository: AllowanceRepository
     private lateinit var appCurrencyRepository: AppCurrencyRepository
     private lateinit var swapTransactionRepository: SwapTransactionRepository
@@ -86,6 +91,7 @@ internal class SwapFormViewModelTest {
     private lateinit var swapTokenSelector: SwapTokenSelector
     private lateinit var swapQuoteManager: SwapQuoteManager
     private lateinit var tokenSelectorAccountsRepository: AccountsRepository
+    private lateinit var tokenBalanceMapper: AccountToTokenBalanceUiModelMapper
 
     private val currencyFlow = MutableStateFlow(AppCurrency.USD)
 
@@ -109,7 +115,9 @@ internal class SwapFormViewModelTest {
                 TokenValue(value = secondArg(), token = firstArg())
             }
 
-        resolveProvider = mockk(relaxed = true)
+        swapQuoteRepository = mockk(relaxed = true)
+        every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+            listOf(SwapProvider.THORCHAIN)
         allowanceRepository = mockk(relaxed = true)
 
         appCurrencyRepository = mockk(relaxed = true)
@@ -138,13 +146,18 @@ internal class SwapFormViewModelTest {
                             TokenValue(value = BigInteger("1000000000000000"), token = ETH_COIN),
                         fiatValue = FiatValue(BigDecimal("2.00"), "USD"),
                     ),
+                chain = Chain.Ethereum,
             )
 
         val accountsRepository: AccountsRepository = mockk(relaxed = true)
         coEvery { accountsRepository.loadAddresses(any()) } returns flowOf(emptyList())
-        val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper =
-            mockk(relaxed = true)
-        coEvery { accountToTokenBalanceUiModelMapper(any()) } returns mockk(relaxed = true)
+        tokenBalanceMapper = mockk(relaxed = true)
+        coEvery { tokenBalanceMapper(any()) } answers
+            {
+                val src = firstArg<SendSrc>()
+                mockk<com.vultisig.wallet.ui.models.send.TokenBalanceUiModel>(relaxed = true)
+                    .apply { every { model } returns src }
+            }
         val requestResultRepository: RequestResultRepository = mockk(relaxed = true)
 
         swapTokenSelector =
@@ -152,7 +165,7 @@ internal class SwapFormViewModelTest {
                 navigator = navigator,
                 accountsRepository = accountsRepository,
                 requestResultRepository = requestResultRepository,
-                accountToTokenBalanceUiModelMapper = accountToTokenBalanceUiModelMapper,
+                accountToTokenBalanceUiModelMapper = tokenBalanceMapper,
             )
         tokenSelectorAccountsRepository = accountsRepository
 
@@ -161,28 +174,34 @@ internal class SwapFormViewModelTest {
 
     @AfterEach
     fun tearDown() {
+        // Cancel viewModelScope on all VMs created during the test before resetting Main.
+        // This cooperatively cancels any pending IO-thread delays (e.g. launchRefreshQuoteTimer)
+        // so they don't try to dispatch a continuation back to Dispatchers.Main after resetMain().
+        createdViewModels.forEach { it.viewModelScope.cancel() }
+        createdViewModels.clear()
         Dispatchers.resetMain()
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
     }
 
     private fun createViewModel() =
         SwapFormViewModel(
-            savedStateHandle = savedStateHandle,
-            navigator = navigator,
-            fiatValueToString = fiatValueToString,
-            convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
-            resolveProvider = resolveProvider,
-            allowanceRepository = allowanceRepository,
-            appCurrencyRepository = appCurrencyRepository,
-            swapTransactionRepository = swapTransactionRepository,
-            getDiscountBpsUseCase = getDiscountBpsUseCase,
-            referralRepository = referralRepository,
-            swapValidator = swapValidator,
-            swapDiscountChecker = swapDiscountChecker,
-            swapGasCalculator = swapGasCalculator,
-            swapTokenSelector = swapTokenSelector,
-            swapQuoteManager = swapQuoteManager,
-        )
+                savedStateHandle = savedStateHandle,
+                navigator = navigator,
+                fiatValueToString = fiatValueToString,
+                convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
+                swapQuoteRepository = swapQuoteRepository,
+                allowanceRepository = allowanceRepository,
+                appCurrencyRepository = appCurrencyRepository,
+                swapTransactionRepository = swapTransactionRepository,
+                getDiscountBpsUseCase = getDiscountBpsUseCase,
+                referralRepository = referralRepository,
+                swapValidator = swapValidator,
+                swapDiscountChecker = swapDiscountChecker,
+                swapGasCalculator = swapGasCalculator,
+                swapTokenSelector = swapTokenSelector,
+                swapQuoteManager = swapQuoteManager,
+            )
+            .also { createdViewModels += it }
 
     private fun createViewModelWithAddresses(
         addresses: List<Address> = listOf(ethAddress(), btcAddress()),
@@ -499,19 +518,28 @@ internal class SwapFormViewModelTest {
     // region flipSelectedTokens
 
     @Test
-    fun `flipSelectedTokens swaps source and destination token IDs`() =
+    fun `flipSelectedTokens swaps src and dst instead of leaving them unchanged`() =
         runTest(mainDispatcher) {
-            val addresses = listOf(ethAddress(), btcAddress())
-            val vm = createViewModelWithAddresses(addresses)
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress(), btcAddress()),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = BTC_COIN.id,
+                )
             advanceUntilIdle()
 
-            // The vm should have selected some tokens by now from addresses
+            val srcBefore = vm.uiState.value.selectedSrcToken?.model?.account?.token?.id
+            val dstBefore = vm.uiState.value.selectedDstToken?.model?.account?.token?.id
+            assertEquals(ETH_COIN.id, srcBefore)
+            assertEquals(BTC_COIN.id, dstBefore)
+
             vm.flipSelectedTokens()
             advanceUntilIdle()
 
-            // After flip, the state should be reset for fresh calculation
-            assertEquals("0", vm.uiState.value.estimatedDstTokenValue)
-            assertEquals("0", vm.uiState.value.estimatedDstFiatValue)
+            val srcAfter = vm.uiState.value.selectedSrcToken?.model?.account?.token?.id
+            val dstAfter = vm.uiState.value.selectedDstToken?.model?.account?.token?.id
+            assertEquals(BTC_COIN.id, srcAfter, "src should now be BTC")
+            assertEquals(ETH_COIN.id, dstAfter, "dst should now be ETH")
         }
 
     @Test
@@ -522,10 +550,15 @@ internal class SwapFormViewModelTest {
 
             vm.flipSelectedTokens()
 
-            assertEquals("0", vm.uiState.value.estimatedDstTokenValue)
-            assertEquals("0", vm.uiState.value.estimatedDstFiatValue)
-            assertEquals("0", vm.uiState.value.srcFiatValue)
-            assertNull(vm.uiState.value.formError)
+            val state = vm.uiState.value
+            assertEquals("0", state.estimatedDstTokenValue)
+            assertEquals("0", state.estimatedDstFiatValue)
+            assertEquals("0", state.srcFiatValue)
+            assertNull(state.formError)
+            // hasQuote must drop on flip, otherwise the fee block stays on screen during the
+            // 450ms debounce while collectTotalFee can still combine the new pair's gas with
+            // the prior pair's swapFeeFiat.
+            assertFalse(state.hasQuote)
         }
 
     // endregion
@@ -535,11 +568,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees debounces amount changes`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -612,7 +644,7 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees shows error when provider is not found`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns null
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns emptyList()
 
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()
@@ -649,11 +681,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees with THORChain provider updates UI state correctly`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -691,11 +722,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees with THORChain sets provider name`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -729,11 +759,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees with MayaChain sets provider name`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.MAYA
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.MAYA)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -767,13 +796,143 @@ internal class SwapFormViewModelTest {
 
     // endregion
 
+    // region calculateFees — outboundFee and swapFeePercent
+
+    @Test
+    fun `calculateFees populates outboundFee and swapFeePercent when present in result`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(outboundFeeText = "$1.50", swapFeePercent = "0.30%")
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals("$1.50", state.outboundFee)
+            assertEquals("0.30%", state.swapFeePercent)
+        }
+
+    @Test
+    fun `calculateFees leaves outboundFee and swapFeePercent null when absent from result`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertNull(state.outboundFee)
+            assertNull(state.swapFeePercent)
+        }
+
+    @Test
+    fun `calculateFees clears outboundFee and swapFeePercent on swap exception`() =
+        runTest(mainDispatcher) {
+            // First quote populates the fields; the second throws so the reset path runs.
+            // Without this two-step flow the test would pass even if the reset were removed,
+            // since both fields default to null on SwapFormUiModel.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    outboundFeeText = "$1.50",
+                    swapFeePercent = "0.30%",
+                ) andThenThrows
+                SwapException.SwapIsNotSupported("Not supported")
+
+            val vm = createViewModelWithSwapTokens(ethBalance = BigInteger("10000000000000000000"))
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            // Sanity-check: the successful quote populated both fields.
+            assertEquals("$1.50", vm.uiState.value.outboundFee)
+            assertEquals("0.30%", vm.uiState.value.swapFeePercent)
+
+            // Re-trigger; this time the mock throws and the reset block must clear them.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("2")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertNull(state.outboundFee)
+            assertNull(state.swapFeePercent)
+        }
+
+    // endregion
+
     // region calculateFees — swap exception handling
 
     @Test
     fun `calculateFees handles SwapRouteNotAvailable`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } throws
-                SwapException.SwapRouteNotAvailable("No route")
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapException.SwapRouteNotAvailable("No route")
 
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()
@@ -790,11 +949,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles TimeOut exception`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -823,11 +981,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles NetworkConnection exception`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -856,11 +1013,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles InsufficientFunds exception`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -893,11 +1049,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles HighPriceImpact exception`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -930,8 +1085,19 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees resets state on swap exception`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } throws
-                SwapException.SwapIsNotSupported("Not supported")
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws SwapException.SwapIsNotSupported("Not supported")
 
             val vm = createViewModelWithSwapTokens()
             advanceUntilIdle()
@@ -947,9 +1113,106 @@ internal class SwapFormViewModelTest {
             assertEquals("0", state.estimatedDstTokenValue)
             assertEquals("0", state.estimatedDstFiatValue)
             assertEquals("0", state.fee)
+            assertEquals("0", state.totalFee)
+            assertNull(state.vultBpsDiscount)
+            assertNull(state.vultBpsDiscountFiatValue)
+            assertNull(state.referralBpsDiscount)
+            assertNull(state.referralBpsDiscountFiatValue)
+            assertNull(state.tierType)
             assertTrue(state.isSwapDisabled)
             assertFalse(state.isLoading)
+            assertFalse(state.hasQuote)
             assertNull(state.expiredAt)
+            // Gas fields are tied to the source token (calculateGas), not the quote, so they
+            // must survive a quote exception — clearing them would leave the row empty until
+            // selectedSrc changes again.
+            assertEquals("0.001 ETH", state.networkFee)
+            assertEquals("$2.00", state.networkFeeFiat)
+        }
+
+    @Test
+    fun `calculateFees recovers hasQuote on success after a swap exception`() =
+        runTest(mainDispatcher) {
+            // First call throws, second call (after a new amount) succeeds.
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws
+                SwapException.SwapIsNotSupported("Not supported") andThen
+                createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            // Trigger the exception path.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.hasQuote)
+            assertNotNull(vm.uiState.value.formError)
+
+            // Trigger the recovery path.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.2")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertTrue(state.hasQuote)
+            assertNull(state.formError)
+            assertFalse(state.isSwapDisabled)
+            assertFalse(state.isLoading)
+            assertNotNull(state.expiredAt)
+            // Gas fields are populated by calculateGas (selectedSrc-scoped) and are not
+            // touched by the SwapException catch nor repopulated by the success path. A
+            // regression that re-introduces clearing in resetQuoteState would surface here.
+            assertEquals("0.001 ETH", state.networkFee)
+            assertEquals("$2.00", state.networkFeeFiat)
+        }
+
+    @Test
+    fun `calculateFees on generic exception sets quote-failed formError and clears hasQuote`() =
+        runTest(mainDispatcher) {
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } throws RuntimeException("network IO failed")
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+            assertEquals(UiText.StringResource(R.string.swap_error_quote_failed), state.formError)
+            assertFalse(state.hasQuote)
+            assertEquals(UiText.Empty, state.provider)
+            assertEquals("0", state.totalFee)
+            assertTrue(state.isSwapDisabled)
+            assertFalse(state.isLoading)
         }
 
     // endregion
@@ -1053,11 +1316,10 @@ internal class SwapFormViewModelTest {
     fun `calculateFees validates balance for native token after successful quote`() =
         runTest(mainDispatcher) {
             // Source has very small balance — less than amount + fees
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1097,11 +1359,10 @@ internal class SwapFormViewModelTest {
                     vultBpsDiscountFiatValue = "$5.00",
                     tierType = null,
                 )
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1131,11 +1392,10 @@ internal class SwapFormViewModelTest {
     fun `calculateFees clears VULT BPS discount when not available`() =
         runTest(mainDispatcher) {
             coEvery { getDiscountBpsUseCase.invoke(any(), any()) } returns 0
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1168,11 +1428,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees sets expiredAt from quote`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1204,11 +1463,10 @@ internal class SwapFormViewModelTest {
     fun `collectTotalFee combines gas and swap fees`() =
         runTest(mainDispatcher) {
             coEvery { fiatValueToString(any()) } returns "$10.00"
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1240,11 +1498,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles SmallSwapAmount with recommended_min_amount_in`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1274,11 +1531,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles SmallSwapAmount with numeric message`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1310,11 +1566,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles SmallSwapAmount with non-numeric message`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1350,11 +1605,10 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees handles generic exception gracefully`() =
         runTest(mainDispatcher) {
-            coEvery { resolveProvider.invoke(any()) } returns SwapProvider.THORCHAIN
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
             coEvery {
-                swapQuoteManager.fetchQuote(
-                    any(),
-                    any(),
+                swapQuoteManager.fetchBestQuote(
                     any(),
                     any(),
                     any(),
@@ -1377,6 +1631,223 @@ internal class SwapFormViewModelTest {
 
             // Should not crash — generic exceptions are caught and logged
             assertFalse(vm.uiState.value.isLoading)
+        }
+
+    // endregion
+
+    // region calculateFees — UTXO plan fee refresh block
+
+    @Test
+    fun `calculateFees for UTXO chain enables swap after successful plan fee`() =
+        runTest(mainDispatcher) {
+            coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
+                GasCalculationResult(
+                    gasFee = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.000001 BTC",
+                            formattedFiatValue = "$0.05",
+                            tokenValue = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                            fiatValue = FiatValue(BigDecimal("0.05"), "USD"),
+                        ),
+                    chain = Chain.Bitcoin,
+                )
+            coEvery {
+                swapGasCalculator.computeUtxoPlanFeeResult(any(), any(), any(), any(), any(), any())
+            } returns
+                GasCalculationResult(
+                    gasFee = TokenValue(value = BigInteger("816"), token = BTC_COIN),
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.00000816 BTC",
+                            formattedFiatValue = "$0.00",
+                            tokenValue = TokenValue(value = BigInteger("816"), token = BTC_COIN),
+                            fiatValue = FiatValue(BigDecimal("0.00"), "USD"),
+                        ),
+                    chain = Chain.Bitcoin,
+                )
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcAddressLargeBalance(), ethAddress()),
+                    srcTokenId = BTC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.isSwapDisabled)
+            assertEquals("0.00000816 BTC", vm.uiState.value.networkFee)
+        }
+
+    @Test
+    fun `calculateFees for UTXO chain shows InsufficientUtxos error and disables swap`() =
+        runTest(mainDispatcher) {
+            coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
+                GasCalculationResult(
+                    gasFee = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.000001 BTC",
+                            formattedFiatValue = "$0.05",
+                            tokenValue = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                            fiatValue = FiatValue(BigDecimal("0.05"), "USD"),
+                        ),
+                    chain = Chain.Bitcoin,
+                )
+            coEvery {
+                swapGasCalculator.computeUtxoPlanFeeResult(any(), any(), any(), any(), any(), any())
+            } throws InsufficientUtxosException()
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcAddressLargeBalance(), ethAddress()),
+                    srcTokenId = BTC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.isSwapDisabled)
+            assertEquals(
+                UiText.StringResource(R.string.insufficient_utxos_error),
+                vm.uiState.value.formError,
+            )
+        }
+
+    @Test
+    fun `calculateFees for UTXO chain clears fee and disables swap on plan network error`() =
+        runTest(mainDispatcher) {
+            coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
+                GasCalculationResult(
+                    gasFee = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0.000001 BTC",
+                            formattedFiatValue = "$0.05",
+                            tokenValue = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                            fiatValue = FiatValue(BigDecimal("0.05"), "USD"),
+                        ),
+                    chain = Chain.Bitcoin,
+                )
+            coEvery {
+                swapGasCalculator.getSpecificAndUtxo(
+                    srcToken = any(),
+                    srcAddress = any(),
+                    gasFee = any(),
+                    isThorchainRouterDeposit = any(),
+                    dstAddress = any(),
+                    memo = any(),
+                    tokenAmountValue = any(),
+                )
+            } throws RuntimeException("network error")
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcAddressLargeBalance(), ethAddress()),
+                    srcTokenId = BTC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.isSwapDisabled)
+            assertEquals("", vm.uiState.value.networkFee)
+        }
+
+    @Test
+    fun `calculateFees for UTXO chain clears fee when gasFeeChain does not match srcToken chain`() =
+        runTest(mainDispatcher) {
+            // Default calculateGasFee mock returns Chain.Ethereum; srcToken is BTC (Bitcoin),
+            // so gasFeeChain != srcToken.chain — chain guard rejects and stale fee is cleared.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcAddressLargeBalance(), ethAddress()),
+                    srcTokenId = BTC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.isSwapDisabled)
+            assertEquals("", vm.uiState.value.networkFee)
         }
 
     // endregion
@@ -1671,6 +2142,13 @@ internal class SwapFormViewModelTest {
             accounts = listOf(createAccount(BTC_COIN, BigInteger("100000000"))),
         )
 
+    private fun btcAddressLargeBalance(): Address =
+        Address(
+            chain = Chain.Bitcoin,
+            address = "bc1qbtcaddress",
+            accounts = listOf(createAccount(BTC_COIN, BigInteger("1000000000"))),
+        )
+
     private fun createDefaultQuoteFetchResult(
         quote: SwapQuote = createThorChainQuote(),
         provider: SwapProvider = SwapProvider.THORCHAIN,
@@ -1678,18 +2156,29 @@ internal class SwapFormViewModelTest {
         srcFiatValueText: String = "$0.00",
         estimatedDstTokenValue: String = "95.0",
         estimatedDstFiatValue: String = "$95.00",
+        estimatedDstFiat: FiatValue = FiatValue(BigDecimal("95.00"), "USD"),
         feeText: String = "$0.00",
         swapFeeFiat: FiatValue = FiatValue(BigDecimal.ZERO, "USD"),
-    ): QuoteFetchResult =
-        QuoteFetchResult(
-            quote = quote,
-            provider = provider,
-            providerUiText = providerUiText,
-            srcFiatValueText = srcFiatValueText,
-            estimatedDstTokenValue = estimatedDstTokenValue,
-            estimatedDstFiatValue = estimatedDstFiatValue,
-            feeText = feeText,
-            swapFeeFiat = swapFeeFiat,
+        outboundFeeText: String? = null,
+        swapFeePercent: String? = null,
+    ): BestQuote =
+        BestQuote(
+            candidate =
+                QuoteCandidate(provider = provider, vultBPSDiscount = null, referral = null),
+            result =
+                QuoteFetchResult(
+                    quote = quote,
+                    provider = provider,
+                    providerUiText = providerUiText,
+                    srcFiatValueText = srcFiatValueText,
+                    estimatedDstTokenValue = estimatedDstTokenValue,
+                    estimatedDstFiatValue = estimatedDstFiatValue,
+                    estimatedDstFiat = estimatedDstFiat,
+                    feeText = feeText,
+                    swapFeeFiat = swapFeeFiat,
+                    outboundFeeText = outboundFeeText,
+                    swapFeePercent = swapFeePercent,
+                ),
         )
 
     private fun createThorChainQuote(

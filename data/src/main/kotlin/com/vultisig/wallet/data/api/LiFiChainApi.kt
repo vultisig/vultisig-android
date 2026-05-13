@@ -10,6 +10,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.http.HttpStatusCode
+import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.math.round
 import kotlinx.serialization.json.Json
@@ -25,6 +26,27 @@ interface LiFiChainApi {
         toAddress: String,
         bpsDiscount: Int,
     ): LiFiSwapQuoteDeserialized
+
+    companion object {
+        const val INTEGRATOR_FEE_BPS = 50
+        const val BPS_DENOMINATOR_INT = 10_000
+        private val BPS_DENOMINATOR = BigInteger.valueOf(BPS_DENOMINATOR_INT.toLong())
+        const val INTEGRATOR_FEE_RATE = INTEGRATOR_FEE_BPS / BPS_DENOMINATOR_INT.toDouble()
+        const val INTEGRATOR_ACCOUNT = "vultisig-android"
+
+        /**
+         * Computes the LI.FI integrator fee that will be deducted from a swap's destination amount,
+         * in the destination token's raw wei. Mirrors iOS' `SwapQuote.inboundFeeDecimal(toCoin:)`.
+         *
+         * The raw "LIFI Fixed Fee" entry returned by LI.FI's `feeCosts` carries no chain id, so its
+         * denomination cannot be inferred reliably for cross-chain swaps (#3300). Deriving the fee
+         * from `dstAmount` sidesteps that ambiguity.
+         */
+        fun integratorFeeAmount(dstAmount: BigInteger, bpsDiscount: Int = 0): BigInteger {
+            val effectiveBps = maxOf(0, INTEGRATOR_FEE_BPS - bpsDiscount)
+            return dstAmount * effectiveBps.toBigInteger() / BPS_DENOMINATOR
+        }
+    }
 }
 
 internal class LiFiChainApiImpl
@@ -48,9 +70,12 @@ constructor(
             fromChain.toLong() == Chain.Solana.oneInchChainId() ||
                 toChain.toLong() == Chain.Solana.oneInchChainId()
 
-        val bpsDiscountFee = round(bpsDiscount.toDouble()) / 10000.0
+        val bpsDiscountFee = round(bpsDiscount.toDouble()) / LiFiChainApi.BPS_DENOMINATOR_INT
         val updatedFeeIntegrator =
-            (round(maxOf(INTEGRATOR_FEE.toDouble() - bpsDiscountFee, 0.0) * 10000) / 10000.0)
+            (round(
+                    maxOf(LiFiChainApi.INTEGRATOR_FEE_RATE - bpsDiscountFee, 0.0) *
+                        LiFiChainApi.BPS_DENOMINATOR_INT
+                ) / LiFiChainApi.BPS_DENOMINATOR_INT)
                 .toString()
 
         val response =
@@ -63,7 +88,7 @@ constructor(
                 parameter("fromAddress", fromAddress)
                 parameter("toAddress", toAddress)
                 if (!isSolanaChainInvolved) {
-                    parameter("integrator", INTEGRATOR_ACCOUNT)
+                    parameter("integrator", LiFiChainApi.INTEGRATOR_ACCOUNT)
                     parameter("fee", updatedFeeIntegrator)
                 }
             }
@@ -74,10 +99,5 @@ constructor(
                 LiFiSwapQuoteError(HttpStatusCode.fromValue(response.status.value).description)
             )
         }
-    }
-
-    companion object {
-        private const val INTEGRATOR_ACCOUNT = "vultisig-android"
-        private const val INTEGRATOR_FEE = "0.005"
     }
 }

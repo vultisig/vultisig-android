@@ -143,7 +143,7 @@ private fun AddressBookContent(
                         }
                     }
                 } else {
-                    items(displayItems) {
+                    items(displayItems, key = { it.model.id }) {
                         EntryItem(
                             title = it.title,
                             subtitle = it.subtitle,

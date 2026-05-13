@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
@@ -13,6 +14,8 @@ import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
+import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
@@ -24,8 +27,15 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.Clock
 import timber.log.Timber
 
@@ -36,9 +46,20 @@ internal data class QuoteFetchResult(
     val srcFiatValueText: String,
     val estimatedDstTokenValue: String,
     val estimatedDstFiatValue: String,
+    val estimatedDstFiat: FiatValue,
     val feeText: String,
     val swapFeeFiat: FiatValue,
+    val outboundFeeText: String? = null,
+    val swapFeePercent: String? = null,
 )
+
+internal data class QuoteCandidate(
+    val provider: SwapProvider,
+    val vultBPSDiscount: Int?,
+    val referral: String?,
+)
+
+internal data class BestQuote(val candidate: QuoteCandidate, val result: QuoteFetchResult)
 
 internal class SwapQuoteManager
 @Inject
@@ -129,7 +150,8 @@ constructor(
         val feeCoin =
             when (provider) {
                 SwapProvider.MAYA,
-                SwapProvider.THORCHAIN -> dstToken
+                SwapProvider.THORCHAIN,
+                SwapProvider.LIFI -> dstToken
                 else -> srcNativeToken
             }
 
@@ -138,6 +160,56 @@ constructor(
         val estimatedDstFiatValue =
             convertTokenValueToFiat(dstToken, quote.expectedDstValue, currency)
 
+        val rawFees =
+            when (quote) {
+                is SwapQuote.ThorChain -> quote.data.fees
+                is SwapQuote.MayaChain -> quote.data.fees
+                else -> null
+            }
+        val resolvedFeeText: String
+        val outboundFeeText: String?
+        val swapFeePercent: String?
+        val resolvedSwapFeeFiat: FiatValue
+        if (rawFees != null) {
+            val affiliateFiat =
+                convertTokenValueToFiat(
+                    dstToken,
+                    dstToken.convertToTokenValue(rawFees.affiliate),
+                    currency,
+                )
+            val outboundFiat =
+                convertTokenValueToFiat(
+                    dstToken,
+                    dstToken.convertToTokenValue(rawFees.outbound),
+                    currency,
+                )
+            swapFeePercent =
+                if (srcFiatValue.value > BigDecimal.ZERO)
+                    String.format(
+                        Locale.US,
+                        "%.2f%%",
+                        affiliateFiat.value
+                            .divide(srcFiatValue.value, 4, RoundingMode.HALF_UP)
+                            .multiply(BigDecimal(100)),
+                    )
+                else null
+            resolvedFeeText = fiatValueToString(affiliateFiat)
+            outboundFeeText = fiatValueToString(outboundFiat)
+            // Headline total must reconcile to the breakdown rows (Swap Fee + Outbound Fee).
+            // Raw `fees.total` includes the `asset` (liquidity) component, but liquidity is
+            // already reflected in `expectedDstValue`, so we drop it here.
+            resolvedSwapFeeFiat =
+                FiatValue(
+                    value = affiliateFiat.value + outboundFiat.value,
+                    currency = fiatFees.currency,
+                )
+        } else {
+            resolvedFeeText = fiatValueToString(fiatFees)
+            outboundFeeText = null
+            swapFeePercent = null
+            resolvedSwapFeeFiat = fiatFees
+        }
+
         return QuoteFetchResult(
             quote = quote,
             provider = provider,
@@ -145,9 +217,88 @@ constructor(
             srcFiatValueText = srcFiatValueText,
             estimatedDstTokenValue = estimatedDstTokenValue,
             estimatedDstFiatValue = fiatValueToString(estimatedDstFiatValue),
-            feeText = fiatValueToString(fiatFees),
-            swapFeeFiat = fiatFees,
+            estimatedDstFiat = estimatedDstFiatValue,
+            feeText = resolvedFeeText,
+            swapFeeFiat = resolvedSwapFeeFiat,
+            outboundFeeText = outboundFeeText,
+            swapFeePercent = swapFeePercent,
         )
+    }
+
+    internal suspend fun fetchBestQuote(
+        candidates: List<QuoteCandidate>,
+        src: SendSrc,
+        dst: SendSrc,
+        srcToken: Coin,
+        dstToken: Coin,
+        srcTokenValue: BigInteger,
+        tokenValue: TokenValue,
+        currency: AppCurrency,
+        amount: BigDecimal,
+    ): BestQuote {
+        if (candidates.isEmpty()) {
+            throw SwapException.SwapIsNotSupported("Swap is not supported for this pair")
+        }
+
+        val results: List<Result<BestQuote>> = coroutineScope {
+            candidates
+                .map { candidate ->
+                    async {
+                        runCatching {
+                                withTimeout(QUOTE_FETCH_TIMEOUT_MS) {
+                                    BestQuote(
+                                        candidate = candidate,
+                                        result =
+                                            fetchQuote(
+                                                provider = candidate.provider,
+                                                src = src,
+                                                dst = dst,
+                                                srcToken = srcToken,
+                                                dstToken = dstToken,
+                                                srcTokenValue = srcTokenValue,
+                                                tokenValue = tokenValue,
+                                                currency = currency,
+                                                vultBPSDiscount = candidate.vultBPSDiscount,
+                                                referral = candidate.referral,
+                                                amount = amount,
+                                            ),
+                                    )
+                                }
+                            }
+                            .onFailure { e ->
+                                // TimeoutCancellationException extends CancellationException
+                                // but is a transient per-provider failure — don't let it
+                                // cancel sibling fetches via awaitAll.
+                                if (
+                                    e is CancellationException && e !is TimeoutCancellationException
+                                )
+                                    throw e
+                                Timber.w(
+                                    e,
+                                    "Quote fetch failed provider=%s src=%s dst=%s amount=%s",
+                                    candidate.provider,
+                                    srcToken.id,
+                                    dstToken.id,
+                                    srcTokenValue,
+                                )
+                            }
+                    }
+                }
+                .awaitAll()
+        }
+
+        val successes = results.mapNotNull { it.getOrNull() }
+        if (successes.isEmpty()) {
+            val failures = results.mapNotNull { it.exceptionOrNull() }
+            throw failures.firstOrNull { it is SwapException } ?: failures.first()
+        }
+
+        // Rank on estimatedDstFiat alone — this represents the destination amount
+        // the user expects to receive. Subtracting swapFeeFiat would double-count
+        // for THOR/MAYA (their expectedAmountOut is already net of protocol fees)
+        // and mix apples-to-oranges since swapFeeFiat is gas for 1inch/Kyber but
+        // an integrator fee for LI.FI.
+        return successes.maxBy { it.result.estimatedDstFiat.value }
     }
 
     private suspend fun fetchThorMayaQuote(
@@ -172,15 +323,20 @@ constructor(
                         srcTokenValue,
                         SwapProvider.MAYA,
                     ) {
-                        swapQuoteRepository.getMayaSwapQuote(
-                            dstAddress = dst.address.address,
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            tokenValue = tokenValue,
-                            isAffiliate = isAffiliate,
-                            bpsDiscount = vultBPSDiscount ?: 0,
-                            referralCode = referral.orEmpty(),
-                        )
+                        swapQuoteRepository
+                            .getQuote(
+                                SwapProvider.MAYA,
+                                SwapQuoteRequest(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                    dstAddress = dst.address.address,
+                                    isAffiliate = isAffiliate,
+                                    bpsDiscount = vultBPSDiscount ?: 0,
+                                    referralCode = referral.orEmpty(),
+                                ),
+                            )
+                            .expectNative(SwapProvider.MAYA)
                     }
                         as SwapQuote.MayaChain
                 mayaSwapQuote to mayaSwapQuote.recommendedMinTokenValue
@@ -192,14 +348,19 @@ constructor(
                         srcTokenValue,
                         SwapProvider.THORCHAIN,
                     ) {
-                        swapQuoteRepository.getSwapQuote(
-                            dstAddress = dst.address.address,
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            tokenValue = tokenValue,
-                            referralCode = referral.orEmpty(),
-                            bpsDiscount = vultBPSDiscount ?: 0,
-                        )
+                        swapQuoteRepository
+                            .getQuote(
+                                SwapProvider.THORCHAIN,
+                                SwapQuoteRequest(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                    dstAddress = dst.address.address,
+                                    referralCode = referral.orEmpty(),
+                                    bpsDiscount = vultBPSDiscount ?: 0,
+                                ),
+                            )
+                            .expectNative(SwapProvider.THORCHAIN)
                     }
                         as SwapQuote.ThorChain
                 thorSwapQuote to thorSwapQuote.recommendedMinTokenValue
@@ -230,12 +391,18 @@ constructor(
         val swapQuote =
             getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.KYBER) {
                 val apiQuote =
-                    swapQuoteRepository.getKyberSwapQuote(
-                        srcToken = srcToken,
-                        dstToken = dstToken,
-                        tokenValue = tokenValue,
-                        affiliateBps = maxOf(0, KYBER_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)),
-                    )
+                    swapQuoteRepository
+                        .getQuote(
+                            SwapProvider.KYBER,
+                            SwapQuoteRequest(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                tokenValue = tokenValue,
+                                affiliateBps =
+                                    maxOf(0, KYBER_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)),
+                            ),
+                        )
+                        .expectEvm(SwapProvider.KYBER)
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val gasFees =
@@ -275,13 +442,18 @@ constructor(
         val swapQuote =
             getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.ONEINCH) {
                 val apiQuote =
-                    swapQuoteRepository.getOneInchSwapQuote(
-                        srcToken = srcToken,
-                        dstToken = dstToken,
-                        tokenValue = tokenValue,
-                        isAffiliate = isAffiliate,
-                        bpsDiscount = vultBPSDiscount ?: 0,
-                    )
+                    swapQuoteRepository
+                        .getQuote(
+                            SwapProvider.ONEINCH,
+                            SwapQuoteRequest(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                tokenValue = tokenValue,
+                                isAffiliate = isAffiliate,
+                                bpsDiscount = vultBPSDiscount ?: 0,
+                            ),
+                        )
+                        .expectEvm(SwapProvider.ONEINCH)
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val tokenFees =
@@ -319,30 +491,49 @@ constructor(
             getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, provider) {
                 val apiQuote =
                     if (provider == SwapProvider.LIFI)
-                        swapQuoteRepository.getLiFiSwapQuote(
-                            srcAddress = src.address.address,
-                            dstAddress = dst.address.address,
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            tokenValue = tokenValue,
-                            bpsDiscount = vultBPSDiscount ?: 0,
-                        )
+                        swapQuoteRepository
+                            .getQuote(
+                                SwapProvider.LIFI,
+                                SwapQuoteRequest(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                    srcAddress = src.address.address,
+                                    dstAddress = dst.address.address,
+                                    bpsDiscount = vultBPSDiscount ?: 0,
+                                ),
+                            )
+                            .expectEvm(SwapProvider.LIFI)
                     else
-                        swapQuoteRepository.getJupiterSwapQuote(
-                            srcAddress = src.address.address,
-                            srcToken = srcToken,
-                            dstToken = dstToken,
-                            tokenValue = tokenValue,
-                        )
+                        swapQuoteRepository
+                            .getQuote(
+                                SwapProvider.JUPITER,
+                                SwapQuoteRequest(
+                                    srcToken = srcToken,
+                                    dstToken = dstToken,
+                                    tokenValue = tokenValue,
+                                    srcAddress = src.address.address,
+                                ),
+                            )
+                            .expectEvm(SwapProvider.JUPITER)
                 val expectedDstValue =
                     TokenValue(value = apiQuote.dstAmount.toBigInteger(), token = dstToken)
                 val (feeAmount, feeCoin) =
-                    resolveSwapFee(
-                        apiQuote.tx.swapFeeTokenContract,
-                        apiQuote.tx.swapFee,
-                        srcNativeToken,
-                        apiQuote.tx.swapFee.toBigInteger(),
-                    )
+                    if (provider == SwapProvider.LIFI) {
+                        val feeWei =
+                            LiFiChainApi.integratorFeeAmount(
+                                dstAmount = apiQuote.dstAmount.toBigInteger(),
+                                bpsDiscount = vultBPSDiscount ?: 0,
+                            )
+                        Pair(feeWei, dstToken)
+                    } else {
+                        resolveSwapFee(
+                            apiQuote.tx.swapFeeTokenContract,
+                            apiQuote.tx.swapFee,
+                            srcNativeToken,
+                            apiQuote.tx.swapFee.toBigInteger(),
+                        )
+                    }
                 val updatedTx = apiQuote.tx.copy(swapFee = feeAmount.toString())
                 val tokenFees = TokenValue(value = feeAmount, token = feeCoin)
                 SwapQuote.OneInch(
@@ -369,20 +560,26 @@ constructor(
         fallbackFee: BigInteger,
     ): Pair<BigInteger, Coin> =
         try {
-            if (swapFeeTokenContract.isNotEmpty()) {
-                val chainId = srcNativeToken.chain.id
-                val amount = swapFeeRaw.toBigInteger()
-                val coinAndFiatValue =
-                    searchToken(chainId, swapFeeTokenContract) ?: error("Can't find token or price")
-                val newNativeAmount =
-                    convertTokenToTokenUseCase.convertTokenToToken(
-                        amount,
-                        coinAndFiatValue,
-                        srcNativeToken,
-                    )
-                Pair(newNativeAmount, srcNativeToken)
-            } else {
-                Pair(fallbackFee, srcNativeToken)
+            when {
+                swapFeeTokenContract.isEmpty() -> Pair(fallbackFee, srcNativeToken)
+                // Kyber / LI.FI / Jupiter use this sentinel for the native chain token —
+                // the fee is already in src-native wei, no contract lookup needed.
+                swapFeeTokenContract.equals(NATIVE_TOKEN_SENTINEL, ignoreCase = true) ->
+                    Pair(swapFeeRaw.toBigIntegerOrNull() ?: fallbackFee, srcNativeToken)
+                else -> {
+                    val chainId = srcNativeToken.chain.id
+                    val amount = swapFeeRaw.toBigInteger()
+                    val coinAndFiatValue =
+                        searchToken(chainId, swapFeeTokenContract)
+                            ?: error("Can't find token or price")
+                    val newNativeAmount =
+                        convertTokenToTokenUseCase.convertTokenToToken(
+                            amount,
+                            coinAndFiatValue,
+                            srcNativeToken,
+                        )
+                    Pair(newNativeAmount, srcNativeToken)
+                }
             }
         } catch (t: Throwable) {
             if (t is CancellationException) throw t
@@ -474,10 +671,16 @@ constructor(
             }
             is SwapException.InsufficientFunds ->
                 UiText.StringResource(R.string.swap_error_small_insufficient_funds)
+            is SwapException.RateLimitExceeded ->
+                UiText.StringResource(R.string.swap_error_rate_limit)
+            is SwapException.AmountBelowDustThreshold ->
+                UiText.StringResource(R.string.swap_error_amount_below_dust_threshold)
         }
 
     companion object {
         private const val KYBER_AFFILIATE_FEE_BPS = 50
+        private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        private const val QUOTE_FETCH_TIMEOUT_MS = 15_000L
     }
 }
 

@@ -25,12 +25,14 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
+import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.getTierType
-import com.vultisig.wallet.data.usecases.resolveprovider.ResolveProviderUseCase
-import com.vultisig.wallet.data.usecases.resolveprovider.SwapSelectionContext
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.findCurrentSrc
+import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
@@ -51,9 +53,13 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -68,7 +74,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import timber.log.Timber
@@ -90,12 +95,15 @@ internal data class SwapFormUiModel(
     val isLoading: Boolean = false,
     val isLoadingNextScreen: Boolean = false,
     val enableMaxAmount: Boolean = false,
+    val hasQuote: Boolean = false,
     val expiredAt: Instant? = null,
     val tierType: TierType? = null,
     val vultBpsDiscount: Int? = null,
     val vultBpsDiscountFiatValue: String? = null,
     val referralBpsDiscount: Int? = null,
     val referralBpsDiscountFiatValue: String? = null,
+    val outboundFee: String? = null,
+    val swapFeePercent: String? = null,
 )
 
 @HiltViewModel
@@ -106,7 +114,7 @@ constructor(
     private val navigator: Navigator<Destination>,
     private val fiatValueToString: FiatValueToStringMapper,
     private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
-    private val resolveProvider: ResolveProviderUseCase,
+    private val swapQuoteRepository: SwapQuoteRepository,
     private val allowanceRepository: AllowanceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
@@ -143,6 +151,7 @@ constructor(
 
     private val estimatedNetworkFeeTokenValue = MutableStateFlow<TokenValue?>(null)
     private val gasFee = MutableStateFlow<TokenValue?>(null)
+    private val gasFeeChain = MutableStateFlow<Chain?>(null)
     private val swapFeeFiat = MutableStateFlow<FiatValue?>(null)
     private val estimatedNetworkFeeFiatValue = MutableStateFlow<FiatValue?>(null)
 
@@ -316,15 +325,23 @@ constructor(
                     val transaction =
                         when (quote) {
                             is SwapQuote.ThorChain -> {
-                                val specificAndUtxo =
-                                    swapGasCalculator.getSpecificAndUtxo(
-                                        srcToken,
-                                        srcAddress,
-                                        gasFee,
-                                    )
-
                                 val dstAddress =
                                     quote.data.router ?: quote.data.inboundAddress ?: srcAddress
+                                val isRouterDeposit =
+                                    !srcToken.isNativeToken &&
+                                        srcToken.chain.standard == TokenStandard.EVM &&
+                                        !quote.data.router.isNullOrEmpty()
+                                val specificAndUtxo =
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken = srcToken,
+                                        srcAddress = srcAddress,
+                                        gasFee = gasFee,
+                                        isThorchainRouterDeposit = isRouterDeposit,
+                                        dstAddress = if (isRouterDeposit) dstAddress else null,
+                                        memo = if (isRouterDeposit) quote.data.memo else null,
+                                        tokenAmountValue =
+                                            if (isRouterDeposit) srcTokenValue.value else null,
+                                    )
                                 val allowance =
                                     allowanceRepository.getAllowance(
                                         chain = srcToken.chain,
@@ -350,7 +367,8 @@ constructor(
                                     gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
                                     isApprovalRequired = isApprovalRequired,
                                     memo = quote.data.memo,
-                                    gasFeeFiatValue = gasFeeFiatValue,
+                                    gasFeeFiatValue =
+                                        estimatedNetworkFeeFiatValue.value ?: gasFeeFiatValue,
                                     payload =
                                         SwapPayload.ThorChain(
                                             THORChainSwapPayload(
@@ -377,13 +395,10 @@ constructor(
                             }
 
                             is SwapQuote.MayaChain -> {
-                                val specificAndUtxo =
-                                    swapGasCalculator.getSpecificAndUtxo(
-                                        srcToken,
-                                        srcAddress,
-                                        gasFee,
-                                    )
-
+                                val isRouterDeposit =
+                                    !srcToken.isNativeToken &&
+                                        srcToken.chain.standard == TokenStandard.EVM &&
+                                        !quote.data.router.isNullOrEmpty()
                                 val dstAddress =
                                     if (
                                         !srcToken.isNativeToken &&
@@ -393,6 +408,17 @@ constructor(
                                     } else {
                                         quote.data.inboundAddress ?: srcAddress
                                     }
+                                val specificAndUtxo =
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken = srcToken,
+                                        srcAddress = srcAddress,
+                                        gasFee = gasFee,
+                                        isThorchainRouterDeposit = isRouterDeposit,
+                                        dstAddress = if (isRouterDeposit) dstAddress else null,
+                                        memo = if (isRouterDeposit) quote.data.memo else null,
+                                        tokenAmountValue =
+                                            if (isRouterDeposit) srcTokenValue.value else null,
+                                    )
 
                                 val allowance =
                                     allowanceRepository.getAllowance(
@@ -419,7 +445,8 @@ constructor(
                                     gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
                                     memo = quote.data.memo,
                                     isApprovalRequired = isApprovalRequired,
-                                    gasFeeFiatValue = gasFeeFiatValue,
+                                    gasFeeFiatValue =
+                                        estimatedNetworkFeeFiatValue.value ?: gasFeeFiatValue,
                                     payload =
                                         SwapPayload.MayaChain(
                                             THORChainSwapPayload(
@@ -637,13 +664,14 @@ constructor(
 
         resetQuoteState()
 
-        val bufId = selectedSrcId.value
+        val previousSrcId = selectedSrcId.value
         selectedSrcId.value = selectedDstId.value
-        selectedDstId.value = bufId
+        selectedDstId.value = previousSrcId
 
-        val buffer = selectedSrc.value
-        selectedSrc.value = selectedDst.value
-        selectedDst.value = buffer
+        // collectSelectedTokens() observes the IDs above and resolves selectedSrc/selectedDst
+        // synchronously under Main.immediate. A manual swap of those resolved StateFlows here
+        // would read the already-resolved post-swap values and write them back into their
+        // original slots, silently reverting the flip so the UI shows the original pair.
 
         if (
             newSrcAmount != null &&
@@ -680,16 +708,7 @@ constructor(
     }
 
     private fun resetQuoteState() {
-        quote = null
-        provider = null
-        uiState.update {
-            it.copy(
-                estimatedDstTokenValue = "0",
-                estimatedDstFiatValue = "0",
-                srcFiatValue = "0",
-                formError = null,
-            )
-        }
+        resetQuoteState(error = null, cause = null, tag = null)
     }
 
     fun selectSrcPercentage(percentage: Float) {
@@ -708,6 +727,13 @@ constructor(
 
         if (maxUsableTokenAmount <= BigInteger.ZERO) {
             srcAmountState.setTextAndPlaceCursorAtEnd("0")
+            val errorRes =
+                if (srcToken.isNativeToken) {
+                    R.string.swap_error_insufficient_balance_and_fees
+                } else {
+                    R.string.swap_error_insufficient_source_token
+                }
+            showError(UiText.FormattedText(errorRes, listOf(srcToken.ticker)))
             return
         }
 
@@ -766,22 +792,39 @@ constructor(
                 .filterNotNull()
                 .catch { Timber.e(it) }
                 .collect { result ->
+                    val chain = result.chain
+                    val previousChain = gasFeeChain.value
                     gasFee.value = result.gasFee
-                    try {
-                        estimatedNetworkFeeFiatValue.value = result.estimated.fiatValue
-                        estimatedNetworkFeeTokenValue.value = result.estimated.tokenValue
+                    gasFeeChain.value = chain
+                    // UTXO non-Cardano fees are displayed from computeUtxoPlanFeeResult in
+                    // calculateFees(); only update the display for non-UTXO chains here so
+                    // a slow gas fetch can't overwrite the plan fee with a dust estimate.
+                    if (chain.standard != TokenStandard.UTXO || chain == Chain.Cardano) {
+                        try {
+                            estimatedNetworkFeeFiatValue.value = result.estimated.fiatValue
+                            estimatedNetworkFeeTokenValue.value = result.estimated.tokenValue
 
-                        uiState.update {
-                            it.copy(
-                                networkFee = result.estimated.formattedTokenValue,
-                                networkFeeFiat = result.estimated.formattedFiatValue,
+                            uiState.update {
+                                it.copy(
+                                    networkFee = result.estimated.formattedTokenValue,
+                                    networkFeeFiat = result.estimated.formattedFiatValue,
+                                )
+                            }
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                            showError(
+                                UiText.StringResource(
+                                    R.string.swap_screen_invalid_gas_fee_calculation
+                                )
                             )
                         }
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        showError(
-                            UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
-                        )
+                    } else if (previousChain != chain) {
+                        // UTXO non-Cardano + chain transitioned (initial selection or token
+                        // switch). The plan-fee block in calculateFees() may have already run
+                        // with a stale or null gasFeeChain and skipped via its chain guard,
+                        // leaving the form fee blank; re-fire so it can compute with the byte
+                        // fee for this chain.
+                        refreshQuoteState.value++
                     }
                 }
         }
@@ -801,7 +844,7 @@ constructor(
 
     @OptIn(FlowPreview::class)
     private fun calculateFees() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             combine(selectedSrc.filterNotNull(), selectedDst.filterNotNull()) { src, dst ->
                     src to dst
                 }
@@ -831,41 +874,84 @@ constructor(
 
                         val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
 
-                        val provider =
-                            resolveProvider(SwapSelectionContext(srcToken, dstToken, tokenValue))
-                                ?: throw SwapException.SwapIsNotSupported(
-                                    "Swap is not supported for this pair"
-                                )
-                        this@SwapFormViewModel.provider = provider
+                        val eligibleProviders =
+                            swapQuoteRepository.getEligibleProviders(srcToken, dstToken)
+                        if (eligibleProviders.isEmpty()) {
+                            throw SwapException.SwapIsNotSupported(
+                                "Swap is not supported for this pair"
+                            )
+                        }
 
                         val currency = appCurrencyRepository.currency.first()
 
-                        val vultBPSDiscount =
-                            vaultId?.let { id ->
-                                getDiscountBpsUseCase.invoke(id, provider).takeIf { it != 0 }
-                            }
-
-                        val referral =
+                        val baselineReferral =
                             referralCode.value
-                                ?: vaultId
-                                    ?.takeIf { srcToken.chain.id == Chain.ThorChain.id }
-                                    ?.let { referralRepository.getExternalReferralBy(it) }
+                                ?: vaultId?.let { referralRepository.getExternalReferralBy(it) }
 
-                        referral?.let { code ->
-                            val tierType = vultBPSDiscount?.getTierType()
-                            val result =
-                                swapDiscountChecker.checkReferralBpsDiscount(
-                                    tierType,
-                                    srcToken,
-                                    tokenValue,
-                                    code,
-                                )
-                            result.referralCode?.let { rc -> referralCode.update { rc } }
+                        val candidates = coroutineScope {
+                            eligibleProviders
+                                .map { p ->
+                                    async {
+                                        val discount =
+                                            vaultId?.let { id ->
+                                                getDiscountBpsUseCase.invoke(id, p).takeIf { bps ->
+                                                    bps != 0
+                                                }
+                                            }
+                                        QuoteCandidate(
+                                            provider = p,
+                                            vultBPSDiscount = discount,
+                                            referral = baselineReferral,
+                                        )
+                                    }
+                                }
+                                .awaitAll()
+                        }
+
+                        val bestQuote =
+                            swapQuoteManager.fetchBestQuote(
+                                candidates = candidates,
+                                src = src,
+                                dst = dst,
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                srcTokenValue = srcTokenValue,
+                                tokenValue = tokenValue,
+                                currency = currency,
+                                amount = amount,
+                            )
+
+                        val quoteResult = bestQuote.result
+                        val provider = quoteResult.provider
+                        this@SwapFormViewModel.provider = provider
+
+                        val vultBPSDiscount = bestQuote.candidate.vultBPSDiscount
+                        val referral = bestQuote.candidate.referral
+
+                        if (provider == SwapProvider.THORCHAIN) {
+                            referral?.let { code ->
+                                val tierType = vultBPSDiscount?.getTierType()
+                                val result =
+                                    swapDiscountChecker.checkReferralBpsDiscount(
+                                        tierType,
+                                        srcToken,
+                                        tokenValue,
+                                        code,
+                                    )
+                                result.referralCode?.let { rc -> referralCode.update { rc } }
+                                uiState.update {
+                                    it.copy(
+                                        referralBpsDiscount = result.referralBpsDiscount,
+                                        referralBpsDiscountFiatValue =
+                                            result.referralBpsDiscountFiatValue,
+                                    )
+                                }
+                            }
+                        } else {
                             uiState.update {
                                 it.copy(
-                                    referralBpsDiscount = result.referralBpsDiscount,
-                                    referralBpsDiscountFiatValue =
-                                        result.referralBpsDiscountFiatValue,
+                                    referralBpsDiscount = null,
+                                    referralBpsDiscountFiatValue = null,
                                 )
                             }
                         }
@@ -884,24 +970,30 @@ constructor(
                             )
                         }
 
-                        val quoteResult =
-                            swapQuoteManager.fetchQuote(
-                                provider = provider,
-                                src = src,
-                                dst = dst,
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                srcTokenValue = srcTokenValue,
-                                tokenValue = tokenValue,
-                                currency = currency,
-                                vultBPSDiscount = vultBPSDiscount,
-                                referral = referral,
-                                amount = amount,
-                            )
-
                         this@SwapFormViewModel.quote = quoteResult.quote
                         swapFeeFiat.value = quoteResult.swapFeeFiat
 
+                        // Determine destination address and memo for UTXO plan fee computation.
+                        // Must be computed before the uiState.update so the button stays
+                        // disabled for UTXO swaps until the plan fee is verified.
+                        val utxoFeeData: Pair<String, String?>? =
+                            when (val q = quoteResult.quote) {
+                                is SwapQuote.ThorChain ->
+                                    (q.data.router
+                                        ?: q.data.inboundAddress
+                                        ?: src.address.address) to q.data.memo
+                                is SwapQuote.MayaChain ->
+                                    (q.data.inboundAddress ?: src.address.address) to q.data.memo
+                                else -> null
+                            }
+                        val isUtxoSwap =
+                            utxoFeeData != null &&
+                                srcToken.chain.standard == TokenStandard.UTXO &&
+                                srcToken.chain != Chain.Cardano
+
+                        // For UTXO swaps keep isSwapDisabled=true until plan fee is verified
+                        // so a tap between this update and the plan-fee write never submits
+                        // with sats/byte as the total fee.
                         uiState.update {
                             it.copy(
                                 provider = quoteResult.providerUiText,
@@ -909,11 +1001,96 @@ constructor(
                                 estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
                                 estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
                                 fee = quoteResult.feeText,
+                                outboundFee = quoteResult.outboundFeeText,
+                                swapFeePercent = quoteResult.swapFeePercent,
                                 formError = null,
-                                isSwapDisabled = false,
+                                isSwapDisabled = isUtxoSwap,
                                 isLoading = false,
+                                hasQuote = true,
                                 expiredAt = this@SwapFormViewModel.quote?.expiredAt,
                             )
+                        }
+
+                        if (isUtxoSwap) {
+                            val currentGasFee =
+                                gasFee.value?.takeIf { gasFeeChain.value == srcToken.chain }
+                            val currentVaultId = vaultId
+                            if (currentGasFee != null && currentVaultId != null) {
+                                val (utxoDstAddress, utxoMemo) = utxoFeeData!!
+                                try {
+                                    val specificAndUtxo =
+                                        swapGasCalculator.getSpecificAndUtxo(
+                                            srcToken,
+                                            src.address.address,
+                                            currentGasFee,
+                                        )
+                                    val planFeeResult =
+                                        swapGasCalculator.computeUtxoPlanFeeResult(
+                                            vaultId = currentVaultId,
+                                            srcToken = srcToken,
+                                            dstAddress = utxoDstAddress,
+                                            tokenAmountInt = srcTokenValue,
+                                            specificAndUtxo = specificAndUtxo,
+                                            memo = utxoMemo,
+                                        )
+                                    if (planFeeResult != null) {
+                                        estimatedNetworkFeeFiatValue.value =
+                                            planFeeResult.estimated.fiatValue
+                                        estimatedNetworkFeeTokenValue.value =
+                                            planFeeResult.estimated.tokenValue
+                                        uiState.update {
+                                            it.copy(
+                                                networkFee =
+                                                    planFeeResult.estimated.formattedTokenValue,
+                                                networkFeeFiat =
+                                                    planFeeResult.estimated.formattedFiatValue,
+                                                isSwapDisabled = false,
+                                            )
+                                        }
+                                    } else {
+                                        estimatedNetworkFeeTokenValue.value = null
+                                        estimatedNetworkFeeFiatValue.value = null
+                                        uiState.update {
+                                            it.copy(
+                                                isSwapDisabled = true,
+                                                networkFee = "",
+                                                networkFeeFiat = "",
+                                            )
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    if (e is kotlin.coroutines.cancellation.CancellationException)
+                                        throw e
+                                    if (e is InsufficientUtxosException) {
+                                        uiState.update {
+                                            it.copy(
+                                                isSwapDisabled = true,
+                                                formError =
+                                                    UiText.StringResource(
+                                                        R.string.insufficient_utxos_error
+                                                    ),
+                                            )
+                                        }
+                                    } else {
+                                        estimatedNetworkFeeTokenValue.value = null
+                                        estimatedNetworkFeeFiatValue.value = null
+                                        uiState.update {
+                                            it.copy(
+                                                isSwapDisabled = true,
+                                                networkFee = "",
+                                                networkFeeFiat = "",
+                                            )
+                                        }
+                                    }
+                                    Timber.e(e, "utxoPlanFee")
+                                }
+                            } else {
+                                // gasFeeChain lags srcToken.chain after a token switch:
+                                // clear any stale fee from the previous chain.
+                                estimatedNetworkFeeTokenValue.value = null
+                                estimatedNetworkFeeFiatValue.value = null
+                                uiState.update { it.copy(networkFee = "", networkFeeFiat = "") }
+                            }
                         }
 
                         val balanceError =
@@ -928,31 +1105,24 @@ constructor(
                             }
                         }
                     } catch (e: SwapException) {
-                        this@SwapFormViewModel.quote = null
-                        val formError =
-                            swapQuoteManager.mapSwapExceptionToFormError(
-                                e,
-                                srcToken,
-                                uiState.value.selectedSrcToken?.title,
-                            )
-                        uiState.update {
-                            it.copy(
-                                provider = UiText.Empty,
-                                srcFiatValue = "0",
-                                estimatedDstTokenValue = "0",
-                                estimatedDstFiatValue = "0",
-                                fee = "0",
-                                isSwapDisabled = true,
-                                formError = formError,
-                                isLoading = false,
-                                expiredAt = null,
-                            )
-                        }
-                        Timber.e(e, "swapError")
+                        resetQuoteState(
+                            error =
+                                swapQuoteManager.mapSwapExceptionToFormError(
+                                    e,
+                                    srcToken,
+                                    uiState.value.selectedSrcToken?.title,
+                                ),
+                            cause = e,
+                            tag = "swapError",
+                        )
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Exception) {
-                        this@SwapFormViewModel.quote = null
-                        isLoading = false
-                        Timber.e(e)
+                        resetQuoteState(
+                            error = UiText.StringResource(R.string.swap_error_quote_failed),
+                            cause = e,
+                            tag = "swapUnexpectedError",
+                        )
                     }
 
                     this@SwapFormViewModel.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
@@ -963,12 +1133,52 @@ constructor(
     private fun launchRefreshQuoteTimer(expiredAt: Instant) {
         refreshQuoteJob?.cancel()
         refreshQuoteJob =
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    delay(expiredAt - Clock.System.now())
-                    refreshQuoteState.value++
-                }
+            viewModelScope.launch(Dispatchers.IO) {
+                delay(expiredAt - Clock.System.now())
+                refreshQuoteState.value++
             }
+    }
+
+    private fun resetQuoteState(error: UiText?, cause: Throwable?, tag: String?) {
+        // The prior quote's refresh timer would otherwise fire mid-flip/mid-error and re-run
+        // calculateFees against the same invalid amount, briefly re-exposing the fee block.
+        refreshQuoteJob?.cancel()
+        refreshQuoteJob = null
+        this@SwapFormViewModel.quote = null
+        this@SwapFormViewModel.provider = null
+        // collectTotalFee() combines this with estimatedNetworkFeeFiatValue. Resetting it
+        // to null lets filterNotNull() short-circuit so a later calculateGas() update can't
+        // write a (newGas + staleSwap) combination back into state.totalFee — the same race
+        // that triggers on flipSelectedTokens since selectedSrc changes synchronously.
+        swapFeeFiat.value = null
+        // networkFee/networkFeeFiat are tied to the source token (calculateGas), not to a
+        // specific quote, so we deliberately leave them alone — resetting them would leave
+        // them empty until selectedSrc changes again.
+        uiState.update {
+            it.copy(
+                provider = UiText.Empty,
+                srcFiatValue = "0",
+                estimatedDstTokenValue = "0",
+                estimatedDstFiatValue = "0",
+                fee = "0",
+                totalFee = "0",
+                vultBpsDiscount = null,
+                vultBpsDiscountFiatValue = null,
+                referralBpsDiscount = null,
+                referralBpsDiscountFiatValue = null,
+                outboundFee = null,
+                swapFeePercent = null,
+                tierType = null,
+                isSwapDisabled = true,
+                hasQuote = false,
+                formError = error,
+                isLoading = false,
+                expiredAt = null,
+            )
+        }
+        if (cause != null) {
+            Timber.e(cause, tag)
+        }
     }
 
     fun hideError() {
@@ -1011,46 +1221,4 @@ internal fun MutableStateFlow<SendSrc?>.updateSrc(
                 addresses.findCurrentSrc(selectedTokenId, selectedSrcValue)
             }
         }
-}
-
-internal fun List<Address>.firstSendSrc(selectedTokenId: String?, filterByChain: Chain?): SendSrc? {
-    val address =
-        when {
-            !selectedTokenId.isNullOrBlank() ->
-                firstOrNull { it -> it.accounts.any { it.token.id == selectedTokenId } }
-                    ?: this.first()
-
-            filterByChain != null -> firstOrNull { it.chain == filterByChain } ?: return null
-            else -> first()
-        }
-    val account =
-        when {
-            !selectedTokenId.isNullOrBlank() ->
-                address.accounts.firstOrNull { it.token.id == selectedTokenId }
-                    ?: address.accounts.first()
-
-            filterByChain != null ->
-                address.accounts.firstOrNull { it.token.isNativeToken } ?: return null
-
-            else -> address.accounts.first()
-        }
-
-    return SendSrc(address, account)
-}
-
-internal fun List<Address>.findCurrentSrc(selectedTokenId: String?, currentSrc: SendSrc): SendSrc? {
-    if (selectedTokenId == null) {
-        val selectedAddress = currentSrc.address
-        val selectedAccount = currentSrc.account
-        val address =
-            firstOrNull {
-                it.chain == selectedAddress.chain && it.address == selectedAddress.address
-            } ?: return null
-        val account =
-            address.accounts.firstOrNull { it.token.ticker == selectedAccount.token.ticker }
-                ?: return null
-        return SendSrc(address, account)
-    } else {
-        return firstSendSrc(selectedTokenId, null)
-    }
 }

@@ -7,8 +7,10 @@ import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -39,6 +41,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -90,7 +93,7 @@ internal class ImportFileViewModelTest {
         fileContent: String? = "test-content",
         isZip: Boolean? = false,
         showPasswordPrompt: Boolean = false,
-        zipOutputs: List<com.vultisig.wallet.data.common.AppZipEntry> = emptyList(),
+        zipOutputs: List<AppZipEntry> = emptyList(),
     ): ImportFileViewModel {
         val savedStateHandle = SavedStateHandle(mapOf("uri" to null))
         val vm =
@@ -105,6 +108,7 @@ internal class ImportFileViewModelTest {
                 vaultRepository = vaultRepository,
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 snackBarFlow = snackbarFlow,
+                defaultDispatcher = testDispatcher,
             )
         vm.uiModel.value =
             ImportFileState(
@@ -159,6 +163,51 @@ internal class ImportFileViewModelTest {
         val savedVaultSlot = slot<Vault>()
         coVerify { saveVault(capture(savedVaultSlot), false) }
         assertEquals(SigningLibType.DKLS, savedVaultSlot.captured.libType)
+    }
+
+    @Test
+    fun `restoring an MLDSA-capable vault re-adds the QBTC token`() = runTest {
+        val vault =
+            Vault(
+                id = "test-vault-id",
+                name = "Test Vault",
+                libType = SigningLibType.KeyImport,
+                pubKeyMLDSA = "mldsa-pubkey",
+            )
+        coEvery { parseVaultFromString(any(), any()) } returns vault
+        coEvery { saveVault(any(), false) } returns Unit
+        coEvery { vaultDataStoreRepository.setBackupStatus(any(), any()) } returns Unit
+        every { discoverToken(any(), any()) } returns Unit
+        coEvery { chainAccountAddressRepository.getAddress(any<Coin>(), any<Vault>()) } returns
+            Pair("qbtc1address", "qbtc-derived-pubkey")
+        coEvery { vaultRepository.addTokenToVault(any(), any()) } returns Unit
+
+        val vm = createViewModel(fileName = "share1of2-test.bak")
+        vm.uiModel.value = vm.uiModel.value.copy(showPasswordPrompt = true)
+        vm.decryptVaultData()
+        vm.uiModel.first { !it.showPasswordPrompt }
+
+        val tokenSlot = slot<Coin>()
+        coVerify { vaultRepository.addTokenToVault("test-vault-id", capture(tokenSlot)) }
+        assertEquals(Coins.Qbtc.QBTC.ticker, tokenSlot.captured.ticker)
+        assertEquals("qbtc1address", tokenSlot.captured.address)
+        assertEquals("qbtc-derived-pubkey", tokenSlot.captured.hexPublicKey)
+    }
+
+    @Test
+    fun `restoring a vault without MLDSA leaves QBTC alone`() = runTest {
+        val vault =
+            Vault(
+                id = "test-vault-id",
+                name = "Test Vault",
+                libType = SigningLibType.DKLS,
+                pubKeyMLDSA = "",
+            )
+        coEvery { parseVaultFromString(any(), any()) } returns vault
+
+        createViewModel(fileName = "share1of2-test.bak").decryptVaultData()
+
+        coVerify(exactly = 0) { vaultRepository.addTokenToVault(any(), any()) }
     }
 
     // --- decryptVaultData: SaveResult routing --------------------------------
@@ -412,16 +461,8 @@ internal class ImportFileViewModelTest {
     @Test
     fun `decryptVaultData zip Malformed shows snackbar and removes bad entry`() = runTest {
         coEvery { parseVaultFromString(any(), any()) } throws MalformedVaultException()
-        val badEntry =
-            com.vultisig.wallet.data.common.AppZipEntry(
-                name = "bad.bak",
-                content = "bad-file-content",
-            )
-        val goodEntry =
-            com.vultisig.wallet.data.common.AppZipEntry(
-                name = "good.bak",
-                content = "good-file-content",
-            )
+        val badEntry = AppZipEntry(name = "bad.bak", content = "bad-file-content")
+        val goodEntry = AppZipEntry(name = "good.bak", content = "good-file-content")
         val vm =
             createViewModel(
                 fileName = "bundle.zip",
@@ -446,16 +487,8 @@ internal class ImportFileViewModelTest {
     fun `decryptVaultData zip Duplicate shows snackbar and removes the duplicate entry`() =
         runTest {
             coEvery { parseVaultFromString(any(), any()) } throws DuplicateVaultException()
-            val dup =
-                com.vultisig.wallet.data.common.AppZipEntry(
-                    name = "vault.bak",
-                    content = "dup-content",
-                )
-            val other =
-                com.vultisig.wallet.data.common.AppZipEntry(
-                    name = "other.bak",
-                    content = "other-content",
-                )
+            val dup = AppZipEntry(name = "vault.bak", content = "dup-content")
+            val other = AppZipEntry(name = "other.bak", content = "other-content")
             val vm =
                 createViewModel(
                     fileName = "bundle.zip",
@@ -479,8 +512,7 @@ internal class ImportFileViewModelTest {
     fun `decryptVaultData zip generic Failed shows snackbar and keeps file intact`() = runTest {
         coEvery { parseVaultFromString(any(), any()) } returns testVault()
         coEvery { saveVault(any(), false) } throws RuntimeException("db locked")
-        val entry =
-            com.vultisig.wallet.data.common.AppZipEntry(name = "vault.bak", content = "keep-me")
+        val entry = AppZipEntry(name = "vault.bak", content = "keep-me")
         val vm =
             createViewModel(
                 fileName = "bundle.zip",
@@ -512,7 +544,7 @@ internal class ImportFileViewModelTest {
 
         vm.saveFileToAppDir()
 
-        val state = vm.uiModel.value
+        val state = vm.uiModel.first { it.error != null }
         assertEquals(
             UiText.StringResource(R.string.import_file_screen_duplicate_vault),
             state.error,
@@ -571,5 +603,26 @@ internal class ImportFileViewModelTest {
         val state = vm.uiModel.value
         assertNull(state.error, "QBTC derivation failure must not block import")
         coVerify { saveVault(any(), false) }
+    }
+
+    @Test
+    fun `saveFileToAppDir surfaces unsupported error when fileContent returns null`() = runTest {
+        val uri = mockk<Uri>()
+        mockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
+        coEvery { uri.fileContent(context) } returns null
+
+        val vm = createViewModel(fileContent = null)
+        vm.uiModel.value =
+            vm.uiModel.value.copy(fileUri = uri, fileName = "share1of2-test.bak", isZip = false)
+
+        vm.saveFileToAppDir()
+
+        val state = vm.uiModel.first { it.error != null }
+        assertEquals(UiText.StringResource(R.string.import_file_not_supported), state.error)
+        assertEquals(null, state.fileUri)
+        assertEquals(null, state.fileName)
+        assertEquals(null, state.fileContent)
+        assertEquals(null, state.isZip)
+        coVerify(exactly = 0) { parseVaultFromString(any(), any()) }
     }
 }

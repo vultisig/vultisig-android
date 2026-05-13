@@ -7,6 +7,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -19,6 +20,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.app.activity.MainActivity
 import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.usecases.QrShareField
+import com.vultisig.wallet.data.usecases.QrShareInfo
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowViewModel
@@ -62,21 +65,41 @@ internal fun KeysignPeerDiscovery(
     val qrShareBackground = Theme.v2.colors.backgrounds.primary
 
     val vault = uiModel.vault
-    val qrShareDescription =
-        if (isSwap)
-            stringResource(
-                R.string.qr_title_join_keysign_swap_description,
-                vault.name.forCanvasMinify(),
-                uiModel.amount.forCanvasMinify(),
-                uiModel.toAmount.forCanvasMinify(),
-            )
-        else
-            stringResource(
-                R.string.qr_title_join_keysign_description,
-                vault.name.forCanvasMinify(),
-                uiModel.amount.forCanvasMinify(),
-                uiModel.toAddress.forCanvasMinify(),
-            )
+    val labelVault = stringResource(R.string.qr_share_label_vault)
+    val labelAmount = stringResource(R.string.qr_share_label_amount)
+    val labelTo = stringResource(R.string.qr_share_label_to)
+    val labelFrom = stringResource(R.string.qr_share_label_from)
+    val srcIconBitmap =
+        remember(uiModel.srcTokenLogoRes) {
+            uiModel.srcTokenLogoRes?.let { BitmapFactory.decodeResource(context.resources, it) }
+        }
+    DisposableEffect(srcIconBitmap) { onDispose { srcIconBitmap?.recycle() } }
+    val dstIconBitmap =
+        remember(uiModel.dstTokenLogoRes) {
+            uiModel.dstTokenLogoRes?.let { BitmapFactory.decodeResource(context.resources, it) }
+        }
+    DisposableEffect(dstIconBitmap) { onDispose { dstIconBitmap?.recycle() } }
+    val vultisigLogoBitmap = remember {
+        BitmapFactory.decodeResource(context.resources, R.drawable.logo)
+    }
+    DisposableEffect(vultisigLogoBitmap) { onDispose { vultisigLogoBitmap.recycle() } }
+    val qrShareInfo =
+        QrShareInfo(
+            title = qrShareTitle,
+            fields =
+                if (isSwap)
+                    listOf(
+                        QrShareField(labelVault, vault.name.forCanvasMinify()),
+                        QrShareField(labelFrom, uiModel.amount.forCanvasMinify(), srcIconBitmap),
+                        QrShareField(labelTo, uiModel.toAmount.forCanvasMinify(), dstIconBitmap),
+                    )
+                else
+                    listOf(
+                        QrShareField(labelVault, vault.name.forCanvasMinify()),
+                        QrShareField(labelAmount, uiModel.amount.forCanvasMinify(), srcIconBitmap),
+                        QrShareField(labelTo, uiModel.toAddress.forCanvasMinify()),
+                    ),
+        )
 
     LaunchedEffect(key1 = viewModel.participants) {
         viewModel.participants.collect { newList ->
@@ -108,13 +131,12 @@ internal fun KeysignPeerDiscovery(
 
     DisposableEffect(Unit) { onDispose { viewModel.stopParticipantDiscovery() } }
 
-    LaunchedEffect(uiModel.qrBitmapPainter) {
+    LaunchedEffect(uiModel.qrBitmapPainter, qrShareInfo) {
         sharedViewModel.saveShareQrBitmap(
             context,
             qrShareBackground.toArgb(),
-            qrShareTitle,
-            qrShareDescription,
-            BitmapFactory.decodeResource(context.resources, R.drawable.ic_share_qr_logo),
+            qrShareInfo,
+            vultisigLogoBitmap,
         )
     }
     val isLookingForVultiServer =

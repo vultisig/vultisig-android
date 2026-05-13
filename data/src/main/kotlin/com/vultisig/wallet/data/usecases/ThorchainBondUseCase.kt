@@ -1,7 +1,7 @@
 package com.vultisig.wallet.data.usecases
 
-import com.vultisig.wallet.data.api.ChurnEntry
-import com.vultisig.wallet.data.api.MidgardNetworkData
+import com.vultisig.wallet.data.api.models.thorchain.ChurnEntry
+import com.vultisig.wallet.data.api.models.thorchain.MidgardNetworkData
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition
 import com.vultisig.wallet.data.blockchain.model.BondedNodePosition.Companion.generateBondedId
 import com.vultisig.wallet.data.models.Coins

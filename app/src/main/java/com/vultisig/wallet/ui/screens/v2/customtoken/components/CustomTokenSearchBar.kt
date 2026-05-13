@@ -17,7 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,8 +41,6 @@ internal fun CustomTokenSearchBar(
     onCloseClick: () -> Unit,
     initialDisplay: Boolean,
 ) {
-    val context = LocalContext.current
-
     Row(modifier = Modifier.height(intrinsicSize = IntrinsicSize.Max)) {
         V2Container(
             modifier = Modifier.weight(1f).height(40.dp),
@@ -80,7 +78,7 @@ internal fun CustomTokenSearchBar(
                             if (state.text.isEmpty()) {
                                 Text(
                                     text =
-                                        context.getString(
+                                        stringResource(
                                             R.string.custom_token_enter_contract_address
                                         ),
                                     style = Theme.brockmann.supplementary.footnote,
