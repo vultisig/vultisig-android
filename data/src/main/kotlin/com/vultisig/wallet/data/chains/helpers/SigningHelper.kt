@@ -141,7 +141,8 @@ object SigningHelper {
                     Chain.Dash,
                     Chain.Zcash -> {
                         val utxo = UtxoHelper(payload.coin.coinType, ecdsaKey, ecdsaChainCode)
-                        utxo.getPreSignedImageHash(payload)
+                        payload.signBitcoin?.let { utxo.getPreSignedImageHashFromSignBitcoin(it) }
+                            ?: utxo.getPreSignedImageHash(payload)
                     }
 
                     Chain.Qbtc -> {
@@ -272,7 +273,9 @@ object SigningHelper {
             Chain.Litecoin,
             Chain.Zcash -> {
                 val utxo = UtxoHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
-                return utxo.getSignedTransaction(keysignPayload, signatures)
+                return keysignPayload.signBitcoin?.let {
+                    utxo.getSignedTransactionFromSignBitcoin(it, signatures)
+                } ?: utxo.getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.ThorChain -> {

@@ -49,6 +49,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             signDirect = from.signDirect,
             signSolana = from.signSolana,
             signTon = from.signTon,
+            signBitcoin = from.signBitcoin,
             swapPayload =
                 when {
                     from.oneinchSwapPayload != null ->
@@ -224,6 +225,8 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                 ttl = it.ttl,
                             )
                         }
+
+                    from.signBitcoin != null -> BlockChainSpecific.BitcoinPSBT
 
                     else -> error("No supported BlockChainSpecific in proto $from")
                 },
