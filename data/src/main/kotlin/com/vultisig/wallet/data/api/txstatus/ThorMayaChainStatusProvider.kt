@@ -40,8 +40,8 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
 
     private val midgardUrls =
         mapOf(
-            Chain.ThorChain to "https://gateway.liquify.com/chain/thorchain_midgard/v2/actions",
-            Chain.MayaChain to "https://midgard.mayachain.info/v2/actions",
+            Chain.ThorChain to THORCHAIN_MIDGARD_ACTIONS_URL,
+            Chain.MayaChain to MAYACHAIN_MIDGARD_ACTIONS_URL,
         )
 
     override suspend fun checkStatus(txHash: String, chain: Chain): TransactionResult {
@@ -80,6 +80,9 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
         value?.takeUnless { it.isBlank() } ?: default
 
     private companion object {
+        const val THORCHAIN_MIDGARD_ACTIONS_URL =
+            "https://gateway.liquify.com/chain/thorchain_midgard/v2/actions"
+        const val MAYACHAIN_MIDGARD_ACTIONS_URL = "https://midgard.mayachain.info/v2/actions"
         const val MIDGARD_TXID_PARAM = "txid"
         const val ACTION_TYPE_REFUND = "refund"
         const val ACTION_TYPE_FAILED = "failed"
