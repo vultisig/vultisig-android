@@ -326,6 +326,7 @@ class SchnorrKeysign(
             heardFromEver.clear()
             waitingNotified = false
         }
+        cache.clear()
         val msgHash = messageToSign.md5()
         val localMessenger =
             TssMessenger(

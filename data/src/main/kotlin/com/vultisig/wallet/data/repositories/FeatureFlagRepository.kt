@@ -15,10 +15,11 @@ internal class FeatureFlagRepositoryImpl
 constructor(private val featureFlagApi: FeatureFlagApi) : FeatureFlagRepository {
 
     companion object {
-        var tssBatchEnabledOverride: Boolean? = true
+        var tssBatchEnabledOverride: Boolean? = false
     }
 
     override suspend fun getFeatureFlags(): FeatureFlagJson {
+
         val flags =
             runCatching { featureFlagApi.getFeatureFlags() }
                 .onFailure { Timber.w(it, "Failed to load feature flags, using safe defaults") }
