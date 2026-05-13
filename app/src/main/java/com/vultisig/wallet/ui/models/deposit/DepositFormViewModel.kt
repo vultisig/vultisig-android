@@ -1794,7 +1794,6 @@ constructor(
             val vault = vaultRepository.get(vaultId) ?: return null
             chainAccountAddressRepository.getAddress(chain = assetChain, vault = vault).first
         } catch (e: Throwable) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to resolve paired address for $poolId")
             null

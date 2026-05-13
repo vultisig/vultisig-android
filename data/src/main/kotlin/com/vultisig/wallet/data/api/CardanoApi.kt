@@ -129,7 +129,6 @@ internal class CardanoApiImpl @Inject constructor(private val httpClient: HttpCl
                 }
             }
         } catch (t: Throwable) {
-            if (t is kotlinx.coroutines.CancellationException) throw t
             if (t is CancellationException) throw t
             Timber.e(t, "Failed to broadcast Cardano transaction")
             error("Failed to broadcast transaction : ${t.message}")
