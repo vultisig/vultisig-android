@@ -969,6 +969,7 @@
     <string name="amino_direct">Izravni potpis</string>
     <string name="transaction_status_confirmed">Transakcija potvrđena</string>
     <string name="transaction_status_failed">Transakcija nije uspjela</string>
+    <string name="transaction_status_refunded">Transakcija vraćena</string>
     <string name="transaction_status_not_found">Transakcija nije pronađena</string>
     <string name="transaction_status_pending">Transakcija na čekanju…</string>
     <string name="transaction_status_notification_title">Status transakcije</string>
@@ -1007,6 +1008,7 @@
     <string name="transaction_history_clear_filters">Ukloni filtere</string>
     <string name="transaction_status_confirmed_label">Potvrđeno</string>
     <string name="transaction_status_failed_label">Neuspješno</string>
+    <string name="transaction_status_refunded_label">Vraćeno</string>
     <string name="transaction_status_in_progress_label">U tijeku…</string>
     <string name="transaction_history_to_label">Za</string>
     <string name="transaction_history_via_prefix">putem</string>
