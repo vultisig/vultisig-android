@@ -11,7 +11,9 @@ import org.junit.jupiter.api.Test
 /**
  * Verifies the Midgard-driven status mapping for THORChain/MayaChain inbound transactions:
  * - `type == "refund"` → [TransactionResult.Refunded] carrying the human-readable reason.
- * - `status == "success"` (non-refund) → [TransactionResult.Confirmed].
+ * - `type == "failed"` → [TransactionResult.Refunded] (same end state — funds refunded after
+ *   network rejected the action, e.g. deposits paused).
+ * - `status == "success"` (non-refund/failed) → [TransactionResult.Confirmed].
  * - empty actions array → [TransactionResult.Pending] (indexer lag).
  * - network/parse failure → [TransactionResult.Pending] (so polling keeps running).
  */
@@ -70,6 +72,57 @@ class ThorMayaChainStatusProviderTest {
             """
             { "actions": [ { "type": "refund", "status": "success",
               "metadata": { "refund": { "reason": "   " } } } ] }
+            """
+                .trimIndent()
+        val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
+        val provider = ThorMayaChainStatusProvider(client)
+
+        val result = provider.checkStatus("hash", Chain.ThorChain)
+
+        result shouldBe TransactionResult.Refunded("Transaction refunded")
+    }
+
+    @Test
+    fun `failed action returns Refunded with reason from metadata`() = runTest {
+        // Real Midgard payload shape for a paused-pool LP add-liquidity:
+        // network accepts the tx (status=success) but cannot execute it (type=failed)
+        // and refunds the inbound funds.
+        val body =
+            """
+            {
+              "actions": [
+                {
+                  "type": "failed",
+                  "status": "success",
+                  "metadata": {
+                    "failed": {
+                      "code": "99",
+                      "memo": "+:ETH.USDT-…:0x…",
+                      "reason": "failed to execute message; message index: 0: unable to add liquidity, deposits are paused for asset (ETH.USDT-…): internal error"
+                    }
+                  }
+                }
+              ]
+            }
+            """
+                .trimIndent()
+        val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
+        val provider = ThorMayaChainStatusProvider(client)
+
+        val result = provider.checkStatus("hash", Chain.ThorChain)
+
+        result shouldBe
+            TransactionResult.Refunded(
+                "failed to execute message; message index: 0: unable to add liquidity, " +
+                    "deposits are paused for asset (ETH.USDT-…): internal error"
+            )
+    }
+
+    @Test
+    fun `failed action without metadata falls back to default reason`() = runTest {
+        val body =
+            """
+            { "actions": [ { "type": "failed", "status": "success" } ] }
             """
                 .trimIndent()
         val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)

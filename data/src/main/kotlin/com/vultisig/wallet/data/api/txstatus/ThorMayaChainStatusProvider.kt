@@ -18,8 +18,12 @@ import timber.log.Timber
  * The previous implementation treated any HTTP 200 from `/thorchain/tx/status/{hash}` as
  * [TransactionResult.Confirmed], but the network returns 200 for both completed and refunded
  * inbound txs — so refunded LP/swap/savers/loan/bond txs were shown as successful in history.
- * Midgard's `actions` endpoint exposes the action `type` ("refund" vs "swap"/"addLiquidity"/…) and
- * a human-readable `metadata.refund.reason`, which is what we surface in the UI.
+ * Midgard's `actions` endpoint exposes the action `type` ("refund"/"failed" vs
+ * "swap"/"addLiquidity"/…) and a human-readable reason in `metadata.refund.reason` or
+ * `metadata.failed.reason`, which is what we surface in the UI. `type == "failed"` (e.g. deposits
+ * paused, slip-limit hit) is reported with `status == "success"` by Midgard but the user's funds
+ * were refunded after the failure — same user-visible end state as a regular refund, so we funnel
+ * both through [TransactionResult.Refunded].
  */
 class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: HttpClient) :
     TransactionStatusProvider {
@@ -53,12 +57,19 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
                         action.metadata?.refund?.reason?.takeUnless { it.isBlank() }
                             ?: DEFAULT_REFUND_REASON
                 )
+            action.type == ACTION_TYPE_FAILED ->
+                TransactionResult.Refunded(
+                    reason =
+                        action.metadata?.failed?.reason?.takeUnless { it.isBlank() }
+                            ?: DEFAULT_REFUND_REASON
+                )
             action.status == ACTION_STATUS_SUCCESS -> TransactionResult.Confirmed
             else -> TransactionResult.Pending
         }
 
     private companion object {
         const val ACTION_TYPE_REFUND = "refund"
+        const val ACTION_TYPE_FAILED = "failed"
         const val ACTION_STATUS_SUCCESS = "success"
         const val DEFAULT_REFUND_REASON = "Transaction refunded"
     }
@@ -75,6 +86,16 @@ internal data class MidgardAction(
 )
 
 @Serializable
-internal data class MidgardActionMetadata(@SerialName("refund") val refund: MidgardRefund? = null)
+internal data class MidgardActionMetadata(
+    @SerialName("refund") val refund: MidgardRefund? = null,
+    @SerialName("failed") val failed: MidgardFailedMetadata? = null,
+)
 
 @Serializable internal data class MidgardRefund(@SerialName("reason") val reason: String? = null)
+
+@Serializable
+internal data class MidgardFailedMetadata(
+    @SerialName("code") val code: String? = null,
+    @SerialName("memo") val memo: String? = null,
+    @SerialName("reason") val reason: String? = null,
+)
