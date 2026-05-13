@@ -519,6 +519,7 @@ class DKLSKeygen(
 
     suspend fun reshareWithRetry(attempt: Int) {
         try {
+            cache.clear()
             val keyshareHandle = Handle()
             if (vault.pubKeyECDSA.isNotEmpty()) {
                 val keyshare = getKeyshareBytesFromVault()

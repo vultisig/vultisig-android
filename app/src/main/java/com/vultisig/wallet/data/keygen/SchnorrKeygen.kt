@@ -486,6 +486,7 @@ class SchnorrKeygen(
 
     suspend fun schnorrReshareWithRetry(attempt: Int) {
         try {
+            cache.clear()
             val keyshareHandle = Handle()
             if (vault.pubKeyEDDSA.isNotEmpty()) {
                 val keyshare = getKeyshareBytesFromVault()
