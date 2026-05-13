@@ -22,9 +22,13 @@ class CosmosFeeService : FeeService {
                 else -> 200000L
             }
         return when (chain) {
+            Chain.Osmosis -> {
+                // Osmosis uses EIP-1559 dynamic fees; 25,000 uosmo matches iOS and covers the
+                // 300k gas × 0.03 uosmo/gas minimum with headroom for base fee spikes.
+                GasFees(limit = gasLimit.toBigInteger(), amount = 25000.toBigInteger())
+            }
             Chain.GaiaChain,
             Chain.Kujira,
-            Chain.Osmosis,
             Chain.Terra,
             Chain.Akash,
             Chain.Qbtc -> {

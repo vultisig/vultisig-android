@@ -71,6 +71,12 @@ class CosmosFeeServiceTest {
     }
 
     @Test
+    fun `Osmosis fee amount is 25000`() = runTest {
+        val fee = feeService.calculateDefaultFees(transfer(Chain.Osmosis)) as GasFees
+        assertEquals(BigInteger("25000"), fee.amount)
+    }
+
+    @Test
     fun `QBTC returns GasFees type`() = runTest {
         val fee = feeService.calculateDefaultFees(transfer(Chain.Qbtc))
         assertTrue(fee is GasFees)
