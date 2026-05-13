@@ -587,6 +587,8 @@
     <string name="vault_backup_screen_paste">붙여넣기</string>
     <string name="vault_backup_error_pin">코드 확인 오류, 다시 시도해 주세요</string>
     <string name="vault_backup_verifying_pin">코드 확인 중, 잠시 기다려 주세요</string>
+    <string name="vault_backup_network_error">서버에 연결할 수 없습니다. 다시 시도해 주세요</string>
+    <string name="vault_backup_try_again">다시 시도</string>
     <string name="vault_backup_screen_email_sent_to">%s(으)로 전송됨.</string>
     <string name="vault_backup_screen_donot_receive_email">이메일을 받지 못하셨나요?</string>
     <string name="vault_backup_screen_restart_keygen">키 생성 재시작</string>
@@ -974,7 +976,11 @@
     <string name="mint_secured_asset_secure">보안 자산 민트 (SECURE+)</string>
     <string name="target_asset">대상 자산: %1$s-%2$s</string>
     <string name="thor_address">Thor 주소</string>
+    <string name="paired_address">페어링된 주소</string>
+    <string name="node_address">노드 주소</string>
     <string name="operation">작업</string>
+    <string name="pool">풀</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">볼트에서 THORChain 주소를 찾을 수 없습니다. 볼트에 RUNE이 있는지 확인해 주세요</string>
     <string name="deposit_error_not_secured_asset">선택한 자산은 보안 자산이 아니므로 처리할 수 없습니다</string>
     <string name="keysign_password_hide_hint">힌트 숨기기</string>

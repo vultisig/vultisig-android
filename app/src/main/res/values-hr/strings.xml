@@ -853,6 +853,8 @@
     <string name="select_vault_type_fast">Brzo</string>
     <string name="vault_backup_screen_paste">Zalijepi</string>
     <string name="vault_backup_error_pin">Pogreška pri provjeri koda, pokušajte ponovno</string>
+    <string name="vault_backup_network_error">Nije moguće povezati se s poslužiteljem, pokušajte ponovno</string>
+    <string name="vault_backup_try_again">Pokušajte ponovno</string>
     <string name="tx_overview_screen_tx_hash">Hash transakcije</string>
     <string name="tx_overview_screen_tx_from">Od</string>
     <string name="swap_swap_button">Zamijeni</string>
@@ -946,7 +948,11 @@
     <string name="mint_secured_asset_secure">Osigurana imovina Mint (SECURE+)</string>
     <string name="target_asset">Ciljana imovina: %1$s-%2$s</string>
     <string name="thor_address">THORChain adresa</string>
+    <string name="paired_address">Uparena adresa</string>
+    <string name="node_address">Adresa čvora</string>
     <string name="operation">Operacija</string>
+    <string name="pool">Pool</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">THORChain adresa nije pronađena u trezoru. Molimo provjerite imate li RUNE u svom trezoru.</string>
     <string name="deposit_error_not_secured_asset">Odabrana imovina nije osigurana imovina i ne može se obraditi.</string>
     <string name="keysign_password_hide_hint">Sakrij savjet</string>

@@ -847,6 +847,8 @@
     <string name="select_vault_type_fast">Rápida</string>
     <string name="vault_backup_screen_paste">Cole</string>
     <string name="vault_backup_error_pin">Erro ao verificar o código. Tente novamente.</string>
+    <string name="vault_backup_network_error">Não foi possível acessar o servidor. Tente novamente.</string>
+    <string name="vault_backup_try_again">Tente novamente</string>
     <string name="tx_overview_screen_tx_hash">Hash da transação</string>
     <string name="tx_overview_screen_tx_from">De</string>
     <string name="swap_swap_button">Trocar</string>
@@ -940,7 +942,11 @@
     <string name="mint_secured_asset_secure">Ativo garantido Mint (SECURE+)</string>
     <string name="target_asset">Ativo alvo: %1$s-%2$s</string>
     <string name="thor_address">Endereço THORChain</string>
+    <string name="paired_address">Endereço emparelhado</string>
+    <string name="node_address">Endereço do nó</string>
     <string name="operation">Operação</string>
+    <string name="pool">Pool</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">Endereço THORChain não encontrado no cofre. Certifique-se de que tem RUNE no seu cofre.</string>
     <string name="deposit_error_not_secured_asset">O ativo selecionado não é um ativo garantido e não pode ser processado.</string>
     <string name="keysign_password_hide_hint">Ocultar dica</string>

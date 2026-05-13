@@ -1,6 +1,7 @@
 package com.vultisig.wallet.flows.keygen
 
 import androidx.test.espresso.intent.rule.IntentsRule
+import com.vultisig.wallet.data.repositories.BackupCodeVerifyResult
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
 import com.vultisig.wallet.data.usecases.fast.FastVaultModule
 import com.vultisig.wallet.data.usecases.fast.VerifyFastVaultBackupCodeUseCase
@@ -28,7 +29,7 @@ class FastVaultKeygenFlowTest : CleanTest() {
     @JvmField
     val verifyFastVaultBackupCodeUseCase: VerifyFastVaultBackupCodeUseCase =
         VerifyFastVaultBackupCodeUseCase { _, _ ->
-            true
+            BackupCodeVerifyResult.Valid
         }
 
     private var isDklsEnabled = false

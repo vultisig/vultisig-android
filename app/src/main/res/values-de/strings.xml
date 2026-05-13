@@ -850,6 +850,8 @@
     <string name="select_vault_type_fast">Schnell</string>
     <string name="vault_backup_screen_paste">Einfügen</string>
     <string name="vault_backup_error_pin">Fehler beim Überprüfen des Codes. Bitte versuchen Sie es erneut.</string>
+    <string name="vault_backup_network_error">Server nicht erreichbar, bitte erneut versuchen</string>
+    <string name="vault_backup_try_again">Erneut versuchen</string>
     <string name="tx_overview_screen_tx_hash">Transaktions-Hash</string>
     <string name="tx_overview_screen_tx_from">Von</string>
     <string name="swap_swap_button">Tauschen</string>
@@ -943,7 +945,11 @@
     <string name="mint_secured_asset_secure">Gesichertes Asset erstellen (SECURE+)</string>
     <string name="target_asset">Zielvermögen: %1$s-%2$s</string>
     <string name="thor_address">THORChain-Adresse</string>
+    <string name="paired_address">Gepaarte Adresse</string>
+    <string name="node_address">Node-Adresse</string>
     <string name="operation">Operation</string>
+    <string name="pool">Pool</string>
+    <string name="lp_destination_format">→ %1$s LP %2$s</string>
     <string name="thorchain_address_not_found_in_vault">Die THORChain-Adresse wurde im Tresor nicht gefunden. Bitte stellen Sie sicher, dass sich RUNE in Ihrem Tresor befindet.</string>
     <string name="deposit_error_not_secured_asset">Das ausgewählte Asset ist nicht gesichert und kann nicht verarbeitet werden.</string>
     <string name="keysign_password_hide_hint">Hinweis ausblenden</string>

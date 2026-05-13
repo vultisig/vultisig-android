@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performTextInput
 import androidx.test.espresso.intent.rule.IntentsRule
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.repositories.BackupCodeVerifyResult
 import com.vultisig.wallet.data.repositories.SecretSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.fast.FastVaultModule
@@ -52,7 +53,7 @@ class MigrateGg20FastVaultFlowTest : CleanTest() {
     @JvmField
     val verifyFastVaultBackupCodeUseCase: VerifyFastVaultBackupCodeUseCase =
         VerifyFastVaultBackupCodeUseCase { _, _ ->
-            true
+            BackupCodeVerifyResult.Valid
         }
 
     private var isDklsEnabled = false
