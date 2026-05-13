@@ -205,7 +205,6 @@ constructor(
                                 )
                             }
                         } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) throw e
                             if (e is CancellationException) throw e
                             Timber.e(e, "FastVaultVerification: save vault failed")
                             updateVerifyState(VerifyPinState.Error)

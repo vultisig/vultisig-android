@@ -200,7 +200,6 @@ constructor(
                 updateAccountInAddresses(account, addresses)
                 uiState.update { it.copy(isLoading = false) }
             } catch (e: Throwable) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load account for token")
                 uiState.update { it.copy(isLoading = false) }

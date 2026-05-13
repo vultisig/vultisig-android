@@ -227,7 +227,6 @@ constructor(
                 // know the available pool set so selected positions are re-evaluated.
                 reloadLpTab()
             } catch (e: Throwable) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load THORChain LP pools for dialog")
                 // Leave availablePools null so the next user interaction (e.g. opening Manage
@@ -868,7 +867,6 @@ constructor(
                         it.copy(lp = LpTabUiModel(isLoading = false, positions = merged))
                     }
                 } catch (e: Throwable) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     if (e is CancellationException) throw e
                     Timber.e(e, "Failed to load THORChain LP positions")
                     state.update {
