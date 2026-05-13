@@ -175,4 +175,37 @@ class KeygenRetryRegressionTest {
         assertEquals(listOf(1), attempts)
         assertEquals("recovered", result)
     }
+
+    @Test
+    fun `shouldKeepExistingChaincode returns true only for KeyImport vaults`() {
+        // KeyImport vaults store the mnemonic's BIP32 chaincode in vault.hexChainCode; QC reshare
+        // must NOT overwrite it. Freshly-created DKLS / GG20 vaults can adopt the QC output safely
+        // because their existing chaincode IS the DKLS output.
+        assertEquals(true, shouldKeepExistingChaincode(SigningLibType.KeyImport))
+        assertEquals(false, shouldKeepExistingChaincode(SigningLibType.DKLS))
+        assertEquals(false, shouldKeepExistingChaincode(SigningLibType.GG20))
+    }
+
+    @Test
+    fun `retry helper rethrows the original failure when the attempt ceiling is reached`() =
+        runTest {
+            var retryCount = 0
+
+            val failure =
+                assertFailsWith<IllegalStateException> {
+                    runKeygenWithRetry(
+                        attempt = 3,
+                        maxAttempts = 3,
+                        retry = { _, _ ->
+                            retryCount += 1
+                            Unit
+                        },
+                    ) {
+                        error("terminal failure")
+                    }
+                }
+
+            assertEquals("terminal failure", failure.message)
+            assertEquals(0, retryCount)
+        }
 }

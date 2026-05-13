@@ -262,52 +262,22 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
 
             coVerify(exactly = 1) {
                 vultiSignerRepository.joinBatchReshare(
-                    match<BatchReshareRequestJson> {
-                        it.publicKeyEcdsa == keyImportVault.pubKeyECDSA
+                    match<BatchReshareRequestJson> { request ->
+                        request.publicKeyEcdsa == keyImportVault.pubKeyECDSA &&
+                            request.oldParties == keyImportVault.signers &&
+                            request.email == "user@example.com" &&
+                            request.encryptionPassword == "fast-vault-password" &&
+                            request.protocols ==
+                                listOf(
+                                    BatchReshareRequestJson.PROTOCOL_ECDSA,
+                                    BatchReshareRequestJson.PROTOCOL_EDDSA,
+                                ) &&
+                            request.localPartyId == "Server-XYZ"
                     }
                 )
             }
             coVerify(exactly = 0) { vultiSignerRepository.joinReshare(any()) }
         }
-
-    @Test
-    fun `KeyImport vault reshare preserves the mnemonic-derived hexChainCode`() {
-        // Pure invariant pin: KeyImport vaults store the mnemonic's BIP32 chaincode in
-        // `vault.hexChainCode` so per-chain addresses derive correctly. Routing reshare through
-        // the DKLS QC executor must NOT overwrite it with the DKLS output, which "may differ"
-        // (per the explicit comment in `startKeyImportKeygen`). Tests the pure decision rule
-        // used inside `KeygenViewModel.startKeygenDkls` finalisation.
-        val mnemonicChaincode = "abc-mnemonic"
-        val dklsChaincode = "xyz-dkls-output"
-
-        // KeyImport vault: original mnemonic chaincode must survive.
-        val keyImportResult =
-            applyChaincodeRule(
-                libType = SigningLibType.KeyImport,
-                existing = mnemonicChaincode,
-                dklsOutput = dklsChaincode,
-            )
-        org.junit.jupiter.api.Assertions.assertEquals(mnemonicChaincode, keyImportResult)
-
-        // DKLS vault: vault.hexChainCode IS the DKLS chaincode, so adopting the QC output is a
-        // no-op equivalence (and matches iOS).
-        val dklsResult =
-            applyChaincodeRule(
-                libType = SigningLibType.DKLS,
-                existing = dklsChaincode,
-                dklsOutput = dklsChaincode,
-            )
-        org.junit.jupiter.api.Assertions.assertEquals(dklsChaincode, dklsResult)
-    }
-
-    private fun applyChaincodeRule(
-        libType: SigningLibType,
-        existing: String,
-        dklsOutput: String,
-    ): String =
-        // Mirrors the production rule in `KeygenViewModel.startKeygenDkls`: only adopt the
-        // DKLS QC chaincode when the vault is NOT KeyImport.
-        if (libType != SigningLibType.KeyImport) dklsOutput else existing
 
     @Test
     fun `reshare on a GG20 vault stays on the legacy endpoint even with the flag on`() =
@@ -323,7 +293,15 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
             createViewModel()
             advanceUntilIdle()
 
-            coVerify(exactly = 1) { vultiSignerRepository.joinReshare(any()) }
+            coVerify(exactly = 1) {
+                vultiSignerRepository.joinReshare(
+                    match<JoinReshareRequestJson> { request ->
+                        request.publicKeyEcdsa == gg20Vault.pubKeyECDSA &&
+                            request.oldResharePrefix == gg20Vault.resharePrefix &&
+                            request.oldParties == gg20Vault.signers
+                    }
+                )
+            }
             coVerify(exactly = 0) { vultiSignerRepository.joinBatchReshare(any()) }
         }
 }

@@ -156,6 +156,19 @@ internal fun mergeReshareKeyshares(
 }
 
 /**
+ * Returns `true` when a reshare ceremony must preserve the vault's existing `hexChainCode` instead
+ * of adopting the DKLS QC output.
+ *
+ * KeyImport vaults store the mnemonic's BIP32 chaincode in `vault.hexChainCode` so the root key
+ * derives per-chain addresses; the QC reshare protocol regenerates threshold shares of the same
+ * secret but does not round-trip the mnemonic chaincode byte-for-byte. For freshly-created DKLS /
+ * GG20 vaults the existing chaincode IS the DKLS output, so adopting the QC value is a no-op.
+ * Migrate forces `libType = SigningLibType.DKLS` via navigation, so Migrate lands on `false` too.
+ */
+internal fun shouldKeepExistingChaincode(libType: SigningLibType): Boolean =
+    libType == SigningLibType.KeyImport
+
+/**
  * Shared retry wrapper for keygen ceremonies.
  *
  * Normal failures retry up to [maxAttempts], while coroutine cancellation must propagate
