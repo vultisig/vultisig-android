@@ -384,7 +384,6 @@ constructor(
                     try {
                         extractMasterKeys(mnemonic)
                     } catch (e: Exception) {
-                        if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.e(e, "KeyImport: failed to extract master keys")
                         state.update {
                             it.copy(
