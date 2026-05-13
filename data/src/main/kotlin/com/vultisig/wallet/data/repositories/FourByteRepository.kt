@@ -40,7 +40,6 @@ constructor(private val fourByteApi: FourByteApi, @param:PrettyJson private val 
             val decodeGeneric = decodeGeneric(memo, functionSignature)
             convertDecodedCallToPrettyArray(decodeGeneric)
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             null
         }
     }

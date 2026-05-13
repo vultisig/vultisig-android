@@ -182,7 +182,6 @@ constructor(
 
             return totalSeconds / totalBlocks
         } catch (t: Throwable) {
-            if (t is kotlinx.coroutines.CancellationException) throw t
             Timber.e(t)
             return 6.0 // Fallback to default
         }

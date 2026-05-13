@@ -382,7 +382,6 @@ constructor(
                 val eddsaUIResp = Tss.getLocalUIEddsa(eddsaShare)
                 localUiEddsa = eddsaUIResp.padEnd(64, '0')
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 throw IllegalStateException("Can't get local ui for migration", e)
             }
         }

@@ -487,7 +487,6 @@ constructor(
                 else -> addr.replace("-", ".")
             }
         } catch (t: Throwable) {
-            if (t is kotlinx.coroutines.CancellationException) throw t
             "thor.$addr"
         }
     }
