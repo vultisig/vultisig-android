@@ -163,6 +163,7 @@ internal class CosmosApiImp(
 
     override suspend fun getTxStatus(txHash: String): CosmosTxStatusJson? {
         val response = httpClient.get("$rpcEndpoint/cosmos/tx/v1beta1/txs/$txHash")
+        if (response.status.value == 404) return null
         return response.bodyOrThrow<CosmosTxStatusJson>()
     }
 }
