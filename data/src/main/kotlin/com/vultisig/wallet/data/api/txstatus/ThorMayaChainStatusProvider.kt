@@ -27,6 +27,12 @@ import timber.log.Timber
  * at least one outbound tx with a non-blank txID is present; otherwise we report
  * [TransactionResult.Failed] so we don't tell the user their funds are back while they're still in
  * flight (or were never refunded).
+ *
+ * Note the deliberate asymmetry: `type == "refund"` is reported as [TransactionResult.Refunded]
+ * immediately without checking `action.out`. The network has explicitly decided to refund, and
+ * that's the user-facing answer regardless of whether the outbound leg has landed yet — observing
+ * the outbound is the network's bookkeeping, not new information for the user. `type == "failed"`
+ * carries no such commitment, which is why it gates on the outbound being observed.
  */
 class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: HttpClient) :
     TransactionStatusProvider {
