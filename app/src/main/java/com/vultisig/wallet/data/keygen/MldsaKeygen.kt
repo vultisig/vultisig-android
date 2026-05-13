@@ -159,6 +159,7 @@ class MldsaKeygen(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "Failed to get messages")
                 delay(1000) // backoff delay
             }

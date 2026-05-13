@@ -45,6 +45,7 @@ fun CoroutineScope.safeLaunch(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Throwable) {
+        if (e is kotlinx.coroutines.CancellationException) throw e
         onError(e)
     }
 }

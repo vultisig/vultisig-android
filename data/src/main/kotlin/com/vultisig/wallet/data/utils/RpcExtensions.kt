@@ -62,6 +62,7 @@ suspend fun extractError(response: HttpResponse, errorKey: String): String {
 
         findValueRecursively(element, errorKey) ?: body
     } catch (t: Throwable) {
+        if (t is kotlinx.coroutines.CancellationException) throw t
         Timber.e(t, "Failed to extract error from response")
         body
     }

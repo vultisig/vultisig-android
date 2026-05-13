@@ -178,6 +178,7 @@ internal class UnstakeStrategy(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     showError(
                         e.message?.asUiText()
                             ?: UiText.StringResource(R.string.dialog_default_error_body)

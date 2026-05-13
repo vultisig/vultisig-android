@@ -18,6 +18,7 @@ class SuiStatusProvider @Inject constructor(private val suiApi: SuiApi) :
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.w(e, "Sui status check failed for %s", txHash)
                 return TransactionResult.Pending
             }

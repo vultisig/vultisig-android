@@ -51,6 +51,7 @@ constructor(
                         try {
                             Chain.fromRaw(cpk.chain)
                         } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e, "Failed to parse chain from key import")
                             null
                         }

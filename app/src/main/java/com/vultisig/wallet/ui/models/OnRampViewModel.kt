@@ -59,6 +59,7 @@ constructor(savedStateHandle: SavedStateHandle, private val vaultRepository: Vau
                 // Set the URL to trigger the UI to open it
                 _banxaUrl.value = url
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 // Default navigation for error
                 Timber.e(e, "Error opening Banxa website")
                 _banxaUrl.value = BANXA_URL

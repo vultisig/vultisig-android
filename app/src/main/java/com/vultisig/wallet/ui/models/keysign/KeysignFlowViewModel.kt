@@ -329,6 +329,7 @@ constructor(
             updateKeysignPayload(context)
             updateTransactionUiModel(keysignPayload, customMessagePayload, txType)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             moveToState(
                 Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
@@ -630,6 +631,7 @@ constructor(
                 Timber.tag("KeysignFlowViewModel").d("joinKeysign: server notified successfully")
             }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")
         }
     }
@@ -671,6 +673,7 @@ constructor(
                 }
                 return
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.tag("KeysignFlowViewModel")
                     .e(e, "startSessionWithRetry: Attempt ${attempt + 1} failed")
                 if (attempt < 3) {
@@ -768,6 +771,7 @@ constructor(
                 sessionApi.startWithCommittee(_serverAddress, _sessionID, keygenCommittee)
                 Timber.d("Keysign started")
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e("Failed to start keysign: ${e.stackTraceToString()}")
             }
         }

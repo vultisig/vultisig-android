@@ -485,6 +485,7 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
@@ -539,6 +540,7 @@ constructor(
             pullTssMessagesJob?.cancel()
             throw e
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
@@ -619,6 +621,7 @@ constructor(
             pullTssMessagesJob?.cancel()
             throw e
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             pullTssMessagesJob?.cancel()
             Timber.tag("KeysignViewModel")
                 .d("signMessageWithRetry error: %s", e.stackTraceToString())

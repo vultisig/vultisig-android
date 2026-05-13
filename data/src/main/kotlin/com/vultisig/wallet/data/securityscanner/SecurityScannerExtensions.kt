@@ -18,6 +18,7 @@ internal suspend fun runSecurityScan(
         Timber.d("SecurityScanner: Result for ${transaction.chain.name} transaction: $result")
         result
     } catch (t: Throwable) {
+        if (t is kotlinx.coroutines.CancellationException) throw t
         if (t is CancellationException) throw t
         val errorMessage = "SecurityScanner: Error scanning ${transaction.chain.name}"
         Timber.e(t, errorMessage)

@@ -121,6 +121,7 @@ class MldsaKeysign(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to sign message (%s)", messageToSign)
             val maxRetries = if (heardFromEver.isEmpty()) 1 else MAX_PROTOCOL_RETRIES
             if (attempt < maxRetries) {
@@ -300,6 +301,7 @@ class MldsaKeysign(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "Failed to get messages")
                 delay(POLL_INTERVAL_MS)
             }

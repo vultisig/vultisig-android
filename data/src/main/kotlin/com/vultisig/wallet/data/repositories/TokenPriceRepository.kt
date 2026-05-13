@@ -237,6 +237,7 @@ constructor(
         try {
             BigDecimal(liQuestApi.getLifiContractPriceUsd(chain, contract).priceUsd)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             null
         }
 
@@ -265,6 +266,7 @@ constructor(
                 try {
                     thorApi.getPools().associate { it.asset.lowercase() to it.assetTorPrice }
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e, "Failed to fetch prices from pools")
                     return@supervisorScope
                 }
@@ -337,6 +339,7 @@ constructor(
 
                             token.id to mapOf(currency to priceInCacao * cacaoPrice)
                         } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e, "Failed to fetch Maya pool price for ${token.ticker}")
                             null
                         }
@@ -423,6 +426,7 @@ constructor(
 
                                     tokenId to mapOf(currency to priceUsd * tetherPrice)
                                 } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
                                     Timber.e(e, "Failed to fetch price for contract: $contract")
                                     null
                                 }
@@ -435,6 +439,7 @@ constructor(
 
                 savePrices(tokenIdToPrices, currency)
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t, "Could not update YTCY/YRUNE/sTCY prices")
             }
         }
@@ -482,6 +487,7 @@ constructor(
                 else -> addr.replace("-", ".")
             }
         } catch (t: Throwable) {
+            if (t is kotlinx.coroutines.CancellationException) throw t
             "thor.$addr"
         }
     }

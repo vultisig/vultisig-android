@@ -216,6 +216,7 @@ constructor(
 
                 state.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 val errorMessage = "Security Scanner Failed"
                 Timber.e(t, errorMessage)
 

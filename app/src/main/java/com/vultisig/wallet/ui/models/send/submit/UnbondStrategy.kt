@@ -71,6 +71,7 @@ internal class UnbondStrategy(
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (e: Exception) {
+                                if (e is kotlinx.coroutines.CancellationException) throw e
                                 Timber.e(e)
                                 throw InvalidTransactionDataException(
                                     UiText.StringResource(R.string.failed_to_resolve_address)
@@ -165,6 +166,7 @@ internal class UnbondStrategy(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     showError(
                         e.message?.asUiText()
                             ?: UiText.StringResource(R.string.dialog_default_error_body)

@@ -221,6 +221,7 @@ constructor(
                 updateModel { it.copy(lpPositionsDialog = lpPositions) }
                 reloadLpTab()
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to load Maya LP positions for dialog")
             }
@@ -289,6 +290,7 @@ constructor(
                     _totalBondedRaw.value = totalBondedRaw
                 }
         } catch (t: Throwable) {
+            if (t is kotlinx.coroutines.CancellationException) throw t
             if (t is CancellationException) throw t
             Timber.e(t)
             _totalBondedRaw.value = BigInteger.ZERO
@@ -369,6 +371,7 @@ constructor(
                     }
                 }
         } catch (t: Throwable) {
+            if (t is kotlinx.coroutines.CancellationException) throw t
             if (t is CancellationException) throw t
             Timber.e(t, "Failed to load CACAO staking position")
             _totalStakingRaw.value = BigInteger.ZERO
@@ -398,6 +401,7 @@ constructor(
                     )
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 if (e is CancellationException) throw e
                 Timber.e(e, "Failed to calculate Maya total fiat value")
                 updateModel { it.copy(isTotalAmountLoading = false) }
@@ -413,6 +417,7 @@ constructor(
                 withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
             currencyFormat.format(fiatValue.value)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to calculate Maya staking fiat price")
             ""
@@ -428,6 +433,7 @@ constructor(
                 withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
             currencyFormat.format(fiatValue.value)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to calculate Maya bonded fiat price")
             ""
@@ -452,6 +458,7 @@ constructor(
                 currency = currency.ticker,
             )
         } catch (t: Throwable) {
+            if (t is kotlinx.coroutines.CancellationException) throw t
             if (t is CancellationException) throw t
             Timber.e(t)
             FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
@@ -477,6 +484,7 @@ constructor(
                 currency = currency.ticker,
             )
         } catch (t: Throwable) {
+            if (t is kotlinx.coroutines.CancellationException) throw t
             if (t is CancellationException) throw t
             Timber.e(t)
             FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
@@ -559,6 +567,7 @@ constructor(
                                 try {
                                     mayachainBondRepository.getMemberDetails(cacaoCoin.address)
                                 } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
                                     if (e is CancellationException) throw e
                                     Timber.e(e, "Failed to fetch Maya member details")
                                     MayaMemberDetails()
@@ -568,6 +577,7 @@ constructor(
                                 try {
                                     mayachainBondRepository.getLpPoolStats()
                                 } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
                                     if (e is CancellationException) throw e
                                     Timber.e(e, "Failed to fetch Maya LP pool stats")
                                     emptyList()

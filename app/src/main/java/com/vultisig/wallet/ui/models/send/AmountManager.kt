@@ -165,6 +165,7 @@ internal class AmountManager(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.w(e, "Failed to get price for token %s", token)
                 return null
             }

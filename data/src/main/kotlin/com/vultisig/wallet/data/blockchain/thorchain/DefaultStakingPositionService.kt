@@ -69,6 +69,7 @@ constructor(
             try {
                 thorChainApi.getBalance(address)
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(
                     e,
                     "DefaultStakingPositionService: Failed to fetch balances from ThorChain API",

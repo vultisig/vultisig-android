@@ -849,6 +849,7 @@ constructor(
                         this@DepositFormViewModel.address.value = address
                     }
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e)
                 }
             }
@@ -909,6 +910,7 @@ constructor(
                                 thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
                             }
                         } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e)
                         }
                     }
@@ -1051,6 +1053,7 @@ constructor(
                 _state.update { state -> state.copy(unstakableAmount = unstakableAmount) }
             } ?: run { _state.update { state -> state.copy(unstakableAmount = null) } }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to fetch unstakable CACAO balance")
             _state.update { state ->
                 state.copy(
@@ -1165,7 +1168,8 @@ constructor(
             }
         } catch (ce: CancellationException) {
             throw ce
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             _state.update { it.copy(nodeAddressError = null, isCheckingWhitelist = false) }
         }
     }
@@ -1305,6 +1309,7 @@ constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
                 showError(UiText.StringResource(R.string.dialog_default_error_body))
                 // Error occurred during deposit operation
@@ -1790,6 +1795,7 @@ constructor(
             val vault = vaultRepository.get(vaultId) ?: return null
             chainAccountAddressRepository.getAddress(chain = assetChain, vault = vault).first
         } catch (e: Throwable) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             if (e is CancellationException) throw e
             Timber.e(e, "Failed to resolve paired address for $poolId")
             null
@@ -2599,6 +2605,7 @@ constructor(
 
                 setUnMergeTokenSharesField(selectedToken)
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 _state.update { it.copy(sharesBalance = UiText.Empty) }
                 Timber.e("Can't load Ruji Balances ${t.message}")
             } finally {
@@ -2806,7 +2813,8 @@ constructor(
             transform(decimalValue, price).toPlainString()
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.d("Failed to get price for token %s", token)
             null
         }

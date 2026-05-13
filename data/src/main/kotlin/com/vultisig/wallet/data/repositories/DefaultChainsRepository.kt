@@ -27,6 +27,7 @@ constructor(private val dataStore: AppDataStore, private val json: Json) : Defau
                 try {
                         json.decodeFromString<List<String>>(it).map { Chain.fromRaw(it) }
                     } catch (e: Throwable) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.e(e)
                         DEFAULT_CHAINS_LIST
                     }

@@ -77,6 +77,7 @@ class TssMessagePuller(
                 }
             }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag(TAG).e(e, "Failed to get messages from server")
         }
     }
