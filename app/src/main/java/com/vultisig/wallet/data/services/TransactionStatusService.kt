@@ -107,6 +107,7 @@ class TransactionStatusService : Service() {
                     when (result) {
                         is TransactionResult.Confirmed,
                         is TransactionResult.Failed,
+                        is TransactionResult.Refunded,
                         TransactionResult.TimedOut -> {
                             updateNotification(
                                 contentText = result.toNotificationMessage(),
@@ -214,6 +215,7 @@ class TransactionStatusService : Service() {
         when (this) {
             TransactionResult.Confirmed -> getString(R.string.transaction_status_confirmed)
             is TransactionResult.Failed -> getString(R.string.transaction_status_failed)
+            is TransactionResult.Refunded -> getString(R.string.transaction_status_failed)
             TransactionResult.NotFound -> getString(R.string.transaction_status_pending)
             TransactionResult.TimedOut -> getString(R.string.transaction_status_not_found)
             TransactionResult.Pending -> getString(R.string.transaction_status_pending)

@@ -855,6 +855,7 @@ constructor(
         when (this) {
             TransactionResult.Confirmed -> TransactionStatus.Confirmed
             is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
+            is TransactionResult.Refunded -> TransactionStatus.Failed(this.reason.asUiText())
             TransactionResult.TimedOut ->
                 TransactionStatus.Failed("Confirmation taking longer than expected".asUiText())
             TransactionResult.NotFound,
