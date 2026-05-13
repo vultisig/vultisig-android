@@ -590,9 +590,8 @@ class SchnorrKeygen(
                 Timber.d("reshare EdDSA key successfully")
                 delay(500)
             }
-        } catch (e: CancellationException) {
-            throw e
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.d("Failed to reshare key, error: ${e.localizedMessage}")
             if (attempt < 3) {
                 Timber.d("keygen/reshare retry, attempt: $attempt")

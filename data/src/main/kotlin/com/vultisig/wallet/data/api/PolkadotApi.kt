@@ -79,6 +79,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
             val hex = result.removePrefix("0x")
             return parsePolkadotFreeBalance(hex)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching Polkadot balance")
             return BigInteger.ZERO
         }

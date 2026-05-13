@@ -38,6 +38,7 @@ constructor(private val getFlowType: GetFlowTypeUseCase) : GetDirectionByQrCodeU
                 else -> Route.ScanError
             }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to navigate to destination")
             Route.ScanError
         }

@@ -18,7 +18,6 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -47,9 +46,8 @@ constructor(
         try {
             val token = FirebaseMessaging.getInstance().token.await()
             onNewToken(token)
-        } catch (e: CancellationException) {
-            throw e
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.w(e, "Failed to fetch FCM token")
         }
     }
@@ -68,9 +66,8 @@ constructor(
                         token = token,
                     )
                 )
-            } catch (e: CancellationException) {
-                throw e
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.w(e, "Failed to re-register vault ${vault.id} with new FCM token")
             }
         }
@@ -131,9 +128,8 @@ constructor(
                 )
             }
             vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
-        } catch (e: CancellationException) {
-            throw e
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             throw PushNotificationError.ApiFailure(e)
         }
     }
@@ -177,9 +173,8 @@ constructor(
                 }
                 vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
                 successCount++
-            } catch (e: CancellationException) {
-                throw e
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.w(e, "Failed to update notification opt-in for vault ${vault.id}")
                 failureCount++
             }

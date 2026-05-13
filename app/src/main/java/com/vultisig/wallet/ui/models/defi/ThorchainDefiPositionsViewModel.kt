@@ -309,6 +309,7 @@ constructor(
                     )
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "Failed to calculate total fiat value")
 
                 state.update { it.copy(isTotalAmountLoading = false) }
@@ -338,6 +339,7 @@ constructor(
                 currency = currency.ticker,
             )
         } catch (t: Throwable) {
+            if (t is kotlinx.coroutines.CancellationException) throw t
             Timber.e(t)
 
             return FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)
@@ -421,6 +423,7 @@ constructor(
                         updateTotalValueStatus(totalBondedRaw, false)
                     }
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
                 state.update {
                     it.copy(
@@ -451,6 +454,7 @@ constructor(
                 withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
             currencyFormat.format(fiatValue.value)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to calculate bonded fiat price")
             ""
         }
@@ -517,6 +521,7 @@ constructor(
 
                 createGenericStakePosition(address, vaultId, coinsToLoad)
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t, "Failed to load staking positions")
                 state.update {
                     it.copy(

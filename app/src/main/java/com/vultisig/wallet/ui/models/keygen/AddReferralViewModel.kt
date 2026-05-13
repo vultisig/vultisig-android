@@ -101,7 +101,7 @@ constructor(
                 } catch (e: CancellationException) {
                     state.update { it.copy(isLoading = false) }
                     throw e
-                } catch (_: Exception) {
+                } catch (e: Exception) {
                     state.update {
                         it.copy(
                             isLoading = false,
