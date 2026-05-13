@@ -100,7 +100,6 @@ constructor(
         try {
             solanaApi.getJupiterTokens().toCoins()
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             emptyList()
         }
 
@@ -108,7 +107,6 @@ constructor(
         return try {
             tokenValueDao.getTokenValue(Chain.Solana.id, coin.address, coin.ticker)!!.toBigInteger()
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "get spl balance error")
             BigInteger.ZERO
         }

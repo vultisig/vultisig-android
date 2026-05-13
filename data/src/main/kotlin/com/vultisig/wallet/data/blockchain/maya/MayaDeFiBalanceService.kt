@@ -33,7 +33,6 @@ class MayaDeFiBalanceService(
                     )
                     amount
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e, "MayaDeFiBalanceService: Failed to fetch bonded nodes")
                     activeBondedNodeRepository.getBondedNodes(vaultId).sumOf { it.amount }
                 }
@@ -47,7 +46,6 @@ class MayaDeFiBalanceService(
                     persistCacaoStakingDetails(vaultId, amount)
                     amount
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e, "MayaDeFiBalanceService: Failed to fetch CACAO staking details")
                     stakingDetailsRepository
                         .getStakingDetailsByCoindId(vaultId, Coins.MayaChain.CACAO.id)
@@ -111,7 +109,6 @@ class MayaDeFiBalanceService(
                 stakingDetailsRepository.updateStakingDetails(vaultId, details)
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "MayaDeFiBalanceService: Failed to persist CACAO staking details")
         }
     }

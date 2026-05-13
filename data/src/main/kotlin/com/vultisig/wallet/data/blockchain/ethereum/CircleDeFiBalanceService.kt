@@ -81,7 +81,6 @@ class CircleDeFiBalanceService(
                 )
             )
         } catch (t: Throwable) {
-            if (t is kotlinx.coroutines.CancellationException) throw t
             Timber.e(t)
             return getCacheDeFiBalance(address, vaultId)
         }

@@ -185,7 +185,6 @@ constructor(
                     navigator.navigate(Destination.Back)
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 snackbarFlow.showMessage(
                     context.getString(R.string.error_saving_qr_code, e.localizedMessage ?: "")
                 )

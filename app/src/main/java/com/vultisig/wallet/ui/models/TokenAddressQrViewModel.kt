@@ -86,7 +86,6 @@ constructor(
                     bitmap.recycle()
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "Failed to capture and share qr address screenshot")
             }
 

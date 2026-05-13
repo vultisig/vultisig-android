@@ -501,7 +501,7 @@ constructor(
             checkServerVaultExists(mnemonic)
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             true // fail-closed: show warning on error
         } finally {
             uiState.update { it.copy(isLoading = false) }

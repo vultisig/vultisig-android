@@ -74,7 +74,6 @@ constructor(
                     try {
                         getStakingDetailsFromNetwork(address)
                     } catch (e: Exception) {
-                        if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.e(
                             e,
                             "TCYStakingService: Error fetching TCY staking details for vault $vaultId",
@@ -150,7 +149,6 @@ constructor(
                 rewardsCoin = rewardsCoin,
             )
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "TCYStakingService: Failed to fetch TCY staking details from network")
             throw e
         }
@@ -206,7 +204,6 @@ constructor(
                 0.0
             }
         } catch (t: Throwable) {
-            if (t is kotlinx.coroutines.CancellationException) throw t
             Timber.e(t)
             0.0
         }
@@ -293,7 +290,6 @@ constructor(
                 // Calculate user's share
                 calculateUserShare(stakedAmount, totalEstimatedRune)
             } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
                 return@supervisorScope null
             }
@@ -368,7 +364,6 @@ constructor(
                     try {
                         BigDecimal(staker.amount)
                     } catch (e: Exception) {
-                        if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.e(e)
                         BigDecimal.ZERO
                     }

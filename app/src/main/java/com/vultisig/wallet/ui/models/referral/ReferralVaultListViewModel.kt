@@ -82,7 +82,6 @@ constructor(
 
                 _state.update { it.copy(vaults = vaultItems, error = null) }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 _state.update { it.copy(error = e.message ?: "Failed to load vaults") }
             }
         }

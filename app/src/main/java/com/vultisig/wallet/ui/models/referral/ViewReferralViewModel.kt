@@ -120,7 +120,6 @@ constructor(
                     )
                 }
             } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
                 state.update {
                     it.copy(
@@ -197,7 +196,6 @@ constructor(
 
                     onLoadReferralCodeInfo()
                 } catch (t: Throwable) {
-                    if (t is kotlinx.coroutines.CancellationException) throw t
                     Timber.e(t)
                 }
             }

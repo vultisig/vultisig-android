@@ -175,7 +175,6 @@ constructor(
                     .body<List<MayaChainDepositCacaoResponse>>()
             request.firstOrNull()?.cacaoDeposit
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to fetch CACAO pool balance for address: $address")
             null
         }
@@ -218,7 +217,6 @@ constructor(
                 responseRawString,
             )
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             return THORChainSwapQuoteDeserialized.Error(
                 THORChainSwapQuoteError(e.message ?: "Unknown error")
             )
@@ -250,7 +248,6 @@ constructor(
             }
             throw Exception("Error broadcasting transaction: ${response.bodyAsText()}")
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag("MayaChainService").e("Error broadcasting transaction: ${e.message}")
             throw e
         }
@@ -263,7 +260,6 @@ constructor(
             Timber.d("getLatestBlock: $responseBody")
             return responseBody
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag("MayaChainService").e("Error getLatestBlock: ${e.message}")
             throw e
         }
@@ -278,7 +274,6 @@ constructor(
             Timber.d("getCacaoProvider: $body")
             return body
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag("MayaChainService").e("Error getCacaoProvider: ${e.message}")
             throw e
         }
@@ -291,7 +286,6 @@ constructor(
             Timber.d("getMayaConstants: $body")
             return body
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag("MayaChainService").e("Error getMayaConstants: ${e.message}")
             throw e
         }

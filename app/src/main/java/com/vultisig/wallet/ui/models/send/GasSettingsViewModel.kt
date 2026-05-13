@@ -79,7 +79,6 @@ constructor(
                 baseFeeState.setTextAndPlaceCursorAtEnd(baseFeeGwei.toPlainString())
                 priorityFeeState.setTextAndPlaceCursorAtEnd(spec.priorityFeeWei.toString())
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
             }
         }
@@ -92,7 +91,6 @@ constructor(
                 val byteFee = utxoFeeService.getDefaultGasFee(chain)
                 byteFeeState.setTextAndPlaceCursorAtEnd(byteFee.toString())
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
             }
         }

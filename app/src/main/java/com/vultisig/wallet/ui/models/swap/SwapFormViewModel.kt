@@ -550,7 +550,6 @@ constructor(
                     isLoadingNextScreen = false
                     showError(e.text)
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     isLoadingNextScreen = false
                     Timber.e(e)
                     showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
@@ -812,7 +811,6 @@ constructor(
                                 )
                             }
                         } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e)
                             showError(
                                 UiText.StringResource(

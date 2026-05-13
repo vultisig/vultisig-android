@@ -394,7 +394,6 @@ constructor(
                 Timber.d(e, "Socket timeout during QR scan")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.d(e, "Failed to parse QR code")
                 currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
             }
@@ -1001,8 +1000,6 @@ constructor(
                                         try {
                                             json.parseToJsonElement(cosmosMsg.value)
                                         } catch (e: Exception) {
-                                            if (e is kotlinx.coroutines.CancellationException)
-                                                throw e
                                             kotlinx.serialization.json.JsonPrimitive(
                                                 cosmosMsg.value
                                             )
@@ -1272,7 +1269,6 @@ constructor(
                     currentModel.copy(txScanStatus = TransactionScanStatus.Scanned(scanResult))
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 updateSendUiModel(verifyUiModel) { currentModel ->
                     currentModel.copy(
                         txScanStatus =
@@ -1399,7 +1395,6 @@ constructor(
                             )
                         }
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.tag("JoinKeysignViewModel")
                         .e("Failed to join keysign: %s", e.stackTraceToString())
                     currentState.value =
@@ -1484,7 +1479,6 @@ constructor(
                 return true
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to check keysign start")
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))

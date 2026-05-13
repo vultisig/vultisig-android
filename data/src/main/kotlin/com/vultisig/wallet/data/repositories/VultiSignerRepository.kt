@@ -135,7 +135,6 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
             api.get(publicKeyEcdsa, password)
             true
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             false
         }
 
@@ -147,7 +146,6 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
             api.get(publicKeyEcdsa, password)
             PasswordCheckResult.Valid
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             when {
                 e.message?.contains("401") == true ||
                     e.message?.contains("403") == true ||
@@ -175,7 +173,6 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
             api.exist(publicKeyEcdsa)
             true
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             false
         }
     }
@@ -211,7 +208,6 @@ internal class VultiSignerRepositoryImpl @Inject constructor(private val api: Vu
             api.requestServerBackup(publicKeyEcdsa, email, password)
             ServerBackupResult.Success
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             val message = e.message.orEmpty()
             val errorType =
                 when {

@@ -13,7 +13,6 @@ class KeysignVerify(serverAddress: String, sessionId: String, private val sessio
                 sessionApi.markLocalPartyKeysignComplete(serverURL, messageId, sig)
                 Timber.tag("KeysignVerify").d("markLocalPartyKeysignComplete")
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.tag("KeysignVerify")
                     .d("markLocalPartyKeysignComplete error: ${e.stackTraceToString()}")
             }
@@ -25,7 +24,6 @@ class KeysignVerify(serverAddress: String, sessionId: String, private val sessio
             try {
                 return@withContext sessionApi.checkKeysignComplete(serverURL, message)
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.tag("KeysignVerify")
                     .d("checkKeysignComplete error: %s", e.stackTraceToString())
             }

@@ -67,7 +67,6 @@ constructor(
             Timber.d("response data: $responseData")
             return responseData.data[address]
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("fail to get address info from blockchair: ${e.message}")
         }
         return null
@@ -94,7 +93,6 @@ constructor(
             }
             return response.bodyAsText() // Returns the transaction ID
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("Error broadcasting transaction: ${e.message}")
             throw e
         }

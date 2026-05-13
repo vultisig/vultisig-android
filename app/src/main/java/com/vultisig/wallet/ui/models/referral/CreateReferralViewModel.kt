@@ -199,7 +199,6 @@ constructor(
                     }
                 state.update { it.copy(searchStatus = status) }
             } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
                 state.update { it.copy(searchStatus = SearchStatusType.DEFAULT) }
             }
@@ -317,7 +316,6 @@ constructor(
 
                 navigator.route(Route.VerifyDeposit(vaultId, tx.id))
             } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
 
                 state.update { it.copy(error = ReferralError.UNKNOWN_ERROR) }

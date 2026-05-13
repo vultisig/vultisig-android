@@ -344,7 +344,6 @@ constructor(
 
                 saveVault()
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.d(e, "generateKey error")
 
                 state.update { it.copy(error = resolveKeygenErrorFromException(e)) }
@@ -382,7 +381,6 @@ constructor(
                 val eddsaUIResp = Tss.getLocalUIEddsa(eddsaShare)
                 localUiEddsa = eddsaUIResp.padEnd(64, '0')
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 throw IllegalStateException("Can't get local ui for migration", e)
             }
         }
@@ -762,7 +760,6 @@ constructor(
 
                 messagePuller.stop()
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 messagePuller.stop()
 
                 Timber.e(e, "attempt $attempt keygenWithRetry failed")

@@ -56,7 +56,6 @@ constructor(
 
                     emit(freshNodes)
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(
                         e,
                         "MayachainBondUseCase: Error fetching bonded nodes for vault $vaultId",
@@ -106,7 +105,6 @@ constructor(
                     )
                 }
             } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
                 throw t
             }

@@ -114,7 +114,6 @@ internal class CosmosApiImp(
             }
             throw Exception("Error broadcasting transaction: ${response.bodyAsText()}")
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag("CosmosApiService").e("Error broadcasting transaction: ${e.message}")
             throw e
         }

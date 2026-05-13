@@ -58,7 +58,6 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
         return try {
             mayaChainApi.getAllNodes()
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching all Maya nodes")
             throw e
         }
@@ -68,7 +67,6 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
         return try {
             mayaChainApi.getNodeDetails(nodeAddress)
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching Maya node details for: $nodeAddress")
             throw e
         }
@@ -81,7 +79,6 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
                 mayaChainApi.getMidgardNetworkData()
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching Maya Midgard network data")
             throw e
         }
@@ -94,7 +91,6 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
                 mayaChainApi.getMidgardHealth()
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching Maya Midgard health data")
             throw e
         }
@@ -104,7 +100,6 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
         return try {
             mayaChainApi.getMayaNodePools().filter { it.status == "Available" }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching Maya node pools")
             throw e
         }
@@ -114,7 +109,6 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
         return try {
             getMayaNodePools().filter { it.bondable }.map { it.asset }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching bondable Maya assets")
             throw e
         }
@@ -126,7 +120,6 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
             val lpPools = mayaChainApi.getMemberDetails(address).pools.map { it.pool }.toSet()
             bondableAssets.intersect(lpPools).toList()
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching LP bondable assets for address: $address")
             throw e
         }
@@ -169,7 +162,6 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
                     )
                 }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching LP bondable assets with units for address: $address")
             throw e
         }
@@ -179,7 +171,6 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
         return try {
             mayaChainApi.getMemberDetails(address)
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching Maya member details for: $address")
             throw e
         }
@@ -189,7 +180,6 @@ class MayachainBondRepositoryImpl @Inject constructor(private val mayaChainApi: 
         return try {
             mayaChainApi.getLpPoolStats()
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching Maya LP pool stats")
             throw e
         }

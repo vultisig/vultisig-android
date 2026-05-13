@@ -138,7 +138,6 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                     .firstOrNull() ?: BigInteger.ZERO
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "error getting tron balance")
             return BigInteger.ZERO
         }
@@ -184,8 +183,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                 }
                 .body<TronTransactionStatusResponse?>()
                 ?.takeIf { it.txId != null }
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+        } catch (_: Exception) {
             null
         }
     }

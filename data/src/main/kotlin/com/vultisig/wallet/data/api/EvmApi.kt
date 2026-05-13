@@ -162,7 +162,6 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
             try {
                 EthereumFunction.balanceErc20Decoder(it)
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.d("get erc20 balance,contract: $contractAddress,address: $address error: $e")
                 BigInteger.ZERO
             }
@@ -386,7 +385,6 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
             val responseList = response.body<List<RpcResponse>>()
             responseList.map { CustomTokenResponse(id = it.id, result = it.result) }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.d("find custom token error: ${e.message}")
             emptyList()
         }
@@ -553,8 +551,7 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
                     method = "eth_getTransactionReceipt",
                     params = buildJsonArray { add(txHash) },
                 )
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
+            } catch (_: Exception) {
                 null
             }
         return rpcResp

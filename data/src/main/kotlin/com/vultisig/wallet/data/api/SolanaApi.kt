@@ -110,7 +110,6 @@ constructor(
             }
             rpcResp.result?.value ?: error("getBalance error")
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             BigInteger.ZERO
         }
     }
@@ -125,7 +124,6 @@ constructor(
                 )
                 .result
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("Error getting minimum balance for rent exemption: ${e.message}")
             BigInteger.ZERO
         }
@@ -195,7 +193,6 @@ constructor(
             }
             return result.result ?: error("broadcastTransaction error")
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag("SolanaApiImp").e("Error broadcasting transaction: ${e.message}")
             throw e
         }
@@ -216,7 +213,6 @@ constructor(
                 is SplTokenDeserialized.Result -> return result.result.values.toList()
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag("SolanaApiImp").e("Error getting spl tokens: ${e.message}")
             return emptyList()
         }
@@ -232,7 +228,6 @@ constructor(
                             .body<List<SplTokenInfo>>()
                             .firstOrNull()
                     } catch (e: Exception) {
-                        if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.tag("SolanaApiImp")
                             .e("Error getting spl token for $token message : ${e.message}")
                         null
@@ -263,7 +258,6 @@ constructor(
                     .mapNotNull { it.body<SplResponseJson>().result?.accounts }
                     .flatten()
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
                 null
             }
@@ -311,7 +305,6 @@ constructor(
             }
             return value.value[0].account.data.parsed.info.tokenAmount.amount
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             return null
         }
@@ -351,7 +344,6 @@ constructor(
                 value.value[0].account.owner == TOKEN_PROGRAM_ID_2022,
             )
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             return Pair(null, false)
         }
@@ -396,7 +388,6 @@ constructor(
 
             return response
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             if (e is ClientRequestException && e.response.status == HttpStatusCode.Forbidden) {
                 Timber.tag("SolanaApiImp").w("Forbidden (403) when checking tx status: $txHash")
                 return null

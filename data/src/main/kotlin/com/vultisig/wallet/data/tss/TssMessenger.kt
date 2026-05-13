@@ -56,7 +56,6 @@ class TssMessenger(
                     // when it reach to this point , it means the message was sent successfully
                     break
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.tag("TssMessenger")
                         .e("fail to send message: ${e.stackTraceToString()} , attempt: $i")
                 }

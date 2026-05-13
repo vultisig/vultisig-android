@@ -23,7 +23,6 @@ class TierRemoteNFTServiceImpl @Inject constructor(private val evmApiFactory: Ev
             val totalNFTs = factory.getERC20Balance(address, NFT_CONTRACT_ADDRESS)
             totalNFTs > BigInteger.ZERO
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to check NFT balance")
             false
         }

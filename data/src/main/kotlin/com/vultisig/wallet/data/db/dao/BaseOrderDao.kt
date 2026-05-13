@@ -25,8 +25,7 @@ abstract class BaseOrderDao<T : BaseOrderEntity>(private val tableName: String) 
         val query = SimpleSQLiteQuery("SELECT * FROM $tableName WHERE `value` = '$value'")
         return try {
             safeFindQuery(query)
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+        } catch (_: Exception) {
             null
         }
     }

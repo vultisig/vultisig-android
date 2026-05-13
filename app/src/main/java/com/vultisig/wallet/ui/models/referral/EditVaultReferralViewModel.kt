@@ -91,7 +91,6 @@ constructor(
                 nativeRuneFees =
                     withContext(Dispatchers.IO) { thorChainApi.getTHORChainReferralFees() }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.w(e, "Falling back to default referral fees")
                 nativeRuneFees = null
             }
@@ -228,7 +227,6 @@ constructor(
 
                 navigator.route(Route.VerifyDeposit(vaultId, tx.id))
             } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t, "Failed to save edited referral")
                 state.update { it.copy(error = ReferralError.UNKNOWN_ERROR) }
             }
@@ -242,7 +240,6 @@ constructor(
                     this@EditVaultReferralViewModel.address = address
                 }
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "Failed to load address")
                 Timber.e(e)
             }

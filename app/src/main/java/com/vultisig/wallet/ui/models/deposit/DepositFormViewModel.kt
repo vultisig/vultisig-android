@@ -849,7 +849,6 @@ constructor(
                         this@DepositFormViewModel.address.value = address
                     }
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e)
                 }
             }
@@ -910,7 +909,6 @@ constructor(
                                 thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
                             }
                         } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e)
                         }
                     }
@@ -1053,7 +1051,6 @@ constructor(
                 _state.update { state -> state.copy(unstakableAmount = unstakableAmount) }
             } ?: run { _state.update { state -> state.copy(unstakableAmount = null) } }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to fetch unstakable CACAO balance")
             _state.update { state ->
                 state.copy(
@@ -1315,7 +1312,6 @@ constructor(
             } catch (e: InvalidTransactionDataException) {
                 showError(e.text)
             } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
                 showError(UiText.StringResource(R.string.dialog_default_error_body))
                 // Error occurred during deposit operation
@@ -2610,7 +2606,6 @@ constructor(
 
                 setUnMergeTokenSharesField(selectedToken)
             } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
                 _state.update { it.copy(sharesBalance = UiText.Empty) }
                 Timber.e("Can't load Ruji Balances ${t.message}")
             } finally {
@@ -2819,7 +2814,7 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.d("Failed to get price for token %s", token)
+            Timber.d(e, "Failed to get price for token %s", token.ticker)
             null
         }
     }

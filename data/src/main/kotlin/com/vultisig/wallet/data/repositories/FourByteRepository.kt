@@ -30,7 +30,7 @@ constructor(private val fourByteApi: FourByteApi, @param:PrettyJson private val 
             EvmCommonSelectors.lookup(selector) ?: fourByteApi.decodeFunction(selector)
         } catch (e: CancellationException) {
             throw e
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             null
         }
     }
@@ -39,8 +39,7 @@ constructor(private val fourByteApi: FourByteApi, @param:PrettyJson private val 
         return try {
             val decodeGeneric = decodeGeneric(memo, functionSignature)
             convertDecodedCallToPrettyArray(decodeGeneric)
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+        } catch (_: Exception) {
             null
         }
     }

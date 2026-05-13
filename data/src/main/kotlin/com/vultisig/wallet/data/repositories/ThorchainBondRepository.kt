@@ -49,7 +49,6 @@ class ThorchainBondRepositoryImpl @Inject constructor(private val thorChainApi: 
         return try {
             thorChainApi.getBondedNodes(address)
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching bonded nodes for address: $address")
             throw e
         }
@@ -59,7 +58,6 @@ class ThorchainBondRepositoryImpl @Inject constructor(private val thorChainApi: 
         return try {
             thorChainApi.getNodeDetails(nodeAddress)
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching node details for: $nodeAddress")
             throw e
         }
@@ -72,7 +70,6 @@ class ThorchainBondRepositoryImpl @Inject constructor(private val thorChainApi: 
                 thorChainApi.getChurns()
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching churns")
             throw e
         }
@@ -85,7 +82,6 @@ class ThorchainBondRepositoryImpl @Inject constructor(private val thorChainApi: 
                 thorChainApi.getChurnInterval()
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching churn interval")
             throw e
         }
@@ -98,7 +94,6 @@ class ThorchainBondRepositoryImpl @Inject constructor(private val thorChainApi: 
                 thorChainApi.getMidgardNetworkData()
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching Midgard network data")
             throw e
         }
@@ -111,7 +106,6 @@ class ThorchainBondRepositoryImpl @Inject constructor(private val thorChainApi: 
                 thorChainApi.getMidgardHealth()
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching Midgard network data")
             throw e
         }

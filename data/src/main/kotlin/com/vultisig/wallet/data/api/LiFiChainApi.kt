@@ -95,7 +95,6 @@ constructor(
         return try {
             json.decodeFromString(liFiSwapQuoteResponseSerializer, response.body<String>())
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             LiFiSwapQuoteDeserialized.Error(
                 LiFiSwapQuoteError(HttpStatusCode.fromValue(response.status.value).description)
             )

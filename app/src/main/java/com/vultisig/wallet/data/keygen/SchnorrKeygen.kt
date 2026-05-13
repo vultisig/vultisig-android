@@ -590,6 +590,16 @@ class SchnorrKeygen(
                 Timber.d("reshare EdDSA key successfully")
                 delay(500)
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.d("Failed to reshare key, error: ${e.localizedMessage}")
+            if (attempt < 3) {
+                Timber.d("keygen/reshare retry, attempt: $attempt")
+                schnorrReshareWithRetry(attempt + 1)
+            } else {
+                throw e
+            }
         }
     }
 

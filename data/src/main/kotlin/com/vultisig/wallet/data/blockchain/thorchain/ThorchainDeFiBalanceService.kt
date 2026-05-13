@@ -32,7 +32,6 @@ class ThorchainDeFiBalanceService(
                 try {
                     getRemoteOrCachedRujiDeFiBalance(address, vaultId)
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e, "Failed to fetch RUJI DeFi balance")
                     null
                 }
@@ -41,7 +40,6 @@ class ThorchainDeFiBalanceService(
                 try {
                     getRemoteOrCachedTcyDeFiBalance(address, vaultId)
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e, "Failed to fetch TCY DeFi balance")
                     null
                 }
@@ -50,7 +48,6 @@ class ThorchainDeFiBalanceService(
                 try {
                     getRemoteOrCachedDefaultStakingPositionsDeFiBalance(address, vaultId)
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e, "Failed to fetch default staking positions")
                     null
                 }
@@ -59,7 +56,6 @@ class ThorchainDeFiBalanceService(
                 try {
                     getRemoteOrCachedBondStakingPositionsDeFiBalance(address, vaultId)
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e, "Failed to fetch bond staking positions")
                     null
                 }

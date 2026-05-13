@@ -334,7 +334,6 @@ constructor(
             val length = BigInteger(bytes.sliceArray(32..63)).toInt()
             return String(bytes.sliceArray(64 until 64 + length)).lowercase()
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             return null
         }
     }
