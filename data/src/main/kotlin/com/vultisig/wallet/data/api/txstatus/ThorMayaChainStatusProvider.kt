@@ -48,7 +48,9 @@ class ThorMayaChainStatusProvider @Inject constructor(private val httpClient: Ht
         when {
             action.type == ACTION_TYPE_REFUND ->
                 TransactionResult.Refunded(
-                    reason = action.metadata?.refund?.reason ?: DEFAULT_REFUND_REASON
+                    reason =
+                        action.metadata?.refund?.reason?.takeUnless { it.isBlank() }
+                            ?: DEFAULT_REFUND_REASON
                 )
             action.status == ACTION_STATUS_SUCCESS -> TransactionResult.Confirmed
             else -> TransactionResult.Pending

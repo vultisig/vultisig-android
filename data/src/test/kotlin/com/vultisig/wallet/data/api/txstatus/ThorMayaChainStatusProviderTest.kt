@@ -65,6 +65,22 @@ class ThorMayaChainStatusProviderTest {
     }
 
     @Test
+    fun `refund with blank reason falls back to default reason`() = runTest {
+        val body =
+            """
+            { "actions": [ { "type": "refund", "status": "success",
+              "metadata": { "refund": { "reason": "   " } } } ] }
+            """
+                .trimIndent()
+        val client = MockHttpClient.respondingWith(HttpStatusCode.OK, body)
+        val provider = ThorMayaChainStatusProvider(client)
+
+        val result = provider.checkStatus("hash", Chain.ThorChain)
+
+        result shouldBe TransactionResult.Refunded("Transaction refunded")
+    }
+
+    @Test
     fun `successful swap returns Confirmed`() = runTest {
         val body =
             """

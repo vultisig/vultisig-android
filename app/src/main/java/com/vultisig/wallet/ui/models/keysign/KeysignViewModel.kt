@@ -752,6 +752,7 @@ constructor(
                     when (statusResult) {
                         TransactionResult.Confirmed,
                         is TransactionResult.Failed,
+                        is TransactionResult.Refunded,
                         TransactionResult.TimedOut -> {
                             tryUpdateEvmActualFee(txHash, chain)
                             transactionStatusServiceManager.stopPolling()
