@@ -1,6 +1,6 @@
 package com.vultisig.wallet.data.api.txstatus
 
-import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusProvider

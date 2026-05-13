@@ -36,6 +36,10 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindVaultBackupEncryption(impl: Pbkdf2AesEncryption): VaultBackupEncryption
+
+    @Binds
+    @Singleton
     fun bindDiscoverTokenUseCase(impl: DiscoverTokenUseCaseImpl): DiscoverTokenUseCase
 
     @Binds
@@ -55,6 +59,8 @@ internal interface DataUsecasesModule {
     @Binds @Singleton fun bindGenerateUniqueName(impl: GenerateUniqueNameImpl): GenerateUniqueName
 
     @Binds @Singleton fun bindIsVaultNameValid(impl: IsVaultNameValidImpl): IsVaultNameValid
+
+    @Binds @Singleton fun bindIsEmailValid(impl: IsEmailValidImpl): IsEmailValid
 
     @Binds
     @Singleton
@@ -217,4 +223,20 @@ internal interface DataUsecasesModule {
     fun bindRefreshPendingTransactionsUseCase(
         impl: RefreshPendingTransactionsUseCaseImpl
     ): RefreshPendingTransactionsUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetThorChainLpPositionsUseCase(
+        impl: GetThorChainLpPositionsUseCaseImpl
+    ): GetThorChainLpPositionsUseCase
+
+    @Binds
+    @Singleton
+    fun bindGetThorChainLpPositionUseCase(
+        impl: GetThorChainLpPositionUseCaseImpl
+    ): GetThorChainLpPositionUseCase
+
+    @Binds
+    @Singleton
+    fun bindThorchainMemoParser(impl: ThorchainMemoParserImpl): ThorchainMemoParser
 }

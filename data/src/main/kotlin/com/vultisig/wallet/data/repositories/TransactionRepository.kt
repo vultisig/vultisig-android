@@ -4,15 +4,13 @@ import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 
 interface TransactionRepository {
 
     suspend fun addTransaction(transaction: Transaction)
 
-    suspend fun getTransaction(id: TransactionId): Transaction
+    suspend fun getTransaction(id: TransactionId): Transaction?
 }
 
 internal class TransactionRepositoryImpl @Inject constructor() : TransactionRepository {
@@ -23,6 +21,5 @@ internal class TransactionRepositoryImpl @Inject constructor() : TransactionRepo
         transactions.update { it + (transaction.id to transaction) }
     }
 
-    override suspend fun getTransaction(id: TransactionId): Transaction =
-        transactions.mapNotNull { it[id] }.first()
+    override suspend fun getTransaction(id: TransactionId): Transaction? = transactions.value[id]
 }

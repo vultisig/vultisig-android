@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -90,9 +91,7 @@ internal fun ReferralVaultListContentScreen(
                             shape = RoundedCornerShape(12.dp),
                         )
                 ) {
-                    items(state.vaults.size) { index ->
-                        val vault = state.vaults[index]
-
+                    itemsIndexed(state.vaults, key = { _, vault -> vault.id }) { index, vault ->
                         VaultRow(vault, onVaultClicked)
 
                         if (index < state.vaults.size - 1) {

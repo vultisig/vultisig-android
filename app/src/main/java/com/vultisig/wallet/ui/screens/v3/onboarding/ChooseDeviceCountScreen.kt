@@ -10,9 +10,17 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,19 +57,30 @@ private fun ChooseDeviceCountScreen(onEvent: (ChooseDeviceCountUiEvent) -> Unit)
                 VsCircularLoading(modifier = Modifier.fillMaxSize().wrapContentSize())
             } else {
                 val vmi = rememberViewModelInstance(file = riveFile)
+                var deviceIndex by remember { mutableIntStateOf(0) }
 
-                LaunchedEffect(Unit) {
+                LaunchedEffect(vmi) {
                     vmi.getNumberFlow("Index").collect { index ->
-                        onEvent(ChooseDeviceCountUiEvent.IndexChanged(index.toInt()))
+                        val clampedIndex = index.toInt().coerceIn(0, 3)
+                        deviceIndex = clampedIndex
+                        onEvent(ChooseDeviceCountUiEvent.IndexChanged(clampedIndex))
                     }
                 }
+
+                val deviceCountLabel = if (deviceIndex == 3) "4+" else (deviceIndex + 1).toString()
+                val a11yDescription =
+                    stringResource(R.string.choose_device_count_a11y_description, deviceCountLabel)
 
                 Box(Modifier.fillMaxSize()) {
                     RiveAnimation(
                         file = riveFile,
                         viewModelInstance = vmi,
                         fit = Fit.Contain(alignment = RiveAlignment.TopCenter),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier.fillMaxWidth().semantics {
+                                contentDescription = a11yDescription
+                                liveRegion = LiveRegionMode.Polite
+                            },
                     )
                     Column(modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)) {
                         Tip()

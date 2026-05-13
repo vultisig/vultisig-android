@@ -14,7 +14,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELECTOR
 import com.vultisig.wallet.data.api.chains.SuiApi
-import com.vultisig.wallet.data.api.chains.TonApi
+import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
@@ -42,6 +42,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Clock
@@ -70,6 +71,7 @@ interface BlockChainSpecificRepository {
         tokenAmountValue: BigInteger? = null,
         memo: String? = null,
         transactionType: TransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+        isThorchainRouterDeposit: Boolean = false,
     ): BlockChainSpecificAndUtxo
 }
 
@@ -106,6 +108,7 @@ constructor(
         tokenAmountValue: BigInteger?,
         memo: String?,
         transactionType: TransactionType,
+        isThorchainRouterDeposit: Boolean,
     ): BlockChainSpecificAndUtxo =
         when (chain.standard) {
             TokenStandard.THORCHAIN -> {
@@ -171,26 +174,41 @@ constructor(
                             else -> DEFAULT_TOKEN_TRANSFER_LIMIT
                         }
 
+                    // ERC-20 router deposits need depositWithExpiry headroom, but
+                    // eth_estimateGas reverts when the router hasn't been approved yet —
+                    // so we hardcode the limit and skip the estimate RPC.
+                    val routerDepositGasLimit =
+                        if (
+                            isThorchainRouterDeposit &&
+                                !token.isNativeToken &&
+                                isThorchainRouterChain(chain)
+                        )
+                            THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT
+                        else null
+
                     val estimateGasLimit =
-                        if (token.isNativeToken)
-                            evmApi.estimateGasForEthTransaction(
-                                senderAddress = token.address,
-                                recipientAddress = recipientAddress,
-                                value = tokenAmountValue ?: BigInteger.ZERO,
-                                memo = memo,
-                            )
-                        else
-                            evmApi
-                                .estimateGasForERC20Transfer(
+                        when {
+                            routerDepositGasLimit != null -> routerDepositGasLimit
+                            token.isNativeToken ->
+                                evmApi.estimateGasForEthTransaction(
                                     senderAddress = token.address,
                                     recipientAddress = recipientAddress,
-                                    contractAddress = token.contractAddress,
                                     value = tokenAmountValue ?: BigInteger.ZERO,
+                                    memo = memo,
                                 )
-                                .increaseByPercent(
-                                    50
-                                ) // keep it consistent with how we calculate default gas limit in
-                    // EthereumFeeService
+                            else ->
+                                evmApi
+                                    .estimateGasForERC20Transfer(
+                                        senderAddress = token.address,
+                                        recipientAddress = recipientAddress,
+                                        contractAddress = token.contractAddress,
+                                        value = tokenAmountValue ?: BigInteger.ZERO,
+                                    )
+                                    .increaseByPercent(
+                                        50
+                                    ) // keep it consistent with how we calculate default gas
+                        // limit in EthereumFeeService
+                        }
 
                     val nonce = evmApi.getNonce(address)
 
@@ -468,13 +486,49 @@ constructor(
 
             TokenStandard.SUI ->
                 coroutineScope {
-                    val gasPriceDeferred = async { suiApi.getReferenceGasPrice() }
                     val coinsDeferred = async { suiApi.getAllCoins(address) }
+                    val transfer =
+                        Transfer(
+                            coin = token,
+                            vault = VaultData("", ""),
+                            amount = tokenAmountValue ?: BigInteger.ZERO,
+                            to = dstAddress ?: address,
+                        )
 
+                    suspend fun paddedDefaultSuiFees(): GasFees {
+                        val price = suiApi.getReferenceGasPrice()
+                        val padded = SUI_DEFAULT_GAS_BUDGET.increaseByPercent(15)
+                        return GasFees(price = price, limit = padded, amount = padded)
+                    }
+
+                    val suiFeesDeferred = async {
+                        try {
+                            when (val fees = feeServiceComposite.calculateFees(transfer)) {
+                                is GasFees -> fees
+                                else -> {
+                                    Timber.w(
+                                        "Unexpected fee type %s for SUI; using padded default gas budget",
+                                        fees::class.simpleName,
+                                    )
+                                    paddedDefaultSuiFees()
+                                }
+                            }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Timber.w(
+                                e,
+                                "SUI fee estimation failed; using padded default gas budget",
+                            )
+                            paddedDefaultSuiFees()
+                        }
+                    }
+
+                    val suiFees = suiFeesDeferred.await()
                     BlockChainSpecificAndUtxo(
                         BlockChainSpecific.Sui(
-                            referenceGasPrice = gasPriceDeferred.await(),
-                            gasBudget = SUI_DEFAULT_GAS_BUDGET,
+                            referenceGasPrice = suiFees.price,
+                            gasBudget = suiFees.limit,
                             coins = coinsDeferred.await(),
                         ),
                         utxos = emptyList(),
@@ -483,9 +537,7 @@ constructor(
 
             TokenStandard.TON -> {
                 coroutineScope {
-                    val sequenceNumberDeferred = async {
-                        tonApi.getSpecificTransactionInfo(address)
-                    }
+                    val sequenceNumberDeferred = async { tonApi.getSeqno(address) }
                     val isBounceable = async {
                         if (dstAddress == null) return@async false
 
@@ -594,9 +646,19 @@ constructor(
             }
         }
 
+    private fun isThorchainRouterChain(chain: Chain): Boolean =
+        chain == Chain.Ethereum ||
+            chain == Chain.Base ||
+            chain == Chain.Avalanche ||
+            chain == Chain.BscChain ||
+            chain == Chain.Arbitrum ||
+            chain == Chain.Optimism
+
     companion object {
         private const val TON_WALLET_STATE_UNINITIALIZED = "uninit"
 
         private const val ENERGY_TO_SUN_FACTOR = 280
+
+        private val THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT = BigInteger.valueOf(200_000)
     }
 }

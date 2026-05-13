@@ -81,9 +81,30 @@ class HandleSwapExceptionTest {
     }
 
     @Test
+    fun `thorchain pool does not exist full message maps to SwapRouteNotAvailable`() {
+        val result =
+            SwapException.handleSwapException(
+                "failed to calculate min swap amount: fail to convert dest fee to src asset pool does not exist: invalid request"
+            )
+        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
+    }
+
+    @Test
     fun `amount less than min swap maps to SmallSwapAmount`() {
         val result = SwapException.handleSwapException("amount less than min swap amount: 10000")
         assertInstanceOf(SwapException.SmallSwapAmount::class.java, result)
+    }
+
+    @Test
+    fun `dust threshold error maps to AmountBelowDustThreshold`() {
+        val result = SwapException.handleSwapException("amount less than dust threshold")
+        assertInstanceOf(SwapException.AmountBelowDustThreshold::class.java, result)
+    }
+
+    @Test
+    fun `dust threshold error is case insensitive`() {
+        val result = SwapException.handleSwapException("Amount Less Than Dust Threshold")
+        assertInstanceOf(SwapException.AmountBelowDustThreshold::class.java, result)
     }
 
     @Test
@@ -93,8 +114,41 @@ class HandleSwapExceptionTest {
     }
 
     @Test
+    fun `no internet connection maps to NetworkConnection`() {
+        val result = SwapException.handleSwapException("No internet connection")
+        assertInstanceOf(SwapException.NetworkConnection::class.java, result)
+    }
+
+    @Test
+    fun `no internet connection is case insensitive`() {
+        val result = SwapException.handleSwapException("NO INTERNET CONNECTION")
+        assertInstanceOf(SwapException.NetworkConnection::class.java, result)
+    }
+
+    @Test
+    fun `no internet connection embedded in longer message maps to NetworkConnection`() {
+        val result =
+            SwapException.handleSwapException(
+                "Request failed: no internet connection available, please retry"
+            )
+        assertInstanceOf(SwapException.NetworkConnection::class.java, result)
+    }
+
+    @Test
     fun `zero amount maps to AmountCannotBeZero`() {
         val result = SwapException.handleSwapException("Amount cannot be zero")
         assertInstanceOf(SwapException.AmountCannotBeZero::class.java, result)
+    }
+
+    @Test
+    fun `too many requests maps to RateLimitExceeded`() {
+        val result = SwapException.handleSwapException("[Jupiter] Too many requests")
+        assertInstanceOf(SwapException.RateLimitExceeded::class.java, result)
+    }
+
+    @Test
+    fun `gateway too many requests maps to RateLimitExceeded`() {
+        val result = SwapException.handleSwapException("[API Gateway] Too many requests")
+        assertInstanceOf(SwapException.RateLimitExceeded::class.java, result)
     }
 }

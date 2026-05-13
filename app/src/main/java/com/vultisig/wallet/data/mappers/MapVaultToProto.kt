@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.mappers
 
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.proto.v1.ChainPublicKeyProto
 import com.vultisig.wallet.data.models.proto.v1.KeyShareProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
 import com.vultisig.wallet.data.models.proto.v1.toProto
@@ -25,5 +26,14 @@ internal class MapVaultToProtoImpl @Inject constructor() : MapVaultToProto {
                 from.keyshares.map { KeyShareProto(publicKey = it.pubKey, keyshare = it.keyShare) },
             createdAt = Timestamp(Clock.System.now().epochSeconds),
             libType = from.libType.toProto(),
+            chainPublicKeys =
+                from.chainPublicKeys.map {
+                    ChainPublicKeyProto(
+                        publicKey = it.publicKey,
+                        chain = it.chain,
+                        isEddsa = it.isEddsa,
+                    )
+                },
+            publicKeyMldsa44 = from.pubKeyMLDSA,
         )
 }

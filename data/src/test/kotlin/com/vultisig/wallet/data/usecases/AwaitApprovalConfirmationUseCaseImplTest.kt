@@ -58,14 +58,16 @@ internal class AwaitApprovalConfirmationUseCaseImplTest {
         }
 
         @Test
-        fun `returns Confirmed on last attempt`() = runTest {
-            val pending = List(4) { null }
+        fun `returns Confirmed after many pending polls within the timeout`() = runTest {
+            // Arbitrum block time is 1s, but the polling delay floor is 2s, so 30 polls = 60s
+            // virtual time — well within the 120s budget.
+            val pending = List(30) { null }
             coEvery { evmApi.getTxStatus(TX_HASH) } returnsMany pending + confirmedReceipt()
 
             val result = useCase(Chain.Arbitrum, TX_HASH)
 
             assertEquals(ApprovalConfirmationResult.Confirmed, result)
-            coVerify(exactly = 5) { evmApi.getTxStatus(TX_HASH) }
+            coVerify(exactly = 31) { evmApi.getTxStatus(TX_HASH) }
         }
     }
 
@@ -97,13 +99,27 @@ internal class AwaitApprovalConfirmationUseCaseImplTest {
     inner class TimedOut {
 
         @Test
-        fun `returns TimedOut after exactly MAX_BLOCKS attempts`() = runTest {
+        fun `returns TimedOut after the bounded wall-clock budget elapses`() = runTest {
             coEvery { evmApi.getTxStatus(TX_HASH) } answers { null }
 
             val result = useCase(Chain.BscChain, TX_HASH)
 
             assertEquals(ApprovalConfirmationResult.TimedOut, result)
-            coVerify(exactly = 5) { evmApi.getTxStatus(TX_HASH) }
+            // BSC block time is 3s, floor doesn't apply. The 120s budget yields exactly 40 polls
+            // before withTimeoutOrNull cancels the loop, locking the wall-clock budget in place.
+            coVerify(exactly = 40) { evmApi.getTxStatus(TX_HASH) }
+        }
+
+        @Test
+        fun `Arbitrum poll cadence is floored to the min poll delay`() = runTest {
+            coEvery { evmApi.getTxStatus(TX_HASH) } answers { null }
+
+            useCase(Chain.Arbitrum, TX_HASH)
+
+            // Arbitrum's 1s block time is floored to the 2s MIN_POLL_DELAY_MS. With a 120s budget
+            // and 2s polling, the loop runs exactly 60 times. If the floor regresses, the cadence
+            // jumps to 120 polls.
+            coVerify(exactly = 60) { evmApi.getTxStatus(TX_HASH) }
         }
     }
 

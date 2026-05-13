@@ -47,7 +47,10 @@ private fun CurrencyUnitSettingScreen(
     ) {
         V2Container(type = ContainerType.SECONDARY) {
             LazyColumn {
-                itemsIndexed(state.currencyUnits) { index, currencyUnit ->
+                itemsIndexed(
+                    state.currencyUnits,
+                    key = { _, currencyUnit -> currencyUnit.fullName },
+                ) { index, currencyUnit ->
                     CurrencyUnitSettingItem(
                         name = currencyUnit.fullName,
                         isSelected = currencyUnit == state.selectedCurrency,

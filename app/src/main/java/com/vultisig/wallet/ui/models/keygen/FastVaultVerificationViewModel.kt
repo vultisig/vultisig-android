@@ -3,13 +3,13 @@ package com.vultisig.wallet.ui.models.keygen
 import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.core.text.isDigitsOnly
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TssAction
+import com.vultisig.wallet.data.repositories.BackupCodeVerifyResult
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
@@ -43,6 +43,7 @@ internal enum class VerifyPinState {
     Loading,
     Success,
     Error,
+    NetworkError,
 }
 
 internal data class VaultBackupState(
@@ -108,6 +109,12 @@ constructor(
         }
     }
 
+    fun retry() {
+        if (state.value.verifyPinState == VerifyPinState.Loading) return
+        updateVerifyState(VerifyPinState.Idle)
+        verify()
+    }
+
     private fun verify() {
         if (state.value.verifyPinState == VerifyPinState.Loading) return
         viewModelScope.launch {
@@ -116,90 +123,97 @@ constructor(
             if (isCodeTemplateValid(code)) {
                 updateVerifyState(VerifyPinState.Loading)
 
-                val isCodeValid =
+                val verifyResult =
                     verifyFastVaultBackupCode(publicKeyEcdsa = args.pubKeyEcdsa, code = code)
-                if (isCodeValid) {
-                    try {
-                        updateVerifyState(VerifyPinState.Success)
+                when (verifyResult) {
+                    BackupCodeVerifyResult.Valid ->
+                        try {
+                            updateVerifyState(VerifyPinState.Success)
 
-                        val vaultId = args.vaultId
+                            val vaultId = args.vaultId
 
-                        if (isSingleKeygen) {
-                            // MLDSA keygen on existing fast vault: merge MLDSA
-                            // data into existing vault and auto-enable QBTC
-                            val tempVault = temporaryVaultRepository.getById(vaultId)
-                            val existingVault =
-                                vaultRepository.get(vaultId)
-                                    ?: error(
-                                        "No vault with id $vaultId exists for SingleKeygen save"
+                            if (isSingleKeygen) {
+                                // MLDSA keygen on existing fast vault: merge MLDSA
+                                // data into existing vault and auto-enable QBTC
+                                val tempVault = temporaryVaultRepository.getById(vaultId)
+                                val existingVault =
+                                    vaultRepository.get(vaultId)
+                                        ?: error(
+                                            "No vault with id $vaultId exists for SingleKeygen save"
+                                        )
+                                existingVault.pubKeyMLDSA = tempVault.vault.pubKeyMLDSA
+                                existingVault.keyshares = tempVault.vault.keyshares
+                                saveVault(existingVault, true)
+
+                                val qbtcToken = Coins.Qbtc.QBTC
+                                val (address, pubKey) =
+                                    chainAccountAddressRepository.getAddress(
+                                        qbtcToken,
+                                        existingVault,
                                     )
-                            existingVault.pubKeyMLDSA = tempVault.vault.pubKeyMLDSA
-                            existingVault.keyshares = tempVault.vault.keyshares
-                            saveVault(existingVault, true)
+                                vaultRepository.addTokenToVault(
+                                    vaultId,
+                                    qbtcToken.copy(address = address, hexPublicKey = pubKey),
+                                )
 
-                            val qbtcToken = Coins.Qbtc.QBTC
-                            val (address, pubKey) =
-                                chainAccountAddressRepository.getAddress(qbtcToken, existingVault)
-                            vaultRepository.addTokenToVault(
-                                vaultId,
-                                qbtcToken.copy(address = address, hexPublicKey = pubKey),
-                            )
+                                delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
+                                navigator.route(
+                                    route =
+                                        Route.BackupVault(
+                                            vaultId = vaultId,
+                                            vaultType = VaultType.Fast,
+                                            action = args.tssAction,
+                                            passwordType =
+                                                BackupPasswordType.VultiServerPassword(
+                                                    password = args.password
+                                                ),
+                                        )
+                                )
+                            } else {
+                                val vault = temporaryVaultRepository.getById(vaultId)
+                                val shouldOverride = args.tssAction == TssAction.Migrate
+                                saveVault(vault.vault, shouldOverride)
 
-                            delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
-                            navigator.route(
-                                route =
-                                    Route.BackupVault(
+                                vault.hint?.let {
+                                    vaultDataStoreRepository.setFastSignHint(
                                         vaultId = vaultId,
-                                        vaultType = VaultType.Fast,
-                                        action = args.tssAction,
-                                        passwordType =
-                                            BackupPasswordType.VultiServerPassword(
-                                                password = args.password
-                                            ),
+                                        hint = it,
                                     )
-                            )
-                        } else {
-                            val vault = temporaryVaultRepository.getById(vaultId)
-                            val shouldOverride = args.tssAction == TssAction.Migrate
-                            saveVault(vault.vault, shouldOverride)
+                                }
 
-                            vault.hint?.let {
-                                vaultDataStoreRepository.setFastSignHint(
+                                if (context.canAuthenticateBiometric()) {
+                                    vaultPasswordRepository.savePassword(vaultId, vault.password)
+                                }
+
+                                vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
                                     vaultId = vaultId,
-                                    hint = it,
+                                    date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
+                                )
+
+                                delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
+                                navigator.route(
+                                    route =
+                                        Route.BackupVault(
+                                            vaultId = args.vaultId,
+                                            vaultType = VaultType.Fast,
+                                            action = args.tssAction,
+                                            passwordType =
+                                                BackupPasswordType.VultiServerPassword(
+                                                    password = args.password
+                                                ),
+                                        )
                                 )
                             }
-
-                            if (context.canAuthenticateBiometric()) {
-                                vaultPasswordRepository.savePassword(vaultId, vault.password)
-                            }
-
-                            vaultMetadataRepo.setFastVaultPasswordReminderShownDate(
-                                vaultId = vaultId,
-                                date = Clock.System.todayIn(TimeZone.currentSystemDefault()),
-                            )
-
-                            delay(FAST_VAULT_VERIFICATION_SUCCESS_DELAY)
-                            navigator.route(
-                                route =
-                                    Route.BackupVault(
-                                        vaultId = args.vaultId,
-                                        vaultType = VaultType.Fast,
-                                        action = args.tssAction,
-                                        passwordType =
-                                            BackupPasswordType.VultiServerPassword(
-                                                password = args.password
-                                            ),
-                                    )
-                            )
+                        } catch (e: Exception) {
+                            if (e is CancellationException) throw e
+                            Timber.e(e, "FastVaultVerification: save vault failed")
+                            updateVerifyState(VerifyPinState.Error)
                         }
-                    } catch (e: Exception) {
-                        if (e is CancellationException) throw e
-                        Timber.e(e, "FastVaultVerification: save vault failed")
-                        updateVerifyState(VerifyPinState.Error)
-                    }
-                } else {
-                    updateVerifyState(VerifyPinState.Error)
+
+                    BackupCodeVerifyResult.Invalid -> updateVerifyState(VerifyPinState.Error)
+
+                    BackupCodeVerifyResult.NetworkError ->
+                        updateVerifyState(VerifyPinState.NetworkError)
                 }
             } else {
                 updateVerifyState(VerifyPinState.Error)
@@ -208,7 +222,7 @@ constructor(
     }
 
     private fun isCodeTemplateValid(code: String) =
-        code.isDigitsOnly() && code.length == FAST_VAULT_VERIFICATION_CODE_LENGTH
+        code.length == FAST_VAULT_VERIFICATION_CODE_LENGTH && code.all { it.isDigit() }
 
     private fun updateVerifyState(verifyState: VerifyPinState) {
         state.update { it.copy(verifyPinState = verifyState) }

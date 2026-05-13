@@ -28,7 +28,6 @@ import com.vultisig.wallet.ui.models.settings.SettingsItem.ShareTheApp
 import com.vultisig.wallet.ui.models.settings.SettingsItem.TermsOfService
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Twitter
 import com.vultisig.wallet.ui.models.settings.SettingsItem.VaultSetting
-import com.vultisig.wallet.ui.models.settings.SettingsItem.Vult
 import com.vultisig.wallet.ui.models.settings.SettingsItem.VultisigWebsite
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -156,15 +155,6 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             )
         )
 
-    data object Vult :
-        SettingsItem(
-            SettingsItemUiModel(
-                title = UiText.StringResource(R.string.vult),
-                leadingIcon = R.drawable.vult,
-                trailingIcon = R.drawable.ic_small_caret_right,
-            )
-        )
-
     data object Github :
         SettingsItem(
             SettingsItemUiModel(
@@ -264,10 +254,10 @@ constructor(
                         items =
                             listOf(
                                 Notifications,
+                                ReferralCode,
                                 Language("English"),
                                 Currency("USD"),
                                 AddressBook,
-                                ReferralCode,
                             ),
                     ),
                     SettingsGroupUiModel(
@@ -280,7 +270,7 @@ constructor(
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.vultisig_community),
-                        items = listOf(Twitter, Vult, Discord, Github, VultisigWebsite),
+                        items = listOf(Twitter, Discord, Github, VultisigWebsite),
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.settings_screen_legal),
@@ -309,7 +299,6 @@ constructor(
             }
 
             Discord -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.DISCORD))
-            Vult -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.VULT_TOKEN))
             Faq -> {
                 viewModelScope.launch { navigator.route(Route.FAQSetting) }
             }

@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.AppVersionText
+import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsSwitch
@@ -40,7 +41,6 @@ import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsUiEvent
 import com.vultisig.wallet.ui.models.settings.SettingsUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
-import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareLinkBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -186,7 +186,7 @@ internal fun SettingItem(
             Column {
                 Text(
                     text = item.title.asString(),
-                    style = Theme.brockmann.supplementary.footnote,
+                    style = Theme.brockmann.headings.subtitle,
                     color = tint ?: Theme.v2.colors.text.primary,
                 )
 
@@ -209,7 +209,7 @@ internal fun SettingItem(
                     VsSwitch(checked = isChecked, onCheckedChange = null)
                     Text(
                         text = if (isChecked) "ON" else "OFF",
-                        style = Theme.brockmann.button.medium.medium,
+                        style = Theme.brockmann.headings.subtitle,
                         color = tint ?: Theme.v2.colors.text.primary,
                     )
                 }
@@ -220,7 +220,7 @@ internal fun SettingItem(
             item.value?.let { value ->
                 Text(
                     text = value,
-                    style = Theme.brockmann.supplementary.footnote,
+                    style = Theme.brockmann.headings.subtitle,
                     color = tint ?: Theme.v2.colors.text.primary,
                 )
                 UiSpacer(size = 12.dp)
@@ -236,7 +236,7 @@ internal fun SettingItem(
         }
 
         if (isLastItem.not()) {
-            FadingHorizontalDivider()
+            UiHorizontalDivider()
         }
     }
 }

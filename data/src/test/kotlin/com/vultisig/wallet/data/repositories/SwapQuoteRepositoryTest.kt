@@ -15,13 +15,17 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.swap.KyberQuoteSource
+import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSource
+import com.vultisig.wallet.data.repositories.swap.SwapProviderTableImpl
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigInteger
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -30,15 +34,9 @@ class SwapQuoteRepositoryTest {
     private val kyberApi: KyberApi = mockk()
     private val liFiChainApi: LiFiChainApi = mockk()
 
-    private val repository =
-        SwapQuoteRepositoryImpl(
-            thorChainApi = mockk(),
-            mayaChainApi = mockk(),
-            oneInchApi = mockk(),
-            liFiChainApi = liFiChainApi,
-            jupiterApi = mockk(),
-            kyberApi = kyberApi,
-        )
+    private val providerTable = SwapProviderTableImpl()
+    private val kyberSource = KyberQuoteSource(kyberApi)
+    private val liFiSource = LiFiQuoteSource(liFiChainApi)
 
     private fun coin(
         chain: Chain,
@@ -68,7 +66,7 @@ class SwapQuoteRepositoryTest {
                 contractAddress = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
             )
 
-        val provider = repository.resolveProvider(sol, usdc)
+        val provider = providerTable.eligibleProvidersFor(sol, usdc).firstOrNull()
 
         assertNotNull(provider)
         assertEquals(SwapProvider.JUPITER, provider)
@@ -84,18 +82,18 @@ class SwapQuoteRepositoryTest {
                 contractAddress = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
             )
 
-        val provider = repository.resolveProvider(usdc, sol)
+        val provider = providerTable.eligibleProvidersFor(usdc, sol).firstOrNull()
 
         assertNotNull(provider)
         assertEquals(SwapProvider.JUPITER, provider)
     }
 
     @Test
-    fun `SOL to SOL cross-chain resolves to THORCHAIN`() {
+    fun `SOL to BTC cross-chain resolves to THORCHAIN`() {
         val sol = coin(Chain.Solana, "SOL")
         val btc = coin(Chain.Bitcoin, "BTC")
 
-        val provider = repository.resolveProvider(sol, btc)
+        val provider = providerTable.eligibleProvidersFor(sol, btc).firstOrNull()
 
         assertNotNull(provider)
         assertEquals(SwapProvider.THORCHAIN, provider)
@@ -111,7 +109,7 @@ class SwapQuoteRepositoryTest {
             )
         val eth = coin(Chain.Ethereum, "ETH")
 
-        val provider = repository.resolveProvider(usdc, eth)
+        val provider = providerTable.eligibleProvidersFor(usdc, eth).firstOrNull()
 
         assertNotNull(provider)
         assertEquals(SwapProvider.LIFI, provider)
@@ -127,10 +125,11 @@ class SwapQuoteRepositoryTest {
             )
         val sol = coin(Chain.Solana, "SOL")
 
-        val provider = repository.resolveProvider(usdt, sol)
+        val providers = providerTable.eligibleProvidersFor(usdt, sol)
 
-        assertNotNull(provider)
-        assertTrue(provider == SwapProvider.JUPITER || provider == SwapProvider.LIFI)
+        assertTrue(providers.isNotEmpty())
+        assertTrue(SwapProvider.JUPITER in providers || SwapProvider.LIFI in providers)
+        assertTrue(SwapProvider.THORCHAIN !in providers)
     }
 
     @Test
@@ -138,9 +137,9 @@ class SwapQuoteRepositoryTest {
         val sui1 = coin(Chain.Sui, "SUI")
         val sui2 = coin(Chain.Sui, "USDC", contractAddress = "0xabc")
 
-        val provider = repository.resolveProvider(sui1, sui2)
+        val providers = providerTable.eligibleProvidersFor(sui1, sui2)
 
-        assertNull(provider)
+        assertTrue(providers.isEmpty())
     }
 
     @Test
@@ -202,13 +201,19 @@ class SwapQuoteRepositoryTest {
         coEvery { kyberApi.getKyberSwapQuote(any(), any(), any(), any(), any()) } returns quoteJson
 
         val result =
-            repository.getKyberSwapQuote(
-                srcToken = coin(Chain.Ethereum, "ETH"),
-                dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xdst"),
-                tokenValue =
-                    TokenValue(value = BigInteger("1000000"), token = coin(Chain.Ethereum, "ETH")),
-                affiliateBps = bps,
-            )
+            (kyberSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = coin(Chain.Ethereum, "ETH"),
+                        dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xdst"),
+                        tokenValue =
+                            TokenValue(
+                                value = BigInteger("1000000"),
+                                token = coin(Chain.Ethereum, "ETH"),
+                            ),
+                        affiliateBps = bps,
+                    )
+                ) as SwapQuoteResult.Evm)
+                .data
 
         // amountOut * bps / 10000 = 10000000 * 50 / 10000 = 50000
         assertEquals("50000", result.tx.swapFee)
@@ -273,13 +278,19 @@ class SwapQuoteRepositoryTest {
         coEvery { kyberApi.getKyberSwapQuote(any(), any(), any(), any(), any()) } returns quoteJson
 
         val result =
-            repository.getKyberSwapQuote(
-                srcToken = coin(Chain.Ethereum, "ETH"),
-                dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xdst"),
-                tokenValue =
-                    TokenValue(value = BigInteger("1000000"), token = coin(Chain.Ethereum, "ETH")),
-                affiliateBps = 50,
-            )
+            (kyberSource.fetch(
+                    SwapQuoteRequest(
+                        srcToken = coin(Chain.Ethereum, "ETH"),
+                        dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xdst"),
+                        tokenValue =
+                            TokenValue(
+                                value = BigInteger("1000000"),
+                                token = coin(Chain.Ethereum, "ETH"),
+                            ),
+                        affiliateBps = 50,
+                    )
+                ) as SwapQuoteResult.Evm)
+                .data
 
         // isInBps=false → feeAmount passed through as-is
         assertEquals(absoluteFeeAmount, result.tx.swapFee)
@@ -332,15 +343,20 @@ class SwapQuoteRepositoryTest {
             liFiChainApi.getSwapQuote(any(), any(), any(), any(), any(), any(), any(), any())
         } returns LiFiSwapQuoteDeserialized.Result(quote)
 
-        return repository.getLiFiSwapQuote(
-            srcAddress = "0xsrc",
-            dstAddress = "0xdst",
-            srcToken = coin(Chain.Ethereum, "ETH"),
-            dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
-            tokenValue =
-                TokenValue(value = BigInteger("1000000"), token = coin(Chain.Ethereum, "ETH")),
-            bpsDiscount = 0,
-        )
+        return (liFiSource.fetch(
+                SwapQuoteRequest(
+                    srcToken = coin(Chain.Ethereum, "ETH"),
+                    dstToken = coin(Chain.Ethereum, "USDC", contractAddress = "0xusdc"),
+                    tokenValue =
+                        TokenValue(
+                            value = BigInteger("1000000"),
+                            token = coin(Chain.Ethereum, "ETH"),
+                        ),
+                    srcAddress = "0xsrc",
+                    dstAddress = "0xdst",
+                )
+            ) as SwapQuoteResult.Evm)
+            .data
     }
 
     @Test

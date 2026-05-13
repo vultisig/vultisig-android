@@ -20,8 +20,8 @@ android {
         applicationId = "com.vultisig.wallet"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = 35
-        versionCode = 98
-        versionName = "1.0.98"
+        versionCode = 101
+        versionName = "1.0.101"
 
         testInstrumentationRunner = "com.vultisig.wallet.util.HiltTestRunner"
 
@@ -146,6 +146,7 @@ dependencies {
     // test
     testImplementation(libs.junit)
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)

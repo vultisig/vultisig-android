@@ -1,25 +1,39 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import app.rive.Fit
+import app.rive.ViewModelSource
+import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
+import com.vultisig.wallet.ui.components.rive.RiveAnimation
+import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.keysign.progress
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.utils.VsUriHandler
-import com.vultisig.wallet.ui.utils.asString
+
+private const val RIVE_PROGRESS_PROPERTY = "progessPercentage" // typo in riv_keysign.riv
 
 @Composable
 internal fun KeysignView(
@@ -34,32 +48,18 @@ internal fun KeysignView(
     progressLink: String?,
     transactionTypeUiModel: TransactionTypeUiModel?,
     showToolbar: Boolean = false,
+    hasBackClick: Boolean,
     showSaveToAddressBook: Boolean,
 ) {
-    val text =
-        when (state) {
-            is KeysignState.CreatingInstance ->
-                stringResource(id = R.string.keysign_screen_preparing_vault)
-            is KeysignState.KeysignECDSA ->
-                stringResource(id = R.string.keysign_screen_signing_with_ecdsa)
-            is KeysignState.KeysignEdDSA ->
-                stringResource(id = R.string.keysign_screen_signing_with_eddsa)
-            is KeysignState.KeysignMLDSA ->
-                stringResource(id = R.string.keysign_screen_signing_with_mldsa)
-            is KeysignState.KeysignFinished ->
-                stringResource(id = R.string.keysign_screen_keysign_finished)
-            is KeysignState.Error ->
-                stringResource(
-                    id = R.string.keysign_screen_error_please_try_again,
-                    state.errorMessage.asString(),
-                )
-        }
-
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+        if (state.isInProgress) {
+            KeepScreenOn()
+        }
         when (state) {
             is KeysignState.KeysignFinished -> {
                 when (transactionTypeUiModel) {
                     is TransactionTypeUiModel.Swap -> {
+                        var isTransactionDetailVisible by remember { mutableStateOf(false) }
                         SwapTransactionOverviewScreen(
                             showToolbar = showToolbar,
                             transactionHash = txHash,
@@ -71,10 +71,13 @@ internal fun KeysignView(
                             progressLink = progressLink,
                             onBack = onBack,
                             transactionTypeUiModel = transactionTypeUiModel.swapTransactionUiModel,
+                            isTransactionDetailVisible = isTransactionDetailVisible,
+                            onTransactionDetailVisibleChange = { isTransactionDetailVisible = it },
                         )
                     }
                     is TransactionTypeUiModel.Deposit,
                     is TransactionTypeUiModel.Send -> {
+                        var isTransactionDetailVisible by remember { mutableStateOf(false) }
                         SendTxOverviewScreen(
                             transactionHash = txHash,
                             transactionLink = transactionLink,
@@ -85,6 +88,8 @@ internal fun KeysignView(
                             showToolbar = showToolbar,
                             onAddToAddressBook = onAddToAddressBook,
                             showSaveToAddressBook = showSaveToAddressBook,
+                            isTransactionDetailVisible = isTransactionDetailVisible,
+                            onTransactionDetailVisibleChange = { isTransactionDetailVisible = it },
                         )
                     }
                     else -> {
@@ -109,17 +114,45 @@ internal fun KeysignView(
                 KeysignErrorScreen(
                     errorMessage = state.errorMessage,
                     tryAgain = onBack,
-                    onBack = onBack,
+                    onBack = onBack.takeIf { hasBackClick },
                 )
             }
 
             else -> {
-                KeepScreenOn()
-
-                VsSigningProgressIndicator(text = text)
+                KeysignRiveProgress(progress = state.progress)
             }
         }
     }
+}
+
+@Composable
+private fun KeysignRiveProgress(progress: Float) {
+    val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keysign).value
+    if (riveFile == null) {
+        VsSigningProgressIndicator(text = stringResource(R.string.keysign_screen_preparing_vault))
+        return
+    }
+    val vmi =
+        rememberViewModelInstance(
+            file = riveFile,
+            source = ViewModelSource.Named("ViewModel").defaultInstance(),
+        )
+
+    val animatedValue by
+        animateFloatAsState(
+            targetValue = progress.times(100),
+            animationSpec = tween(durationMillis = 300),
+            label = "riv_progress_animation",
+        )
+
+    SideEffect { vmi.setNumber(RIVE_PROGRESS_PROPERTY, animatedValue) }
+
+    RiveAnimation(
+        file = riveFile,
+        viewModelInstance = vmi,
+        modifier = Modifier.fillMaxSize(),
+        fit = Fit.Cover(),
+    )
 }
 
 @Preview
@@ -143,5 +176,6 @@ private fun KeysignPreview() {
         onComplete = {},
         onAddToAddressBook = {},
         showSaveToAddressBook = true,
+        hasBackClick = true,
     )
 }

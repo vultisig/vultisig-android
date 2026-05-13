@@ -80,7 +80,10 @@ internal sealed class JoinKeygenError(val message: UiText) {
 internal data class JoinKeygenUiModel(
     val isSuccess: Boolean = false,
     val error: JoinKeygenError? = null,
+    val alreadyJoined: AlreadyJoinedVault? = null,
 )
+
+internal data class AlreadyJoinedVault(val vaultId: VaultId, val vaultName: String)
 
 private class JoinKeygenException(val error: JoinKeygenError) : Exception()
 
@@ -126,6 +129,28 @@ constructor(
                                 mapKeygenMessageFromProto(
                                     protoBuf.decodeFromByteArray<KeygenMessageProto>(bytes)
                                 )
+
+                            // hexChainCode uniquely identifies the vault across devices.
+                            // If a vault with the same chain code is already on this device,
+                            // skip the join and surface a clear "already on device" message
+                            // instead of running keygen + failing on duplicate save.
+                            val alreadyJoinedVault =
+                                existingVaults.find {
+                                    it.hexChainCode == message.hexChainCode &&
+                                        it.hexChainCode.isNotBlank()
+                                }
+                            if (alreadyJoinedVault != null) {
+                                state.update {
+                                    it.copy(
+                                        alreadyJoined =
+                                            AlreadyJoinedVault(
+                                                vaultId = alreadyJoinedVault.id,
+                                                vaultName = alreadyJoinedVault.name,
+                                            )
+                                    )
+                                }
+                                return@launch
+                            }
 
                             assertNoVaultNameDuplicates(existingVaults, message.vaultName)
 
@@ -281,6 +306,16 @@ constructor(
 
     fun navigateBack() {
         viewModelScope.launch { navigator.navigate(Destination.Back) }
+    }
+
+    fun openExistingVault() {
+        val vaultId = state.value.alreadyJoined?.vaultId ?: return
+        viewModelScope.launch {
+            navigator.route(
+                route = Route.Home(openVaultId = vaultId),
+                opts = NavigationOptions(clearBackStack = true),
+            )
+        }
     }
 
     private fun assertNoVaultNameDuplicates(existingVaults: List<Vault>, name: String) {

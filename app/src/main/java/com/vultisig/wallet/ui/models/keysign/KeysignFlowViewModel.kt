@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.SavedStateHandle
@@ -36,6 +37,7 @@ import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
+import com.vultisig.wallet.data.models.tokenLogoRes
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -118,6 +120,8 @@ data class KeysignFlowUiState(
     val isLoading: Boolean = false,
     val enableNotification: Boolean = false,
     val resendCooldownSeconds: Int = 0,
+    @param:DrawableRes val srcTokenLogoRes: Int? = null,
+    @param:DrawableRes val dstTokenLogoRes: Int? = null,
 )
 
 @HiltViewModel
@@ -307,12 +311,16 @@ constructor(
                     }
                 }
 
+            val srcLogoModel = keysignPayload?.coin?.tokenLogoRes()
+            val dstLogoModel = keysignPayload?.swapPayload?.dstToken?.tokenLogoRes()
             uiState.update {
                 it.copy(
                     vault = vault,
                     isSwap = shareViewModel.keysignPayload?.swapPayload != null,
                     toAddress = keysignPayload?.toAddress ?: "",
                     enableNotification = vault.isSecureVault(),
+                    srcTokenLogoRes = srcLogoModel,
+                    dstTokenLogoRes = dstLogoModel,
                 )
             }
 
@@ -468,7 +476,7 @@ constructor(
                     keysignPayload.swapPayload != null ||
                         txType == Route.Keysign.Keysign.TxType.Swap
 
-                viewModelScope.launch {
+                viewModelScope.safeLaunch {
                     val isDeposit =
                         when (val specific = keysignPayload.blockChainSpecific) {
                             is BlockChainSpecific.MayaChain -> specific.isDeposit
@@ -513,10 +521,13 @@ constructor(
                         }
 
                         else -> {
-                            val transactionDetailsUiModel =
-                                mapTransactionToUiModel(
-                                    transactionRepository.getTransaction(transactionId)
-                                )
+                            val tx =
+                                transactionRepository.getTransaction(transactionId)
+                                    ?: run {
+                                        Timber.e("Transaction not found: %s", transactionId)
+                                        return@safeLaunch
+                                    }
+                            val transactionDetailsUiModel = mapTransactionToUiModel(tx)
                             transactionHistoryData.update {
                                 transactionHistoryDataMapper(transactionDetailsUiModel)
                             }
@@ -679,8 +690,16 @@ constructor(
         selection.value = currentList + participant
     }
 
-    fun removeParticipant(participant: String) {
-        selection.value = selection.value - participant
+    private fun removeParticipant(participant: String) {
+        selection.value -= participant
+    }
+
+    fun handleParticipant(participant: String) {
+        if (participant in selection.value) {
+            removeParticipant(participant)
+        } else {
+            addParticipant(participant)
+        }
     }
 
     fun moveToState(nextState: KeysignFlowState) {

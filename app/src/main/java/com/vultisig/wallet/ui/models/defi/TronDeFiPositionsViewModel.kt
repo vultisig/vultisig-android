@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.models.TronAccountJson
 import com.vultisig.wallet.data.api.models.TronAccountResourceJson
 import com.vultisig.wallet.data.api.models.calculateResourceStats
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.VaultId
@@ -53,20 +54,29 @@ private val TRON_STAKE_POSITIONS_DIALOG =
 
 private val TRON_DEFAULT_SELECTED_POSITIONS = listOf(TRON_KEY)
 
+/** UI model for the Tron staking/freeze position screen. */
 @Immutable
 internal data class TronStakingUiModel(
     val totalAmountPrice: String = "",
+    val frozenTotalPrice: String = "",
+    val frozenTotalTrx: String = "",
     val availableBandwidth: Long = 0L,
     val totalBandwidth: Long = 0L,
     val availableEnergy: Long = 0L,
     val totalEnergy: Long = 0L,
     val pendingWithdrawals: List<TronPendingWithdrawalUiModel> = emptyList(),
-    val hasPositions: Boolean = false,
+    val hasFrozenBalance: Boolean = false,
+    val hasAvailableBalance: Boolean = false,
 )
 
+/** UI state for the Tron DeFi positions screen. */
 @Immutable
 internal sealed interface TronDeFiUiState {
-    data object Loading : TronDeFiUiState
+    /**
+     * Loading state; carries [previousSuccess] so the UI can show skeleton placeholders sized to
+     * real data.
+     */
+    data class Loading(val previousSuccess: Success? = null) : TronDeFiUiState
 
     @Immutable data class Error(val error: UiText) : TronDeFiUiState
 
@@ -77,19 +87,21 @@ internal sealed interface TronDeFiUiState {
         val selectedTab: DeFiTab = DeFiTab.STAKED,
         val showPositionSelectionDialog: Boolean = false,
         val stakePositionsDialog: List<PositionUiModelDialog> = TRON_STAKE_POSITIONS_DIALOG,
-        // TODO(#4014): gate rendered cards by selectedPositions
         val selectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
         val tempSelectedPositions: List<String> = TRON_DEFAULT_SELECTED_POSITIONS,
     ) : TronDeFiUiState
 }
 
-@Immutable data class TronPendingWithdrawalUiModel(val amountTrx: String, val expiryEpochMs: Long)
+@Immutable
+data class TronPendingWithdrawalUiModel(
+    val amountTrx: String,
+    val expiryEpochMs: Long,
+    val resourceType: TronResourceType?,
+)
 
-internal enum class TronAction(val memo: String, val defiType: DeFiNavActions) {
-    FREEZE_BANDWIDTH("FREEZE:BANDWIDTH", DeFiNavActions.FREEZE_TRX),
-    FREEZE_ENERGY("FREEZE:ENERGY", DeFiNavActions.FREEZE_TRX),
-    UNFREEZE_BANDWIDTH("UNFREEZE:BANDWIDTH", DeFiNavActions.UNFREEZE_TRX),
-    UNFREEZE_ENERGY("UNFREEZE:ENERGY", DeFiNavActions.UNFREEZE_TRX),
+internal enum class TronAction(val defiType: DeFiNavActions) {
+    FREEZE(DeFiNavActions.FREEZE_TRX),
+    UNFREEZE(DeFiNavActions.UNFREEZE_TRX),
 }
 
 @HiltViewModel
@@ -104,7 +116,7 @@ constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<TronDeFiUiState>(TronDeFiUiState.Loading)
+    private val _state = MutableStateFlow<TronDeFiUiState>(TronDeFiUiState.Loading())
     val state: StateFlow<TronDeFiUiState> = _state.asStateFlow()
 
     private var vaultId: VaultId = ""
@@ -127,13 +139,13 @@ constructor(
                 onError = { e ->
                     Timber.e(e, "Failed to load Tron DeFi data")
                     _state.value =
-                        TronDeFiUiState.Error(
-                            e.message?.asUiText()
-                                ?: R.string.error_view_default_description.asUiText()
-                        )
+                        TronDeFiUiState.Error(R.string.error_view_default_description.asUiText())
                 }
             ) {
-                _state.value = TronDeFiUiState.Loading
+                val previousSuccess =
+                    (_state.value as? TronDeFiUiState.Success)
+                        ?: (_state.value as? TronDeFiUiState.Loading)?.previousSuccess
+                _state.value = TronDeFiUiState.Loading(previousSuccess = previousSuccess)
 
                 // Resolve the TRX coin for this vault
                 val trxCoin = findTrxCoin(vaultId)
@@ -186,12 +198,15 @@ constructor(
 
         return TronStakingUiModel(
             totalAmountPrice = currencyFormat.format(availableBalanceTrx.multiply(trxPrice)),
+            frozenTotalPrice = currencyFormat.format(frozenTotal.multiply(trxPrice)),
+            frozenTotalTrx = frozenTotal.stripTrailingZeros().toPlainString(),
             availableBandwidth = stats.availableBandwidth,
             totalBandwidth = stats.totalBandwidth,
             availableEnergy = stats.availableEnergy,
             totalEnergy = stats.totalEnergy,
             pendingWithdrawals = pendingWithdrawals,
-            hasPositions = frozenTotal > BigDecimal.ZERO || pendingWithdrawals.isNotEmpty(),
+            hasFrozenBalance = frozenTotal > BigDecimal.ZERO,
+            hasAvailableBalance = availableBalanceTrx > BigDecimal.ZERO,
         )
     }
 
@@ -205,9 +220,17 @@ constructor(
                 TronPendingWithdrawalUiModel(
                     amountTrx = amountSun.sunToTrx().toPlainString(),
                     expiryEpochMs = expireTimeMs,
+                    resourceType = entry.type.toTronResourceType(),
                 )
             }
             .sortedWith(compareBy { it.expiryEpochMs })
+
+    private fun String?.toTronResourceType(): TronResourceType? =
+        when (this) {
+            "BANDWIDTH" -> TronResourceType.BANDWIDTH
+            "ENERGY" -> TronResourceType.ENERGY
+            else -> null
+        }
 
     private suspend fun findTrxCoin(vaultId: VaultId) =
         vaultRepository.get(vaultId)?.coins?.find { it.chain == Chain.Tron && it.isNativeToken }
@@ -267,14 +290,9 @@ constructor(
                     chainId = Chain.Tron.id,
                     tokenId = trxCoin.id,
                     address = trxCoin.address,
-                    memo = action.memo,
                     type = action.defiType.type,
                 )
             )
         }
-    }
-
-    fun onBackClick() {
-        viewModelScope.safeLaunch { navigator.navigate(Destination.Back) }
     }
 }

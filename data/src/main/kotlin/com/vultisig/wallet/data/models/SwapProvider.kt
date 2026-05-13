@@ -14,8 +14,21 @@ fun SwapProvider.getSwapProviderId(): String {
         SwapProvider.JUPITER -> "Jupiter"
         SwapProvider.KYBER -> "KyberSwap"
         SwapProvider.LIFI -> "LI.FI"
-        SwapProvider.MAYA -> "Maya"
+        SwapProvider.MAYA -> "MayaChain"
         SwapProvider.ONEINCH -> "1Inch"
-        SwapProvider.THORCHAIN -> "Thorchain"
+        SwapProvider.THORCHAIN -> "THORChain"
     }
 }
+
+fun swapProviderFromWireId(wireId: String): SwapProvider? =
+    when (wireId.lowercase().trim()) {
+        "thorchain" -> SwapProvider.THORCHAIN
+        "maya",
+        "mayachain" -> SwapProvider.MAYA
+        "li.fi" -> SwapProvider.LIFI
+        "1inch" -> SwapProvider.ONEINCH
+        "kyber",
+        "kyberswap" -> SwapProvider.KYBER
+        "jupiter" -> SwapProvider.JUPITER
+        else -> null
+    }

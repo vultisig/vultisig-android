@@ -8,12 +8,14 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
 import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
@@ -50,7 +52,8 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -85,6 +88,7 @@ internal data class VaultAccountsUiModel(
     val defiAccounts: List<AccountUiModel> = emptyList(),
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val isBannerVisible: Boolean = true,
+    val showBuyVultBanner: Boolean = false,
     val cryptoConnectionType: CryptoConnectionType = CryptoConnectionType.Wallet,
     val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
     val isChainSelectionEnabled: Boolean = true,
@@ -140,6 +144,7 @@ constructor(
     private val remoteNFTService: TierRemoteNFTService,
     private val pushNotificationManager: PushNotificationManager,
     private val snackbarFlow: SnackbarFlow,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private var requestedVaultId: String? = savedStateHandle.toRoute<Route.Home>().openVaultId
@@ -157,6 +162,14 @@ constructor(
     init {
         collectCryptoConnectionType()
         collectLastOpenedVault()
+        collectBuyVultBannerDismissed()
+    }
+
+    private fun collectBuyVultBannerDismissed() {
+        vaultDataStoreRepository
+            .readBuyVultBannerDismissed()
+            .onEach { dismissed -> uiState.update { it.copy(showBuyVultBanner = !dismissed) } }
+            .launchIn(viewModelScope)
     }
 
     private fun collectCryptoConnectionType() {
@@ -176,7 +189,7 @@ constructor(
     }
 
     private fun collectLastOpenedVault() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             updateLastOpenedVault()
             lastOpenedVaultRepository.lastOpenedVaultId
                 .map { lastOpenedVaultId ->
@@ -209,48 +222,50 @@ constructor(
         viewModelScope.launch {
             try {
                 val vault = vaultRepository.get(vaultId) ?: return@launch
-
-                // Check if vault has Ethereum chain enabled
-                val hasEthereum = vault.coins.any { it.chain == Chain.Ethereum }
-                if (!hasEthereum) {
-                    Timber.d("Ethereum chain not enabled, skipping VULT token auto-enable")
-                    return@launch
-                }
-
-                // Check if VULT token is already enabled
-                val vultCoin = vault.coins.find { it.id == Coins.Ethereum.VULT.id }
-
-                if (vultCoin == null) {
-                    // Enable VULT token in background
-                    Timber.d("VULT token not enabled, enabling it now for vault: $vaultId")
-                    withContext(Dispatchers.IO) { enableTokenUseCase(vaultId, Coins.Ethereum.VULT) }
-                    Timber.d("VULT token enabled successfully")
-                }
+                ensureVultEnabled(vault)
 
                 // fetch NFT
                 val ethAddress = vault.coins.find { it.id == Coins.Ethereum.ETH.id }?.address
                 if (ethAddress != null) {
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         val balance = remoteNFTService.checkNFTBalance(ethAddress)
                         tiersNFTRepository.saveTierNFT(vaultId, balance)
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Failed to auto-enable VULT token")
             }
         }
     }
 
+    private suspend fun ensureVultEnabled(vault: Vault): Boolean {
+        if (vault.coins.any { it.id == Coins.Ethereum.VULT.id }) return true
+        if (vault.coins.none { it.chain == Chain.Ethereum }) {
+            Timber.d("Ethereum chain not enabled, cannot enable VULT token")
+            return false
+        }
+        return try {
+            withContext(ioDispatcher) { enableTokenUseCase(vault.id, Coins.Ethereum.VULT) != null }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to enable VULT token")
+            false
+        }
+    }
+
     private fun showGlobalBackupReminder() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val showReminder = isGlobalBackupReminderRequired()
             uiState.update { it.copy(showMonthlyBackupReminder = showReminder) }
         }
     }
 
     private fun showVerifyFastVaultPasswordReminderIfRequired(vaultId: VaultId) {
-        viewModelScope.launch {
-            val vault = vaultRepository.get(vaultId) ?: return@launch
+        viewModelScope.safeLaunch {
+            val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
             if (
                 vault.isFastVault() &&
                     vaultMetadataRepo.isFastVaultPasswordReminderRequired(vaultId)
@@ -261,7 +276,7 @@ constructor(
     }
 
     private fun loadBalanceVisibility(vaultId: String) {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
             uiState.update { it.copy(isBalanceValueVisible = isBalanceVisible) }
         }
@@ -288,6 +303,28 @@ constructor(
         viewModelScope.launch {
             navigator.route(Route.OnRamp(vaultId = vaultId, chainId = Chain.ThorChain.raw))
         }
+    }
+
+    fun buyVult() {
+        val vaultId = vaultId ?: return
+        viewModelScope.launch {
+            val vault = withContext(ioDispatcher) { vaultRepository.get(vaultId) } ?: return@launch
+            if (!ensureVultEnabled(vault)) {
+                Timber.w("VULT setup unavailable, skipping swap navigation")
+                return@launch
+            }
+            navigator.route(
+                Route.Swap(
+                    vaultId = vaultId,
+                    chainId = Chain.Ethereum.id,
+                    dstTokenId = Coins.Ethereum.VULT.id,
+                )
+            )
+        }
+    }
+
+    fun dismissBuyVultBanner() {
+        viewModelScope.safeLaunch { vaultDataStoreRepository.setBuyVultBannerDismissed(true) }
     }
 
     fun receive() {
@@ -347,8 +384,8 @@ constructor(
     private fun loadVaultNameAndShowBackup(vaultId: String) {
         loadVaultNameJob?.cancel()
         loadVaultNameJob =
-            viewModelScope.launch {
-                val vault = vaultRepository.get(vaultId) ?: return@launch
+            viewModelScope.safeLaunch {
+                val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
                 uiState.update {
                     it.copy(
                         vaultName = vault.name,
@@ -368,7 +405,7 @@ constructor(
     private fun loadAccounts(vaultId: String, isRefresh: Boolean = false) {
         loadAccountsJob?.cancel()
         loadAccountsJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 combine(
                         accountsRepository
                             .loadAddresses(vaultId, isRefresh)
@@ -385,7 +422,9 @@ constructor(
                                 when (cryptoConnectionType) {
                                     CryptoConnectionType.Wallet -> true
                                     CryptoConnectionType.Defi ->
-                                        cryptoConnectionTypeRepository.isDefi(it.chain)
+                                        cryptoConnectionTypeRepository.hasDeFiPositionsScreen(
+                                            it.chain
+                                        )
                                 }
                             }
                             .updateUiStateFromList(searchQuery = searchQuery.toString())
@@ -397,7 +436,7 @@ constructor(
     private fun loadDeFiBalances(vaultId: String, isRefresh: Boolean = false) {
         loadDeFiBalancesJob?.cancel()
         loadDeFiBalancesJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 combine(
                         accountsRepository
                             .loadDeFiAddresses(vaultId, isRefresh)
@@ -490,7 +529,7 @@ constructor(
                     return
                 }
         val isBalanceValueVisible = !uiState.value.isBalanceValueVisible
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             uiState.update { it.copy(isBalanceValueVisible = isBalanceValueVisible) }
             balanceVisibilityRepository.setVisibility(vaultId, isBalanceValueVisible)
         }
@@ -519,7 +558,7 @@ constructor(
     }
 
     fun doNotRemindBackup() =
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             setNeverShowGlobalBackupReminder()
             dismissBackupReminder()
         }
@@ -578,14 +617,14 @@ constructor(
     }
 
     private fun checkNotificationPrompt(vaultId: String) {
-        viewModelScope.launch {
-            val currentVault = vaultRepository.get(vaultId) ?: return@launch
-            if (!currentVault.isSecureVault()) return@launch
+        viewModelScope.safeLaunch {
+            val currentVault = vaultRepository.get(vaultId) ?: return@safeLaunch
+            if (!currentVault.isSecureVault()) return@safeLaunch
             if (
                 pushNotificationManager.isVaultOptedIn(vaultId) ||
                     pushNotificationManager.hasPromptedVault(vaultId)
             )
-                return@launch
+                return@safeLaunch
 
             val eligibleVaults = vaultRepository.getAll().filter { it.isSecureVault() }
             val introVaults =
@@ -604,7 +643,7 @@ constructor(
     }
 
     fun onNotificationEnable() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             // Mark as prompted now so we don't re-prompt even if permission is denied
             uiState.value.notificationIntroVaults.forEach { vault ->
                 pushNotificationManager.markVaultPrompted(vault.vaultId)
@@ -621,7 +660,7 @@ constructor(
     }
 
     fun onNotificationNotNow() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             uiState.value.notificationIntroVaults.forEach { vault ->
                 pushNotificationManager.markVaultPrompted(vault.vaultId)
             }

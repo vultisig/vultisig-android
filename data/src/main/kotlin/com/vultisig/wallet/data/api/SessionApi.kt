@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.mediator.Message
 import io.ktor.client.HttpClient
@@ -10,6 +11,7 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.isSuccess
+import java.io.IOException
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -74,10 +76,9 @@ internal class SessionApiImpl
 @Inject
 constructor(private val json: Json, private val httpClient: HttpClient) : SessionApi {
     override suspend fun checkCommittee(serverUrl: String, sessionId: String): List<String> {
-        return httpClient
-            .get("$serverUrl/start/$sessionId")
-            .throwIfUnsuccessful()
-            .body<List<String>>()
+        return withRelayRetry {
+            httpClient.get("$serverUrl/start/$sessionId").throwIfUnsuccessful().body<List<String>>()
+        }
     }
 
     override suspend fun startSession(
@@ -85,7 +86,9 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         sessionId: String,
         localPartyId: List<String>,
     ) {
-        httpClient.post("$serverUrl/$sessionId") { setBody(localPartyId) }.throwIfUnsuccessful()
+        withRelayRetry {
+            httpClient.post("$serverUrl/$sessionId") { setBody(localPartyId) }.throwIfUnsuccessful()
+        }
     }
 
     override suspend fun startWithCommittee(
@@ -93,7 +96,11 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         sessionId: String,
         committee: List<String>,
     ) {
-        httpClient.post("$serverUrl/start/$sessionId") { setBody(committee) }.throwIfUnsuccessful()
+        withRelayRetry {
+            httpClient
+                .post("$serverUrl/start/$sessionId") { setBody(committee) }
+                .throwIfUnsuccessful()
+        }
     }
 
     override suspend fun markLocalPartyComplete(
@@ -234,8 +241,35 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
             .throwIfUnsuccessful()
     }
 
+    private suspend fun <T> withRelayRetry(block: suspend () -> T): T {
+        var lastException: Exception? = null
+        repeat(RELAY_MAX_RETRIES) { attempt ->
+            try {
+                return block()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: HttpException) {
+                if (e.statusCode < 500) throw e
+                lastException = e
+                Timber.w(
+                    "Relay request failed with ${e.statusCode}, retrying (attempt ${attempt + 1})"
+                )
+            } catch (e: IOException) {
+                lastException = e
+                Timber.w(e, "Relay request IOException, retrying (attempt ${attempt + 1})")
+            }
+            if (attempt < RELAY_MAX_RETRIES - 1) {
+                delay(RELAY_BACKOFF_MS * (1L shl attempt))
+            }
+        }
+        throw lastException
+            ?: IllegalStateException("Relay request failed after $RELAY_MAX_RETRIES retries")
+    }
+
     companion object {
         private const val MESSAGE_ID_HEADER_TITLE = "message_id"
         private const val MAX_RETRIES = 10
+        private const val RELAY_MAX_RETRIES = 3
+        private const val RELAY_BACKOFF_MS = 1000L
     }
 }

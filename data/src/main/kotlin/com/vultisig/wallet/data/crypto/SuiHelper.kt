@@ -7,8 +7,10 @@ import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.tss.getSignature
+import java.math.BigInteger
 import timber.log.Timber
 import tss.KeysignResponse
+import vultisig.keysign.v1.SuiCoin
 import wallet.core.jni.AnyAddress
 import wallet.core.jni.Base64
 import wallet.core.jni.CoinType
@@ -57,22 +59,14 @@ object SuiHelper {
                                     .build()
                             }
                 }
-        val gascoin =
-            coins
-                .filter {
-                    it.coinType == suiContractAddress &&
-                        it.balance.toBigInteger() > referenceGasPrice
-                }
-                .minByOrNull { it.balance.toBigInteger() }
+        val gascoin = selectSuiGasCoin(coins, gasBudget)
 
         val input =
             if (nonSuiObjectRef.isNotEmpty()) {
                     Sui.SigningInput.newBuilder()
                         .setPay(
                             Sui.Pay.newBuilder()
-                                .setGas(
-                                    suiObjectRefs.first { it.objectId == gascoin?.coinObjectId }
-                                )
+                                .setGas(selectSuiGasObjectRef(suiObjectRefs, gascoin?.coinObjectId))
                                 .addAllInputCoins(nonSuiObjectRef)
                                 .addAllRecipients(listOf(toAddress.description()))
                                 .addAllAmounts(listOf(keysignPayload.toAmount.toLong()))
@@ -126,6 +120,18 @@ object SuiHelper {
 
         return Base64.encode(tx)
     }
+
+    internal fun selectSuiGasCoin(coins: List<SuiCoin>, gasBudget: BigInteger): SuiCoin? =
+        coins
+            .filter { it.coinType == suiContractAddress && it.balance.toBigInteger() >= gasBudget }
+            .minByOrNull { it.balance.toBigInteger() }
+
+    internal fun selectSuiGasObjectRef(
+        suiObjectRefs: List<Sui.ObjectRef>,
+        gasCoinObjectId: String?,
+    ): Sui.ObjectRef =
+        suiObjectRefs.firstOrNull { it.objectId == gasCoinObjectId }
+            ?: error("No suitable SUI gas coin available for transaction")
 
     fun getSignedTransaction(
         vaultHexPubKey: String,

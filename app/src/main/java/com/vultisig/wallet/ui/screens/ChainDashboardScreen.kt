@@ -8,14 +8,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.data.models.CryptoConnectionType
+import com.vultisig.wallet.ui.components.v2.buttons.DesignType
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
+import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
 import com.vultisig.wallet.ui.models.ChainDashboardUiModel
 import com.vultisig.wallet.ui.models.ChainDashboardViewModel
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
@@ -41,6 +51,7 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
         uiModel = uiModel,
         onTypeClick = viewModel::updateCryptoConnectionType,
         onCameraClick = viewModel::openCamera,
+        onBackClick = viewModel::back,
         content = {
             when (val route = uiModel.route) {
                 is PositionCircle -> CircleDeFiPositionsScreen(vaultId = route.vaultId)
@@ -48,7 +59,12 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
                 is PositionMaya ->
                     MayachainDefiPositionsScreen(vaultId = (uiModel.route as PositionMaya).vaultId)
                 is PositionTron -> TronDeFiPositionsScreen(vaultId = route.vaultId)
-                is Wallet -> ChainTokensScreen(vaultId = route.vaultId, chainId = route.chainId)
+                is Wallet ->
+                    ChainTokensScreen(
+                        vaultId = route.vaultId,
+                        chainId = route.chainId,
+                        onBackClick = viewModel::back,
+                    )
                 null -> Unit
             }
         },
@@ -60,9 +76,34 @@ private fun ChainDashboardScreen(
     uiModel: ChainDashboardUiModel,
     onTypeClick: (CryptoConnectionType) -> Unit,
     onCameraClick: () -> Unit,
+    onBackClick: () -> Unit,
     content: @Composable () -> Unit = {},
 ) {
+    var topBarAction by remember { mutableStateOf<ChainDashboardTopBarAction?>(null) }
+
+    LaunchedEffect(uiModel.route?.javaClass) { topBarAction = null }
+
     Scaffold(
+        topBar = {
+            if (uiModel.route !is Wallet) {
+                V2Topbar(
+                    title = null,
+                    onBackClick = onBackClick,
+                    actions =
+                        topBarAction?.let { action ->
+                            {
+                                VsCircleButton(
+                                    onClick = action.onClick,
+                                    size = VsCircleButtonSize.Small,
+                                    type = VsCircleButtonType.Secondary,
+                                    designType = DesignType.Shined,
+                                    icon = action.icon,
+                                )
+                            }
+                        },
+                )
+            }
+        },
         bottomBar = {
             Box(modifier = Modifier.fillMaxWidth().animateContentSize()) {
                 if (uiModel.isBottomBarVisible) {
@@ -82,10 +123,20 @@ private fun ChainDashboardScreen(
                     }
                 }
             }
-        }
+        },
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())) {
-            content()
+        Box(
+            modifier =
+                Modifier.padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding(),
+                )
+        ) {
+            CompositionLocalProvider(
+                LocalChainDashboardTopBarActionSetter provides { topBarAction = it }
+            ) {
+                content()
+            }
         }
     }
 }
@@ -97,6 +148,7 @@ private fun ChainDashboardScreenPreview() {
         uiModel = ChainDashboardUiModel(route = Wallet(vaultId = "sdsda", "007")),
         onTypeClick = {},
         onCameraClick = {},
+        onBackClick = {},
         content = {
             ChainTokensScreen(
                 uiModel =
@@ -116,6 +168,7 @@ private fun ChainDashboardScreenPreview() {
                                 )
                             ),
                     ),
+                onBackClick = {},
                 onRefresh = {},
                 onShowSearchBar = {},
                 onHideSearchBar = {},
@@ -126,7 +179,6 @@ private fun ChainDashboardScreenPreview() {
                 onReceive = {},
                 onSelectTokens = {},
                 onTokenClick = {},
-                onBackClick = {},
                 onShowReviewPopUp = {},
             )
         },

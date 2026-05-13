@@ -1,9 +1,10 @@
 package com.vultisig.wallet.data.models
 
 import androidx.annotation.Keep
-import com.vultisig.wallet.data.utils.ServerUtils.LOCAL_PARTY_ID_PREFIX
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import kotlinx.serialization.Serializable
+
+const val LOCAL_PARTY_ID_PREFIX = "Server"
 
 typealias VaultId = String
 

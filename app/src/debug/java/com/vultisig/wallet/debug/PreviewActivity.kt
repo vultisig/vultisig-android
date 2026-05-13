@@ -1,38 +1,72 @@
 package com.vultisig.wallet.debug
 
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
+import com.vultisig.wallet.data.usecases.GenerateQrBitmap
+import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
+import com.vultisig.wallet.data.usecases.QrShareField
+import com.vultisig.wallet.data.usecases.QrShareInfo
+import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.hero.HeroCoinAmount
+import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.v2.fastselection.SelectPopupUiModel
+import com.vultisig.wallet.ui.components.v2.fastselection.components.ChainSelectorPickerItem
+import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectPopup
+import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
+import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
+import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
 import com.vultisig.wallet.ui.models.keygen.VerifyPinState
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
+import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.models.toNetworkUiModel
+import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
+import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
 import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
+import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
@@ -42,13 +76,29 @@ import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
+import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
 import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.UpgradeBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.container.HomePagePagerContainer
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
+import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+import vultisig.keysign.v1.SignTon
+import vultisig.keysign.v1.TonMessage
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface ShareQrPreviewEntryPoint {
+    fun generateQrBitmap(): GenerateQrBitmap
+
+    fun makeQrCodeBitmapShareFormat(): MakeQrCodeBitmapShareFormat
+}
 
 class PreviewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,8 +122,26 @@ class PreviewActivity : ComponentActivity() {
                     "choose_vault" -> SelectVaultTypeScreenPreview()
                     "content_row" -> ContentRowPreview()
                     "solana_display" -> SolanaDisplayPreview()
+                    "ton_display_single" -> TonDisplayPreview(messageCount = 1)
+                    "ton_display_multi" -> TonDisplayPreview(messageCount = 4)
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
+                    "import_seedphrase" -> ImportSeedphrasePreview()
+                    "defi_account_list" -> DeFiAccountListPreview()
+                    "share_qr_keysign" -> ShareQrKeysignPreview()
+                    "share_qr_keysign_swap" -> ShareQrKeysignSwapPreview()
+                    "share_qr_keygen" -> ShareQrKeygenPreview()
+                    "blockaid_hero_send" -> BlockaidHeroVerifySendPreview()
+                    "blockaid_hero_swap" -> BlockaidHeroVerifySwapPreview()
+                    "blockaid_hero_unverified" -> BlockaidHeroVerifyUnverifiedPreview()
+                    "blockaid_hero_scanning" -> BlockaidHeroVerifyScanningPreview()
+                    "blockaid_hero_not_scanned" -> BlockaidHeroVerifyNotScannedPreview()
+                    "blockaid_hero_done_send" -> BlockaidHeroDoneSendPreview()
+                    "blockaid_hero_done_swap" -> BlockaidHeroDoneSwapPreview()
+                    "blockaid_hero_done_unverified" -> BlockaidHeroDoneUnverifiedPreview()
+                    "blockaid_popup_high" -> BlockaidPopupHighRiskPreview()
+                    "blockaid_popup_medium" -> BlockaidPopupMediumRiskPreview()
+                    "select_chain_popup" -> SelectChainPopupPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -155,6 +223,7 @@ private fun FastVaultVerificationPreview() {
         onCodeChanged = {},
         onPasteClick = {},
         onChangeEmailClick = {},
+        onRetryClick = {},
     )
 }
 
@@ -296,6 +365,52 @@ private fun SolanaInstructionMock(
 }
 
 @Composable
+private fun TonDisplayPreview(messageCount: Int) {
+    val messages =
+        when (messageCount) {
+            1 ->
+                listOf(
+                    TonMessage(
+                        to = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "1500000000",
+                    )
+                )
+            else ->
+                listOf(
+                    TonMessage(
+                        to = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "1500000000",
+                        payload = "te6ccgEBAQEABgAACAA=",
+                    ),
+                    TonMessage(
+                        to = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "250000000",
+                        payload = "te6ccgEBAQEABgAACAA=",
+                        stateInit = "te6ccgEBAQEABwAA",
+                    ),
+                    TonMessage(
+                        to = "EQAB9999999999ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "100000",
+                    ),
+                    TonMessage(
+                        to = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "5000000000",
+                        stateInit = "te6ccgEBAQEABwAA",
+                    ),
+                )
+        }
+    androidx.compose.foundation.layout.Column(
+        modifier =
+            Modifier.padding(24.dp)
+                .fillMaxSize()
+                .background(Theme.v2.colors.backgrounds.primary)
+                .padding(16.dp)
+    ) {
+        SignTonDisplayView(signTon = SignTon(tonMessages = messages))
+    }
+}
+
+@Composable
 private fun SendTxDonePreview() {
     val ethCoin = Coins.Ethereum.ETH
 
@@ -318,6 +433,8 @@ private fun SendTxDonePreview() {
                 networkFeeTokenValue = "0.0024 ETH",
                 networkFeeFiatValue = "$6.15",
             ),
+        isTransactionDetailVisible = false,
+        onTransactionDetailVisibleChange = {},
     )
 }
 
@@ -373,4 +490,592 @@ private fun SwapErrorPreview() {
             SwapFormUiModel(formError = UiText.DynamicString(errorMessage), isSwapDisabled = true),
         srcAmountTextFieldState = TextFieldState("1000"),
     )
+}
+
+@Composable
+private fun ImportSeedphrasePreview() {
+    ImportSeedphraseContent(
+        state =
+            com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel(
+                wordCount = 0,
+                expectedWordCount = 12,
+            ),
+        mnemonicFieldState = TextFieldState(),
+        onBackClick = {},
+        onImportClick = {},
+    )
+}
+
+@Composable
+private fun DeFiAccountListPreview() {
+    val accounts =
+        listOf(
+            deFiAccount(
+                chain = Chain.ThorChain,
+                chainName = "THORChain",
+                address = "thor1mtqtupwgjwn397w3dx9fqmqgzrjcal5yxz8q7v",
+                fiat = "$32,201.15",
+                native = "32,020.12 RUNE",
+            ),
+            deFiAccount(
+                chain = Chain.Ethereum,
+                chainName = "Ethereum",
+                address = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+                fiat = "$7,400.00",
+                assets = 4,
+            ),
+            deFiAccount(
+                chain = Chain.MayaChain,
+                chainName = "Maya",
+                address = "maya1mtqtupwgjwn397w3dx9fqmqgzrjcal5yxz8q7v",
+                fiat = "$1,240.50",
+                assets = 3,
+            ),
+            deFiAccount(
+                chain = Chain.Solana,
+                chainName = "Solana",
+                address = "8FE27ioQh3T7o22QsYVT5Re8NnHFqmFNbdqwiF3ywuZQ",
+                fiat = "$990.00",
+                assets = 3,
+            ),
+            deFiAccount(
+                chain = Chain.Tron,
+                chainName = "Tron",
+                address = "TXYZopq123abc456def789ghi012jkl345mno678",
+                fiat = "$865.75",
+                native = "10,829.10 TRX",
+            ),
+        )
+
+    androidx.compose.foundation.layout.Box(
+        modifier =
+            Modifier.fillMaxSize()
+                .background(com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.primary)
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+    ) {
+        androidx.compose.foundation.layout.Column(
+            modifier =
+                Modifier.background(
+                    color = com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.secondary,
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                )
+        ) {
+            AccountList(
+                onAccountClick = {},
+                snackbarState = rememberVsSnackbarState(),
+                accounts = accounts,
+                isBalanceVisible = true,
+                showAddress = false,
+            )
+        }
+    }
+}
+
+private fun deFiAccount(
+    chain: Chain,
+    chainName: String,
+    address: String,
+    fiat: String,
+    native: String? = null,
+    assets: Int = 0,
+): AccountUiModel =
+    AccountUiModel(
+        model = Address(chain = chain, address = address, accounts = emptyList()),
+        chainName = chainName,
+        logo = chain.logo,
+        address = address,
+        nativeTokenAmount = native,
+        fiatAmount = fiat,
+        assetsSize = assets,
+    )
+
+@Composable
+private fun ShareQrKeysignPreview() {
+    val context = LocalContext.current
+    val usdcIcon = remember { BitmapFactory.decodeResource(context.resources, R.drawable.usdc) }
+    ShareQrPreview(
+        info =
+            QrShareInfo(
+                title = "Join Keysign",
+                fields =
+                    listOf(
+                        QrShareField("Vault", "Honeypot Vault DKLS"),
+                        QrShareField("Amount", "100 USDC", usdcIcon),
+                        QrShareField("To", "0xe3F83...6CE1e8b2"),
+                    ),
+            )
+    )
+}
+
+@Composable
+private fun ShareQrKeysignSwapPreview() {
+    val context = LocalContext.current
+    val srcIcon = remember { BitmapFactory.decodeResource(context.resources, R.drawable.usdc) }
+    val dstIcon = remember { BitmapFactory.decodeResource(context.resources, R.drawable.bitcoin) }
+    ShareQrPreview(
+        info =
+            QrShareInfo(
+                title = "Join Keysign Swap",
+                fields =
+                    listOf(
+                        QrShareField("Vault", "Honeypot Vault DKLS"),
+                        QrShareField("From", "100 USDC", srcIcon),
+                        QrShareField("To", "0.0012 BTC", dstIcon),
+                    ),
+            )
+    )
+}
+
+@Composable
+private fun ShareQrKeygenPreview() {
+    ShareQrPreview(
+        info =
+            QrShareInfo(
+                title = "Join Keygen",
+                fields =
+                    listOf(
+                        QrShareField("Vault", "Honeypot Vault DKLS"),
+                        QrShareField("Type", "Fast Vault"),
+                    ),
+            )
+    )
+}
+
+// -------------------------------------------------------------------------
+// Blockaid hero previews — issue #4095
+//
+// Each preview renders a full screen (verify or done) with mocked vault state
+// but the same `HeroContent` shape produced by the real flow. Token logos /
+// fiat balances are mocked; the hero shape (transfer / swap / unverified)
+// matches what the production parser produces from a real Blockaid response.
+// Used to capture screenshots for the PR before/after comparison.
+// -------------------------------------------------------------------------
+
+@Composable
+private fun BlockaidHeroVerifySendPreview() {
+    VerifySendScreen(
+        state = blockaidHeroSendState(),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun BlockaidHeroVerifySwapPreview() {
+    VerifySendScreen(
+        state = blockaidHeroSwapState(),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun BlockaidHeroVerifyUnverifiedPreview() {
+    VerifySendScreen(
+        state = blockaidHeroUnverifiedState(),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun BlockaidHeroVerifyScanningPreview() {
+    VerifySendScreen(
+        state = blockaidHeroSendState().copy(txScanStatus = TransactionScanStatus.Scanning),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun BlockaidHeroVerifyNotScannedPreview() {
+    VerifySendScreen(
+        state =
+            blockaidHeroSendState()
+                .copy(
+                    txScanStatus =
+                        TransactionScanStatus.Error(
+                            message = "chain not supported",
+                            provider = "blockaid",
+                        )
+                ),
+        isConsentsEnabled = true,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun BlockaidHeroDoneSendPreview() {
+    TransactionDoneView(
+        showToolbar = true,
+        transactionHash = "0xabc123def456...",
+        approveTransactionHash = "",
+        transactionLink = "https://etherscan.io/tx/0xabc123",
+        approveTransactionLink = "",
+        onComplete = {},
+        onBack = {},
+        onUriClick = {},
+        transactionTypeUiModel = TransactionTypeUiModel.Send(blockaidHeroSendDetails()),
+    )
+}
+
+@Composable
+private fun BlockaidHeroDoneSwapPreview() {
+    TransactionDoneView(
+        showToolbar = true,
+        transactionHash = "0xabc123def456...",
+        approveTransactionHash = "",
+        transactionLink = "https://etherscan.io/tx/0xabc123",
+        approveTransactionLink = "",
+        onComplete = {},
+        onBack = {},
+        onUriClick = {},
+        transactionTypeUiModel = TransactionTypeUiModel.Send(blockaidHeroSwapDetails()),
+    )
+}
+
+@Composable
+private fun BlockaidPopupHighRiskPreview() {
+    BlockaidPopupOverlay(
+        title = "High risk transaction detected",
+        description =
+            "This transaction involves a malicious address. Interacting with it may compromise your assets. Proceed only if you are certain.",
+        iconRes = com.vultisig.wallet.R.drawable.ic_triangle_alert,
+        iconColor = Theme.v2.colors.alerts.error,
+    )
+}
+
+@Composable
+private fun BlockaidPopupMediumRiskPreview() {
+    BlockaidPopupOverlay(
+        title = "Medium risk transaction detected",
+        description =
+            "This transaction involves a malicious address. Interacting with it may compromise your assets. Proceed only if you are certain.",
+        iconRes = com.vultisig.wallet.R.drawable.alert,
+        iconColor = Theme.v2.colors.alerts.warning,
+    )
+}
+
+/**
+ * Renders the security scanner popup the way users actually see it: a modal sheet docked to the
+ * bottom of the screen, sitting on top of a scrim that partially obscures the verify screen behind.
+ * Mirrors Figma node 39852:64136 (high-risk variant) and 39852:64319 (medium-risk variant) where
+ * the sheet occupies only the bottom portion of the screen with the dApp transaction card still
+ * visible (and dimmed) above.
+ */
+@Composable
+private fun BlockaidPopupOverlay(
+    title: String,
+    description: String,
+    iconRes: Int,
+    iconColor: androidx.compose.ui.graphics.Color,
+) {
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.background)
+    ) {
+        // Stand-in for the verify screen visible behind the modal.
+        VerifySendScreen(
+            state = blockaidHeroSendState(),
+            isConsentsEnabled = true,
+            confirmTitle = "Sign",
+            onFastSignClick = {},
+            onConfirm = {},
+            onConsentAddress = {},
+            onConsentAmount = {},
+            onBackClick = {},
+            onConfirmScanning = {},
+            onDismissScanning = {},
+            hasToolbar = true,
+        )
+
+        // Scrim — Material's bottom-sheet scrim is black @ ~32% alpha.
+        androidx.compose.foundation.layout.Box(
+            modifier =
+                Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color(0x99000000))
+        )
+
+        // Sheet docked at the bottom with rounded top corners.
+        androidx.compose.foundation.layout.Box(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .align(androidx.compose.ui.Alignment.BottomCenter)
+                    .background(
+                        color = Theme.v2.colors.backgrounds.background,
+                        shape =
+                            androidx.compose.foundation.shape.RoundedCornerShape(
+                                topStart = 38.dp,
+                                topEnd = 38.dp,
+                            ),
+                    )
+        ) {
+            com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetContent(
+                contentStyle =
+                    com.vultisig.wallet.ui.components.securityscanner
+                        .SecurityScannerBottomSheetStyle(
+                            title = title,
+                            description = description,
+                            image = iconRes,
+                            imageColor = iconColor,
+                        ),
+                securityScannerProvider = "blockaid",
+                onDismissRequest = {},
+                onContinueAnyway = {},
+            )
+        }
+    }
+}
+
+@Composable
+private fun BlockaidHeroDoneUnverifiedPreview() {
+    TransactionDoneView(
+        showToolbar = true,
+        transactionHash = "0xabc123def456...",
+        approveTransactionHash = "",
+        transactionLink = "https://etherscan.io/tx/0xabc123",
+        approveTransactionLink = "",
+        onComplete = {},
+        onBack = {},
+        onUriClick = {},
+        transactionTypeUiModel = TransactionTypeUiModel.Send(blockaidHeroUnverifiedDetails()),
+    )
+}
+
+// ---- Fixtures ----
+
+private fun blockaidHeroSendDetails(): TransactionDetailsUiModel {
+    val ethCoin = Coins.Ethereum.ETH
+    return TransactionDetailsUiModel(
+        token = ValuedToken(token = ethCoin, value = "0", fiatValue = "$0.00"),
+        srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+        srcVaultName = "Honeypot Vault DKLS",
+        dstAddress = "0x9876543210FeDcBa9876543210FeDcBa98765432",
+        dstLabel = "Aave V3: Pool",
+        memo =
+            "0xa9059cbb000000000000000000000000fedcba98765432109876543210fedcba9876543200000000000000000000000000000000000000000000000000000000077359400",
+        functionName = "Approve",
+        functionSignature = "approve(address,uint256)",
+        functionInputs =
+            "[\n  {\"name\": \"spender\", \"value\": \"0x9876...432\"},\n  {\"name\": \"amount\", \"value\": \"125000000\"}\n]",
+        networkFeeFiatValue = "$1.84",
+        networkFeeTokenValue = "0.000482 ETH",
+        heroContent =
+            HeroContent.Send(
+                title = "Approve",
+                coin =
+                    HeroCoinAmount(
+                        amount = "125",
+                        ticker = "USDC",
+                        logo = "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+                    ),
+            ),
+    )
+}
+
+private fun blockaidHeroSwapDetails(): TransactionDetailsUiModel {
+    val ethCoin = Coins.Ethereum.ETH
+    return TransactionDetailsUiModel(
+        token = ValuedToken(token = ethCoin, value = "1.0", fiatValue = "$3,847.50"),
+        srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+        srcVaultName = "Honeypot Vault DKLS",
+        dstAddress = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+        dstLabel = "Uniswap V3: Router 2",
+        memo = "0x5ae401dc...",
+        functionName = "Multicall",
+        functionSignature = "multicall(uint256,bytes[])",
+        functionInputs = "[{\"name\": \"deadline\", \"value\": \"1730000000\"}]",
+        networkFeeFiatValue = "$4.15",
+        networkFeeTokenValue = "0.00108 ETH",
+        heroContent =
+            HeroContent.Swap(
+                title = "Multicall",
+                from = HeroCoinAmount(amount = "1", ticker = "ETH", logo = ""),
+                to =
+                    HeroCoinAmount(
+                        amount = "3,150.42",
+                        ticker = "USDC",
+                        logo = "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+                    ),
+            ),
+    )
+}
+
+private fun blockaidHeroUnverifiedDetails(): TransactionDetailsUiModel {
+    val ethCoin = Coins.Ethereum.ETH
+    return TransactionDetailsUiModel(
+        token = ValuedToken(token = ethCoin, value = "0", fiatValue = "$0.00"),
+        srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+        srcVaultName = "Honeypot Vault DKLS",
+        dstAddress = "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+        dstLabel = "Unknown Contract",
+        memo = "0xdeadbeef00000000000000000000000000000000",
+        functionName = "Pause",
+        functionSignature = "pause()",
+        functionInputs = "[]",
+        networkFeeFiatValue = "$0.95",
+        networkFeeTokenValue = "0.00025 ETH",
+        heroContent = HeroContent.Unverified,
+    )
+}
+
+private fun blockaidHeroSendState() =
+    VerifyTransactionUiModel(
+        transaction = blockaidHeroSendDetails(),
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = true,
+        txScanStatus =
+            TransactionScanStatus.Scanned(
+                SecurityScannerResult(
+                    provider = "blockaid",
+                    isSecure = true,
+                    riskLevel = SecurityRiskLevel.NONE,
+                    warnings = emptyList(),
+                    description = "Transaction is safe",
+                    recommendations = "",
+                )
+            ),
+    )
+
+private fun blockaidHeroSwapState() =
+    VerifyTransactionUiModel(
+        transaction = blockaidHeroSwapDetails(),
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = true,
+        txScanStatus =
+            TransactionScanStatus.Scanned(
+                SecurityScannerResult(
+                    provider = "blockaid",
+                    isSecure = true,
+                    riskLevel = SecurityRiskLevel.NONE,
+                    warnings = emptyList(),
+                    description = "Transaction is safe",
+                    recommendations = "",
+                )
+            ),
+    )
+
+private fun blockaidHeroUnverifiedState() =
+    VerifyTransactionUiModel(
+        transaction = blockaidHeroUnverifiedDetails(),
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = true,
+        // No security scanner result — this case maps to the title-only hero
+        // because Blockaid couldn't simulate (chain unsupported / 0x function
+        // body / network failure).
+        txScanStatus = TransactionScanStatus.NotStarted,
+    )
+
+@Composable
+private fun SelectChainPopupPreview() {
+    val density = LocalDensity.current
+    val configuration = LocalConfiguration.current
+
+    val networks =
+        listOf(
+            Chain.Ethereum.toNetworkUiModel(),
+            Chain.Bitcoin.toNetworkUiModel(),
+            Chain.Solana.toNetworkUiModel(),
+            Chain.ThorChain.toNetworkUiModel(),
+            Chain.MayaChain.toNetworkUiModel(),
+            Chain.BitcoinCash.toNetworkUiModel(),
+            Chain.Hyperliquid.toNetworkUiModel(),
+            Chain.TerraClassic.toNetworkUiModel(),
+        )
+
+    val pressX = with(density) { (configuration.screenWidthDp.dp / 2).toPx() }
+    val pressY = with(density) { (configuration.screenHeightDp.dp / 2).toPx() }
+
+    SwapScreen(state = SwapFormUiModel(), srcAmountTextFieldState = TextFieldState())
+
+    SelectPopup(
+        uiModel =
+            SelectPopupUiModel(
+                items = networks,
+                initialIndex = 2,
+                isLongPressActive = true,
+                pressPosition = Offset(pressX, pressY),
+            ),
+        key = { it.chain },
+        onItemSelected = {},
+        itemContent = { item, distanceFromCenter ->
+            ChainSelectorPickerItem(item = item, distanceFromCenter = distanceFromCenter)
+        },
+    )
+}
+
+@Composable
+private fun ShareQrPreview(info: QrShareInfo) {
+    val context = LocalContext.current
+    val bgColor = Theme.v2.colors.backgrounds.primary
+    val bitmap =
+        remember(info) {
+            val entry =
+                EntryPointAccessors.fromApplication(
+                    context.applicationContext,
+                    ShareQrPreviewEntryPoint::class.java,
+                )
+            val qr =
+                entry
+                    .generateQrBitmap()
+                    .invoke(
+                        "vultisig://preview/${info.title.replace(" ", "_")}",
+                        Color.White,
+                        Color.Transparent,
+                        null,
+                    )
+            val logo = BitmapFactory.decodeResource(context.resources, R.drawable.logo)
+            entry.makeQrCodeBitmapShareFormat().invoke(context, qr, bgColor.toArgb(), logo, info)
+        }
+    Box(
+        modifier = Modifier.fillMaxSize().background(bgColor).padding(16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }

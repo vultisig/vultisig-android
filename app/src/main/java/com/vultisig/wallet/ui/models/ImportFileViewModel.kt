@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.DefaultDispatcher
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.common.fileName
@@ -38,9 +39,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 internal data class ImportFileState(
@@ -74,6 +77,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val snackBarFlow: SnackbarFlow,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.ImportVault>()
@@ -95,11 +99,15 @@ constructor(
         val vaultFileContent = uiModel.value.fileContent
         if (!vaultFileContent.isNullOrBlank()) {
             viewModelScope.launch {
-                val result = saveToDb(vaultFileContent, key)
-                hidePasswordPromptDialog()
-                when (result) {
-                    SaveResult.Success -> showSuccessImport()
-                    SaveResult.Duplicate -> showDuplicateError()
+                when (saveToDb(vaultFileContent, key)) {
+                    SaveResult.Success -> {
+                        hidePasswordPromptDialog()
+                        showSuccessImport()
+                    }
+                    SaveResult.Duplicate -> {
+                        hidePasswordPromptDialog()
+                        showDuplicateError()
+                    }
                     SaveResult.Failed -> showErrorHint()
                 }
             }
@@ -118,7 +126,9 @@ constructor(
 
     private suspend fun saveToDb(fileContent: String, password: String?): SaveResult =
         try {
-            insertVaultToDb(parseVaultFromString(fileContent, password))
+            val vault =
+                withContext(defaultDispatcher) { parseVaultFromString(fileContent, password) }
+            insertVaultToDb(vault)
             SaveResult.Success
         } catch (e: DuplicateVaultException) {
             Timber.e(e)
@@ -185,6 +195,9 @@ constructor(
         vaultDataStoreRepository.setBackupStatus(adjustedVault.id, true)
         discoverToken(adjustedVault.id, null)
 
+        // MLDSA capability is sticky across hide/restore. Hiding QBTC from the chain list
+        // doesn't strip the key from the backup, so a restored vault always re-adds the QBTC
+        // token — the user may still hold funds there.
         if (adjustedVault.pubKeyMLDSA.isNotBlank()) {
             val qbtcToken = Coins.Qbtc.QBTC
             val (address, pubKey) =
@@ -225,6 +238,18 @@ constructor(
         val uri = uiModel.value.fileUri ?: return
         viewModelScope.launch {
             val fileContent = uri.fileContent(context)
+            if (fileContent == null) {
+                uiModel.update {
+                    it.copy(
+                        fileUri = null,
+                        fileName = null,
+                        fileContent = null,
+                        isZip = null,
+                        error = UiText.StringResource(R.string.import_file_not_supported),
+                    )
+                }
+                return@launch
+            }
             uiModel.update { it.copy(fileContent = fileContent) }
             parseFileContent()
         }

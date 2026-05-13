@@ -237,7 +237,8 @@ fun KeysignPasswordSheetContent(
 @Preview
 @Composable
 private fun KeysignPasswordScreenPreview() {
-    InputPasswordScreen(
+    KeysignPasswordSheetContent(
+        title = stringResource(R.string.keysign_password_enter_your_password),
         subtitle = "Enter your password to unlock your Server Share and start the upgrade",
         state = KeysignPasswordUiModel(passwordHint = UiText.DynamicString("Hint")),
         passwordFieldState = TextFieldState(),

@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BasicFee
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
+import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.chains.helpers.BittensorHelper
 import com.vultisig.wallet.data.models.Chain
@@ -19,6 +20,11 @@ import kotlinx.coroutines.coroutineScope
 internal class BittensorFeeService @Inject constructor(private val bittensorApi: BittensorApi) :
     FeeService {
     override suspend fun calculateFees(transaction: BlockchainTransaction): Fee {
+        // Bittensor extrinsic build is Transfer-shaped. A Swap carries opaque callData so fall back
+        // to the constant estimate — TAO has no live swap provider today.
+        if (transaction is Swap) {
+            return calculateDefaultFees(transaction)
+        }
         require(transaction is Transfer) {
             "Invalid Transaction type: ${transaction::class.simpleName}"
         }

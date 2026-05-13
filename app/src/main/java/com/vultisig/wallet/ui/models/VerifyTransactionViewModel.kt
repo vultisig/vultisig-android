@@ -6,9 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.FourByteRepository
+import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -17,7 +21,14 @@ import com.vultisig.wallet.data.securityscanner.SecurityScannerContract
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.models.keysign.FunctionInfo
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
+import com.vultisig.wallet.ui.models.keysign.approvalSpenderArgIndex
+import com.vultisig.wallet.ui.models.keysign.isTokenContractApproval
+import com.vultisig.wallet.ui.models.keysign.isUnlimitedApproval
+import com.vultisig.wallet.ui.models.keysign.prettifyEvmFunctionName
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.navigation.Destination
@@ -30,14 +41,21 @@ import com.vultisig.wallet.ui.utils.handleSigningFlowCommon
 import com.vultisig.wallet.ui.utils.normalizeAddressForLookup
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
+import vultisig.keysign.v1.SignTon
 
 @Immutable
 internal data class TransactionDetailsUiModel(
@@ -54,6 +72,28 @@ internal data class TransactionDetailsUiModel(
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,
+    val signTon: SignTon? = null,
+    val functionSignature: String? = null,
+    val functionInputs: String? = null,
+    val functionName: String? = null,
+    /**
+     * True when the transaction is an ERC-20 approval call with an effectively unlimited amount.
+     */
+    val isUnlimitedApproval: Boolean = false,
+    /** The address being granted the unlimited allowance (args[0] of the approval call). */
+    val approvalSpender: String? = null,
+    /**
+     * Resolved ERC-20 ticker for the token contract being approved (overrides native coin ticker).
+     */
+    val approvalTokenTicker: String? = null,
+    /**
+     * Resolved hero content for the dApp signing screens. Populated by [BuildHeroContentUseCase]
+     * once the Blockaid simulation completes. When non-null, screens render this in place of the
+     * function-name title or the native-amount `VsOverviewToken`. When null, screens fall back to
+     * the existing display logic (function-name title for EVM contract calls, otherwise native
+     * amount).
+     */
+    val heroContent: HeroContent? = null,
 )
 
 @Immutable
@@ -63,8 +103,6 @@ internal data class VerifyTransactionUiModel(
     val consentAmount: Boolean = false,
     val errorText: UiText? = null,
     val hasFastSign: Boolean = false,
-    val functionSignature: String? = null,
-    val functionInputs: String? = null,
     val txScanStatus: TransactionScanStatus = TransactionScanStatus.NotStarted,
     val showScanningWarning: Boolean = false,
     val isLoadingFees: Boolean = false,
@@ -73,6 +111,13 @@ internal data class VerifyTransactionUiModel(
         get() = consentAddress && consentAmount
 }
 
+/**
+ * Annotated [Immutable] so the Compose compiler treats every variant as stable for skipping. The
+ * inner [SecurityScannerResult] holds a `List<SecurityWarning>` which Compose infers as unstable,
+ * but in practice the list is never mutated post-construction; the annotation closes that gap so
+ * `VerifyTransactionUiModel`'s own `@Immutable` declaration is not silently downgraded.
+ */
+@Immutable
 sealed class TransactionScanStatus {
     data object NotStarted : TransactionScanStatus()
 
@@ -97,6 +142,9 @@ constructor(
     private val securityScannerService: SecurityScannerContract,
     private val vaultRepository: VaultRepository,
     private val addressBookRepository: AddressBookRepository,
+    private val fourByteRepository: FourByteRepository,
+    @param:PrettyJson private val json: Json,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.VerifySend>()
@@ -106,7 +154,8 @@ constructor(
 
     private var transaction: Transaction? = null
 
-    val uiState = MutableStateFlow(VerifyTransactionUiModel())
+    private val _uiState = MutableStateFlow(VerifyTransactionUiModel())
+    val uiState: StateFlow<VerifyTransactionUiModel> = _uiState.asStateFlow()
     private val password = MutableStateFlow<String?>(null)
 
     private val _fastSignFlow = Channel<Boolean>()
@@ -121,11 +170,11 @@ constructor(
     }
 
     fun checkConsentAddress(checked: Boolean) {
-        viewModelScope.launch { uiState.update { it.copy(consentAddress = checked) } }
+        viewModelScope.launch { _uiState.update { it.copy(consentAddress = checked) } }
     }
 
     fun checkConsentAmount(checked: Boolean) {
-        viewModelScope.launch { uiState.update { it.copy(consentAmount = checked) } }
+        viewModelScope.launch { _uiState.update { it.copy(consentAmount = checked) } }
     }
 
     fun authFastSign() {
@@ -144,28 +193,28 @@ constructor(
     fun joinKeySign() {
         _fastSign = false
         handleSigningFlowCommon(
-            txScanStatus = uiState.value.txScanStatus,
-            showWarning = { uiState.update { it.copy(showScanningWarning = true) } },
+            txScanStatus = _uiState.value.txScanStatus,
+            showWarning = { _uiState.update { it.copy(showScanningWarning = true) } },
             onSign = { keysign(KeysignInitType.QR_CODE) },
         )
     }
 
     private fun joinKeySignAndSkipWarnings() {
-        uiState.update { it.copy(showScanningWarning = false) }
+        _uiState.update { it.copy(showScanningWarning = false) }
         keysign(KeysignInitType.QR_CODE)
     }
 
     fun fastSign() {
         _fastSign = true
         handleSigningFlowCommon(
-            txScanStatus = uiState.value.txScanStatus,
-            showWarning = { uiState.update { it.copy(showScanningWarning = true) } },
+            txScanStatus = _uiState.value.txScanStatus,
+            showWarning = { _uiState.update { it.copy(showScanningWarning = true) } },
             onSign = { fastSignAndSkipWarnings() },
         )
     }
 
     private fun fastSignAndSkipWarnings() {
-        uiState.update { it.copy(showScanningWarning = false) }
+        _uiState.update { it.copy(showScanningWarning = false) }
 
         if (!tryToFastSignWithPassword()) {
             viewModelScope.launch { _fastSignFlow.send(true) }
@@ -181,11 +230,11 @@ constructor(
     }
 
     fun dismissError() {
-        uiState.update { it.copy(errorText = null) }
+        _uiState.update { it.copy(errorText = null) }
     }
 
     fun dismissScanningWarning() {
-        uiState.update { it.copy(showScanningWarning = false) }
+        _uiState.update { it.copy(showScanningWarning = false) }
     }
 
     fun back() {
@@ -193,7 +242,7 @@ constructor(
     }
 
     private fun keysign(keysignInitType: KeysignInitType) {
-        if (uiState.value.hasAllConsents) {
+        if (_uiState.value.hasAllConsents) {
             viewModelScope.launch {
                 launchKeysign(
                     keysignInitType,
@@ -204,7 +253,7 @@ constructor(
                 )
             }
         } else {
-            uiState.update {
+            _uiState.update {
                 it.copy(
                     errorText =
                         UiText.StringResource(R.string.verify_transaction_error_not_enough_consent)
@@ -220,23 +269,24 @@ constructor(
     private fun loadFastSign() {
         viewModelScope.launch {
             val hasFastSign = isVaultHasFastSignById(vaultId)
-            uiState.update { it.copy(hasFastSign = hasFastSign) }
+            _uiState.update { it.copy(hasFastSign = hasFastSign) }
         }
     }
 
     private fun loadTransaction() {
-        viewModelScope.launch {
-            transaction =
-                runCatching { transactionRepository.getTransaction(transactionId) }
-                    .getOrElse {
-                        Timber.e(it, "Failed to load transaction")
-                        navigator.back()
-                        return@launch
-                    }
-            val tx = transaction ?: return@launch
+        viewModelScope.safeLaunch(
+            onError = {
+                Timber.e(it, "Failed to load transaction")
+                navigator.back()
+            }
+        ) {
+            val tx =
+                transactionRepository.getTransaction(transactionId)
+                    ?: error("Transaction not found: $transactionId")
+            transaction = tx
             val transactionUiModel = mapTransactionToUiModel(tx)
 
-            val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
+            val allVaults = withContext(ioDispatcher) { vaultRepository.getAll() }
             val chain = tx.token.chain
             val srcVaultName = allVaults.find { it.id == vaultId }?.name
             val normalizedDstAddress = normalizeAddressForLookup(tx.dstAddress)
@@ -257,14 +307,64 @@ constructor(
                         .getOrNull()
                 } else null
 
+            val memo = tx.memo
+            val functionInfo =
+                if (chain.standard == TokenStandard.EVM && !memo.isNullOrEmpty()) {
+                    withContext(ioDispatcher) {
+                        val sig = fourByteRepository.decodeFunction(memo) ?: return@withContext null
+                        FunctionInfo(
+                            signature = sig,
+                            inputs = fourByteRepository.decodeFunctionArgs(sig, memo),
+                            functionName = prettifyEvmFunctionName(sig),
+                        )
+                    }
+                } else null
+            val isUnlimitedApproval =
+                functionInfo != null &&
+                    isUnlimitedApproval(functionInfo.signature, functionInfo.inputs, json)
+            val approvalSpender =
+                if (isUnlimitedApproval) {
+                    val spenderIdx = approvalSpenderArgIndex(functionInfo?.signature ?: "")
+                    if (spenderIdx != null) {
+                        runCatching {
+                                json
+                                    .parseToJsonElement(functionInfo?.inputs ?: "[]")
+                                    .jsonArray
+                                    .getOrNull(spenderIdx)
+                                    ?.jsonPrimitive
+                                    ?.content
+                                    ?.trim()
+                                    ?.takeIf { it.isNotEmpty() }
+                            }
+                            .onFailure { if (it is CancellationException) throw it }
+                            .getOrNull()
+                    } else null
+                } else null
+            val approvalTokenTicker =
+                if (isUnlimitedApproval && isTokenContractApproval(functionInfo?.signature ?: "")) {
+                    allVaults
+                        .flatMap { it.coins }
+                        .firstOrNull { coin ->
+                            coin.chain == chain &&
+                                coin.contractAddress.equals(tx.dstAddress, ignoreCase = true)
+                        }
+                        ?.ticker
+                } else null
+
             val namedUiModel =
                 transactionUiModel.copy(
                     srcVaultName = srcVaultName,
                     dstVaultName = dstVaultName,
                     dstAddressBookTitle = dstAddressBookTitle,
+                    functionSignature = functionInfo?.signature,
+                    functionInputs = functionInfo?.inputs,
+                    functionName = functionInfo?.functionName,
+                    isUnlimitedApproval = isUnlimitedApproval,
+                    approvalSpender = approvalSpender,
+                    approvalTokenTicker = approvalTokenTicker,
                 )
 
-            uiState.update { it.copy(transaction = namedUiModel) }
+            _uiState.update { it.copy(transaction = namedUiModel) }
 
             scanTransaction()
         }
@@ -281,22 +381,22 @@ constructor(
 
             if (!isSupported) return
 
-            uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
+            _uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanning) }
 
             val securityScannerTransaction =
                 securityScannerService.createSecurityScannerTransaction(tx)
 
             val result =
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     securityScannerService.scanTransaction(securityScannerTransaction)
                 }
 
-            uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
+            _uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
         } catch (t: Throwable) {
             val errorMessage = "Security scan failed ${t.message}"
             Timber.e(t, errorMessage)
 
-            uiState.update {
+            _uiState.update {
                 val message = t.message ?: errorMessage
                 it.copy(
                     txScanStatus =
