@@ -466,6 +466,11 @@ constructor(
             if (!skipBroadcast()) {
                 broadcastTransaction()
                 checkThorChainTxResult()
+            } else {
+                // Broadcast intentionally skipped (PSBT co-signing or other
+                // dApp-orchestrated flow); transition past the spinner so the
+                // UI doesn't hang waiting for a broadcast that will never happen.
+                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             }
             if (customMessagePayload != null) {
                 // For custom message signing, we consider the flow complete after signing without
@@ -482,7 +487,13 @@ constructor(
     }
 
     private fun skipBroadcast(): Boolean {
-        val flag = keysignPayload?.skipBroadcast ?: false
+        val payload = keysignPayload
+        if (payload?.signBitcoin != null) {
+            // PSBT co-signing: only the dApp orchestrating the session can assemble
+            // the final signed transaction, so the wallet must never broadcast.
+            return true
+        }
+        val flag = payload?.skipBroadcast ?: false
         Timber.d("SkipBroadcastFlag, value: $flag")
         return flag
     }
