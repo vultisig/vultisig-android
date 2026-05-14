@@ -13,10 +13,10 @@ enum class BondNodeState(val state: String) {
             when (this) {
                 WHITELISTED,
                 STANDBY,
+                DISABLED,
                 UNKNOWN -> true
                 READY,
-                ACTIVE,
-                DISABLED -> false
+                ACTIVE -> false
             }
 
     val canBond: Boolean
