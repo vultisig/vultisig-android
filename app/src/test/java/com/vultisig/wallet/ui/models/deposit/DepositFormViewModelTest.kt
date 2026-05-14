@@ -83,6 +83,9 @@ internal class DepositFormViewModelTest {
     private val getThorChainLpPositionUseCase:
         com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase =
         mockk(relaxed = true)
+    private val thorChainLpPreflight:
+        com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase =
+        mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
@@ -120,6 +123,7 @@ internal class DepositFormViewModelTest {
             gasFeeToEstimate = gasFeeToEstimate,
             requestAddressBookEntry = requestAddressBookEntry,
             getThorChainLpPositionUseCase = getThorChainLpPositionUseCase,
+            thorChainLpPreflight = thorChainLpPreflight,
         )
 
     @Test

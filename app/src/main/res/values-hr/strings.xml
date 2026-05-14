@@ -316,6 +316,9 @@
     <string name="deposit_error_invalid_assets">Sredstva su nevažeća</string>
     <string name="deposit_error_chain_not_enabled">Omogućite %1$s u ovom trezoru za povlačenje %2$s</string>
     <string name="deposit_error_has_not_reached_maturity">Ovaj depozit još nije dostigao rok dospijeća</string>
+    <string name="deposit_error_lp_paused_pool">Dodavanje likvidnosti je pauzirano za %1$s. THORChain bi vratio ovu transakciju.</string>
+    <string name="deposit_error_lp_halted_chain">Akcije likvidnosti na %1$s su trenutno zaustavljene. THORChain bi vratio ovu transakciju.</string>
+    <string name="deposit_error_pool_not_available">Pool %1$s trenutno nije dostupan za depozite.</string>
     <string name="deposit_form_screen_assets">Imovina</string>
     <string name="deposit_form_screen_asset_selection">Odabir imovine</string>
     <string name="deposit_form_screen_lpunits">LP jedinice</string>

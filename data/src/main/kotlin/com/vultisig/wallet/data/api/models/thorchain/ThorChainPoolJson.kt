@@ -12,4 +12,6 @@ data class ThorChainPoolJson(
     @SerialName("asset") val asset: String,
     // asset price in usd with 8 decimals
     @Contextual @SerialName("asset_tor_price") val assetTorPrice: BigInteger,
+    // pool status — typically Available / Staged / Suspended; absent on older endpoints
+    @SerialName("status") val status: String? = null,
 )

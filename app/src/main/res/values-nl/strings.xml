@@ -315,6 +315,9 @@
     <string name="deposit_error_invalid_assets">Activa zijn ongeldig</string>
     <string name="deposit_error_chain_not_enabled">Schakel %1$s in deze kluis in om %2$s op te nemen</string>
     <string name="deposit_error_has_not_reached_maturity">Deze deposito heeft de vervaldatum nog niet bereikt</string>
+    <string name="deposit_error_lp_paused_pool">Liquiditeit toevoegen is gepauzeerd voor %1$s. THORChain zou deze transactie terugbetalen.</string>
+    <string name="deposit_error_lp_halted_chain">Liquiditeitsacties op %1$s zijn momenteel stilgelegd. THORChain zou deze transactie terugbetalen.</string>
+    <string name="deposit_error_pool_not_available">Pool %1$s is momenteel niet beschikbaar voor stortingen.</string>
     <string name="deposit_form_screen_assets">Activa</string>
     <string name="deposit_form_screen_asset_selection">Activaselectie</string>
     <string name="deposit_form_screen_lpunits">LP-eenheden</string>
