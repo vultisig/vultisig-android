@@ -996,6 +996,7 @@
     <string name="amino_direct">Direct 서명</string>
     <string name="transaction_status_confirmed">거래 확인됨</string>
     <string name="transaction_status_failed">거래 실패</string>
+    <string name="transaction_status_refunded">거래 환불됨</string>
     <string name="transaction_status_not_found">거래를 찾을 수 없음</string>
     <string name="transaction_status_pending">거래 대기 중…</string>
     <string name="transaction_status_notification_title">거래 상태</string>
@@ -1033,6 +1034,7 @@
     <string name="transaction_history_clear_filters">필터 초기화</string>
     <string name="transaction_status_confirmed_label">성공</string>
     <string name="transaction_status_failed_label">오류</string>
+    <string name="transaction_status_refunded_label">환불됨</string>
     <string name="transaction_status_in_progress_label">진행 중…</string>
     <string name="transaction_history_to_label">수신</string>
     <string name="transaction_history_via_prefix">경유</string>

@@ -14,6 +14,13 @@ sealed class TransactionResult {
     data object TimedOut : TransactionResult()
 
     data class Failed(val reason: String) : TransactionResult()
+
+    /**
+     * The chain accepted the inbound transaction but the network refunded it (e.g. paused pool,
+     * unmet swap limit, full savers capacity). Funds are back with the sender; the intended side
+     * effect did not happen.
+     */
+    data class Refunded(val reason: String) : TransactionResult()
 }
 
 interface TransactionStatusRepository {

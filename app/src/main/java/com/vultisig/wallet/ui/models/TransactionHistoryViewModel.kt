@@ -66,6 +66,12 @@ sealed interface TransactionStatusUiModel {
     data object Confirmed : TransactionStatusUiModel
 
     data class Failed(val reason: UiText?) : TransactionStatusUiModel
+
+    /**
+     * THORChain/MayaChain inbound tx that the network refunded (paused pool, unmet swap limit,
+     * etc.). Funds were returned to the sender; the intended side effect did not happen.
+     */
+    data class Refunded(val reason: UiText?) : TransactionStatusUiModel
 }
 
 sealed interface TransactionHistoryItemUiModel {
@@ -355,6 +361,8 @@ constructor(
                 TransactionStatus.CONFIRMED -> TransactionStatusUiModel.Confirmed
                 TransactionStatus.FAILED ->
                     TransactionStatusUiModel.Failed(UiText.DynamicString(failureReason.orEmpty()))
+                TransactionStatus.REFUNDED ->
+                    TransactionStatusUiModel.Refunded(UiText.DynamicString(failureReason.orEmpty()))
                 // NotFound is transient — the indexer has not seen the tx yet. Render as Pending.
                 TransactionStatus.NotFound ->
                     TransactionStatusUiModel.Pending(elapsedTime = formatElapsed(now - timestamp))
