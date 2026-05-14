@@ -101,6 +101,7 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -252,6 +253,7 @@ constructor(
 
     private var _jobWaitingForKeysignStart: Job? = null
     private var blockaidSimulationJob: Job? = null
+    private val isJoiningKeysign = AtomicBoolean(false)
     private var isNavigateToHome: Boolean = false
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
@@ -1382,13 +1384,16 @@ constructor(
     }
 
     fun joinKeysign() {
-        viewModelScope.launch {
+        if (!isJoiningKeysign.compareAndSet(false, true)) return
+        viewModelScope.safeLaunch {
             withContext(Dispatchers.IO) {
                 try {
                     Timber.tag("JoinKeysignViewModel").d("Joining keysign")
                     sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: HttpException) {
                     Timber.tag("JoinKeysignViewModel")
                         .e(
@@ -1404,12 +1409,13 @@ constructor(
                                 JoinKeysignError.FailedToStart(e.message.toString())
                             )
                         }
+                    isJoiningKeysign.set(false)
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.tag("JoinKeysignViewModel")
                         .e("Failed to join keysign: %s", e.stackTraceToString())
                     currentState.value =
                         JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.message.toString()))
+                    isJoiningKeysign.set(false)
                 }
             }
         }
