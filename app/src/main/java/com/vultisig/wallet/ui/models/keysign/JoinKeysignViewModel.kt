@@ -1511,6 +1511,8 @@ constructor(
             }
         } catch (e: KeysignMessagesException) {
             throw e
+        } catch (ce: CancellationException) {
+            throw ce
         } catch (e: Exception) {
             throw KeysignMessagesException(e.message ?: "Failed to resolve messages to sign")
         }
