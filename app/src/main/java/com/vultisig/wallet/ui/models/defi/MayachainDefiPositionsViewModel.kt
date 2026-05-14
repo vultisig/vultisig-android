@@ -70,7 +70,6 @@ private val MAYA_BOND_POSITIONS_DIALOG: List<PositionUiModelDialog>
                 ticker = Coins.MayaChain.CACAO.ticker,
                 isSelected = true,
                 positionKey = MAYA_BOND_CACAO_KEY,
-                chainLogo = Chain.MayaChain.logo,
             )
         )
 
@@ -82,7 +81,6 @@ private val MAYA_STAKE_POSITIONS_DIALOG: List<PositionUiModelDialog>
                 ticker = Coins.MayaChain.CACAO.ticker,
                 isSelected = true,
                 positionKey = MAYA_STAKE_CACAO_KEY,
-                chainLogo = Chain.MayaChain.logo,
             )
         )
 

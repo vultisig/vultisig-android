@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
@@ -244,15 +245,20 @@ private fun TokenUiGridLogo(modifier: Modifier = Modifier, size: Dp = 28.dp, tok
         )
 
         if (token.chainLogo != null) {
-            SubcomposeAsyncImage(
-                model = token.chainLogo,
-                contentDescription = null,
+            Box(
                 modifier =
                     Modifier.align(Alignment.BottomEnd)
                         .size(size * 0.42f)
                         .clip(CircleShape)
-                        .border(1.dp, Theme.v2.colors.backgrounds.primary, CircleShape),
-            )
+                        .background(Theme.v2.colors.backgrounds.tertiary_2)
+                        .border(1.dp, Theme.v2.colors.backgrounds.primary, CircleShape)
+            ) {
+                AsyncImage(
+                    model = token.chainLogo,
+                    contentDescription = null,
+                    modifier = Modifier.size(size * 0.42f).clip(CircleShape),
+                )
+            }
         }
     }
 }
