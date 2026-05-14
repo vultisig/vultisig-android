@@ -47,6 +47,7 @@ constructor(
             val token = FirebaseMessaging.getInstance().token.await()
             onNewToken(token)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.w(e, "Failed to fetch FCM token")
         }
     }
@@ -66,6 +67,7 @@ constructor(
                     )
                 )
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.w(e, "Failed to re-register vault ${vault.id} with new FCM token")
             }
         }
@@ -127,6 +129,7 @@ constructor(
             }
             vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             throw PushNotificationError.ApiFailure(e)
         }
     }
@@ -171,6 +174,7 @@ constructor(
                 vaultNotificationSettingsDao.setEnabled(vault.id, enabled)
                 successCount++
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.w(e, "Failed to update notification opt-in for vault ${vault.id}")
                 failureCount++
             }

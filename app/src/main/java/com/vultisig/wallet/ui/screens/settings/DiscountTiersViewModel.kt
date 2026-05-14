@@ -131,6 +131,7 @@ constructor(
                                 tiersNFTRepository.saveTierNFT(vaultId, hasNFTValue)
                             }
                         } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e)
                             if (cachedVultBalance == null) {
                                 throw e
@@ -143,6 +144,7 @@ constructor(
                     _state.value = DiscountTiersUiModel(isLoading = false, activeTier = null)
                 }
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "Error loading VULT balance")
                 _state.value = DiscountTiersUiModel(isLoading = false, activeTier = null)
             }
@@ -179,6 +181,7 @@ constructor(
                             }
                             Timber.d("Ethereum chain enabled successfully")
                         } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e, "Failed to enable Ethereum chain")
                         }
                     }
@@ -192,6 +195,7 @@ constructor(
                             }
                             Timber.d("VULT token enabled successfully")
                         } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e, "Failed to enable VULT token")
                         }
                     }
@@ -206,6 +210,7 @@ constructor(
                     )
                 )
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e, "Error preparing swap navigation")
                 navigator.route(
                     Route.Swap(

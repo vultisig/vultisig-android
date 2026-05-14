@@ -37,6 +37,7 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
         return try {
             fetchPrices(priceProviderIdsParam, currenciesParam)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.d(e, "error occurred in getCryptoPrices")
             emptyMap()
         }
@@ -52,6 +53,7 @@ internal class CoinGeckoApiImpl @Inject constructor(private val http: HttpClient
         return try {
             fetchContractPrices(chain.coinGeckoAssetId, priceProviderIdsParam, currenciesParam)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.d(e, "error occurred in getContractsPrice")
             emptyMap()
         }

@@ -111,6 +111,7 @@ constructor(
                 response.body<String>(),
             )
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             return KyberSwapQuoteDeserialized.Error(
                 KyberSwapErrorResponse(message = e.message ?: "Unknown error")
             )
@@ -180,6 +181,7 @@ constructor(
             }
             return response.bodyOrThrow<KyberSwapQuoteJson>()
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             throw SwapException.handleSwapException(e.message.toString())
         }
     }

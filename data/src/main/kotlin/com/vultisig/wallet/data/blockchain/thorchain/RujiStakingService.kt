@@ -80,6 +80,7 @@ constructor(
                 rewardsCoin = RUJI_REWARDS_COIN,
             )
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "RujiStakingService: Failed to fetch RUJI staking details from network")
             throw e
         }

@@ -385,6 +385,7 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
             val responseList = response.body<List<RpcResponse>>()
             responseList.map { CustomTokenResponse(id = it.id, result = it.result) }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.d("find custom token error: ${e.message}")
             emptyList()
         }
@@ -551,7 +552,8 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
                     method = "eth_getTransactionReceipt",
                     params = buildJsonArray { add(txHash) },
                 )
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 null
             }
         return rpcResp

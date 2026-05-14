@@ -344,6 +344,7 @@ constructor(
 
                 saveVault()
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.d(e, "generateKey error")
 
                 state.update { it.copy(error = resolveKeygenErrorFromException(e)) }
@@ -760,6 +761,7 @@ constructor(
 
                 messagePuller.stop()
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 messagePuller.stop()
 
                 Timber.e(e, "attempt $attempt keygenWithRetry failed")
