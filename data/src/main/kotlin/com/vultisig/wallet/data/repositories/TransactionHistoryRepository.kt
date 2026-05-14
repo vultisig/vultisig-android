@@ -69,6 +69,8 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
                     failureReason = result.reason,
                     lastCheckedAt = now,
                 )
+            is TransactionResult.Refunded ->
+                dao.updateToRefunded(txHash = txHash, reason = result.reason, lastCheckedAt = now)
             TransactionResult.Pending ->
                 dao.updateStatus(
                     txHash = txHash,

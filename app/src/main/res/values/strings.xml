@@ -1021,6 +1021,7 @@
     <string name="amino_direct">Direct Sign</string>
     <string name="transaction_status_confirmed">Transaction confirmed</string>
     <string name="transaction_status_failed">Transaction failed</string>
+    <string name="transaction_status_refunded">Transaction refunded</string>
     <string name="transaction_status_not_found">Transaction not found</string>
     <string name="transaction_status_pending">Transaction pending…</string>
     <string name="transaction_status_notification_title">Transaction Status</string>
@@ -1081,6 +1082,7 @@
     <string name="transaction_history_clear_filters">Clear filters</string>
     <string name="transaction_status_confirmed_label">Successful</string>
     <string name="transaction_status_failed_label">Error</string>
+    <string name="transaction_status_refunded_label">Refunded</string>
     <string name="transaction_status_in_progress_label">In progress…</string>
     <string name="transaction_history_to_label">To</string>
     <string name="transaction_history_via_prefix">via</string>

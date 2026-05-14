@@ -176,6 +176,15 @@ sealed interface TransactionStatus {
 
     /** Transaction failed or was rejected. */
     data class Failed(val cause: UiText) : TransactionStatus
+
+    /**
+     * Transaction was accepted by the chain but refunded by the protocol (e.g. THORChain/Maya `type
+     * == "refund"` or `type == "failed"` actions where the user's funds are returned).
+     *
+     * @property reason Human-readable explanation from `metadata.refund.reason` /
+     *   `metadata.failed.reason`, e.g. "deposits are paused for asset (ETH.USDT...)".
+     */
+    data class Refunded(val reason: UiText) : TransactionStatus
 }
 
 /** ViewModel that drives the keysign screen: starts the TSS signing flow and tracks its state. */
@@ -752,6 +761,7 @@ constructor(
                     when (statusResult) {
                         TransactionResult.Confirmed,
                         is TransactionResult.Failed,
+                        is TransactionResult.Refunded,
                         TransactionResult.TimedOut -> {
                             tryUpdateEvmActualFee(txHash, chain)
                             transactionStatusServiceManager.stopPolling()
@@ -855,6 +865,7 @@ constructor(
         when (this) {
             TransactionResult.Confirmed -> TransactionStatus.Confirmed
             is TransactionResult.Failed -> TransactionStatus.Failed(this.reason.asUiText())
+            is TransactionResult.Refunded -> TransactionStatus.Refunded(this.reason.asUiText())
             TransactionResult.TimedOut ->
                 TransactionStatus.Failed("Confirmation taking longer than expected".asUiText())
             TransactionResult.NotFound,
