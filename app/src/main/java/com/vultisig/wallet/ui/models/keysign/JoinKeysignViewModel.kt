@@ -101,6 +101,7 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -229,6 +230,8 @@ constructor(
         private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
     }
 
+    private class KeysignMessagesException(message: String) : Exception(message)
+
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
     private val vaultId: String = args.vaultId
     private val qrBase64: String = args.qr
@@ -250,6 +253,7 @@ constructor(
 
     private var _jobWaitingForKeysignStart: Job? = null
     private var blockaidSimulationJob: Job? = null
+    private val isJoiningKeysign = AtomicBoolean(false)
     private var isNavigateToHome: Boolean = false
 
     private var transactionTypeUiModel: TransactionTypeUiModel? = null
@@ -1380,13 +1384,16 @@ constructor(
     }
 
     fun joinKeysign() {
-        viewModelScope.launch {
+        if (!isJoiningKeysign.compareAndSet(false, true)) return
+        viewModelScope.safeLaunch {
             withContext(Dispatchers.IO) {
                 try {
                     Timber.tag("JoinKeysignViewModel").d("Joining keysign")
                     sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: HttpException) {
                     Timber.tag("JoinKeysignViewModel")
                         .e(
@@ -1402,12 +1409,13 @@ constructor(
                                 JoinKeysignError.FailedToStart(e.message.toString())
                             )
                         }
+                    isJoiningKeysign.set(false)
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.tag("JoinKeysignViewModel")
                         .e("Failed to join keysign: %s", e.stackTraceToString())
                     currentState.value =
                         JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.message.toString()))
+                    isJoiningKeysign.set(false)
                 }
             }
         }
@@ -1445,11 +1453,21 @@ constructor(
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
                     while (isActive) {
-                        if (checkKeygenStarted()) {
-                            currentState.value = JoinKeysignState.Keysign
+                        try {
+                            if (checkKeygenStarted()) {
+                                currentState.value = JoinKeysignState.Keysign
+                                return@withContext
+                            }
+                        } catch (e: KeysignMessagesException) {
+                            Timber.e(e, "Failed to prepare messages to sign")
+                            currentState.value =
+                                JoinKeysignState.Error(
+                                    JoinKeysignError.FailedToCheck(
+                                        e.message ?: "Failed to prepare messages to sign"
+                                    )
+                                )
                             return@withContext
                         }
-                        // backoff 1s
                         delay(1000)
                     }
                 }
@@ -1462,38 +1480,48 @@ constructor(
             Timber.d("Keysign committee: $_keysignCommittee")
             Timber.d("local party: $_localPartyID")
             if (this._keysignCommittee.contains(_localPartyID)) {
-                when {
-                    _keysignPayload != null -> {
-                        val payload = _keysignPayload ?: error("keysignPayload unexpectedly null")
-                        messagesToSign =
-                            SigningHelper.getKeysignMessages(
-                                payload = payload,
-                                vault = _currentVault,
-                            )
-                    }
-
-                    customMessagePayload != null -> {
-                        val payload =
-                            customMessagePayload ?: error("customMessagePayload unexpectedly null")
-                        messagesToSign = SigningHelper.getKeysignMessages(payload)
-                    }
-
-                    else -> {
-                        Timber.e("Both keysign payload and custom message payload are null")
-                        currentState.value = JoinKeysignState.Error(JoinKeysignError.InvalidQr)
-                        return false
-                    }
-                }
-
+                resolveMessagesToSign()
                 return true
             }
+        } catch (e: KeysignMessagesException) {
+            throw e
+        } catch (ce: CancellationException) {
+            throw ce
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to check keysign start")
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
         }
         return false
+    }
+
+    private fun resolveMessagesToSign() {
+        try {
+            when {
+                _keysignPayload != null -> {
+                    val payload = _keysignPayload ?: error("keysignPayload unexpectedly null")
+                    messagesToSign =
+                        SigningHelper.getKeysignMessages(payload = payload, vault = _currentVault)
+                }
+
+                customMessagePayload != null -> {
+                    val payload =
+                        customMessagePayload ?: error("customMessagePayload unexpectedly null")
+                    messagesToSign = SigningHelper.getKeysignMessages(payload)
+                }
+
+                else ->
+                    throw KeysignMessagesException(
+                        "Both keysign payload and custom message payload are null"
+                    )
+            }
+        } catch (e: KeysignMessagesException) {
+            throw e
+        } catch (ce: CancellationException) {
+            throw ce
+        } catch (e: Exception) {
+            throw KeysignMessagesException(e.message ?: "Failed to resolve messages to sign")
+        }
     }
 
     fun enableNavigationToHome() {

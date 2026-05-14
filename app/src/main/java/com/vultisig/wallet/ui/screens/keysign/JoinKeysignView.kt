@@ -49,12 +49,16 @@ internal fun JoinKeysignView(navController: NavHostController) {
     val verifyUiModel by viewModel.verifyUiModel.collectAsState()
     val isKeysignFinished = keysignState is KeysignState.KeysignFinished
     val isKeysignInProgress = state == Keysign && keysignState.isInProgress
+    val isSignMessageDone = isKeysignFinished && verifyUiModel is VerifyUiModel.SignMessage
     val title =
         stringResource(
             when {
+                isSignMessageDone -> R.string.transaction_done_overview
                 isKeysignFinished -> R.string.transaction_complete_screen_title
                 state == JoinKeysign && verifyUiModel is VerifyUiModel.Swap ->
                     R.string.verify_swap_swap_overview
+                state == JoinKeysign && verifyUiModel is VerifyUiModel.SignMessage ->
+                    R.string.verify_transaction_screen_title
                 else -> R.string.sign_transaction
             }
         )
@@ -209,7 +213,7 @@ private fun JoinKeysignScreen(
         content()
     } else {
         V2Scaffold(
-            onBackClick = onBack.takeIf { isError.not() },
+            onBackClick = onBack.takeIf { !isError },
             rightIcon = R.drawable.big_close.takeIf { isError },
             onRightIconClick = onBack.takeIf { isError },
             title = title,
