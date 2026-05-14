@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle
 import com.vultisig.wallet.ui.screens.transaction.components.TypeBadge
 import com.vultisig.wallet.ui.screens.transaction.components.abbreviateAddress
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.asString
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -111,6 +112,13 @@ internal fun TransactionDetailBottomSheet(
                 when (item) {
                     is TransactionHistoryItemUiModel.Send -> SendDetailContent(item)
                     is TransactionHistoryItemUiModel.Swap -> SwapDetailContent(item)
+                }
+
+                val refunded = item.status as? TransactionStatusUiModel.Refunded
+                val refundReason = refunded?.reason?.asString()?.takeIf { it.isNotBlank() }
+                if (refundReason != null) {
+                    UiSpacer(size = 16.dp)
+                    RefundReasonBanner(reason = refundReason)
                 }
 
                 UiSpacer(size = 24.dp)
@@ -320,6 +328,10 @@ private fun DetailInfoRows(
                             stringResource(R.string.transaction_status_failed_label) to
                                 Theme.v2.colors.alerts.error
 
+                        is TransactionStatusUiModel.Refunded ->
+                            stringResource(R.string.transaction_status_refunded_label) to
+                                Theme.v2.colors.alerts.warning
+
                         TransactionStatusUiModel.Broadcasted ->
                             stringResource(R.string.transaction_status_in_progress_label) to
                                 Theme.v2.colors.text.secondary
@@ -379,6 +391,32 @@ private fun DetailInfoRows(
             value = { DetailValuePill(text = network) },
         )
     }
+}
+
+/**
+ * Banner used in the transaction detail sheet to expose the THORChain/MayaChain refund reason
+ * returned by Midgard. Sits alongside the explorer link so the user can both read the reason and
+ * inspect the on-chain refund.
+ */
+@Composable
+private fun RefundReasonBanner(reason: String) {
+    Text(
+        text = reason,
+        style = Theme.brockmann.supplementary.footnote,
+        color = Theme.v2.colors.alerts.warning,
+        modifier =
+            Modifier.fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.alerts.warning.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .background(
+                    color = Theme.v2.colors.alerts.warning.copy(alpha = 0.10f),
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+    )
 }
 
 @Composable

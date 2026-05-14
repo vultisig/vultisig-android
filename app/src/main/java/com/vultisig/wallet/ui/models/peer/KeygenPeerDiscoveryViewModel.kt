@@ -274,11 +274,13 @@ constructor(
 
     fun selectDevice(device: ParticipantName) {
         state.update {
+            val isReshare = args?.action == TssAction.ReShare
             val maxOtherDevices = it.minimumDevices - 1
             it.copy(
                 selectedDevices =
                     if (device in it.selectedDevices) it.selectedDevices - device
-                    else if (it.selectedDevices.size >= maxOtherDevices) it.selectedDevices
+                    else if (!isReshare && it.selectedDevices.size >= maxOtherDevices)
+                        it.selectedDevices
                     else it.selectedDevices + device
             )
         }
@@ -532,11 +534,16 @@ constructor(
                     val existingDevices = currentState.devices.toSet()
                     val newDevices = devices - existingDevices
 
-                    val maxOtherDevices =
-                        if (currentState.minimumDevices > 1) currentState.minimumDevices - 1
-                        else currentState.minimumDevices
-                    val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
-                    val devicesToAutoSelect = newDevices.take(remainingSlots.coerceAtLeast(0))
+                    val devicesToAutoSelect =
+                        if (args?.action == TssAction.ReShare) {
+                            newDevices
+                        } else {
+                            val maxOtherDevices =
+                                if (currentState.minimumDevices > 1) currentState.minimumDevices - 1
+                                else currentState.minimumDevices
+                            val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
+                            newDevices.take(remainingSlots.coerceAtLeast(0))
+                        }
                     val selectedDevices = currentState.selectedDevices.toSet() + devicesToAutoSelect
 
                     state.update {
