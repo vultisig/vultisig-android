@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.utils.Numeric
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -56,6 +57,7 @@ class TssMessenger(
                     // when it reach to this point , it means the message was sent successfully
                     break
                 } catch (e: Exception) {
+                    if (e is CancellationException) throw e
                     Timber.tag("TssMessenger")
                         .e("fail to send message: ${e.stackTraceToString()} , attempt: $i")
                 }

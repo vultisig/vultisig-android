@@ -393,6 +393,7 @@ constructor(
 
             _uiState.update { it.copy(txScanStatus = TransactionScanStatus.Scanned(result)) }
         } catch (t: Throwable) {
+            if (t is kotlinx.coroutines.CancellationException) throw t
             val errorMessage = "Security scan failed ${t.message}"
             Timber.e(t, errorMessage)
 

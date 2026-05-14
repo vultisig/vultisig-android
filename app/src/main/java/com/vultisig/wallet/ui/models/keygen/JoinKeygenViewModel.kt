@@ -295,6 +295,7 @@ constructor(
 
                 waitForKeygenToStart(session)
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
                 when (e) {
                     is JoinKeygenException -> {
@@ -368,6 +369,7 @@ constructor(
                     try {
                         fetchKeygenCommittee(session)
                     } catch (e: Exception) {
+                        if (e is kotlinx.coroutines.CancellationException) throw e
                         Timber.e("Error fetching keygen committee: $e")
                         emptyList()
                     }

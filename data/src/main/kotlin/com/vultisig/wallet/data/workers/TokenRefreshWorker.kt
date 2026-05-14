@@ -52,6 +52,7 @@ constructor(
                 try {
                     vaultRepository.getEnabledTokens(vaultId = vault.id).first()
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e)
                     return Result.failure()
                 }
@@ -60,6 +61,7 @@ constructor(
                 try {
                     cleanupDeFiOnlyTokens(vault, chain)
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e)
                 }
 
@@ -71,6 +73,7 @@ constructor(
                             addRefreshTokenToVault(enabledCoinIds, refreshToken, vault)
                         }
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(e)
                 }
 

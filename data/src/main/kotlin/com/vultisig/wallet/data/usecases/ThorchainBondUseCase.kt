@@ -71,6 +71,7 @@ constructor(
 
                     emit(freshNodes)
                 } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
                     Timber.e(
                         e,
                         "ThorchainBondUseCase: Error fetching bonded nodes for vault $vaultId",
@@ -114,6 +115,7 @@ constructor(
                     activeNodes.add(activeNode)
                 }
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
                 throw t // allow getActiveNodes() to fall back to cache
             }
