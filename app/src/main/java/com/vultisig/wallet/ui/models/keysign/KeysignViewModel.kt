@@ -527,8 +527,15 @@ constructor(
 
             Timber.d("All messages signed, broadcasting transaction")
 
-            broadcastTransaction()
-            checkThorChainTxResult()
+            if (!skipBroadcast()) {
+                broadcastTransaction()
+                checkThorChainTxResult()
+            } else {
+                // Broadcast intentionally skipped (PSBT co-signing or other
+                // dApp-orchestrated flow); transition past the spinner so the
+                // UI doesn't hang waiting for a broadcast that will never happen.
+                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+            }
             if (customMessagePayload != null) {
                 // For custom message signing, we consider the flow complete after signing without
                 // broadcasting
