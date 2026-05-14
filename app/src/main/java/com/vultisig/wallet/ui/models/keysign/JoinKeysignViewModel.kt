@@ -1449,7 +1449,9 @@ constructor(
                             currentState.value = JoinKeysignState.Keysign
                             return@withContext
                         }
-                        // backoff 1s
+                        if (currentState.value is JoinKeysignState.Error) {
+                            return@withContext
+                        }
                         delay(1000)
                     }
                 }
