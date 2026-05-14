@@ -1011,6 +1011,7 @@
     <string name="transaction_status_failed_label">Ошибка</string>
     <string name="transaction_status_refunded_label">Возвращено</string>
     <string name="transaction_status_in_progress_label">В процессе…</string>
+    <string name="transaction_status_signed_label">Подписано</string>
     <string name="transaction_history_to_label">На</string>
     <string name="transaction_history_via_prefix">через</string>
     <string name="transaction_history_min_payout_label">мин. выплата</string>

@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import java.math.BigInteger
 import vultisig.keysign.v1.SignAmino
+import vultisig.keysign.v1.SignBitcoin
 import vultisig.keysign.v1.SignSolana
 import vultisig.keysign.v1.SignTon
 import vultisig.keysign.v1.TronTransferAssetContractPayload
@@ -29,6 +30,12 @@ data class KeysignPayload(
     val signDirect: SignDirectProto? = null,
     val signSolana: SignSolana? = null,
     val signTon: SignTon? = null,
+    /**
+     * Structured Bitcoin PSBT payload supplied by an external dApp for co-signing. When present,
+     * the UTXO signing path uses these inputs/outputs directly and bypasses WalletCore tx planning;
+     * `utxos` and the UTXO `blockChainSpecific` slot are unused.
+     */
+    val signBitcoin: SignBitcoin? = null,
     val tronTransferContractPayload: TronTransferContractPayload? = null,
     val tronTriggerSmartContractPayload: TronTriggerSmartContractPayload? = null,
     val tronTransferAssetContractPayload: TronTransferAssetContractPayload? = null,

@@ -19,7 +19,7 @@ data class Vault(
     var signers: List<String> = listOf(),
     var resharePrefix: String = "",
     var keyshares: List<KeyShare> = listOf(),
-    val coins: List<Coin> = emptyList(),
+    var coins: List<Coin> = emptyList(),
     var chainPublicKeys: List<ChainPublicKey> = emptyList(),
     var libType: SigningLibType = SigningLibType.GG20,
 ) {

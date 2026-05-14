@@ -127,6 +127,7 @@ private fun SuccessTransaction(
             val isTransactionPending = transactionStatus == TransactionStatus.Pending
             val isTransactionFailed = transactionStatus is TransactionStatus.Failed
             val isTransactionRefunded = transactionStatus is TransactionStatus.Refunded
+            val isTransactionSigned = transactionStatus == TransactionStatus.Signed
             Box(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
                 contentAlignment = Alignment.Center,
@@ -153,6 +154,10 @@ private fun SuccessTransaction(
                                 isTransactionPending -> R.string.transaction_status_pending
                                 isTransactionRefunded -> R.string.transaction_status_refunded
                                 isTransactionFailed -> R.string.transaction_failed
+                                // PSBT co-signing flow: wallet signed, dApp broadcasts. Avoid
+                                // "Transaction successful" copy that would imply the tx is
+                                // already on-chain.
+                                isTransactionSigned -> R.string.transaction_status_signed_label
                                 else -> R.string.tx_transaction_successful_screen_title
                             }
                         ),
@@ -247,6 +252,10 @@ internal fun TransactionStatusRow(status: TransactionStatus, modifier: Modifier 
             is TransactionStatus.Refunded ->
                 stringResource(R.string.transaction_status_refunded_label) to
                     Theme.v2.colors.alerts.warning
+
+            TransactionStatus.Signed ->
+                stringResource(R.string.transaction_status_signed_label) to
+                    Theme.v2.colors.alerts.success
 
             TransactionStatus.Broadcasted,
             TransactionStatus.Pending ->

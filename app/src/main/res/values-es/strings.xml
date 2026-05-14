@@ -1004,6 +1004,7 @@
     <string name="transaction_status_failed_label">Fallida</string>
     <string name="transaction_status_refunded_label">Reembolsada</string>
     <string name="transaction_status_in_progress_label">En progreso…</string>
+    <string name="transaction_status_signed_label">Firmada</string>
     <string name="transaction_history_to_label">Para</string>
     <string name="transaction_history_via_prefix">vía</string>
     <string name="transaction_history_min_payout_label">pago mín.</string>

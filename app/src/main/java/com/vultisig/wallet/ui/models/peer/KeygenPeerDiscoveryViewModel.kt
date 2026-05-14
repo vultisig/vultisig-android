@@ -20,6 +20,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.signer.BatchKeygenRequestJson
+import com.vultisig.wallet.data.api.models.signer.BatchReshareRequestJson
 import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
@@ -30,6 +31,7 @@ import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.sha256
+import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
@@ -170,6 +172,16 @@ constructor(
     private var signers: List<String> = emptyList()
     private var resharePrefix: String = ""
 
+    /**
+     * Snapshot of the `tss-batch` feature flag taken once per peer discovery session.
+     *
+     * Captured early in [loadData] so the QR payload, the FastVault dispatch, and the navigation
+     * arg passed to [com.vultisig.wallet.ui.models.keygen.KeygenViewModel] all see the same value —
+     * otherwise an in-flight toggle could route the QR through the legacy path while the FastVault
+     * call hits `/batch/reshare`, leaving the joiner stranded on the wrong relay channel.
+     */
+    private var isTssBatchEnabled: Boolean = false
+
     // fast vault data
     private val email = args?.email
     private val password = args?.password
@@ -262,11 +274,13 @@ constructor(
 
     fun selectDevice(device: ParticipantName) {
         state.update {
+            val isReshare = args?.action == TssAction.ReShare
             val maxOtherDevices = it.minimumDevices - 1
             it.copy(
                 selectedDevices =
                     if (device in it.selectedDevices) it.selectedDevices - device
-                    else if (it.selectedDevices.size >= maxOtherDevices) it.selectedDevices
+                    else if (!isReshare && it.selectedDevices.size >= maxOtherDevices)
+                        it.selectedDevices
                     else it.selectedDevices + device
             )
         }
@@ -326,6 +340,11 @@ constructor(
                         } ?: emptyList(),
                     oldResharePrefix = existingVault?.resharePrefix ?: "",
                     deviceCount = args.deviceCount,
+                    // Mirrors the QR opt-in: when the initiator chose batched reshare on
+                    // FastVault, every peer (including this one) must follow the same path.
+                    // Both DKLS and KeyImport vaults qualify because they share the same root
+                    // ECDSA / EdDSA threshold protocols — matches iOS / Windows.
+                    isTssBatch = isBatchEligibleReshare(args.action, libType) && isTssBatchEnabled,
                 ),
                 opts =
                     NavigationOptions(
@@ -399,6 +418,8 @@ constructor(
             }
 
             setupLibType()
+
+            isTssBatchEnabled = featureFlagRepository.getFeatureFlags().isTssBatchEnabled
 
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
 
@@ -513,11 +534,16 @@ constructor(
                     val existingDevices = currentState.devices.toSet()
                     val newDevices = devices - existingDevices
 
-                    val maxOtherDevices =
-                        if (currentState.minimumDevices > 1) currentState.minimumDevices - 1
-                        else currentState.minimumDevices
-                    val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
-                    val devicesToAutoSelect = newDevices.take(remainingSlots.coerceAtLeast(0))
+                    val devicesToAutoSelect =
+                        if (args?.action == TssAction.ReShare) {
+                            newDevices
+                        } else {
+                            val maxOtherDevices =
+                                if (currentState.minimumDevices > 1) currentState.minimumDevices - 1
+                                else currentState.minimumDevices
+                            val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
+                            newDevices.take(remainingSlots.coerceAtLeast(0))
+                        }
                     val selectedDevices = currentState.selectedDevices.toSet() + devicesToAutoSelect
 
                     state.update {
@@ -609,6 +635,12 @@ constructor(
                                     oldResharePrefix = resharePrefix,
                                     vaultName = args.vaultName,
                                     libType = libType.toProto(),
+                                    // Only opt the reshare ceremony into batch mode; migrate
+                                    // shares the same proto but is excluded from batched reshare.
+                                    // Both DKLS and KeyImport vaults qualify (matches iOS).
+                                    isTssBatch =
+                                        isBatchEligibleReshare(args.action, libType) &&
+                                            isTssBatchEnabled,
                                 )
                             )
                         )
@@ -647,25 +679,46 @@ constructor(
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) {
             when (args.action) {
                 TssAction.ReShare -> {
-                    vultiSignerRepository.joinReshare(
-                        JoinReshareRequestJson(
-                            vaultName = vaultName,
-                            publicKeyEcdsa = pubKeyEcdsa,
-                            sessionId = sessionId,
-                            hexEncryptionKey = encryptionKeyHex,
-                            hexChainCode = hexChainCode,
-                            localPartyId = localPartyId,
-                            encryptionPassword = password,
-                            email = email,
-                            oldParties = signers,
-                            oldResharePrefix = resharePrefix,
+                    if (isTssBatchEnabled && isBatchEligibleReshare(args.action, libType)) {
+                        require(pubKeyEcdsa.isNotBlank()) {
+                            "Reshare requires the existing vault's ECDSA public key"
+                        }
+                        vultiSignerRepository.joinBatchReshare(
+                            BatchReshareRequestJson(
+                                publicKeyEcdsa = pubKeyEcdsa,
+                                sessionId = sessionId,
+                                hexEncryptionKey = encryptionKeyHex,
+                                localPartyId = generateServerPartyId(),
+                                oldParties = signers,
+                                encryptionPassword = password,
+                                email = email,
+                                protocols =
+                                    listOf(
+                                        BatchReshareRequestJson.PROTOCOL_ECDSA,
+                                        BatchReshareRequestJson.PROTOCOL_EDDSA,
+                                    ),
+                            )
                         )
-                    )
+                    } else {
+                        vultiSignerRepository.joinReshare(
+                            JoinReshareRequestJson(
+                                vaultName = vaultName,
+                                publicKeyEcdsa = pubKeyEcdsa,
+                                sessionId = sessionId,
+                                hexEncryptionKey = encryptionKeyHex,
+                                hexChainCode = hexChainCode,
+                                localPartyId = localPartyId,
+                                encryptionPassword = password,
+                                email = email,
+                                oldParties = signers,
+                                oldResharePrefix = resharePrefix,
+                            )
+                        )
+                    }
                 }
 
                 TssAction.KEYGEN -> {
-                    val featureFlags = featureFlagRepository.getFeatureFlags()
-                    if (featureFlags.isTssBatchEnabled) {
+                    if (isTssBatchEnabled) {
                         vultiSignerRepository.joinBatchKeygen(
                             BatchKeygenRequestJson(
                                 vaultName = vaultName,

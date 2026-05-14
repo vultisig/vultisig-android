@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
 import com.vultisig.wallet.data.models.SigningLibType
@@ -224,6 +225,18 @@ constructor(
                                 oldCommittee = message.oldParties,
                                 oldResharePrefix = message.oldResharePrefix,
                                 vaultId = existingVault?.id,
+                                // Migrate shares the proto with reshare but is excluded from
+                                // batched mode — the flag only flips on for genuine reshares.
+                                // Defensively pin the flag to libTypes that actually run the
+                                // batched protocol so a forged QR cannot route a GG20 ceremony
+                                // through the wrong relay namespace.
+                                isTssBatch =
+                                    message.isTssBatch &&
+                                        isBatchEligibleReshare(
+                                            action,
+                                            if (action == TssAction.Migrate) SigningLibType.DKLS
+                                            else message.libType,
+                                        ),
                             )
                         }
 
@@ -385,6 +398,7 @@ constructor(
                                 hint = null,
                                 deviceCount = null,
                                 chains = session.chains,
+                                isTssBatch = session.isTssBatch,
                             ),
                         opts =
                             NavigationOptions(
@@ -419,6 +433,8 @@ constructor(
         val localPartyId: String,
         val vaultId: VaultId? = null,
         val chains: List<String> = emptyList(),
+        // Mirrors the initiator's QR opt-in for batched ECDSA + EdDSA reshare.
+        val isTssBatch: Boolean = false,
     )
 }
 

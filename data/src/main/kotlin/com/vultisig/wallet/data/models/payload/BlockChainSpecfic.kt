@@ -8,6 +8,13 @@ import vultisig.keysign.v1.TransactionType
 sealed class BlockChainSpecific {
     data class UTXO(val byteFee: BigInteger, val sendMaxAmount: Boolean) : BlockChainSpecific()
 
+    /**
+     * Marker variant for Bitcoin PSBT co-signing initiated by external dApps. The structured
+     * inputs/outputs live on `KeysignPayload.signBitcoin`; this entry exists so the
+     * `blockChainSpecific` slot stays non-null when the proto omits a `utxo_specific` block.
+     */
+    data object BitcoinPSBT : BlockChainSpecific()
+
     data class Ethereum(
         val maxFeePerGasWei: BigInteger,
         val priorityFeeWei: BigInteger,

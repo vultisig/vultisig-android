@@ -170,6 +170,13 @@ sealed interface TransactionStatus {
     /** Transaction has been submitted to the network. */
     data object Broadcasted : TransactionStatus
 
+    /**
+     * Wallet has produced a valid signature but is not broadcasting (e.g. PSBT co-signing where the
+     * orchestrating dApp assembles and broadcasts the final tx). Distinct from [Broadcasted] so the
+     * success screen does not suggest the tx is already on-chain.
+     */
+    data object Signed : TransactionStatus
+
     /** Transaction is in the mempool but not yet included in a block. */
     data object Pending : TransactionStatus
 
@@ -478,6 +485,8 @@ constructor(
             if (!skipBroadcast()) {
                 broadcastTransaction()
                 checkThorChainTxResult()
+            } else {
+                finishWithoutBroadcast()
             }
             if (customMessagePayload != null) {
                 // For custom message signing, we consider the flow complete after signing without
@@ -493,8 +502,23 @@ constructor(
         }
     }
 
+    /**
+     * Transitions past the keysign spinner without broadcasting. Used by PSBT co-signing and other
+     * dApp-orchestrated flows where only the dApp can assemble the final transaction. The `Signed`
+     * status (vs. `Broadcasted`) keeps the success screen honest — the tx is not yet on-chain.
+     */
+    private fun finishWithoutBroadcast() {
+        currentState.value = KeysignState.KeysignFinished(TransactionStatus.Signed)
+    }
+
     private fun skipBroadcast(): Boolean {
-        val flag = keysignPayload?.skipBroadcast ?: false
+        val payload = keysignPayload
+        if (payload?.signBitcoin != null) {
+            // PSBT co-signing: only the dApp orchestrating the session can assemble
+            // the final signed transaction, so the wallet must never broadcast.
+            return true
+        }
+        val flag = payload?.skipBroadcast ?: false
         Timber.d("SkipBroadcastFlag, value: $flag")
         return flag
     }
@@ -528,8 +552,12 @@ constructor(
 
             Timber.d("All messages signed, broadcasting transaction")
 
-            broadcastTransaction()
-            checkThorChainTxResult()
+            if (!skipBroadcast()) {
+                broadcastTransaction()
+                checkThorChainTxResult()
+            } else {
+                finishWithoutBroadcast()
+            }
             if (customMessagePayload != null) {
                 // For custom message signing, we consider the flow complete after signing without
                 // broadcasting
