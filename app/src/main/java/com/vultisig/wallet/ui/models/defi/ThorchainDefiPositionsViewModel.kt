@@ -1265,5 +1265,6 @@ private fun String.toLpPositionDialogModel(): PositionUiModelDialog {
         ticker = "RUNE/${parsed.ticker}",
         isSelected = false,
         positionKey = this,
+        chainLogo = parsed.chain?.logo,
     )
 }

@@ -7,4 +7,5 @@ internal data class PositionUiModelDialog(
     val ticker: String,
     val isSelected: Boolean = true,
     val positionKey: String = ticker,
+    val chainLogo: ImageModel? = null,
 )

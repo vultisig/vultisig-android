@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.defi.BondedNodeUiModel
 import com.vultisig.wallet.ui.models.defi.BondedTabUiModel
@@ -22,7 +23,12 @@ internal fun defaultPositionsStakingDialog(): List<PositionUiModelDialog> =
     thorchainSupportStakingDeFi.toPositionDialogModels()
 
 internal fun List<Coin>.toPositionDialogModels(): List<PositionUiModelDialog> = map { coin ->
-    PositionUiModelDialog(logo = getCoinLogo(coin.logo), ticker = coin.ticker, isSelected = true)
+    PositionUiModelDialog(
+        logo = getCoinLogo(coin.logo),
+        ticker = coin.ticker,
+        isSelected = true,
+        chainLogo = coin.chain.logo,
+    )
 }
 
 val defiSupportedChains: List<Chain>

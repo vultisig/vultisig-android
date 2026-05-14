@@ -3,12 +3,14 @@ package com.vultisig.wallet.ui.components.v2.tokenitem
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +41,11 @@ import com.vultisig.wallet.ui.components.v2.tokenitem.TokenSelectionUiModel.*
 import com.vultisig.wallet.ui.theme.Theme
 
 internal sealed interface TokenSelectionUiModel {
-    data class TokenUiSingle(val name: String, val logo: ImageModel) : TokenSelectionUiModel
+    data class TokenUiSingle(
+        val name: String,
+        val logo: ImageModel,
+        val chainLogo: ImageModel? = null,
+    ) : TokenSelectionUiModel
 
     data class TokenUiPair(val left: TokenUiSingle, val right: TokenUiSingle) :
         TokenSelectionUiModel
@@ -220,7 +226,7 @@ private fun TokenUiGridLogo(tokens: TokenUiPair, space: Float = 4f) {
 @Composable
 private fun TokenUiGridLogo(modifier: Modifier = Modifier, size: Dp = 28.dp, token: TokenUiSingle) {
 
-    Box(modifier = modifier) {
+    Box(modifier = modifier.size(size)) {
         SubcomposeAsyncImage(
             model = token.logo,
             contentDescription = null,
@@ -236,6 +242,18 @@ private fun TokenUiGridLogo(modifier: Modifier = Modifier, size: Dp = 28.dp, tok
                 }
             },
         )
+
+        if (token.chainLogo != null) {
+            SubcomposeAsyncImage(
+                model = token.chainLogo,
+                contentDescription = null,
+                modifier =
+                    Modifier.align(Alignment.BottomEnd)
+                        .size(size * 0.42f)
+                        .clip(CircleShape)
+                        .border(1.dp, Theme.v2.colors.backgrounds.primary, CircleShape),
+            )
+        }
     }
 }
 

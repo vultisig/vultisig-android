@@ -391,6 +391,7 @@ internal fun PositionsSelectionDialog(
                     TokenSelectionUiModel.TokenUiSingle(
                         name = gridToken.data.ticker,
                         logo = gridToken.data.logo,
+                        chainLogo = gridToken.data.chainLogo,
                     )
             }
         return TokenSelectionGridUiModel(
