@@ -1452,9 +1452,6 @@ constructor(
                                 currentState.value = JoinKeysignState.Keysign
                                 return@withContext
                             }
-                            if (currentState.value is JoinKeysignState.Error) {
-                                return@withContext
-                            }
                         } catch (e: KeysignMessagesException) {
                             Timber.e(e, "Failed to prepare messages to sign")
                             currentState.value =
@@ -1482,8 +1479,9 @@ constructor(
             }
         } catch (e: KeysignMessagesException) {
             throw e
+        } catch (_: CancellationException) {
+            throw CancellationException()
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to check keysign start")
             currentState.value =
                 JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
