@@ -67,7 +67,6 @@ internal fun JoinKeysignView(navController: NavHostController) {
         onBack = viewModel::navigateToHome,
         isError = state is Error,
         fullScreen = isKeysignInProgress,
-        showTopBarBack = !isSignMessageDone,
         applyDefaultPaddings =
             !(state == JoinKeysign && verifyUiModel is VerifyUiModel.Swap) && !isKeysignFinished,
     ) {
@@ -206,7 +205,6 @@ private fun JoinKeysignScreen(
     isError: Boolean,
     applyDefaultPaddings: Boolean = true,
     fullScreen: Boolean = false,
-    showTopBarBack: Boolean = true,
     onBack: () -> Unit = {},
     content: @Composable () -> Unit = {},
 ) {
@@ -215,7 +213,7 @@ private fun JoinKeysignScreen(
         content()
     } else {
         V2Scaffold(
-            onBackClick = onBack.takeIf { !isError && showTopBarBack },
+            onBackClick = onBack.takeIf { !isError },
             rightIcon = R.drawable.big_close.takeIf { isError },
             onRightIconClick = onBack.takeIf { isError },
             title = title,

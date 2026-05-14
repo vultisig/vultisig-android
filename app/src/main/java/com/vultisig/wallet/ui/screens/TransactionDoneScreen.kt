@@ -339,12 +339,12 @@ private fun CustomMessageDetail(signMessage: SignMessageTransactionUiModel?, sig
     if (signMessage == null) return
 
     SignMessageCard(
-        title = stringResource(R.string.verify_sign_message_method_field_title),
+        title = stringResource(R.string.verify_sign_message_signing_method),
         value = signMessage.method,
     )
 
     SignMessageCard(
-        title = stringResource(R.string.verify_sign_message_message_field_title),
+        title = stringResource(R.string.verify_sign_message_message_sign),
         value = signMessage.message,
     )
 
