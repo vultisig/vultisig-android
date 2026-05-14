@@ -22,6 +22,7 @@ internal class ReshareMessageFromProtoMapperImpl @Inject constructor() :
             oldResharePrefix = from.oldResharePrefix,
             vaultName = from.vaultName,
             libType = from.libType.toSigningLibType(),
+            isTssBatch = from.isTssBatch,
         )
 }
 
@@ -40,5 +41,6 @@ internal class ReshareMessageToProtoMapperImpl @Inject constructor() : ReshareMe
             oldResharePrefix = from.oldResharePrefix,
             vaultName = from.vaultName,
             libType = from.libType.toProto(),
+            isTssBatch = from.isTssBatch,
         )
 }

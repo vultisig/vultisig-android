@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.signer.BatchKeygenRequestJson
+import com.vultisig.wallet.data.api.models.signer.BatchReshareRequestJson
 import com.vultisig.wallet.data.api.models.signer.CreateMldsaVaultRequestJson
 import com.vultisig.wallet.data.api.models.signer.JoinKeyImportRequest
 import com.vultisig.wallet.data.api.models.signer.JoinKeygenRequestJson
@@ -32,6 +33,8 @@ internal interface VultiSignerApi {
     suspend fun joinKeysign(requestJson: JoinKeysignRequestJson)
 
     suspend fun joinReshare(request: JoinReshareRequestJson)
+
+    suspend fun joinBatchReshare(request: BatchReshareRequestJson)
 
     suspend fun get(publicKeyEcdsa: String, password: String)
 
@@ -73,6 +76,10 @@ internal class VultiSignerApiImpl @Inject constructor(private val http: HttpClie
 
     override suspend fun joinReshare(request: JoinReshareRequestJson) {
         http.post("$URL/reshare") { setBody(request) }.throwIfUnsuccessful()
+    }
+
+    override suspend fun joinBatchReshare(request: BatchReshareRequestJson) {
+        http.post("$URL/batch/reshare") { setBody(request) }.throwIfUnsuccessful()
     }
 
     @OptIn(ExperimentalEncodingApi::class)

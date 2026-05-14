@@ -12,9 +12,19 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
 import com.vultisig.wallet.data.keygen.DKLSKeygen
+import com.vultisig.wallet.data.keygen.KeygenExecutor
 import com.vultisig.wallet.data.keygen.KeygenRouting
 import com.vultisig.wallet.data.keygen.MldsaKeygen
+import com.vultisig.wallet.data.keygen.ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID
+import com.vultisig.wallet.data.keygen.ROOT_ECDSA_MESSAGE_ID
+import com.vultisig.wallet.data.keygen.ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID
+import com.vultisig.wallet.data.keygen.ROOT_EDDSA_MESSAGE_ID
+import com.vultisig.wallet.data.keygen.ROOT_MLDSA_EXCHANGE_MESSAGE_ID
+import com.vultisig.wallet.data.keygen.ROOT_MLDSA_SETUP_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.SchnorrKeygen
+import com.vultisig.wallet.data.keygen.mergeReshareKeyshares
+import com.vultisig.wallet.data.keygen.selectKeygenExecutor
+import com.vultisig.wallet.data.keygen.shouldKeepExistingChaincode
 import com.vultisig.wallet.data.keygen.shouldUseNewKeygenExecution
 import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Chain
@@ -166,17 +176,6 @@ constructor(
 
     private val isReshareMode: Boolean = action == TssAction.ReShare
 
-    private companion object {
-        // Relay message IDs must match the server batch keygen protocol prefixes.
-        // Server uses "p-ecdsa", "p-eddsa", "p-mldsa" in ProcessBatchKeygen.
-        const val ROOT_ECDSA_MESSAGE_ID = "p-ecdsa"
-        const val ROOT_EDDSA_MESSAGE_ID = "p-eddsa"
-        const val ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID = "ecdsa_key_import"
-        const val ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID = "eddsa_key_import"
-        const val ROOT_MLDSA_EXCHANGE_MESSAGE_ID = "p-mldsa"
-        const val ROOT_MLDSA_SETUP_MESSAGE_ID = "p-mldsa-setup"
-    }
-
     init {
         generateKey()
     }
@@ -189,8 +188,31 @@ constructor(
         shouldUseNewKeygenExecution(
             action = action,
             libType = libType,
-            isParallelKeygenFeatureEnabled = featureFlags.isTssBatchEnabled,
+            isParallelKeygenFeatureEnabled = isParallelKeygenEnabledForThisCeremony(),
         )
+
+    /**
+     * Decides whether THIS peer takes the parallel / batch path for the current ceremony.
+     *
+     * For reshare we trust the initiator's QR opt-in EXCLUSIVELY (matches iOS behavior in
+     * `KeygenViewModel.swift` — iOS sets `useParallelPath = self.isTssBatch` from the deserialised
+     * QR field, never OR'd with a local toggle). This avoids a cross-version deadlock where an iOS
+     * initiator with the toggle off (default) sends `is_tss_batch=false`, but an Android joiner
+     * with the local override forced on would otherwise read `localFlag || false = true` and poll
+     * the batched relay namespaces while iOS polled the legacy ones.
+     *
+     * For keygen / migrate / key-import we keep the OR fallback because Android does not yet carry
+     * `is_tss_batch` on the `KeygenMessage` proto on the read side, so a joiner has no QR signal to
+     * trust — its local feature flag is the only available decision input. (Reading the
+     * `is_tss_batch` field on `KeygenMessage` is a separate follow-up that will let us collapse to
+     * a single QR-driven rule.)
+     */
+    private fun isParallelKeygenEnabledForThisCeremony(): Boolean =
+        if (action == TssAction.ReShare) {
+            args.isTssBatch
+        } else {
+            featureFlags.isTssBatchEnabled || args.isTssBatch
+        }
 
     private fun createDklsKeygen(localUi: String, action: TssAction = this.action): DKLSKeygen =
         DKLSKeygen(
@@ -282,6 +304,15 @@ constructor(
                     vault.pubKeyEDDSA = cachedVault.pubKeyEDDSA
                     vault.pubKeyMLDSA = cachedVault.pubKeyMLDSA
                     vault.keyshares = cachedVault.keyshares
+                    // Preserve user-curated state across reshare / migrate. The keygen ceremony
+                    // only regenerates the threshold root shares — coins (custom token list,
+                    // addresses) and per-chain public keys (KeyImport vaults' chain routing) must
+                    // survive untouched. Without this, SaveVaultUseCase would overwrite the
+                    // upserted vault's empty coin list with default chains, wiping the user's
+                    // selections; for KeyImport vaults the empty `chainPublicKeys` would also
+                    // break per-chain signing-key resolution in `Vault.getEcdsaSigningKey`.
+                    vault.coins = cachedVault.coins
+                    vault.chainPublicKeys = cachedVault.chainPublicKeys
                 }
             }
 
@@ -296,10 +327,14 @@ constructor(
                     }
                     startSingleKeygen()
                 } else {
-                    when (libType) {
-                        SigningLibType.DKLS -> startKeygenDkls()
-                        SigningLibType.GG20 -> startKeygenGG20()
-                        SigningLibType.KeyImport -> startKeyImportKeygen()
+                    // Pure dispatch function lives in KeygenExecution.kt so the matrix is
+                    // unit-testable in isolation — the previous inline `when` shipped a
+                    // dispatch bug for (ReShare, KeyImport) that abstract audits missed.
+                    when (selectKeygenExecutor(action, libType)) {
+                        KeygenExecutor.SingleKeygen -> startSingleKeygen()
+                        KeygenExecutor.DklsKeygen -> startKeygenDkls()
+                        KeygenExecutor.Gg20Keygen -> startKeygenGG20()
+                        KeygenExecutor.KeyImportKeygen -> startKeyImportKeygen()
                     }
                 }
 
@@ -401,11 +436,42 @@ constructor(
 
             TssAction.ReShare -> {
                 schnorr = createSchnorrKeygen(localUi = localUiEddsa)
-                // Reshare still uses the legacy shared relay namespace. Keep it sequential until
-                // both ceremonies are explicitly partitioned the same way as keygen.
-                dklsKeygen.reshareWithRetry(0)
-                updateStep(KeygenState.ReshareEdDSA)
-                schnorr.schnorrReshareWithRetry(0)
+                if (useNewKeygenPath) {
+                    // Reshare partitioning is stricter than keygen: each protocol creates its own
+                    // setup message, so both setup AND exchange must be namespaced. The server's
+                    // ProcessBatchReshare expects p-ecdsa / p-eddsa for both.
+                    coroutineScope {
+                        listOf(
+                                async {
+                                    dklsKeygen.reshareWithRetry(
+                                        0,
+                                        KeygenRouting.from(
+                                            setupMessageId = ROOT_ECDSA_MESSAGE_ID,
+                                            exchangeMessageId = ROOT_ECDSA_MESSAGE_ID,
+                                        ),
+                                    )
+                                },
+                                async {
+                                    schnorr.schnorrReshareWithRetry(
+                                        0,
+                                        KeygenRouting.from(
+                                            setupMessageId = ROOT_EDDSA_MESSAGE_ID,
+                                            exchangeMessageId = ROOT_EDDSA_MESSAGE_ID,
+                                        ),
+                                    )
+                                },
+                            )
+                            .awaitAll()
+                    }
+                    // Both ceremonies finished concurrently. Snap the progress indicator forward
+                    // so the user doesn't see it stuck on `ReshareECDSA` (33%) for the whole
+                    // parallel run before jumping straight to Success.
+                    updateStep(KeygenState.ReshareEdDSA)
+                } else {
+                    dklsKeygen.reshareWithRetry(0)
+                    updateStep(KeygenState.ReshareEdDSA)
+                    schnorr.schnorrReshareWithRetry(0)
+                }
             }
 
             TssAction.KeyImport -> error("KeyImport is handled by startKeyImportKeygen()")
@@ -416,17 +482,27 @@ constructor(
             requireNotNull(dklsKeygen.keyshare) { "ECDSA keygen produced no keyshare" }
         val keyshareEddsa = requireNotNull(schnorr.keyshare) { "EdDSA keygen produced no keyshare" }
 
-        vault.pubKeyECDSA = keyshareEcdsa.pubKey
-        vault.pubKeyEDDSA = keyshareEddsa.pubKey
-        vault.hexChainCode = keyshareEcdsa.chaincode
-
-        val newKeyshares =
-            mutableListOf(
-                KeyShare(pubKey = keyshareEcdsa.pubKey, keyShare = keyshareEcdsa.keyshare),
-                KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
+        // Compute the new keyshare list against the OLD pubkeys BEFORE mutating vault state.
+        // The pure helper enforces the invariant that root reshare must drop OLD ECDSA / EdDSA
+        // shares and keep everything else (MLDSA, KeyImport per-chain shares).
+        val mergedKeyshares =
+            mergeReshareKeyshares(
+                existing = vault.keyshares,
+                newEcdsa =
+                    KeyShare(pubKey = keyshareEcdsa.pubKey, keyShare = keyshareEcdsa.keyshare),
+                newEddsa =
+                    KeyShare(pubKey = keyshareEddsa.pubKey, keyShare = keyshareEddsa.keyshare),
+                oldEcdsaPubKey = vault.pubKeyECDSA,
+                oldEddsaPubKey = vault.pubKeyEDDSA,
+                isReshare = action == TssAction.ReShare,
             )
 
-        vault.keyshares = newKeyshares
+        vault.pubKeyECDSA = keyshareEcdsa.pubKey
+        vault.pubKeyEDDSA = keyshareEddsa.pubKey
+        if (!shouldKeepExistingChaincode(libType)) {
+            vault.hexChainCode = keyshareEcdsa.chaincode
+        }
+        vault.keyshares = mergedKeyshares
 
         if (action == TssAction.Migrate) {
             vault.libType = SigningLibType.DKLS

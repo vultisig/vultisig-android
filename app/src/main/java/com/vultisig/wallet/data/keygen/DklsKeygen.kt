@@ -517,39 +517,60 @@ class DKLSKeygen(
         }
     }
 
-    suspend fun reshareWithRetry(attempt: Int) {
-        try {
-            cache.clear()
+    /**
+     * Runs the DKLS reshare ceremony for this device.
+     *
+     * The default [routing] preserves legacy behavior — both setup and exchange traverse the
+     * relay's untagged namespace. When the initiator opts into batched reshare, callers pass a
+     * non-default routing (`p-ecdsa` for both setup and exchange) so the server can run the ECDSA
+     * goroutine in parallel with EdDSA on `p-eddsa`. Cancellation is propagated through
+     * [runKeygenWithRetry] so a failure on the sibling Schnorr ceremony cancels this one cleanly.
+     */
+    @Throws(Exception::class)
+    internal suspend fun reshareWithRetry(
+        attempt: Int,
+        routing: KeygenRouting = KeygenRouting.from(),
+    ) {
+        activeMessageId = routing.exchangeMessageId
+        messenger.setMessageID(activeMessageId)
+        cache.clear()
+        runKeygenWithRetry(
+            attempt = attempt,
+            retry = { nextAttempt, cause ->
+                Timber.d("Failed to reshare ECDSA key, error: %s", cause.localizedMessage)
+                Timber.d("ecdsa reshare retry, attempt: %d", nextAttempt)
+                reshareWithRetry(nextAttempt, routing)
+            },
+        ) {
             val keyshareHandle = Handle()
             if (vault.pubKeyECDSA.isNotEmpty()) {
-                val keyshare = getKeyshareBytesFromVault()
-                val keyshareSlice = keyshare.toGoSlice()
+                val keyshareBytes = getKeyshareBytesFromVault()
+                val keyshareSlice = keyshareBytes.toGoSlice()
                 val result = dkls_keyshare_from_bytes(keyshareSlice, keyshareHandle)
                 if (result != LIB_OK) {
-                    throw RuntimeException("fail to get keyshare, $result")
+                    error("fail to get keyshare, $result")
                 }
             }
 
-            val reshareSetupMsg: ByteArray
-            if (isInitiateDevice && attempt == 0) {
-                reshareSetupMsg = getDklsReshareSetupMessage(keyshareHandle)
-
-                sessionApi.uploadSetupMessage(
-                    serverUrl = mediatorURL,
-                    sessionId = sessionID,
-                    message =
-                        Base64.encode(
-                            encryption.encrypt(
-                                Base64.encodeToByteArray(reshareSetupMsg),
-                                Numeric.hexStringToByteArray(encryptionKeyHex),
-                            )
-                        ),
-                    messageId = null,
-                )
-            } else {
-                reshareSetupMsg =
+            val reshareSetupMsg: ByteArray =
+                if (isInitiateDevice && attempt == 0) {
+                    val msg = getDklsReshareSetupMessage(keyshareHandle)
+                    sessionApi.uploadSetupMessage(
+                        serverUrl = mediatorURL,
+                        sessionId = sessionID,
+                        message =
+                            Base64.encode(
+                                encryption.encrypt(
+                                    Base64.encodeToByteArray(msg),
+                                    Numeric.hexStringToByteArray(encryptionKeyHex),
+                                )
+                            ),
+                        messageId = routing.setupMessageId,
+                    )
+                    msg
+                } else {
                     sessionApi
-                        .getSetupMessage(mediatorURL, sessionID, null)
+                        .getSetupMessage(mediatorURL, sessionID, routing.setupMessageId)
                         .let {
                             encryption.decrypt(
                                 Base64.decode(it),
@@ -557,34 +578,31 @@ class DKLSKeygen(
                             ) ?: error("fail to decrypt reshare setup message")
                         }
                         .let { Base64.decode(it) }
-            }
+                }
 
             val decodedSetupMsg = reshareSetupMsg.toGoSlice()
             val handler = Handle()
             val localPartyIDArr = localPartyId.toByteArray()
             val localPartySlice = localPartyIDArr.toGoSlice()
 
-            val result =
+            val sessionResult =
                 dkls_qc_session_from_setup(
                     decodedSetupMsg,
                     localPartySlice,
                     keyshareHandle,
                     handler,
                 )
-            if (result != LIB_OK) {
-                throw RuntimeException(
-                    "fail to create session from reshare setup message, error: $result"
-                )
+            if (sessionResult != LIB_OK) {
+                error("fail to create session from reshare setup message, error: $sessionResult")
             }
 
             processDKLSOutboundMessage(handler)
             val isFinished = pullInboundMessages(handler)
             if (isFinished) {
-
                 val newKeyshareHandler = Handle()
                 val keyShareResult = dkls_qc_session_finish(handler, newKeyshareHandler)
                 if (keyShareResult != LIB_OK) {
-                    throw RuntimeException("fail to get new keyshare, $keyShareResult")
+                    error("fail to get new keyshare, $keyShareResult")
                 }
                 val keyshareBytes = getKeyshareBytes(newKeyshareHandler)
                 val publicKeyECDSA = getPublicKeyBytes(newKeyshareHandler)
@@ -597,16 +615,6 @@ class DKLSKeygen(
                     )
                 delay(500)
                 Timber.d("reshare ECDSA key successfully")
-                Timber.d("publicKeyECDSA: ${publicKeyECDSA.toHexString()}")
-                Timber.d("chaincode: ${chainCodeBytes.toHexString()}")
-            }
-        } catch (e: Exception) {
-            Timber.d("Failed to reshare key, error: ${e.localizedMessage}")
-            if (attempt < 3) {
-                Timber.d("keygen/reshare retry, attempt: $attempt")
-                reshareWithRetry(attempt + 1)
-            } else {
-                throw e
             }
         }
     }
