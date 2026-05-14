@@ -168,6 +168,13 @@ sealed interface TransactionStatus {
     /** Transaction has been submitted to the network. */
     data object Broadcasted : TransactionStatus
 
+    /**
+     * Wallet has produced a valid signature but is not broadcasting (e.g. PSBT co-signing where the
+     * orchestrating dApp assembles and broadcasts the final tx). Distinct from [Broadcasted] so the
+     * success screen does not suggest the tx is already on-chain.
+     */
+    data object Signed : TransactionStatus
+
     /** Transaction is in the mempool but not yet included in a block. */
     data object Pending : TransactionStatus
 
@@ -476,10 +483,7 @@ constructor(
                 broadcastTransaction()
                 checkThorChainTxResult()
             } else {
-                // Broadcast intentionally skipped (PSBT co-signing or other
-                // dApp-orchestrated flow); transition past the spinner so the
-                // UI doesn't hang waiting for a broadcast that will never happen.
-                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+                finishWithoutBroadcast()
             }
             if (customMessagePayload != null) {
                 // For custom message signing, we consider the flow complete after signing without
@@ -493,6 +497,15 @@ constructor(
             Timber.e(e)
             currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
+    }
+
+    /**
+     * Transitions past the keysign spinner without broadcasting. Used by PSBT co-signing and other
+     * dApp-orchestrated flows where only the dApp can assemble the final transaction. The `Signed`
+     * status (vs. `Broadcasted`) keeps the success screen honest — the tx is not yet on-chain.
+     */
+    private fun finishWithoutBroadcast() {
+        currentState.value = KeysignState.KeysignFinished(TransactionStatus.Signed)
     }
 
     private fun skipBroadcast(): Boolean {
@@ -540,10 +553,7 @@ constructor(
                 broadcastTransaction()
                 checkThorChainTxResult()
             } else {
-                // Broadcast intentionally skipped (PSBT co-signing or other
-                // dApp-orchestrated flow); transition past the spinner so the
-                // UI doesn't hang waiting for a broadcast that will never happen.
-                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+                finishWithoutBroadcast()
             }
             if (customMessagePayload != null) {
                 // For custom message signing, we consider the flow complete after signing without

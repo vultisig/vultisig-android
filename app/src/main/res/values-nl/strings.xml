@@ -1001,6 +1001,7 @@
     <string name="transaction_status_failed_label">Fout</string>
     <string name="transaction_status_refunded_label">Terugbetaald</string>
     <string name="transaction_status_in_progress_label">Bezig…</string>
+    <string name="transaction_status_signed_label">Ondertekend</string>
     <string name="transaction_history_to_label">Aan</string>
     <string name="transaction_history_via_prefix">via</string>
     <string name="transaction_history_min_payout_label">min. uitbetaling</string>

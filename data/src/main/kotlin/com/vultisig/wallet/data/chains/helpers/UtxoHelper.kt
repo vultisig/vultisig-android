@@ -352,65 +352,38 @@ class UtxoHelper(
      * Returns the sorted hex-encoded BIP-143 sighashes for every input owned by this device in the
      * structured PSBT payload, ready to be dispatched to the MPC engine. Bypasses WalletCore tx
      * planning entirely. Only P2WPKH and P2SH-P2WPKH inputs are supported; P2TR is rejected.
+     *
+     * Bitcoin-only: the witness-program shapes parsed here (`0x00 0x14 <20-byte hash>`) are
+     * meaningful only for the Bitcoin chain. UTXO siblings (BCH, Doge, LTC, Dash, Zcash) use legacy
+     * P2PKH and must not route through this path.
      */
-    fun getPreSignedImageHashFromSignBitcoin(signBitcoin: SignBitcoin): List<String> =
-        computeOurSighashes(signBitcoin).map { Numeric.toHexStringNoPrefix(it) }.sorted()
-
-    /**
-     * Compiles the raw signed segwit transaction from a structured `SignBitcoin` payload and the
-     * MPC signatures keyed by sighash hex. Witnesses are populated only for inputs marked `is_ours
-     * = true`; other inputs receive an empty witness stack for downstream finalization.
-     */
-    fun getSignedTransactionFromSignBitcoin(
-        signBitcoin: SignBitcoin,
-        signatures: Map<String, KeysignResponse>,
-    ): SignedTransactionResult {
-        val derivedPublicKey =
-            PublicKeyHelper.getDerivedPublicKey(
-                vaultHexPublicKey,
-                vaultHexChainCode,
-                coinType.derivationPath(),
-            )
-        val publicKey =
-            PublicKey(Numeric.hexStringToByteArray(derivedPublicKey), PublicKeyType.SECP256K1)
-        val pubKeyBytes = publicKey.data()
-
-        val inputs = signBitcoin.inputs.filterNotNull()
-        val outputs = signBitcoin.outputs.filterNotNull()
-        val sighashes = computeOurSighashes(signBitcoin)
-        val sighashByOursIdx = mutableListOf<Pair<Int, ByteArray>>()
-        var s = 0
-        inputs.forEachIndexed { idx, input ->
-            if (input.isOurs) {
-                sighashByOursIdx += idx to sighashes[s++]
-            }
+    fun getPreSignedImageHashFromSignBitcoin(signBitcoin: SignBitcoin): List<String> {
+        require(coinType == CoinType.BITCOIN) {
+            "SignBitcoin PSBT co-signing is only supported on Bitcoin, got $coinType"
         }
-
-        val witnessByIndex = mutableMapOf<Int, Pair<ByteArray, ByteArray>>()
-        sighashByOursIdx.forEach { (idx, sighash) ->
-            val input = inputs[idx]
-            val key = Numeric.toHexStringNoPrefix(sighash)
-            val sig = signatures[key] ?: error("Missing MPC signature for input $idx sighash $key")
-            val derSig = Numeric.hexStringToByteArray(sig.derSignature)
-            if (!publicKey.verifyAsDER(derSig, sighash)) {
-                Timber.d("Invalid signature for PSBT input %d", idx)
-                error("Invalid signature for PSBT input $idx")
-            }
-            val sighashFlag = (input.sighashType ?: SIGHASH_ALL.toUInt()).toInt() and 0xFF
-            witnessByIndex[idx] = (derSig + byteArrayOf(sighashFlag.toByte())) to pubKeyBytes
-        }
-
-        val segwitTx = serializeSegwitTransaction(inputs, outputs, signBitcoin, witnessByIndex)
-        val legacyTx = serializeLegacyTransaction(inputs, outputs, signBitcoin)
-        val txid = sha256d(legacyTx).reversedArray()
-
-        return SignedTransactionResult(
-            rawTransaction = Numeric.toHexStringNoPrefix(segwitTx),
-            transactionHash = Numeric.toHexStringNoPrefix(txid),
-        )
+        verifyOwnedInputsMatchVault(signBitcoin)
+        return computeOurSighashes(signBitcoin).map { Numeric.toHexStringNoPrefix(it) }.sorted()
     }
 
-    private fun computeOurSighashes(signBitcoin: SignBitcoin): List<ByteArray> {
+    /**
+     * Defense-in-depth check on every input flagged `is_ours=true` by the dApp. The wallet only
+     * ever signs for its own derivation path, so any owned input must redeem to the vault's
+     * HASH160(pubkey). A lying dApp that toggles `is_ours` on an unrelated input gets a hard
+     * failure instead of a usable signature.
+     */
+    private fun verifyOwnedInputsMatchVault(signBitcoin: SignBitcoin) {
+        val expected = deriveExpectedPubKeyHash()
+        signBitcoin.inputs.filterNotNull().forEach { input ->
+            if (!input.isOurs) return@forEach
+            val actual = extractWitnessPubKeyHash(input)
+            require(actual.contentEquals(expected)) {
+                "PSBT input ${input.hash}:${input.index} marked is_ours=true but its witness " +
+                    "pubkey hash does not match this vault's derived key"
+            }
+        }
+    }
+
+    internal fun computeOurSighashes(signBitcoin: SignBitcoin): List<ByteArray> {
         val inputs = signBitcoin.inputs.filterNotNull()
         val outputs = signBitcoin.outputs.filterNotNull()
         val hashPrevouts = sha256d(serializePrevouts(inputs))
@@ -450,6 +423,20 @@ class UtxoHelper(
         }
     }
 
+    private fun deriveExpectedPubKeyHash(): ByteArray {
+        val derivedPublicKey =
+            PublicKeyHelper.getDerivedPublicKey(
+                vaultHexPublicKey,
+                vaultHexChainCode,
+                coinType.derivationPath(),
+            )
+        val publicKey =
+            PublicKey(Numeric.hexStringToByteArray(derivedPublicKey), PublicKeyType.SECP256K1)
+        val address = coinType.deriveAddressFromPublicKey(publicKey)
+        return BitcoinScript.lockScriptForAddress(address, coinType)
+            .matchPayToWitnessPublicKeyHash()
+    }
+
     private fun extractWitnessPubKeyHash(input: BitcoinInput): ByteArray =
         when (input.scriptType.lowercase()) {
             "p2wpkh" -> parseWitnessProgram(input.scriptPubKey)
@@ -470,13 +457,13 @@ class UtxoHelper(
     private fun parseWitnessProgram(hex: String): ByteArray {
         val bytes = Numeric.hexStringToByteArray(hex)
         require(
-            bytes.size == WITNESS_V0_KEY_HASH_LEN &&
+            bytes.size == WITNESS_V0_PROGRAM_LEN &&
                 bytes[0] == 0x00.toByte() &&
                 bytes[1] == 0x14.toByte()
         ) {
             "Expected v0 witness program 0x0014<20-byte hash>, got $hex"
         }
-        return bytes.copyOfRange(2, WITNESS_V0_KEY_HASH_LEN)
+        return bytes.copyOfRange(2, WITNESS_V0_PROGRAM_LEN)
     }
 
     private fun buildP2WPKHScriptCode(pubKeyHash: ByteArray): ByteArray {
@@ -541,81 +528,6 @@ class UtxoHelper(
         return buf.toByteArray()
     }
 
-    private fun buildScriptSig(input: BitcoinInput): ByteArray =
-        when (input.scriptType.lowercase()) {
-            "p2sh-p2wpkh" -> {
-                val redeem =
-                    Numeric.hexStringToByteArray(
-                        input.redeemScript ?: error("redeem_script required for P2SH-P2WPKH input")
-                    )
-                ByteArrayOutputStream()
-                    .apply {
-                        write(byteArrayOf(redeem.size.toByte()))
-                        write(redeem)
-                    }
-                    .toByteArray()
-            }
-            else -> ByteArray(0)
-        }
-
-    private fun serializeLegacyTransaction(
-        inputs: List<BitcoinInput>,
-        outputs: List<BitcoinOutput>,
-        signBitcoin: SignBitcoin,
-    ): ByteArray {
-        val buf = ByteArrayOutputStream()
-        buf.write(uint32LE(signBitcoin.version.toInt()))
-        buf.write(varInt(inputs.size.toLong()))
-        inputs.forEach { input ->
-            buf.write(Numeric.hexStringToByteArray(input.hash).reversedArray())
-            buf.write(uint32LE(input.index.toInt()))
-            val scriptSig = buildScriptSig(input)
-            buf.write(varInt(scriptSig.size.toLong()))
-            buf.write(scriptSig)
-            buf.write(uint32LE((input.sequence ?: 0xFFFFFFFFu).toInt()))
-        }
-        buf.write(varInt(outputs.size.toLong()))
-        buf.write(serializeOutputs(outputs))
-        buf.write(uint32LE(signBitcoin.locktime.toInt()))
-        return buf.toByteArray()
-    }
-
-    private fun serializeSegwitTransaction(
-        inputs: List<BitcoinInput>,
-        outputs: List<BitcoinOutput>,
-        signBitcoin: SignBitcoin,
-        witnessByIndex: Map<Int, Pair<ByteArray, ByteArray>>,
-    ): ByteArray {
-        val buf = ByteArrayOutputStream()
-        buf.write(uint32LE(signBitcoin.version.toInt()))
-        buf.write(byteArrayOf(0x00.toByte(), 0x01.toByte()))
-        buf.write(varInt(inputs.size.toLong()))
-        inputs.forEach { input ->
-            buf.write(Numeric.hexStringToByteArray(input.hash).reversedArray())
-            buf.write(uint32LE(input.index.toInt()))
-            val scriptSig = buildScriptSig(input)
-            buf.write(varInt(scriptSig.size.toLong()))
-            buf.write(scriptSig)
-            buf.write(uint32LE((input.sequence ?: 0xFFFFFFFFu).toInt()))
-        }
-        buf.write(varInt(outputs.size.toLong()))
-        buf.write(serializeOutputs(outputs))
-        inputs.forEachIndexed { idx, _ ->
-            val witness = witnessByIndex[idx]
-            if (witness != null) {
-                buf.write(varInt(2))
-                buf.write(varInt(witness.first.size.toLong()))
-                buf.write(witness.first)
-                buf.write(varInt(witness.second.size.toLong()))
-                buf.write(witness.second)
-            } else {
-                buf.write(varInt(0))
-            }
-        }
-        buf.write(uint32LE(signBitcoin.locktime.toInt()))
-        return buf.toByteArray()
-    }
-
     private fun uint32LE(v: Int): ByteArray =
         byteArrayOf(v.toByte(), (v ushr 8).toByte(), (v ushr 16).toByte(), (v ushr 24).toByte())
 
@@ -636,4 +548,6 @@ class UtxoHelper(
 }
 
 private const val SIGHASH_ALL: Int = 0x01
-private const val WITNESS_V0_KEY_HASH_LEN: Int = 22
+// Length of a v0 witness program serialized as `0x00 0x14 <20-byte hash>` (the program, not the
+// hash itself).
+private const val WITNESS_V0_PROGRAM_LEN: Int = 22

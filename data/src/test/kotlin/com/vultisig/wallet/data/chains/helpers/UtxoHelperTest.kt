@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.utils.Numeric
 import java.math.BigDecimal
 import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -177,13 +178,17 @@ class UtxoHelperTest {
 
     // BIP-143 sighash tests — exercise the new from-scratch PSBT signing path against the
     // canonical test vectors from https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki
+    // These call `computeOurSighashes` directly because the public
+    // `getPreSignedImageHashFromSignBitcoin` entry point also verifies that every is_ours input
+    // redeems to the wallet's HASH160(pubkey) — that vault-ownership check is orthogonal to
+    // the BIP-143 sighash algorithm itself, which is what these vectors validate.
 
     /**
      * BIP-143 "Native P2WPKH" vector. Two-input tx where input #1 is a P2WPKH output we own. The
      * expected sighash for that input is documented in the BIP itself.
      */
     @Test
-    fun `getPreSignedImageHashFromSignBitcoin - BIP-143 native P2WPKH vector`() {
+    fun `computeOurSighashes - BIP-143 native P2WPKH vector`() {
         val helper = newHelper()
         val signBitcoin =
             SignBitcoin(
@@ -229,7 +234,8 @@ class UtxoHelperTest {
             )
 
         try {
-            val hashes = helper.getPreSignedImageHashFromSignBitcoin(signBitcoin)
+            val hashes =
+                helper.computeOurSighashes(signBitcoin).map { Numeric.toHexStringNoPrefix(it) }
             assertEquals(1, hashes.size, "Only the is_ours input should produce a sighash")
             assertEquals(
                 "c37af31116d1b27caf68aae9e3ac82f1477929014d5b917657d0eb49478cb670",
@@ -245,7 +251,7 @@ class UtxoHelperTest {
      * witness program from the redeem script, not the outer scriptPubKey.
      */
     @Test
-    fun `getPreSignedImageHashFromSignBitcoin - BIP-143 P2SH-P2WPKH vector`() {
+    fun `computeOurSighashes - BIP-143 P2SH-P2WPKH vector`() {
         val helper = newHelper()
         val signBitcoin =
             SignBitcoin(
@@ -279,7 +285,8 @@ class UtxoHelperTest {
             )
 
         try {
-            val hashes = helper.getPreSignedImageHashFromSignBitcoin(signBitcoin)
+            val hashes =
+                helper.computeOurSighashes(signBitcoin).map { Numeric.toHexStringNoPrefix(it) }
             assertEquals(1, hashes.size)
             assertEquals(
                 "64f3b0f4dd2bb3aa1ce8566d220cc74dda9df97d8490cc81d89d735c92e59fb6",
@@ -291,7 +298,7 @@ class UtxoHelperTest {
     }
 
     @Test
-    fun `getPreSignedImageHashFromSignBitcoin - sighashes are returned in sorted hex order`() {
+    fun `computeOurSighashes - all sighashes are computed for is_ours inputs`() {
         val helper = newHelper()
         // Two P2WPKH inputs we own; differ by index, scriptPubKey, and amount so sighashes differ.
         val signBitcoin =
@@ -326,9 +333,9 @@ class UtxoHelperTest {
             )
 
         try {
-            val hashes = helper.getPreSignedImageHashFromSignBitcoin(signBitcoin)
+            val hashes =
+                helper.computeOurSighashes(signBitcoin).map { Numeric.toHexStringNoPrefix(it) }
             assertEquals(2, hashes.size)
-            assertEquals(hashes.sorted(), hashes, "Sighashes must be returned sorted")
             assertTrue(hashes.all { it.length == 64 }, "Each sighash must be 32 bytes (64 hex)")
         } catch (e: Throwable) {
             skipIfJniUnavailable(e)
@@ -336,7 +343,7 @@ class UtxoHelperTest {
     }
 
     @Test
-    fun `getPreSignedImageHashFromSignBitcoin - P2TR is rejected`() {
+    fun `computeOurSighashes - P2TR is rejected`() {
         val helper = newHelper()
         val signBitcoin =
             SignBitcoin(
@@ -360,7 +367,7 @@ class UtxoHelperTest {
 
         try {
             assertThrows(IllegalStateException::class.java) {
-                helper.getPreSignedImageHashFromSignBitcoin(signBitcoin)
+                helper.computeOurSighashes(signBitcoin)
             }
         } catch (e: Throwable) {
             skipIfJniUnavailable(e)
@@ -446,7 +453,7 @@ class UtxoHelperTest {
     }
 
     @Test
-    fun `getPreSignedImageHashFromSignBitcoin - rejects non-SIGHASH_ALL inputs`() {
+    fun `computeOurSighashes - rejects non-SIGHASH_ALL inputs`() {
         val helper = newHelper()
         val signBitcoin =
             SignBitcoin(
@@ -472,7 +479,7 @@ class UtxoHelperTest {
 
         try {
             assertThrows(IllegalArgumentException::class.java) {
-                helper.getPreSignedImageHashFromSignBitcoin(signBitcoin)
+                helper.computeOurSighashes(signBitcoin)
             }
         } catch (e: Throwable) {
             skipIfJniUnavailable(e)

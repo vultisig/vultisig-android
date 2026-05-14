@@ -141,8 +141,15 @@ object SigningHelper {
                     Chain.Dash,
                     Chain.Zcash -> {
                         val utxo = UtxoHelper(payload.coin.coinType, ecdsaKey, ecdsaChainCode)
-                        payload.signBitcoin?.let { utxo.getPreSignedImageHashFromSignBitcoin(it) }
-                            ?: utxo.getPreSignedImageHash(payload)
+                        val sb = payload.signBitcoin
+                        // PSBT co-signing helper supports P2WPKH / P2SH-P2WPKH only; the UTXO
+                        // siblings (BCH, Doge, LTC, Dash, Zcash) use legacy P2PKH, so route them
+                        // through the WalletCore path even if a `signBitcoin` block slipped in.
+                        if (chain == Chain.Bitcoin && sb != null) {
+                            utxo.getPreSignedImageHashFromSignBitcoin(sb)
+                        } else {
+                            utxo.getPreSignedImageHash(payload)
+                        }
                     }
 
                     Chain.Qbtc -> {
@@ -272,10 +279,11 @@ object SigningHelper {
             Chain.Dogecoin,
             Chain.Litecoin,
             Chain.Zcash -> {
+                // PSBT co-signing (`signBitcoin != null`) always skips broadcast — only the
+                // orchestrating dApp can finalize the segwit transaction — so this branch is
+                // only reached for the WalletCore-built path.
                 val utxo = UtxoHelper(keysignPayload.coin.coinType, ecdsaKey, ecdsaChainCode)
-                return keysignPayload.signBitcoin?.let {
-                    utxo.getSignedTransactionFromSignBitcoin(it, signatures)
-                } ?: utxo.getSignedTransaction(keysignPayload, signatures)
+                return utxo.getSignedTransaction(keysignPayload, signatures)
             }
 
             Chain.ThorChain -> {
