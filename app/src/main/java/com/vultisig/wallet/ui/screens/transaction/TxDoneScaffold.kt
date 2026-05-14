@@ -126,13 +126,14 @@ private fun SuccessTransaction(
         AnimatedVisibility(isTransactionDetailVisible.not()) {
             val isTransactionPending = transactionStatus == TransactionStatus.Pending
             val isTransactionFailed = transactionStatus is TransactionStatus.Failed
+            val isTransactionRefunded = transactionStatus is TransactionStatus.Refunded
             Box(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 300.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 if (isTransactionPending) {
                     TransactionPending()
-                } else if (isTransactionFailed) {
+                } else if (isTransactionFailed || isTransactionRefunded) {
                     RiveAnimation(
                         animation = R.raw.riv_transaction_error,
                         modifier = Modifier.fillMaxWidth(),
@@ -150,6 +151,7 @@ private fun SuccessTransaction(
                         stringResource(
                             when {
                                 isTransactionPending -> R.string.transaction_status_pending
+                                isTransactionRefunded -> R.string.transaction_status_refunded
                                 isTransactionFailed -> R.string.transaction_failed
                                 else -> R.string.tx_transaction_successful_screen_title
                             }
@@ -241,6 +243,10 @@ internal fun TransactionStatusRow(status: TransactionStatus, modifier: Modifier 
             is TransactionStatus.Failed ->
                 stringResource(R.string.transaction_status_failed_label) to
                     Theme.v2.colors.alerts.error
+
+            is TransactionStatus.Refunded ->
+                stringResource(R.string.transaction_status_refunded_label) to
+                    Theme.v2.colors.alerts.warning
 
             TransactionStatus.Broadcasted,
             TransactionStatus.Pending ->

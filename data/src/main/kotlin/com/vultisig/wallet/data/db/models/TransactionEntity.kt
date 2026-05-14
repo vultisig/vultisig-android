@@ -17,6 +17,12 @@ enum class TransactionStatus {
     PENDING,
     CONFIRMED,
     FAILED,
+    /**
+     * Terminal state for inbound THORChain/MayaChain transactions that the network refunded (paused
+     * pool, unmet swap limit, etc.). Surfaced separately from [FAILED] so the UI can show the
+     * refund reason and distinct iconography. The reason is persisted in `failureReason`.
+     */
+    REFUNDED,
     NotFound,
 }
 
