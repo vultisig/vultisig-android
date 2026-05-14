@@ -594,7 +594,7 @@ constructor(
 
             val isEncryptionGcm = featureFlags?.isEncryptGcmEnabled == true
             pullTssMessagesJob =
-                viewModelScope.launch {
+                viewModelScope.launch(Dispatchers.IO) {
                     pullTssMessages(
                             serverUrl = serverUrl,
                             sessionId = sessionId,
