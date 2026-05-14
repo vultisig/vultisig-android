@@ -123,14 +123,8 @@ internal fun TransactionDoneView(
             }
         },
         bottomBar = {
-            val ctaLabel =
-                if (transactionTypeUiModel is TransactionTypeUiModel.SignMessage) {
-                    stringResource(R.string.verify_swap_sign_button)
-                } else {
-                    stringResource(R.string.transaction_done_complete)
-                }
             VsButton(
-                label = ctaLabel,
+                label = stringResource(R.string.transaction_done_complete),
                 onClick = onComplete,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
             )
@@ -353,6 +347,7 @@ private fun CustomMessageDetail(signMessage: SignMessageTransactionUiModel?, sig
     SignMessageCard(
         title = stringResource(R.string.verify_sign_message_message_field_signature),
         value = signature,
+        valueColor = Theme.v2.colors.primary.accent4,
     )
 }
 

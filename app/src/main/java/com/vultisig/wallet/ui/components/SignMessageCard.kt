@@ -10,16 +10,23 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
  * Card used on custom-message Verify and Transaction Complete screens to display a labelled value
  * (e.g. Method, Message, Signature). Renders a bordered, dark-filled rounded card with a muted
- * caption label and a primary-color value.
+ * caption label and a value rendered in [valueColor] (defaults to the primary text color; pass the
+ * accent blue for the signed-signature value to match the extension design).
  */
 @Composable
-internal fun SignMessageCard(title: String, value: String, modifier: Modifier = Modifier) {
+internal fun SignMessageCard(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    valueColor: Color = Theme.v2.colors.text.primary,
+) {
     Column(
         modifier =
             modifier
@@ -42,10 +49,6 @@ internal fun SignMessageCard(title: String, value: String, modifier: Modifier = 
             style = Theme.brockmann.supplementary.caption,
         )
 
-        Text(
-            text = value,
-            color = Theme.v2.colors.text.primary,
-            style = Theme.brockmann.body.s.regular,
-        )
+        Text(text = value, color = valueColor, style = Theme.brockmann.body.s.regular)
     }
 }
