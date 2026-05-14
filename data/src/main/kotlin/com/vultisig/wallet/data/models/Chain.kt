@@ -427,6 +427,15 @@ val Chain.getDustThreshold: BigInteger
             else -> throw UnsupportedOperationException("Chain ${this.name} does not support Dust")
         }
 
+/**
+ * Approximate block production interval for the chain, in milliseconds.
+ *
+ * Used as the polling cadence when waiting for an EVM transaction receipt. All EVM chains supported
+ * today are listed explicitly; the 4-second fallback is a defensive default for any future EVM
+ * chain added to [Chain] so the polling path keeps working without forcing every caller to update.
+ * Callers should clamp the value to a sensible floor (e.g. `MIN_POLL_DELAY_MS` in
+ * `AwaitApprovalConfirmationUseCase`) so very-fast L2 RPC endpoints do not get hammered.
+ */
 val Chain.blockTimeMs: Long
     get() =
         when (this) {
