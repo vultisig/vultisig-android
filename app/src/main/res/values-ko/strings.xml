@@ -468,7 +468,7 @@
     <string name="sign_message_sign_screen_title">메시지 서명</string>
     <string name="vault_settings_sign_message_description">사용자 정의 메시지 서명</string>
     <string name="swap_screen_invalid_specific_and_utxo">세부 계산 실패</string>
-    <string name="verify_sign_message_message_field_signature">서명</string>
+    <string name="verify_sign_message_message_field_signature">서명된 서명</string>
     <string name="secret_enable_dkls">DKLS 활성화</string>
     <string name="dialog_default_error_body">문제가 발생했습니다</string>
     <string name="address_bookmark_error_invalid_address">이 주소는 %s에 유효하지 않습니다</string>

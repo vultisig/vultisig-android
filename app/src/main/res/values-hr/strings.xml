@@ -838,7 +838,7 @@
     <string name="referral_invite_onboarding_1">Pozovite prijatelje.</string>
     <string name="referral_invite_onboarding_2">Zarađujte nagrade.</string>
     <string name="swap_screen_invalid_specific_and_utxo">Određeni izračun nije uspio</string>
-    <string name="verify_sign_message_message_field_signature">Potpis</string>
+    <string name="verify_sign_message_message_field_signature">Potpisani potpis</string>
     <string name="secret_enable_dkls">Omogućite DKLS</string>
     <string name="fast_vault_name_screen_desc">Svoj trezor uvijek možete kasnije preimenovati u postavkama</string>
     <string name="enter_email_screen_title">Unesite svoju e-adresu</string>

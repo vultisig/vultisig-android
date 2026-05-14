@@ -836,7 +836,7 @@
     <string name="enter_email_screen_title">Introduce tu correo electrónico</string>
     <string name="enter_email_screen_hint">Correo electrónico</string>
     <string name="swap_screen_invalid_specific_and_utxo">Error en un cálculo específico</string>
-    <string name="verify_sign_message_message_field_signature">Firma</string>
+    <string name="verify_sign_message_message_field_signature">Firma firmada</string>
     <string name="secret_enable_dkls">Activa DKLS</string>
     <string name="fast_vault_password_hint_screen_desc">Esto se mostrará en caso de que olvide su contraseña.</string>
     <string name="fast_vault_password_hint_skip">Saltar</string>
