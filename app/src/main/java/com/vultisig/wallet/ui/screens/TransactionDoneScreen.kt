@@ -64,28 +64,35 @@ internal fun TransactionDoneView(
             }
         },
         content = {
-            FormCard(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            if (transactionTypeUiModel is TransactionTypeUiModel.SignMessage) {
                 Column(
-                    modifier = Modifier.padding(all = 12.dp).fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.verticalScroll(rememberScrollState()).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
-                        val transaction = transactionTypeUiModel.tx
-                        TransactionHero(
-                            heroContent = transaction.heroContent,
-                            functionName = transaction.functionName,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            VsOverviewToken(
-                                header = stringResource(R.string.tx_overview_screen_tx_send),
-                                valuedToken = transaction.token,
-                                shape = RoundedCornerShape(24.dp),
+                    CustomMessageDetail(transactionTypeUiModel.model, transactionHash)
+                }
+            } else {
+                FormCard(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Column(
+                        modifier = Modifier.padding(all = 12.dp).fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
+                            val transaction = transactionTypeUiModel.tx
+                            TransactionHero(
+                                heroContent = transaction.heroContent,
+                                functionName = transaction.functionName,
                                 modifier = Modifier.fillMaxWidth(),
-                            )
+                            ) {
+                                VsOverviewToken(
+                                    header = stringResource(R.string.tx_overview_screen_tx_send),
+                                    valuedToken = transaction.token,
+                                    shape = RoundedCornerShape(24.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
                         }
-                    }
 
-                    if (transactionTypeUiModel !is TransactionTypeUiModel.SignMessage) {
                         if (approveTransactionHash.isNotEmpty()) {
                             TxLinkAndHash(
                                 transactionLink = approveTransactionLink,
@@ -100,24 +107,21 @@ internal fun TransactionDoneView(
                             transactionHash = transactionHash,
                             onUriClick = onUriClick,
                         )
-                    }
 
-                    when (transactionTypeUiModel) {
-                        is TransactionTypeUiModel.Deposit ->
-                            DepositTransactionDetail(
-                                transactionTypeUiModel.depositTransactionUiModel
-                            )
+                        when (transactionTypeUiModel) {
+                            is TransactionTypeUiModel.Deposit ->
+                                DepositTransactionDetail(
+                                    transactionTypeUiModel.depositTransactionUiModel
+                                )
 
-                        is TransactionTypeUiModel.Send ->
-                            TransactionDetail(transaction = transactionTypeUiModel.tx)
+                            is TransactionTypeUiModel.Send ->
+                                TransactionDetail(transaction = transactionTypeUiModel.tx)
 
-                        is TransactionTypeUiModel.Swap ->
-                            SwapTransactionDetail(transactionTypeUiModel.swapTransactionUiModel)
+                            is TransactionTypeUiModel.Swap ->
+                                SwapTransactionDetail(transactionTypeUiModel.swapTransactionUiModel)
 
-                        is TransactionTypeUiModel.SignMessage ->
-                            CustomMessageDetail(transactionTypeUiModel.model, transactionHash)
-
-                        else -> Unit
+                            else -> Unit
+                        }
                     }
                 }
             }
