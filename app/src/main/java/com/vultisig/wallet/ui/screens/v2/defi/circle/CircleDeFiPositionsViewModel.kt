@@ -121,6 +121,7 @@ constructor(
                     )
                 }
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
             }
         }
@@ -133,6 +134,7 @@ constructor(
                     withContext(ioDispatcher) { balanceVisibilityRepository.getVisibility(vaultId) }
                 _state.update { it.copy(isBalanceVisible = isVisible) }
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
             }
         }
@@ -225,6 +227,7 @@ constructor(
                     )
                 }
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
             }
         }
@@ -283,6 +286,7 @@ constructor(
                     )
                 }
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
             }
         }
@@ -307,6 +311,7 @@ constructor(
                     )
                 }
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
             }
         }
@@ -333,6 +338,7 @@ constructor(
                 }
                 mscaAddress
             } catch (t: Throwable) {
+                if (t is kotlinx.coroutines.CancellationException) throw t
                 Timber.e(t)
                 null
             }
@@ -417,6 +423,7 @@ constructor(
                 currency = currency.ticker,
             )
         } catch (t: Throwable) {
+            if (t is kotlinx.coroutines.CancellationException) throw t
             Timber.e(t)
 
             return FiatValue(value = BigDecimal.ZERO, currency = currency.ticker)

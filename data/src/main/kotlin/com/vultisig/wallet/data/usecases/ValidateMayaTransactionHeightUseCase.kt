@@ -23,6 +23,7 @@ constructor(private val mayaChainApi: MayaChainApi) : ValidateMayaTransactionHei
 
             currentBlockHeight - lastDepositHeight > depositMaturity
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e)
             false
         }

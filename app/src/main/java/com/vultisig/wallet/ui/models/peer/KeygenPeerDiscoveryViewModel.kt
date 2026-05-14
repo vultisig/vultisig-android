@@ -504,6 +504,7 @@ constructor(
                 }
             )
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to connect to Vultiserver")
             state.update {
                 it.copy(
@@ -839,6 +840,7 @@ constructor(
                     sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
                 return
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.tag("startSessionAndDiscovery").e(e, "Attempt ${attempt + 1} failed")
                 if (attempt >= 2) {
                     Timber.tag("startSessionAndDiscovery").e("All attempts to start session failed")
@@ -873,6 +875,7 @@ constructor(
         return try {
             sessionApi.getParticipants(serverUrl, sessionId).isNotEmpty()
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to get session participants, assuming session not started")
             false
         }

@@ -71,6 +71,7 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
                 }
             }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e.message, "Error in Broadcast XRP Transaction")
             error(e.message ?: "Error in Broadcast XRP Transaction")
         }
@@ -110,6 +111,7 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
 
             maxOf(balance - accountReservedBalance, BigInteger.ZERO)
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("Error in getBalance: ${e.message}")
             BigInteger.ZERO
         }
@@ -132,6 +134,7 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
             val response = http.post(BASE_XRP_CLUSTER) { setBody(payload) }
             response.body<RippleAccountInfoResponseJson>()
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("Error in fetchTokenAccountsByOwner: ${e.message}")
             error(e.message ?: "Error in fetchTokenAccountsByOwner")
         }

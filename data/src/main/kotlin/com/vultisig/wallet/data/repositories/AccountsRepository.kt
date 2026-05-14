@@ -110,6 +110,7 @@ constructor(
 
                                     addresses[index] = account.copy(accounts = newAccounts)
                                 } catch (e: Exception) {
+                                    if (e is kotlinx.coroutines.CancellationException) throw e
                                     Timber.e(e)
                                     // ignore
                                 }
@@ -358,6 +359,7 @@ constructor(
                 send(cachedAddresses)
             }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to load cached DeFi balances")
         }
 
@@ -395,6 +397,7 @@ constructor(
 
                             account.copy(accounts = newAccounts, isDefiProvider = canBeDeFiProvider)
                         } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e)
                             null
                         }

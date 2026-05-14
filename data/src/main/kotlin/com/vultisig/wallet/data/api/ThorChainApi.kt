@@ -174,6 +174,7 @@ constructor(
                 response.bodyOrThrow<TcyStakerResponse>().unstakable
             }
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Error fetching TCY staker data for %s", address)
             null
         }
@@ -290,6 +291,7 @@ constructor(
             }
             error("Error broadcasting transaction: $responseRawString")
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag("THORChainService").e(e, "Error broadcasting transaction")
             throw e
         }
@@ -511,6 +513,7 @@ constructor(
             }
             null
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to fetch denom metadata for %s", denom)
             null
         }
@@ -524,6 +527,7 @@ constructor(
                     .bodyOrThrow<MetadatasResponse>()
             response.metadatas
         } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to fetch denom metadata list")
             emptyList()
         }
