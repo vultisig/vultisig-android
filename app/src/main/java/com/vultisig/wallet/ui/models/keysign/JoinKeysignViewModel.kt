@@ -834,6 +834,12 @@ constructor(
                     when (val specific = payload.blockChainSpecific) {
                         is BlockChainSpecific.MayaChain -> specific.isDeposit
                         is BlockChainSpecific.THORChain -> specific.isDeposit
+                        // PSBT co-signing is initiated by an external dApp and is never a deposit;
+                        // exit before the memo-keyword heuristic so a payload carrying `SECURE+:`
+                        // in `payload.memo` (BTC is `isSecuredAssetEligible`) cannot be flagged
+                        // `isDeposit=true` and crash the deposit branch below — the `when` over
+                        // `payload.blockChainSpecific` does not list `BitcoinPSBT`.
+                        is BlockChainSpecific.BitcoinPSBT -> false
                         else -> {
                             val memoUpper = payload.memo?.uppercase(Locale.ROOT)
                             payload.coin.isSecuredAssetEligible() &&
