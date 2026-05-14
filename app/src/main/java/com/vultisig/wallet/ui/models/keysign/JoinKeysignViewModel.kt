@@ -1479,8 +1479,8 @@ constructor(
             }
         } catch (e: KeysignMessagesException) {
             throw e
-        } catch (_: CancellationException) {
-            throw CancellationException()
+        } catch (ce: CancellationException) {
+            throw ce
         } catch (e: Exception) {
             Timber.e(e, "Failed to check keysign start")
             currentState.value =
