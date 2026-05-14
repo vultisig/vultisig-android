@@ -9,15 +9,7 @@ enum class BondNodeState(val state: String) {
     UNKNOWN("unknown");
 
     val canUnbond: Boolean
-        get() =
-            when (this) {
-                WHITELISTED,
-                STANDBY,
-                UNKNOWN -> true
-                READY,
-                ACTIVE,
-                DISABLED -> false
-            }
+        get() = this != ACTIVE
 
     val canBond: Boolean
         get() =
