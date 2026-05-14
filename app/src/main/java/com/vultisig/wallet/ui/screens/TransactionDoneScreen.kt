@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.CopyIcon
+import com.vultisig.wallet.ui.components.SignMessageCard
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.VsOverviewToken
@@ -122,8 +123,14 @@ internal fun TransactionDoneView(
             }
         },
         bottomBar = {
+            val ctaLabel =
+                if (transactionTypeUiModel is TransactionTypeUiModel.SignMessage) {
+                    stringResource(R.string.verify_swap_sign_button)
+                } else {
+                    stringResource(R.string.transaction_done_complete)
+                }
             VsButton(
-                label = stringResource(R.string.transaction_done_complete),
+                label = ctaLabel,
                 onClick = onComplete,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
             )
@@ -333,20 +340,19 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
 private fun CustomMessageDetail(signMessage: SignMessageTransactionUiModel?, signature: String) {
     if (signMessage == null) return
 
-    AddressField(
+    SignMessageCard(
         title = stringResource(R.string.verify_sign_message_method_field_title),
-        address = signMessage.method,
+        value = signMessage.method,
     )
 
-    AddressField(
+    SignMessageCard(
         title = stringResource(R.string.verify_sign_message_message_field_title),
-        address = signMessage.message,
+        value = signMessage.message,
     )
 
-    AddressField(
+    SignMessageCard(
         title = stringResource(R.string.verify_sign_message_message_field_signature),
-        address = signature,
-        divider = false,
+        value = signature,
     )
 }
 
