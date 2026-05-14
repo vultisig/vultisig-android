@@ -67,15 +67,15 @@ abstract class TransactionHistoryDao {
     abstract suspend fun getAllPendingTransactions(): List<TransactionHistoryEntity>
 
     /**
-     * CONFIRMED and FAILED are terminal — the WHERE guard prevents stale writers from downgrading a
-     * finalised row. retryCount resets on every successful API response (including NotFound) so
-     * backoff only accumulates on network errors.
+     * CONFIRMED, FAILED, and REFUNDED are terminal — the WHERE guard prevents stale writers from
+     * downgrading a finalised row. retryCount resets on every successful API response (including
+     * NotFound) so backoff only accumulates on network errors.
      */
     @Query(
         """
         UPDATE transaction_history
         SET status = :status, lastCheckedAt = :lastCheckedAt, retryCount = 0
-        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED')
+        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
     abstract suspend fun updateStatus(
@@ -89,7 +89,7 @@ abstract class TransactionHistoryDao {
         UPDATE transaction_history
         SET status = 'CONFIRMED', confirmedAt = :confirmedAt,
             lastCheckedAt = :lastCheckedAt, retryCount = 0
-        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED')
+        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
     abstract suspend fun updateToConfirmed(txHash: String, confirmedAt: Long, lastCheckedAt: Long)
@@ -99,10 +99,24 @@ abstract class TransactionHistoryDao {
         UPDATE transaction_history
         SET status = 'FAILED', failureReason = :failureReason,
             lastCheckedAt = :lastCheckedAt, retryCount = 0
-        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED')
+        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
     abstract suspend fun updateToFailed(txHash: String, failureReason: String, lastCheckedAt: Long)
+
+    /**
+     * Mirror of [updateToFailed] for the REFUNDED terminal state. Reuses [failureReason] to carry
+     * the human-readable refund reason from Midgard.
+     */
+    @Query(
+        """
+        UPDATE transaction_history
+        SET status = 'REFUNDED', failureReason = :reason,
+            lastCheckedAt = :lastCheckedAt, retryCount = 0
+        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
+    """
+    )
+    abstract suspend fun updateToRefunded(txHash: String, reason: String, lastCheckedAt: Long)
 
     /** Bypasses the terminal-state guard for chain reorganisations. */
     @Query(
@@ -119,7 +133,7 @@ abstract class TransactionHistoryDao {
         """
         UPDATE transaction_history
         SET retryCount = retryCount + 1, lastCheckedAt = :lastCheckedAt
-        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED')
+        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
     abstract suspend fun incrementRetryCount(txHash: String, lastCheckedAt: Long)
@@ -131,7 +145,7 @@ abstract class TransactionHistoryDao {
         SET status = :status, confirmedAt = :confirmedAt, failureReason = :failureReason,
             lastCheckedAt = :lastCheckedAt, payload = :payload, explorerUrl = :explorerUrl,
             retryCount = 0
-        WHERE id = :id AND status NOT IN ('CONFIRMED', 'FAILED')
+        WHERE id = :id AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
     abstract suspend fun updateFromBackfillGuarded(
@@ -148,7 +162,7 @@ abstract class TransactionHistoryDao {
         """
         UPDATE transaction_history
         SET payload = :payload, explorerUrl = :explorerUrl
-        WHERE id = :id AND status IN ('CONFIRMED', 'FAILED')
+        WHERE id = :id AND status IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
     abstract suspend fun updateBackfillMetadataOnly(
@@ -171,7 +185,8 @@ abstract class TransactionHistoryDao {
 
         when (existing.status) {
             TransactionStatus.CONFIRMED,
-            TransactionStatus.FAILED ->
+            TransactionStatus.FAILED,
+            TransactionStatus.REFUNDED ->
                 updateBackfillMetadataOnly(
                     id = existing.id,
                     payload = entity.payload,
