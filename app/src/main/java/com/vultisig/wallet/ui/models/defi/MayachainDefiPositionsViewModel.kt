@@ -770,14 +770,14 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
     val assetTicker = asset.substringAfter(".")
     val coinName = assetTicker.substringBefore("-").lowercase()
     val coinLogo = getCoinLogo(coinName)
-    val logo: Int =
-        if (coinLogo is Int) coinLogo
-        else mayaPoolChainPrefixToChain(asset.substringBefore("."))?.logo ?: R.drawable.cacao
+    val chain = mayaPoolChainPrefixToChain(asset.substringBefore("."))
+    val logo: Int = if (coinLogo is Int) coinLogo else chain?.logo ?: R.drawable.cacao
     return PositionUiModelDialog(
         logo = logo,
         ticker = "CACAO/${assetTicker.substringBefore("-")}",
         isSelected = false,
         positionKey = asset,
+        chainLogo = chain?.logo,
     )
 }
 
