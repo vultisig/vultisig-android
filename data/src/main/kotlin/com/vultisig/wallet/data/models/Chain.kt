@@ -427,6 +427,34 @@ val Chain.getDustThreshold: BigInteger
             else -> throw UnsupportedOperationException("Chain ${this.name} does not support Dust")
         }
 
+/**
+ * Approximate block production interval for the chain, in milliseconds.
+ *
+ * Used as the polling cadence when waiting for an EVM transaction receipt. All EVM chains supported
+ * today are listed explicitly; the 4-second fallback is a defensive default for any future EVM
+ * chain added to [Chain] so the polling path keeps working without forcing every caller to update.
+ * Callers should clamp the value to a sensible floor (e.g. `MIN_POLL_DELAY_MS` in
+ * `AwaitApprovalConfirmationUseCase`) so very-fast L2 RPC endpoints do not get hammered.
+ */
+val Chain.blockTimeMs: Long
+    get() =
+        when (this) {
+            Chain.Ethereum -> 12_000L
+            Chain.BscChain,
+            Chain.CronosChain -> 3_000L
+            Chain.Polygon,
+            Chain.Avalanche,
+            Chain.Optimism,
+            Chain.Base,
+            Chain.Blast,
+            Chain.Mantle -> 2_000L
+            Chain.Arbitrum,
+            Chain.ZkSync,
+            Chain.Sei,
+            Chain.Hyperliquid -> 1_000L
+            else -> 4_000L
+        }
+
 fun Chain.toValue(value: BigInteger): BigDecimal = coinType.toValue(value)
 
 fun Chain.toValue(value: BigDecimal): BigDecimal = coinType.toValue(value)

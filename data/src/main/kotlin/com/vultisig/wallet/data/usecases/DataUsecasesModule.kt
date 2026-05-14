@@ -26,6 +26,12 @@ internal interface DataUsecasesModule {
 
     @Binds @Singleton fun bindBroadcastTxUseCase(impl: BroadcastTxUseCaseImpl): BroadcastTxUseCase
 
+    @Binds
+    @Singleton
+    fun bindAwaitApprovalConfirmationUseCase(
+        impl: AwaitApprovalConfirmationUseCaseImpl
+    ): AwaitApprovalConfirmationUseCase
+
     @Binds @Singleton fun bindEncryption(impl: AesEncryption): Encryption
 
     @Binds
