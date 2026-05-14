@@ -425,6 +425,63 @@ class UtxoHelperTest {
     }
 
     @Test
+    fun `getBitcoinTransactionPlanFromSignBitcoin - rejects negative input amount`() {
+        val helper = newHelper()
+        val signBitcoin =
+            SignBitcoin(
+                version = 2u,
+                locktime = 0u,
+                inputs =
+                    listOf(
+                        BitcoinInput(
+                            hash =
+                                "0000000000000000000000000000000000000000000000000000000000000001",
+                            index = 0u,
+                            // int64 negative — would two's-complement to ~2^64 in BIP-143 preimage
+                            amount = -100L,
+                            scriptPubKey = "0014" + "11".repeat(20),
+                            scriptType = "p2wpkh",
+                            isOurs = true,
+                        )
+                    ),
+                outputs =
+                    listOf(BitcoinOutput(amount = 50L, scriptPubKey = "0014" + "22".repeat(20))),
+            )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            helper.getBitcoinTransactionPlanFromSignBitcoin(signBitcoin)
+        }
+    }
+
+    @Test
+    fun `getBitcoinTransactionPlanFromSignBitcoin - rejects negative output amount`() {
+        val helper = newHelper()
+        val signBitcoin =
+            SignBitcoin(
+                version = 2u,
+                locktime = 0u,
+                inputs =
+                    listOf(
+                        BitcoinInput(
+                            hash =
+                                "0000000000000000000000000000000000000000000000000000000000000001",
+                            index = 0u,
+                            amount = 100L,
+                            scriptPubKey = "0014" + "11".repeat(20),
+                            scriptType = "p2wpkh",
+                            isOurs = true,
+                        )
+                    ),
+                outputs =
+                    listOf(BitcoinOutput(amount = -10L, scriptPubKey = "0014" + "22".repeat(20))),
+            )
+
+        assertThrows(IllegalArgumentException::class.java) {
+            helper.getBitcoinTransactionPlanFromSignBitcoin(signBitcoin)
+        }
+    }
+
+    @Test
     fun `getBitcoinTransactionPlanFromSignBitcoin - rejects payload where outputs exceed inputs`() {
         val helper = newHelper()
         val signBitcoin =

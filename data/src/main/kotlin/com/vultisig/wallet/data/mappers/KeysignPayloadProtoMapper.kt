@@ -97,6 +97,13 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 },
             blockChainSpecific =
                 when {
+                    // PSBT co-signing must take precedence: when the proto carries both a
+                    // `signBitcoin` block and a `utxoSpecific` block, the signing path is the PSBT
+                    // one (`signBitcoin` is copied above on line 52). Returning a UTXO variant here
+                    // would leave `blockChainSpecific` reading stale `byteFee`/`sendMaxAmount` data
+                    // while sighashes dispatch through the PSBT helper.
+                    from.signBitcoin != null -> BlockChainSpecific.BitcoinPSBT
+
                     from.ethereumSpecific != null ->
                         from.ethereumSpecific.let {
                             BlockChainSpecific.Ethereum(
@@ -225,8 +232,6 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                 ttl = it.ttl,
                             )
                         }
-
-                    from.signBitcoin != null -> BlockChainSpecific.BitcoinPSBT
 
                     else -> error("No supported BlockChainSpecific in proto $from")
                 },

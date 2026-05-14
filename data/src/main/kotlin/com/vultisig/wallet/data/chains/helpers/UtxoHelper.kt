@@ -20,6 +20,7 @@ import wallet.core.java.AnySigner
 import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
 import wallet.core.jni.DataVector
+import wallet.core.jni.Hash
 import wallet.core.jni.PrivateKey
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
@@ -332,6 +333,7 @@ class UtxoHelper(
     ): Bitcoin.TransactionPlan {
         val inputs = signBitcoin.inputs.filterNotNull()
         val outputs = signBitcoin.outputs.filterNotNull()
+        validateAmounts(inputs, outputs)
         val available = inputs.sumOf { it.amount }
         val change = outputs.filter { it.isChange }.sumOf { it.amount }
         val sent = outputs.filterNot { it.isChange }.sumOf { it.amount }
@@ -349,6 +351,28 @@ class UtxoHelper(
     }
 
     /**
+     * Rejects PSBT payloads carrying negative `int64` amounts. The proto schema lets `BitcoinInput`
+     * and `BitcoinOutput` carry a signed amount, but every downstream consumer treats the value as
+     * an unsigned satoshi count — `uint64LE` in [buildBip143Preimage] / [serializeOutputs] would
+     * encode a negative value's two's complement as ~2^64, producing a sighash committing to an
+     * amount no on-chain UTXO has. The `require(fee >= 0)` guard in
+     * [getBitcoinTransactionPlanFromSignBitcoin] only catches the aggregate going negative, not a
+     * payload that mixes positive and negative inputs balancing out.
+     */
+    private fun validateAmounts(inputs: List<BitcoinInput>, outputs: List<BitcoinOutput>) {
+        inputs.forEach { input ->
+            require(input.amount >= 0) {
+                "PSBT input ${input.hash}:${input.index} has negative amount ${input.amount}"
+            }
+        }
+        outputs.forEach { output ->
+            require(output.amount >= 0) {
+                "PSBT output to '${output.address}' has negative amount ${output.amount}"
+            }
+        }
+    }
+
+    /**
      * Returns the sorted hex-encoded BIP-143 sighashes for every input owned by this device in the
      * structured PSBT payload, ready to be dispatched to the MPC engine. Bypasses WalletCore tx
      * planning entirely. Only P2WPKH and P2SH-P2WPKH inputs are supported; P2TR is rejected.
@@ -361,24 +385,38 @@ class UtxoHelper(
         require(coinType == CoinType.BITCOIN) {
             "SignBitcoin PSBT co-signing is only supported on Bitcoin, got $coinType"
         }
-        verifyOwnedInputsMatchVault(signBitcoin)
+        verifyOwnership(signBitcoin)
         return computeOurSighashes(signBitcoin).map { Numeric.toHexStringNoPrefix(it) }.sorted()
     }
 
     /**
-     * Defense-in-depth check on every input flagged `is_ours=true` by the dApp. The wallet only
-     * ever signs for its own derivation path, so any owned input must redeem to the vault's
-     * HASH160(pubkey). A lying dApp that toggles `is_ours` on an unrelated input gets a hard
-     * failure instead of a usable signature.
+     * Defense-in-depth check that ties the PSBT to the vault before signing.
+     *
+     * Inputs: every input flagged `is_ours=true` by the dApp must redeem to the vault's
+     * HASH160(pubkey). The wallet only ever signs for its own derivation path; a lying dApp that
+     * toggles `is_ours` on an unrelated input gets a hard failure instead of a usable signature.
+     *
+     * Outputs: any output flagged `is_change=true` must decode to this vault's own address. Without
+     * this binding, a malicious initiator can flag an attacker output `is_change=true` to skew the
+     * change/fee totals fed into [getBitcoinTransactionPlanFromSignBitcoin] (mirroring the Windows
+     * companion which derives `isChange` from `outputAddress === senderAddress`).
      */
-    private fun verifyOwnedInputsMatchVault(signBitcoin: SignBitcoin) {
-        val expected = deriveExpectedPubKeyHash()
+    private fun verifyOwnership(signBitcoin: SignBitcoin) {
+        val expectedPubKeyHash = deriveExpectedPubKeyHash()
         signBitcoin.inputs.filterNotNull().forEach { input ->
             if (!input.isOurs) return@forEach
             val actual = extractWitnessPubKeyHash(input)
-            require(actual.contentEquals(expected)) {
+            require(actual.contentEquals(expectedPubKeyHash)) {
                 "PSBT input ${input.hash}:${input.index} marked is_ours=true but its witness " +
                     "pubkey hash does not match this vault's derived key"
+            }
+        }
+        val vaultAddress = deriveVaultAddress()
+        signBitcoin.outputs.filterNotNull().forEach { output ->
+            if (!output.isChange) return@forEach
+            require(output.address == vaultAddress) {
+                "PSBT output marked is_change=true does not belong to this vault " +
+                    "(address='${output.address}', expected='$vaultAddress')"
             }
         }
     }
@@ -386,6 +424,7 @@ class UtxoHelper(
     internal fun computeOurSighashes(signBitcoin: SignBitcoin): List<ByteArray> {
         val inputs = signBitcoin.inputs.filterNotNull()
         val outputs = signBitcoin.outputs.filterNotNull()
+        validateAmounts(inputs, outputs)
         val hashPrevouts = sha256d(serializePrevouts(inputs))
         val hashSequence = sha256d(serializeSequences(inputs))
         val hashOutputs = sha256d(serializeOutputs(outputs))
@@ -423,36 +462,67 @@ class UtxoHelper(
         }
     }
 
-    private fun deriveExpectedPubKeyHash(): ByteArray {
+    private fun deriveVaultPublicKey(): PublicKey {
         val derivedPublicKey =
             PublicKeyHelper.getDerivedPublicKey(
                 vaultHexPublicKey,
                 vaultHexChainCode,
                 coinType.derivationPath(),
             )
-        val publicKey =
-            PublicKey(Numeric.hexStringToByteArray(derivedPublicKey), PublicKeyType.SECP256K1)
-        val address = coinType.deriveAddressFromPublicKey(publicKey)
-        return BitcoinScript.lockScriptForAddress(address, coinType)
-            .matchPayToWitnessPublicKeyHash()
+        return PublicKey(Numeric.hexStringToByteArray(derivedPublicKey), PublicKeyType.SECP256K1)
     }
+
+    private fun deriveVaultAddress(): String =
+        coinType.deriveAddressFromPublicKey(deriveVaultPublicKey())
+
+    private fun deriveExpectedPubKeyHash(): ByteArray =
+        BitcoinScript.lockScriptForAddress(deriveVaultAddress(), coinType)
+            .matchPayToWitnessPublicKeyHash()
 
     private fun extractWitnessPubKeyHash(input: BitcoinInput): ByteArray =
         when (input.scriptType.lowercase()) {
             "p2wpkh" -> parseWitnessProgram(input.scriptPubKey)
-            "p2sh-p2wpkh" ->
-                parseWitnessProgram(
+            "p2sh-p2wpkh" -> {
+                val redeemScriptHex =
                     input.redeemScript
                         ?: error(
                             "redeem_script required for P2SH-P2WPKH input ${input.hash}:${input.index}"
                         )
-                )
+                verifyP2shCommitment(input, redeemScriptHex)
+                parseWitnessProgram(redeemScriptHex)
+            }
             "p2tr" ->
                 error(
                     "P2TR (Taproot) signing is not supported yet for input ${input.hash}:${input.index}"
                 )
             else -> error("Unsupported script_type ${input.scriptType}")
         }
+
+    /**
+     * Verifies the redeem script actually binds to the on-chain P2SH commitment by checking
+     * `HASH160(redeemScript) == scriptPubKey[2..22]`. Without this, any redeem script shaped `0x00
+     * 0x14 <20-byte hash>` would be accepted regardless of whether it spends the UTXO the wallet is
+     * supposed to be signing for — [verifyOwnership] alone compares against the redeem-script hash,
+     * not the on-chain commitment.
+     */
+    private fun verifyP2shCommitment(input: BitcoinInput, redeemScriptHex: String) {
+        val scriptPubKey = Numeric.hexStringToByteArray(input.scriptPubKey)
+        require(
+            scriptPubKey.size == P2SH_SCRIPT_LEN &&
+                scriptPubKey[0] == 0xa9.toByte() &&
+                scriptPubKey[1] == 0x14.toByte() &&
+                scriptPubKey[P2SH_SCRIPT_LEN - 1] == 0x87.toByte()
+        ) {
+            "PSBT input ${input.hash}:${input.index} script_pub_key is not a valid P2SH script " +
+                "(expected OP_HASH160 <20-byte hash> OP_EQUAL)"
+        }
+        val expectedHash = scriptPubKey.copyOfRange(2, 22)
+        val actualHash = Hash.sha256RIPEMD(Numeric.hexStringToByteArray(redeemScriptHex))
+        require(actualHash.contentEquals(expectedHash)) {
+            "PSBT input ${input.hash}:${input.index} redeem_script does not bind to its " +
+                "script_pub_key via HASH160"
+        }
+    }
 
     private fun parseWitnessProgram(hex: String): ByteArray {
         val bytes = Numeric.hexStringToByteArray(hex)
@@ -551,3 +621,5 @@ private const val SIGHASH_ALL: Int = 0x01
 // Length of a v0 witness program serialized as `0x00 0x14 <20-byte hash>` (the program, not the
 // hash itself).
 private const val WITNESS_V0_PROGRAM_LEN: Int = 22
+// Length of a P2SH scriptPubKey: OP_HASH160 (1) + push20 (1) + 20-byte hash + OP_EQUAL (1).
+private const val P2SH_SCRIPT_LEN: Int = 23
