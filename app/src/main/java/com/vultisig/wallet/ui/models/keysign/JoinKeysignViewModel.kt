@@ -1383,41 +1383,38 @@ constructor(
 
     fun joinKeysign() {
         if (!isJoiningKeysign.compareAndSet(false, true)) return
-        viewModelScope.launch {
-            try {
-                withContext(Dispatchers.IO) {
-                    try {
-                        Timber.tag("JoinKeysignViewModel").d("Joining keysign")
-                        sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
-                        waitForKeysignToStart()
-                        currentState.value = JoinKeysignState.WaitingForKeysignStart
-                    } catch (e: HttpException) {
-                        Timber.tag("JoinKeysignViewModel")
-                            .e(
-                                "Failed to join keysign (HTTP %d): %s",
-                                e.statusCode,
-                                e.stackTraceToString(),
-                            )
-                        currentState.value =
-                            if (e.statusCode >= 500) {
-                                JoinKeysignState.Error(JoinKeysignError.RelayUnavailable)
-                            } else {
-                                JoinKeysignState.Error(
-                                    JoinKeysignError.FailedToStart(e.message.toString())
-                                )
-                            }
-                    } catch (e: Exception) {
-                        if (e is CancellationException) throw e
-                        Timber.tag("JoinKeysignViewModel")
-                            .e("Failed to join keysign: %s", e.stackTraceToString())
-                        currentState.value =
+        viewModelScope.safeLaunch {
+            withContext(Dispatchers.IO) {
+                try {
+                    Timber.tag("JoinKeysignViewModel").d("Joining keysign")
+                    sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
+                    waitForKeysignToStart()
+                    currentState.value = JoinKeysignState.WaitingForKeysignStart
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: HttpException) {
+                    Timber.tag("JoinKeysignViewModel")
+                        .e(
+                            "Failed to join keysign (HTTP %d): %s",
+                            e.statusCode,
+                            e.stackTraceToString(),
+                        )
+                    currentState.value =
+                        if (e.statusCode >= 500) {
+                            JoinKeysignState.Error(JoinKeysignError.RelayUnavailable)
+                        } else {
                             JoinKeysignState.Error(
                                 JoinKeysignError.FailedToStart(e.message.toString())
                             )
-                    }
+                        }
+                    isJoiningKeysign.set(false)
+                } catch (e: Exception) {
+                    Timber.tag("JoinKeysignViewModel")
+                        .e("Failed to join keysign: %s", e.stackTraceToString())
+                    currentState.value =
+                        JoinKeysignState.Error(JoinKeysignError.FailedToStart(e.message.toString()))
+                    isJoiningKeysign.set(false)
                 }
-            } finally {
-                isJoiningKeysign.set(false)
             }
         }
     }
