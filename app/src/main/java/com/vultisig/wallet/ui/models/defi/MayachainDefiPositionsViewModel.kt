@@ -517,6 +517,7 @@ constructor(
                     position = "0 CACAO + 0 $assetTicker",
                     positionKey = pool.positionKey,
                     canRemove = false,
+                    chainLogo = pool.chainLogo as? Int,
                 )
             }
         updateModel {
@@ -667,6 +668,7 @@ constructor(
                                 "${cacaoAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetCoinTicker",
                             positionKey = pool.positionKey,
                             canRemove = liquidityUnits > BigDecimal.ZERO,
+                            chainLogo = assetChain?.logo,
                         )
                     }
 

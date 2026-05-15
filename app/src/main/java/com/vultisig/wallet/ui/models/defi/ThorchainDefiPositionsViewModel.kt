@@ -116,6 +116,7 @@ internal data class LpPositionUiModel(
     val position: String,
     val positionKey: String = "",
     val canRemove: Boolean = true,
+    val chainLogo: Int? = null,
 )
 
 internal data class StakePositionUiModel(
@@ -887,6 +888,7 @@ constructor(
             position = "0 ${Coins.ThorChain.RUNE.ticker} + 0 $assetTicker",
             positionKey = positionKey,
             canRemove = false,
+            chainLogo = parsed.chain?.logo,
         )
     }
 
@@ -941,6 +943,7 @@ constructor(
                 "${runeAmount.stripTrailingZeros().toPlainString()} ${Coins.ThorChain.RUNE.ticker} + " +
                     "${assetAmount.stripTrailingZeros().toPlainString()} $assetTicker",
             positionKey = pool,
+            chainLogo = assetChain?.logo,
         )
     }
 

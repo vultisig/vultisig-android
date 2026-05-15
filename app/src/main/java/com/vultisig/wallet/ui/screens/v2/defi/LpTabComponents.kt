@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -70,11 +73,26 @@ internal fun LpWidget(
                 .padding(16.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(id = state.icon),
-                contentDescription = null,
-                modifier = Modifier.size(48.dp),
-            )
+            Box(modifier = Modifier.size(48.dp)) {
+                Image(
+                    painter = painterResource(id = state.icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                )
+
+                if (state.chainLogo != null) {
+                    AsyncImage(
+                        model = state.chainLogo,
+                        contentDescription = null,
+                        modifier =
+                            Modifier.align(Alignment.BottomEnd)
+                                .size(20.dp)
+                                .clip(CircleShape)
+                                .background(Theme.v2.colors.backgrounds.tertiary_2)
+                                .border(1.dp, Theme.v2.colors.backgrounds.primary, CircleShape),
+                    )
+                }
+            }
 
             UiSpacer(12.dp)
 
@@ -190,6 +208,7 @@ private fun LpWidgetPreview() {
                 icon = R.drawable.ethereum,
                 apr = "12.5%",
                 position = "0.5 ETH / 1500 USDC",
+                chainLogo = R.drawable.ethereum,
             ),
         isLoading = false,
         onClickAdd = {},
@@ -208,6 +227,7 @@ private fun LpWidgetLoadingPreview() {
                 icon = R.drawable.ethereum,
                 apr = null,
                 position = "Loading...",
+                chainLogo = R.drawable.ethereum,
             ),
         isLoading = true,
         onClickAdd = {},

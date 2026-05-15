@@ -225,7 +225,7 @@ private fun TokenUiGridLogo(tokens: TokenUiPair, space: Float = 4f) {
 }
 
 @Composable
-private fun TokenUiGridLogo(modifier: Modifier = Modifier, size: Dp = 28.dp, token: TokenUiSingle) {
+private fun TokenUiGridLogo(modifier: Modifier = Modifier, size: Dp = 36.dp, token: TokenUiSingle) {
 
     Box(modifier = modifier.size(size)) {
         SubcomposeAsyncImage(
