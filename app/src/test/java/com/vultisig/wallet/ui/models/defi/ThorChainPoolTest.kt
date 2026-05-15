@@ -33,6 +33,11 @@ internal class ThorChainPoolTest {
         assertEquals(Chain.Litecoin, parseThorChainPool("LTC.LTC").chain)
         assertEquals(Chain.BitcoinCash, parseThorChainPool("BCH.BCH").chain)
         assertEquals(Chain.ThorChain, parseThorChainPool("THOR.RUNE").chain)
+        assertEquals(
+            Chain.Tron,
+            parseThorChainPool("TRX.USDT-TR7NHQJEKQXGTCI8Q8ZY4PL8OTSZGJLJ6T").chain,
+        )
+        assertEquals(Chain.Ripple, parseThorChainPool("XRP.XRP").chain)
     }
 
     @Test

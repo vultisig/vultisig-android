@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
@@ -888,7 +889,7 @@ constructor(
             position = "0 ${Coins.ThorChain.RUNE.ticker} + 0 $assetTicker",
             positionKey = positionKey,
             canRemove = false,
-            chainLogo = parsed.chain?.logo,
+            chainLogo = parsed.chain?.monoToneLogo,
         )
     }
 
@@ -943,7 +944,7 @@ constructor(
                 "${runeAmount.stripTrailingZeros().toPlainString()} ${Coins.ThorChain.RUNE.ticker} + " +
                     "${assetAmount.stripTrailingZeros().toPlainString()} $assetTicker",
             positionKey = pool,
-            chainLogo = assetChain?.logo,
+            chainLogo = assetChain?.monoToneLogo,
         )
     }
 
@@ -1268,6 +1269,6 @@ private fun String.toLpPositionDialogModel(): PositionUiModelDialog {
         ticker = "RUNE/${parsed.ticker}",
         isSelected = false,
         positionKey = this,
-        chainLogo = parsed.chain?.logo,
+        chainLogo = parsed.chain?.monoToneLogo,
     )
 }

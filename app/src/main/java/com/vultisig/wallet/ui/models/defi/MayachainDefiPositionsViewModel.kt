@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
@@ -668,7 +669,7 @@ constructor(
                                 "${cacaoAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetCoinTicker",
                             positionKey = pool.positionKey,
                             canRemove = liquidityUnits > BigDecimal.ZERO,
-                            chainLogo = assetChain?.logo,
+                            chainLogo = assetChain?.monoToneLogo,
                         )
                     }
 
@@ -779,7 +780,7 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
         ticker = "CACAO/${assetTicker.substringBefore("-")}",
         isSelected = false,
         positionKey = asset,
-        chainLogo = chain?.logo,
+        chainLogo = chain?.monoToneLogo,
     )
 }
 
