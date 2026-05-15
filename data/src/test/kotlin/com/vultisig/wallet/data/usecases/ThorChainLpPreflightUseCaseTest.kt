@@ -6,7 +6,9 @@ import com.vultisig.wallet.data.repositories.ThorMimirRepository
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigInteger
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
@@ -99,6 +101,13 @@ internal class ThorChainLpPreflightUseCaseTest {
         coEvery { api.getPool(any()) } throws RuntimeException("thornode down")
 
         assertNull(useCase(POOL_USDT))
+    }
+
+    @Test
+    fun `CancellationException is propagated, not swallowed by the fail-open probe`() = runTest {
+        coEvery { mimir.isLpPaused(any()) } throws CancellationException("parent cancelled")
+
+        assertFailsWith<CancellationException> { useCase(POOL_USDT) }
     }
 
     @Test
