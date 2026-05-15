@@ -240,28 +240,30 @@ constructor(
                 withContext(ioDispatcher) {
                     runCatching {
                         val ethereumVaultAddress = getEvmVaultAddress()
-                        circleApi.createScAccount(ethereumVaultAddress).also { newAddress ->
-                            scaCircleAccountRepository.saveAccount(vaultId, newAddress)
-                        }
+                        circleApi.createScAccount(ethereumVaultAddress)
                     }
                 }
 
             createdAddress
                 .onSuccess { newAddress ->
                     mscaAddress = newAddress
+                    _state.update { currentState ->
+                        currentState.copy(
+                            circleDefi = currentState.circleDefi.copy(isAccountOpen = true)
+                        )
+                    }
                     showSnackbar(R.string.circle_msca_account_created_success, SnackbarType.Success)
+                    runCatching {
+                            withContext(ioDispatcher) {
+                                scaCircleAccountRepository.saveAccount(vaultId, newAddress)
+                            }
+                        }
+                        .onFailure { Timber.e(it) }
                 }
                 .onFailure { t ->
                     Timber.e(t)
                     showSnackbar(R.string.circle_msca_account_created_failed, SnackbarType.Error)
                 }
-
-            _state.update { currentState ->
-                currentState.copy(
-                    circleDefi =
-                        currentState.circleDefi.copy(isAccountOpen = createdAddress.isSuccess)
-                )
-            }
         }
     }
 
