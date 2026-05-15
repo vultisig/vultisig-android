@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.CopyIcon
+import com.vultisig.wallet.ui.components.SignMessageCard
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.VsOverviewToken
@@ -63,28 +64,35 @@ internal fun TransactionDoneView(
             }
         },
         content = {
-            FormCard(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            if (transactionTypeUiModel is TransactionTypeUiModel.SignMessage) {
                 Column(
-                    modifier = Modifier.padding(all = 12.dp).fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.verticalScroll(rememberScrollState()).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
-                        val transaction = transactionTypeUiModel.tx
-                        TransactionHero(
-                            heroContent = transaction.heroContent,
-                            functionName = transaction.functionName,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            VsOverviewToken(
-                                header = stringResource(R.string.tx_overview_screen_tx_send),
-                                valuedToken = transaction.token,
-                                shape = RoundedCornerShape(24.dp),
+                    CustomMessageDetail(transactionTypeUiModel.model, transactionHash)
+                }
+            } else {
+                FormCard(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Column(
+                        modifier = Modifier.padding(all = 12.dp).fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        if (transactionTypeUiModel is TransactionTypeUiModel.Send) {
+                            val transaction = transactionTypeUiModel.tx
+                            TransactionHero(
+                                heroContent = transaction.heroContent,
+                                functionName = transaction.functionName,
                                 modifier = Modifier.fillMaxWidth(),
-                            )
+                            ) {
+                                VsOverviewToken(
+                                    header = stringResource(R.string.tx_overview_screen_tx_send),
+                                    valuedToken = transaction.token,
+                                    shape = RoundedCornerShape(24.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
                         }
-                    }
 
-                    if (transactionTypeUiModel !is TransactionTypeUiModel.SignMessage) {
                         if (approveTransactionHash.isNotEmpty()) {
                             TxLinkAndHash(
                                 transactionLink = approveTransactionLink,
@@ -99,24 +107,21 @@ internal fun TransactionDoneView(
                             transactionHash = transactionHash,
                             onUriClick = onUriClick,
                         )
-                    }
 
-                    when (transactionTypeUiModel) {
-                        is TransactionTypeUiModel.Deposit ->
-                            DepositTransactionDetail(
-                                transactionTypeUiModel.depositTransactionUiModel
-                            )
+                        when (transactionTypeUiModel) {
+                            is TransactionTypeUiModel.Deposit ->
+                                DepositTransactionDetail(
+                                    transactionTypeUiModel.depositTransactionUiModel
+                                )
 
-                        is TransactionTypeUiModel.Send ->
-                            TransactionDetail(transaction = transactionTypeUiModel.tx)
+                            is TransactionTypeUiModel.Send ->
+                                TransactionDetail(transaction = transactionTypeUiModel.tx)
 
-                        is TransactionTypeUiModel.Swap ->
-                            SwapTransactionDetail(transactionTypeUiModel.swapTransactionUiModel)
+                            is TransactionTypeUiModel.Swap ->
+                                SwapTransactionDetail(transactionTypeUiModel.swapTransactionUiModel)
 
-                        is TransactionTypeUiModel.SignMessage ->
-                            CustomMessageDetail(transactionTypeUiModel.model, transactionHash)
-
-                        else -> Unit
+                            else -> Unit
+                        }
                     }
                 }
             }
@@ -333,20 +338,20 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
 private fun CustomMessageDetail(signMessage: SignMessageTransactionUiModel?, signature: String) {
     if (signMessage == null) return
 
-    AddressField(
-        title = stringResource(R.string.verify_sign_message_method_field_title),
-        address = signMessage.method,
+    SignMessageCard(
+        title = stringResource(R.string.verify_sign_message_signing_method),
+        value = signMessage.method,
     )
 
-    AddressField(
-        title = stringResource(R.string.verify_sign_message_message_field_title),
-        address = signMessage.message,
+    SignMessageCard(
+        title = stringResource(R.string.verify_sign_message_message_sign),
+        value = signMessage.message,
     )
 
-    AddressField(
+    SignMessageCard(
         title = stringResource(R.string.verify_sign_message_message_field_signature),
-        address = signature,
-        divider = false,
+        value = signature,
+        valueColor = Theme.v2.colors.primary.accent4,
     )
 }
 

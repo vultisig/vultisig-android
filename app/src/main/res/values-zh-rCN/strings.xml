@@ -1521,6 +1521,8 @@
     <string name="key_import_error_title">密钥导入失败</string>
     <string name="key_import_error_description">无法从助记词导入钱包。请检查您的助记词并重试。</string>
     <string name="key_import_error_no_mnemonic_description">未找到助记词。请重新输入您的助记词并重试。</string>
+    <string name="swap_error_approval_timeout">代币批准耗时比预期更长。请先在浏览器中查看后再重试</string>
+    <string name="swap_error_approval_failed">代币批准交易失败。请重试</string>
     <string name="erc20_approval_unlimited_amount">无限制 %1$s 授权</string>
     <string name="erc20_approval_spender">接收方</string>
 </resources>
