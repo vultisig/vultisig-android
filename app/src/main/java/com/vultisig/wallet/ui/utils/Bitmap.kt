@@ -15,12 +15,27 @@ import androidx.core.graphics.createBitmap
 import java.io.FileDescriptor
 import java.io.IOException
 
-internal fun uriToBitmap(contentResolver: ContentResolver, selectedFileUri: Uri): Bitmap? {
+internal fun uriToBitmap(
+    contentResolver: ContentResolver,
+    selectedFileUri: Uri,
+    maxDimension: Int = 1600,
+): Bitmap? {
     try {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         contentResolver.openFileDescriptor(selectedFileUri, "r").use {
             val fileDescriptor: FileDescriptor = requireNotNull(it).fileDescriptor
-            val image = BitmapFactory.decodeFileDescriptor(fileDescriptor)
-            return image
+            BitmapFactory.decodeFileDescriptor(fileDescriptor, null, bounds)
+        }
+        val largest = maxOf(bounds.outWidth, bounds.outHeight)
+        if (largest <= 0) return null
+        var sampleSize = 1
+        while (largest / sampleSize > maxDimension) {
+            sampleSize *= 2
+        }
+        val decodeOptions = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+        contentResolver.openFileDescriptor(selectedFileUri, "r").use {
+            val fileDescriptor: FileDescriptor = requireNotNull(it).fileDescriptor
+            return BitmapFactory.decodeFileDescriptor(fileDescriptor, null, decodeOptions)
         }
     } catch (e: IOException) {
         e.printStackTrace()
