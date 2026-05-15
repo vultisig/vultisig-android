@@ -392,6 +392,7 @@ internal fun PositionsSelectionDialog(
                         name = gridToken.data.ticker,
                         logo = gridToken.data.logo,
                         chainLogo = gridToken.data.chainLogo,
+                        errorLetter = gridToken.data.ticker.substringAfter("/"),
                     )
             }
         return TokenSelectionGridUiModel(

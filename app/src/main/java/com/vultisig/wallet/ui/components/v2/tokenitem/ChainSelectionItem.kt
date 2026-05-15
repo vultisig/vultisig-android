@@ -46,6 +46,7 @@ internal sealed interface TokenSelectionUiModel {
         val name: String,
         val logo: ImageModel,
         val chainLogo: ImageModel? = null,
+        val errorLetter: String? = null,
     ) : TokenSelectionUiModel
 
     data class TokenUiPair(val left: TokenUiSingle, val right: TokenUiSingle) :
@@ -236,7 +237,8 @@ private fun TokenUiGridLogo(modifier: Modifier = Modifier, size: Dp = 36.dp, tok
             error = {
                 Box(modifier = Modifier.size(size), contentAlignment = Alignment.Center) {
                     Text(
-                        token.name.firstOrNull()?.toString().orEmpty(),
+                        text =
+                            (token.errorLetter ?: token.name).firstOrNull()?.toString().orEmpty(),
                         color = Theme.v2.colors.text.primary,
                         style = Theme.brockmann.body.m.medium,
                     )
