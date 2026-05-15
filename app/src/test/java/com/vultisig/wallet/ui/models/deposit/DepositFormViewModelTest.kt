@@ -7,6 +7,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
@@ -23,8 +25,11 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
+import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
+import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
@@ -39,6 +44,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -80,9 +86,8 @@ internal class DepositFormViewModelTest {
     private val tokenRepository: TokenRepository = mockk(relaxed = true)
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl = mockk(relaxed = true)
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase = mockk(relaxed = true)
-    private val getThorChainLpPositionUseCase:
-        com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase =
-        mockk(relaxed = true)
+    private val getThorChainLpPositionUseCase: GetThorChainLpPositionUseCase = mockk(relaxed = true)
+    private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
 
     @BeforeEach
     fun setUp() {
@@ -120,6 +125,7 @@ internal class DepositFormViewModelTest {
             gasFeeToEstimate = gasFeeToEstimate,
             requestAddressBookEntry = requestAddressBookEntry,
             getThorChainLpPositionUseCase = getThorChainLpPositionUseCase,
+            thorChainLpPreflight = thorChainLpPreflight,
         )
 
     @Test
@@ -232,6 +238,45 @@ internal class DepositFormViewModelTest {
         vm.validateCustomMemo()
 
         assertNotNull(vm.state.value.customMemoError)
+    }
+
+    @Test
+    fun `deposit for AddLiquidity surfaces preflight block as errorText`() = runTest {
+        val pool = "ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7"
+        val vm = buildViewModel()
+        coEvery { accountsRepository.loadAddress("vault1", Chain.ThorChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.ThorChain,
+                    address = "thor1somevalidaddress",
+                    accounts =
+                        listOf(
+                            Account(
+                                token = Coins.ThorChain.RUNE,
+                                tokenValue = null,
+                                fiatValue = null,
+                                price = null,
+                            )
+                        ),
+                )
+            )
+        coEvery { thorChainLpPreflight.invoke(pool) } returns
+            ThorChainLpPreflightBlock.LpPaused(pool)
+
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null, pool)
+        advanceUntilIdle()
+        vm.selectDepositOption(DepositOption.AddLiquidity)
+        vm.tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1")
+        vm.deposit()
+        advanceUntilIdle()
+
+        val errorText = vm.state.value.errorText
+        assertNotNull(errorText)
+        assertTrue(errorText is UiText.FormattedText)
+        assertEquals(
+            R.string.deposit_error_lp_paused_pool,
+            (errorText as UiText.FormattedText).resId,
+        )
     }
 
     @Test

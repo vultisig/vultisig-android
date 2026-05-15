@@ -131,6 +131,10 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindThorMimirRepository(impl: ThorMimirRepositoryImpl): ThorMimirRepository
+
+    @Binds
+    @Singleton
     fun bindExplorerLinkRepository(impl: ExplorerLinkRepositoryImpl): ExplorerLinkRepository
 
     @Binds
