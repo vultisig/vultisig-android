@@ -185,21 +185,32 @@ private fun ScanQrScreen(
                                 if (firstBarcodes.isNotEmpty()) {
                                     firstBarcodes
                                 } else {
-                                    val source =
-                                        requireNotNull(uriToBitmap(context.contentResolver, uri))
-                                    val bordered = source.addWhiteBorder(2F)
-                                    source.recycle()
-                                    val retry = scanImage(InputImage.fromBitmap(bordered, 0))
-                                    bordered.recycle()
-                                    when (retry) {
-                                        is ScanResult.Success -> retry.barcodes
-                                        is ScanResult.Failure -> {
-                                            Timber.e(
-                                                "Scan failed: %s",
-                                                (first as? ScanResult.Failure)?.message
-                                                    ?: retry.message,
-                                            )
-                                            emptyList()
+                                    val source = uriToBitmap(context.contentResolver, uri)
+                                    if (source == null) {
+                                        Timber.e("Failed to decode bitmap from URI")
+                                        emptyList()
+                                    } else {
+                                        try {
+                                            val bordered = source.addWhiteBorder(2F)
+                                            try {
+                                                val retry =
+                                                    scanImage(InputImage.fromBitmap(bordered, 0))
+                                                when (retry) {
+                                                    is ScanResult.Success -> retry.barcodes
+                                                    is ScanResult.Failure -> {
+                                                        Timber.e(
+                                                            "Scan failed: %s",
+                                                            (first as? ScanResult.Failure)?.message
+                                                                ?: retry.message,
+                                                        )
+                                                        emptyList()
+                                                    }
+                                                }
+                                            } finally {
+                                                bordered.recycle()
+                                            }
+                                        } finally {
+                                            source.recycle()
                                         }
                                     }
                                 }
