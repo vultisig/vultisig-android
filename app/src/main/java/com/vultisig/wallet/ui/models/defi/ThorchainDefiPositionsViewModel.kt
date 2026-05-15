@@ -12,9 +12,11 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.ThorChainLpPosition
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.lpAssetLogoRes
 import com.vultisig.wallet.data.models.monoToneLogo
@@ -112,7 +114,8 @@ internal data class LpTabUiModel(
 internal data class LpPositionUiModel(
     val titleLp: String,
     val totalPriceLp: String,
-    val icon: Int,
+    val icon: ImageModel,
+    val assetTicker: String,
     val apr: String?,
     val position: String,
     val positionKey: String = "",
@@ -881,13 +884,13 @@ constructor(
     private fun PositionUiModelDialog.toPlaceholderUiModel(): LpPositionUiModel {
         val parsed = parseThorChainPool(positionKey)
         val assetTicker = parsed.ticker
-        val resolvedAssetLogo =
+        val resolvedAssetLogo: ImageModel? =
             lpAssetLogoRes(parsed.chain, parsed.ticker, parsed.contractAddress) ?: (logo as? Int)
-        val icon = resolvedAssetLogo ?: R.drawable.ic_coins
         return LpPositionUiModel(
             titleLp = "$ticker Pool",
             totalPriceLp = DEFAULT_ZERO_BALANCE,
-            icon = icon,
+            icon = resolvedAssetLogo ?: getCoinLogo(assetTicker.lowercase()),
+            assetTicker = assetTicker,
             apr = null,
             position = "0 ${Coins.ThorChain.RUNE.ticker} + 0 $assetTicker",
             positionKey = positionKey,
@@ -934,12 +937,12 @@ constructor(
                 .setScale(2, RoundingMode.DOWN)
 
         val resolvedAssetLogo = lpAssetLogoRes(assetChain, assetTicker, assetContractAddress)
-        val icon = resolvedAssetLogo ?: R.drawable.ic_coins
 
         return LpPositionUiModel(
             titleLp = "RUNE/$assetTicker Pool",
             totalPriceLp = currencyFormat.format(totalFiat),
-            icon = icon,
+            icon = resolvedAssetLogo ?: getCoinLogo(assetTicker.lowercase()),
+            assetTicker = assetTicker,
             apr = annualPercentageRate?.formatPercentage(),
             position =
                 "${runeAmount.stripTrailingZeros().toPlainString()} ${Coins.ThorChain.RUNE.ticker} + " +
@@ -1264,9 +1267,8 @@ data class StakeDefaultValues(val stakeElements: List<StakingElement> = emptyLis
 private fun String.toLpPositionDialogModel(): PositionUiModelDialog {
     val parsed = parseThorChainPool(this)
     val resolvedAssetLogo = lpAssetLogoRes(parsed.chain, parsed.ticker, parsed.contractAddress)
-    val logo: Int = resolvedAssetLogo ?: R.drawable.ic_coins
     return PositionUiModelDialog(
-        logo = logo,
+        logo = resolvedAssetLogo ?: getCoinLogo(parsed.ticker.lowercase()),
         ticker = "RUNE/${parsed.ticker}",
         isSelected = false,
         positionKey = this,
