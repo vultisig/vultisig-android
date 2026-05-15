@@ -64,7 +64,6 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
-import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
@@ -2943,22 +2942,6 @@ internal data class TokenMergeInfo(val ticker: String, val contract: String) {
     val denom: String
         get() = "thor.$ticker".lowercase()
 }
-
-private fun ThorChainLpPreflightBlock.toError(): InvalidTransactionDataException =
-    when (this) {
-        is ThorChainLpPreflightBlock.LpPaused ->
-            InvalidTransactionDataException(
-                UiText.FormattedText(R.string.deposit_error_lp_paused_pool, listOf(pool))
-            )
-        is ThorChainLpPreflightBlock.ChainLpHalted ->
-            InvalidTransactionDataException(
-                UiText.FormattedText(R.string.deposit_error_lp_halted_chain, listOf(chainPrefix))
-            )
-        is ThorChainLpPreflightBlock.PoolNotAvailable ->
-            InvalidTransactionDataException(
-                UiText.FormattedText(R.string.deposit_error_pool_not_available, listOf(pool))
-            )
-    }
 
 internal data class TokenWithdrawSecureAsset(
     val ticker: String,

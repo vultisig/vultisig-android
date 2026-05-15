@@ -69,6 +69,30 @@ internal class ThorChainLpPreflightUseCaseTest {
     }
 
     @Test
+    fun `when multiple signals block, mimir LP pause wins over chain halt and pool status`() =
+        runTest {
+            coEvery { mimir.isLpPaused(POOL_USDT) } returns true
+            coEvery { mimir.isLpHalted("ETH") } returns true
+            coEvery { api.getPool(POOL_USDT) } returns
+                ThorChainPoolJson(
+                    asset = POOL_USDT,
+                    assetTorPrice = BigInteger.ZERO,
+                    status = "Staged",
+                )
+
+            assertTrue(useCase(POOL_USDT) is ThorChainLpPreflightBlock.LpPaused)
+        }
+
+    @Test
+    fun `when chain halt and pool status both block, chain halt wins`() = runTest {
+        coEvery { mimir.isLpHalted("ETH") } returns true
+        coEvery { api.getPool(POOL_USDT) } returns
+            ThorChainPoolJson(asset = POOL_USDT, assetTorPrice = BigInteger.ZERO, status = "Staged")
+
+        assertTrue(useCase(POOL_USDT) is ThorChainLpPreflightBlock.ChainLpHalted)
+    }
+
+    @Test
     fun `network errors are swallowed - clean state still passes`() = runTest {
         coEvery { mimir.isLpPaused(any()) } throws RuntimeException("thornode down")
         coEvery { mimir.isLpHalted(any()) } throws RuntimeException("thornode down")
