@@ -20,6 +20,7 @@ internal fun uriToBitmap(
     selectedFileUri: Uri,
     maxDimension: Int = 1600,
 ): Bitmap? {
+    require(maxDimension > 0) { "maxDimension must be > 0" }
     try {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         contentResolver.openFileDescriptor(selectedFileUri, "r").use {
