@@ -38,29 +38,44 @@ internal class ThorMimirRepositoryTest {
     }
 
     @Test
-    fun `per-asset pause key matches the pool's chain and ticker without contract suffix`() =
+    fun `per-pool deposit pause key matches the full asset identifier including contract`() =
         runTest {
-            coEvery { api.getMimir() } returns mapOf("PAUSELP-ETH-USDT" to 1L)
+            coEvery { api.getMimir() } returns
+                mapOf("PAUSELPDEPOSIT-ETH-USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7" to 1L)
 
             assertTrue(repository.isLpPaused("ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7"))
+            // Same ticker, different contract — must not match.
             assertFalse(
-                repository.isLpPaused("ETH.USDC-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
+                repository.isLpPaused("ETH.USDT-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
             )
             assertFalse(repository.isLpPaused("BTC.BTC"))
         }
 
     @Test
-    fun `per-asset pause key matches case-insensitively`() = runTest {
-        coEvery { api.getMimir() } returns mapOf("pauselp-eth-usdt" to 1L)
+    fun `per-pool deposit pause key matches native pools without contract suffix`() = runTest {
+        coEvery { api.getMimir() } returns mapOf("PAUSELPDEPOSIT-BTC-BTC" to 1L)
 
-        assertTrue(repository.isLpPaused("ETH.USDT-0xdac"))
+        assertTrue(repository.isLpPaused("BTC.BTC"))
+        assertFalse(repository.isLpPaused("ETH.ETH"))
+    }
+
+    @Test
+    fun `per-pool deposit pause key matches case-insensitively`() = runTest {
+        coEvery { api.getMimir() } returns
+            mapOf("pauselpdeposit-eth-usdt-0xdac17f958d2ee523a2206206994597c13d831ec7" to 1L)
+
+        assertTrue(repository.isLpPaused("ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7"))
     }
 
     @Test
     fun `zero value is treated as off`() = runTest {
-        coEvery { api.getMimir() } returns mapOf("PAUSELP" to 0L, "PAUSELP-ETH-USDT" to 0L)
+        coEvery { api.getMimir() } returns
+            mapOf(
+                "PAUSELP" to 0L,
+                "PAUSELPDEPOSIT-ETH-USDT-0XDAC17F958D2EE523A2206206994597C13D831EC7" to 0L,
+            )
 
-        assertFalse(repository.isLpPaused("ETH.USDT-0xdac"))
+        assertFalse(repository.isLpPaused("ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7"))
     }
 
     @Test

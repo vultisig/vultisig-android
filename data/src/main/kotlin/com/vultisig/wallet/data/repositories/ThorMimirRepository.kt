@@ -16,8 +16,10 @@ import kotlinx.coroutines.sync.withLock
 interface ThorMimirRepository {
     /**
      * True when add-liquidity is paused either globally (`PAUSELP`) or for the specific [pool]
-     * (`PAUSELP-<CHAIN>-<TICKER>`). [pool] is the canonical THORChain pool identifier (e.g.
-     * `ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7`).
+     * (`PAUSELPDEPOSIT-<CHAIN>-<ASSET[-CONTRACT]>`). [pool] is the canonical THORChain pool
+     * identifier (e.g. `ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7`). The contract suffix
+     * is preserved so ERC20 pools — which thornode pauses by full asset id — are matched correctly
+     * (the 2026-04-10 `BTC.BTC` refund incident surfaced this requirement).
      */
     suspend fun isLpPaused(pool: String): Boolean
 
@@ -38,7 +40,7 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
     override suspend fun isLpPaused(pool: String): Boolean {
         val mimir = mimir()
         if (mimir.isOn(KEY_GLOBAL_LP_PAUSE)) return true
-        val key = "$KEY_GLOBAL_LP_PAUSE-${pool.toMimirAssetSuffix()}"
+        val key = "$KEY_PER_POOL_LP_DEPOSIT_PAUSE-${pool.toMimirAssetSuffix()}"
         return mimir.isOn(key)
     }
 
@@ -67,17 +69,15 @@ internal class ThorMimirRepositoryImpl @Inject constructor(private val thorChain
     private fun Map<String, Long>.isOn(key: String): Boolean = (this[key.uppercase()] ?: 0L) > 0L
 
     /**
-     * Mimir per-asset pause keys are formatted as `PAUSELP-<CHAIN>-<TICKER>` (no contract suffix,
-     * dashes instead of dots, all uppercase). Convert a canonical pool id (`ETH.USDT-0xdac...`) to
-     * that form.
+     * Per-pool LP-deposit pause keys are formatted as `PAUSELPDEPOSIT-<CHAIN>-<ASSET[-CONTRACT]>`:
+     * dashes instead of dots, full asset identifier including any ERC20 contract suffix, all
+     * uppercase. Convert a canonical pool id (`ETH.USDT-0xdac...`) to that form.
      */
-    private fun String.toMimirAssetSuffix(): String {
-        val withoutContract = substringBefore('-')
-        return withoutContract.replace('.', '-').uppercase()
-    }
+    private fun String.toMimirAssetSuffix(): String = replace('.', '-').uppercase()
 
     private companion object {
         const val TTL_MILLIS = 30_000L
         const val KEY_GLOBAL_LP_PAUSE = "PAUSELP"
+        const val KEY_PER_POOL_LP_DEPOSIT_PAUSE = "PAUSELPDEPOSIT"
     }
 }

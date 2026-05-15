@@ -2954,10 +2954,6 @@ private fun ThorChainLpPreflightBlock.toError(): InvalidTransactionDataException
             InvalidTransactionDataException(
                 UiText.FormattedText(R.string.deposit_error_lp_halted_chain, listOf(chainPrefix))
             )
-        is ThorChainLpPreflightBlock.InboundLpPaused ->
-            InvalidTransactionDataException(
-                UiText.FormattedText(R.string.deposit_error_lp_halted_chain, listOf(chainPrefix))
-            )
         is ThorChainLpPreflightBlock.PoolNotAvailable ->
             InvalidTransactionDataException(
                 UiText.FormattedText(R.string.deposit_error_pool_not_available, listOf(pool))

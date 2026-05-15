@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.api.ThorChainApi
-import com.vultisig.wallet.data.api.models.thorchain.THORChainInboundAddress
 import com.vultisig.wallet.data.api.models.thorchain.ThorChainPoolJson
 import com.vultisig.wallet.data.repositories.ThorMimirRepository
 import io.mockk.coEvery
@@ -26,12 +25,10 @@ internal class ThorChainLpPreflightUseCaseTest {
         mimir = mockk()
         useCase = ThorChainLpPreflightUseCaseImpl(api, mimir)
 
-        // Default: clean state — every signal off, pool Available, no inbound flags.
+        // Default: clean state — every signal off, pool Available.
         coEvery { mimir.isLpPaused(any()) } returns false
         coEvery { mimir.isLpHalted(any()) } returns false
         coEvery { api.getPool(any()) } returns availablePool(POOL_USDT)
-        coEvery { api.getTHORChainInboundAddresses() } returns
-            listOf(inbound(chain = "ETH", halted = false))
     }
 
     @Test fun `clean state passes`() = runTest { assertNull(useCase(POOL_USDT)) }
@@ -72,49 +69,10 @@ internal class ThorChainLpPreflightUseCaseTest {
     }
 
     @Test
-    fun `inbound chain_lp_actions_paused is reported`() = runTest {
-        coEvery { api.getTHORChainInboundAddresses() } returns
-            listOf(inbound(chain = "ETH", chainLpActionsPaused = true))
-
-        val block = useCase(POOL_USDT)
-
-        assertTrue(block is ThorChainLpPreflightBlock.InboundLpPaused)
-    }
-
-    @Test
-    fun `inbound halted is reported`() = runTest {
-        coEvery { api.getTHORChainInboundAddresses() } returns
-            listOf(inbound(chain = "ETH", halted = true))
-
-        val block = useCase(POOL_USDT)
-
-        assertTrue(block is ThorChainLpPreflightBlock.InboundLpPaused)
-    }
-
-    @Test
-    fun `inbound global trading paused is reported`() = runTest {
-        coEvery { api.getTHORChainInboundAddresses() } returns
-            listOf(inbound(chain = "ETH", globalTradingPaused = true))
-
-        val block = useCase(POOL_USDT)
-
-        assertTrue(block is ThorChainLpPreflightBlock.InboundLpPaused)
-    }
-
-    @Test
-    fun `inbound entry for unrelated chain is ignored`() = runTest {
-        coEvery { api.getTHORChainInboundAddresses() } returns
-            listOf(inbound(chain = "BTC", halted = true), inbound(chain = "ETH", halted = false))
-
-        assertNull(useCase(POOL_USDT))
-    }
-
-    @Test
     fun `network errors are swallowed - clean state still passes`() = runTest {
         coEvery { mimir.isLpPaused(any()) } throws RuntimeException("thornode down")
         coEvery { mimir.isLpHalted(any()) } throws RuntimeException("thornode down")
         coEvery { api.getPool(any()) } throws RuntimeException("thornode down")
-        coEvery { api.getTHORChainInboundAddresses() } throws RuntimeException("thornode down")
 
         assertNull(useCase(POOL_USDT))
     }
@@ -141,23 +99,6 @@ internal class ThorChainLpPreflightUseCaseTest {
 
     private fun availablePool(asset: String): ThorChainPoolJson =
         ThorChainPoolJson(asset = asset, assetTorPrice = BigInteger.ZERO, status = "Available")
-
-    private fun inbound(
-        chain: String,
-        halted: Boolean = false,
-        chainLpActionsPaused: Boolean = false,
-        globalTradingPaused: Boolean = false,
-    ): THORChainInboundAddress =
-        THORChainInboundAddress(
-            chain = chain,
-            address = "0xinbound",
-            halted = halted,
-            globalTradingPaused = globalTradingPaused,
-            chainTradingPaused = false,
-            chainLPActionsPaused = chainLpActionsPaused,
-            gasRate = "0",
-            gasRateUnits = "gwei",
-        )
 
     private companion object {
         const val POOL_USDT = "ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7"
