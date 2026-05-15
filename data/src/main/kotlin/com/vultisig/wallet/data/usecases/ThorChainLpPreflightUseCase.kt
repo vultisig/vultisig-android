@@ -31,18 +31,14 @@ sealed class ThorChainLpPreflightBlock {
 
 /**
  * Validates THORChain network state before a RUNE-side add-liquidity inbound is signed and
- * broadcast.
+ * broadcast. By reading mimir and the pool's `status`, we refuse to build the keysign payload when
+ * the network would refund it.
  *
- * Companion to #4468 (refund *reporting*) — this use case is the *prevention* half: by reading
- * mimir and the pool's `status`, we refuse to build the keysign payload when the network would
- * refund it.
- *
- * Scope is intentionally limited to the RUNE side. The asset chain's inbound flags are NOT
- * inspected here because a RUNE deposit never traverses the asset-chain inbound — iOS
- * (`FunctionCallAddThorLP`) and the browser extension's `assertPoolDepositable` make the same
- * choice. The asset chain is identified by the pool prefix (e.g. `ETH` from `ETH.USDT-0xdac…`) and
- * is only used for the mimir `HALT<CHAIN>LP`/`HALT<CHAIN>CHAIN` checks, which capture LP-specific
- * halts independently of inbound trading state.
+ * Scope is intentionally limited to the RUNE side: a RUNE deposit never traverses the asset-chain
+ * inbound, so asset-chain inbound flags are not inspected. The asset chain is identified by the
+ * pool prefix (e.g. `ETH` from `ETH.USDT-0xdac…`) and is only used for the mimir
+ * `HALT<CHAIN>LP`/`HALT<CHAIN>CHAIN` checks, which capture LP-specific halts independently of
+ * inbound trading state.
  */
 interface ThorChainLpPreflightUseCase {
     /**

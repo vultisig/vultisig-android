@@ -17,9 +17,8 @@ interface ThorMimirRepository {
     /**
      * True when add-liquidity is paused either globally (`PAUSELP`) or for the specific [pool]
      * (`PAUSELPDEPOSIT-<CHAIN>-<ASSET[-CONTRACT]>`). [pool] is the canonical THORChain pool
-     * identifier (e.g. `ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7`). The contract suffix
-     * is preserved so ERC20 pools — which thornode pauses by full asset id — are matched correctly
-     * (the 2026-04-10 `BTC.BTC` refund incident surfaced this requirement).
+     * identifier (e.g. `ETH.USDT-0xdac17f958d2ee523a2206206994597c13d831ec7`). The full asset id
+     * including any ERC20 contract suffix is used, since thornode pauses ERC20 pools by full id.
      */
     suspend fun isLpPaused(pool: String): Boolean
 
