@@ -537,7 +537,7 @@ constructor(
                     sessionId,
                     encryptionKeyHex,
                     sessionApi,
-                    CoroutineScope(Dispatchers.IO),
+                    CoroutineScope(viewModelScope.coroutineContext + Dispatchers.IO),
                     encryption,
                     isEncryptionGcm,
                 )
