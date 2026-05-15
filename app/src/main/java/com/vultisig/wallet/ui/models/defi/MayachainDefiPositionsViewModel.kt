@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.lpAssetLogoRes
 import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -660,16 +661,18 @@ constructor(
 
                         val apr = stats?.annualPercentageRate?.toDoubleOrNull()
 
+                        val poolLogo = (pool.logo as? Int) ?: R.drawable.cacao
+                        val showChainBadge = poolLogo != assetChain?.logo
                         LpPositionUiModel(
                             titleLp = "${pool.ticker} Pool",
                             totalPriceLp = currencyFormat.format(totalFiatValue.value),
-                            icon = (pool.logo as? Int) ?: R.drawable.cacao,
+                            icon = poolLogo,
                             apr = apr?.formatPercentage(),
                             position =
                                 "${cacaoAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetCoinTicker",
                             positionKey = pool.positionKey,
                             canRemove = liquidityUnits > BigDecimal.ZERO,
-                            chainLogo = assetChain?.monoToneLogo,
+                            chainLogo = assetChain?.monoToneLogo?.takeIf { showChainBadge },
                         )
                     }
 
@@ -770,17 +773,18 @@ constructor(
 }
 
 private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
-    val assetTicker = asset.substringAfter(".")
-    val coinName = assetTicker.substringBefore("-").lowercase()
-    val coinLogo = getCoinLogo(coinName)
+    val tickerPart = asset.substringAfter(".").substringBefore("-")
+    val contractAddress = asset.substringAfter(".").substringAfter("-", "")
     val chain = mayaPoolChainPrefixToChain(asset.substringBefore("."))
-    val logo: Int = if (coinLogo is Int) coinLogo else chain?.logo ?: R.drawable.cacao
+    val resolvedAssetLogo = lpAssetLogoRes(chain, tickerPart, contractAddress)
+    val logo: Int = resolvedAssetLogo ?: chain?.logo ?: R.drawable.cacao
+    val showChainBadge = resolvedAssetLogo != null && resolvedAssetLogo != chain?.logo
     return PositionUiModelDialog(
         logo = logo,
-        ticker = "CACAO/${assetTicker.substringBefore("-")}",
+        ticker = "CACAO/$tickerPart",
         isSelected = false,
         positionKey = asset,
-        chainLogo = chain?.monoToneLogo,
+        chainLogo = chain?.monoToneLogo?.takeIf { showChainBadge },
     )
 }
 
