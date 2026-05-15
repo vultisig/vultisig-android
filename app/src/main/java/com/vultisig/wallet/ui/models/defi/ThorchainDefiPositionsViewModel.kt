@@ -883,9 +883,7 @@ constructor(
         val assetTicker = parsed.ticker
         val resolvedAssetLogo =
             lpAssetLogoRes(parsed.chain, parsed.ticker, parsed.contractAddress) ?: (logo as? Int)
-        val icon = resolvedAssetLogo ?: parsed.chain?.logo ?: R.drawable.ic_coins
-        val chainLogoRes = parsed.chain?.logo
-        val showChainBadge = resolvedAssetLogo != null && resolvedAssetLogo != chainLogoRes
+        val icon = resolvedAssetLogo ?: R.drawable.ic_coins
         return LpPositionUiModel(
             titleLp = "$ticker Pool",
             totalPriceLp = DEFAULT_ZERO_BALANCE,
@@ -894,7 +892,7 @@ constructor(
             position = "0 ${Coins.ThorChain.RUNE.ticker} + 0 $assetTicker",
             positionKey = positionKey,
             canRemove = false,
-            chainLogo = parsed.chain?.monoToneLogo?.takeIf { showChainBadge },
+            chainLogo = parsed.chain?.monoToneLogo,
         )
     }
 
@@ -936,8 +934,7 @@ constructor(
                 .setScale(2, RoundingMode.DOWN)
 
         val resolvedAssetLogo = lpAssetLogoRes(assetChain, assetTicker, assetContractAddress)
-        val icon = resolvedAssetLogo ?: assetChain?.logo ?: R.drawable.ic_coins
-        val showChainBadge = resolvedAssetLogo != null && resolvedAssetLogo != assetChain?.logo
+        val icon = resolvedAssetLogo ?: R.drawable.ic_coins
 
         return LpPositionUiModel(
             titleLp = "RUNE/$assetTicker Pool",
@@ -948,7 +945,7 @@ constructor(
                 "${runeAmount.stripTrailingZeros().toPlainString()} ${Coins.ThorChain.RUNE.ticker} + " +
                     "${assetAmount.stripTrailingZeros().toPlainString()} $assetTicker",
             positionKey = pool,
-            chainLogo = assetChain?.monoToneLogo?.takeIf { showChainBadge },
+            chainLogo = assetChain?.monoToneLogo,
         )
     }
 
@@ -1267,13 +1264,12 @@ data class StakeDefaultValues(val stakeElements: List<StakingElement> = emptyLis
 private fun String.toLpPositionDialogModel(): PositionUiModelDialog {
     val parsed = parseThorChainPool(this)
     val resolvedAssetLogo = lpAssetLogoRes(parsed.chain, parsed.ticker, parsed.contractAddress)
-    val logo: Int = resolvedAssetLogo ?: parsed.chain?.logo ?: R.drawable.ic_coins
-    val showChainBadge = resolvedAssetLogo != null && resolvedAssetLogo != parsed.chain?.logo
+    val logo: Int = resolvedAssetLogo ?: R.drawable.ic_coins
     return PositionUiModelDialog(
         logo = logo,
         ticker = "RUNE/${parsed.ticker}",
         isSelected = false,
         positionKey = this,
-        chainLogo = parsed.chain?.monoToneLogo?.takeIf { showChainBadge },
+        chainLogo = parsed.chain?.monoToneLogo,
     )
 }

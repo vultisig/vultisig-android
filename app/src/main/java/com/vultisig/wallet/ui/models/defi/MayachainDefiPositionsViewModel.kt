@@ -661,8 +661,7 @@ constructor(
 
                         val apr = stats?.annualPercentageRate?.toDoubleOrNull()
 
-                        val poolLogo = (pool.logo as? Int) ?: R.drawable.cacao
-                        val showChainBadge = poolLogo != assetChain?.logo
+                        val poolLogo = (pool.logo as? Int) ?: R.drawable.ic_coins
                         LpPositionUiModel(
                             titleLp = "${pool.ticker} Pool",
                             totalPriceLp = currencyFormat.format(totalFiatValue.value),
@@ -672,7 +671,7 @@ constructor(
                                 "${cacaoAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} CACAO + ${assetAmount.setScale(4, RoundingMode.DOWN).stripTrailingZeros().toPlainString()} $assetCoinTicker",
                             positionKey = pool.positionKey,
                             canRemove = liquidityUnits > BigDecimal.ZERO,
-                            chainLogo = assetChain?.monoToneLogo?.takeIf { showChainBadge },
+                            chainLogo = assetChain?.monoToneLogo,
                         )
                     }
 
@@ -777,14 +776,13 @@ private fun MayaNodePool.toPositionDialogModel(): PositionUiModelDialog {
     val contractAddress = asset.substringAfter(".").substringAfter("-", "")
     val chain = mayaPoolChainPrefixToChain(asset.substringBefore("."))
     val resolvedAssetLogo = lpAssetLogoRes(chain, tickerPart, contractAddress)
-    val logo: Int = resolvedAssetLogo ?: chain?.logo ?: R.drawable.cacao
-    val showChainBadge = resolvedAssetLogo != null && resolvedAssetLogo != chain?.logo
+    val logo: Int = resolvedAssetLogo ?: R.drawable.ic_coins
     return PositionUiModelDialog(
         logo = logo,
         ticker = "CACAO/$tickerPart",
         isSelected = false,
         positionKey = asset,
-        chainLogo = chain?.monoToneLogo?.takeIf { showChainBadge },
+        chainLogo = chain?.monoToneLogo,
     )
 }
 
