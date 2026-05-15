@@ -1739,9 +1739,9 @@ constructor(
         }
         val tokenAmountInt = tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
 
-        // Preflight against THORChain network state — pool status + mimir pause keys + inbound
-        // chain_lp_actions_paused. Refuses to build the keysign payload when the network would
-        // refund the inbound, sparing the user the inbound gas spend.
+        // Preflight against THORChain network state — pool status and the relevant mimir pause
+        // keys. Refuses to build the keysign payload when the network would refund the inbound,
+        // sparing the user the inbound gas spend.
         if (chain == Chain.ThorChain) {
             thorChainLpPreflight(poolId)?.let { block -> throw block.toError() }
         }
