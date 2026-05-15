@@ -250,7 +250,8 @@ private fun TokenUiGridLogo(modifier: Modifier = Modifier, size: Dp = 36.dp, tok
                     Modifier.align(Alignment.BottomEnd)
                         .size(size * 0.42f)
                         .clip(CircleShape)
-                        .border(1.dp, Theme.v2.colors.backgrounds.primary, CircleShape)
+                        .background(Theme.v2.colors.neutrals.n200, CircleShape)
+                        .border(1.dp, Theme.v2.colors.backgrounds.secondary, CircleShape)
             ) {
                 AsyncImage(
                     model = token.chainLogo,

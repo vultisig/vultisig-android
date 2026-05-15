@@ -88,7 +88,8 @@ internal fun LpWidget(
                             Modifier.align(Alignment.BottomEnd)
                                 .size(20.dp)
                                 .clip(CircleShape)
-                                .border(1.dp, Theme.v2.colors.backgrounds.primary, CircleShape),
+                                .background(Theme.v2.colors.neutrals.n200, CircleShape)
+                                .border(1.dp, Theme.v2.colors.backgrounds.secondary, CircleShape),
                     )
                 }
             }
