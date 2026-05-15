@@ -102,9 +102,11 @@ import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -175,31 +177,48 @@ private fun ScanQrScreen(
             coroutineScope.launch {
                 if (uri != null) {
                     try {
-                        val first = scanImage(InputImage.fromFilePath(context, uri))
-                        val firstBarcodes = (first as? ScanResult.Success)?.barcodes.orEmpty()
-                        if (firstBarcodes.isNotEmpty()) {
-                            onSuccess(firstBarcodes)
-                        } else {
-                            val bitmap =
-                                requireNotNull(uriToBitmap(context.contentResolver, uri))
-                                    .addWhiteBorder(2F)
-                            val retry = scanImage(InputImage.fromBitmap(bitmap, 0))
-                            bitmap.recycle()
-                            when (retry) {
-                                is ScanResult.Success ->
-                                    if (retry.barcodes.isNotEmpty()) {
-                                        onSuccess(retry.barcodes)
+                        val barcodes =
+                            withContext(Dispatchers.IO) {
+                                val first = scanImage(InputImage.fromFilePath(context, uri))
+                                val firstBarcodes =
+                                    (first as? ScanResult.Success)?.barcodes.orEmpty()
+                                if (firstBarcodes.isNotEmpty()) {
+                                    firstBarcodes
+                                } else {
+                                    val source = uriToBitmap(context.contentResolver, uri)
+                                    if (source == null) {
+                                        Timber.e("Failed to decode bitmap from URI")
+                                        emptyList()
                                     } else {
-                                        onError(noBarcodeFoundMessage)
+                                        try {
+                                            val bordered = source.addWhiteBorder(2F)
+                                            try {
+                                                val retry =
+                                                    scanImage(InputImage.fromBitmap(bordered, 0))
+                                                when (retry) {
+                                                    is ScanResult.Success -> retry.barcodes
+                                                    is ScanResult.Failure -> {
+                                                        Timber.e(
+                                                            "Scan failed: %s",
+                                                            (first as? ScanResult.Failure)?.message
+                                                                ?: retry.message,
+                                                        )
+                                                        emptyList()
+                                                    }
+                                                }
+                                            } finally {
+                                                bordered.recycle()
+                                            }
+                                        } finally {
+                                            source.recycle()
+                                        }
                                     }
-                                is ScanResult.Failure -> {
-                                    Timber.e(
-                                        "Scan failed: %s",
-                                        (first as? ScanResult.Failure)?.message ?: retry.message,
-                                    )
-                                    onError(noBarcodeFoundMessage)
                                 }
                             }
+                        if (barcodes.isNotEmpty()) {
+                            onSuccess(barcodes)
+                        } else {
+                            onError(noBarcodeFoundMessage)
                         }
                     } catch (e: CancellationException) {
                         throw e
