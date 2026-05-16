@@ -124,9 +124,6 @@
     <string name="vault_detail_screen_eddsa_key_copied">Chave EdDSA Copiada</string>
     <string name="welcome_screen_skip">Pular</string>
     <string name="keysign_screen_preparing_vault">PREPARANDO COFRE…</string>
-    <string name="keysign_screen_signing_with_ecdsa">ASSINANDO USANDO CHAVE ECDSA…</string>
-    <string name="keysign_screen_signing_with_eddsa">ASSINANDO USANDO CHAVE EdDSA…</string>
-    <string name="keysign_screen_signing_with_mldsa">ASSINANDO USANDO CHAVE MLDSA…</string>
     <string name="vault_settings_delete_vault_caution1">Estou ciente de que o cofre será excluído permanentemente</string>
     <string name="vault_settings_delete_vault_caution2">Estou ciente de que posso perder fundos</string>
     <string name="vault_settings_delete_vault_caution3">Fiz um backup do cofre para restaurá-lo mais tarde</string>
@@ -160,7 +157,6 @@
     <string name="import_file_screen_duplicate_vault">O cofre é duplicado</string>
     <string name="import_file_screen_success_import">O cofre foi importado com sucesso</string>
     <string name="verify_swap_consent_amount">O valor da troca está correto</string>
-    <string name="successfully_scanned_barcode">Código de barras escaneado com sucesso: %1$s</string>
     <string name="swap_form_vault">Cofre</string>
     <string name="swap_form_min_pay">pagamento mín.</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, verifique todos os consentimentos</string>
@@ -169,7 +165,6 @@
     <string name="send_screen_max">MÁXIMA</string>
     <string name="biometry_auth_login_button">Login com biometria</string>
     <string name="feature_item_learn_more">Saber mais</string>
-    <string name="keysign_screen_keysign_finished">Keysign concluído!</string>
     <string name="keysign">Sinal de chave</string>
     <string name="generating_key_screen_keygen_failed">Falha na geração de chaves</string>
     <string name="bottom_warning_msg_keygen_error_screen">Mantenha os dispositivos na mesma rede WiFi, corrija o cofre e pareie os dispositivos.\nCertifique-se de que nenhum outro dispositivo esteja executando o Vultisig.</string>
@@ -188,7 +183,6 @@
     <string name="swap_form_estimated_fees_title">Taxa de swap</string>
     <string name="swap_form_estimated_fees_with_percent_title">Taxa de swap (%1$s)</string>
     <string name="swap_form_outbound_fee_title">Taxa de saída</string>
-    <string name="keysign_screen_error_please_try_again">Erro! Por favor, tente novamente. %1$s</string>
     <string name="join_keysign_discovering_session_id">Descobrindo o ID da sessão</string>
     <string name="join_keysign_discovery_service">Descobrindo o Serviço</string>
     <string name="vault_settings_delete_subtitle">Exclua seu cofre permanentemente.</string>
@@ -206,7 +200,6 @@
     <string name="vault_settings_delete_vault_ecdsa_key">Chave ECDSA:</string>
     <string name="vault_settings_delete_vault_eddsa_key">Chave EdDSA:</string>
     <string name="vault_settings_delete_vault_id">ID do dispositivo:</string>
-    <string name="circular_progress_indicator_done">Concluído</string>
     <string name="verify_transaction_memo_title">Memorando</string>
     <string name="vault_settings_delete_vault_value">Vault Valor:</string>
     <string name="join_keysign_wrong_reshare">ReShare errado</string>
@@ -295,9 +288,6 @@
     <string name="qr_title_join_keygen">Junte-se à Keygen</string>
     <string name="qr_title_join_keysign">Junte-se ao Keysign</string>
     <string name="qr_title_join_swap_keysign">Junte-se à troca</string>
-    <string name="qr_title_join_keygen_description">Digitalize com dispositivos para participar na geração do cofre</string>
-    <string name="qr_title_join_keysign_description">Cofre: %1$s\nValor: %2$s\n Para: %3$s</string>
-    <string name="qr_title_join_keysign_swap_description">Cofre: %1$s De: %2$s\n Para: %3$s</string>
     <string name="qr_share_label_vault">Cofre</string>
     <string name="qr_share_label_amount">Montante</string>
     <string name="qr_share_label_to">Para</string>
@@ -422,7 +412,6 @@
     <string name="deposit_option_withdraw_ruji">Sacar RUJI</string>
     <string name="withdraw_amount">Sacar %s</string>
     <string name="deposit_form_unstake_percentage_hint">Insira a percentagem para desbloquear</string>
-    <string name="scan_qr_screen_title">Digitalize o código QR</string>
     <string name="verify_transaction_function_inputs_title">Argumentos de função</string>
     <string name="dapp_hero_unverified_function_title">Função não verificada</string>
     <string name="dapp_hero_unverified_function_subtitle">Reveja os detalhes antes de assinar</string>
@@ -464,16 +453,10 @@
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Pool de liquidez</string>
     <!-- Tron DeFi -->
-    <string name="tron_defi_available_balance">Saldo Disponível</string>
-    <string name="tron_defi_staking">Staking</string>
-    <string name="tron_defi_bandwidth">Largura de Banda</string>
-    <string name="tron_defi_energy">Energia</string>
     <string name="tron_defi_freeze">Congelar</string>
     <string name="tron_defi_unfreeze">Descongelar</string>
     <string name="tron_defi_tron_freeze">TRON Congelar</string>
     <string name="tron_defi_frozen">Congelado</string>
-    <string name="tron_defi_unfreezing">Descongelando</string>
-    <string name="tron_defi_resources">Recursos</string>
     <string name="tron_defi_pending_withdrawals">Saques Pendentes</string>
     <string name="tron_defi_ready_to_claim">Pronto para resgatar</string>
     <string name="tron_defi_countdown_days">%1$d dias, %2$d h</string>
@@ -522,14 +505,10 @@
     <string name="deposit_option_remove_cacao_pool">Remover do pool CACAO</string>
     <string name="deposit_option_add_liquidity">Adicionar liquidez</string>
     <string name="deposit_option_remove_liquidity">Remover liquidez</string>
-    <string name="add_pool_title">Adicionar Pool</string>
     <string name="add_lp_title">Adicionar LP de %1$s</string>
     <string name="add_pool_amount_label">Valor</string>
     <string name="add_pool_gas_auto">Taxa de rede (auto)</string>
     <string name="max">Máx</string>
-    <string name="token_fiat_toggle_token_label">Valor do token</string>
-    <string name="token_fiat_toggle_fiat_label">Valor fiat</string>
-    <string name="remove_pool_title">Remover Pool</string>
     <string name="remove_lp_title">Remover LP de %1$s</string>
     <string name="remove_pool_amount_label">Montante</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
@@ -1070,7 +1049,6 @@
     <string name="sign_ton_messages">Mensagens</string>
     <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
-    <string name="vault_count_recommended">Recomendada</string>
 
     <string name="welcome_tip">Dica: Pode usar um browser como dispositivo</string>
     <string name="vault_setup_your_vault_setup">A configuração do seu cofre</string>

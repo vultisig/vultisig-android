@@ -66,16 +66,10 @@
     <string name="defi_stake">스테이킹</string>
     <string name="liquidity_pool">유동성 풀</string>
     <!-- Tron DeFi -->
-    <string name="tron_defi_available_balance">사용 가능 잔액</string>
-    <string name="tron_defi_staking">스테이킹</string>
-    <string name="tron_defi_bandwidth">대역폭</string>
-    <string name="tron_defi_energy">에너지</string>
     <string name="tron_defi_freeze">동결</string>
     <string name="tron_defi_unfreeze">동결 해제</string>
     <string name="tron_defi_tron_freeze">TRON 동결</string>
     <string name="tron_defi_frozen">동결됨</string>
-    <string name="tron_defi_unfreezing">동결 해제 중</string>
-    <string name="tron_defi_resources">리소스</string>
     <string name="tron_defi_pending_withdrawals">대기 중인 출금</string>
     <string name="tron_defi_ready_to_claim">청구 가능</string>
     <string name="tron_defi_countdown_days">%1$d일 %2$d시간</string>
@@ -231,12 +225,6 @@
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA 키 복사됨</string>
     <string name="welcome_screen_skip">건너뛰기</string>
     <string name="keysign_screen_preparing_vault">볼트 준비 중…</string>
-    <string name="keysign_screen_signing_with_ecdsa">ECDSA로 서명 중…</string>
-    <string name="keysign_screen_signing_with_eddsa">EdDSA로 서명 중…</string>
-    <string name="keysign_screen_signing_with_mldsa">MLDSA로 서명 중…</string>
-    <string name="keysign_screen_keysign_finished">서명 완료!</string>
-    <string name="keysign_screen_error_please_try_again">오류! 다시 시도해 주세요. %1$s</string>
-    <string name="successfully_scanned_barcode">바코드 스캔 성공: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">볼트가 영구적으로 삭제된다는 것을 알고 있습니다</string>
     <string name="vault_settings_delete_vault_caution2">자금을 잃을 수 있다는 것을 알고 있습니다</string>
     <string name="vault_settings_delete_vault_caution3">나중에 복원할 수 있도록 볼트 백업을 완료했습니다</string>
@@ -289,7 +277,6 @@
     <string name="send_from_invalid_amount">잘못된 금액</string>
     <string name="insufficient_utxos_error">선택한 금액을 처리하기에 사용 가능한 UTXO가 부족합니다. 자금을 추가하거나 보내는 금액을 줄여주세요</string>
     <string name="verify_transaction_memo_title">메모</string>
-    <string name="circular_progress_indicator_done">완료</string>
     <string name="join_keysign_wrong_reshare">잘못된 재공유</string>
     <string name="swap_screen_provider_title">제공자</string>
     <string name="swap_form_minimum_amount">"스왑 금액이 너무 적습니다. 권장 금액 %1$s %2$s "</string>
@@ -390,9 +377,6 @@
     <string name="qr_title_join_keygen">키 생성 참여</string>
     <string name="qr_title_join_keysign">서명 참여</string>
     <string name="qr_title_join_swap_keysign">스왑 참여</string>
-    <string name="qr_title_join_keygen_description">기기로 스캔하여\n볼트 생성에 참여하세요</string>
-    <string name="qr_title_join_keysign_description">볼트: %1$s\n금액: %2$s\n 수신: %3$s</string>
-    <string name="qr_title_join_keysign_swap_description">볼트: %1$s\n보내기: %2$s\n 받기: %3$s</string>
     <string name="qr_share_label_vault">볼트</string>
     <string name="qr_share_label_amount">금액</string>
     <string name="qr_share_label_to">받는</string>
@@ -627,7 +611,6 @@
     <string name="transfer_ibc_function_memo_title">메모</string>
     <string name="merge_account_doesnt_exist">이 주소에서 선택한 토큰을 찾을 수 없습니다</string>
     <string name="keygen_email_error">이메일이 올바르지 않습니다. 확인해 주세요</string>
-    <string name="scan_qr_screen_title">QR 코드 스캔</string>
     <string name="verify_transaction_function_inputs_title">함수 인수</string>
     <string name="dapp_hero_unverified_function_title">확인되지 않은 함수</string>
     <string name="dapp_hero_unverified_function_subtitle">서명 전에 아래 세부정보를 확인하세요</string>
@@ -706,14 +689,10 @@
     <string name="deposit_option_remove_cacao_pool">CACAO 풀에서 제거</string>
     <string name="deposit_option_add_liquidity">유동성 추가</string>
     <string name="deposit_option_remove_liquidity">유동성 제거</string>
-    <string name="add_pool_title">풀 추가</string>
     <string name="add_lp_title">%1$s LP 추가</string>
     <string name="add_pool_amount_label">금액</string>
     <string name="add_pool_gas_auto">가스 (자동)</string>
     <string name="max">최대</string>
-    <string name="token_fiat_toggle_token_label">토큰 가치</string>
-    <string name="token_fiat_toggle_fiat_label">법정화폐 가치</string>
-    <string name="remove_pool_title">풀 제거</string>
     <string name="remove_lp_title">%1$s LP 제거</string>
     <string name="remove_pool_amount_label">금액</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
@@ -1013,7 +992,6 @@
     <plurals name="solana_accounts_data">
         <item quantity="other">계정: %1$d | 데이터 길이: %2$d 바이트</item>
     </plurals>
-    <string name="vault_count_recommended">권장</string>
 
     <!-- Key Import / Feature Spotlight -->
     <string name="key_import_spotlight_before_you_start">시작하기 전에…</string>
