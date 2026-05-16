@@ -103,6 +103,7 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -167,9 +168,15 @@ private fun ScanQrScreen(
         }
     }
 
-    val executor = remember { Executors.newSingleThreadExecutor() }
+    val executor = remember {
+        Executors.newSingleThreadExecutor { runnable ->
+            Thread(runnable, "QrAnalyzer").apply { priority = Thread.NORM_PRIORITY }
+        }
+    }
 
     DisposableEffect(Unit) { onDispose { executor.shutdownNow() } }
+
+    var autoFocusJob by remember { mutableStateOf<Job?>(null) }
 
     val pickMedia =
         rememberLauncherForActivityResult(GetContent()) { uri ->
@@ -254,10 +261,12 @@ private fun ScanQrScreen(
                     executor = executor,
                     onAutoFocusTriggered = {
                         isFrameHighlighted = true
-                        coroutineScope.launch {
-                            delay(300)
-                            isFrameHighlighted = false
-                        }
+                        autoFocusJob?.cancel()
+                        autoFocusJob =
+                            coroutineScope.launch {
+                                delay(300)
+                                isFrameHighlighted = false
+                            }
                     },
                 )
             }
