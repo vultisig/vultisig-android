@@ -352,13 +352,7 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
         val response = http.post(rpcUrl) { setBody(payload) }
         val responseBody = response.bodyAsText()
         Timber.d("broadcast response: $responseBody")
-        if (!response.status.isSuccess()) {
-            throw NetworkException(
-                response.status.value,
-                "EVM broadcast failed (${response.status.value})",
-            )
-        }
-        val jsonObject = response.body<SendTransactionJson>()
+        val jsonObject = response.bodyOrThrow<SendTransactionJson>()
         if (jsonObject.error != null) {
             val message = jsonObject.error.message
             if (
