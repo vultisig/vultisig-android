@@ -238,5 +238,11 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindThorChainLpPreflightUseCase(
+        impl: ThorChainLpPreflightUseCaseImpl
+    ): ThorChainLpPreflightUseCase
+
+    @Binds
+    @Singleton
     fun bindThorchainMemoParser(impl: ThorchainMemoParserImpl): ThorchainMemoParser
 }

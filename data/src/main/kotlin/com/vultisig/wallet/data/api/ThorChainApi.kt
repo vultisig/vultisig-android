@@ -93,6 +93,18 @@ interface ThorChainApi {
     suspend fun getPools(): List<ThorChainPoolJson>
 
     /**
+     * Fetch a single pool's state from thornode. Returns null when the pool does not exist (404).
+     * Includes the `status` field used by the LP preflight to detect Suspended/Staged pools.
+     */
+    suspend fun getPool(asset: String): ThorChainPoolJson?
+
+    /**
+     * Returns the full mimir key/value map from thornode. Used by the LP preflight to detect
+     * pause/halt flags like `PAUSELP`, `PAUSELP-<ASSET>`, `HALT<CHAIN>LP`, etc.
+     */
+    suspend fun getMimir(): Map<String, Long>
+
+    /**
      * Midgard pool statistics including LUVI-based APR. Pass [period] (e.g. "7d", "30d", "100d") to
      * control the APR window; defaults to 30d to match thorchain.org.
      */
@@ -346,6 +358,20 @@ constructor(
     override suspend fun getPools(): List<ThorChainPoolJson> =
         httpClient
             .get("$THORNODE_BASE/thorchain/pools") { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
+            .bodyOrThrow()
+
+    override suspend fun getPool(asset: String): ThorChainPoolJson? {
+        val response =
+            httpClient.get("$THORNODE_BASE/thorchain/pool/$asset") {
+                header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
+            }
+        return if (response.status == HttpStatusCode.NotFound) null
+        else response.bodyOrThrow<ThorChainPoolJson>()
+    }
+
+    override suspend fun getMimir(): Map<String, Long> =
+        httpClient
+            .get("$THORNODE_BASE/thorchain/mimir") { header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE) }
             .bodyOrThrow()
 
     override suspend fun getPoolStats(period: String?): List<ThorChainPoolStatsJson> =

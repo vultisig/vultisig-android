@@ -64,6 +64,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
+import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.getChain
@@ -220,6 +221,7 @@ constructor(
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
     private val getThorChainLpPositionUseCase: GetThorChainLpPositionUseCase,
+    private val thorChainLpPreflight: ThorChainLpPreflightUseCase,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -1736,6 +1738,13 @@ constructor(
             )
         }
         val tokenAmountInt = tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
+
+        // Preflight against THORChain network state — pool status and the relevant mimir pause
+        // keys. Refuses to build the keysign payload when the network would refund the inbound,
+        // sparing the user the inbound gas spend.
+        if (chain == Chain.ThorChain) {
+            thorChainLpPreflight(poolId)?.let { block -> throw block.toError() }
+        }
 
         val srcAddress = selectedToken.address
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)

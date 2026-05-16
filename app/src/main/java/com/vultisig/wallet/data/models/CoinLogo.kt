@@ -150,3 +150,31 @@ internal fun getCoinLogo(logoName: String): ImageModel {
 // the coin's `logo` string is not in the predefined mapping (e.g. for arbitrary ERC20s where
 // `logo` would otherwise be a URL).
 internal fun Coin.tokenLogoRes(): Int = (getCoinLogo(logo) as? Int) ?: chain.logo
+
+/**
+ * Resolves the icon drawable for a THORChain / MayaChain LP pool asset.
+ *
+ * Pool ids identify an asset as `CHAIN.TICKER` or `CHAIN.TICKER-CONTRACT`. Looking up by ticker
+ * alone collides across chains (USDT exists on multiple chains) and misses tokens like ETH.GUSD
+ * whose ticker has no entry in [getCoinLogo]. This helper instead matches the catalog by `(chain,
+ * contractAddress)` for ERC20-style entries and falls back to the chain's native coin for
+ * chain-prefixed native pools, returning `null` when no catalog entry matches so callers can fall
+ * back to [Chain.logo].
+ */
+internal fun lpAssetLogoRes(chain: Chain?, ticker: String, contractAddress: String): Int? {
+    if (chain != null) {
+        val catalog = Coins.coins[chain].orEmpty()
+        val match =
+            if (contractAddress.isNotEmpty()) {
+                catalog.firstOrNull {
+                    it.contractAddress.equals(contractAddress, ignoreCase = true)
+                }
+            } else {
+                catalog.firstOrNull {
+                    it.isNativeToken && it.ticker.equals(ticker, ignoreCase = true)
+                }
+            }
+        if (match != null) return getCoinLogo(match.logo) as? Int
+    }
+    return getCoinLogo(ticker.lowercase()) as? Int
+}
