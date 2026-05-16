@@ -15,7 +15,7 @@ internal interface FiatValueToStringMapper {
      * When [asFee] is true and the value lies between zero and one standard sub-unit of the
      * currency (e.g. less than `0.01` for USD, less than `1` for JPY), the result is rendered with
      * extra precision (up to three extra fraction digits) using [RoundingMode.DOWN] so a sub-unit
-     * fee like `$0.00125` displays as `$0.0012` instead of being truncated to `$0.00`. All other
+     * fee like `$0.001234` displays as `$0.00123` instead of being truncated to `$0.00`. All other
      * values fall through to the currency's standard formatting.
      */
     suspend operator fun invoke(value: FiatValue, asFee: Boolean = false): String
