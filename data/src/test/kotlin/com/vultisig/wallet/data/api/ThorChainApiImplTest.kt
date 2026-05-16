@@ -234,7 +234,7 @@ class ThorChainApiImplTest {
     }
 
     @Test
-    fun `broadcastTransaction throws with code -1 when tx_response is null`() {
+    fun `broadcastTransaction throws with code -1 and preserves rawBody when tx_response is null`() {
         // Node returned a well-formed envelope with no tx_response (e.g. transport-level reject).
         val body = "{}"
         val api = newApi(HttpStatusCode.OK, body)
@@ -245,7 +245,7 @@ class ThorChainApiImplTest {
             }
         assertEquals(-1, ex.code)
         assertEquals(null, ex.codespace)
-        assertEquals(null, ex.rawLog)
+        assertEquals(body, ex.rawLog)
         assertEquals(null, ex.txHash)
     }
 }

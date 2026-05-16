@@ -85,12 +85,15 @@ internal fun parseCosmosBroadcastResponse(rawBody: String, logTag: String, json:
     val result = json.decodeFromString<CosmosTransactionBroadcastResponse>(rawBody)
     val txResponse =
         result.txResponse
-            ?: throw CosmosBroadcastException.from(
-                code = -1,
-                codespace = null,
-                rawLog = null,
-                txHash = null,
-            )
+            ?: run {
+                Timber.tag(logTag).e("Broadcast response missing tx_response: %s", rawBody)
+                throw CosmosBroadcastException.from(
+                    code = -1,
+                    codespace = null,
+                    rawLog = rawBody,
+                    txHash = null,
+                )
+            }
     val code = txResponse.code ?: COSMOS_TX_SUCCESS_CODE
     if (code == COSMOS_TX_SUCCESS_CODE || code == ERR_TX_IN_MEMPOOL_CACHE) {
         return txResponse.txHash

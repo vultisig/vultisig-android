@@ -116,7 +116,7 @@ internal class CosmosApiImp(
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             if (e !is CosmosBroadcastException) {
-                Timber.tag("CosmosApiService").e("Error broadcasting transaction: ${e.message}")
+                Timber.tag("CosmosApiService").e(e, "Error broadcasting transaction")
             }
             throw e
         }
