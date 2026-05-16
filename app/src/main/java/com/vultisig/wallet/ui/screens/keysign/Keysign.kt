@@ -18,6 +18,7 @@ import app.rive.Fit
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
@@ -50,6 +51,7 @@ internal fun KeysignView(
     showToolbar: Boolean = false,
     hasBackClick: Boolean,
     showSaveToAddressBook: Boolean,
+    dappMetadata: DAppMetadata? = null,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         if (state.isInProgress) {
@@ -73,6 +75,7 @@ internal fun KeysignView(
                             transactionTypeUiModel = transactionTypeUiModel.swapTransactionUiModel,
                             isTransactionDetailVisible = isTransactionDetailVisible,
                             onTransactionDetailVisibleChange = { isTransactionDetailVisible = it },
+                            dappMetadata = dappMetadata,
                         )
                     }
                     is TransactionTypeUiModel.Deposit,
@@ -90,6 +93,7 @@ internal fun KeysignView(
                             showSaveToAddressBook = showSaveToAddressBook,
                             isTransactionDetailVisible = isTransactionDetailVisible,
                             onTransactionDetailVisibleChange = { isTransactionDetailVisible = it },
+                            dappMetadata = dappMetadata,
                         )
                     }
                     else -> {

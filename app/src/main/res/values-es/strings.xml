@@ -415,6 +415,7 @@
     <string name="verify_transaction_function_inputs_title">Argumentos de función</string>
     <string name="dapp_hero_unverified_function_title">Función no verificada</string>
     <string name="dapp_hero_unverified_function_subtitle">Revisa los detalles antes de firmar</string>
+    <string name="request_from">Solicitud de</string>
     <string name="send_shares_currency_hint">Introduce acciones</string>
     <string name="send_error_max_shares">La cantidad no debe exceder el saldo</string>
     <string name="deposit_form_shares_title">Acciones (Saldo: %1$s)</string>
