@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.http.HttpStatusCode
@@ -9,7 +10,6 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -195,10 +195,10 @@ class ThorChainApiImplTest {
         val api = newApi(HttpStatusCode.OK, body)
 
         val ex =
-            assertThrows(IllegalStateException::class.java) {
+            assertThrows(CosmosBroadcastException::class.java) {
                 runBlocking { api.broadcastTransaction(tx = "{}") }
             }
-        // The full raw body is preserved in the exception message so callers can debug.
-        assertTrue(ex.message?.contains("\"code\": 5") == true, "actual: ${ex.message}")
+        assertEquals(5, ex.code)
+        assertEquals("BAADF00D", ex.txHash)
     }
 }
