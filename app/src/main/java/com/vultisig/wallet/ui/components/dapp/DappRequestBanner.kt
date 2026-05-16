@@ -15,8 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -24,7 +22,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.SubcomposeAsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.theme.Theme
@@ -37,6 +34,13 @@ import com.vultisig.wallet.ui.theme.Theme
  * Layout mirrors the iOS `DAppRequestBanner`: a "Request from" header followed by a 32dp circular
  * icon and a name/host stack. Empty fields are treated as absent so partially-populated metadata
  * still renders cleanly.
+ *
+ * **Privacy stance — Android intentionally does NOT fetch the dApp-supplied `iconUrl`.** Loading
+ * the favicon would expose the signing device IP and TLS fingerprint to a host the user has not yet
+ * consented to interact with, and feed a default Coil pipeline an attacker-controlled URL with no
+ * size cap or timeout (decoder-CVE surface). iOS and Windows currently load the icon — Android
+ * leads on this and ships a placeholder glyph instead. The name and host already identify the dApp;
+ * the icon was visual polish, not load-bearing.
  */
 @Composable
 internal fun DappRequestBanner(metadata: DAppMetadata, modifier: Modifier = Modifier) {
@@ -46,7 +50,11 @@ internal fun DappRequestBanner(metadata: DAppMetadata, modifier: Modifier = Modi
     val announcement = buildString {
         append(label)
         if (metadata.name.isNotEmpty()) append(' ').append(metadata.name)
-        if (metadata.host.isNotEmpty()) append(", ").append(metadata.host)
+        if (metadata.host.isNotEmpty()) {
+            // Use a comma to separate name from host, but a plain space when name is absent so
+            // TalkBack reads "Request from app.uniswap.org" instead of "Request from, app…".
+            append(if (metadata.name.isNotEmpty()) ", " else " ").append(metadata.host)
+        }
     }
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -70,43 +78,28 @@ internal fun DappRequestBanner(metadata: DAppMetadata, modifier: Modifier = Modi
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            DappIcon(safeIconUrl = metadata.safeIconUrl)
+            DappIcon()
             DappInfo(name = metadata.name, host = metadata.host, modifier = Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun DappIcon(safeIconUrl: String?) {
-    val placeholder: @Composable () -> Unit = {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier =
-                Modifier.size(ICON_SIZE)
-                    .background(Theme.v2.colors.backgrounds.surface1, CircleShape),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.settings_globe),
-                contentDescription = null,
-                tint = Theme.v2.colors.text.tertiary,
-                modifier = Modifier.size(PLACEHOLDER_GLYPH_SIZE),
-            )
-        }
+private fun DappIcon() {
+    // Intentionally no `iconUrl` parameter. See class kdoc — Android does not fetch dApp-supplied
+    // icons so a hostile origin can't fingerprint the signing device the moment verify renders.
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier =
+            Modifier.size(ICON_SIZE).background(Theme.v2.colors.backgrounds.surface1, CircleShape),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.settings_globe),
+            contentDescription = null,
+            tint = Theme.v2.colors.text.tertiary,
+            modifier = Modifier.size(PLACEHOLDER_GLYPH_SIZE),
+        )
     }
-
-    if (safeIconUrl == null) {
-        placeholder()
-        return
-    }
-
-    SubcomposeAsyncImage(
-        model = safeIconUrl,
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-        modifier = Modifier.size(ICON_SIZE).clip(CircleShape),
-        loading = { placeholder() },
-        error = { placeholder() },
-    )
 }
 
 @Composable

@@ -111,6 +111,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -249,6 +251,14 @@ constructor(
     private var _discoveryListener: MediatorServiceDiscoveryListener? = null
     private var _nsdManager: NsdManager? = null
     private var _keysignPayload: KeysignPayload? = null
+        set(value) {
+            field = value
+            // Mirror dappMetadata into the StateFlow so the verify banner is observable on its own,
+            // independent of [verifyUiModel] emission ordering.
+            _dappMetadata.value = value?.dappMetadata
+        }
+
+    private val _dappMetadata = MutableStateFlow<DAppMetadata?>(null)
     private var customMessagePayload: CustomMessagePayload? = null
     private var messagesToSign: List<String> = emptyList()
 
@@ -270,16 +280,11 @@ constructor(
      * the joining-device path. Independent of [verifyUiModel] so every variant (Send/Swap/Deposit)
      * shares one source.
      *
-     * **Compose observability:** [_keysignPayload] is a plain `var`, so this getter is *not*
-     * observable on its own. The verify screens that read it also `collectAsState()` on
-     * [verifyUiModel]; because [loadTransaction] sets `_keysignPayload` before the matching
-     * `verifyUiModel.value = …` assignment, the state-flow emission triggers the recomposition that
-     * re-reads this getter and picks up the populated value. If a future change emits to
-     * `verifyUiModel` *before* `_keysignPayload` is populated, the banner will read stale `null`
-     * until the next unrelated recomposition.
+     * Driven by the custom setter on [_keysignPayload] so consumers observing this flow are
+     * notified the moment the payload is parsed — no implicit dependency on the ordering of
+     * `verifyUiModel.value = …` emissions.
      */
-    val dappMetadata: DAppMetadata?
-        get() = _keysignPayload?.dappMetadata
+    val dappMetadata: StateFlow<DAppMetadata?> = _dappMetadata.asStateFlow()
 
     val keysignViewModel: KeysignViewModel
         get() =

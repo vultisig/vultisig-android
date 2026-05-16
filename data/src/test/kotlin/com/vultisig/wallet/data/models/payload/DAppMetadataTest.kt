@@ -51,7 +51,7 @@ class DAppMetadataTest {
     }
 
     @Test
-    fun `isEmpty is true only when every field is empty`() {
+    fun `isEmpty is true when name and url are both empty`() {
         assertTrue(DAppMetadata(name = "", url = "", iconUrl = "").isEmpty)
     }
 
@@ -66,34 +66,10 @@ class DAppMetadataTest {
     }
 
     @Test
-    fun `isEmpty is false when iconUrl is set`() {
-        assertFalse(DAppMetadata(name = "", url = "", iconUrl = "https://x.io/favicon.ico").isEmpty)
-    }
-
-    @Test
-    fun `safeIconUrl returns https iconUrl unchanged`() {
-        val metadata = DAppMetadata(name = "", url = "", iconUrl = "https://1inch.io/favicon.ico")
-        assertEquals("https://1inch.io/favicon.ico", metadata.safeIconUrl)
-    }
-
-    @Test
-    fun `safeIconUrl is null for non-https schemes so Coil never loads file or data URIs`() {
-        val cases =
-            listOf(
-                "http://insecure.example/favicon.ico",
-                "file:///etc/passwd",
-                "data:image/svg+xml,<svg/>",
-                "content://com.attacker.fileprovider/x",
-            )
-        for (icon in cases) {
-            val metadata = DAppMetadata(name = "", url = "", iconUrl = icon)
-            assertEquals(null, metadata.safeIconUrl, "expected null safeIconUrl for $icon")
-        }
-    }
-
-    @Test
-    fun `safeIconUrl is null when iconUrl is empty`() {
-        val metadata = DAppMetadata(name = "", url = "", iconUrl = "")
-        assertEquals(null, metadata.safeIconUrl)
+    fun `isEmpty is true when only iconUrl is set so attacker can't force a network fetch via icon-only metadata`() {
+        // Without name or url there's nothing identifying to show — gating on iconUrl alone would
+        // both render an empty text stack and let a hostile dApp trigger a fetch to an
+        // attacker-controlled origin via the banner.
+        assertTrue(DAppMetadata(name = "", url = "", iconUrl = "https://x.io/favicon.ico").isEmpty)
     }
 }

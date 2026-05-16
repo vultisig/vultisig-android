@@ -12,6 +12,7 @@ import vultisig.keysign.v1.TransactionType
 class KeysignPayloadProtoMapperDAppMetadataTest {
 
     private val mapper = KeysignPayloadProtoMapperImpl()
+    private val outboundMapper = PayloadToProtoMapperImpl()
 
     @Test
     fun `dappMetadata is null when proto does not carry it`() {
@@ -78,6 +79,38 @@ class KeysignPayloadProtoMapperDAppMetadataTest {
         assertEquals("Uniswap", metadata.name)
         assertEquals("https://app.uniswap.org", metadata.url)
         assertEquals("https://app.uniswap.org/favicon.ico", metadata.iconUrl)
+    }
+
+    @Test
+    fun `dappMetadata round-trips through outbound proto mapper for relay parity with iOS and Windows`() {
+        // A future dApp-initiated flow may have Android serve as the initiator that relays the
+        // payload to joining peers. The outbound mapper must carry dappMetadata so the joining
+        // device renders the banner — matching iOS `mapToProtobuff` and Windows
+        // `buildDappMetadata`.
+        val inboundProto =
+            basePayload(
+                dappMetadata =
+                    DAppMetadataProto(
+                        name = "Uniswap",
+                        url = "https://app.uniswap.org",
+                        iconUrl = "https://app.uniswap.org/favicon.ico",
+                    )
+            )
+        val domain = mapper.invoke(inboundProto)
+        val outboundProto = outboundMapper.invoke(domain)
+
+        val outboundDapp =
+            requireNotNull(outboundProto?.dappMetadata) { "outbound dappMetadata must not be null" }
+        assertEquals("Uniswap", outboundDapp.name)
+        assertEquals("https://app.uniswap.org", outboundDapp.url)
+        assertEquals("https://app.uniswap.org/favicon.ico", outboundDapp.iconUrl)
+    }
+
+    @Test
+    fun `outbound mapper writes null dappMetadata when domain has none`() {
+        val domain = mapper.invoke(basePayload())
+        val outboundProto = outboundMapper.invoke(domain)
+        assertNull(outboundProto?.dappMetadata)
     }
 
     @Test
