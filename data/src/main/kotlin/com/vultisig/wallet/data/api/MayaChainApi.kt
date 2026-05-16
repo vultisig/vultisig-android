@@ -270,7 +270,7 @@ constructor(
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             if (e !is CosmosBroadcastException) {
-                Timber.tag("MayaChainService").e("Error broadcasting transaction: ${e.message}")
+                Timber.tag("MayaChainService").e(e, "Error broadcasting transaction")
             }
             throw e
         }
