@@ -1,7 +1,5 @@
 package com.vultisig.wallet.data.api.models
 
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Coin
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -104,21 +102,6 @@ data class KyberSwapToken(
 ) {
     val logoUrl: String?
         get() = logoURI
-}
-
-fun KyberSwapToken.toCoinMeta(chain: Chain): Coin {
-    return Coin(
-        chain = chain,
-        ticker = this.symbol,
-        logo = this.logoURI ?: "",
-        decimal = this.decimals,
-        priceProviderID = "",
-        // ?!  address = this.address
-        contractAddress = this.address,
-        isNativeToken = false,
-        address = "",
-        hexPublicKey = "",
-    )
 }
 
 @Serializable

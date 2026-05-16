@@ -52,10 +52,6 @@ internal interface DataUsecasesModule {
     @Singleton
     fun bindPullTssMessagesUseCase(impl: PullTssMessagesUseCaseImpl): PullTssMessagesUseCase
 
-    @Binds
-    @Singleton
-    fun bindGenerateRandomName(impl: GenerateRandomUniqueNameImpl): GenerateRandomUniqueName
-
     @Binds @Singleton fun bindGenerateUniqueName(impl: GenerateUniqueNameImpl): GenerateUniqueName
 
     @Binds @Singleton fun bindIsVaultNameValid(impl: IsVaultNameValidImpl): IsVaultNameValid

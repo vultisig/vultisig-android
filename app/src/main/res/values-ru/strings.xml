@@ -150,12 +150,6 @@
     <string name="vault_detail_screen_eddsa_key_copied">Ключ EdDSA скопирован</string>
     <string name="welcome_screen_skip">Пропустить</string>
     <string name="keysign_screen_preparing_vault">Подготовка хранилища…</string>
-    <string name="keysign_screen_signing_with_ecdsa">Подписание с использованием ECDSA…</string>
-    <string name="keysign_screen_signing_with_eddsa">Подписание с использованием EdDSA…</string>
-    <string name="keysign_screen_signing_with_mldsa">Подписание с использованием MLDSA…</string>
-    <string name="keysign_screen_keysign_finished">Подписание ключа завершено!</string>
-    <string name="keysign_screen_error_please_try_again">Ошибка! Пожалуйста, попробуйте снова. %1$s</string>
-    <string name="successfully_scanned_barcode">Штрихкод успешно отсканирован: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">Я понимаю, что хранилище будет удалено навсегда</string>
     <string name="vault_settings_delete_vault_caution2">Я понимаю, что могу потерять средства</string>
     <string name="vault_settings_delete_vault_caution3">Я сделал резервную копию хранилища для последующего восстановления</string>
@@ -207,7 +201,6 @@
     <string name="insufficient_utxos_error">Недостаточно доступных UTXO для покрытия выбранной суммы. Пожалуйста, добавьте больше средств или уменьшите отправляемую сумму</string>
     <string name="swap_screen_invalid_vault">Транзакция, скорее всего, завершится неудачей, хранилище не удалось загрузить.</string>
     <string name="verify_transaction_memo_title">Мемо</string>
-    <string name="circular_progress_indicator_done">Готово</string>
     <string name="join_keysign_wrong_reshare">Неправильный ReShare</string>
     <string name="swap_screen_provider_title">Провайдер</string>
     <string name="swap_form_minimum_amount">Сумма обмена слишком мала. Рекомендуемая сумма %1$s %2$s</string>
@@ -294,9 +287,6 @@
     <string name="qr_title_join_keygen">Присоединяйтесь к кейгену</string>
     <string name="qr_title_join_keysign">Присоединяйтесь к Keysign</string>
     <string name="qr_title_join_swap_keysign">Присоединяйтесь к обмену</string>
-    <string name="qr_title_join_keygen_description">Сканируйте с помощью устройств, чтобы\n присоединиться к созданию хранилища</string>
-    <string name="qr_title_join_keysign_description">Хранилище: %1$s\nСумма: %2$s\n Кому: %3$s</string>
-    <string name="qr_title_join_keysign_swap_description">Хранилище: %1$s\nОт: %2$s\nКуда: %3$s</string>
     <string name="qr_share_label_vault">Хранилище</string>
     <string name="qr_share_label_amount">Сумма</string>
     <string name="qr_share_label_to">Кому</string>
@@ -423,7 +413,6 @@
     <string name="deposit_option_withdraw_ruji">Вывести RUJI</string>
     <string name="withdraw_amount">Вывести %s</string>
     <string name="deposit_form_unstake_percentage_hint">Введите процент для вывода из стейкинга</string>
-    <string name="scan_qr_screen_title">Сканировать QR-код</string>
     <string name="verify_transaction_function_inputs_title">Аргументы функции</string>
     <string name="dapp_hero_unverified_function_title">Непроверенная функция</string>
     <string name="dapp_hero_unverified_function_subtitle">Просмотрите детали ниже перед подписанием</string>
@@ -465,16 +454,10 @@
     <string name="defi_stake">Стейк</string>
     <string name="liquidity_pool">Пул ликвидности</string>
     <!-- Tron DeFi -->
-    <string name="tron_defi_available_balance">Доступный баланс</string>
-    <string name="tron_defi_staking">Стейкинг</string>
-    <string name="tron_defi_bandwidth">Пропускная способность</string>
-    <string name="tron_defi_energy">Энергия</string>
     <string name="tron_defi_freeze">Заморозить</string>
     <string name="tron_defi_unfreeze">Разморозить</string>
     <string name="tron_defi_tron_freeze">TRON Заморозить</string>
     <string name="tron_defi_frozen">Заморожено</string>
-    <string name="tron_defi_unfreezing">Размораживается</string>
-    <string name="tron_defi_resources">Ресурсы</string>
     <string name="tron_defi_pending_withdrawals">Ожидающие выводы</string>
     <string name="tron_defi_ready_to_claim">Готово к получению</string>
     <string name="tron_defi_countdown_days">%1$d дн., %2$d ч</string>
@@ -523,14 +506,10 @@
     <string name="deposit_option_remove_cacao_pool">Удалить из пула CACAO</string>
     <string name="deposit_option_add_liquidity">Добавить ликвидность</string>
     <string name="deposit_option_remove_liquidity">Удалить ликвидность</string>
-    <string name="add_pool_title">Добавить в пул</string>
     <string name="add_lp_title">Добавить LP %1$s</string>
     <string name="add_pool_amount_label">Сумма</string>
     <string name="add_pool_gas_auto">Комиссия сети (авто)</string>
     <string name="max">Макс</string>
-    <string name="token_fiat_toggle_token_label">Стоимость токена</string>
-    <string name="token_fiat_toggle_fiat_label">Фиатная стоимость</string>
-    <string name="remove_pool_title">Удалить пул</string>
     <string name="remove_lp_title">Удалить LP %1$s</string>
     <string name="remove_pool_amount_label">Сумма</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
@@ -1082,7 +1061,6 @@
     <string name="sign_ton_messages">Сообщения</string>
     <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
-    <string name="vault_count_recommended">Рекомендуется</string>
 
     <string name="welcome_tip">Совет: Вы можете использовать браузер как устройство</string>
     <string name="vault_setup_your_vault_setup">Настройка вашего хранилища</string>
