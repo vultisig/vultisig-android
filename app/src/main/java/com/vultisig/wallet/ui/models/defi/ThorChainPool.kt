@@ -36,5 +36,8 @@ internal fun thorPoolChainPrefixToChain(prefix: String): Chain? =
         "BASE" -> Chain.Base
         "GAIA" -> Chain.GaiaChain
         "THOR" -> Chain.ThorChain
+        "SOL" -> Chain.Solana
+        "TRON" -> Chain.Tron
+        "XRP" -> Chain.Ripple
         else -> null
     }
