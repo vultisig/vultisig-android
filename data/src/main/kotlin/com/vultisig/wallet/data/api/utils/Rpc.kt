@@ -2,8 +2,8 @@ package com.vultisig.wallet.data.api.utils
 
 import com.vultisig.wallet.data.api.models.RpcError
 import com.vultisig.wallet.data.api.models.RpcPayload
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import kotlinx.serialization.SerialName
@@ -23,4 +23,4 @@ internal suspend inline fun <reified T> HttpClient.postRpc(
     method: String,
     params: JsonArray,
     id: Int = 1,
-): T = post(url) { setBody(RpcPayload(method = method, params = params, id = id)) }.body()
+): T = post(url) { setBody(RpcPayload(method = method, params = params, id = id)) }.bodyOrThrow()
