@@ -299,12 +299,6 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
-    fun bindNotificationTokenRepository(
-        impl: NotificationTokenRepositoryImpl
-    ): NotificationTokenRepository
-
-    @Binds
-    @Singleton
     fun bindPreventScreenshotsRepository(
         impl: PreventScreenshotsRepositoryImpl
     ): PreventScreenshotsRepository
