@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.components
 
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -9,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
+import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -86,13 +86,15 @@ internal fun UiConfirmDialog(
 @Preview
 @Composable
 private fun UiAlertDialogPreview() {
-    MaterialTheme { UiAlertDialog(title = "Error", text = "Something went wrong", onDismiss = {}) }
+    OnBoardingComposeTheme {
+        UiAlertDialog(title = "Error", text = "Something went wrong", onDismiss = {})
+    }
 }
 
 @Preview
 @Composable
 private fun UiConfirmDialogPreview() {
-    MaterialTheme {
+    OnBoardingComposeTheme {
         UiConfirmDialog(
             title = "Delete?",
             text = "This action cannot be undone.",
