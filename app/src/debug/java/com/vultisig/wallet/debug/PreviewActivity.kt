@@ -31,6 +31,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.data.securityscanner.SecurityScannerResult
 import com.vultisig.wallet.data.usecases.GenerateQrBitmap
@@ -142,6 +143,12 @@ class PreviewActivity : ComponentActivity() {
                     "blockaid_popup_high" -> BlockaidPopupHighRiskPreview()
                     "blockaid_popup_medium" -> BlockaidPopupMediumRiskPreview()
                     "select_chain_popup" -> SelectChainPopupPreview()
+                    "dapp_banner_verify_full" -> DappBannerVerifyPreview(DappBannerVariant.FULL)
+                    "dapp_banner_verify_name_only" ->
+                        DappBannerVerifyPreview(DappBannerVariant.NAME_ONLY)
+                    "dapp_banner_verify_host_only" ->
+                        DappBannerVerifyPreview(DappBannerVariant.HOST_ONLY)
+                    "dapp_banner_send_done" -> DappBannerSendDonePreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -1006,6 +1013,75 @@ private fun blockaidHeroUnverifiedState() =
         // body / network failure).
         txScanStatus = TransactionScanStatus.NotStarted,
     )
+
+private enum class DappBannerVariant {
+    FULL,
+    NAME_ONLY,
+    HOST_ONLY,
+}
+
+@Composable
+private fun DappBannerVerifyPreview(variant: DappBannerVariant) {
+    val metadata =
+        when (variant) {
+            DappBannerVariant.FULL ->
+                DAppMetadata(
+                    name = "Uniswap",
+                    url = "https://app.uniswap.org/swap",
+                    iconUrl = "https://app.uniswap.org/favicon.ico",
+                )
+            DappBannerVariant.NAME_ONLY -> DAppMetadata(name = "Uniswap", url = "", iconUrl = "")
+            DappBannerVariant.HOST_ONLY ->
+                DAppMetadata(name = "", url = "https://app.uniswap.org/swap", iconUrl = "")
+        }
+    VerifySendScreen(
+        state = blockaidHeroSendState(),
+        dappMetadata = metadata,
+        isConsentsEnabled = false,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+    )
+}
+
+@Composable
+private fun DappBannerSendDonePreview() {
+    val ethCoin = Coins.Ethereum.ETH
+    SendTxOverviewScreen(
+        showToolbar = true,
+        showSaveToAddressBook = true,
+        transactionHash = "0x1a2b3c...d4e5f6",
+        transactionLink = "https://etherscan.io/tx/0x1a2b3c",
+        transactionStatus = TransactionStatus.Broadcasted,
+        onComplete = {},
+        onBack = {},
+        onAddToAddressBook = {},
+        tx =
+            UiTransactionInfo(
+                type = UiTransactionInfoType.Send,
+                token = ValuedToken(token = ethCoin, value = "1.5", fiatValue = "$3,847.50"),
+                from = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+                to = "0x9876543210FeDcBa9876543210FeDcBa98765432",
+                memo = "",
+                networkFeeTokenValue = "0.0024 ETH",
+                networkFeeFiatValue = "$6.15",
+            ),
+        isTransactionDetailVisible = false,
+        onTransactionDetailVisibleChange = {},
+        dappMetadata =
+            DAppMetadata(
+                name = "Uniswap",
+                url = "https://app.uniswap.org/swap",
+                iconUrl = "https://app.uniswap.org/favicon.ico",
+            ),
+    )
+}
 
 @Composable
 private fun SelectChainPopupPreview() {

@@ -38,9 +38,11 @@ import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
+import com.vultisig.wallet.ui.components.dapp.DappRequestBanner
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.v2.topbar.V2Topbar
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
@@ -61,6 +63,7 @@ internal fun TxDoneScaffold(
     isTransactionDetailVisible: Boolean,
     onTransactionDetailVisibleChange: (Boolean) -> Unit,
     onBack: () -> Unit = {},
+    dappMetadata: DAppMetadata? = null,
     tokenContent: @Composable () -> Unit,
     detailContent: @Composable () -> Unit,
     bottomBarContent: @Composable () -> Unit,
@@ -94,6 +97,7 @@ internal fun TxDoneScaffold(
                 snackbarHostState = snackbarHostState,
                 context = context,
                 detailContent = detailContent,
+                dappMetadata = dappMetadata,
                 isTransactionDetailVisible = isTransactionDetailVisible,
                 onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
             )
@@ -115,6 +119,7 @@ private fun SuccessTransaction(
     detailContent: @Composable (() -> Unit),
     isTransactionDetailVisible: Boolean,
     onTransactionDetailVisibleChange: (Boolean) -> Unit,
+    dappMetadata: DAppMetadata? = null,
 ) {
 
     Column(
@@ -173,6 +178,13 @@ private fun SuccessTransaction(
                 )
             }
         }
+
+        dappMetadata
+            ?.takeUnless { it.isEmpty }
+            ?.let {
+                DappRequestBanner(metadata = it)
+                UiSpacer(8.dp)
+            }
 
         tokenContent()
 

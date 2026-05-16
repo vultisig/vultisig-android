@@ -43,6 +43,7 @@ import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
@@ -263,6 +264,22 @@ constructor(
     private var tempKeysignMessageProto: KeysignMessageProto? = null
 
     private val deepLinkHelper = MutableStateFlow<DeepLinkHelper?>(null)
+
+    /**
+     * dApp identity attached to the keysign request, if any. Read by the verify and done banners on
+     * the joining-device path. Independent of [verifyUiModel] so every variant (Send/Swap/Deposit)
+     * shares one source.
+     *
+     * **Compose observability:** [_keysignPayload] is a plain `var`, so this getter is *not*
+     * observable on its own. The verify screens that read it also `collectAsState()` on
+     * [verifyUiModel]; because [loadTransaction] sets `_keysignPayload` before the matching
+     * `verifyUiModel.value = …` assignment, the state-flow emission triggers the recomposition that
+     * re-reads this getter and picks up the populated value. If a future change emits to
+     * `verifyUiModel` *before* `_keysignPayload` is populated, the banner will read stale `null`
+     * until the next unrelated recomposition.
+     */
+    val dappMetadata: DAppMetadata?
+        get() = _keysignPayload?.dappMetadata
 
     val keysignViewModel: KeysignViewModel
         get() =

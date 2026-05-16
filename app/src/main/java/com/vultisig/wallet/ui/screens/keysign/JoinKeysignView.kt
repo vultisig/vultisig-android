@@ -95,6 +95,7 @@ internal fun JoinKeysignView(navController: NavHostController) {
                     is VerifyUiModel.Send -> {
                         VerifySendScreen(
                             state = model.model,
+                            dappMetadata = viewModel.dappMetadata,
                             isConsentsEnabled = false,
                             confirmTitle = stringResource(R.string.verify_transaction_join_keysign),
                             onFastSignClick = {},
@@ -105,6 +106,7 @@ internal fun JoinKeysignView(navController: NavHostController) {
                     is VerifyUiModel.Swap -> {
                         VerifySwapScreen(
                             state = model.model,
+                            dappMetadata = viewModel.dappMetadata,
                             showToolbar = false,
                             onBackClick = {},
                             confirmTitle = stringResource(R.string.verify_swap_sign_button),
@@ -117,6 +119,7 @@ internal fun JoinKeysignView(navController: NavHostController) {
                     is VerifyUiModel.Deposit -> {
                         VerifyDepositScreen(
                             state = model.model,
+                            dappMetadata = viewModel.dappMetadata,
                             confirmTitle = stringResource(R.string.verify_swap_sign_button),
                             onFastSignClick = {},
                             onConfirm = viewModel::joinKeysign,
@@ -159,6 +162,7 @@ internal fun JoinKeysignView(navController: NavHostController) {
                     showSaveToAddressBook =
                         keysignViewModel.showSaveToAddressBook.collectAsState().value,
                     hasBackClick = false,
+                    dappMetadata = viewModel.dappMetadata,
                 )
             }
 
