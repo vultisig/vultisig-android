@@ -126,6 +126,7 @@ internal class CircleDeFiPositionsViewModelTest {
             val type = snackbarTypeShownBy { vm.onCreateAccount() }
 
             assertEquals(SnackbarType.Success, type)
+            coVerify(exactly = 1) { scaCircleAccountRepository.saveAccount(VAULT_ID, MSCA_ADDRESS) }
             assertTrue(vm.state.value.circleDefi.isAccountOpen)
         }
 
