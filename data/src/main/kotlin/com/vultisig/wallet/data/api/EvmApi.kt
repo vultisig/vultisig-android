@@ -26,6 +26,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.isSuccess
 import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
@@ -351,6 +352,9 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
         val response = http.post(rpcUrl) { setBody(payload) }
         val responseBody = response.bodyAsText()
         Timber.d("broadcast response: $responseBody")
+        if (!response.status.isSuccess()) {
+            throw Exception("EVM broadcast failed (${response.status.value}): $responseBody")
+        }
         val jsonObject = response.body<SendTransactionJson>()
         if (jsonObject.error != null) {
             val message = jsonObject.error.message
@@ -382,6 +386,11 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
         val (payload1, payload2) = generateCustomTokenPayload(contractAddress)
         return try {
             val response = http.post(rpcUrl) { setBody(listOf(payload1, payload2)) }
+            if (!response.status.isSuccess()) {
+                throw Exception(
+                    "findCustomToken failed (${response.status.value}): ${response.bodyAsText()}"
+                )
+            }
             val responseList = response.body<List<RpcResponse>>()
             responseList.map { CustomTokenResponse(id = it.id, result = it.result) }
         } catch (e: Exception) {
