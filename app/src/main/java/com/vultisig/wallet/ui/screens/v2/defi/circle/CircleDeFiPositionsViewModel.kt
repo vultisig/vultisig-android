@@ -236,31 +236,33 @@ constructor(
     /** Creates a new Circle MSCA account for the current vault. */
     fun onCreateAccount() {
         viewModelScope.launch {
-            val createdAddress =
-                withContext(ioDispatcher) {
-                    runCatching {
+            try {
+                val newAddress =
+                    withContext(ioDispatcher) {
                         val ethereumVaultAddress = getEvmVaultAddress()
-                        circleApi.createScAccount(ethereumVaultAddress).also { newAddress ->
-                            scaCircleAccountRepository.saveAccount(vaultId, newAddress)
-                        }
+                        circleApi.createScAccount(ethereumVaultAddress)
                     }
+                mscaAddress = newAddress
+                _state.update { currentState ->
+                    currentState.copy(
+                        circleDefi = currentState.circleDefi.copy(isAccountOpen = true)
+                    )
                 }
-
-            createdAddress
-                .onSuccess { newAddress ->
-                    mscaAddress = newAddress
-                    showSnackbar(R.string.circle_msca_account_created_success, SnackbarType.Success)
-                }
-                .onFailure { t ->
+                showSnackbar(R.string.circle_msca_account_created_success, SnackbarType.Success)
+                try {
+                    withContext(ioDispatcher) {
+                        scaCircleAccountRepository.saveAccount(vaultId, newAddress)
+                    }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (t: Throwable) {
                     Timber.e(t)
-                    showSnackbar(R.string.circle_msca_account_created_failed, SnackbarType.Error)
                 }
-
-            _state.update { currentState ->
-                currentState.copy(
-                    circleDefi =
-                        currentState.circleDefi.copy(isAccountOpen = createdAddress.isSuccess)
-                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (t: Throwable) {
+                Timber.e(t)
+                showSnackbar(R.string.circle_msca_account_created_failed, SnackbarType.Error)
             }
         }
     }
