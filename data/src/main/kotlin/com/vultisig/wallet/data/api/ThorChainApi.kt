@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
+import com.vultisig.wallet.data.api.errors.parseCosmosBroadcastResponse
 import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.GraphQLResponse
 import com.vultisig.wallet.data.api.models.MetadataResponse
@@ -10,7 +11,6 @@ import com.vultisig.wallet.data.api.models.ThorTcyBalancesResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosEnvelopedTxResponse
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.NativeTxFeeRune
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountResultJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
@@ -290,29 +290,10 @@ constructor(
                     header(X_CLIENT_ID_HEADER, X_CLIENT_ID_VALUE)
                     setBody(tx)
                 }
-            val responseRawString = response.bodyAsText()
-            val result =
-                json.decodeFromString<CosmosTransactionBroadcastResponse>(responseRawString)
-
-            val txResponse =
-                result.txResponse
-                    ?: throw CosmosBroadcastException.from(
-                        code = -1,
-                        codespace = null,
-                        rawLog = null,
-                        txHash = null,
-                    )
-            val code = txResponse.code ?: COSMOS_TX_SUCCESS_CODE
-            if (code == COSMOS_TX_SUCCESS_CODE || code == ERR_TX_IN_MEMPOOL_CACHE) {
-                return txResponse.txHash
-            }
-            Timber.tag("THORChainService")
-                .e("Broadcast rejected (code=%d): %s", code, responseRawString)
-            throw CosmosBroadcastException.from(
-                code = code,
-                codespace = txResponse.codespace,
-                rawLog = txResponse.rawLog,
-                txHash = txResponse.txHash,
+            return parseCosmosBroadcastResponse(
+                rawBody = response.bodyAsText(),
+                logTag = "THORChainService",
+                json = json,
             )
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
@@ -744,12 +725,6 @@ constructor(
           }
         }
         """
-        // Cosmos SDK success code (0) and ErrTxInMempoolCache (19): tx already accepted
-        // into mempool, treated as success.
-        // https://github.com/cosmos/cosmos-sdk/blob/v0.50.0/types/errors/errors.go#L79
-        private const val COSMOS_TX_SUCCESS_CODE = 0
-        private const val ERR_TX_IN_MEMPOOL_CACHE = 19
-
         private const val STAKING_TCY_DENOM = "x/staking-tcy"
         private const val DEFAULT_REWARDS_TICKER = "USDC"
         private const val THOR_CHAIN_NAME = "THOR"

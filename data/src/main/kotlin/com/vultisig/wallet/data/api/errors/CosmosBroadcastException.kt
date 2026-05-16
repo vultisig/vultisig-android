@@ -1,5 +1,9 @@
 package com.vultisig.wallet.data.api.errors
 
+import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
+import kotlinx.serialization.json.Json
+import timber.log.Timber
+
 /**
  * Typed broadcast failure from a Cosmos SDK node (THORChain / MayaChain).
  *
@@ -51,4 +55,51 @@ class CosmosBroadcastException(
             )
         }
     }
+}
+
+/** Cosmos SDK success code (0). */
+internal const val COSMOS_TX_SUCCESS_CODE = 0
+
+/**
+ * Cosmos SDK ErrTxInMempoolCache (19): tx already accepted into mempool, treated as success.
+ *
+ * See https://github.com/cosmos/cosmos-sdk/blob/v0.50.0/types/errors/errors.go#L79
+ */
+internal const val ERR_TX_IN_MEMPOOL_CACHE = 19
+
+/**
+ * Decode a Cosmos `tx_response` body and either return the broadcast tx hash on success, or throw
+ * [CosmosBroadcastException] with the parsed code/codespace/raw_log on rejection.
+ *
+ * Shared by `ThorChainApi`, `MayaChainApi`, and `CosmosApi` so the success-code list and the
+ * rejection envelope evolve in one place. On rejection, logs `Broadcast rejected (code=%d): %s`
+ * once under [logTag] before throwing.
+ *
+ * @param rawBody Verbatim HTTP body returned by the node's `/cosmos/tx/v1beta1/txs` endpoint.
+ * @param logTag Timber tag used for the structured rejection log line.
+ * @param json `Json` instance configured for the response shape.
+ * @return The transaction hash when the node accepts the broadcast, or null when the node accepts
+ *   it but does not assign a hash.
+ */
+internal fun parseCosmosBroadcastResponse(rawBody: String, logTag: String, json: Json): String? {
+    val result = json.decodeFromString<CosmosTransactionBroadcastResponse>(rawBody)
+    val txResponse =
+        result.txResponse
+            ?: throw CosmosBroadcastException.from(
+                code = -1,
+                codespace = null,
+                rawLog = null,
+                txHash = null,
+            )
+    val code = txResponse.code ?: COSMOS_TX_SUCCESS_CODE
+    if (code == COSMOS_TX_SUCCESS_CODE || code == ERR_TX_IN_MEMPOOL_CACHE) {
+        return txResponse.txHash
+    }
+    Timber.tag(logTag).e("Broadcast rejected (code=%d): %s", code, rawBody)
+    throw CosmosBroadcastException.from(
+        code = code,
+        codespace = txResponse.codespace,
+        rawLog = txResponse.rawLog,
+        txHash = txResponse.txHash,
+    )
 }
