@@ -1061,17 +1061,7 @@ constructor(
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
 
                     val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-                    val normalizedSrcAddress = normalizeAddressForLookup(address)
-                    val srcVaultName =
-                        allVaults
-                            .firstOrNull { v ->
-                                v.coins.any {
-                                    it.chain == chain &&
-                                        normalizeAddressForLookup(it.address) ==
-                                            normalizedSrcAddress
-                                }
-                            }
-                            ?.name
+                    val srcVaultName = _currentVault.name
                     val normalizedDstAddress = normalizeAddressForLookup(payload.toAddress)
                     val dstVaultName =
                         allVaults
