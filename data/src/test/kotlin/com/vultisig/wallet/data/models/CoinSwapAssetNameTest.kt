@@ -66,18 +66,18 @@ class CoinSwapAssetNameTest {
     // swapAssetName — ThorChain non-native (secured assets)
 
     @Test
-    fun `ThorChain secured asset address word-dash-word returned as-is`() {
+    fun `ThorChain secured asset normalises chain-symbol to CHAIN dot SYMBOL`() {
         listOf(
-                "BTC" to "btc-btc",
-                "ETH" to "eth-eth",
-                "LTC" to "ltc-ltc",
-                "DOGE" to "doge-doge",
-                "AVAX" to "avax-avax",
-                "BNB" to "bsc-bnb",
+                Triple("BTC", "btc-btc", "BTC.BTC"),
+                Triple("ETH", "eth-eth", "ETH.ETH"),
+                Triple("LTC", "ltc-ltc", "LTC.LTC"),
+                Triple("DOGE", "doge-doge", "DOGE.DOGE"),
+                Triple("AVAX", "avax-avax", "AVAX.AVAX"),
+                Triple("BNB", "bsc-bnb", "BSC.BNB"),
             )
-            .forEach { (ticker, denom) ->
+            .forEach { (ticker, denom, expected) ->
                 val c = coin(Chain.ThorChain, ticker, denom, isNativeToken = false)
-                assertEquals(denom, c.swapAssetName())
+                assertEquals(expected, c.swapAssetName())
             }
     }
 
@@ -88,7 +88,7 @@ class CoinSwapAssetNameTest {
     }
 
     @Test
-    fun `ThorChain secured USDC address returned as-is`() {
+    fun `ThorChain secured EVM token preserves hex tail case`() {
         val c =
             coin(
                 Chain.ThorChain,
@@ -96,7 +96,25 @@ class CoinSwapAssetNameTest {
                 "eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
                 isNativeToken = false,
             )
-        assertEquals("eth-usdc-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", c.swapAssetName())
+        assertEquals("ETH.USDC-0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", c.swapAssetName())
+    }
+
+    @Test
+    fun `ThorChain secured EVM token with EIP-55 checksum hex tail preserves case`() {
+        val c =
+            coin(
+                Chain.ThorChain,
+                "USDC",
+                "eth-usdc-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                isNativeToken = false,
+            )
+        assertEquals("ETH.USDC-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", c.swapAssetName())
+    }
+
+    @Test
+    fun `ThorChain RUJI single-segment contract address returns THOR dot RUJI`() {
+        val c = coin(Chain.ThorChain, "RUJI", "ruji", isNativeToken = false)
+        assertEquals("THOR.RUJI", c.swapAssetName())
     }
 
     // swapAssetName — EVM non-native
@@ -160,6 +178,6 @@ class CoinSwapAssetNameTest {
     @Test
     fun `ThorChain secured asset comparison name unchanged`() {
         val c = coin(Chain.ThorChain, "ETH", "eth-eth", isNativeToken = false)
-        assertEquals("eth-eth", c.swapAssetComparisonName())
+        assertEquals("ETH.ETH", c.swapAssetComparisonName())
     }
 }
