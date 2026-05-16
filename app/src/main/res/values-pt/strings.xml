@@ -271,6 +271,9 @@
     <string name="password_should_not_be_empty">A palavra-passe não deve estar vazia</string>
     <string name="signing_error_insufficient_funds">Não há gás suficiente para cobrir a taxa de transação.\n Por favor, financie a carteira.</string>
     <string name="signing_error_mixed_reshare">Assinatura mista de nova partilha. \nUtilizar partilhas do cofre do mesmo ciclo de nova partilha.</string>
+    <string name="signing_error_sequence_mismatch">A sequência da conta foi alterada — por favor, tente novamente.</string>
+    <string name="signing_error_broadcast_rejected">Transação rejeitada pela rede.</string>
+    <string name="signing_error_broadcast_rejected_s">Transação rejeitada pela rede: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Sinal rápido</string>
     <string name="keysign_sign_transaction">Assinar transação</string>
     <string name="sign_transaction">Assinar transação</string>

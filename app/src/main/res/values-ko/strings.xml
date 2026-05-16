@@ -360,6 +360,9 @@
     <string name="password_should_not_be_empty">비밀번호를 입력해 주세요</string>
     <string name="signing_error_insufficient_funds">거래 수수료를 충당할 가스가 부족합니다.\n지갑에 자금을 충전해 주세요.</string>
     <string name="signing_error_mixed_reshare">혼합 재공유 서명.\n동일한 재공유 주기의 볼트 공유를 사용해 주세요.</string>
+    <string name="signing_error_sequence_mismatch">계정 시퀀스가 변경되었습니다 — 다시 시도해 주세요.</string>
+    <string name="signing_error_broadcast_rejected">네트워크가 거래를 거부했습니다.</string>
+    <string name="signing_error_broadcast_rejected_s">네트워크가 거래를 거부했습니다: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">빠른 서명</string>
     <string name="keysign_sign_transaction">거래 서명</string>
     <string name="sign_transaction">거래 서명</string>

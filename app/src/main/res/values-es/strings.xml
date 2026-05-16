@@ -271,6 +271,9 @@
     <string name="password_should_not_be_empty">La contraseña no debe estar vacía</string>
     <string name="signing_error_insufficient_funds">No hay suficiente gas para cubrir la tarifa de transacción.\n Por favor, cargue la billetera.</string>
     <string name="signing_error_mixed_reshare">Firma de recompartición mixta.\n Utilice recursos compartidos de bóveda del mismo ciclo de recompartición.</string>
+    <string name="signing_error_sequence_mismatch">La secuencia de la cuenta ha cambiado — por favor, vuelva a intentarlo.</string>
+    <string name="signing_error_broadcast_rejected">Transacción rechazada por la red.</string>
+    <string name="signing_error_broadcast_rejected_s">Transacción rechazada por la red: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Firma rápida</string>
     <string name="keysign_sign_transaction">Firmar transacción</string>
     <string name="sign_transaction">Firmar transacción</string>

@@ -1,11 +1,12 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
+import com.vultisig.wallet.data.api.errors.parseCosmosBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceJson
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
-import com.vultisig.wallet.data.api.models.cosmos.CosmosTransactionBroadcastResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
@@ -107,15 +108,16 @@ internal class CosmosApiImp(
                     contentType(ContentType.Application.Json)
                     setBody(tx)
                 }
-            val result = response.body<CosmosTransactionBroadcastResponse>()
-            val txResponse = result.txResponse
-            if (txResponse?.code == 0 || txResponse?.code == 19) {
-                return txResponse.txHash
-            }
-            throw Exception("Error broadcasting transaction: ${response.bodyAsText()}")
+            return parseCosmosBroadcastResponse(
+                rawBody = response.bodyAsText(),
+                logTag = "CosmosApiService",
+                json = json,
+            )
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.tag("CosmosApiService").e("Error broadcasting transaction: ${e.message}")
+            if (e !is CosmosBroadcastException) {
+                Timber.tag("CosmosApiService").e(e, "Error broadcasting transaction")
+            }
             throw e
         }
     }
