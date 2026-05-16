@@ -380,6 +380,9 @@
     <string name="password_should_not_be_empty">Password should not be empty</string>
     <string name="signing_error_insufficient_funds">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
     <string name="signing_error_mixed_reshare">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
+    <string name="signing_error_sequence_mismatch">Account sequence changed — please retry the transaction.</string>
+    <string name="signing_error_broadcast_rejected">Transaction rejected by the network.</string>
+    <string name="signing_error_broadcast_rejected_s">Transaction rejected by the network: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
     <string name="keysign_sign_transaction">Sign transaction</string>
     <string name="sign_transaction">Sign Transaction</string>

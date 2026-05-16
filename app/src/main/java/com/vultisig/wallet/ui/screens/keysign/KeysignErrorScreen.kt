@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.utils.UiText
@@ -29,6 +30,23 @@ internal fun KeysignErrorScreen(
         }
         errorMessageString.contains("failed to calculate bob mid and bob_mic_mc") -> {
             errorLabel = stringResource(R.string.signing_error_mixed_reshare)
+            infoText = null
+        }
+        errorMessageString.contains(CosmosBroadcastException.SEQUENCE_MISMATCH_MARKER) -> {
+            errorLabel = stringResource(R.string.signing_error_sequence_mismatch)
+            infoText = null
+        }
+        errorMessageString.contains(CosmosBroadcastException.BROADCAST_FAILURE_MARKER) -> {
+            val detail =
+                errorMessageString
+                    .substringAfter(CosmosBroadcastException.BROADCAST_FAILURE_MARKER)
+                    .trimStart(':', ' ')
+            errorLabel =
+                if (detail.isBlank()) {
+                    stringResource(R.string.signing_error_broadcast_rejected)
+                } else {
+                    stringResource(R.string.signing_error_broadcast_rejected_s, detail)
+                }
             infoText = null
         }
         else -> {

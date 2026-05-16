@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.api.models.CacaoProviderResponse
 import com.vultisig.wallet.data.api.models.MayaLatestBlockInfoResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
@@ -243,15 +244,34 @@ constructor(
                     header(xClientID, xClientIDValue)
                     setBody(tx)
                 }
-            val result = response.body<CosmosTransactionBroadcastResponse>()
-            val txResponse = result.txResponse
-            if (txResponse?.code == 0 || txResponse?.code == 19) {
+            val responseRawString = response.bodyAsText()
+            val result =
+                json.decodeFromString<CosmosTransactionBroadcastResponse>(responseRawString)
+            val txResponse =
+                result.txResponse
+                    ?: throw CosmosBroadcastException.from(
+                        code = -1,
+                        codespace = null,
+                        rawLog = null,
+                        txHash = null,
+                    )
+            val code = txResponse.code ?: 0
+            if (code == 0 || code == 19) {
                 return txResponse.txHash
             }
-            throw Exception("Error broadcasting transaction: ${response.bodyAsText()}")
+            Timber.tag("MayaChainService")
+                .e("Broadcast rejected (code=%d): %s", code, responseRawString)
+            throw CosmosBroadcastException.from(
+                code = code,
+                codespace = txResponse.codespace,
+                rawLog = txResponse.rawLog,
+                txHash = txResponse.txHash,
+            )
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.tag("MayaChainService").e("Error broadcasting transaction: ${e.message}")
+            if (e !is CosmosBroadcastException) {
+                Timber.tag("MayaChainService").e("Error broadcasting transaction: ${e.message}")
+            }
             throw e
         }
     }

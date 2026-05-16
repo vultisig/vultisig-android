@@ -521,6 +521,9 @@
     <!-- Signing Errors -->
     <string name="signing_error_insufficient_funds">没有足够的燃料来支付交易费用。\n请为钱包充值。</string>
     <string name="signing_error_mixed_reshare">混合重新分享签名。\n请使用相同重新分享周期的保险库份额。</string>
+    <string name="signing_error_sequence_mismatch">账户序列号已更改 — 请重试。</string>
+    <string name="signing_error_broadcast_rejected">交易被网络拒绝。</string>
+    <string name="signing_error_broadcast_rejected_s">交易被网络拒绝：%s</string>
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_fast_sign_btn_title">快速签名</string>

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.GraphQLResponse
 import com.vultisig.wallet.data.api.models.MetadataResponse
@@ -294,17 +295,30 @@ constructor(
                 json.decodeFromString<CosmosTransactionBroadcastResponse>(responseRawString)
 
             val txResponse =
-                result.txResponse ?: error("Error broadcasting transaction: $responseRawString")
-            if (
-                txResponse.code == COSMOS_TX_SUCCESS_CODE ||
-                    txResponse.code == ERR_TX_IN_MEMPOOL_CACHE
-            ) {
+                result.txResponse
+                    ?: throw CosmosBroadcastException.from(
+                        code = -1,
+                        codespace = null,
+                        rawLog = null,
+                        txHash = null,
+                    )
+            val code = txResponse.code ?: COSMOS_TX_SUCCESS_CODE
+            if (code == COSMOS_TX_SUCCESS_CODE || code == ERR_TX_IN_MEMPOOL_CACHE) {
                 return txResponse.txHash
             }
-            error("Error broadcasting transaction: $responseRawString")
+            Timber.tag("THORChainService")
+                .e("Broadcast rejected (code=%d): %s", code, responseRawString)
+            throw CosmosBroadcastException.from(
+                code = code,
+                codespace = txResponse.codespace,
+                rawLog = txResponse.rawLog,
+                txHash = txResponse.txHash,
+            )
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.tag("THORChainService").e(e, "Error broadcasting transaction")
+            if (e !is CosmosBroadcastException) {
+                Timber.tag("THORChainService").e(e, "Error broadcasting transaction")
+            }
             throw e
         }
     }

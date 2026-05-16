@@ -12,4 +12,6 @@ data class CosmosTransactionBroadcastResponse(
 data class CosmosTransactionBroadcastTx(
     @SerialName("txhash") val txHash: String?,
     @SerialName("code") val code: Int?,
+    @SerialName("codespace") val codespace: String? = null,
+    @SerialName("raw_log") val rawLog: String? = null,
 )
