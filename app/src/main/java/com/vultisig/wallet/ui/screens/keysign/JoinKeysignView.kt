@@ -55,6 +55,8 @@ internal fun JoinKeysignView(navController: NavHostController) {
             when {
                 isSignMessageDone -> R.string.transaction_done_overview
                 isKeysignFinished -> R.string.transaction_complete_screen_title
+                state == JoinKeysign && verifyUiModel is VerifyUiModel.Send ->
+                    R.string.verify_send_send_overview
                 state == JoinKeysign && verifyUiModel is VerifyUiModel.Swap ->
                     R.string.verify_swap_swap_overview
                 state == JoinKeysign && verifyUiModel is VerifyUiModel.SignMessage ->
