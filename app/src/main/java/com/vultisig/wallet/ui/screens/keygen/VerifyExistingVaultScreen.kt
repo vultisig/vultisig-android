@@ -22,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -97,7 +96,6 @@ internal fun VerifyExistingVaultScreen(
             UiSpacer(size = 24.dp)
 
             VsTextInputField(
-                modifier = Modifier.testTag(VerifyExistingVaultTags.INPUT_FIELD),
                 textFieldState = inputTextFieldState,
                 trailingIcon = R.drawable.close_circle,
                 innerState = uiState.innerState,
@@ -126,7 +124,7 @@ internal fun VerifyExistingVaultScreen(
             UiSpacer(weight = 1f)
             VsButton(
                 label = stringResource(R.string.enter_email_screen_next),
-                modifier = Modifier.fillMaxWidth().testTag(VerifyExistingVaultTags.NEXT_BUTTON),
+                modifier = Modifier.fillMaxWidth(),
                 state = if (canProceed) VsButtonState.Enabled else VsButtonState.Disabled,
             ) {
                 onEvent(VerifyExistingVaultEvent.Next)
@@ -270,9 +268,4 @@ enum class VerifyExistingVaultStepType(
         logo = R.drawable.center_lock,
         isPassword = true,
     ),
-}
-
-internal object VerifyExistingVaultTags {
-    const val INPUT_FIELD = "VerifyExistingVaultScreen.inputField"
-    const val NEXT_BUTTON = "VerifyExistingVaultScreen.nextButton"
 }

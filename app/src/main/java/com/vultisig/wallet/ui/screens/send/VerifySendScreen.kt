@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.ui.components.SignSolanaDisplayView
 import com.vultisig.wallet.ui.components.SignTonDisplayView
@@ -52,6 +53,7 @@ import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
+import com.vultisig.wallet.ui.components.dapp.DappRequestBanner
 import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
@@ -124,6 +126,7 @@ internal fun VerifySendScreen(
     confirmTitle: String,
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
+    dappMetadata: DAppMetadata? = null,
     onConsentAddress: (Boolean) -> Unit = {},
     onConsentAmount: (Boolean) -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -187,6 +190,8 @@ internal fun VerifySendScreen(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             ) {
                 val tx = state.transaction
+
+                dappMetadata?.takeUnless { it.isEmpty }?.let { DappRequestBanner(metadata = it) }
 
                 SecurityScannerBadget(state.txScanStatus)
 
@@ -558,6 +563,31 @@ private fun PreviewVerifySendScreenUnlimitedApproval() {
         confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = {},
         onConsentAmount = {},
+        onFastSignClick = {},
+        onConfirm = {},
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewVerifySendScreenWithDappBanner() {
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        srcAddress = "0x1111111111111111111111111111111111111111",
+                        dstAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                    )
+            ),
+        dappMetadata =
+            DAppMetadata(
+                name = "Uniswap",
+                url = "https://app.uniswap.org/swap",
+                iconUrl = "https://app.uniswap.org/favicon.ico",
+            ),
+        isConsentsEnabled = false,
+        confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onFastSignClick = {},
         onConfirm = {},
     )

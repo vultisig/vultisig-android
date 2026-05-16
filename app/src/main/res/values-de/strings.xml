@@ -121,9 +121,6 @@
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA-Schlüssel kopiert</string>
     <string name="welcome_screen_skip">Überspringen</string>
     <string name="keysign_screen_preparing_vault">TRESOR VORBEREITEN…</string>
-    <string name="keysign_screen_signing_with_ecdsa">MIT ECDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
-    <string name="keysign_screen_signing_with_eddsa">MIT EdDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
-    <string name="keysign_screen_signing_with_mldsa">MIT MLDSA-SCHLÜSSEL UNTERSCHREIBEN…</string>
     <string name="vault_settings_delete_vault_caution1">Mir ist bewusst, dass der Tresor dauerhaft gelöscht wird</string>
     <string name="vault_settings_delete_vault_caution2">Mir ist bewusst, dass ich Geld verlieren kann</string>
     <string name="vault_settings_delete_vault_caution3">Ich habe eine Sicherung des Tresors für eine spätere Wiederherstellung erstellt</string>
@@ -162,14 +159,12 @@
     <string name="import_file_screen_duplicate_vault">Der Tresor ist ein Duplikat</string>
     <string name="import_file_screen_success_import">Der Tresor wurde erfolgreich importiert</string>
     <string name="verify_swap_consent_amount">Der Swapbetrag ist korrekt</string>
-    <string name="successfully_scanned_barcode">Barcode erfolgreich gescannt: %1$s</string>
     <string name="verify_transaction_error_not_enough_consent">Bitte überprüfen Sie alle Einwilligungen</string>
     <string name="send_error_no_token">Kein Token ausgewählt</string>
     <string name="send_error_no_gas_fee">Keine Gasgebühren</string>
     <string name="send_screen_max">MAX</string>
     <string name="biometry_auth_login_button">Login mit Biometrie</string>
     <string name="feature_item_learn_more">Erfahren Sie mehr</string>
-    <string name="keysign_screen_keysign_finished">Schlüsselsignatur fertig!</string>
     <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen fehlgeschlagen</string>
     <string name="bottom_warning_msg_keygen_error_screen">Behalten Sie die Geräte im selben WLAN-Netzwerk, korrigieren Sie den Tresor und koppeln Sie die Geräte.\nStellen Sie sicher, dass Vultisig auf keinem anderen Gerät ausgeführt wird.</string>
@@ -188,7 +183,6 @@
     <string name="swap_form_estimated_fees_title">Swap Gebühr</string>
     <string name="swap_form_estimated_fees_with_percent_title">Swap Gebühr (%1$s)</string>
     <string name="swap_form_outbound_fee_title">Ausgehende Gebühr</string>
-    <string name="keysign_screen_error_please_try_again">Fehler! Bitte versuchen Sie es erneut. %1$s</string>
     <string name="join_keysign_discovering_session_id">Sitzungs-ID ermitteln</string>
     <string name="join_keysign_discovery_service">Service entdecken</string>
     <string name="vault_settings_delete_subtitle">Löschen Sie Ihren Tresor dauerhaft.</string>
@@ -206,7 +200,6 @@
     <string name="vault_settings_delete_vault_ecdsa_key">ECDSA Schlüssel:</string>
     <string name="vault_settings_delete_vault_eddsa_key">EdDSA Schlüssel:</string>
     <string name="vault_settings_delete_vault_id">Geräte-ID:</string>
-    <string name="circular_progress_indicator_done">Fertig</string>
     <string name="verify_transaction_memo_title">Memo</string>
     <string name="vault_settings_delete_vault_value">Vault Wert:</string>
     <string name="join_keysign_wrong_reshare">Falsches ReShare</string>
@@ -278,6 +271,9 @@
     <string name="password_should_not_be_empty">Das Passwort darf nicht leer sein</string>
     <string name="signing_error_insufficient_funds">Nicht genug Gas, um die Transaktionsgebühr zu decken.\n Bitte füllen Sie das Wallet auf.</string>
     <string name="signing_error_mixed_reshare">Gemischte Reshare-Signatur.\nBitte verwenden Sie Vault-Freigaben aus dem gleichen Reshare-Zyklus.</string>
+    <string name="signing_error_sequence_mismatch">Die Konto-Sequenz hat sich geändert — bitte versuchen Sie es erneut.</string>
+    <string name="signing_error_broadcast_rejected">Transaktion vom Netzwerk abgelehnt.</string>
+    <string name="signing_error_broadcast_rejected_s">Transaktion vom Netzwerk abgelehnt: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Schnelle Signatur</string>
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
     <string name="sign_transaction">Transaktion signieren</string>
@@ -295,9 +291,6 @@
     <string name="qr_title_join_keygen">Keygen beitreten</string>
     <string name="qr_title_join_keysign">Keysign beitreten</string>
     <string name="qr_title_join_swap_keysign">Treten Sie Swap bei</string>
-    <string name="qr_title_join_keygen_description">Mit Geräten scannen, um der \nVault-Generation beizutreten</string>
-    <string name="qr_title_join_keysign_description">Tresor: %1$s\nVon: %2$s\n Bis: %3$s</string>
-    <string name="qr_title_join_keysign_swap_description">Tresor: %1$s\n Von: %2$s\n An: %3$s</string>
     <string name="qr_share_label_vault">Tresor</string>
     <string name="qr_share_label_amount">Menge</string>
     <string name="qr_share_label_to">Zu</string>
@@ -422,10 +415,10 @@
     <string name="deposit_option_withdraw_ruji">RUJI abheben</string>
     <string name="withdraw_amount">%s abheben</string>
     <string name="deposit_form_unstake_percentage_hint">Prozentsatz zum Unstaking eingeben</string>
-    <string name="scan_qr_screen_title">QR-Code scannen</string>
     <string name="verify_transaction_function_inputs_title">Funktionsargumente</string>
     <string name="dapp_hero_unverified_function_title">Nicht verifizierte Funktion</string>
     <string name="dapp_hero_unverified_function_subtitle">Überprüfen Sie die Details unten, bevor Sie signieren</string>
+    <string name="request_from">Anfrage von</string>
     <string name="send_shares_currency_hint">Anteile eingeben</string>
     <string name="send_error_max_shares">Betrag darf den Kontostand nicht überschreiten</string>
     <string name="deposit_form_shares_title">Anteile (Guthaben: %1$s)</string>
@@ -466,16 +459,10 @@
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquiditätspool</string>
     <!-- Tron DeFi -->
-    <string name="tron_defi_available_balance">Verfügbares Guthaben</string>
-    <string name="tron_defi_staking">Staking</string>
-    <string name="tron_defi_bandwidth">Bandbreite</string>
-    <string name="tron_defi_energy">Energie</string>
     <string name="tron_defi_freeze">Einfrieren</string>
     <string name="tron_defi_unfreeze">Entfrieren</string>
     <string name="tron_defi_tron_freeze">TRON Einfrieren</string>
     <string name="tron_defi_frozen">Eingefroren</string>
-    <string name="tron_defi_unfreezing">Wird entfroren</string>
-    <string name="tron_defi_resources">Ressourcen</string>
     <string name="tron_defi_pending_withdrawals">Ausstehende Auszahlungen</string>
     <string name="tron_defi_ready_to_claim">Abrufbereit</string>
     <string name="tron_defi_countdown_days">%1$d Tage, %2$d Std.</string>
@@ -524,14 +511,10 @@
     <string name="deposit_option_remove_cacao_pool">Aus dem CACAO-Pool entfernen</string>
     <string name="deposit_option_add_liquidity">Liquidität hinzufügen</string>
     <string name="deposit_option_remove_liquidity">Liquidität entfernen</string>
-    <string name="add_pool_title">Pool hinzufügen</string>
     <string name="add_lp_title">%1$s LP hinzufügen</string>
     <string name="add_pool_amount_label">Betrag</string>
     <string name="add_pool_gas_auto">Netzwerkgebühr (auto)</string>
     <string name="max">Max</string>
-    <string name="token_fiat_toggle_token_label">Token-Wert</string>
-    <string name="token_fiat_toggle_fiat_label">Fiat-Wert</string>
-    <string name="remove_pool_title">Pool entfernen</string>
     <string name="remove_lp_title">%1$s LP entfernen</string>
     <string name="remove_pool_amount_label">Menge</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
@@ -1071,7 +1054,6 @@
     <string name="sign_ton_messages">Nachrichten</string>
     <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
-    <string name="vault_count_recommended">Empfohlen</string>
 
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>
     <string name="vault_setup_your_vault_setup">Ihre Tresor-Einrichtung</string>

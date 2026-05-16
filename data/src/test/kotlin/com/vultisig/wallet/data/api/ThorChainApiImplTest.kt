@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import io.ktor.http.HttpStatusCode
@@ -9,7 +10,6 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -195,10 +195,57 @@ class ThorChainApiImplTest {
         val api = newApi(HttpStatusCode.OK, body)
 
         val ex =
-            assertThrows(IllegalStateException::class.java) {
+            assertThrows(CosmosBroadcastException::class.java) {
                 runBlocking { api.broadcastTransaction(tx = "{}") }
             }
-        // The full raw body is preserved in the exception message so callers can debug.
-        assertTrue(ex.message?.contains("\"code\": 5") == true, "actual: ${ex.message}")
+        assertEquals(5, ex.code)
+        assertEquals("BAADF00D", ex.txHash)
+    }
+
+    @Test
+    fun `broadcastTransaction surfaces sequence mismatch via SEQUENCE_MISMATCH_MARKER`() {
+        val body =
+            """
+            {
+              "tx_response": {
+                "txhash": "SEQ32",
+                "code": 32,
+                "codespace": "sdk",
+                "raw_log": "account sequence mismatch, expected 7, got 6: incorrect account sequence"
+              }
+            }
+            """
+                .trimIndent()
+        val api = newApi(HttpStatusCode.OK, body)
+
+        val ex =
+            assertThrows(CosmosBroadcastException::class.java) {
+                runBlocking { api.broadcastTransaction(tx = "{}") }
+            }
+        assertEquals(32, ex.code)
+        assertEquals("sdk", ex.codespace)
+        assertEquals("SEQ32", ex.txHash)
+        // Message must start with the sequence-mismatch marker so KeysignErrorScreen routes to
+        // the localized sequence-mismatch copy rather than the generic rejected branch.
+        assertEquals(
+            true,
+            ex.message?.startsWith(CosmosBroadcastException.SEQUENCE_MISMATCH_MARKER) == true,
+        )
+    }
+
+    @Test
+    fun `broadcastTransaction throws with code -1 and preserves rawBody when tx_response is null`() {
+        // Node returned a well-formed envelope with no tx_response (e.g. transport-level reject).
+        val body = "{}"
+        val api = newApi(HttpStatusCode.OK, body)
+
+        val ex =
+            assertThrows(CosmosBroadcastException::class.java) {
+                runBlocking { api.broadcastTransaction(tx = "{}") }
+            }
+        assertEquals(-1, ex.code)
+        assertEquals(null, ex.codespace)
+        assertEquals(body, ex.rawLog)
+        assertEquals(null, ex.txHash)
     }
 }

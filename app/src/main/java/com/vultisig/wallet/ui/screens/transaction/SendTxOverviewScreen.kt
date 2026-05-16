@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -60,6 +61,7 @@ internal fun SendTxOverviewScreen(
     tx: UiTransactionInfo,
     isTransactionDetailVisible: Boolean,
     onTransactionDetailVisibleChange: (Boolean) -> Unit,
+    dappMetadata: DAppMetadata? = null,
 ) {
     TxDoneScaffold(
         transactionHash = transactionHash,
@@ -69,6 +71,7 @@ internal fun SendTxOverviewScreen(
         onBack = onBack,
         isTransactionDetailVisible = isTransactionDetailVisible,
         onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
+        dappMetadata = dappMetadata,
         bottomBarContent = {
             VsButton(
                 label = stringResource(R.string.transaction_done_title),

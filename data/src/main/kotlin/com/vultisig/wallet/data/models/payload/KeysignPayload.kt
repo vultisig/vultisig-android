@@ -41,6 +41,12 @@ data class KeysignPayload(
     val tronTransferAssetContractPayload: TronTransferAssetContractPayload? = null,
     val skipBroadcast: Boolean = false,
     val defiAction: DeFiAction = DeFiAction.NONE,
+    /**
+     * Identity of the dApp that originated this keysign request (name, URL, icon), if the request
+     * came from an external dApp via the extension. Informational only — Blockaid + decoded
+     * calldata remain the security source of truth.
+     */
+    val dappMetadata: DAppMetadata? = null,
 )
 
 enum class DeFiAction {

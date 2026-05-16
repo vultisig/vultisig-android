@@ -84,28 +84,4 @@ class DeepLinkHelper(input: String) {
         }
         return null
     }
-
-    companion object {
-
-        fun createSendDeeplink(
-            assetChain: String,
-            assetTicker: String,
-            toAddress: String,
-            amount: String? = null,
-            memo: String? = null,
-        ): String {
-            return StringBuilder()
-                .apply {
-                    append("vultisig://send?")
-                    append("assetChain=").append(Uri.encode(assetChain))
-                    append("&assetTicker=").append(Uri.encode(assetTicker))
-                    append("&toAddress=").append(Uri.encode(toAddress))
-
-                    amount?.let { append("&amount=").append(Uri.encode(it)) }
-
-                    memo?.let { append("&memo=").append(Uri.encode(it)) }
-                }
-                .toString()
-        }
-    }
 }

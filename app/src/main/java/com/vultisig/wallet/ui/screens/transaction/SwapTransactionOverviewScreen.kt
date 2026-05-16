@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -56,6 +57,7 @@ internal fun SwapTransactionOverviewScreen(
     transactionTypeUiModel: SwapTransactionUiModel,
     isTransactionDetailVisible: Boolean,
     onTransactionDetailVisibleChange: (Boolean) -> Unit,
+    dappMetadata: DAppMetadata? = null,
 ) {
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -69,6 +71,7 @@ internal fun SwapTransactionOverviewScreen(
         onBack = onBack,
         isTransactionDetailVisible = isTransactionDetailVisible,
         onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
+        dappMetadata = dappMetadata,
         tokenContent = {
             Box {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

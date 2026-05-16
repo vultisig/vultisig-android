@@ -48,7 +48,7 @@ constructor(
             }
 
         return EstimatedGasFee(
-            formattedFiatValue = fiatValueToStringMapper(fiatFees),
+            formattedFiatValue = fiatValueToStringMapper(fiatFees, asFee = true),
             formattedTokenValue = convertTokenValueToString(tokenValue),
             tokenValue = tokenValue,
             fiatValue = fiatFees,

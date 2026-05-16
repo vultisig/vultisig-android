@@ -61,16 +61,10 @@
     <string name="defi_stake">质押</string>
     <string name="liquidity_pool">流动性池</string>
     <!-- Tron DeFi -->
-    <string name="tron_defi_available_balance">可用余额</string>
-    <string name="tron_defi_staking">质押</string>
-    <string name="tron_defi_bandwidth">带宽</string>
-    <string name="tron_defi_energy">能量</string>
     <string name="tron_defi_freeze">冻结</string>
     <string name="tron_defi_unfreeze">解冻</string>
     <string name="tron_defi_tron_freeze">TRON 冻结</string>
     <string name="tron_defi_frozen">已冻结</string>
-    <string name="tron_defi_unfreezing">解冻中</string>
-    <string name="tron_defi_resources">资源</string>
     <string name="tron_defi_pending_withdrawals">待提取</string>
     <string name="tron_defi_ready_to_claim">可提取</string>
     <string name="tron_defi_countdown_days">%1$d天 %2$d小时</string>
@@ -277,14 +271,8 @@
 
     <!-- Keysign Screen -->
     <string name="keysign_screen_preparing_vault">准备保险库…</string>
-    <string name="keysign_screen_signing_with_ecdsa">使用 ECDSA 签名…</string>
-    <string name="keysign_screen_signing_with_eddsa">使用 EdDSA 签名…</string>
-    <string name="keysign_screen_signing_with_mldsa">使用 MLDSA 签名…</string>
-    <string name="keysign_screen_keysign_finished">密钥签名完成！</string>
-    <string name="keysign_screen_error_please_try_again">错误！请重试。%1$s</string>
 
     <!-- Camera Bind Error -->
-    <string name="successfully_scanned_barcode">成功扫描条形码：%1$s</string>
 
     <!-- Vault Settings Delete -->
     <string name="vault_settings_delete_vault_caution1">我知道保险库将被永久删除</string>
@@ -372,7 +360,6 @@
     <string name="verify_transaction_memo_title">备注</string>
 
     <!-- Circular Progress Indicator -->
-    <string name="circular_progress_indicator_done">完成</string>
 
     <!-- Join Keysign -->
     <string name="join_keysign_wrong_reshare">错误的重新分享</string>
@@ -521,6 +508,9 @@
     <!-- Signing Errors -->
     <string name="signing_error_insufficient_funds">没有足够的燃料来支付交易费用。\n请为钱包充值。</string>
     <string name="signing_error_mixed_reshare">混合重新分享签名。\n请使用相同重新分享周期的保险库份额。</string>
+    <string name="signing_error_sequence_mismatch">账户序列号已更改 — 请重试。</string>
+    <string name="signing_error_broadcast_rejected">交易被网络拒绝。</string>
+    <string name="signing_error_broadcast_rejected_s">交易被网络拒绝：%s</string>
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_fast_sign_btn_title">快速签名</string>
@@ -550,9 +540,6 @@
     <string name="qr_title_join_keygen">加入密钥生成</string>
     <string name="qr_title_join_keysign">加入密钥签名</string>
     <string name="qr_title_join_swap_keysign">加入交换</string>
-    <string name="qr_title_join_keygen_description">扫描设备以加入\n保险库生成</string>
-    <string name="qr_title_join_keysign_description">保险库：%1$s\n金额：%2$s\n至：%3$s</string>
-    <string name="qr_title_join_keysign_swap_description">保险库：%1$s\n从：%2$s\n至：%3$s</string>
     <string name="qr_share_label_vault">保险库</string>
     <string name="qr_share_label_amount">金额</string>
     <string name="qr_share_label_to">至</string>
@@ -702,12 +689,12 @@
     <string name="keygen_email_error">电子邮件不正确，请检查</string>
 
     <!-- Scan QR Screen -->
-    <string name="scan_qr_screen_title">扫描二维码</string>
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_function_inputs_title">函数参数</string>
     <string name="dapp_hero_unverified_function_title">未验证的功能</string>
     <string name="dapp_hero_unverified_function_subtitle">请在签名前查看下方详情</string>
+    <string name="request_from">请求来自</string>
 
     <!-- Fast Vault Password Reminder -->
     <string name="fast_vault_password_reminder_title">验证您的密码：</string>
@@ -768,14 +755,10 @@
     <string name="deposit_option_remove_cacao_pool">从 CACAO 池移除</string>
     <string name="deposit_option_add_liquidity">添加流动性</string>
     <string name="deposit_option_remove_liquidity">移除流动性</string>
-    <string name="add_pool_title">添加池</string>
     <string name="add_lp_title">添加 %1$s LP</string>
     <string name="add_pool_amount_label">金额</string>
     <string name="add_pool_gas_auto">网络费用（自动）</string>
     <string name="max">最大</string>
-    <string name="token_fiat_toggle_token_label">代币价值</string>
-    <string name="token_fiat_toggle_fiat_label">法币价值</string>
-    <string name="remove_pool_title">移除流动池</string>
     <string name="remove_lp_title">移除 %1$s LP</string>
     <string name="remove_pool_amount_label">金额</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
@@ -1398,7 +1381,6 @@
     <string name="sign_ton_messages">消息</string>
     <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
-    <string name="vault_count_recommended">推荐</string>
 
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>
     <string name="vault_setup_your_vault_setup">您的保险库设置</string>

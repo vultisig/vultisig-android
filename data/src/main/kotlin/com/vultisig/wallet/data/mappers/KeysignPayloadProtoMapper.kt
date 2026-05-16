@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.ERC20ApprovePayload
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
@@ -238,6 +239,18 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             tronTransferContractPayload = from.tronTransferContractPayload,
             tronTransferAssetContractPayload = from.tronTransferAssetContractPayload,
             tronTriggerSmartContractPayload = from.tronTriggerSmartContractPayload,
+            // Trim whitespace at the boundary so consumers (host derivation, isEmpty gate, UI)
+            // don't have to re-normalize. Empty after trim ⇒ treat the whole banner as absent.
+            dappMetadata =
+                from.dappMetadata
+                    ?.let {
+                        DAppMetadata(
+                            name = it.name.trim(),
+                            url = it.url.trim(),
+                            iconUrl = it.iconUrl.trim(),
+                        )
+                    }
+                    ?.takeUnless { it.isEmpty },
         )
     }
 

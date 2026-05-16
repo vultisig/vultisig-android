@@ -243,6 +243,17 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
             tronTransferContractPayload = keysignPayload.tronTransferContractPayload,
             tronTransferAssetContractPayload = keysignPayload.tronTransferAssetContractPayload,
             tronTriggerSmartContractPayload = keysignPayload.tronTriggerSmartContractPayload,
+            // Symmetric with the inbound mapper: when Android relays a payload (e.g. as the
+            // initiator for a future dApp-initiated flow) the dApp identity must round-trip to the
+            // peers, matching iOS `mapToProtobuff` and Windows `buildDappMetadata`.
+            dappMetadata =
+                keysignPayload.dappMetadata?.let {
+                    vultisig.keysign.v1.DAppMetadata(
+                        name = it.name,
+                        url = it.url,
+                        iconUrl = it.iconUrl,
+                    )
+                },
         )
     }
 

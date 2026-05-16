@@ -33,6 +33,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -269,6 +270,12 @@ constructor(
     val showSaveToAddressBook = MutableStateFlow(false)
     /** Transaction UI model, potentially enriched after signing completes. */
     val resolvedTransactionUiModel = MutableStateFlow(transactionTypeUiModel)
+
+    /**
+     * dApp identity attached to the keysign request, if any. Read by the verify and done banners.
+     */
+    val dappMetadata: DAppMetadata?
+        get() = keysignPayload?.dappMetadata
 
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null

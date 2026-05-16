@@ -148,9 +148,6 @@
     <string name="swap_form_vault">Cassaforte</string>
     <string name="swap_form_min_pay">pagamento min.</string>
     <string name="chain_account_view_swap">SCAMBIA</string>
-    <string name="keysign_screen_signing_with_ecdsa">FIRMANDO CON CHIAVE ECDSA…</string>
-    <string name="keysign_screen_signing_with_eddsa">FIRMANDO CON CHIAVE EdDSA…</string>
-    <string name="keysign_screen_signing_with_mldsa">FIRMANDO CON CHIAVE MLDSA…</string>
     <string name="signing_error_please_try_again_s">Errore di Firma. Per favore, riprova.%s</string>
     <string name="faq_settings_q1">Che cos\'è Vultisig?</string>
     <string name="vault_list_vaults_list">Cassaforti</string>
@@ -162,14 +159,12 @@
     <string name="import_file_screen_duplicate_vault">Il caveau è duplicato</string>
     <string name="import_file_screen_success_import">Il caveau è stato importato con successo</string>
     <string name="verify_swap_consent_amount">L\'importo dello swap è corretto</string>
-    <string name="successfully_scanned_barcode">Codice a barre scansionato correttamente: %1$s</string>
     <string name="verify_transaction_error_not_enough_consent">Si prega di controllare tutti i consensi</string>
     <string name="send_error_no_token">Nessun token selezionato</string>
     <string name="send_error_no_gas_fee">Nessuna commissione per il gas</string>
     <string name="send_screen_max">Massimo</string>
     <string name="biometry_auth_login_button">Accedi con la biometria</string>
     <string name="feature_item_learn_more">Saperne di più</string>
-    <string name="keysign_screen_keysign_finished">Keysign completato!</string>
     <string name="keysign">Segno chiave</string>
     <string name="generating_key_screen_keygen_failed">Keygen non riuscito</string>
     <string name="bottom_warning_msg_keygen_error_screen">Mantieni i dispositivi sulla stessa rete WiFi, correggi il vault e associa i dispositivi.\nAssicurati che nessun altro dispositivo stia eseguendo Vultisig.</string>
@@ -188,7 +183,6 @@
     <string name="swap_form_estimated_fees_title">Commissione di cambio</string>
     <string name="swap_form_estimated_fees_with_percent_title">Commissione di cambio (%1$s)</string>
     <string name="swap_form_outbound_fee_title">Commissione in uscita</string>
-    <string name="keysign_screen_error_please_try_again">Errore! Riprova. %1$s</string>
     <string name="join_keysign_discovering_session_id">Individuazione dell\'ID sessione</string>
     <string name="join_keysign_discovery_service">Scoprire il servizio</string>
     <string name="vault_settings_delete_subtitle">Elimina definitivamente il tuo vault.</string>
@@ -206,7 +200,6 @@
     <string name="vault_settings_delete_vault_ecdsa_key">Chiave ECDSA:</string>
     <string name="vault_settings_delete_vault_eddsa_key">Chiave EdDSA:</string>
     <string name="vault_settings_delete_vault_id">ID del dispositivo:</string>
-    <string name="circular_progress_indicator_done">Fatto</string>
     <string name="verify_transaction_memo_title">Promemoria</string>
     <string name="vault_settings_delete_vault_value">Vault Valore:</string>
     <string name="join_keysign_wrong_reshare">Condivisione errata</string>
@@ -278,6 +271,9 @@
     <string name="password_should_not_be_empty">La password non deve essere vuota</string>
     <string name="signing_error_insufficient_funds">Non c&#8217;è abbastanza benzina per coprire la commissione di transazione.\n Si prega di finanziare il portafoglio.</string>
     <string name="signing_error_mixed_reshare">Firma di condivisione mista.\nUtilizzare condivisioni Vault dello stesso ciclo di condivisione.</string>
+    <string name="signing_error_sequence_mismatch">La sequenza dell&#8217;account è cambiata — riprova.</string>
+    <string name="signing_error_broadcast_rejected">Transazione rifiutata dalla rete.</string>
+    <string name="signing_error_broadcast_rejected_s">Transazione rifiutata dalla rete: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Segnale veloce</string>
     <string name="keysign_sign_transaction">Firma transazione</string>
     <string name="sign_transaction">Firma transazione</string>
@@ -295,9 +291,6 @@
     <string name="qr_title_join_keygen">Unisciti a Keygen</string>
     <string name="qr_title_join_keysign">Unisciti a Keysign</string>
     <string name="qr_title_join_swap_keysign">Unisciti allo scambio</string>
-    <string name="qr_title_join_keygen_description">Esegui la scansione con i dispositivi per partecipare alla\n generazione del vault</string>
-    <string name="qr_title_join_keysign_description">Cassaforte: %1$s\n Importo: %2$s\n A: %3$s</string>
-    <string name="qr_title_join_keysign_swap_description">Cassaforte: %1$s\n Da: %2$s\n A: %3$s</string>
     <string name="qr_share_label_vault">Cassaforte</string>
     <string name="qr_share_label_amount">Importo</string>
     <string name="qr_share_label_to">A</string>
@@ -422,10 +415,10 @@
     <string name="deposit_option_withdraw_ruji">Ritira RUJI</string>
     <string name="withdraw_amount">Ritira %s</string>
     <string name="deposit_form_unstake_percentage_hint">Inserisci la percentuale da sbloccare</string>
-    <string name="scan_qr_screen_title">Scansiona il codice QR</string>
     <string name="verify_transaction_function_inputs_title">Argomenti della funzione</string>
     <string name="dapp_hero_unverified_function_title">Funzione non verificata</string>
     <string name="dapp_hero_unverified_function_subtitle">Controlla i dettagli prima di firmare</string>
+    <string name="request_from">Richiesta da</string>
     <string name="send_shares_currency_hint">Inserisci quote</string>
     <string name="send_error_max_shares">L\'importo non deve superare il saldo</string>
     <string name="deposit_form_shares_title">Quote (Saldo: %1$s)</string>
@@ -466,16 +459,10 @@
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Pool di liquidità</string>
     <!-- Tron DeFi -->
-    <string name="tron_defi_available_balance">Saldo Disponibile</string>
-    <string name="tron_defi_staking">Staking</string>
-    <string name="tron_defi_bandwidth">Larghezza di Banda</string>
-    <string name="tron_defi_energy">Energia</string>
     <string name="tron_defi_freeze">Congela</string>
     <string name="tron_defi_unfreeze">Scongela</string>
     <string name="tron_defi_tron_freeze">TRON Congela</string>
     <string name="tron_defi_frozen">Congelato</string>
-    <string name="tron_defi_unfreezing">Scongelamento</string>
-    <string name="tron_defi_resources">Risorse</string>
     <string name="tron_defi_pending_withdrawals">Prelievi in Sospeso</string>
     <string name="tron_defi_ready_to_claim">Pronto per il prelievo</string>
     <string name="tron_defi_countdown_days">%1$d giorni, %2$d h</string>
@@ -524,14 +511,10 @@
     <string name="deposit_option_remove_cacao_pool">Rimuovi dal pool CACAO</string>
     <string name="deposit_option_add_liquidity">Aggiungi liquidità</string>
     <string name="deposit_option_remove_liquidity">Rimuovi liquidità</string>
-    <string name="add_pool_title">Aggiungi Pool</string>
     <string name="add_lp_title">Aggiungi LP %1$s</string>
     <string name="add_pool_amount_label">Importo</string>
     <string name="add_pool_gas_auto">Commissione di rete (automatica)</string>
     <string name="max">Max</string>
-    <string name="token_fiat_toggle_token_label">Valore token</string>
-    <string name="token_fiat_toggle_fiat_label">Valore fiat</string>
-    <string name="remove_pool_title">Rimuovi Pool</string>
     <string name="remove_lp_title">Rimuovi LP %1$s</string>
     <string name="remove_pool_amount_label">Quantità</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
@@ -1072,7 +1055,6 @@
     <string name="sign_ton_messages">Messaggi</string>
     <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
-    <string name="vault_count_recommended">Consigliata</string>
 
     <string name="welcome_tip">Suggerimento: Puoi usare un browser come dispositivo</string>
     <string name="vault_setup_your_vault_setup">La configurazione del tuo vault</string>

@@ -40,8 +40,6 @@ val BOTH_CRYPTO_CONNECTION_TYPES = listOf(CryptoConnectionType.Wallet, CryptoCon
 
 val ONLY_WALLET = listOf(CryptoConnectionType.Wallet)
 
-val ONLY_DEFI = listOf(CryptoConnectionType.Defi)
-
 @Composable
 internal fun CryptoConnectionSelect(
     modifier: Modifier = Modifier,
@@ -110,16 +108,6 @@ internal fun CryptoConnectionSelect(
                                 text = stringResource(R.string.defi),
                                 icon = R.drawable.coins_add,
                                 enabled = !isWalletSelected,
-                            )
-                        }
-                        ONLY_DEFI -> {
-
-                            WalletEarnOption(
-                                modifier = Modifier.weight(1f),
-                                onClick = { onTypeClick(CryptoConnectionType.Defi) },
-                                text = stringResource(R.string.defi),
-                                icon = R.drawable.coins_add,
-                                enabled = true,
                             )
                         }
                         ONLY_WALLET -> {

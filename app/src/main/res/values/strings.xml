@@ -66,16 +66,10 @@
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquidity Pool</string>
     <!-- Tron DeFi -->
-    <string name="tron_defi_available_balance">Available Balance</string>
-    <string name="tron_defi_staking">Staking</string>
-    <string name="tron_defi_bandwidth">Bandwidth</string>
-    <string name="tron_defi_energy">Energy</string>
     <string name="tron_defi_freeze">Freeze</string>
     <string name="tron_defi_unfreeze">Unfreeze</string>
     <string name="tron_defi_tron_freeze">TRON Freeze</string>
     <string name="tron_defi_frozen">Frozen</string>
-    <string name="tron_defi_unfreezing">Unfreezing</string>
-    <string name="tron_defi_resources">Resources</string>
     <string name="tron_defi_pending_withdrawals">Pending Withdrawals</string>
     <string name="tron_defi_ready_to_claim">Ready to claim</string>
     <string name="tron_defi_countdown_days">%1$d days, %2$d hrs</string>
@@ -232,12 +226,6 @@
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA Key Copied</string>
     <string name="welcome_screen_skip">Skip</string>
     <string name="keysign_screen_preparing_vault">Preparing vault…</string>
-    <string name="keysign_screen_signing_with_ecdsa">Signing with ECDSA…</string>
-    <string name="keysign_screen_signing_with_eddsa">Signing with EdDSA…</string>
-    <string name="keysign_screen_signing_with_mldsa">Signing with MLDSA…</string>
-    <string name="keysign_screen_keysign_finished">Keysign Finished!</string>
-    <string name="keysign_screen_error_please_try_again">Error! Please try again. %1$s</string>
-    <string name="successfully_scanned_barcode">Successfully scanned barcode: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">I am aware that the vault will be deleted permanently</string>
     <string name="vault_settings_delete_vault_caution2">I am aware that I can lose funds</string>
     <string name="vault_settings_delete_vault_caution3">I have made a vault backup to restore later</string>
@@ -290,7 +278,6 @@
     <string name="send_from_invalid_amount">Invalid amount</string>
     <string name="insufficient_utxos_error">Not enough available UTXOs to cover the selected amount. Please add more funds or reduce the amount you\'re sending</string>
     <string name="verify_transaction_memo_title">Memo</string>
-    <string name="circular_progress_indicator_done">Done</string>
     <string name="join_keysign_wrong_reshare">Wrong ReShare</string>
     <string name="swap_screen_provider_title">Provider</string>
     <string name="swap_form_provider_thorchain" translatable="false">THORChain</string>
@@ -380,6 +367,9 @@
     <string name="password_should_not_be_empty">Password should not be empty</string>
     <string name="signing_error_insufficient_funds">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
     <string name="signing_error_mixed_reshare">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
+    <string name="signing_error_sequence_mismatch">Account sequence changed — please retry the transaction.</string>
+    <string name="signing_error_broadcast_rejected">Transaction rejected by the network.</string>
+    <string name="signing_error_broadcast_rejected_s">Transaction rejected by the network: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
     <string name="keysign_sign_transaction">Sign transaction</string>
     <string name="sign_transaction">Sign Transaction</string>
@@ -397,9 +387,6 @@
     <string name="qr_title_join_keygen">Join Keygen</string>
     <string name="qr_title_join_keysign">Join Keysign</string>
     <string name="qr_title_join_swap_keysign">Join Swap</string>
-    <string name="qr_title_join_keygen_description">Scan with devices to join the\nvault generation</string>
-    <string name="qr_title_join_keysign_description">Vault: %1$s\nAmount: %2$s\n To: %3$s</string>
-    <string name="qr_title_join_keysign_swap_description">Vault: %1$s\nFrom: %2$s\n To: %3$s</string>
     <string name="qr_share_label_vault">Vault</string>
     <string name="qr_share_label_amount">Amount</string>
     <string name="qr_share_label_to">To</string>
@@ -635,10 +622,10 @@
     <string name="transfer_ibc_function_memo_title">Memo</string>
     <string name="merge_account_doesnt_exist">Selected token is not found for this address</string>
     <string name="keygen_email_error">Incorrect email, please check</string>
-    <string name="scan_qr_screen_title">Scan QR Code</string>
     <string name="verify_transaction_function_inputs_title">Function Arguments</string>
     <string name="dapp_hero_unverified_function_title">Unverified function</string>
     <string name="dapp_hero_unverified_function_subtitle">Review the details below before signing</string>
+    <string name="request_from">Request from</string>
     <string name="fast_vault_password_reminder_title">Verify your password for:</string>
     <string name="fast_vault_password_reminder_done_button">Done</string>
     <string name="periodically_ask_verify_password">We periodically ask for a verification so you don\'t forget your password.</string>
@@ -714,14 +701,10 @@
     <string name="deposit_option_remove_cacao_pool">Remove from CACAO Pool</string>
     <string name="deposit_option_add_liquidity">Add Liquidity</string>
     <string name="deposit_option_remove_liquidity">Remove Liquidity</string>
-    <string name="add_pool_title">Add Pool</string>
     <string name="add_lp_title">Add %1$s LP</string>
     <string name="add_pool_amount_label">Amount</string>
     <string name="add_pool_gas_auto">Gas (auto)</string>
     <string name="max">Max</string>
-    <string name="token_fiat_toggle_token_label">Token value</string>
-    <string name="token_fiat_toggle_fiat_label">Fiat value</string>
-    <string name="remove_pool_title">Remove Pool</string>
     <string name="remove_lp_title">Remove %1$s LP</string>
     <string name="remove_pool_amount_label">Amount</string>
     <string name="remove_pool_zero_amount" translatable="false">0 %1$s</string>
@@ -1039,7 +1022,6 @@
         <item quantity="one">Accounts: %1$d | Data length: %2$d bytes</item>
         <item quantity="other">Accounts: %1$d | Data length: %2$d bytes</item>
     </plurals>
-    <string name="vault_count_recommended">Recommended</string>
 
     <!-- Vault count plural -->
     <plurals name="vault_count">

@@ -150,12 +150,6 @@
     <string name="vault_detail_screen_eddsa_key_copied">EdDSA-sleutel gekopieerd</string>
     <string name="welcome_screen_skip">Overslaan</string>
     <string name="keysign_screen_preparing_vault">Kluis voorbereiden…</string>
-    <string name="keysign_screen_signing_with_ecdsa">Ondertekenen met ECDSA…</string>
-    <string name="keysign_screen_signing_with_eddsa">Ondertekenen met EdDSA…</string>
-    <string name="keysign_screen_signing_with_mldsa">Ondertekenen met MLDSA…</string>
-    <string name="keysign_screen_keysign_finished">Keysign voltooid!</string>
-    <string name="keysign_screen_error_please_try_again">Fout! Probeer het opnieuw. %1$s</string>
-    <string name="successfully_scanned_barcode">Barcode succesvol gescand: %1$s</string>
     <string name="vault_settings_delete_vault_caution1">Ik ben me ervan bewust dat de kluis permanent zal worden verwijderd</string>
     <string name="vault_settings_delete_vault_caution2">Ik ben me ervan bewust dat ik geld kan verliezen</string>
     <string name="vault_settings_delete_vault_caution3">Ik heb een kluisback-up gemaakt om later te kunnen herstellen</string>
@@ -207,7 +201,6 @@
     <string name="insufficient_utxos_error">Onvoldoende beschikbare UTXO\'s om het geselecteerde bedrag te dekken. Voeg meer fondsen toe of verlaag het bedrag dat u verzendt</string>
     <string name="swap_screen_invalid_vault">De transactie zal waarschijnlijk mislukken, de kluis kon niet worden geladen.</string>
     <string name="verify_transaction_memo_title">Memo</string>
-    <string name="circular_progress_indicator_done">Klaar</string>
     <string name="join_keysign_wrong_reshare">Verkeerde ReShare</string>
     <string name="swap_screen_provider_title">Leverancier</string>
     <string name="swap_form_minimum_amount">Wisselbedrag te klein. Aanbevolen bedrag: %1$s %2$s</string>
@@ -277,6 +270,9 @@
     <string name="password_should_not_be_empty">Wachtwoord mag niet leeg zijn</string>
     <string name="signing_error_insufficient_funds">Er is niet genoeg gas om de transactiekosten te dekken.\nSchakel geld in de wallet.</string>
     <string name="signing_error_mixed_reshare">Gemengde Reshare-ondertekening.\nGebruik kluisshares van dezelfde Reshare-cyclus.</string>
+    <string name="signing_error_sequence_mismatch">De accountvolgorde is gewijzigd — probeer het opnieuw.</string>
+    <string name="signing_error_broadcast_rejected">Transactie geweigerd door het netwerk.</string>
+    <string name="signing_error_broadcast_rejected_s">Transactie geweigerd door het netwerk: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>
     <string name="sign_transaction">Transactie ondertekenen</string>
@@ -294,9 +290,6 @@
     <string name="qr_title_join_keygen">Word lid van Keygen</string>
     <string name="qr_title_join_keysign">Word lid van Keysign</string>
     <string name="qr_title_join_swap_keysign">Doe mee aan Swap</string>
-    <string name="qr_title_join_keygen_description">Scannen met apparaten om deel te nemen\n aan de kluisgeneratie</string>
-    <string name="qr_title_join_keysign_description">Kluis: %1$s\nBedrag: %2$s\nAan: %3$s</string>
-    <string name="qr_title_join_keysign_swap_description">Kluis: %1$s\nVan: %2$s\nAan: %3$s</string>
     <string name="qr_share_label_vault">Kluis</string>
     <string name="qr_share_label_amount">Bedrag</string>
     <string name="qr_share_label_to">Aan</string>
@@ -421,10 +414,10 @@
     <string name="deposit_option_withdraw_ruji">RUJI opnemen</string>
     <string name="withdraw_amount">%s opnemen</string>
     <string name="deposit_form_unstake_percentage_hint">Voer percentage in om te unstaken</string>
-    <string name="scan_qr_screen_title">QR-code scannen</string>
     <string name="verify_transaction_function_inputs_title">Functie-argumenten</string>
     <string name="dapp_hero_unverified_function_title">Niet-geverifieerde functie</string>
     <string name="dapp_hero_unverified_function_subtitle">Bekijk de details hieronder voordat je ondertekent</string>
+    <string name="request_from">Verzoek van</string>
     <string name="send_shares_currency_hint">Voer aandelen in</string>
     <string name="send_error_max_shares">Bedrag mag het saldo niet overschrijden</string>
     <string name="deposit_form_shares_title">Aandelen (Saldo: %1$s)</string>
@@ -463,16 +456,10 @@
     <string name="defi_stake">Stake</string>
     <string name="liquidity_pool">Liquiditeitspool</string>
     <!-- Tron DeFi -->
-    <string name="tron_defi_available_balance">Beschikbaar Saldo</string>
-    <string name="tron_defi_staking">Staking</string>
-    <string name="tron_defi_bandwidth">Bandbreedte</string>
-    <string name="tron_defi_energy">Energie</string>
     <string name="tron_defi_freeze">Bevriezen</string>
     <string name="tron_defi_unfreeze">Ontdooien</string>
     <string name="tron_defi_tron_freeze">TRON Bevriezen</string>
     <string name="tron_defi_frozen">Bevroren</string>
-    <string name="tron_defi_unfreezing">Wordt ontdooid</string>
-    <string name="tron_defi_resources">Bronnen</string>
     <string name="tron_defi_pending_withdrawals">Uitstaande Opnames</string>
     <string name="tron_defi_ready_to_claim">Klaar om te claimen</string>
     <string name="tron_defi_countdown_days">%1$d dagen, %2$d uur</string>
@@ -521,14 +508,10 @@
     <string name="deposit_option_remove_cacao_pool">Verwijderen uit CACAO-pool</string>
     <string name="deposit_option_add_liquidity">Liquiditeit toevoegen</string>
     <string name="deposit_option_remove_liquidity">Liquiditeit verwijderen</string>
-    <string name="add_pool_title">Pool toevoegen</string>
     <string name="add_lp_title">%1$s LP toevoegen</string>
     <string name="add_pool_amount_label">Bedrag</string>
     <string name="add_pool_gas_auto">Netwerkkosten (auto)</string>
     <string name="max">Max</string>
-    <string name="token_fiat_toggle_token_label">Tokenwaarde</string>
-    <string name="token_fiat_toggle_fiat_label">Fiatwaarde</string>
-    <string name="remove_pool_title">Pool verwijderen</string>
     <string name="remove_lp_title">%1$s LP verwijderen</string>
     <string name="remove_pool_amount_label">Bedrag</string>
     <string name="remove_pool_percent_format">%1$d%%</string>
@@ -1066,7 +1049,6 @@
     <string name="sign_ton_messages">Berichten</string>
     <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
-    <string name="vault_count_recommended">Aanbevolen</string>
 
     <string name="welcome_tip">Tip: U kunt een browser gebruiken als apparaat</string>
     <string name="vault_setup_your_vault_setup">Uw kluis-instelling</string>
