@@ -285,9 +285,7 @@ internal class VaultAccountsViewModelTest {
             every { accountsRepository.loadAddresses("vault-1", any()) } returns
                 flowOf(listOf(testAddress))
             coEvery { addressToUiModelMapper(any()) } returns mappedUiModel
-            // fiatValueToStringMapper is a function-type interface; relaxed mocks return a generic
-            // Object that fails the implicit cast at the VM call site, so stub explicitly.
-            coEvery { fiatValueToStringMapper(any()) } returns "$10.00"
+            coEvery { fiatValueToStringMapper(any(), any()) } returns "$10.00"
 
             val vm = createViewModel()
             advanceUntilIdle()

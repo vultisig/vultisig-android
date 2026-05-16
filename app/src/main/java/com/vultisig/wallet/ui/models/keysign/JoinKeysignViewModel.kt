@@ -676,7 +676,8 @@ constructor(
                                     ValuedToken(
                                         token = feeToken,
                                         value = value.toString(),
-                                        fiatValue = fiatValueToStringMapper.forFee(estimatedFee),
+                                        fiatValue =
+                                            fiatValueToStringMapper(estimatedFee, asFee = true),
                                     ),
                                 networkFee =
                                     ValuedToken(
@@ -686,8 +687,9 @@ constructor(
                                                 estimatedNetworkGasFee.tokenValue
                                             ),
                                         fiatValue =
-                                            fiatValueToStringMapper.forFee(
-                                                estimatedNetworkGasFee.fiatValue
+                                            fiatValueToStringMapper(
+                                                estimatedNetworkGasFee.fiatValue,
+                                                asFee = true,
                                             ),
                                     ),
                                 networkFeeFormatted =
@@ -695,8 +697,9 @@ constructor(
                                         estimatedNetworkGasFee.tokenValue
                                     ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
                                 totalFee =
-                                    fiatValueToStringMapper.forFee(
-                                        estimatedFee + networkGasFeeFiatValue
+                                    fiatValueToStringMapper(
+                                        estimatedFee + networkGasFeeFiatValue,
+                                        asFee = true,
                                     ),
                                 provider = provider,
                             )
@@ -1199,19 +1202,23 @@ constructor(
                 ValuedToken(
                     token = srcToken,
                     value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
-                    fiatValue = fiatValueToStringMapper.forFee(estimatedNetworkGasFee.fiatValue),
+                    fiatValue =
+                        fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue, asFee = true),
                 ),
             providerFee =
                 ValuedToken(
                     token = providerFeeToken,
                     value = providerFee.value.toString(),
-                    fiatValue = fiatValueToStringMapper.forFee(estimatedFee),
+                    fiatValue = fiatValueToStringMapper(estimatedFee, asFee = true),
                 ),
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                     " ${estimatedNetworkGasFee.tokenValue.unit}",
             totalFee =
-                fiatValueToStringMapper.forFee(estimatedFee + estimatedNetworkGasFee.fiatValue),
+                fiatValueToStringMapper(
+                    estimatedFee + estimatedNetworkGasFee.fiatValue,
+                    asFee = true,
+                ),
             provider = provider,
         )
     }
