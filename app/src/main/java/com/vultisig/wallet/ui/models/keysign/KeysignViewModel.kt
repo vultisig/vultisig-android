@@ -806,14 +806,16 @@ constructor(
         error: Throwable,
     ): String? {
         if (isInitiatingDevice) return null
-        val localHash = signedTx.transactionHash.takeIf { it.isNotBlank() } ?: return null
-        Timber.w(
-            error,
-            "Joined-device broadcast for %s failed; using locally computed hash %s",
-            chain.raw,
-            localHash,
-        )
-        return localHash
+        return signedTx.transactionHash
+            .takeUnless { it.isBlank() }
+            ?.also { hash ->
+                Timber.w(
+                    error,
+                    "Joined-device broadcast for %s failed; using locally computed hash %s",
+                    chain.raw,
+                    hash,
+                )
+            }
     }
 
     internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {

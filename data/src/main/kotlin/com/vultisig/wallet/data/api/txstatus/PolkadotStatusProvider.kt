@@ -36,15 +36,17 @@ class PolkadotStatusProvider @Inject constructor(private val polkadotApi: Polkad
         }
 
     private fun Throwable.isExplorerUnauthorized(): Boolean {
-        val networkException = this as? NetworkException ?: return false
+        val exception = this as? NetworkException ?: return false
+        if (exception.httpStatusCode != 400) return false
+        return SUBSCAN_AUTH_WALL_PHRASES.any { exception.message.contains(it, ignoreCase = true) }
+    }
+
+    private companion object {
         // Subscan returns HTTP 400 with body `{"code": 403, "message": "Subscan API strictly
         // requires an API key. Unauthenticated access is disabled."}` when the request omits
-        // the API key. Require both the 400 status and one of the key-specific phrases — a
-        // looser match could classify unrelated bad-request responses as terminal and stop
-        // polling early.
-        if (networkException.httpStatusCode != 400) return false
-        val body = networkException.message
-        return body.contains("requires an API key", ignoreCase = true) ||
-            body.contains("Unauthenticated access is disabled", ignoreCase = true)
+        // the API key. Match both phrases — looser matching could classify unrelated
+        // bad-request responses as terminal and stop polling early.
+        val SUBSCAN_AUTH_WALL_PHRASES =
+            listOf("requires an API key", "Unauthenticated access is disabled")
     }
 }
