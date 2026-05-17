@@ -76,7 +76,9 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         get() =
             when (this) {
                 Chain.Ton -> explorerUrl
-                Chain.Ripple -> "${explorerUrl}account/"
+                Chain.Ripple,
+                Chain.Polkadot,
+                Chain.Bittensor -> "${explorerUrl}account/"
                 else -> "${explorerUrl}address/"
             }
 
@@ -103,8 +105,8 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Polygon -> "https://polygonscan.com/"
                 Chain.Solana -> "https://orb.helius.dev/"
                 Chain.ThorChain -> "https://runescan.io/"
-                Chain.Polkadot -> "https://assethub-polkadot.subscan.io/account/"
-                Chain.Bittensor -> "https://taostats.io/account/"
+                Chain.Polkadot -> "https://assethub-polkadot.subscan.io/"
+                Chain.Bittensor -> "https://taostats.io/"
                 Chain.ZkSync -> "https://explorer.zksync.io/"
                 Chain.Sui -> "https://suiscan.xyz/mainnet/"
                 Chain.Ton -> "https://tonviewer.com/"
