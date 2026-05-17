@@ -132,6 +132,19 @@ class BroadcastTxUseCaseTest {
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
     }
 
+    @Test
+    fun `zcash broadcast recovers when peer already broadcast`() = runTest {
+        val blockChairApi = mockk<BlockChairApi>()
+        coEvery { blockChairApi.broadcastTransaction(Chain.Zcash, RAW_TRANSACTION) } throws
+            RuntimeException("fail to broadcast transaction: transaction already known")
+        coEvery { blockChairApi.getTsStatus(Chain.Zcash, KNOWN_TRANSACTION_HASH) } returns
+            blockchairResult(blockId = -1)
+
+        val txHash = createUseCase(blockChairApi = blockChairApi)(Chain.Zcash, signedTransaction())
+
+        assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+    }
+
     private fun blockchairResult(blockId: Int) =
         BlockChainStatusDeserialized.Result(
             BlockChairStatusResponse(
