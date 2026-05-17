@@ -49,6 +49,7 @@ import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.getProviderLogo
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.swapAssetName
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -57,6 +58,7 @@ import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
+import com.vultisig.wallet.ui.components.dapp.DappRequestBanner
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBadget
@@ -125,6 +127,7 @@ internal fun VerifySwapScreen(
     showToolbar: Boolean,
     confirmTitle: String,
     isConsentsEnabled: Boolean = true,
+    dappMetadata: DAppMetadata? = null,
     onConsentReceiveAmount: (Boolean) -> Unit = {},
     onConsentAmount: (Boolean) -> Unit = {},
     onConsentAllowance: (Boolean) -> Unit = {},
@@ -147,6 +150,7 @@ internal fun VerifySwapScreen(
         isConsentsEnabled = isConsentsEnabled,
         hasFastSign = state.hasFastSign,
         vaultName = state.vaultName,
+        dappMetadata = dappMetadata,
         onConsentReceiveAmount = onConsentReceiveAmount,
         onConsentAmount = onConsentAmount,
         onConsentAllowance = onConsentAllowance,
@@ -172,6 +176,7 @@ private fun VerifySwapScreen(
     isConsentsEnabled: Boolean = true,
     hasFastSign: Boolean,
     vaultName: String,
+    dappMetadata: DAppMetadata?,
     onConsentReceiveAmount: (Boolean) -> Unit,
     onConsentAmount: (Boolean) -> Unit,
     onConsentAllowance: (Boolean) -> Unit,
@@ -189,6 +194,8 @@ private fun VerifySwapScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             ) {
+                dappMetadata?.takeUnless { it.isEmpty }?.let { DappRequestBanner(metadata = it) }
+
                 Column(modifier = Modifier.align(alignment = Alignment.CenterHorizontally)) {
                     SecurityScannerBadget(scanStatus)
                 }
@@ -657,6 +664,7 @@ private fun VerifySwapScreenPreview() {
         confirmTitle = "Sign",
         hasFastSign = false,
         vaultName = "Main Vault",
+        dappMetadata = null,
         onConsentReceiveAmount = {},
         onConsentAmount = {},
         onConsentAllowance = {},

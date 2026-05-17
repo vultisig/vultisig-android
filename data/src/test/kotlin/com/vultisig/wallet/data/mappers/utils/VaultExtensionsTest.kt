@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.models.SigningKey
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
-import com.vultisig.wallet.data.models.getSignersExceptLocalParty
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.models.isFastVault
 import junit.framework.TestCase.assertEquals
@@ -55,34 +54,6 @@ class VaultExtensionsTest {
         val vault = vault.copy(signers = listOf("1", "2"))
 
         assertEquals(false, vault.isFastVault())
-    }
-
-    @Test
-    fun `getSignersExceptLocalParty returns all signers except localPartyID`() {
-        val vault = vault.copy(localPartyID = "1", signers = listOf("1", "2", "3"))
-
-        assertEquals(listOf("2", "3"), vault.getSignersExceptLocalParty())
-    }
-
-    @Test
-    fun `getSignersExceptLocalParty returns empty list when signers is empty`() {
-        val vault = vault.copy(localPartyID = "1", signers = emptyList())
-
-        assertEquals(emptyList<String>(), vault.getSignersExceptLocalParty())
-    }
-
-    @Test
-    fun `getSignersExceptLocalParty returns empty list when signers contains only localPartyID`() {
-        val vault = vault.copy(localPartyID = "1", signers = listOf("1"))
-
-        assertEquals(emptyList<String>(), vault.getSignersExceptLocalParty())
-    }
-
-    @Test
-    fun `getSignersExceptLocalParty returns all signers except localPartyID when localPartyID is not first in signers`() {
-        val vault = vault.copy(localPartyID = "2", signers = listOf("1", "2", "3"))
-
-        assertEquals(listOf("1", "3"), vault.getSignersExceptLocalParty())
     }
 
     @Test

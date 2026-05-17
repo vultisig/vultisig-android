@@ -78,17 +78,17 @@ constructor(
                 ValuedToken(
                     token = tokenValue,
                     value = from.estimatedFees.value.toString(),
-                    fiatValue = fiatValueToStringMapper(quotesFeesFiat),
+                    fiatValue = fiatValueToStringMapper(quotesFeesFiat, asFee = true),
                 ),
             networkFee =
                 ValuedToken(
                     token = from.srcToken,
                     value = mapTokenValueToDecimalUiString(from.gasFees),
-                    fiatValue = fiatValueToStringMapper(from.gasFeeFiatValue),
+                    fiatValue = fiatValueToStringMapper(from.gasFeeFiatValue, asFee = true),
                 ),
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
-            totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue),
+            totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue, asFee = true),
             provider = provider.getSwapProviderId(),
         )
     }

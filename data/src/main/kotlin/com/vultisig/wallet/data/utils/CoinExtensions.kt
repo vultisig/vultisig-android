@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.utils
 
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.Coins
 import java.math.BigDecimal
 
 val Coin.thorswapMultiplier: BigDecimal
@@ -11,10 +10,6 @@ val Coin.thorswapMultiplier: BigDecimal
             Chain.MayaChain -> BigDecimal.TEN.pow(decimal)
             else -> BigDecimal(1e8)
         }
-
-fun Coins.getCoinBy(chain: Chain, ticker: String): Coin? {
-    return coins[chain]?.first { it.ticker.equals(ticker, ignoreCase = true) }
-}
 
 fun String.getChain(): Chain {
     return when (this) {

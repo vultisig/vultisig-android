@@ -193,8 +193,8 @@ constructor(
                             .multiply(BigDecimal(100)),
                     )
                 else null
-            resolvedFeeText = fiatValueToString(affiliateFiat)
-            outboundFeeText = fiatValueToString(outboundFiat)
+            resolvedFeeText = fiatValueToString(affiliateFiat, asFee = true)
+            outboundFeeText = fiatValueToString(outboundFiat, asFee = true)
             // Headline total must reconcile to the breakdown rows (Swap Fee + Outbound Fee).
             // Raw `fees.total` includes the `asset` (liquidity) component, but liquidity is
             // already reflected in `expectedDstValue`, so we drop it here.
@@ -204,7 +204,7 @@ constructor(
                     currency = fiatFees.currency,
                 )
         } else {
-            resolvedFeeText = fiatValueToString(fiatFees)
+            resolvedFeeText = fiatValueToString(fiatFees, asFee = true)
             outboundFeeText = null
             swapFeePercent = null
             resolvedSwapFeeFiat = fiatFees

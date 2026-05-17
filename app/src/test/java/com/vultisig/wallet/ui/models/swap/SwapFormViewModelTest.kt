@@ -107,7 +107,7 @@ internal class SwapFormViewModelTest {
         navigator = mockk(relaxed = true)
 
         fiatValueToString = mockk(relaxed = true)
-        coEvery { fiatValueToString(any()) } returns "$0.00"
+        coEvery { fiatValueToString(any(), any()) } returns "$0.00"
 
         convertTokenAndValueToTokenValue = mockk(relaxed = true)
         every { convertTokenAndValueToTokenValue(any(), any()) } answers
@@ -1462,7 +1462,7 @@ internal class SwapFormViewModelTest {
     @Test
     fun `collectTotalFee combines gas and swap fees`() =
         runTest(mainDispatcher) {
-            coEvery { fiatValueToString(any()) } returns "$10.00"
+            coEvery { fiatValueToString(any(), any()) } returns "$10.00"
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
                 listOf(SwapProvider.THORCHAIN)
             coEvery {

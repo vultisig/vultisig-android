@@ -839,7 +839,7 @@ constructor(
                 gasFeeFiat + swapFeeFiat
             }
             .onEach { totalFee ->
-                uiState.update { it.copy(totalFee = fiatValueToString(totalFee)) }
+                uiState.update { it.copy(totalFee = fiatValueToString(totalFee, asFee = true)) }
             }
             .launchIn(viewModelScope)
     }

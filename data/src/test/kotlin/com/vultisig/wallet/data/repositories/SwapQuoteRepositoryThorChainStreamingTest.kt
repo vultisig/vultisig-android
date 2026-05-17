@@ -94,15 +94,34 @@ class SwapQuoteRepositoryThorChainStreamingTest {
 
     @Test
     fun `rapid slippage below threshold returns rapid without fetching streaming`() = runTest {
-        // fees=100, out=9900 → slippage=100*10000/10000=100 bps ≤ 300
+        // fees=50, out=9950 → slippage=50*10000/10000=50 bps ≤ 100
         coEvery { thorChainApi.getSwapQuotes(match { it.interval == "0" }) } returns
             THORChainSwapQuoteDeserialized.Result(
-                thorQuote(expectedAmountOut = "9900", feesTotal = "100")
+                thorQuote(expectedAmountOut = "9950", feesTotal = "50")
             )
 
         val result = fetchQuote()
 
         coVerify(exactly = 0) { thorChainApi.getSwapQuotes(match { it.interval == "1" }) }
+        assertEquals("9950", result.data.expectedAmountOut)
+    }
+
+    @Test
+    fun `rapid slippage in 100 to 300 bps band now triggers streaming fetch`() = runTest {
+        // fees=200, out=9800 → slippage=200*10000/10000=200 bps. Below the old 300 bps
+        // threshold but above the new 100 bps threshold → must fetch streaming.
+        val rapidData =
+            thorQuote(expectedAmountOut = "9800", feesTotal = "200", maxStreamingQuantity = 4)
+        val streamingData = thorQuote(expectedAmountOut = "9900", feesTotal = "100")
+
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "0" }) } returns
+            THORChainSwapQuoteDeserialized.Result(rapidData)
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "1" }) } returns
+            THORChainSwapQuoteDeserialized.Result(streamingData)
+
+        val result = fetchQuote()
+
+        coVerify(exactly = 1) { thorChainApi.getSwapQuotes(match { it.interval == "1" }) }
         assertEquals("9900", result.data.expectedAmountOut)
     }
 

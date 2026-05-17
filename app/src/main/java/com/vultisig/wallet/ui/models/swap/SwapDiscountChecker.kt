@@ -42,7 +42,7 @@ constructor(
         }
         val vultBpsDiscountFiat =
             convertBpsToFiat(token = srcToken, tokenValue = tokenValue, bps = vultBPSDiscount)
-        val vultBpsDiscountFiatValue = fiatValueToString(vultBpsDiscountFiat)
+        val vultBpsDiscountFiatValue = fiatValueToString(vultBpsDiscountFiat, asFee = true)
         val tierType = vultBPSDiscount.getTierType()
         return VultDiscountResult(
             vultBpsDiscount = vultBPSDiscount,
@@ -66,7 +66,8 @@ constructor(
                 )
         val referralBpsDiscountFiat =
             convertBpsToFiat(token = srcToken, tokenValue = tokenValue, bps = referralBpsDiscount)
-        val referralBpsDiscountFiatFormatted = fiatValueToString(referralBpsDiscountFiat)
+        val referralBpsDiscountFiatFormatted =
+            fiatValueToString(referralBpsDiscountFiat, asFee = true)
         return ReferralDiscountResult(
             referralBpsDiscount = referralBpsDiscount,
             referralBpsDiscountFiatValue = referralBpsDiscountFiatFormatted,

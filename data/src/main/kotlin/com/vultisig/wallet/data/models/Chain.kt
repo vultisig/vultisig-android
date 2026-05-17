@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.TokenStandard.TON
 import com.vultisig.wallet.data.models.TokenStandard.TRC20
 import com.vultisig.wallet.data.models.TokenStandard.UTXO
 import com.vultisig.wallet.data.utils.getDustThreshold
-import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -458,7 +457,3 @@ val Chain.blockTimeMs: Long
 fun Chain.toValue(value: BigInteger): BigDecimal = coinType.toValue(value)
 
 fun Chain.toValue(value: BigDecimal): BigDecimal = coinType.toValue(value)
-
-fun Chain.toUnit(value: BigInteger): BigInteger = coinType.toUnit(value)
-
-fun Chain.toUnit(value: BigDecimal): BigInteger = coinType.toUnit(value)

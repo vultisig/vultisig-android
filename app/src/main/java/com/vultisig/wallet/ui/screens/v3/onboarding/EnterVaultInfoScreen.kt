@@ -32,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
@@ -186,7 +185,6 @@ internal fun EnterVaultInfoScreen(
             UiSpacer(size = 24.dp)
 
             VsTextInputField(
-                modifier = Modifier.testTag(EnterVaultInfoTags.INPUT_FIELD),
                 textFieldState = uiState.inputTextFieldState,
                 trailingIcon = R.drawable.close_circle,
                 innerState = uiState.innerState,
@@ -215,7 +213,6 @@ internal fun EnterVaultInfoScreen(
             if (uiState.activeStep.isPassword) {
                 UiSpacer(size = 8.dp)
                 VsTextInputField(
-                    modifier = Modifier.testTag(EnterVaultInfoTags.CONFIRM_PASSWORD_FIELD),
                     textFieldState = uiState.confirmPasswordTextFieldState,
                     type =
                         VsTextInputFieldType.Password(
@@ -240,7 +237,7 @@ internal fun EnterVaultInfoScreen(
             UiSpacer(weight = 1f)
             VsButton(
                 label = stringResource(R.string.enter_email_screen_next),
-                modifier = Modifier.fillMaxWidth().testTag(EnterVaultInfoTags.NEXT_BUTTON),
+                modifier = Modifier.fillMaxWidth(),
                 state = if (canProceed) VsButtonState.Enabled else VsButtonState.Disabled,
             ) {
                 onEvent(EnterVaultInfoEvent.Next)
@@ -365,10 +362,4 @@ private fun EnterVaultInfoScreenPreview() {
             ),
         onEvent = {},
     )
-}
-
-internal object EnterVaultInfoTags {
-    const val INPUT_FIELD = "EnterVaultInfoScreen.inputField"
-    const val CONFIRM_PASSWORD_FIELD = "EnterVaultInfoScreen.confirmPasswordField"
-    const val NEXT_BUTTON = "EnterVaultInfoScreen.nextButton"
 }

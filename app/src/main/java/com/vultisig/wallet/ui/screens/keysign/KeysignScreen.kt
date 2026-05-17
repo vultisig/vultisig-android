@@ -110,5 +110,6 @@ private fun Keysign(
         onAddToAddressBook = keysignViewModel::navigateToAddressBook,
         showSaveToAddressBook = keysignViewModel.showSaveToAddressBook.collectAsState().value,
         hasBackClick = true,
+        dappMetadata = keysignViewModel.dappMetadata,
     )
 }

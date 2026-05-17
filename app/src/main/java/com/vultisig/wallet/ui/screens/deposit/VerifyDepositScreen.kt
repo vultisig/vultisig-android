@@ -35,11 +35,13 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.logo
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
+import com.vultisig.wallet.ui.components.dapp.DappRequestBanner
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
@@ -104,6 +106,7 @@ internal fun VerifyDepositScreen(
     confirmTitle: String,
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
+    dappMetadata: DAppMetadata? = null,
     onBackClick: () -> Unit = {},
 ) {
     Scaffold(
@@ -126,6 +129,8 @@ internal fun VerifyDepositScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState()),
             ) {
+                dappMetadata?.takeUnless { it.isEmpty }?.let { DappRequestBanner(metadata = it) }
+
                 val tx = state.depositTransactionUiModel
 
                 Column(

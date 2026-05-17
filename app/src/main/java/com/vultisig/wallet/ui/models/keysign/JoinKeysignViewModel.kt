@@ -43,6 +43,7 @@ import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
@@ -110,6 +111,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -248,6 +251,14 @@ constructor(
     private var _discoveryListener: MediatorServiceDiscoveryListener? = null
     private var _nsdManager: NsdManager? = null
     private var _keysignPayload: KeysignPayload? = null
+        set(value) {
+            field = value
+            // Mirror dappMetadata into the StateFlow so the verify banner is observable on its own,
+            // independent of [verifyUiModel] emission ordering.
+            _dappMetadata.value = value?.dappMetadata
+        }
+
+    private val _dappMetadata = MutableStateFlow<DAppMetadata?>(null)
     private var customMessagePayload: CustomMessagePayload? = null
     private var messagesToSign: List<String> = emptyList()
 
@@ -263,6 +274,17 @@ constructor(
     private var tempKeysignMessageProto: KeysignMessageProto? = null
 
     private val deepLinkHelper = MutableStateFlow<DeepLinkHelper?>(null)
+
+    /**
+     * dApp identity attached to the keysign request, if any. Read by the verify and done banners on
+     * the joining-device path. Independent of [verifyUiModel] so every variant (Send/Swap/Deposit)
+     * shares one source.
+     *
+     * Driven by the custom setter on [_keysignPayload] so consumers observing this flow are
+     * notified the moment the payload is parsed — no implicit dependency on the ordering of
+     * `verifyUiModel.value = …` emissions.
+     */
+    val dappMetadata: StateFlow<DAppMetadata?> = _dappMetadata.asStateFlow()
 
     val keysignViewModel: KeysignViewModel
         get() =
@@ -676,7 +698,8 @@ constructor(
                                     ValuedToken(
                                         token = feeToken,
                                         value = value.toString(),
-                                        fiatValue = fiatValueToStringMapper(estimatedFee),
+                                        fiatValue =
+                                            fiatValueToStringMapper(estimatedFee, asFee = true),
                                     ),
                                 networkFee =
                                     ValuedToken(
@@ -687,7 +710,8 @@ constructor(
                                             ),
                                         fiatValue =
                                             fiatValueToStringMapper(
-                                                estimatedNetworkGasFee.fiatValue
+                                                estimatedNetworkGasFee.fiatValue,
+                                                asFee = true,
                                             ),
                                     ),
                                 networkFeeFormatted =
@@ -695,7 +719,10 @@ constructor(
                                         estimatedNetworkGasFee.tokenValue
                                     ) + " ${estimatedNetworkGasFee.tokenValue.unit}",
                                 totalFee =
-                                    fiatValueToStringMapper(estimatedFee + networkGasFeeFiatValue),
+                                    fiatValueToStringMapper(
+                                        estimatedFee + networkGasFeeFiatValue,
+                                        asFee = true,
+                                    ),
                                 provider = provider,
                             )
 
@@ -1056,17 +1083,7 @@ constructor(
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
 
                     val allVaults = withContext(Dispatchers.IO) { vaultRepository.getAll() }
-                    val normalizedSrcAddress = normalizeAddressForLookup(address)
-                    val srcVaultName =
-                        allVaults
-                            .firstOrNull { v ->
-                                v.coins.any {
-                                    it.chain == chain &&
-                                        normalizeAddressForLookup(it.address) ==
-                                            normalizedSrcAddress
-                                }
-                            }
-                            ?.name
+                    val srcVaultName = _currentVault.name
                     val normalizedDstAddress = normalizeAddressForLookup(payload.toAddress)
                     val dstVaultName =
                         allVaults
@@ -1197,18 +1214,23 @@ constructor(
                 ValuedToken(
                     token = srcToken,
                     value = mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
-                    fiatValue = fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue),
+                    fiatValue =
+                        fiatValueToStringMapper(estimatedNetworkGasFee.fiatValue, asFee = true),
                 ),
             providerFee =
                 ValuedToken(
                     token = providerFeeToken,
                     value = providerFee.value.toString(),
-                    fiatValue = fiatValueToStringMapper(estimatedFee),
+                    fiatValue = fiatValueToStringMapper(estimatedFee, asFee = true),
                 ),
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                     " ${estimatedNetworkGasFee.tokenValue.unit}",
-            totalFee = fiatValueToStringMapper(estimatedFee + estimatedNetworkGasFee.fiatValue),
+            totalFee =
+                fiatValueToStringMapper(
+                    estimatedFee + estimatedNetworkGasFee.fiatValue,
+                    asFee = true,
+                ),
             provider = provider,
         )
     }

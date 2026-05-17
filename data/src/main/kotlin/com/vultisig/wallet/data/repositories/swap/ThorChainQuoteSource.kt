@@ -161,8 +161,8 @@ internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi
     }
 
     private companion object {
-        // 3% slippage cutoff above which we prefer a streaming swap over a rapid one.
-        const val STREAMING_SLIPPAGE_THRESHOLD_BPS = 300
+        // 1% slippage cutoff above which we prefer a streaming swap over a rapid one.
+        const val STREAMING_SLIPPAGE_THRESHOLD_BPS = 100
 
         private fun computeSlippageBps(quote: THORChainSwapQuote): Int {
             val feesTotal = quote.fees.total.toBigInteger()

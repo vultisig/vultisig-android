@@ -22,7 +22,6 @@ import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -351,7 +350,7 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
         val response = http.post(rpcUrl) { setBody(payload) }
         val responseBody = response.bodyAsText()
         Timber.d("broadcast response: $responseBody")
-        val jsonObject = response.body<SendTransactionJson>()
+        val jsonObject = response.bodyOrThrow<SendTransactionJson>()
         if (jsonObject.error != null) {
             val message = jsonObject.error.message
             if (
@@ -381,8 +380,10 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
     override suspend fun findCustomToken(contractAddress: String): List<CustomTokenResponse> {
         val (payload1, payload2) = generateCustomTokenPayload(contractAddress)
         return try {
-            val response = http.post(rpcUrl) { setBody(listOf(payload1, payload2)) }
-            val responseList = response.body<List<RpcResponse>>()
+            val responseList =
+                http
+                    .post(rpcUrl) { setBody(listOf(payload1, payload2)) }
+                    .bodyOrThrow<List<RpcResponse>>()
             responseList.map { CustomTokenResponse(id = it.id, result = it.result) }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e

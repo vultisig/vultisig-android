@@ -115,6 +115,22 @@ internal class CircleDeFiPositionsViewModelTest {
         }
 
     @Test
+    fun `onCreateAccount shows Success and sets isAccountOpen true even when local save throws`() =
+        runTest {
+            val vm = createViewModel().also { it.setData(VAULT_ID) }
+            givenNoExistingAccount()
+            coEvery { circleApi.createScAccount(OWNER_ADDRESS) } returns MSCA_ADDRESS
+            coEvery { scaCircleAccountRepository.saveAccount(VAULT_ID, MSCA_ADDRESS) } throws
+                RuntimeException("DataStore IO error")
+
+            val type = snackbarTypeShownBy { vm.onCreateAccount() }
+
+            assertEquals(SnackbarType.Success, type)
+            coVerify(exactly = 1) { scaCircleAccountRepository.saveAccount(VAULT_ID, MSCA_ADDRESS) }
+            assertTrue(vm.state.value.circleDefi.isAccountOpen)
+        }
+
+    @Test
     fun `onCreateAccount reports an Error when the vault cannot be resolved`() = runTest {
         val vm = createViewModel().also { it.setData(VAULT_ID) }
         givenNoExistingAccount()
