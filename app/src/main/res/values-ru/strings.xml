@@ -907,11 +907,11 @@
     <string name="migration_onboarding_step_3_text_end">при обновлении</string>
     <string name="migration_onboarding_upgrade_your_vault">Обновите своё хранилище</string>
     <string name="migration_onboarding_upgrade_now">Обновите сейчас</string>
-    <string name="migration_server_share_location_title">Где находится ваш общий сервер?</string>
+    <string name="migration_server_share_location_title">Где находится ваша доля сервера?</string>
     <string name="migration_server_share_location_online_title">VultiServer</string>
-    <string name="migration_server_share_location_online_description">Использовать общий сервер, размещённый Vultisig</string>
+    <string name="migration_server_share_location_online_description">Использовать долю сервера, размещённую в VultiServer</string>
     <string name="migration_server_share_location_another_device_title">Другое моё устройство</string>
-    <string name="migration_server_share_location_another_device_description">Я импортировал общий сервер на другое устройство</string>
+    <string name="migration_server_share_location_another_device_description">Я импортировал долю сервера на другое устройство</string>
     <string name="migration_onboarding_step_1_text_start">Обновите это хранилище до</string>
     <string name="onboarding_desc_page_1_part_2">Общие ресурсы хранилища</string>
     <string name="verify_swap_youre_swapping_title">Вы выполняете обмен</string>
