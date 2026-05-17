@@ -332,7 +332,7 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         composable<VerifyDeposit> { VerifyDepositScreen(navController = navController) }
 
         // keysign
-        composable<Keysign.Join> { JoinKeysignView(navController = navController) }
+        composable<Keysign.Join> { JoinKeysignView() }
 
         dialog<Keysign.Password> { KeysignPasswordScreen() }
 
