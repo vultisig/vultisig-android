@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageViewModel
 import com.vultisig.wallet.ui.utils.asString
@@ -72,6 +73,8 @@ internal fun VerifySignMessageScreen(
     confirmTitle: String,
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
+    hasToolbar: Boolean = false,
+    onBackClick: () -> Unit = {},
 ) {
     val transactionUiModel = state.model
     VerifySignMessageScreen(
@@ -81,6 +84,8 @@ internal fun VerifySignMessageScreen(
         hasFastSign = state.hasFastSign,
         onFastSignClick = onFastSignClick,
         onConfirm = onConfirm,
+        hasToolbar = hasToolbar,
+        onBackClick = onBackClick,
     )
 }
 
@@ -92,9 +97,19 @@ private fun VerifySignMessageScreen(
     confirmTitle: String,
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
+    hasToolbar: Boolean = false,
+    onBackClick: () -> Unit = {},
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        topBar = {
+            if (hasToolbar) {
+                VsTopAppBar(
+                    title = stringResource(R.string.verify_transaction_screen_title),
+                    onBackClick = onBackClick,
+                )
+            }
+        },
         bottomBar = {
             Column(modifier = Modifier.fillMaxWidth().padding(all = 16.dp)) {
                 if (hasFastSign) {
