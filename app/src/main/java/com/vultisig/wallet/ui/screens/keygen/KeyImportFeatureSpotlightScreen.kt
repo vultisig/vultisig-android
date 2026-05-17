@@ -83,7 +83,7 @@ private fun KeyImportFeatureSpotlightScreenContent(
         },
         content = {
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                val centerTop = (maxHeight - RiveHeight) / 2
+                val centerTop = ((maxHeight - RiveHeight) / 2).coerceAtLeast(0.dp)
                 val riveTop by
                     animateDpAsState(
                         targetValue = if (revealed) RevealedTopPadding else centerTop,
