@@ -4,6 +4,7 @@ package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.models.proto.v1.VaultContainerProto
 import com.vultisig.wallet.data.models.proto.v1.VaultProto
+import com.vultisig.wallet.data.utils.runCatchingCancellable
 import io.ktor.util.decodeBase64Bytes
 import io.ktor.util.encodeBase64
 import javax.inject.Inject
@@ -24,36 +25,33 @@ constructor(private val encryption: VaultBackupEncryption, private val protoBuf:
 
     override fun invoke(vault: VaultProto, password: String?): String? {
         val vaultBytes = protoBuf.encodeToByteArray(vault)
+        val effectivePassword = password?.takeUnless { it.isBlank() }
 
-        val contentBytes =
-            if (!password.isNullOrBlank()) {
-                    try {
-                        encryption.encrypt(vaultBytes, password.toByteArray())
-                    } catch (e: Exception) {
-                        Timber.e(e)
-                        return null
+        val payload =
+            if (effectivePassword == null) vaultBytes
+            else
+                runCatchingCancellable {
+                        encryption.encrypt(vaultBytes, effectivePassword.toByteArray())
                     }
-                } else {
-                    vaultBytes
-                }
-                .encodeBase64()
+                    .onFailure { Timber.e(it, "Vault backup encryption failed") }
+                    .getOrNull() ?: return null
 
         val backup =
             protoBuf
                 .encodeToByteArray(
                     VaultContainerProto(
                         version = VAULT_BACKUP_VERSION,
-                        vault = contentBytes,
-                        isEncrypted = !password.isNullOrBlank(),
+                        vault = payload.encodeBase64(),
+                        isEncrypted = effectivePassword != null,
                     )
                 )
                 .encodeBase64()
 
         // Round-trip the just-produced backup with the same password before handing it back, so
-        // we never return a file the user couldn't restore. Catches encryption layer regressions
+        // we never return a file the user couldn't restore. Catches encryption-layer regressions
         // and container-encoding drift at export time instead of weeks later.
-        if (!isRecoverable(backup, vaultBytes, password)) {
-            Timber.e("Vault backup self-check failed; refusing to return a backup we can't decrypt")
+        if (!isRecoverable(backup, vaultBytes, effectivePassword)) {
+            Timber.e("Vault backup self-check failed; refusing to return an unrecoverable backup")
             return null
         }
         return backup
@@ -62,30 +60,25 @@ constructor(private val encryption: VaultBackupEncryption, private val protoBuf:
     private fun isRecoverable(
         backup: String,
         expectedVaultBytes: ByteArray,
-        password: String?,
+        effectivePassword: String?,
     ): Boolean =
-        try {
-            val container =
-                protoBuf.decodeFromByteArray<VaultContainerProto>(backup.decodeBase64Bytes())
-            // Defend against metadata drift: the container's encryption flag must agree with the
-            // password we used to produce it. Otherwise the round-trip would silently pick the
-            // wrong path and could pass on a semantically broken file.
-            if (container.isEncrypted != !password.isNullOrBlank()) {
-                false
-            } else {
+        runCatchingCancellable {
+                val container =
+                    protoBuf.decodeFromByteArray<VaultContainerProto>(backup.decodeBase64Bytes())
+                // Defend against metadata drift: container.isEncrypted must agree with the
+                // password we used to produce it, otherwise the round-trip would silently take
+                // the wrong recovery branch and could pass on a semantically broken file.
+                if (container.isEncrypted != (effectivePassword != null)) {
+                    return@runCatchingCancellable false
+                }
                 val payload = container.vault.decodeBase64Bytes()
                 val recovered =
-                    if (!password.isNullOrBlank()) {
-                        encryption.decrypt(payload, password.toByteArray())
-                    } else {
-                        payload
-                    }
-                recovered != null && recovered.contentEquals(expectedVaultBytes)
+                    effectivePassword?.let { encryption.decrypt(payload, it.toByteArray()) }
+                        ?: payload
+                recovered?.contentEquals(expectedVaultBytes) == true
             }
-        } catch (e: Exception) {
-            Timber.e(e, "Vault backup self-check raised an exception")
-            false
-        }
+            .onFailure { Timber.e(it, "Vault backup self-check raised an exception") }
+            .getOrDefault(false)
 
     companion object {
         private const val VAULT_BACKUP_VERSION = 1uL

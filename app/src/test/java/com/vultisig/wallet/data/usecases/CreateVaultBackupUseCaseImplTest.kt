@@ -8,7 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -25,9 +25,9 @@ internal class CreateVaultBackupUseCaseImplTest {
     private val protoBuf = ProtoBuf
 
     /**
-     * Reversible no-op encryption that lets us exercise the full encode → container → decode →
-     * verify pipeline without depending on `Pbkdf2AesEncryption` (which is `internal` to the data
-     * module). PBKDF2/AES-GCM correctness is covered by `Pbkdf2AesEncryptionTest`.
+     * Reversible no-op encryption that exercises the full encode → container → decode → verify
+     * pipeline without depending on `Pbkdf2AesEncryption` (which is `internal` to the data module).
+     * PBKDF2/AES-GCM correctness is covered by `Pbkdf2AesEncryptionTest`.
      */
     private val identityEncryption =
         object : VaultBackupEncryption {
@@ -38,6 +38,9 @@ internal class CreateVaultBackupUseCaseImplTest {
 
     private fun useCase(encryption: VaultBackupEncryption) =
         CreateVaultBackupUseCaseImpl(encryption = encryption, protoBuf = protoBuf)
+
+    private fun parseContainer(backup: String): VaultContainerProto =
+        protoBuf.decodeFromByteArray(backup.decodeBase64Bytes())
 
     private fun testVaultProto(name: String = "TestVault") =
         VaultProto(
@@ -59,12 +62,12 @@ internal class CreateVaultBackupUseCaseImplTest {
         val output = useCase(identityEncryption).invoke(proto, "correct-pw")
 
         assertNotNull(output)
-        val container =
-            protoBuf.decodeFromByteArray<VaultContainerProto>(output.decodeBase64Bytes())
+        val container = parseContainer(output)
         assertTrue(container.isEncrypted)
-        val decrypted = container.vault.decodeBase64Bytes() // identity → already plaintext
-        val expected = protoBuf.encodeToByteArray(proto)
-        assertContentEquals(expected, decrypted)
+        // Identity encryption leaves the payload as plaintext, so the decoded `vault` field is
+        // already the original protobuf bytes.
+        val decoded = container.vault.decodeBase64Bytes()
+        assertContentEquals(protoBuf.encodeToByteArray(proto), decoded)
     }
 
     @Test
@@ -73,23 +76,17 @@ internal class CreateVaultBackupUseCaseImplTest {
         val output = useCase(identityEncryption).invoke(proto, null)
 
         assertNotNull(output)
-        val container =
-            protoBuf.decodeFromByteArray<VaultContainerProto>(output.decodeBase64Bytes())
-        assertEquals(false, container.isEncrypted)
-        val payload = container.vault.decodeBase64Bytes()
-        val expected = protoBuf.encodeToByteArray(proto)
-        assertContentEquals(expected, payload)
+        val container = parseContainer(output)
+        assertFalse(container.isEncrypted)
+        assertContentEquals(protoBuf.encodeToByteArray(proto), container.vault.decodeBase64Bytes())
     }
 
     @Test
     fun `produces plaintext container when password is blank`() {
-        val proto = testVaultProto()
-        val output = useCase(identityEncryption).invoke(proto, "   ")
+        val output = useCase(identityEncryption).invoke(testVaultProto(), "   ")
 
         assertNotNull(output)
-        val container =
-            protoBuf.decodeFromByteArray<VaultContainerProto>(output.decodeBase64Bytes())
-        assertEquals(false, container.isEncrypted)
+        assertFalse(parseContainer(output).isEncrypted)
     }
 
     @Test
@@ -98,9 +95,7 @@ internal class CreateVaultBackupUseCaseImplTest {
         val encryption = mockk<VaultBackupEncryption>()
         every { encryption.encrypt(any(), any()) } throws IllegalStateException("boom")
 
-        val output = useCase(encryption).invoke(testVaultProto(), "pw")
-
-        assertNull(output)
+        assertNull(useCase(encryption).invoke(testVaultProto(), "pw"))
     }
 
     @Test
@@ -111,9 +106,7 @@ internal class CreateVaultBackupUseCaseImplTest {
         every { encryption.encrypt(any(), any()) } returns byteArrayOf(0x01, 0x02, 0x03)
         every { encryption.decrypt(any(), any()) } returns null
 
-        val output = useCase(encryption).invoke(testVaultProto(), "pw")
-
-        assertNull(output)
+        assertNull(useCase(encryption).invoke(testVaultProto(), "pw"))
     }
 
     @Test
@@ -122,9 +115,7 @@ internal class CreateVaultBackupUseCaseImplTest {
         every { encryption.encrypt(any(), any()) } returns byteArrayOf(0x01, 0x02, 0x03)
         every { encryption.decrypt(any(), any()) } throws IllegalStateException("decrypt boom")
 
-        val output = useCase(encryption).invoke(testVaultProto(), "pw")
-
-        assertNull(output)
+        assertNull(useCase(encryption).invoke(testVaultProto(), "pw"))
     }
 
     @Test
@@ -135,9 +126,7 @@ internal class CreateVaultBackupUseCaseImplTest {
         every { encryption.encrypt(any(), any()) } returns byteArrayOf(0x01, 0x02, 0x03)
         every { encryption.decrypt(any(), any()) } returns byteArrayOf(0xFF.toByte(), 0xEE.toByte())
 
-        val output = useCase(encryption).invoke(testVaultProto(), "pw")
-
-        assertNull(output)
+        assertNull(useCase(encryption).invoke(testVaultProto(), "pw"))
     }
 
     @Test
@@ -149,20 +138,17 @@ internal class CreateVaultBackupUseCaseImplTest {
         every { encryption.encrypt(vaultBytes, password.toByteArray()) } returns ciphertext
         every { encryption.decrypt(ciphertext, password.toByteArray()) } returns vaultBytes
 
-        val output = useCase(encryption).invoke(testVaultProto(), password)
+        assertNotNull(useCase(encryption).invoke(testVaultProto(), password))
 
-        assertNotNull(output)
         verify(exactly = 1) { encryption.encrypt(vaultBytes, password.toByteArray()) }
         verify(exactly = 1) { encryption.decrypt(ciphertext, password.toByteArray()) }
     }
 
     @Test
     fun `does not invoke encryption layer at all when password is null`() {
+        // No `every {}` stubs — any encryption call would throw and fail the test.
         val encryption = mockk<VaultBackupEncryption>()
-        // No `every {}` stubs — any call would throw and fail the test.
 
-        val output = useCase(encryption).invoke(testVaultProto(), null)
-
-        assertNotNull(output)
+        assertNotNull(useCase(encryption).invoke(testVaultProto(), null))
     }
 }
