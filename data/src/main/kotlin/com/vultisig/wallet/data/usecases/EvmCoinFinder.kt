@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.utils.NetworkException
 import java.math.BigInteger
 import java.net.SocketTimeoutException
 import javax.inject.Inject
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -57,10 +56,11 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
                 .map { it.lowercase() }
                 .filter { it != NATIVE_COIN_SENTINEL }
                 .toList()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.e(e, "1inch /balance failed for %s", chain.id)
+        } catch (e: SocketTimeoutException) {
+            Timber.e(e, "1inch /balance timed out for %s", chain.id)
+            emptyList()
+        } catch (e: NetworkException) {
+            Timber.e(e, "1inch /balance failed for %s: status=%d", chain.id, e.httpStatusCode)
             emptyList()
         }
 
@@ -68,10 +68,11 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
         val info: Map<String, OneInchTokenJson> =
             try {
                 oneInchApi.getTokensByContracts(chain, contracts)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "1inch /token failed for %s", chain.id)
+            } catch (e: SocketTimeoutException) {
+                Timber.e(e, "1inch /token timed out for %s", chain.id)
+                return emptyList()
+            } catch (e: NetworkException) {
+                Timber.e(e, "1inch /token failed for %s: status=%d", chain.id, e.httpStatusCode)
                 return emptyList()
             }
 
