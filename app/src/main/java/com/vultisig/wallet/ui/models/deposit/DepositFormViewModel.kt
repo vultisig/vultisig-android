@@ -1019,11 +1019,16 @@ constructor(
 
             thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
 
+            fetchSecuredAssetInboundAddress()
+        }
+    }
+
+    private suspend fun fetchSecuredAssetInboundAddress(): String? {
+        val chainName = state.value.selectedToken.getChainName()
+        return try {
             val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
             val inboundAddress =
-                inboundAddresses.firstOrNull {
-                    it.chain.equals(state.value.selectedToken.getChainName(), ignoreCase = true)
-                }
+                inboundAddresses.firstOrNull { it.chain.equals(chainName, ignoreCase = true) }
 
             if (
                 inboundAddress != null &&
@@ -1033,7 +1038,12 @@ constructor(
             ) {
                 val inboundChainAddress = inboundAddress.address
                 secureAssetNodeValue.value = inboundChainAddress
-            }
+                inboundChainAddress
+            } else null
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            Timber.e(e, "Failed to fetch secured asset inbound address")
+            null
         }
     }
 
@@ -1530,7 +1540,7 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val dstAddr = secureAssetNodeValue.value
+        val dstAddr = secureAssetNodeValue.value ?: fetchSecuredAssetInboundAddress()
         if (dstAddr.isNullOrBlank()) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
