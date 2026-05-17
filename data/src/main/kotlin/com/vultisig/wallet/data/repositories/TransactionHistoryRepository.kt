@@ -5,6 +5,7 @@ import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.db.models.TransactionStatus
 import com.vultisig.wallet.data.models.CommonTransactionHistoryData
 import com.vultisig.wallet.data.models.TransactionHistoryData
+import com.vultisig.wallet.data.models.buildTransactionHistoryId
 import com.vultisig.wallet.data.models.toEntity
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import javax.inject.Inject
@@ -19,9 +20,9 @@ interface TransactionHistoryRepository {
         genericData: CommonTransactionHistoryData,
     )
 
-    suspend fun updateTransactionStatus(txHash: String, result: TransactionResult)
+    suspend fun updateTransactionStatus(chain: String, txHash: String, result: TransactionResult)
 
-    suspend fun getTransaction(txHash: String): TransactionHistoryEntity?
+    suspend fun getTransaction(chain: String, txHash: String): TransactionHistoryEntity?
 
     fun observeTransactions(
         vaultId: String,
@@ -36,10 +37,10 @@ interface TransactionHistoryRepository {
     suspend fun upsertFromBackfill(entity: TransactionHistoryEntity)
 
     /** Explicit CONFIRMED -> FAILED demotion for chain reorganisations. */
-    suspend fun demoteForReorg(txHash: String, reason: String)
+    suspend fun demoteForReorg(chain: String, txHash: String, reason: String)
 
     /** Bump retry counter on a transient-status row (drives exponential backoff). */
-    suspend fun incrementRetryCount(txHash: String)
+    suspend fun incrementRetryCount(chain: String, txHash: String)
 }
 
 enum class TransactionHistoryType {
@@ -58,39 +59,32 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
         genericData: CommonTransactionHistoryData,
     ) = dao.insert(transaction = txData.toEntity(genericData))
 
-    override suspend fun updateTransactionStatus(txHash: String, result: TransactionResult) {
+    override suspend fun updateTransactionStatus(
+        chain: String,
+        txHash: String,
+        result: TransactionResult,
+    ) {
+        val id = buildTransactionHistoryId(chain, txHash)
         val now = System.currentTimeMillis()
         when (result) {
             TransactionResult.Confirmed ->
-                dao.updateToConfirmed(txHash = txHash, confirmedAt = now, lastCheckedAt = now)
+                dao.updateToConfirmed(id = id, confirmedAt = now, lastCheckedAt = now)
             is TransactionResult.Failed ->
-                dao.updateToFailed(
-                    txHash = txHash,
-                    failureReason = result.reason,
-                    lastCheckedAt = now,
-                )
+                dao.updateToFailed(id = id, failureReason = result.reason, lastCheckedAt = now)
             is TransactionResult.Refunded ->
-                dao.updateToRefunded(txHash = txHash, reason = result.reason, lastCheckedAt = now)
+                dao.updateToRefunded(id = id, reason = result.reason, lastCheckedAt = now)
             TransactionResult.Pending ->
-                dao.updateStatus(
-                    txHash = txHash,
-                    status = TransactionStatus.PENDING,
-                    lastCheckedAt = now,
-                )
+                dao.updateStatus(id = id, status = TransactionStatus.PENDING, lastCheckedAt = now)
             // NotFound is transient (indexer lag); TimedOut means the foreground poller gave up
             // but the tx may still confirm — both keep the row pollable for the background poller.
             TransactionResult.NotFound,
             TransactionResult.TimedOut ->
-                dao.updateStatus(
-                    txHash = txHash,
-                    status = TransactionStatus.NotFound,
-                    lastCheckedAt = now,
-                )
+                dao.updateStatus(id = id, status = TransactionStatus.NotFound, lastCheckedAt = now)
         }
     }
 
-    override suspend fun getTransaction(txHash: String): TransactionHistoryEntity? =
-        dao.getByTxHash(txHash)
+    override suspend fun getTransaction(chain: String, txHash: String): TransactionHistoryEntity? =
+        dao.getById(buildTransactionHistoryId(chain, txHash))
 
     override fun observeTransactions(
         vaultId: String,
@@ -111,14 +105,16 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
     override suspend fun upsertFromBackfill(entity: TransactionHistoryEntity) =
         dao.upsertFromBackfill(entity)
 
-    override suspend fun demoteForReorg(txHash: String, reason: String) {
+    override suspend fun demoteForReorg(chain: String, txHash: String, reason: String) {
+        val id = buildTransactionHistoryId(chain, txHash)
         val now = System.currentTimeMillis()
-        dao.demoteForReorg(txHash = txHash, reason = reason, lastCheckedAt = now)
-        Timber.w("Reorg demotion: CONFIRMED -> FAILED for tx %s — %s", txHash, reason)
+        dao.demoteForReorg(id = id, reason = reason, lastCheckedAt = now)
+        Timber.w("Reorg demotion: CONFIRMED -> FAILED for tx %s on %s — %s", txHash, chain, reason)
     }
 
-    override suspend fun incrementRetryCount(txHash: String) {
+    override suspend fun incrementRetryCount(chain: String, txHash: String) {
+        val id = buildTransactionHistoryId(chain, txHash)
         val now = System.currentTimeMillis()
-        dao.incrementRetryCount(txHash = txHash, lastCheckedAt = now)
+        dao.incrementRetryCount(id = id, lastCheckedAt = now)
     }
 }
