@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,15 +20,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -74,26 +72,6 @@ private fun KeyImportFeatureSpotlightScreenContent(
         contentVisible = true
     }
 
-    val density = LocalDensity.current
-    var availableHeightPx by remember { mutableIntStateOf(0) }
-
-    val centerTop = with(density) { (availableHeightPx.toDp() - RiveHeight) / 2 }
-    val riveTop by
-        animateDpAsState(
-            targetValue = if (revealed) RevealedTopPadding else centerTop,
-            animationSpec = spring(stiffness = Spring.StiffnessLow),
-            label = "riveTop",
-        )
-    val contentAlpha by
-        animateFloatAsState(
-            targetValue = if (contentVisible) 1f else 0f,
-            animationSpec = spring(stiffness = Spring.StiffnessLow),
-            label = "contentAlpha",
-        )
-
-    val effectiveRiveTop = if (skipAnimation) RevealedTopPadding else riveTop
-    val effectiveContentAlpha = if (skipAnimation) 1f else contentAlpha
-
     V2Scaffold(
         onBackClick = onBack,
         bottomBar = {
@@ -104,67 +82,82 @@ private fun KeyImportFeatureSpotlightScreenContent(
             )
         },
         content = {
-            Column(
-                modifier =
-                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()).onSizeChanged {
-                        availableHeightPx = it.height
-                    }
-            ) {
-                Spacer(modifier = Modifier.height(effectiveRiveTop))
-
-                RiveAnimation(
-                    animation = R.raw.riv_import_seedphrase,
-                    modifier = Modifier.fillMaxWidth().height(RiveHeight),
-                    fit = Fit.CONTAIN,
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                Column(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = 8.dp)
-                            .alpha(effectiveContentAlpha)
-                ) {
-                    Text(
-                        text = stringResource(R.string.key_import_spotlight_before_you_start),
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.secondary,
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val centerTop = (maxHeight - RiveHeight) / 2
+                val riveTop by
+                    animateDpAsState(
+                        targetValue = if (revealed) RevealedTopPadding else centerTop,
+                        animationSpec = spring(stiffness = Spring.StiffnessLow),
+                        label = "riveTop",
+                    )
+                val contentAlpha by
+                    animateFloatAsState(
+                        targetValue = if (contentVisible) 1f else 0f,
+                        animationSpec = spring(stiffness = Spring.StiffnessLow),
+                        label = "contentAlpha",
                     )
 
-                    UiSpacer(12.dp)
+                val effectiveRiveTop = if (skipAnimation) RevealedTopPadding else riveTop
+                val effectiveContentAlpha = if (skipAnimation) 1f else contentAlpha
 
-                    val headingText = buildAnnotatedString {
-                        append(stringResource(R.string.key_import_spotlight_heading_part1))
-                        withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
-                            append(stringResource(R.string.key_import_spotlight_heading_highlight))
+                Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+                    Spacer(modifier = Modifier.height(effectiveRiveTop))
+
+                    RiveAnimation(
+                        animation = R.raw.riv_import_seedphrase,
+                        modifier = Modifier.fillMaxWidth().height(RiveHeight),
+                        fit = Fit.COVER,
+                    )
+
+                    Column(
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(horizontal = 8.dp)
+                                .alpha(effectiveContentAlpha)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.key_import_spotlight_before_you_start),
+                            style = Theme.brockmann.supplementary.caption,
+                            color = Theme.v2.colors.text.secondary,
+                        )
+
+                        UiSpacer(12.dp)
+
+                        val headingText = buildAnnotatedString {
+                            append(stringResource(R.string.key_import_spotlight_heading_part1))
+                            withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
+                                append(
+                                    stringResource(R.string.key_import_spotlight_heading_highlight)
+                                )
+                            }
+                            append(stringResource(R.string.key_import_spotlight_heading_part2))
                         }
-                        append(stringResource(R.string.key_import_spotlight_heading_part2))
+
+                        Text(
+                            text = headingText,
+                            style = Theme.brockmann.headings.title2.copy(lineHeight = 30.sp),
+                            color = Theme.v2.colors.text.primary,
+                        )
+
+                        UiSpacer(32.dp)
+
+                        BulletItem(
+                            icon = R.drawable.ic_seedphrase,
+                            title = stringResource(R.string.key_import_spotlight_seedphrase_title),
+                            description =
+                                stringResource(R.string.key_import_spotlight_seedphrase_desc),
+                        )
+
+                        UiSpacer(24.dp)
+
+                        BulletItem(
+                            icon = R.drawable.ic_devices,
+                            title = stringResource(R.string.key_import_spotlight_device_title),
+                            description = stringResource(R.string.key_import_spotlight_device_desc),
+                        )
+
+                        UiSpacer(65.dp)
                     }
-
-                    Text(
-                        text = headingText,
-                        style = Theme.brockmann.headings.title2.copy(lineHeight = 30.sp),
-                        color = Theme.v2.colors.text.primary,
-                    )
-
-                    UiSpacer(32.dp)
-
-                    BulletItem(
-                        icon = R.drawable.ic_seedphrase,
-                        title = stringResource(R.string.key_import_spotlight_seedphrase_title),
-                        description = stringResource(R.string.key_import_spotlight_seedphrase_desc),
-                    )
-
-                    UiSpacer(24.dp)
-
-                    BulletItem(
-                        icon = R.drawable.ic_devices,
-                        title = stringResource(R.string.key_import_spotlight_device_title),
-                        description = stringResource(R.string.key_import_spotlight_device_desc),
-                    )
-
-                    UiSpacer(65.dp)
                 }
             }
         },

@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.screens.v3.onboarding.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -9,16 +8,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
-import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
 fun SetupVaultRive(animationRes: Int, modifier: Modifier = Modifier) {
-    Box(
-        modifier =
-            modifier
-                .size(width = 350.dp, height = 240.dp)
-                .background(color = Theme.v2.colors.backgrounds.secondary)
-    ) {
+    Box(modifier = modifier.size(width = 350.dp, height = 240.dp)) {
         RiveAnimation(animation = animationRes)
     }
 }
