@@ -67,14 +67,21 @@ constructor(private val encryption: VaultBackupEncryption, private val protoBuf:
         try {
             val container =
                 protoBuf.decodeFromByteArray<VaultContainerProto>(backup.decodeBase64Bytes())
-            val payload = container.vault.decodeBase64Bytes()
-            val recovered =
-                if (!password.isNullOrBlank()) {
-                    encryption.decrypt(payload, password.toByteArray())
-                } else {
-                    payload
-                }
-            recovered != null && recovered.contentEquals(expectedVaultBytes)
+            // Defend against metadata drift: the container's encryption flag must agree with the
+            // password we used to produce it. Otherwise the round-trip would silently pick the
+            // wrong path and could pass on a semantically broken file.
+            if (container.isEncrypted != !password.isNullOrBlank()) {
+                false
+            } else {
+                val payload = container.vault.decodeBase64Bytes()
+                val recovered =
+                    if (!password.isNullOrBlank()) {
+                        encryption.decrypt(payload, password.toByteArray())
+                    } else {
+                        payload
+                    }
+                recovered != null && recovered.contentEquals(expectedVaultBytes)
+            }
         } catch (e: Exception) {
             Timber.e(e, "Vault backup self-check raised an exception")
             false
