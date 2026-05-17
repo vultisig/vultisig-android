@@ -5,7 +5,9 @@ import com.vultisig.wallet.data.api.BlockChairApi
 import com.vultisig.wallet.data.api.CardanoApi
 import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.DashApi
+import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
+import com.vultisig.wallet.data.api.EvmApiImp
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
@@ -72,6 +74,13 @@ interface BlockChainSpecificRepository {
         memo: String? = null,
         transactionType: TransactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
         isThorchainRouterDeposit: Boolean = false,
+        /**
+         * Pre-encoded `depositWithExpiry` calldata used to drive a live `eth_estimateGas` call on
+         * the router. Null when the caller can't compute it (e.g. send-strategy ADD_LP path before
+         * router-resolution lands) — in that case the implementation falls back to the safety
+         * floor. Pre-approval the RPC reverts, so the floor still applies in practice.
+         */
+        routerDepositCallData: String? = null,
     ): BlockChainSpecificAndUtxo
 }
 
@@ -109,6 +118,7 @@ constructor(
         memo: String?,
         transactionType: TransactionType,
         isThorchainRouterDeposit: Boolean,
+        routerDepositCallData: String?,
     ): BlockChainSpecificAndUtxo =
         when (chain.standard) {
             TokenStandard.THORCHAIN -> {
@@ -174,17 +184,43 @@ constructor(
                             else -> DEFAULT_TOKEN_TRANSFER_LIMIT
                         }
 
-                    // ERC-20 router deposits need depositWithExpiry headroom, but
-                    // eth_estimateGas reverts when the router hasn't been approved yet —
-                    // so we hardcode the limit and skip the estimate RPC.
+                    // ERC-20 router deposit: derive the limit from a live `eth_estimateGas` against
+                    // the actual `depositWithExpiry` calldata × 1.3 (closes #4152, fixes the USDT
+                    // OOG seen with the old hardcoded 120k path). Pre-approval the RPC reverts,
+                    // returning zero — we keep a 200k floor as a safety net so the user can still
+                    // submit the transaction (the router needs depositWithExpiry headroom even
+                    // when estimation fails).
+                    val isErc20RouterDeposit =
+                        isThorchainRouterDeposit &&
+                            !token.isNativeToken &&
+                            isThorchainRouterChain(chain)
                     val routerDepositGasLimit =
-                        if (
-                            isThorchainRouterDeposit &&
-                                !token.isNativeToken &&
-                                isThorchainRouterChain(chain)
-                        )
-                            THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT
-                        else null
+                        if (isErc20RouterDeposit) {
+                            val estimated =
+                                if (routerDepositCallData != null && dstAddress != null) {
+                                    try {
+                                        evmApi.estimateGasForRouterDeposit(
+                                            senderAddress = token.address,
+                                            router = dstAddress,
+                                            callData = routerDepositCallData,
+                                        )
+                                    } catch (e: CancellationException) {
+                                        throw e
+                                    } catch (e: Throwable) {
+                                        Timber.d(
+                                            e,
+                                            "eth_estimateGas for router depositWithExpiry failed; using floor",
+                                        )
+                                        BigInteger.ZERO
+                                    }
+                                } else BigInteger.ZERO
+                            if (estimated > BigInteger.ZERO) {
+                                max(
+                                    THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT,
+                                    estimated.increaseByPercent(30),
+                                )
+                            } else THORCHAIN_ROUTER_DEPOSIT_GAS_LIMIT
+                        } else null
 
                     val estimateGasLimit =
                         when {
@@ -653,6 +689,23 @@ constructor(
             chain == Chain.BscChain ||
             chain == Chain.Arbitrum ||
             chain == Chain.Optimism
+
+    /**
+     * Live `eth_estimateGas` against the router for a `depositWithExpiry` call. Delegates to
+     * [EvmApiImp.estimateGasForCallDataTransfer] when available (the only production impl). Returns
+     * zero when the impl can't be reached so the caller can apply the safety floor.
+     */
+    private suspend fun EvmApi.estimateGasForRouterDeposit(
+        senderAddress: String,
+        router: String,
+        callData: String,
+    ): BigInteger =
+        (this as? EvmApiImp)?.estimateGasForCallDataTransfer(
+            senderAddress = senderAddress,
+            recipientAddress = router,
+            value = "0x0",
+            callData = callData,
+        ) ?: BigInteger.ZERO
 
     companion object {
         private const val TON_WALLET_STATE_UNINITIALIZED = "uninit"

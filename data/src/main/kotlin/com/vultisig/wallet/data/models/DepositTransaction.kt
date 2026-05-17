@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import vultisig.keysign.v1.WasmExecuteContractPayload
 
@@ -22,6 +23,12 @@ data class DepositTransaction(
     val pairedAddress: String = "",
     val pool: String = "",
     val utxos: List<UtxoInfo> = emptyList(),
+    /**
+     * Carries THORChain router/vault/expiration for ERC-20 LP add via `depositWithExpiry`. Threaded
+     * into `KeysignPayload.swapPayload` so the signing path encodes the router call (and the wire
+     * format matches iOS for QR parity). Null for native L1 deposits.
+     */
+    val swapPayload: SwapPayload? = null,
 )
 
 const val OPERATION_MINT = "Mint"

@@ -201,6 +201,7 @@ constructor(
                 utxos = transaction.utxos,
                 vaultLocalPartyID = vault.localPartyID,
                 memo = transaction.memo,
+                swapPayload = transaction.swapPayload,
                 libType = vault.libType,
                 wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
                 defiAction =

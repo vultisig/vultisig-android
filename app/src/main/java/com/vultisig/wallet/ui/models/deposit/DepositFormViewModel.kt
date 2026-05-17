@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.models.OPERATION_LEAVE
 import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.OPERATION_UNBOND
 import com.vultisig.wallet.data.models.OPERATION_WITHDRAW
+import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.coinType
@@ -43,6 +44,7 @@ import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.isSecuredAssetEligible
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.models.toValue
@@ -112,6 +114,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.datetime.Clock
 import timber.log.Timber
 import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
@@ -1724,11 +1727,34 @@ constructor(
                 )
 
         val address = accountsRepository.loadAddress(vaultId, chain).first()
+        val parsedPool = parseThorChainPool(poolId)
+        // ERC-20 LP add is initiated from the asset chain side (EVM) — pick the pool's asset
+        // token from the vault's accounts so we deposit USDT/USDC etc rather than native ETH.
+        // The native L1 path (RUNE/CACAO/BTC/...) keeps its existing `isNativeToken` filter.
+        val isErc20LpAdd =
+            chain.standard == TokenStandard.EVM &&
+                parsedPool.contractAddress.isNotBlank() &&
+                parsedPool.chain == chain
         val selectedToken =
-            address.accounts.firstOrNull { it.token.isNativeToken }?.token
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
+            if (isErc20LpAdd) {
+                address.accounts
+                    .firstOrNull {
+                        !it.token.isNativeToken &&
+                            it.token.contractAddress.equals(
+                                parsedPool.contractAddress,
+                                ignoreCase = true,
+                            )
+                    }
+                    ?.token
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+            } else {
+                address.accounts.firstOrNull { it.token.isNativeToken }?.token
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.send_error_no_address)
+                    )
+            }
 
         val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
 
@@ -1752,14 +1778,36 @@ constructor(
         // For a RUNE-side add into a non-THOR pool the memo MUST carry the paired-chain address —
         // otherwise THORChain can't credit the LP when the asset half is later deposited.
         if (chain == Chain.ThorChain && pairedAddress == null) {
-            val assetChain = parseThorChainPool(poolId).chain
+            val assetChain = parsedPool.chain
             if (assetChain != null && assetChain != Chain.ThorChain) {
                 throw InvalidTransactionDataException(
                     UiText.StringResource(R.string.send_error_no_address)
                 )
             }
         }
-        val memo = DepositMemo.AddLiquidity(poolId, pairedAddress)
+
+        val thorAddressForMemo = if (isErc20LpAdd) resolveThorAddress(vaultId) else pairedAddress
+        val memo = DepositMemo.AddLiquidity(poolId, thorAddressForMemo)
+
+        val routerDepositPayload =
+            if (isErc20LpAdd) {
+                buildRouterDepositPayload(
+                    selectedToken = selectedToken,
+                    srcAddress = srcAddress,
+                    tokenAmountInt = tokenAmountInt,
+                )
+            } else null
+
+        val routerDepositCallData =
+            routerDepositPayload?.let {
+                encodeDepositWithExpiry(
+                    vault = it.vaultAddress,
+                    asset = it.fromCoin.contractAddress,
+                    amount = it.fromAmount,
+                    memo = memo.toString(),
+                    expiration = it.expirationTime,
+                )
+            }
 
         val specific =
             blockChainSpecificRepository.getSpecific(
@@ -1770,6 +1818,11 @@ constructor(
                 isSwap = false,
                 isMaxAmountEnabled = false,
                 isDeposit = true,
+                memo = memo.toString(),
+                tokenAmountValue = tokenAmountInt,
+                dstAddress = routerDepositPayload?.routerAddress ?: srcAddress,
+                isThorchainRouterDeposit = isErc20LpAdd,
+                routerDepositCallData = routerDepositCallData,
             )
 
         val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
@@ -1779,7 +1832,7 @@ constructor(
             vaultId = vaultId,
             srcToken = selectedToken,
             srcAddress = srcAddress,
-            dstAddress = "",
+            dstAddress = routerDepositPayload?.routerAddress.orEmpty(),
             memo = memo.toString(),
             srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
             estimatedFees = gasFee,
@@ -1788,7 +1841,100 @@ constructor(
             operation = OPERATION_MINT,
             pool = poolId,
             pairedAddress = pairedAddress.orEmpty(),
+            swapPayload = routerDepositPayload?.let(SwapPayload::ThorChain),
         )
+    }
+
+    /**
+     * Builds the THORChain swap payload that carries router/vault/expiration for an ERC-20 LP add.
+     * Reusing [SwapPayload.ThorChain] keeps the wire format identical to iOS (the
+     * `thorchain_swap_payload` oneof in `KeysignPayload`), so QR scans round-trip between platforms
+     * even though this is semantically a deposit, not a swap.
+     */
+    private suspend fun buildRouterDepositPayload(
+        selectedToken: Coin,
+        srcAddress: String,
+        tokenAmountInt: BigInteger,
+    ): THORChainSwapPayload {
+        val inbound =
+            thorChainApi.getTHORChainInboundAddresses().firstOrNull {
+                it.chain.equals(selectedToken.getChainName(), ignoreCase = true)
+            }
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+        if (inbound.halted || inbound.chainLPActionsPaused || inbound.globalTradingPaused) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_error_no_address)
+            )
+        }
+        val router =
+            inbound.router?.takeIf { it.isNotBlank() }
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_no_address)
+                )
+        // iOS pins expiration to now + 1h for router deposits; match for QR parity.
+        val expirationTime =
+            (Clock.System.now().toEpochMilliseconds() / 1000 + ONE_HOUR_SECONDS).toULong()
+        return THORChainSwapPayload(
+            fromAddress = srcAddress,
+            fromCoin = selectedToken,
+            toCoin = selectedToken,
+            vaultAddress = inbound.address,
+            routerAddress = router,
+            fromAmount = tokenAmountInt,
+            toAmountDecimal = BigDecimal.ZERO,
+            toAmountLimit = "0",
+            streamingInterval = "0",
+            streamingQuantity = "0",
+            expirationTime = expirationTime,
+            isAffiliate = false,
+        )
+    }
+
+    private suspend fun resolveThorAddress(vaultId: String): String? =
+        try {
+            val vault = vaultRepository.get(vaultId) ?: return null
+            chainAccountAddressRepository.getAddress(chain = Chain.ThorChain, vault = vault).first
+        } catch (e: Throwable) {
+            if (e is CancellationException) throw e
+            Timber.e(e, "Failed to resolve THOR address for ERC-20 LP add")
+            null
+        }
+
+    /**
+     * ABI-encodes `depositWithExpiry(address,address,uint256,string,uint256)` with selector
+     * `0x44bc937b`. Used for live `eth_estimateGas` against the real router calldata; the encoding
+     * is otherwise produced by `EthereumAbi` at sign time. Kept in this VM (rather than EvmHelper)
+     * because it is the only caller and to keep the change scoped.
+     */
+    @OptIn(ExperimentalStdlibApi::class)
+    private fun encodeDepositWithExpiry(
+        vault: String,
+        asset: String,
+        amount: BigInteger,
+        memo: String,
+        expiration: ULong,
+    ): String {
+        fun padLeft(hex: String): String = hex.removePrefix("0x").lowercase().padStart(64, '0')
+        val memoBytes = memo.toByteArray(Charsets.UTF_8)
+        val memoLen = memoBytes.size
+        val memoHex = memoBytes.toHexString()
+        // Right-pad the memo bytes to the next 32-byte boundary, or empty when the memo is empty.
+        val paddedMemoLength = if (memoLen == 0) 0 else ((memoLen + 31) / 32) * 64
+        val paddedMemo = memoHex.padEnd(paddedMemoLength, '0')
+        return buildString {
+            append("0x")
+            append(DEPOSIT_WITH_EXPIRY_SELECTOR)
+            append(padLeft(vault))
+            append(padLeft(asset))
+            append(padLeft(amount.toString(16)))
+            // Dynamic memo lives after the 5 fixed 32-byte slots → offset = 0xa0.
+            append(padLeft("a0"))
+            append(padLeft(expiration.toString(16)))
+            append(padLeft(memoLen.toString(16)))
+            append(paddedMemo)
+        }
     }
 
     /**
@@ -2934,6 +3080,10 @@ constructor(
 
     companion object {
         private const val ADDRESS_AWAIT_TIMEOUT_MS = 5_000L
+        private const val ONE_HOUR_SECONDS: Long = 60 * 60
+        // Function selector for THORChain router
+        // `depositWithExpiry(address,address,uint256,string,uint256)`.
+        private const val DEPOSIT_WITH_EXPIRY_SELECTOR = "44bc937b"
     }
 }
 

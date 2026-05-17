@@ -14,4 +14,5 @@ data class THORChainInboundAddress(
     @SerialName("chain_lp_actions_paused") val chainLPActionsPaused: Boolean,
     @SerialName("gas_rate") val gasRate: String,
     @SerialName("gas_rate_units") val gasRateUnits: String,
+    @SerialName("router") val router: String? = null,
 )
