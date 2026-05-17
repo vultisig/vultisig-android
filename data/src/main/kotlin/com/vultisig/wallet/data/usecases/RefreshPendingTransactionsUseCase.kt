@@ -40,18 +40,22 @@ constructor(
         val chain =
             resolveChain(tx)
                 ?: run {
-                    runSafeCatching { transactionHistoryRepository.incrementRetryCount(tx.txHash) }
+                    runSafeCatching {
+                        transactionHistoryRepository.incrementRetryCount(tx.chain, tx.txHash)
+                    }
                     return
                 }
 
         try {
             val result = transactionStatusRepository.checkTransactionStatus(tx.txHash, chain)
-            transactionHistoryRepository.updateTransactionStatus(tx.txHash, result)
+            transactionHistoryRepository.updateTransactionStatus(tx.chain, tx.txHash, result)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             Timber.e(e, "Failed to refresh %s (retry #%d)", tx.txHash, tx.retryCount)
-            runSafeCatching { transactionHistoryRepository.incrementRetryCount(tx.txHash) }
+            runSafeCatching {
+                transactionHistoryRepository.incrementRetryCount(tx.chain, tx.txHash)
+            }
         }
     }
 
@@ -62,8 +66,9 @@ constructor(
             Timber.w("Unknown chain '%s' for tx %s — retiring", tx.chain, tx.txHash)
             runSafeCatching {
                 transactionHistoryRepository.updateTransactionStatus(
-                    tx.txHash,
-                    TransactionResult.Failed("Unknown chain: ${tx.chain}"),
+                    chain = tx.chain,
+                    txHash = tx.txHash,
+                    result = TransactionResult.Failed("Unknown chain: ${tx.chain}"),
                 )
             }
             null

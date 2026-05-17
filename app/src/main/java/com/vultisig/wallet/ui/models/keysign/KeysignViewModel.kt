@@ -865,8 +865,9 @@ constructor(
                 transactionStatusServiceManager.getStatusFlow()?.collect { statusResult ->
                     runCatching {
                             transactionHistoryRepository.updateTransactionStatus(
-                                txHash,
-                                statusResult,
+                                chain = chain.raw,
+                                txHash = txHash,
+                                result = statusResult,
                             )
                         }
                         .onFailure {
