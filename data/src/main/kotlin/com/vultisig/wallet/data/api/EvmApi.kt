@@ -9,9 +9,7 @@ import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.api.models.RpcResponse
 import com.vultisig.wallet.data.api.models.RpcResponseJson
 import com.vultisig.wallet.data.api.models.SendTransactionJson
-import com.vultisig.wallet.data.api.models.VultisigBalanceJson
 import com.vultisig.wallet.data.api.models.ZkGasFee
-import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
 import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
 import com.vultisig.wallet.data.common.stripHexPrefix
@@ -74,8 +72,6 @@ interface EvmApi {
         recipientAddress: String,
         value: BigInteger,
     ): BigInteger
-
-    suspend fun getBalances(address: String): VultisigBalanceJson
 
     suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger
 
@@ -489,9 +485,6 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
             )
         }
     }
-
-    override suspend fun getBalances(address: String): VultisigBalanceJson =
-        http.postRpc(rpcUrl, "alchemy_getTokenBalances", params = buildJsonArray { add(address) })
 
     private suspend inline fun <reified T> fetch(
         method: String,
