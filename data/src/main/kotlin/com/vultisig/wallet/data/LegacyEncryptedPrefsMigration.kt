@@ -10,9 +10,17 @@ import java.io.File
 import java.security.KeyStore
 import timber.log.Timber
 
+/** Name of the legacy androidx.security encrypted prefs file being migrated from. */
 private const val ENCRYPTED_PREFS_FILE = "token_encrypted_prefs"
-// Stored in a separate file so a clear() on the main prefs cannot reset this sentinel.
+
+/**
+ * Name of the dedicated prefs file that stores the migration-done sentinel, kept separate from the
+ * main prefs so a [SharedPreferences.Editor.clear] on those cannot reset the sentinel and
+ * re-trigger the migration.
+ */
 private const val MIGRATION_STATE_PREFS = "migration_state_prefs"
+
+/** Boolean key inside [MIGRATION_STATE_PREFS] that marks the migration as completed. */
 private const val MIGRATION_DONE_KEY = "__migrated_from_encrypted_prefs"
 
 /**
