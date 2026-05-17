@@ -1558,6 +1558,18 @@ constructor(
         }
     }
 
+    /**
+     * Finishes the joined-device flow after a successful keysign. Clears the back stack so the
+     * wrapping ViewModelStore (and the foreground status-polling service it owns) tears down
+     * promptly — without this, navigating to home would leave the join destination on the stack and
+     * the polling service would keep firing until its own timeout.
+     */
+    fun complete() {
+        viewModelScope.safeLaunch {
+            navigator.route(Route.Home(), NavigationOptions(clearBackStack = true))
+        }
+    }
+
     override fun onCleared() {
         cleanUp()
         super.onCleared()

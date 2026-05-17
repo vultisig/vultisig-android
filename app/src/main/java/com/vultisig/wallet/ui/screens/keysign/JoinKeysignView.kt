@@ -13,7 +13,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
@@ -29,7 +28,6 @@ import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.WaitingForKeysignS
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
-import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.sign.VerifySignMessageScreen
@@ -37,7 +35,7 @@ import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.utils.asString
 
 @Composable
-internal fun JoinKeysignView(navController: NavHostController) {
+internal fun JoinKeysignView() {
     val viewModel: JoinKeysignViewModel = hiltViewModel()
     val context = LocalContext.current
     var keysignState: KeysignState by remember { mutableStateOf(KeysignState.CreatingInstance) }
@@ -157,7 +155,7 @@ internal fun JoinKeysignView(navController: NavHostController) {
                     transactionLink = keysignViewModel.txLink.collectAsState().value,
                     approveTransactionLink = keysignViewModel.approveTxLink.collectAsState().value,
                     progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
-                    onComplete = { navController.navigate(Route.Home()) },
+                    onComplete = viewModel::complete,
                     onBack = keysignViewModel::navigateToHome,
                     transactionTypeUiModel =
                         keysignViewModel.resolvedTransactionUiModel.collectAsState().value,
