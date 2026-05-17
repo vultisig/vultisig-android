@@ -311,6 +311,8 @@
     <string name="deposit_error_has_not_reached_maturity">Este depósito ainda não atingiu o seu prazo de vencimento.</string>
     <string name="deposit_error_lp_paused_pool">Adicionar liquidez está pausado para %1$s. THORChain reembolsaria esta transação.</string>
     <string name="deposit_error_lp_halted_chain">As ações de liquidez em %1$s estão atualmente interrompidas. THORChain reembolsaria esta transação.</string>
+    <string name="deposit_error_secured_asset_chain_halted">Os depósitos SECURE+ em %1$s estão atualmente interrompidos no THORChain. Tente novamente mais tarde.</string>
+    <string name="deposit_error_secured_asset_inbound_unavailable">Não foi possível conectar ao THORChain para verificar o cofre de entrada. Tente novamente.</string>
     <string name="deposit_error_pool_not_available">O pool %1$s não está disponível para depósitos no momento.</string>
     <string name="deposit_form_screen_assets">Ativo</string>
     <string name="deposit_form_screen_asset_selection">Seleção de ativos</string>

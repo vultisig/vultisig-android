@@ -1023,28 +1023,40 @@ constructor(
         }
     }
 
-    private suspend fun fetchSecuredAssetInboundAddress(): String? {
+    private suspend fun fetchSecuredAssetInboundAddress(): SecuredAssetInbound {
         val chainName = state.value.selectedToken.getChainName()
         return try {
             val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
             val inboundAddress =
                 inboundAddresses.firstOrNull { it.chain.equals(chainName, ignoreCase = true) }
+                    ?: return SecuredAssetInbound.Unsupported
 
             if (
-                inboundAddress != null &&
-                    inboundAddress.halted.not() &&
-                    inboundAddress.chainLPActionsPaused.not() &&
-                    inboundAddress.globalTradingPaused.not()
+                inboundAddress.halted ||
+                    inboundAddress.chainLPActionsPaused ||
+                    inboundAddress.globalTradingPaused
             ) {
-                val inboundChainAddress = inboundAddress.address
-                secureAssetNodeValue.value = inboundChainAddress
-                inboundChainAddress
-            } else null
+                return SecuredAssetInbound.Halted
+            }
+
+            val inboundChainAddress = inboundAddress.address
+            secureAssetNodeValue.value = inboundChainAddress
+            SecuredAssetInbound.Available(inboundChainAddress)
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to fetch secured asset inbound address")
-            null
+            SecuredAssetInbound.FetchFailed
         }
+    }
+
+    private sealed class SecuredAssetInbound {
+        data class Available(val address: String) : SecuredAssetInbound()
+
+        data object Halted : SecuredAssetInbound()
+
+        data object Unsupported : SecuredAssetInbound()
+
+        data object FetchFailed : SecuredAssetInbound()
     }
 
     private suspend fun handleRemoveCacaoOption() {
@@ -1552,8 +1564,29 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        val dstAddr = secureAssetNodeValue.value ?: fetchSecuredAssetInboundAddress()
-        if (dstAddr.isNullOrBlank()) {
+        val dstAddr =
+            secureAssetNodeValue.value
+                ?: when (val result = fetchSecuredAssetInboundAddress()) {
+                    is SecuredAssetInbound.Available -> result.address
+                    SecuredAssetInbound.Halted ->
+                        throw InvalidTransactionDataException(
+                            UiText.FormattedText(
+                                R.string.deposit_error_secured_asset_chain_halted,
+                                listOf(selectedToken.getChainName()),
+                            )
+                        )
+                    SecuredAssetInbound.Unsupported ->
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(R.string.deposit_error_not_secured_asset)
+                        )
+                    SecuredAssetInbound.FetchFailed ->
+                        throw InvalidTransactionDataException(
+                            UiText.StringResource(
+                                R.string.deposit_error_secured_asset_inbound_unavailable
+                            )
+                        )
+                }
+        if (dstAddr.isBlank()) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
             )
