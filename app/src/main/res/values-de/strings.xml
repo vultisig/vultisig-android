@@ -904,6 +904,11 @@
     <string name="migration_onboarding_step_3_text_end">Beim Upgrade</string>
     <string name="migration_onboarding_upgrade_your_vault">Verbessern Sie Ihren Tresor</string>
     <string name="migration_onboarding_upgrade_now">Jetzt upgraden</string>
+    <string name="migration_server_share_location_title">Wo befindet sich Ihre Serverfreigabe?</string>
+    <string name="migration_server_share_location_online_title">VultiServer</string>
+    <string name="migration_server_share_location_online_description">Verwenden Sie die von Vultisig gehostete Serverfreigabe</string>
+    <string name="migration_server_share_location_another_device_title">Ein anderes meiner Geräte</string>
+    <string name="migration_server_share_location_another_device_description">Ich habe die Serverfreigabe auf ein anderes Gerät importiert</string>
     <string name="migration_onboarding_step_1_text_start">Verbessere diesen Tresor auf die</string>
     <string name="onboarding_desc_page_1_part_2">Tresorfreigaben</string>
     <string name="verify_swap_youre_swapping_title">Sie tauschen gerade Daten aus.</string>

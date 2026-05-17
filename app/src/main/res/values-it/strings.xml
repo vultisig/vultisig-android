@@ -902,6 +902,11 @@
     <string name="migration_onboarding_step_3_text_end">durante l\'aggiornamento</string>
     <string name="migration_onboarding_upgrade_your_vault">Aggiorna il tuo caveau</string>
     <string name="migration_onboarding_upgrade_now">Aggiorna ora</string>
+    <string name="migration_server_share_location_title">Dov\'è la tua condivisione server?</string>
+    <string name="migration_server_share_location_online_title">VultiServer</string>
+    <string name="migration_server_share_location_online_description">Usa la condivisione server gestita da Vultisig</string>
+    <string name="migration_server_share_location_another_device_title">Un altro mio dispositivo</string>
+    <string name="migration_server_share_location_another_device_description">Ho importato la condivisione server su un altro dispositivo</string>
     <string name="migration_onboarding_step_1_text_start">Aggiorna questo caveau a</string>
     <string name="onboarding_desc_page_1_part_2">Condivisioni del Vault,</string>
     <string name="verify_swap_youre_swapping_title">Stai effettuando uno scambio</string>

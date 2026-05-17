@@ -901,6 +901,11 @@
     <string name="migration_onboarding_step_3_text_end">Ao atualizar</string>
     <string name="migration_onboarding_upgrade_your_vault">Atualize o seu cofre</string>
     <string name="migration_onboarding_upgrade_now">Atualize agora</string>
+    <string name="migration_server_share_location_title">Onde está a sua Partilha de Servidor?</string>
+    <string name="migration_server_share_location_online_title">VultiServer</string>
+    <string name="migration_server_share_location_online_description">Use a Partilha de Servidor alojada pela Vultisig</string>
+    <string name="migration_server_share_location_another_device_title">Outro dispositivo meu</string>
+    <string name="migration_server_share_location_another_device_description">Importei a Partilha de Servidor para outro dispositivo</string>
     <string name="migration_onboarding_step_1_text_start">Atualize este cofre para</string>
     <string name="onboarding_desc_page_1_part_2">Partilhas do cofre</string>
     <string name="verify_swap_youre_swapping_title">Está a trocar</string>

@@ -899,6 +899,11 @@
     <string name="migration_onboarding_step_3_text_end">bij het upgraden</string>
     <string name="migration_onboarding_upgrade_your_vault">Upgrade uw kluis</string>
     <string name="migration_onboarding_upgrade_now">Upgrade nu</string>
+    <string name="migration_server_share_location_title">Waar staat uw servershare?</string>
+    <string name="migration_server_share_location_online_title">VultiServer</string>
+    <string name="migration_server_share_location_online_description">Gebruik de servershare die door Vultisig wordt gehost</string>
+    <string name="migration_server_share_location_another_device_title">Een ander apparaat van mij</string>
+    <string name="migration_server_share_location_another_device_description">Ik heb de servershare naar een ander apparaat geïmporteerd</string>
     <string name="migration_onboarding_step_1_text_start">Upgrade deze kluis naar</string>
     <string name="onboarding_desc_page_1_part_2">Vault-shares,</string>
     <string name="verify_swap_youre_swapping_title">Je wisselt</string>

@@ -1233,6 +1233,11 @@
     <string name="migration_onboarding_step_3_text_end">升级时</string>
     <string name="migration_onboarding_upgrade_your_vault">升级您的保险库</string>
     <string name="migration_onboarding_upgrade_now">立即升级</string>
+    <string name="migration_server_share_location_title">您的服务器份额在哪里？</string>
+    <string name="migration_server_share_location_online_title">VultiServer</string>
+    <string name="migration_server_share_location_online_description">使用由 Vultisig 托管的服务器份额</string>
+    <string name="migration_server_share_location_another_device_title">我的另一台设备</string>
+    <string name="migration_server_share_location_another_device_description">我已将服务器份额导入到另一台设备</string>
     <string name="migration_onboarding_step_1_text_start">将此保险库升级至</string>
     <string name="onboarding_desc_page_1_part_2">保险库共享</string>
     <string name="verify_swap_youre_swapping_title">您正在交换</string>

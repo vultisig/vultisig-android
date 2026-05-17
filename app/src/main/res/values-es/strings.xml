@@ -902,6 +902,11 @@
     <string name="migration_onboarding_step_3_text_end">Al actualizar</string>
     <string name="migration_onboarding_upgrade_your_vault">Mejora tu bóveda</string>
     <string name="migration_onboarding_upgrade_now">Actualízate ahora</string>
+    <string name="migration_server_share_location_title">¿Dónde está tu servidor compartido?</string>
+    <string name="migration_server_share_location_online_title">VultiServer</string>
+    <string name="migration_server_share_location_online_description">Usa el servidor compartido alojado por Vultisig</string>
+    <string name="migration_server_share_location_another_device_title">Otro dispositivo mío</string>
+    <string name="migration_server_share_location_another_device_description">Importé el servidor compartido a otro dispositivo</string>
     <string name="migration_onboarding_step_1_text_start">Mejora esta bóveda a la versión mejorada</string>
     <string name="onboarding_desc_page_1_part_2">Recursos compartidos de la bóveda</string>
     <string name="verify_swap_youre_swapping_title">Estás intercambiando</string>

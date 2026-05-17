@@ -907,6 +907,11 @@
     <string name="migration_onboarding_step_3_text_end">prilikom nadogradnje</string>
     <string name="migration_onboarding_upgrade_your_vault">Nadogradi svoj trezor</string>
     <string name="migration_onboarding_upgrade_now">Nadogradite sada</string>
+    <string name="migration_server_share_location_title">Gdje se nalazi vaš dijeljeni poslužitelj?</string>
+    <string name="migration_server_share_location_online_title">VultiServer</string>
+    <string name="migration_server_share_location_online_description">Koristite dijeljeni poslužitelj kojeg održava Vultisig</string>
+    <string name="migration_server_share_location_another_device_title">Drugi moj uređaj</string>
+    <string name="migration_server_share_location_another_device_description">Uvezao sam dijeljeni poslužitelj na drugi uređaj</string>
     <string name="migration_onboarding_step_1_text_start">Nadogradi ovaj trezor na</string>
     <string name="onboarding_desc_page_1_part_2">dijeljenja trezora,</string>
     <string name="verify_swap_youre_swapping_title">Zamjenjujete</string>

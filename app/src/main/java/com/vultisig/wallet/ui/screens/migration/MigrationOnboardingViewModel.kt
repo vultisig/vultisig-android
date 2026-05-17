@@ -17,7 +17,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal data class MigrationOnboardingUiModel(
-    val vaultType: Route.VaultInfo.VaultType = Route.VaultInfo.VaultType.Secure
+    val vaultType: Route.VaultInfo.VaultType = Route.VaultInfo.VaultType.Secure,
+    val isServerShareLocationSheetVisible: Boolean = false,
 )
 
 @HiltViewModel
@@ -33,6 +34,9 @@ constructor(
 
     private val args = savedStateHandle.toRoute<Route.Migration.Onboarding>()
     private val vaultId = args.vaultId
+
+    // Cached when [upgrade] detects a fast vault, so the sheet callbacks don't need to refetch.
+    private var fastVaultName: String? = null
 
     init {
         viewModelScope.launch {
@@ -56,20 +60,47 @@ constructor(
             val vault = vaultRepository.get(vaultId) ?: error("Vault with $vaultId doesn't exist")
 
             if (vault.isFastVault()) {
-                navigator.route(Route.Migration.Password(vaultId = vaultId))
+                // The vault has a server signer, but the user may have imported that share onto
+                // another device they own. Ask before silently hitting the online VultiServer.
+                fastVaultName = vault.name
+                state.update { it.copy(isServerShareLocationSheetVisible = true) }
             } else {
-                navigator.route(
-                    Route.Keygen.PeerDiscovery(
-                        action = TssAction.Migrate,
-                        vaultName = vault.name,
-                        vaultId = vaultId,
-                    )
-                )
+                routeToPeerMigrate(vault.name)
             }
         }
     }
 
+    fun continueWithOnlineVultiServer() {
+        closeServerShareLocationSheet()
+        viewModelScope.launch { navigator.route(Route.Migration.Password(vaultId = vaultId)) }
+    }
+
+    fun continueWithSelfHostedServer() {
+        val vaultName = fastVaultName ?: return
+        closeServerShareLocationSheet()
+        viewModelScope.launch { routeToPeerMigrate(vaultName) }
+    }
+
+    fun dismissServerShareLocationSheet() {
+        closeServerShareLocationSheet()
+    }
+
     fun back() {
         viewModelScope.launch { navigator.navigate(Destination.Back) }
+    }
+
+    private fun closeServerShareLocationSheet() {
+        fastVaultName = null
+        state.update { it.copy(isServerShareLocationSheetVisible = false) }
+    }
+
+    private suspend fun routeToPeerMigrate(vaultName: String) {
+        navigator.route(
+            Route.Keygen.PeerDiscovery(
+                action = TssAction.Migrate,
+                vaultName = vaultName,
+                vaultId = vaultId,
+            )
+        )
     }
 }

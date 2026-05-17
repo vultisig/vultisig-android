@@ -617,6 +617,11 @@
     <string name="migration_onboarding_step_3_text_end">when upgrading</string>
     <string name="migration_onboarding_upgrade_your_vault">Upgrade your vault</string>
     <string name="migration_onboarding_upgrade_now">Upgrade now</string>
+    <string name="migration_server_share_location_title">Where is your Server Share?</string>
+    <string name="migration_server_share_location_online_title">VultiServer</string>
+    <string name="migration_server_share_location_online_description">Use the Server Share hosted by Vultisig</string>
+    <string name="migration_server_share_location_another_device_title">Another device of mine</string>
+    <string name="migration_server_share_location_another_device_description">I imported the Server Share to another device</string>
     <string name="upgrade_banner_title">Upgrade your vault now</string>
     <string name="deposit_form_custom_memo_optional_title">Custom Memo (optional)</string>
     <string name="transfer_ibc_function_memo_title">Memo</string>

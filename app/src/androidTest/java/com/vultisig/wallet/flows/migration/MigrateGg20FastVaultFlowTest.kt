@@ -23,6 +23,7 @@ import com.vultisig.wallet.ui.pages.keygen.FastVaultVerificationPage
 import com.vultisig.wallet.ui.pages.onboarding.VaultBackupOnboardingPage
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreenTags
 import com.vultisig.wallet.ui.screens.migration.MigrationOnboardingScreenTags
+import com.vultisig.wallet.ui.screens.migration.MigrationServerShareLocationSheetTags
 import com.vultisig.wallet.ui.utils.click
 import com.vultisig.wallet.ui.utils.waitUntilShown
 import com.vultisig.wallet.util.CleanTest
@@ -85,6 +86,9 @@ class MigrateGg20FastVaultFlowTest : CleanTest() {
         compose.waitUntilShown(MigrationOnboardingScreenTags.NEXT)
         compose.click(MigrationOnboardingScreenTags.NEXT)
         compose.click(MigrationOnboardingScreenTags.NEXT)
+
+        compose.waitUntilShown(MigrationServerShareLocationSheetTags.ONLINE)
+        compose.click(MigrationServerShareLocationSheetTags.ONLINE)
 
         compose.waitUntilShown("InputPasswordScreen.password")
         compose.textField("InputPasswordScreen.password").performTextInput(TEST_VAULT_PASSWORD)

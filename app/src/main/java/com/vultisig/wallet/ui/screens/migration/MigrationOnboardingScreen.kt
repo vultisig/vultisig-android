@@ -40,6 +40,7 @@ internal fun MigrationOnboardingScreen(model: MigrationOnboardingViewModel = hil
     MigrationOnboardingScreen(
         currentPage = currentPage,
         pages = pages,
+        isServerShareLocationSheetVisible = state.isServerShareLocationSheetVisible,
         onBackClick = {
             if (currentPage <= 0) {
                 model.back()
@@ -54,6 +55,9 @@ internal fun MigrationOnboardingScreen(model: MigrationOnboardingViewModel = hil
                 currentPage++
             }
         },
+        onDismissServerShareLocationSheet = model::dismissServerShareLocationSheet,
+        onUseOnlineVultiServer = model::continueWithOnlineVultiServer,
+        onUseAnotherDevice = model::continueWithSelfHostedServer,
     )
 }
 
@@ -61,8 +65,12 @@ internal fun MigrationOnboardingScreen(model: MigrationOnboardingViewModel = hil
 private fun MigrationOnboardingScreen(
     currentPage: Int,
     pages: List<MigrationOnboardingPage>,
+    isServerShareLocationSheetVisible: Boolean,
     onBackClick: () -> Unit,
     onNext: () -> Unit,
+    onDismissServerShareLocationSheet: () -> Unit,
+    onUseOnlineVultiServer: () -> Unit,
+    onUseAnotherDevice: () -> Unit,
 ) {
     V2Scaffold(
         title = stringResource(R.string.migration_onboarding_upgrade_your_vault),
@@ -75,6 +83,14 @@ private fun MigrationOnboardingScreen(
                 text = page.text,
                 buttonText = page.buttonText,
             )
+
+            if (isServerShareLocationSheetVisible) {
+                MigrationServerShareLocationBottomSheet(
+                    onDismissRequest = onDismissServerShareLocationSheet,
+                    onUseOnlineVultiServer = onUseOnlineVultiServer,
+                    onUseAnotherDevice = onUseAnotherDevice,
+                )
+            }
         },
     )
 }
@@ -185,8 +201,12 @@ private fun MigrationOnboardingScreenPreview() {
     MigrationOnboardingScreen(
         currentPage = 0,
         pages = getPages(Route.VaultInfo.VaultType.Secure),
+        isServerShareLocationSheetVisible = false,
         onBackClick = {},
         onNext = {},
+        onDismissServerShareLocationSheet = {},
+        onUseOnlineVultiServer = {},
+        onUseAnotherDevice = {},
     )
 }
 
