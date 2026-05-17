@@ -109,7 +109,12 @@ internal fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedP
         // Use commit() (not apply()) so the sentinel is guaranteed on disk before legacyFile is
         // deleted. An apply() here would allow a process kill to leave the marker unflushed while
         // the legacy file is gone, causing re-migration to overwrite values on the next launch.
-        migrationStatePrefs.edit().putBoolean(MIGRATION_DONE_KEY, true).commit()
+        if (!migrationStatePrefs.edit().putBoolean(MIGRATION_DONE_KEY, true).commit()) {
+            // Marker did not persist; retain the legacy file so the next launch can retry rather
+            // than leaving a migrated-but-unsentinelled state with no path back.
+            Timber.w("Failed to persist migration marker; legacy file retained for next attempt")
+            return
+        }
         if (!legacyFile.delete()) {
             Timber.w("Failed to delete legacy encrypted prefs file at %s", legacyFile.absolutePath)
         }
@@ -122,11 +127,14 @@ internal fun migrateFromEncryptedSharedPrefs(context: Context, newPrefs: SharedP
 
 /**
  * Best-effort delete of the [MasterKey] AndroidKeyStore alias and the [MIGRATION_STATE_PREFS]
- * sentinel file. The sentinel is only deleted once [legacyFile] is confirmed gone, so a transient
- * legacy-file delete failure cannot leave the sentinel cleared while ciphertext remains on disk
- * (which would re-trigger migration and overwrite user-modified values on the next launch).
+ * sentinel file. Only runs once [legacyFile] is confirmed gone, so a transient legacy-file delete
+ * failure cannot strand ciphertext on disk without its decryption key or leave the sentinel cleared
+ * while ciphertext remains (which would re-trigger migration and overwrite user-modified values on
+ * the next launch).
  */
 private fun reapLegacyArtifacts(legacyFile: File, sentinelFile: File) {
+    if (legacyFile.exists()) return
+
     runCatching {
             val keyStore = KeyStore.getInstance("AndroidKeyStore")
             keyStore.load(null)
@@ -136,7 +144,6 @@ private fun reapLegacyArtifacts(legacyFile: File, sentinelFile: File) {
         }
         .onFailure { Timber.w(it, "Failed to delete legacy AndroidKeyStore master-key alias") }
 
-    if (legacyFile.exists()) return
     if (sentinelFile.exists() && !sentinelFile.delete()) {
         Timber.w("Failed to delete legacy migration sentinel at %s", sentinelFile.absolutePath)
     }

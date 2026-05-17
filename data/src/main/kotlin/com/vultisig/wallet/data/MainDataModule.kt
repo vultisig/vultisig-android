@@ -117,14 +117,25 @@ internal interface MainDataModule {
                 // be re-imported into the freshly generated key on the next create() call. The
                 // sentinel lives in a separate prefs file (see LegacyEncryptedPrefsMigration.kt)
                 // so it is not wiped by the secure-prefs deletion above.
-                runCatching {
-                        context
-                            .getSharedPreferences("migration_state_prefs", Context.MODE_PRIVATE)
-                            .edit()
-                            .remove("__migrated_from_encrypted_prefs")
-                            .commit()
-                    }
-                    .onFailure { Timber.w(it, "Failed to clear migration marker during recovery") }
+                val sentinelCleared =
+                    runCatching {
+                            context
+                                .getSharedPreferences("migration_state_prefs", Context.MODE_PRIVATE)
+                                .edit()
+                                .remove("__migrated_from_encrypted_prefs")
+                                .commit()
+                        }
+                        .onFailure {
+                            Timber.w(it, "Failed to clear migration marker during recovery")
+                        }
+                        .getOrDefault(false)
+                if (!sentinelCleared) {
+                    // commit() returning false (or throwing) means the marker may still be set; log
+                    // loudly so that if the legacy file is still present we have a trail explaining
+                    // why migration did not re-run. create() still proceeds — we cannot leave Hilt
+                    // without a SharedPreferences and the alias has already been rotated.
+                    Timber.e("Migration marker not cleared; legacy data may not be re-imported")
+                }
                 return create()
             }
 
