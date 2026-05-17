@@ -22,7 +22,10 @@ import java.security.KeyStore
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 import org.apache.commons.compress.compressors.CompressorStreamProvider
 import timber.log.Timber
@@ -80,6 +83,12 @@ internal interface MainDataModule {
                 // GeneralSecurityException) surfaces here rather than silently returning defaults
                 // on every subsequent read.
                 prefs.selfTest()
+                // Run migration on IO to avoid blocking the calling thread (often main). The
+                // migration is idempotent and reaps its own legacy artifacts (master-key alias and
+                // sentinel file) once it confirms there is nothing left to migrate.
+                CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                    migrateFromEncryptedSharedPrefs(context, prefs)
+                }
                 return prefs
             }
 
@@ -104,6 +113,18 @@ internal interface MainDataModule {
                         keyStore.deleteEntry(SECURE_PREFS_KEY_ALIAS)
                     }
                     .onFailure { Timber.e(it, "Failed to delete secure prefs key during recovery") }
+                // Clear the migration sentinel so that if the legacy file is still present it can
+                // be re-imported into the freshly generated key on the next create() call. The
+                // sentinel lives in a separate prefs file (see LegacyEncryptedPrefsMigration.kt)
+                // so it is not wiped by the secure-prefs deletion above.
+                runCatching {
+                        context
+                            .getSharedPreferences("migration_state_prefs", Context.MODE_PRIVATE)
+                            .edit()
+                            .remove("__migrated_from_encrypted_prefs")
+                            .commit()
+                    }
+                    .onFailure { Timber.w(it, "Failed to clear migration marker during recovery") }
                 return create()
             }
 
