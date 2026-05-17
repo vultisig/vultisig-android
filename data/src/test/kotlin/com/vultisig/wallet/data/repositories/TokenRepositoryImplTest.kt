@@ -2,14 +2,12 @@
 
 package com.vultisig.wallet.data.repositories
 
-import com.vultisig.wallet.data.api.CoinGeckoApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
-import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.usecases.OneInchToCoinsUseCase
+import com.vultisig.wallet.data.usecases.EvmCoinFinder
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -132,13 +130,10 @@ internal class TokenRepositoryImplTest {
 
     private fun newRepository(thorApi: ThorChainApi): TokenRepositoryImpl =
         TokenRepositoryImpl(
-            oneInchApi = mockk<OneInchApi>(relaxed = true),
             evmApiFactory = mockk<EvmApiFactory>(relaxed = true),
             thorApi = thorApi,
-            coinGeckoApi = mockk<CoinGeckoApi>(relaxed = true),
-            currencyRepository = mockk<AppCurrencyRepository>(relaxed = true),
             chainAccountAddressRepository = mockk<ChainAccountAddressRepository>(relaxed = true),
-            oneInchToCoins = mockk<OneInchToCoinsUseCase>(relaxed = true),
+            evmCoinFinder = mockk<EvmCoinFinder>(relaxed = true),
         )
 
     private companion object {

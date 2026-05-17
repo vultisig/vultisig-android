@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.api.models.quotes.OneInchSwapQuoteErrorResponse
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.utils.OneInchSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
@@ -139,7 +140,7 @@ constructor(
             httpClient.get(
                 "https://api.vultisig.com/1inch/balance/v1.2/${chain.oneInchChainId()}/balances/$address"
             )
-        return response.body<Map<String, String>>().mapNotNull { (key, value) ->
+        return response.bodyOrThrow<Map<String, String>>().mapNotNull { (key, value) ->
             if (value.toBigInteger() > BigInteger.ZERO) key else null
         }
     }
@@ -147,12 +148,14 @@ constructor(
     override suspend fun getTokensByContracts(
         chain: Chain,
         contractAddresses: List<String>,
-    ): Map<String, OneInchTokenJson> =
-        httpClient
+    ): Map<String, OneInchTokenJson> {
+        if (contractAddresses.isEmpty()) return emptyMap()
+        return httpClient
             .get("https://api.vultisig.com/1inch/token/v1.2/${chain.oneInchChainId()}/custom") {
                 parameter("addresses", contractAddresses.joinToString(","))
             }
-            .body()
+            .bodyOrThrow<Map<String, OneInchTokenJson>>()
+    }
 
     companion object {
         private const val ONEINCH_REFERRER_ADDRESS = "0x8E247a480449c84a5fDD25974A8501f3EFa4ABb9"

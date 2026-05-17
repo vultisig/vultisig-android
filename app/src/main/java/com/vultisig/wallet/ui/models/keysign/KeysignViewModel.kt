@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.CommonTransactionHistoryData
 import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
+import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TokenStandard
@@ -734,7 +735,7 @@ constructor(
                 nonceAcc = nonceAcc,
             )
 
-        val txHash = broadcastTx(chain = chain, tx = signedTx)
+        val txHash = broadcastOrRecover(chain = chain, signedTx = signedTx)
 
         Timber.d("transaction hash: $txHash")
         if (txHash != null) {
@@ -765,6 +766,56 @@ constructor(
             approveTxLink.value =
                 explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
         }
+    }
+
+    /**
+     * Broadcasts [signedTx] for [chain], falling back to the deterministic locally computed hash
+     * when a non-initiator's duplicate broadcast is rejected.
+     *
+     * In a multi-device vault both peers compute the same signed extrinsic and call this path;
+     * whichever device's broadcast reaches the network first wins. The losing device's broadcast is
+     * then rejected — Substrate in particular surfaces this as `Transaction has a bad signature`
+     * (code 1010) when the initiator's extrinsic has already advanced the nonce. The signed bytes
+     * are byte-identical on both devices, so the locally computed
+     * [SignedTransactionResult.transactionHash] is the canonical on-chain hash, and we use it
+     * instead of failing the joined-device screen.
+     *
+     * iOS does the same recovery in `KeysignViewModel.handleBroadcastError` / `isAlreadyOnChain`.
+     * We keep it scoped to non-initiator devices so a real broadcast failure on the initiator is
+     * still surfaced as an error.
+     */
+    internal suspend fun broadcastOrRecover(
+        chain: Chain,
+        signedTx: SignedTransactionResult,
+    ): String? =
+        try {
+            broadcastTx(chain = chain, tx = signedTx)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            recoverJoinedDeviceBroadcast(chain, signedTx, e) ?: throw e
+        }
+
+    /**
+     * Returns the locally computed transaction hash if this is a joined-device broadcast failure we
+     * should swallow; `null` if the caller must re-throw the original error.
+     */
+    private fun recoverJoinedDeviceBroadcast(
+        chain: Chain,
+        signedTx: SignedTransactionResult,
+        error: Throwable,
+    ): String? {
+        if (isInitiatingDevice) return null
+        return signedTx.transactionHash
+            .takeUnless { it.isBlank() }
+            ?.also { hash ->
+                Timber.w(
+                    error,
+                    "Joined-device broadcast for %s failed; using locally computed hash %s",
+                    chain.raw,
+                    hash,
+                )
+            }
     }
 
     internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
@@ -814,8 +865,9 @@ constructor(
                 transactionStatusServiceManager.getStatusFlow()?.collect { statusResult ->
                     runCatching {
                             transactionHistoryRepository.updateTransactionStatus(
-                                txHash,
-                                statusResult,
+                                chain = chain.raw,
+                                txHash = txHash,
+                                result = statusResult,
                             )
                         }
                         .onFailure {
