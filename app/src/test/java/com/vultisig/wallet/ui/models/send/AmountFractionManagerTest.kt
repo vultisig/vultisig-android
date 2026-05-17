@@ -156,6 +156,29 @@ internal class AmountFractionManagerTest {
             coVerify(exactly = 0) { tokenRepository.getNativeToken(any()) }
         }
 
+    @Test
+    fun `chooseMaxTokenAmount non-native token - short-circuits without fee recalculation`() =
+        runTest(mainDispatcher) {
+            // Non-native SPL token on a non-EVM chain (USDC on Solana). Chain gas is paid in
+            // the native coin (SOL) and never reduces the USDC balance, so the chip must not
+            // block on a fresh-fee RPC.
+            val usdc = usdcSolanaAccount()
+            account = usdc
+            gasFee.value = TokenValue(value = BigInteger("5000"), token = solAccount().token)
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(value = BigInteger("12500000"), token = usdc.token)
+            val manager = build(backgroundScope)
+
+            manager.chooseMaxTokenAmount()
+            advanceUntilIdle()
+
+            // 12.5 USDC × 1.0 → 12.5 (6 decimals, trailing zeros stripped).
+            assertEquals("12.5", tokenAmountFieldState.text.toString())
+            coVerify { amountManager.markMax(BigDecimal("12.5")) }
+            coVerify(exactly = 0) { feeServiceComposite.calculateFees(any()) }
+            coVerify(exactly = 0) { tokenRepository.getNativeToken(any()) }
+        }
+
     // ──────── choosePercentageAmount ────────
 
     @Test
@@ -203,6 +226,51 @@ internal class AmountFractionManagerTest {
             assertEquals(AmountFraction.F75, uiState.value.selectedAmountFraction)
             assertFalse(uiState.value.isAmountSelectionLoading)
             assertEquals("0", tokenAmountFieldState.text.toString())
+        }
+
+    @Test
+    fun `choosePercentageAmount non-native token - short-circuits without fee recalculation`() =
+        runTest(mainDispatcher) {
+            val usdc = usdcSolanaAccount()
+            account = usdc
+            gasFee.value = TokenValue(value = BigInteger("5000"), token = solAccount().token)
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(value = BigInteger("10000000"), token = usdc.token)
+            val manager = build(backgroundScope)
+
+            manager.choosePercentageAmount(AmountFraction.F50)
+            advanceUntilIdle()
+
+            // 10 USDC × 0.5 → "5".
+            assertEquals(AmountFraction.F50, uiState.value.selectedAmountFraction)
+            assertFalse(uiState.value.isAmountSelectionLoading)
+            assertEquals("5", tokenAmountFieldState.text.toString())
+            coVerify(exactly = 0) { feeServiceComposite.calculateFees(any()) }
+            coVerify(exactly = 0) { tokenRepository.getNativeToken(any()) }
+            coVerify(exactly = 0) { amountManager.markMax(any()) }
+        }
+
+    @Test
+    fun `choosePercentageAmount non-native token with null gasFee - short-circuits without fee recalculation`() =
+        runTest(mainDispatcher) {
+            // gasFee.value stays null. For non-native tokens this is still safe: the fee never
+            // reduces the selected balance, and GasFeeOrchestrator refreshes the fee in the
+            // background once the amount field is populated.
+            val usdc = usdcSolanaAccount()
+            account = usdc
+            coEvery { getAvailableTokenBalance(any(), any()) } returns
+                TokenValue(value = BigInteger("8000000"), token = usdc.token)
+            val manager = build(backgroundScope)
+
+            manager.choosePercentageAmount(AmountFraction.F75)
+            advanceUntilIdle()
+
+            // 8 USDC × 0.75 → "6".
+            assertEquals(AmountFraction.F75, uiState.value.selectedAmountFraction)
+            assertFalse(uiState.value.isAmountSelectionLoading)
+            assertEquals("6", tokenAmountFieldState.text.toString())
+            coVerify(exactly = 0) { feeServiceComposite.calculateFees(any()) }
+            coVerify(exactly = 0) { tokenRepository.getNativeToken(any()) }
         }
 
     @Test
@@ -318,6 +386,48 @@ internal class AmountFractionManagerTest {
         return Account(
             token = token,
             tokenValue = TokenValue(value = BigInteger("0"), token = token),
+            fiatValue = null,
+            price = null,
+        )
+    }
+
+    private fun solAccount(): Account {
+        val token =
+            Coin(
+                chain = Chain.Solana,
+                ticker = "SOL",
+                logo = "",
+                address = "Sol...",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "solana",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+        return Account(
+            token = token,
+            tokenValue = TokenValue(value = BigInteger("0"), token = token),
+            fiatValue = null,
+            price = null,
+        )
+    }
+
+    private fun usdcSolanaAccount(): Account {
+        val token =
+            Coin(
+                chain = Chain.Solana,
+                ticker = "USDC",
+                logo = "",
+                address = "Sol...",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "usd-coin",
+                contractAddress = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                isNativeToken = false,
+            )
+        return Account(
+            token = token,
+            tokenValue = TokenValue(value = BigInteger("10000000"), token = token),
             fiatValue = null,
             price = null,
         )

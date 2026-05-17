@@ -148,9 +148,14 @@ internal class AmountFractionManager(
             if (gasFee.value != null) {
                 fetchPercentageOfAvailableBalance(percentage)
             } else {
+                // Mirror fetchPercentageOfAvailableBalance's normalization so the
+                // short-circuit below returns the same shape as the fresh-fee path,
+                // e.g. "6" instead of "6.00" when 0.75f × 8 leaves trailing zeros.
                 getAvailableTokenBalance(selectedAccount, BigInteger.ZERO)
                     ?.decimal
-                    ?.multiply(percentage.toBigDecimal()) ?: BigDecimal.ZERO
+                    ?.multiply(percentage.toBigDecimal())
+                    ?.setScale(token.decimal, RoundingMode.DOWN)
+                    ?.stripTrailingZeros() ?: BigDecimal.ZERO
             }
 
         if (
@@ -174,7 +179,15 @@ internal class AmountFractionManager(
 
         val chain = token.chain
 
-        if (gasFee.value != null && chain.standard == TokenStandard.EVM) {
+        // Skip the fresh-fee round-trip when it cannot change the percentage amount:
+        //   - Non-native tokens pay chain gas in the native coin (see
+        //     GetAvailableTokenBalanceUseCase), so the fee never reduces the
+        //     selected balance and the cached estimate is already accurate.
+        //   - EVM gas is amount-independent once collectGasFees has run, so the
+        //     cached fee is reusable.
+        // GasFeeOrchestrator still refreshes gasFee in the background when the
+        // amount field updates, so the fee display reflects the new amount.
+        if (!token.isNativeToken || (gasFee.value != null && chain.standard == TokenStandard.EVM)) {
             return amount
         }
 
