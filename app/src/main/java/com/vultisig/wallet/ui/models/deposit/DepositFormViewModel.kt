@@ -1069,7 +1069,7 @@ constructor(
     fun selectDstChain(chain: Chain) {
         nodeAddressFieldState.clearText()
 
-        _state.update { it.copy(selectedDstChain = chain) }
+        _state.update { it.copy(selectedDstChain = chain, dstAddressError = null) }
 
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
@@ -1105,6 +1105,33 @@ constructor(
         assetsFieldState.clearText()
         rewardsAmountFieldState.clearText()
         _state.update { it.copy(tokenAmountError = null) }
+    }
+
+    /**
+     * Validates the destination address shown on the IBC Transfer and Switch sub-forms against the
+     * appropriate chain (selected destination chain for IBC, source/Gaia chain for Switch),
+     * surfacing inline errors via [DepositFormUiModel.dstAddressError]. Other deposit options leave
+     * the field error untouched.
+     */
+    fun validateDstAddress() {
+        val dstAddress = nodeAddressFieldState.text.toString()
+        val validationChain =
+            when (state.value.depositOption) {
+                DepositOption.TransferIbc -> state.value.selectedDstChain
+                DepositOption.Switch -> chain
+                else -> return
+            }
+        val error =
+            if (
+                validationChain == null ||
+                    dstAddress.isBlank() ||
+                    !chainAccountAddressRepository.isValid(validationChain, dstAddress)
+            ) {
+                UiText.StringResource(R.string.send_error_no_address)
+            } else {
+                null
+            }
+        _state.update { it.copy(dstAddressError = error) }
     }
 
     fun validateNodeAddress() {

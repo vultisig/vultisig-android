@@ -91,7 +91,7 @@ internal fun DepositFormScreen(
         onDeposit = model::deposit,
         onSelectChain = model::selectDstChain,
         dstAddress = model.nodeAddressFieldState,
-        onDstAddressLostFocus = {},
+        onDstAddressLostFocus = model::validateDstAddress,
         onSetDstAddress = model::setNodeAddress,
         amountFieldState = model.tokenAmountFieldState,
         onAmountLostFocus = model::validateTokenAmount,
@@ -571,7 +571,10 @@ internal fun DepositFormScreen(
                     state.isLoading ||
                         state.isCheckingWhitelist ||
                         state.isWhitelistFailed ||
-                        state.nodeAddressError != null
+                        state.nodeAddressError != null ||
+                        state.dstAddressError != null ||
+                        state.amountError != null ||
+                        state.memoError != null
                 )
                     VsButtonState.Disabled
                 else VsButtonState.Enabled,
