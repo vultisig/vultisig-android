@@ -1767,8 +1767,10 @@ constructor(
 
         // Preflight against THORChain network state — pool status and the relevant mimir pause
         // keys. Refuses to build the keysign payload when the network would refund the inbound,
-        // sparing the user the inbound gas spend.
-        if (chain == Chain.ThorChain) {
+        // sparing the user the inbound gas spend. ERC-20 router deposits need this too, because
+        // the inbound-halt flags checked in buildRouterDepositPayload() don't cover paused/staged
+        // pools or PAUSELP / HALT<CHAIN>LP mimir keys.
+        if (chain == Chain.ThorChain || isErc20LpAdd) {
             thorChainLpPreflight(poolId)?.let { block -> throw block.toError() }
         }
 
