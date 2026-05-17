@@ -120,9 +120,9 @@ internal interface MainDataModule {
                 val sentinelCleared =
                     runCatching {
                             context
-                                .getSharedPreferences("migration_state_prefs", Context.MODE_PRIVATE)
+                                .getSharedPreferences(MIGRATION_STATE_PREFS, Context.MODE_PRIVATE)
                                 .edit()
-                                .remove("__migrated_from_encrypted_prefs")
+                                .remove(MIGRATION_DONE_KEY)
                                 .commit()
                         }
                         .onFailure {

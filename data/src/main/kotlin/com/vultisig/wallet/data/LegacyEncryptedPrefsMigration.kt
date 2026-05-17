@@ -18,10 +18,10 @@ private const val ENCRYPTED_PREFS_FILE = "token_encrypted_prefs"
  * main prefs so a [SharedPreferences.Editor.clear] on those cannot reset the sentinel and
  * re-trigger the migration.
  */
-private const val MIGRATION_STATE_PREFS = "migration_state_prefs"
+internal const val MIGRATION_STATE_PREFS = "migration_state_prefs"
 
 /** Boolean key inside [MIGRATION_STATE_PREFS] that marks the migration as completed. */
-private const val MIGRATION_DONE_KEY = "__migrated_from_encrypted_prefs"
+internal const val MIGRATION_DONE_KEY = "__migrated_from_encrypted_prefs"
 
 /**
  * One-time migration from the legacy androidx.security [EncryptedSharedPreferences] file into the
