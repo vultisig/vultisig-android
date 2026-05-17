@@ -1115,7 +1115,12 @@ constructor(
         assetsFieldState.clearText()
         rewardsAmountFieldState.clearText()
         _state.update {
-            it.copy(tokenAmountError = null, nodeAddressError = null, dstAddressError = null)
+            it.copy(
+                tokenAmountError = null,
+                nodeAddressError = null,
+                dstAddressError = null,
+                thorAddressError = null,
+            )
         }
     }
 
@@ -1126,29 +1131,19 @@ constructor(
      * the field error untouched.
      */
     fun validateDstAddress() {
-        val dstAddress = nodeAddressFieldState.text.toString()
         val validationChain =
             when (state.value.depositOption) {
                 DepositOption.TransferIbc -> state.value.selectedDstChain
                 DepositOption.Switch -> chain
                 else -> return
             }
-        val error =
-            if (
-                validationChain == null ||
-                    dstAddress.isBlank() ||
-                    !chainAccountAddressRepository.isValid(validationChain, dstAddress)
-            ) {
-                UiText.StringResource(R.string.send_error_no_address)
-            } else {
-                null
-            }
+        val error = validateDstAddress(validationChain, nodeAddressFieldState.text.toString())
         _state.update { it.copy(dstAddressError = error) }
     }
 
     fun validateNodeAddress() {
         val nodeAddress = nodeAddressFieldState.text.toString()
-        val errorText = validateDstAddress(nodeAddress)
+        val errorText = validateDstAddress(chain, nodeAddress)
         if (errorText != null) {
             whitelistJob?.cancel()
             _state.update { it.copy(nodeAddressError = errorText, isCheckingWhitelist = false) }
@@ -1234,7 +1229,7 @@ constructor(
     }
 
     fun validateProvider() {
-        val errorText = validateDstAddress(providerFieldState.text.toString())
+        val errorText = validateDstAddress(chain, providerFieldState.text.toString())
         _state.update { it.copy(providerError = errorText) }
     }
 
@@ -1294,6 +1289,23 @@ constructor(
     fun setDstAddress(address: String) {
         nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
         validateDstAddress()
+    }
+
+    /**
+     * Validates the destination THORChain address on the Switch sub-form against ThorChain,
+     * surfacing inline errors via [DepositFormUiModel.thorAddressError]. No-op outside the Switch
+     * flow so SECURE+ auto-populated values do not trigger inline errors.
+     */
+    fun validateThorAddress() {
+        if (state.value.depositOption != DepositOption.Switch) return
+        val errorText = validateDstAddress(Chain.ThorChain, thorAddressFieldState.text.toString())
+        _state.update { it.copy(thorAddressError = errorText) }
+    }
+
+    /** Sets the THORChain destination address on the Switch sub-form and revalidates. */
+    fun setThorAddress(address: String) {
+        thorAddressFieldState.setTextAndPlaceCursorAtEnd(address)
+        validateThorAddress()
     }
 
     private fun setSlippage(slippage: String) {
@@ -2581,16 +2593,8 @@ constructor(
                     UiText.StringResource(R.string.send_error_no_address)
                 )
         val dstAddr = nodeAddressFieldState.text.toString()
-        if (dstAddr.isBlank()) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.deposit_error_destination_address)
-            )
-        }
-
-        if (!chainAccountAddressRepository.isValid(state.value.selectedDstChain, dstAddr)) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.deposit_error_invalid_destination_address)
-            )
+        validateDstAddress(state.value.selectedDstChain, dstAddr)?.let {
+            throw InvalidTransactionDataException(it)
         }
 
         val selectedMergeToken = state.value.selectedCoin
@@ -2744,8 +2748,8 @@ constructor(
             null
         }
 
-    private fun validateDstAddress(dstAddress: String): UiText? {
-        val chain = chain ?: return UiText.StringResource(R.string.dialog_default_error_title)
+    private fun validateDstAddress(chain: Chain?, dstAddress: String): UiText? {
+        if (chain == null) return UiText.StringResource(R.string.dialog_default_error_title)
         if (dstAddress.isBlank() || !chainAccountAddressRepository.isValid(chain, dstAddress))
             return UiText.StringResource(R.string.send_error_no_address)
         return null

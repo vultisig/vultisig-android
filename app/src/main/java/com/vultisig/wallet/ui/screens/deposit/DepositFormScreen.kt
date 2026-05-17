@@ -100,8 +100,8 @@ internal fun DepositFormScreen(
         onSelectCoin = model::selectMergeToken,
         onSelectUnMergeCoin = model::selectUnMergeToken,
         thorAddress = model.thorAddressFieldState,
-        onThorAddressLostFocus = {},
-        onSetThorAddress = {},
+        onThorAddressLostFocus = model::validateThorAddress,
+        onSetThorAddress = model::setThorAddress,
         onOpenSelectToken = model::selectToken,
         onLoadRujiBalances = model::onLoadRujiMergeBalances,
         onSelectSecureAsset = model::onSelectSecureAsset,
@@ -573,8 +573,7 @@ internal fun DepositFormScreen(
                         state.isWhitelistFailed ||
                         state.nodeAddressError != null ||
                         state.dstAddressError != null ||
-                        state.amountError != null ||
-                        state.memoError != null
+                        state.thorAddressError != null
                 )
                     VsButtonState.Disabled
                 else VsButtonState.Enabled,
