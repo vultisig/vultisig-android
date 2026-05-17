@@ -279,6 +279,7 @@ constructor(
     private var addressJob: Job? = null
     private var whitelistJob: Job? = null
     private var loadLpJob: Job? = null
+    private var switchInboundJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
@@ -884,53 +885,63 @@ constructor(
     fun selectDepositOption(option: DepositOption) {
         // Stop any in-flight Remove LP fetch so it can't write stale state into the new option.
         loadLpJob?.cancel()
+        // Stop any in-flight Switch inbound fetch so a late callback can't overwrite the
+        // freshly reset dstAddressError or keep writing to thorAddressFieldState from a stale
+        // Switch context.
+        switchInboundJob?.cancel()
         viewModelScope.launch {
             resetTextFields()
             _state.update { it.copy(depositOption = option) }
 
             when (option) {
                 DepositOption.Switch -> {
-                    viewModelScope.launch {
-                        val vaultId = vaultId ?: return@launch
-                        try {
-                            when (
-                                val result = fetchThorChainInboundForChain(SWITCH_INBOUND_CHAIN)
-                            ) {
-                                is InboundAddressResult.Available -> {
-                                    nodeAddressFieldState.setTextAndPlaceCursorAtEnd(result.address)
-                                    _state.update { it.copy(dstAddressError = null) }
+                    switchInboundJob =
+                        viewModelScope.launch {
+                            val vaultId = vaultId ?: return@launch
+                            try {
+                                when (
+                                    val result = fetchThorChainInboundForChain(SWITCH_INBOUND_CHAIN)
+                                ) {
+                                    is InboundAddressResult.Available -> {
+                                        nodeAddressFieldState.setTextAndPlaceCursorAtEnd(
+                                            result.address
+                                        )
+                                        _state.update { it.copy(dstAddressError = null) }
+                                    }
+                                    InboundAddressResult.Halted ->
+                                        _state.update {
+                                            it.copy(
+                                                dstAddressError =
+                                                    UiText.FormattedText(
+                                                        R.string
+                                                            .deposit_error_thorchain_chain_halted,
+                                                        listOf(Chain.GaiaChain.raw),
+                                                    )
+                                            )
+                                        }
+                                    InboundAddressResult.FetchFailed,
+                                    InboundAddressResult.Unsupported ->
+                                        _state.update {
+                                            it.copy(
+                                                dstAddressError =
+                                                    UiText.StringResource(
+                                                        R.string
+                                                            .deposit_error_thorchain_inbound_unavailable
+                                                    )
+                                            )
+                                        }
                                 }
-                                InboundAddressResult.Halted ->
-                                    _state.update {
-                                        it.copy(
-                                            dstAddressError =
-                                                UiText.FormattedText(
-                                                    R.string.deposit_error_thorchain_chain_halted,
-                                                    listOf(SWITCH_INBOUND_CHAIN),
-                                                )
-                                        )
-                                    }
-                                InboundAddressResult.FetchFailed,
-                                InboundAddressResult.Unsupported ->
-                                    _state.update {
-                                        it.copy(
-                                            dstAddressError =
-                                                UiText.StringResource(
-                                                    R.string
-                                                        .deposit_error_thorchain_inbound_unavailable
-                                                )
-                                        )
-                                    }
+                                accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect {
+                                    addresses ->
+                                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(
+                                        addresses.address
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                if (e is kotlinx.coroutines.CancellationException) throw e
+                                Timber.e(e)
                             }
-                            accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect {
-                                addresses ->
-                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
-                            }
-                        } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) throw e
-                            Timber.e(e)
                         }
-                    }
                 }
 
                 DepositOption.Bond,
@@ -1164,13 +1175,19 @@ constructor(
      * the field error untouched.
      */
     fun validateDstAddress() {
+        val depositOption = state.value.depositOption
         val validationChain =
-            when (state.value.depositOption) {
+            when (depositOption) {
                 DepositOption.TransferIbc -> state.value.selectedDstChain
                 DepositOption.Switch -> chain
                 else -> return
             }
-        val error = dstAddressErrorOrNull(validationChain, nodeAddressFieldState.text.toString())
+        val dstAddress = nodeAddressFieldState.text.toString()
+        // For Switch the dst field is auto-populated from the THORChain inbound vault. When the
+        // fetch returns halt/unavailable, the field is left blank and dstAddressError carries the
+        // actionable reason; running the generic blank-check here would clobber that context.
+        if (depositOption == DepositOption.Switch && dstAddress.isBlank()) return
+        val error = dstAddressErrorOrNull(validationChain, dstAddress)
         _state.update { it.copy(dstAddressError = error) }
     }
 
