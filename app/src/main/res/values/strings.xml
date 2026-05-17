@@ -409,8 +409,8 @@
     <string name="deposit_error_has_not_reached_maturity">This deposit has not reached its maturity period yet</string>
     <string name="deposit_error_lp_paused_pool">Add liquidity is paused for %1$s. THORChain would refund this transaction.</string>
     <string name="deposit_error_lp_halted_chain">Liquidity actions on %1$s are currently halted. THORChain would refund this transaction.</string>
-    <string name="deposit_error_secured_asset_chain_halted">SECURE+ deposits on %1$s are currently halted on THORChain. Please try again later.</string>
-    <string name="deposit_error_secured_asset_inbound_unavailable">Could not reach THORChain to verify the inbound vault. Please try again.</string>
+    <string name="deposit_error_thorchain_chain_halted">Deposits on %1$s are currently halted on THORChain. Please try again later.</string>
+    <string name="deposit_error_thorchain_inbound_unavailable">Could not reach THORChain to verify the inbound vault. Please try again.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s is not currently available for deposits.</string>
     <string name="deposit_form_screen_assets">Asset</string>
     <string name="deposit_form_screen_asset_selection">Asset selection</string>
