@@ -119,17 +119,14 @@ constructor(
                     failedChains += chain.coin.chain.raw
                     return@forEach
                 }
-                try {
-                    discoverTokenUseCase(vaultId, chain.coin.chain.raw)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Timber.w(
-                        e,
-                        "Token discovery scheduling failed for chain %s",
-                        chain.coin.chain.raw,
-                    )
-                }
+                runCatching { discoverTokenUseCase(vaultId, chain.coin.chain.raw) }
+                    .onFailure {
+                        Timber.w(
+                            it,
+                            "Token discovery scheduling failed for chain %s",
+                            chain.coin.chain.raw,
+                        )
+                    }
             }
             toDisableAccounts.forEach { disableAccount(it.coin) }
 
