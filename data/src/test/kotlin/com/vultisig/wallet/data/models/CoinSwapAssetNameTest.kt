@@ -70,6 +70,7 @@ class CoinSwapAssetNameTest {
         listOf(
                 Triple("BTC", "btc-btc", "BTC.BTC"),
                 Triple("ETH", "eth-eth", "ETH.ETH"),
+                Triple("BCH", "bch-bch", "BCH.BCH"),
                 Triple("LTC", "ltc-ltc", "LTC.LTC"),
                 Triple("DOGE", "doge-doge", "DOGE.DOGE"),
                 Triple("AVAX", "avax-avax", "AVAX.AVAX"),
@@ -176,8 +177,27 @@ class CoinSwapAssetNameTest {
     }
 
     @Test
-    fun `ThorChain secured asset comparison name unchanged`() {
+    fun `ThorChain secured asset comparison name lowercased for cross-chain identity`() {
         val c = coin(Chain.ThorChain, "ETH", "eth-eth", isNativeToken = false)
-        assertEquals("ETH.ETH", c.swapAssetComparisonName())
+        assertEquals("eth.eth", c.swapAssetComparisonName())
+    }
+
+    @Test
+    fun `ThorChain secured EVM asset and its Ethereum counterpart compare equal`() {
+        val thorSide =
+            coin(
+                Chain.ThorChain,
+                "USDC",
+                "eth-usdc-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                isNativeToken = false,
+            )
+        val ethSide =
+            coin(
+                Chain.Ethereum,
+                "USDC",
+                "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                isNativeToken = false,
+            )
+        assertEquals(thorSide.swapAssetComparisonName(), ethSide.swapAssetComparisonName())
     }
 }

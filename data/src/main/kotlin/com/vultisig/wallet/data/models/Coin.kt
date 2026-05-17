@@ -116,15 +116,14 @@ fun Coin.swapAssetName(): String =
         }
     }
 
+private val EVM_TAIL_REGEX = Regex("""^(.+)-(0x[0-9a-fA-F]+)$""")
+
 /**
  * Builds the Thornode-accepted secured-asset name (e.g. `BTC.BTC`, `ETH.USDC-0xa0b8...`) from a raw
  * `contractAddress` of the form `<chain>-<symbol>[-<0xHex>]`. The EVM hex tail is preserved
  * verbatim so EIP-55 checksum casing survives the round-trip; chain and symbol parts are uppercased
- * to match the Thornode native-swap-asset convention. Mirrors `toNativeSwapAsset` from
- * `vultisig-sdk` v0.22.7 (PR #455).
+ * to match the Thornode native-swap-asset convention.
  */
-private val EVM_TAIL_REGEX = Regex("""^(.+)-(0x[0-9a-fA-F]+)$""")
-
 private fun Coin.thorChainSecuredAssetSwapName(): String {
     val chainPart = securedAssetChain()
     val rest = contractAddress.substringAfter("-")
@@ -140,11 +139,14 @@ private fun Coin.thorChainSecuredAssetSwapName(): String {
 
 /**
  * Normalizes [swapAssetName] for same-asset identity comparisons. EVM contract addresses are
- * lowercased to handle EIP-55 checksum-casing differences from QR payloads. Non-EVM chains (e.g.
- * Cosmos ibc/, Kujira factory/) use case-sensitive canonical forms as returned by the THORChain API
- * and are not altered.
+ * lowercased to handle EIP-55 checksum-casing differences from QR payloads. THORChain secured
+ * assets are also lowercased so the THORChain side (`THORCHAIN` standard) matches its native EVM
+ * counterpart. Other non-EVM chains (e.g. Cosmos ibc/, Kujira factory/) use case-sensitive
+ * canonical forms as returned by the THORChain API and are not altered.
  */
 fun Coin.swapAssetComparisonName(): String {
     val name = swapAssetName()
-    return if (chain.standard == TokenStandard.EVM) name.lowercase() else name
+    val needsLowercase =
+        chain.standard == TokenStandard.EVM || (chain == Chain.ThorChain && isSecuredAsset())
+    return if (needsLowercase) name.lowercase() else name
 }
