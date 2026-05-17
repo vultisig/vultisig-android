@@ -1186,7 +1186,15 @@ constructor(
         // For Switch the dst field is auto-populated from the THORChain inbound vault. When the
         // fetch returns halt/unavailable, the field is left blank and dstAddressError carries the
         // actionable reason; running the generic blank-check here would clobber that context.
-        if (depositOption == DepositOption.Switch && dstAddress.isBlank()) return
+        // Only skip when dstAddressError is already set (halt/unavailable) — if it's null the user
+        // manually cleared the field in the healthy path, so we must validate and surface the blank
+        // error to block Continue.
+        if (
+            depositOption == DepositOption.Switch &&
+                dstAddress.isBlank() &&
+                state.value.dstAddressError != null
+        )
+            return
         val error = dstAddressErrorOrNull(validationChain, dstAddress)
         _state.update { it.copy(dstAddressError = error) }
     }
@@ -2616,6 +2624,7 @@ constructor(
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
 
         val dstAddr = nodeAddressFieldState.text.toString()
+        dstAddressErrorOrNull(chain, dstAddr)?.let { throw InvalidTransactionDataException(it) }
 
         val memo = "SWITCH:${thorAddressFieldState.text}"
 
