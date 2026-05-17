@@ -1470,29 +1470,28 @@ constructor(
     }
 
     private fun waitForKeysignToStart() {
-        _jobWaitingForKeysignStart =
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    while (isActive) {
-                        try {
-                            if (checkKeygenStarted()) {
-                                currentState.value = JoinKeysignState.Keysign
-                                return@withContext
-                            }
-                        } catch (e: KeysignMessagesException) {
-                            Timber.e(e, "Failed to prepare messages to sign")
-                            currentState.value =
-                                JoinKeysignState.Error(
-                                    JoinKeysignError.FailedToCheck(
-                                        e.message ?: "Failed to prepare messages to sign"
-                                    )
-                                )
+        _jobWaitingForKeysignStart = viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                while (isActive) {
+                    try {
+                        if (checkKeygenStarted()) {
+                            currentState.value = JoinKeysignState.Keysign
                             return@withContext
                         }
-                        delay(1000)
+                    } catch (e: KeysignMessagesException) {
+                        Timber.e(e, "Failed to prepare messages to sign")
+                        currentState.value =
+                            JoinKeysignState.Error(
+                                JoinKeysignError.FailedToCheck(
+                                    e.message ?: "Failed to prepare messages to sign"
+                                )
+                            )
+                        return@withContext
                     }
+                    delay(1000)
                 }
             }
+        }
     }
 
     private suspend fun checkKeygenStarted(): Boolean {
@@ -1769,6 +1768,16 @@ internal fun prettifyEvmFunctionName(signature: String): String? {
     }
 }
 
+/**
+ * Polymorphic fee helper shared by the join-keysign deposit, send, and swap branches — mirrors
+ * iOS's `BlockChainSpecific.fee` getter. Ethereum returns `maxFeePerGasWei * gasLimit`, THORChain
+ * returns `blockChainSpecific.fee`, and every other chain returns [fallbackFeeAmount] (the swap
+ * branch passes ZERO since it never enters the else branch).
+ *
+ * @param evmGasLimitOverride when non-null, replaces `blockChainSpecific.gasLimit` for the Ethereum
+ *   case. The swap branch passes [defaultEvmSwapGasLimit] so joiner output matches the initiator's
+ *   swap-fee display; deposit and send leave it null to preserve the payload gas limit.
+ */
 internal fun computeJoinKeysignNetworkFee(
     blockChainSpecific: BlockChainSpecific,
     nativeCoin: Coin,
@@ -1788,10 +1797,14 @@ internal fun computeJoinKeysignNetworkFee(
         else -> TokenValue(value = fallbackFeeAmount, token = nativeCoin)
     }
 
-// The initiator's swap path always displays maxFeePerGas * DEFAULT_SWAP_LIMIT (via
-// EthereumFeeService.calculateDefaultFees(Swap)), ignoring BlockChainSpecific.gasLimit —
-// which can be as low as 40k for native ETH/Arb swaps. Mirror that here so joiner output
-// matches initiator output instead of being ~15× lower.
+/**
+ * The initiator's swap path always displays `maxFeePerGas * DEFAULT_SWAP_LIMIT` (via
+ * [EthereumFeeService.calculateDefaultFees] for Swap), ignoring `BlockChainSpecific.gasLimit` —
+ * which can be as low as 40k for native ETH/Arb swaps. Mirror that here so joiner output matches
+ * initiator output instead of being ~15× lower. Mantle uses
+ * [EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT] because its per-gas limit is an order of magnitude
+ * higher than other EVM chains.
+ */
 internal fun defaultEvmSwapGasLimit(chain: Chain): BigInteger =
     if (chain == Chain.Mantle) EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
     else EthereumFeeService.DEFAULT_SWAP_LIMIT

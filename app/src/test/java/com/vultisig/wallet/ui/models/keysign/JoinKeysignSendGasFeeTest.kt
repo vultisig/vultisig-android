@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
@@ -46,6 +47,19 @@ internal class JoinKeysignSendGasFeeTest {
             decimal = 8,
             hexPublicKey = "hex",
             priceProviderID = "thorchain",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    private val mntCoin =
+        Coin(
+            chain = Chain.Mantle,
+            ticker = "MNT",
+            logo = "mnt",
+            address = "0xmntaddr",
+            decimal = 18,
+            hexPublicKey = "hex",
+            priceProviderID = "mantle",
             contractAddress = "",
             isNativeToken = true,
         )
@@ -167,6 +181,45 @@ internal class JoinKeysignSendGasFeeTest {
             )
 
         result shouldBe TokenValue(value = maxFeePerGasWei * swapGasLimitOverride, token = ethCoin)
+    }
+
+    /**
+     * defaultEvmSwapGasLimit must return DEFAULT_MANTLE_SWAP_LIMIT for Mantle and
+     * DEFAULT_SWAP_LIMIT for every other EVM chain (Mantle has a much higher per-gas limit, so this
+     * branch is the only thing keeping joiner output aligned with the initiator on Mantle swaps).
+     */
+    @Test
+    fun `defaultEvmSwapGasLimit selects Mantle limit for Mantle and default elsewhere`() {
+        defaultEvmSwapGasLimit(Chain.Mantle) shouldBe EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
+        defaultEvmSwapGasLimit(Chain.Ethereum) shouldBe EthereumFeeService.DEFAULT_SWAP_LIMIT
+    }
+
+    /** Swap branch: Mantle uses DEFAULT_MANTLE_SWAP_LIMIT when fed through the helper. */
+    @Test
+    fun `evm swap branch on Mantle applies Mantle gasLimit`() {
+        val payloadGasLimit = BigInteger.valueOf(21_000)
+        val maxFeePerGasWei = BigInteger.valueOf(30_000_000_000L)
+        val specific =
+            BlockChainSpecific.Ethereum(
+                maxFeePerGasWei = maxFeePerGasWei,
+                priorityFeeWei = BigInteger.valueOf(1_000_000_000L),
+                nonce = BigInteger.ZERO,
+                gasLimit = payloadGasLimit,
+            )
+
+        val result =
+            computeJoinKeysignNetworkFee(
+                blockChainSpecific = specific,
+                nativeCoin = mntCoin,
+                fallbackFeeAmount = BigInteger.ZERO,
+                evmGasLimitOverride = defaultEvmSwapGasLimit(Chain.Mantle),
+            )
+
+        result shouldBe
+            TokenValue(
+                value = maxFeePerGasWei * EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT,
+                token = mntCoin,
+            )
     }
 
     /** Swap branch: THORChain ignores the override and still returns blockChainSpecific.fee. */
