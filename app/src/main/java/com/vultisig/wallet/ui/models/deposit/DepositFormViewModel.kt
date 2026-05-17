@@ -1344,6 +1344,7 @@ constructor(
         validateNodeAddress()
     }
 
+    /** Sets the destination address on the IBC Transfer / Switch sub-forms and revalidates. */
     fun setDstAddress(address: String) {
         nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
         validateDstAddress()
