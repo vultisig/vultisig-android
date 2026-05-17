@@ -39,9 +39,12 @@ class PolkadotStatusProvider @Inject constructor(private val polkadotApi: Polkad
         val networkException = this as? NetworkException ?: return false
         // Subscan returns HTTP 400 with body `{"code": 403, "message": "Subscan API strictly
         // requires an API key. Unauthenticated access is disabled."}` when the request omits
-        // the API key — match on the body text since the surface HTTP code (400) is generic.
+        // the API key. Require both the 400 status and one of the key-specific phrases — a
+        // looser match could classify unrelated bad-request responses as terminal and stop
+        // polling early.
+        if (networkException.httpStatusCode != 400) return false
         val body = networkException.message
-        return body.contains("API key", ignoreCase = true) ||
-            body.contains("Subscan", ignoreCase = true)
+        return body.contains("requires an API key", ignoreCase = true) ||
+            body.contains("Unauthenticated access is disabled", ignoreCase = true)
     }
 }

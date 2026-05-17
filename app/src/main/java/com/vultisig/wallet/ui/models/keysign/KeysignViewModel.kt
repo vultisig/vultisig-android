@@ -793,19 +793,28 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            val localHash = signedTx.transactionHash
-            if (!isInitiatingDevice && localHash.isNotBlank()) {
-                Timber.w(
-                    e,
-                    "Joined-device broadcast for %s failed; using locally computed hash %s",
-                    chain.raw,
-                    localHash,
-                )
-                localHash
-            } else {
-                throw e
-            }
+            recoverJoinedDeviceBroadcast(chain, signedTx, e) ?: throw e
         }
+
+    /**
+     * Returns the locally computed transaction hash if this is a joined-device broadcast failure we
+     * should swallow; `null` if the caller must re-throw the original error.
+     */
+    private fun recoverJoinedDeviceBroadcast(
+        chain: Chain,
+        signedTx: SignedTransactionResult,
+        error: Throwable,
+    ): String? {
+        if (isInitiatingDevice) return null
+        val localHash = signedTx.transactionHash.takeIf { it.isNotBlank() } ?: return null
+        Timber.w(
+            error,
+            "Joined-device broadcast for %s failed; using locally computed hash %s",
+            chain.raw,
+            localHash,
+        )
+        return localHash
+    }
 
     internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
         transactionHistoryData?.let {

@@ -89,6 +89,18 @@ class PolkadotStatusProviderTest {
         assertEquals(TransactionResult.Pending, result)
     }
 
+    @Test
+    fun `generic 400 without API-key phrasing keeps polling alive as Pending`() = runTest {
+        // An unrelated bad-request response — for example a malformed payload — must not be
+        // mistaken for the Subscan auth wall and stop polling early.
+        coEvery { polkadotApi.getTxStatus(TX_HASH) } throws
+            NetworkException(httpStatusCode = 400, message = "{\"error\":\"invalid hash format\"}")
+
+        val result = provider.checkStatus(TX_HASH, Chain.Polkadot)
+
+        assertEquals(TransactionResult.Pending, result)
+    }
+
     private fun successResponse(extrinsicHash: String) =
         PolkadotExtrinsicResponseJson(
             code = 0,

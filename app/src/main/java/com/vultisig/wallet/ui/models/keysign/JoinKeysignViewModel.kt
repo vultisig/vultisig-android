@@ -1567,7 +1567,7 @@ constructor(
      * the polling service would keep firing until its own timeout.
      */
     fun complete() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             navigator.route(Route.Home(), NavigationOptions(clearBackStack = true))
         }
     }
