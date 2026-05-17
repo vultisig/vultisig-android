@@ -18,6 +18,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import io.mockk.Runs
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
@@ -27,6 +28,7 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -64,6 +66,14 @@ internal class ChainSelectionViewModelTest {
         navigator = mockk(relaxed = true)
         requestResultRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
+
+        // Stub the dependencies touched by init's loadChains() and by onCommitChanges
+        // so test ordering does not race the ViewModel's eager initialization.
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault()
+        every { tokenRepository.nativeTokens } returns emptyFlow()
+        every { vaultRepository.getEnabledChains(VAULT_ID) } returns emptyFlow()
+        coEvery { chainAccountAddressRepository.getAddress(any<Coin>(), any<Vault>()) } returns
+            Pair("address", "derivedPubKey")
     }
 
     @AfterEach
@@ -76,17 +86,12 @@ internal class ChainSelectionViewModelTest {
     fun `triggers token discovery for each successfully enabled chain`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            val ethCoin = nativeCoin(Chain.Ethereum)
-            val btcCoin = nativeCoin(Chain.Bitcoin)
-            coEvery { vaultRepository.get(VAULT_ID) } returns vault()
-            coEvery { chainAccountAddressRepository.getAddress(any<Coin>(), any<Vault>()) } returns
-                Pair("address", "derivedPubKey")
             vm.uiState.update {
                 it.copy(
                     chains =
                         listOf(
-                            ChainUiModel(isEnabled = true, coin = ethCoin),
-                            ChainUiModel(isEnabled = true, coin = btcCoin),
+                            ChainUiModel(isEnabled = true, coin = nativeCoin(Chain.Ethereum)),
+                            ChainUiModel(isEnabled = true, coin = nativeCoin(Chain.Bitcoin)),
                         )
                 )
             }
@@ -101,10 +106,6 @@ internal class ChainSelectionViewModelTest {
     @Test
     fun `skips token discovery for chains whose enable step fails`() =
         runTest(testDispatcher) {
-            val vm = createViewModel()
-            val ethCoin = nativeCoin(Chain.Ethereum)
-            val btcCoin = nativeCoin(Chain.Bitcoin)
-            coEvery { vaultRepository.get(VAULT_ID) } returns vault()
             coEvery { chainAccountAddressRepository.getAddress(any<Coin>(), any<Vault>()) } answers
                 {
                     when (firstArg<Coin>().chain) {
@@ -112,12 +113,13 @@ internal class ChainSelectionViewModelTest {
                         else -> Pair("address", "pubKey")
                     }
                 }
+            val vm = createViewModel()
             vm.uiState.update {
                 it.copy(
                     chains =
                         listOf(
-                            ChainUiModel(isEnabled = true, coin = ethCoin),
-                            ChainUiModel(isEnabled = true, coin = btcCoin),
+                            ChainUiModel(isEnabled = true, coin = nativeCoin(Chain.Ethereum)),
+                            ChainUiModel(isEnabled = true, coin = nativeCoin(Chain.Bitcoin)),
                         )
                 )
             }
@@ -133,12 +135,11 @@ internal class ChainSelectionViewModelTest {
     fun `triggers discovery only after the native token is persisted`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            val ethCoin = nativeCoin(Chain.Ethereum)
-            coEvery { vaultRepository.get(VAULT_ID) } returns vault()
-            coEvery { chainAccountAddressRepository.getAddress(any<Coin>(), any<Vault>()) } returns
-                Pair("address", "derivedPubKey")
             vm.uiState.update {
-                it.copy(chains = listOf(ChainUiModel(isEnabled = true, coin = ethCoin)))
+                it.copy(
+                    chains =
+                        listOf(ChainUiModel(isEnabled = true, coin = nativeCoin(Chain.Ethereum)))
+                )
             }
 
             vm.onCommitChanges()
@@ -154,16 +155,41 @@ internal class ChainSelectionViewModelTest {
     fun `does not trigger discovery for chains being disabled`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
-            val ethCoin = nativeCoin(Chain.Ethereum)
-            coEvery { vaultRepository.get(VAULT_ID) } returns vault()
             vm.uiState.update {
-                it.copy(chains = listOf(ChainUiModel(isEnabled = false, coin = ethCoin)))
+                it.copy(
+                    chains =
+                        listOf(ChainUiModel(isEnabled = false, coin = nativeCoin(Chain.Ethereum)))
+                )
             }
 
             vm.onCommitChanges()
             advanceUntilIdle()
 
             verify(exactly = 0) { discoverTokenUseCase(any(), any()) }
+        }
+
+    @Test
+    fun `logs and continues when token discovery scheduling fails`() =
+        runTest(testDispatcher) {
+            every { discoverTokenUseCase(VAULT_ID, Chain.Ethereum.raw) } throws
+                IllegalStateException("WorkManager not initialized")
+            val vm = createViewModel()
+            vm.uiState.update {
+                it.copy(
+                    chains =
+                        listOf(
+                            ChainUiModel(isEnabled = true, coin = nativeCoin(Chain.Ethereum)),
+                            ChainUiModel(isEnabled = true, coin = nativeCoin(Chain.Bitcoin)),
+                        )
+                )
+            }
+
+            vm.onCommitChanges()
+            advanceUntilIdle()
+
+            // Bitcoin's enable + discovery still runs after Ethereum's discovery threw.
+            coVerify { vaultRepository.addTokenToVault(VAULT_ID, any()) }
+            verify { discoverTokenUseCase(VAULT_ID, Chain.Bitcoin.raw) }
         }
 
     private fun createViewModel() =

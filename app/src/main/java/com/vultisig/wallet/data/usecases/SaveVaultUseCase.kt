@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
 
@@ -72,6 +73,14 @@ constructor(
         }
         // Schedule background discovery so any tokens already held at the vault
         // addresses surface without the user having to open each chain screen.
-        discoverTokenUseCase(vault.id, null)
+        // Best-effort: the vault is already persisted, so a discovery failure
+        // here must not surface as a save failure to callers.
+        try {
+            discoverTokenUseCase(vault.id, null)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Token discovery scheduling failed for vault %s", vault.id)
+        }
     }
 }

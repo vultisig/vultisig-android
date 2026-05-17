@@ -215,4 +215,15 @@ internal class SaveVaultUseCaseImplTest {
 
         verify(exactly = 0) { discoverTokenUseCase(any(), any()) }
     }
+
+    @Test
+    fun `save succeeds even when token discovery scheduling fails`() = runTest {
+        val vault = dklsVault().copy(coins = listOf(nativeCoin(Chain.Ethereum)))
+        every { discoverTokenUseCase(any(), any()) } throws
+            IllegalStateException("WorkManager not initialized")
+
+        useCase(vault, true)
+
+        coVerify { vaultRepository.upsert(vault) }
+    }
 }
