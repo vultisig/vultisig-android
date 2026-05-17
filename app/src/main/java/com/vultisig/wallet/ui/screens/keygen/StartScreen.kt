@@ -94,7 +94,7 @@ private fun StartScreen(
                 Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "vultisig",
-                    modifier = Modifier.width(60.dp).scale(logoScale.value),
+                    modifier = Modifier.width(74.5.dp).scale(logoScale.value),
                 )
                 UiSpacer(12.dp)
                 Text(
