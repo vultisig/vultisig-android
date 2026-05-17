@@ -22,6 +22,7 @@ constructor(
     private val tokenRepository: TokenRepository,
     private val defaultChainsRepository: DefaultChainsRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val discoverTokenUseCase: DiscoverTokenUseCase,
 ) : SaveVaultUseCase {
     override suspend fun invoke(vault: Vault, shouldOverrideVault: Boolean) {
         if (shouldOverrideVault) {
@@ -69,5 +70,8 @@ constructor(
                     vaultRepository.addTokenToVault(vaultId, updatedNativeToken)
                 }
         }
+        // Schedule background discovery so any tokens already held at the vault
+        // addresses surface without the user having to open each chain screen.
+        discoverTokenUseCase(vault.id, null)
     }
 }
