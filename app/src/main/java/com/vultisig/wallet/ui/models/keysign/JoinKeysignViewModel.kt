@@ -564,15 +564,14 @@ constructor(
                             }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeToken)
                         }
-                        blockChainSpecific is BlockChainSpecific.Ethereum ->
-                            TokenValue(
-                                value =
-                                    blockChainSpecific.maxFeePerGasWei *
-                                        defaultEvmSwapGasLimit(chain),
-                                token = nativeToken,
+                        blockChainSpecific is BlockChainSpecific.Ethereum ||
+                            blockChainSpecific is BlockChainSpecific.THORChain ->
+                            computeJoinKeysignNetworkFee(
+                                blockChainSpecific = blockChainSpecific,
+                                nativeCoin = nativeToken,
+                                fallbackFeeAmount = BigInteger.ZERO,
+                                evmGasLimitOverride = defaultEvmSwapGasLimit(chain),
                             )
-                        blockChainSpecific is BlockChainSpecific.THORChain ->
-                            TokenValue(value = blockChainSpecific.fee, token = nativeToken)
                         else -> {
                             val (nativeTokenAddress, _) =
                                 chainAccountAddressRepository.getAddress(nativeToken, _currentVault)
@@ -1471,29 +1470,28 @@ constructor(
     }
 
     private fun waitForKeysignToStart() {
-        _jobWaitingForKeysignStart =
-            viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    while (isActive) {
-                        try {
-                            if (checkKeygenStarted()) {
-                                currentState.value = JoinKeysignState.Keysign
-                                return@withContext
-                            }
-                        } catch (e: KeysignMessagesException) {
-                            Timber.e(e, "Failed to prepare messages to sign")
-                            currentState.value =
-                                JoinKeysignState.Error(
-                                    JoinKeysignError.FailedToCheck(
-                                        e.message ?: "Failed to prepare messages to sign"
-                                    )
-                                )
+        _jobWaitingForKeysignStart = viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                while (isActive) {
+                    try {
+                        if (checkKeygenStarted()) {
+                            currentState.value = JoinKeysignState.Keysign
                             return@withContext
                         }
-                        delay(1000)
+                    } catch (e: KeysignMessagesException) {
+                        Timber.e(e, "Failed to prepare messages to sign")
+                        currentState.value =
+                            JoinKeysignState.Error(
+                                JoinKeysignError.FailedToCheck(
+                                    e.message ?: "Failed to prepare messages to sign"
+                                )
+                            )
+                        return@withContext
                     }
+                    delay(1000)
                 }
             }
+        }
     }
 
     private suspend fun checkKeygenStarted(): Boolean {
@@ -1774,11 +1772,14 @@ internal fun computeJoinKeysignNetworkFee(
     blockChainSpecific: BlockChainSpecific,
     nativeCoin: Coin,
     fallbackFeeAmount: BigInteger,
+    evmGasLimitOverride: BigInteger? = null,
 ): TokenValue =
     when (blockChainSpecific) {
         is BlockChainSpecific.Ethereum ->
             TokenValue(
-                value = blockChainSpecific.maxFeePerGasWei * blockChainSpecific.gasLimit,
+                value =
+                    blockChainSpecific.maxFeePerGasWei *
+                        (evmGasLimitOverride ?: blockChainSpecific.gasLimit),
                 token = nativeCoin,
             )
         is BlockChainSpecific.THORChain ->

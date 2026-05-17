@@ -140,4 +140,56 @@ internal class JoinKeysignSendGasFeeTest {
 
         result shouldBe TokenValue(value = fee, token = runeCoin)
     }
+
+    /**
+     * Swap branch: Ethereum case must use the override (DEFAULT_SWAP_LIMIT) instead of the
+     * payload's gasLimit, so joiner output matches initiator output.
+     */
+    @Test
+    fun `evm swap branch uses gasLimit override`() {
+        val payloadGasLimit = BigInteger.valueOf(21_000)
+        val swapGasLimitOverride = BigInteger.valueOf(600_000)
+        val maxFeePerGasWei = BigInteger.valueOf(30_000_000_000L)
+        val specific =
+            BlockChainSpecific.Ethereum(
+                maxFeePerGasWei = maxFeePerGasWei,
+                priorityFeeWei = BigInteger.valueOf(1_000_000_000L),
+                nonce = BigInteger.ZERO,
+                gasLimit = payloadGasLimit,
+            )
+
+        val result =
+            computeJoinKeysignNetworkFee(
+                blockChainSpecific = specific,
+                nativeCoin = ethCoin,
+                fallbackFeeAmount = BigInteger.ZERO,
+                evmGasLimitOverride = swapGasLimitOverride,
+            )
+
+        result shouldBe TokenValue(value = maxFeePerGasWei * swapGasLimitOverride, token = ethCoin)
+    }
+
+    /** Swap branch: THORChain ignores the override and still returns blockChainSpecific.fee. */
+    @Test
+    fun `thorchain swap branch ignores gasLimit override`() {
+        val fee = BigInteger.valueOf(2_000_000)
+        val specific =
+            BlockChainSpecific.THORChain(
+                accountNumber = BigInteger.ONE,
+                sequence = BigInteger.ZERO,
+                fee = fee,
+                isDeposit = false,
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+            )
+
+        val result =
+            computeJoinKeysignNetworkFee(
+                blockChainSpecific = specific,
+                nativeCoin = runeCoin,
+                fallbackFeeAmount = BigInteger.ZERO,
+                evmGasLimitOverride = BigInteger.valueOf(600_000),
+            )
+
+        result shouldBe TokenValue(value = fee, token = runeCoin)
+    }
 }
