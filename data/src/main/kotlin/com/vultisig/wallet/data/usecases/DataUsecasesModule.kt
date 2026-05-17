@@ -164,6 +164,8 @@ internal interface DataUsecasesModule {
     @Singleton
     fun bindOneInchToCoinsUseCase(impl: OneInchToCoinsUseCaseImpl): OneInchToCoinsUseCase
 
+    @Binds @Singleton fun bindEvmCoinFinder(impl: EvmCoinFinderImpl): EvmCoinFinder
+
     @Binds
     @Singleton
     fun bindGetChainTokenUseCase(impl: GetChainTokensUseCaseImpl): GetChainTokensUseCase
