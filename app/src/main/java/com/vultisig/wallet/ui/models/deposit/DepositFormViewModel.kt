@@ -1786,7 +1786,15 @@ constructor(
             }
         }
 
-        val thorAddressForMemo = if (isErc20LpAdd) resolveThorAddress(vaultId) else pairedAddress
+        val thorAddressForMemo =
+            if (isErc20LpAdd) {
+                resolveThorAddress(vaultId)
+                    ?: throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.thorchain_address_not_found_in_vault)
+                    )
+            } else {
+                pairedAddress
+            }
         val memo = DepositMemo.AddLiquidity(poolId, thorAddressForMemo)
 
         val routerDepositPayload =
