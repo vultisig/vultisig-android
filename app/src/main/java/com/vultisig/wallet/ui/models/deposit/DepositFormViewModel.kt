@@ -1104,7 +1104,9 @@ constructor(
         lpUnitsFieldState.clearText()
         assetsFieldState.clearText()
         rewardsAmountFieldState.clearText()
-        _state.update { it.copy(tokenAmountError = null) }
+        _state.update {
+            it.copy(tokenAmountError = null, nodeAddressError = null, dstAddressError = null)
+        }
     }
 
     /**
@@ -1277,6 +1279,11 @@ constructor(
     fun setNodeAddress(address: String) {
         nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
         validateNodeAddress()
+    }
+
+    fun setDstAddress(address: String) {
+        nodeAddressFieldState.setTextAndPlaceCursorAtEnd(address)
+        validateDstAddress()
     }
 
     private fun setSlippage(slippage: String) {

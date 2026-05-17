@@ -92,7 +92,7 @@ internal fun DepositFormScreen(
         onSelectChain = model::selectDstChain,
         dstAddress = model.nodeAddressFieldState,
         onDstAddressLostFocus = model::validateDstAddress,
-        onSetDstAddress = model::setNodeAddress,
+        onSetDstAddress = model::setDstAddress,
         amountFieldState = model.tokenAmountFieldState,
         onAmountLostFocus = model::validateTokenAmount,
         memoFieldState = model.customMemoFieldState,
