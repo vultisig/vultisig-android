@@ -1470,28 +1470,29 @@ constructor(
     }
 
     private fun waitForKeysignToStart() {
-        _jobWaitingForKeysignStart = viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                while (isActive) {
-                    try {
-                        if (checkKeygenStarted()) {
-                            currentState.value = JoinKeysignState.Keysign
+        _jobWaitingForKeysignStart =
+            viewModelScope.launch {
+                withContext(Dispatchers.IO) {
+                    while (isActive) {
+                        try {
+                            if (checkKeygenStarted()) {
+                                currentState.value = JoinKeysignState.Keysign
+                                return@withContext
+                            }
+                        } catch (e: KeysignMessagesException) {
+                            Timber.e(e, "Failed to prepare messages to sign")
+                            currentState.value =
+                                JoinKeysignState.Error(
+                                    JoinKeysignError.FailedToCheck(
+                                        e.message ?: "Failed to prepare messages to sign"
+                                    )
+                                )
                             return@withContext
                         }
-                    } catch (e: KeysignMessagesException) {
-                        Timber.e(e, "Failed to prepare messages to sign")
-                        currentState.value =
-                            JoinKeysignState.Error(
-                                JoinKeysignError.FailedToCheck(
-                                    e.message ?: "Failed to prepare messages to sign"
-                                )
-                            )
-                        return@withContext
+                        delay(1000)
                     }
-                    delay(1000)
                 }
             }
-        }
     }
 
     private suspend fun checkKeygenStarted(): Boolean {
