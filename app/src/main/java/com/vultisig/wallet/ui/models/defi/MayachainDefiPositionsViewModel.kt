@@ -167,7 +167,9 @@ constructor(
 
     fun setData(vaultId: VaultId) {
         this.vaultId = vaultId
-        _state.value = MayachainDefiUiState.Success(MayachainDefiPositionsUiModel())
+        if (_state.value !is MayachainDefiUiState.Success) {
+            _state.value = MayachainDefiUiState.Success(MayachainDefiPositionsUiModel())
+        }
         loadBalanceVisibility()
         savedPositionsJob?.cancel()
         savedPositionsJob = loadSavedPositions()
