@@ -454,6 +454,32 @@ val Chain.blockTimeMs: Long
             else -> 4_000L
         }
 
+/**
+ * The on-chain native fee denomination for Cosmos-family chains.
+ *
+ * Unlike [feeUnit], which may contain UI display labels (e.g. "Gwei", "BTC/vbyte"), this property
+ * always returns the actual denomination string used in Cosmos `Fee` messages. Returns `null` for
+ * non-Cosmos chains.
+ *
+ * Mirrors the Windows `cosmosFeeCoinDenom` map so both platforms resolve the same denom.
+ */
+val Chain.cosmosNativeDenom: String?
+    get() =
+        when (this) {
+            Chain.ThorChain -> "rune"
+            Chain.MayaChain -> "cacao"
+            Chain.GaiaChain -> "uatom"
+            Chain.Kujira -> "ukuji"
+            Chain.Dydx -> "adydx"
+            Chain.Osmosis -> "uosmo"
+            Chain.Terra -> "uluna"
+            Chain.TerraClassic -> "uluna"
+            Chain.Noble -> "uusdc"
+            Chain.Akash -> "uakt"
+            Chain.Qbtc -> "qbtc"
+            else -> null
+        }
+
 fun Chain.toValue(value: BigInteger): BigDecimal = coinType.toValue(value)
 
 fun Chain.toValue(value: BigDecimal): BigDecimal = coinType.toValue(value)

@@ -26,6 +26,7 @@ import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.normalizeMessageFormat
 import com.vultisig.wallet.data.mappers.KeysignMessageFromProtoMapper
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.cosmosNativeDenom
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.EstimatedGasFee
@@ -564,13 +565,26 @@ constructor(
                             }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeToken)
                         }
-                        blockChainSpecific is BlockChainSpecific.Ethereum ||
-                            blockChainSpecific is BlockChainSpecific.THORChain ->
+                        blockChainSpecific is BlockChainSpecific.Ethereum ->
                             computeJoinKeysignSwapNetworkFee(
                                 blockChainSpecific = blockChainSpecific,
                                 nativeCoin = nativeToken,
                                 chain = chain,
                             )
+                        blockChainSpecific is BlockChainSpecific.THORChain -> {
+                            val dappFee = payload.dappSuppliedNativeFee(chain, parseCosmosMessage)
+                            TokenValue(
+                                value = dappFee ?: blockChainSpecific.fee,
+                                token = nativeToken,
+                            )
+                        }
+                        blockChainSpecific is BlockChainSpecific.MayaChain -> {
+                            val dappFee = payload.dappSuppliedNativeFee(chain, parseCosmosMessage)
+                            TokenValue(
+                                value = dappFee ?: BigInteger.valueOf(2_000_000_000L),
+                                token = nativeToken,
+                            )
+                        }
                         else -> {
                             val (nativeTokenAddress, _) =
                                 chainAccountAddressRepository.getAddress(nativeToken, _currentVault)
@@ -996,8 +1010,11 @@ constructor(
 
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
+                    val dappSuppliedFee = payload.dappSuppliedNativeFee(chain, parseCosmosMessage)
                     val gasFee =
-                        if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
+                        if (dappSuppliedFee != null) {
+                            TokenValue(value = dappSuppliedFee, token = nativeCoin)
+                        } else if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
                             val utxoHelper = UtxoHelper.getHelper(vault, payloadToken.coinType)
                             val plan = utxoHelper.getBitcoinTransactionPlan(payload)
                             if (plan.error != SigningError.OK) {
@@ -1847,3 +1864,48 @@ internal fun computeJoinKeysignSwapNetworkFee(
 internal fun defaultEvmSwapGasLimit(chain: Chain): BigInteger =
     if (chain == Chain.Mantle) EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
     else EthereumFeeService.DEFAULT_SWAP_LIMIT
+
+/**
+ * Returns the dApp-supplied native fee from [KeysignPayload.signAmino] or
+ * [KeysignPayload.signDirect], or `null` when no native-denom entry is present.
+ * Callers should fall back to the estimated fee when `null`.
+ *
+ * Uses [Chain.cosmosNativeDenom] (an explicit on-chain denom table) instead of [Chain.feeUnit] so
+ * the comparison is never confused by UI-only labels like "Gwei".
+ *
+ * If any matched entry has a missing or unparseable amount, the function returns `null` rather than
+ * silently summing to zero — forcing the caller to use the estimated fee instead of displaying a
+ * misleading "0" row.
+ */
+private fun KeysignPayload.dappSuppliedNativeFee(
+    chain: Chain,
+    parseCosmosMessage: ParseCosmosMessageUseCase,
+): BigInteger? {
+    val nativeDenom = chain.cosmosNativeDenom ?: return null
+
+    // 1. Try signAmino
+    val aminoEntries = signAmino?.fee?.amount
+    if (aminoEntries != null) {
+        val matched = aminoEntries.filter { it?.denom?.lowercase() == nativeDenom }
+        if (matched.isNotEmpty()) {
+            val parsed = matched.map { it?.amount?.toBigIntegerOrNull() ?: return null }
+            return parsed.fold(BigInteger.ZERO, BigInteger::add)
+        }
+    }
+
+    // 2. Try signDirect
+    val signDirectPayload = signDirect
+    if (signDirectPayload != null) {
+        val directFee =
+            runCatching { parseCosmosMessage(signDirectPayload) }.getOrNull()?.authInfoFee
+        if (directFee != null) {
+            val matched = directFee.amount.filter { it.denom.lowercase() == nativeDenom }
+            if (matched.isNotEmpty()) {
+                val parsed = matched.map { it.amount.toBigIntegerOrNull() ?: return null }
+                return parsed.fold(BigInteger.ZERO, BigInteger::add)
+            }
+        }
+    }
+
+    return null
+}
