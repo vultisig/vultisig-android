@@ -1178,4 +1178,13 @@
     <string name="swap_error_approval_failed">Tokengoedkeuringstransactie mislukt. Probeer het opnieuw.</string>
     <string name="erc20_approval_unlimited_amount">Onbeperkte goedkeuring van %1$s</string>
     <string name="erc20_approval_spender">Ontvanger</string>
+    <string name="decoded_function_owner">Eigenaar</string>
+    <string name="decoded_function_operator">Operator</string>
+    <string name="decoded_function_status">Status</string>
+    <string name="decoded_function_status_approved">Goedgekeurd</string>
+    <string name="decoded_function_status_revoked">Ingetrokken</string>
+    <string name="decoded_function_deadline">Deadline</string>
+    <string name="decoded_function_amount">Bedrag</string>
+    <string name="decoded_function_unlimited">Onbeperkt</string>
+    <string name="decoded_function_unlimited_amount">Onbeperkt %1$s</string>
 </resources>

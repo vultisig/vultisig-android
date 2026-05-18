@@ -1203,4 +1203,13 @@
     <string name="swap_error_approval_failed">토큰 승인 거래에 실패했습니다. 다시 시도해 주세요</string>
     <string name="erc20_approval_unlimited_amount">무제한 %1$s 승인</string>
     <string name="erc20_approval_spender">수신자</string>
+    <string name="decoded_function_owner">소유자</string>
+    <string name="decoded_function_operator">운영자</string>
+    <string name="decoded_function_status">상태</string>
+    <string name="decoded_function_status_approved">승인됨</string>
+    <string name="decoded_function_status_revoked">취소됨</string>
+    <string name="decoded_function_deadline">마감 시각</string>
+    <string name="decoded_function_amount">금액</string>
+    <string name="decoded_function_unlimited">무제한</string>
+    <string name="decoded_function_unlimited_amount">무제한 %1$s</string>
 </resources>

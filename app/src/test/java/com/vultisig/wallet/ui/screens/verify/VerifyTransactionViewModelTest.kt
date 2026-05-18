@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
+import com.vultisig.wallet.data.repositories.TokenMetadataResolver
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -78,6 +79,7 @@ internal class VerifyTransactionViewModelTest {
     private lateinit var vaultRepository: VaultRepository
     private lateinit var addressBookRepository: AddressBookRepository
     private lateinit var fourByteRepository: FourByteRepository
+    private lateinit var tokenMetadataResolver: TokenMetadataResolver
     private val json: Json = Json
 
     /** Sets up mocks and test dispatcher before each test. */
@@ -97,6 +99,7 @@ internal class VerifyTransactionViewModelTest {
         vaultRepository = mockk(relaxed = true)
         addressBookRepository = mockk(relaxed = true)
         fourByteRepository = mockk(relaxed = true)
+        tokenMetadataResolver = mockk(relaxed = true)
         // Function-type-interface mocks need explicit return-type stubs; relaxed mode auto-stubs
         // to a generic Object that fails the implicit cast at the VM call site.
         coEvery { isVaultHasFastSignById(any()) } returns false
@@ -132,6 +135,7 @@ internal class VerifyTransactionViewModelTest {
             vaultRepository = vaultRepository,
             addressBookRepository = addressBookRepository,
             fourByteRepository = fourByteRepository,
+            tokenMetadataResolver = tokenMetadataResolver,
             json = json,
             ioDispatcher = testDispatcher,
         )

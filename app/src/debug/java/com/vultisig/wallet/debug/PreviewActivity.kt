@@ -149,6 +149,9 @@ class PreviewActivity : ComponentActivity() {
                     "dapp_banner_verify_host_only" ->
                         DappBannerVerifyPreview(DappBannerVariant.HOST_ONLY)
                     "dapp_banner_send_done" -> DappBannerSendDonePreview()
+                    "decoded_function_before" -> DecodedFunctionDetailsBeforePreview()
+                    "decoded_function_after" -> DecodedFunctionDetailsAfterPreview()
+                    "decoded_function_transfer_after" -> DecodedFunctionTransferAfterPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -1118,6 +1121,175 @@ private fun SelectChainPopupPreview() {
         itemContent = { item, distanceFromCenter ->
             ChainSelectorPickerItem(item = item, distanceFromCenter = distanceFromCenter)
         },
+    )
+}
+
+/**
+ * Stand-in for the verify-send card's Transaction Details section pre-expanded so the BEFORE /
+ * AFTER screenshots for #4058 capture the actual rendered output rather than relying on the user to
+ * tap the expander before a `screencap`. Mirrors the production layout in [VerifySendScreen]'s
+ * `TransactionDetailsSection`; deviations from production rendering must be mirrored here so the PR
+ * screenshot stays faithful.
+ */
+@Composable
+private fun DecodedFunctionPreviewCard(
+    title: String,
+    functionSignature: String,
+    rich: List<com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam>?,
+    rawInputs: String?,
+) {
+    androidx.compose.foundation.layout.Box(
+        modifier =
+            Modifier.fillMaxSize()
+                .background(com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.primary)
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+        contentAlignment = androidx.compose.ui.Alignment.TopCenter,
+    ) {
+        androidx.compose.foundation.layout.Column(
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .background(
+                        color = com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.secondary,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                    )
+                    .padding(24.dp),
+        ) {
+            androidx.compose.material3.Text(
+                text = title,
+                style = com.vultisig.wallet.ui.theme.Theme.brockmann.headings.subtitle,
+                color = com.vultisig.wallet.ui.theme.Theme.v2.colors.text.primary,
+            )
+            androidx.compose.foundation.layout.Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .background(
+                            color = androidx.compose.ui.graphics.Color.Transparent,
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                        )
+                        .padding(top = 8.dp),
+            ) {
+                androidx.compose.foundation.layout.Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    androidx.compose.material3.Text(
+                        text = "Function Signature",
+                        style = com.vultisig.wallet.ui.theme.Theme.brockmann.supplementary.footnote,
+                        color = com.vultisig.wallet.ui.theme.Theme.v2.colors.text.tertiary,
+                    )
+                    androidx.compose.material3.Text(
+                        text = functionSignature,
+                        style =
+                            com.vultisig.wallet.ui.theme.Theme.brockmann.body.m.medium.copy(
+                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                            ),
+                        color = com.vultisig.wallet.ui.theme.Theme.v2.colors.alerts.success,
+                    )
+                }
+
+                if (!rich.isNullOrEmpty()) {
+                    com.vultisig.wallet.ui.screens.send.DecodedFunctionParamRows(params = rich)
+                } else if (rawInputs != null) {
+                    androidx.compose.foundation.layout.Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        androidx.compose.material3.Text(
+                            text = "Function Arguments",
+                            style =
+                                com.vultisig.wallet.ui.theme.Theme.brockmann.supplementary.footnote,
+                            color = com.vultisig.wallet.ui.theme.Theme.v2.colors.text.tertiary,
+                        )
+                        androidx.compose.material3.Text(
+                            text = rawInputs,
+                            style =
+                                com.vultisig.wallet.ui.theme.Theme.brockmann.body.m.medium.copy(
+                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                ),
+                            color = com.vultisig.wallet.ui.theme.Theme.v2.colors.alerts.success,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DecodedFunctionDetailsBeforePreview() {
+    DecodedFunctionPreviewCard(
+        title = "Transaction Details",
+        functionSignature = "approve(address,uint256)",
+        rich = null,
+        rawInputs =
+            "[\"0x7a250d5630b4cf539739df2c5dacb4c659f2488d\",\"11579208923731619542357098500868790785326998466564056403945758400791312963993" +
+                "5\"]",
+    )
+}
+
+@Composable
+private fun DecodedFunctionDetailsAfterPreview() {
+    val rows =
+        listOf(
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label =
+                    com.vultisig.wallet.ui.utils.UiText.StringResource(
+                        com.vultisig.wallet.R.string.erc20_approval_spender
+                    ),
+                value =
+                    com.vultisig.wallet.ui.utils.UiText.DynamicString(
+                        "0x7a250d5630b4cf539739df2c5dacb4c659f2488d"
+                    ),
+                secondary = "Uniswap V2 Router",
+            ),
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label =
+                    com.vultisig.wallet.ui.utils.UiText.StringResource(
+                        com.vultisig.wallet.R.string.decoded_function_amount
+                    ),
+                value =
+                    com.vultisig.wallet.ui.utils.UiText.FormattedText(
+                        com.vultisig.wallet.R.string.decoded_function_unlimited_amount,
+                        listOf("USDC"),
+                    ),
+                isWarning = true,
+            ),
+        )
+    DecodedFunctionPreviewCard(
+        title = "Transaction Details",
+        functionSignature = "approve(address,uint256)",
+        rich = rows,
+        rawInputs = null,
+    )
+}
+
+@Composable
+private fun DecodedFunctionTransferAfterPreview() {
+    val rows =
+        listOf(
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label =
+                    com.vultisig.wallet.ui.utils.UiText.StringResource(
+                        com.vultisig.wallet.R.string.verify_transaction_to_title
+                    ),
+                value =
+                    com.vultisig.wallet.ui.utils.UiText.DynamicString(
+                        "0x9876543210fedcba9876543210fedcba98765432"
+                    ),
+            ),
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label =
+                    com.vultisig.wallet.ui.utils.UiText.StringResource(
+                        com.vultisig.wallet.R.string.decoded_function_amount
+                    ),
+                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("125 USDC"),
+            ),
+        )
+    DecodedFunctionPreviewCard(
+        title = "Transaction Details",
+        functionSignature = "transfer(address,uint256)",
+        rich = rows,
+        rawInputs = null,
     )
 }
 
