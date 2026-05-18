@@ -22,6 +22,7 @@ constructor(
     private val tokenRepository: TokenRepository,
     private val defaultChainsRepository: DefaultChainsRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val discoverTokenUseCase: DiscoverTokenUseCase,
 ) : SaveVaultUseCase {
     override suspend fun invoke(vault: Vault, shouldOverrideVault: Boolean) {
         if (shouldOverrideVault) {
@@ -69,5 +70,10 @@ constructor(
                     vaultRepository.addTokenToVault(vaultId, updatedNativeToken)
                 }
         }
+        // Schedule background discovery so any tokens already held at the vault addresses
+        // surface without the user having to open each chain screen. Best-effort: the vault
+        // is already persisted, so a WorkManager hiccup must not surface as a save failure.
+        runCatching { discoverTokenUseCase(vault.id, null) }
+            .onFailure { Timber.w(it, "Token discovery scheduling failed for vault %s", vault.id) }
     }
 }

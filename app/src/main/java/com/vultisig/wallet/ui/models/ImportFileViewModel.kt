@@ -23,7 +23,6 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.MalformedVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
@@ -76,7 +75,6 @@ constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val saveVault: SaveVaultUseCase,
     private val parseVaultFromString: ParseVaultFromStringUseCase,
-    private val discoverToken: DiscoverTokenUseCase,
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val snackBarFlow: SnackbarFlow,
@@ -224,7 +222,6 @@ constructor(
         runBestEffort("Failed to set backup status") {
             vaultDataStoreRepository.setBackupStatus(adjusted.id, true)
         }
-        runBestEffort("Token discovery failed") { discoverToken(adjusted.id, null) }
         if (adjusted.pubKeyMLDSA.isNotBlank()) attachQbtcToken(adjusted)
 
         finishImport(adjusted)

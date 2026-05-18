@@ -11,10 +11,13 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DefaultChainsRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.verify
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -28,6 +31,7 @@ internal class SaveVaultUseCaseImplTest {
     private lateinit var tokenRepository: TokenRepository
     private lateinit var defaultChainsRepository: DefaultChainsRepository
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
+    private lateinit var discoverTokenUseCase: DiscoverTokenUseCase
 
     private lateinit var useCase: SaveVaultUseCaseImpl
 
@@ -52,6 +56,8 @@ internal class SaveVaultUseCaseImplTest {
         tokenRepository = mockk()
         defaultChainsRepository = mockk()
         chainAccountAddressRepository = mockk()
+        discoverTokenUseCase = mockk()
+        every { discoverTokenUseCase(any(), any()) } just Runs
 
         // Default: nativeTokens returns coins for all chains we test with
         val nativeTokens =
@@ -70,6 +76,7 @@ internal class SaveVaultUseCaseImplTest {
                 tokenRepository = tokenRepository,
                 defaultChainsRepository = defaultChainsRepository,
                 chainAccountAddressRepository = chainAccountAddressRepository,
+                discoverTokenUseCase = discoverTokenUseCase,
             )
     }
 
@@ -175,5 +182,48 @@ internal class SaveVaultUseCaseImplTest {
         coEvery { vaultRepository.getByEcdsa(any()) } returns vault
 
         assertFailsWith<DuplicateVaultException> { useCase(vault, false) }
+    }
+
+    @Test
+    fun `triggers token discovery for the vault after saving`() = runTest {
+        val vault = dklsVault()
+        coEvery { vaultRepository.getByEcdsa(any()) } returns null
+        coEvery { vaultRepository.get(vaultId) } returns vault
+        every { defaultChainsRepository.selectedDefaultChains } returns flowOf(emptyList())
+
+        useCase(vault, false)
+
+        verify(exactly = 1) { discoverTokenUseCase(vaultId, null) }
+    }
+
+    @Test
+    fun `triggers token discovery on override path`() = runTest {
+        val vault = dklsVault().copy(coins = listOf(nativeCoin(Chain.Ethereum)))
+
+        useCase(vault, true)
+
+        coVerify { vaultRepository.upsert(vault) }
+        verify(exactly = 1) { discoverTokenUseCase(vaultId, null) }
+    }
+
+    @Test
+    fun `does not trigger token discovery when vault is a duplicate`() = runTest {
+        val vault = keyImportVault()
+        coEvery { vaultRepository.getByEcdsa(any()) } returns vault
+
+        assertFailsWith<DuplicateVaultException> { useCase(vault, false) }
+
+        verify(exactly = 0) { discoverTokenUseCase(any(), any()) }
+    }
+
+    @Test
+    fun `save succeeds even when token discovery scheduling fails`() = runTest {
+        val vault = dklsVault().copy(coins = listOf(nativeCoin(Chain.Ethereum)))
+        every { discoverTokenUseCase(any(), any()) } throws
+            IllegalStateException("WorkManager not initialized")
+
+        useCase(vault, true)
+
+        coVerify { vaultRepository.upsert(vault) }
     }
 }

@@ -17,6 +17,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.models.VaultAccountsViewModel.Companion.REFRESH_CHAIN_DATA
 import com.vultisig.wallet.ui.navigation.Destination
@@ -51,6 +52,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
+    private val discoverTokenUseCase: DiscoverTokenUseCase,
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
     private val snackbarFlow: SnackbarFlow,
@@ -115,7 +117,16 @@ constructor(
                     // malformed `pubKeyECDSA` or `hexChainCode`.
                     Timber.w(e, "Failed to enable chain %s", chain.coin.chain.raw)
                     failedChains += chain.coin.chain.raw
+                    return@forEach
                 }
+                runCatching { discoverTokenUseCase(vaultId, chain.coin.chain.raw) }
+                    .onFailure {
+                        Timber.w(
+                            it,
+                            "Token discovery scheduling failed for chain %s",
+                            chain.coin.chain.raw,
+                        )
+                    }
             }
             toDisableAccounts.forEach { disableAccount(it.coin) }
 
