@@ -311,6 +311,8 @@
     <string name="deposit_error_has_not_reached_maturity">Questo deposito non ha ancora raggiunto il suo periodo di scadenza</string>
     <string name="deposit_error_lp_paused_pool">Aggiungere liquidità è in pausa per %1$s. THORChain rimborserebbe questa transazione.</string>
     <string name="deposit_error_lp_halted_chain">Le azioni di liquidità su %1$s sono attualmente sospese. THORChain rimborserebbe questa transazione.</string>
+    <string name="deposit_error_thorchain_chain_halted">I depositi su %1$s sono attualmente sospesi su THORChain. Riprova più tardi.</string>
+    <string name="deposit_error_thorchain_inbound_unavailable">Impossibile contattare THORChain per verificare il vault in entrata. Riprova.</string>
     <string name="deposit_error_pool_not_available">Il pool %1$s non è attualmente disponibile per i depositi.</string>
     <string name="deposit_form_screen_assets">Attività</string>
     <string name="deposit_form_screen_asset_selection">Selezione asset</string>

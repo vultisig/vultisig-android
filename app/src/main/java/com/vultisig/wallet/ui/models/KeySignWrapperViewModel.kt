@@ -25,6 +25,11 @@ constructor(@Assisted val viewModel: KeysignViewModel) : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
+        // The wrapped KeysignViewModel is not registered with any ViewModelStore, so its own
+        // `onCleared` never runs. Cancel its polling explicitly so the foreground status service
+        // stops as soon as the user navigates away from the keysign flow, instead of polling
+        // until the next terminal status or until the chain-specific timeout fires.
+        viewModel.stopPolling()
         viewModel.viewModelScope.cancel()
     }
 }

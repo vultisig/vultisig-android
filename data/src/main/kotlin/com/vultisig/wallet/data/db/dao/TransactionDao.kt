@@ -16,8 +16,8 @@ abstract class TransactionHistoryDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insert(transaction: TransactionHistoryEntity)
 
-    @Query("SELECT * FROM transaction_history WHERE txHash = :txHash LIMIT 1")
-    abstract suspend fun getByTxHash(txHash: String): TransactionHistoryEntity?
+    @Query("SELECT * FROM transaction_history WHERE id = :id")
+    abstract suspend fun getById(id: String): TransactionHistoryEntity?
 
     @Query(
         """
@@ -69,40 +69,38 @@ abstract class TransactionHistoryDao {
     /**
      * CONFIRMED, FAILED, and REFUNDED are terminal — the WHERE guard prevents stale writers from
      * downgrading a finalised row. retryCount resets on every successful API response (including
-     * NotFound) so backoff only accumulates on network errors.
+     * NotFound) so backoff only accumulates on network errors. All mutating queries key on the
+     * chain-scoped primary key `id` (`"$chain:$txHash"`) so writes are unambiguous even when two
+     * chains produce identical hash strings.
      */
     @Query(
         """
         UPDATE transaction_history
         SET status = :status, lastCheckedAt = :lastCheckedAt, retryCount = 0
-        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
+        WHERE id = :id AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
-    abstract suspend fun updateStatus(
-        txHash: String,
-        status: TransactionStatus,
-        lastCheckedAt: Long,
-    )
+    abstract suspend fun updateStatus(id: String, status: TransactionStatus, lastCheckedAt: Long)
 
     @Query(
         """
         UPDATE transaction_history
         SET status = 'CONFIRMED', confirmedAt = :confirmedAt,
             lastCheckedAt = :lastCheckedAt, retryCount = 0
-        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
+        WHERE id = :id AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
-    abstract suspend fun updateToConfirmed(txHash: String, confirmedAt: Long, lastCheckedAt: Long)
+    abstract suspend fun updateToConfirmed(id: String, confirmedAt: Long, lastCheckedAt: Long)
 
     @Query(
         """
         UPDATE transaction_history
         SET status = 'FAILED', failureReason = :failureReason,
             lastCheckedAt = :lastCheckedAt, retryCount = 0
-        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
+        WHERE id = :id AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
-    abstract suspend fun updateToFailed(txHash: String, failureReason: String, lastCheckedAt: Long)
+    abstract suspend fun updateToFailed(id: String, failureReason: String, lastCheckedAt: Long)
 
     /**
      * Mirror of [updateToFailed] for the REFUNDED terminal state. Reuses [failureReason] to carry
@@ -113,10 +111,10 @@ abstract class TransactionHistoryDao {
         UPDATE transaction_history
         SET status = 'REFUNDED', failureReason = :reason,
             lastCheckedAt = :lastCheckedAt, retryCount = 0
-        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
+        WHERE id = :id AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
-    abstract suspend fun updateToRefunded(txHash: String, reason: String, lastCheckedAt: Long)
+    abstract suspend fun updateToRefunded(id: String, reason: String, lastCheckedAt: Long)
 
     /** Bypasses the terminal-state guard for chain reorganisations. */
     @Query(
@@ -124,19 +122,19 @@ abstract class TransactionHistoryDao {
         UPDATE transaction_history
         SET status = 'FAILED', failureReason = :reason,
             confirmedAt = NULL, lastCheckedAt = :lastCheckedAt, retryCount = 0
-        WHERE txHash = :txHash AND status = 'CONFIRMED'
+        WHERE id = :id AND status = 'CONFIRMED'
     """
     )
-    abstract suspend fun demoteForReorg(txHash: String, reason: String, lastCheckedAt: Long)
+    abstract suspend fun demoteForReorg(id: String, reason: String, lastCheckedAt: Long)
 
     @Query(
         """
         UPDATE transaction_history
         SET retryCount = retryCount + 1, lastCheckedAt = :lastCheckedAt
-        WHERE txHash = :txHash AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
+        WHERE id = :id AND status NOT IN ('CONFIRMED', 'FAILED', 'REFUNDED')
     """
     )
-    abstract suspend fun incrementRetryCount(txHash: String, lastCheckedAt: Long)
+    abstract suspend fun incrementRetryCount(id: String, lastCheckedAt: Long)
 
     /** Guards against a concurrent status writer between snapshot read and this write. */
     @Query(
@@ -174,7 +172,7 @@ abstract class TransactionHistoryDao {
     /** Merges backfill data with existing rows, preserving terminal status and local metadata. */
     @Transaction
     open suspend fun upsertFromBackfill(entity: TransactionHistoryEntity) {
-        val existing = getByTxHash(entity.txHash)
+        val existing = getById(entity.id)
         if (existing == null) {
             insert(entity)
             return

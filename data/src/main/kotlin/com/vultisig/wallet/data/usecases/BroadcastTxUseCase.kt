@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
+import com.vultisig.wallet.data.api.models.BlockChainStatusDeserialized
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Chain.Akash
 import com.vultisig.wallet.data.models.Chain.Arbitrum
@@ -84,9 +85,18 @@ constructor(
             Litecoin,
             Dogecoin,
             Dash,
-            Chain.Zcash -> {
-                blockChairApi.broadcastTransaction(chain, tx.rawTransaction)
-            }
+            Chain.Zcash ->
+                recoverIfAlreadyBroadcast(
+                    tx = tx,
+                    broadcast = { blockChairApi.broadcastTransaction(chain, tx.rawTransaction) },
+                    verify = { hash ->
+                        val response = blockChairApi.getTsStatus(chain, hash)
+                        (response as? BlockChainStatusDeserialized.Result)
+                            ?.data
+                            ?.data
+                            ?.containsKey(hash) == true
+                    },
+                )
 
             Ethereum,
             CronosChain,

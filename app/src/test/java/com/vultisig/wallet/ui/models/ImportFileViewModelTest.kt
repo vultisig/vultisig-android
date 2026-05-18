@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.usecases.DiscoverTokenUseCase
 import com.vultisig.wallet.data.usecases.DuplicateVaultException
 import com.vultisig.wallet.data.usecases.MalformedVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
@@ -60,7 +59,6 @@ internal class ImportFileViewModelTest {
     private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
     private lateinit var saveVault: SaveVaultUseCase
     private lateinit var parseVaultFromString: ParseVaultFromStringUseCase
-    private lateinit var discoverToken: DiscoverTokenUseCase
     private lateinit var vaultRepository: VaultRepository
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
     private lateinit var snackbarFlow: SnackbarFlow
@@ -75,7 +73,6 @@ internal class ImportFileViewModelTest {
         vaultDataStoreRepository = mockk(relaxed = true)
         saveVault = mockk(relaxed = true)
         parseVaultFromString = mockk(relaxed = true)
-        discoverToken = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
         chainAccountAddressRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
@@ -104,7 +101,6 @@ internal class ImportFileViewModelTest {
                 vaultDataStoreRepository = vaultDataStoreRepository,
                 saveVault = saveVault,
                 parseVaultFromString = parseVaultFromString,
-                discoverToken = discoverToken,
                 vaultRepository = vaultRepository,
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 snackBarFlow = snackbarFlow,
@@ -177,7 +173,6 @@ internal class ImportFileViewModelTest {
         coEvery { parseVaultFromString(any(), any()) } returns vault
         coEvery { saveVault(any(), false) } returns Unit
         coEvery { vaultDataStoreRepository.setBackupStatus(any(), any()) } returns Unit
-        every { discoverToken(any(), any()) } returns Unit
         coEvery { chainAccountAddressRepository.getAddress(any<Coin>(), any<Vault>()) } returns
             Pair("qbtc1address", "qbtc-derived-pubkey")
         coEvery { vaultRepository.addTokenToVault(any(), any()) } returns Unit
@@ -554,21 +549,6 @@ internal class ImportFileViewModelTest {
     }
 
     // --- Post-save hardening: non-fatal downstream failures ------------------
-
-    @Test
-    fun `import succeeds when discoverToken fails`() = runTest {
-        coEvery { parseVaultFromString(any(), any()) } returns testVault()
-        coEvery { discoverToken(any(), any()) } throws RuntimeException("network")
-        val vm = createViewModel(fileName = "vault.bak")
-
-        vm.decryptVaultData()
-
-        val state = vm.uiModel.value
-        // Success path: no error state, no lingering prompt.
-        assertNull(state.error)
-        assertFalse(state.showPasswordPrompt)
-        coVerify { saveVault(any(), false) }
-    }
 
     @Test
     fun `import succeeds when setBackupStatus fails`() = runTest {

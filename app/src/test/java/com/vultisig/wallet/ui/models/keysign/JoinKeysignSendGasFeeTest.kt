@@ -1,9 +1,11 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import java.math.BigInteger
 import org.junit.jupiter.api.Test
@@ -139,5 +141,91 @@ internal class JoinKeysignSendGasFeeTest {
             )
 
         result shouldBe TokenValue(value = fee, token = runeCoin)
+    }
+
+    /**
+     * Swap helper: Ethereum case must apply [EthereumFeeService.DEFAULT_SWAP_LIMIT] regardless of
+     * the payload's gasLimit, so joiner output matches initiator output.
+     */
+    @Test
+    fun `evm swap helper uses default swap limit`() {
+        val payloadGasLimit = BigInteger.valueOf(21_000)
+        val maxFeePerGasWei = BigInteger.valueOf(30_000_000_000L)
+        val specific =
+            BlockChainSpecific.Ethereum(
+                maxFeePerGasWei = maxFeePerGasWei,
+                priorityFeeWei = BigInteger.valueOf(1_000_000_000L),
+                nonce = BigInteger.ZERO,
+                gasLimit = payloadGasLimit,
+            )
+
+        val result =
+            computeJoinKeysignSwapNetworkFee(
+                blockChainSpecific = specific,
+                nativeCoin = ethCoin,
+                chain = Chain.Ethereum,
+            )
+
+        result shouldBe
+            TokenValue(
+                value = maxFeePerGasWei * EthereumFeeService.DEFAULT_SWAP_LIMIT,
+                token = ethCoin,
+            )
+    }
+
+    /**
+     * defaultEvmSwapGasLimit must return DEFAULT_MANTLE_SWAP_LIMIT for Mantle and
+     * DEFAULT_SWAP_LIMIT for every other EVM chain (Mantle has a much higher per-gas limit, so this
+     * branch is the only thing keeping joiner output aligned with the initiator on Mantle swaps).
+     */
+    @Test
+    fun `defaultEvmSwapGasLimit selects Mantle limit for Mantle and default elsewhere`() {
+        defaultEvmSwapGasLimit(Chain.Mantle) shouldBe EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
+        defaultEvmSwapGasLimit(Chain.Ethereum) shouldBe EthereumFeeService.DEFAULT_SWAP_LIMIT
+    }
+
+    /** Swap helper: THORChain returns blockChainSpecific.fee. */
+    @Test
+    fun `thorchain swap helper uses blockChainSpecific fee`() {
+        val fee = BigInteger.valueOf(2_000_000)
+        val specific =
+            BlockChainSpecific.THORChain(
+                accountNumber = BigInteger.ONE,
+                sequence = BigInteger.ZERO,
+                fee = fee,
+                isDeposit = false,
+                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
+            )
+
+        val result =
+            computeJoinKeysignSwapNetworkFee(
+                blockChainSpecific = specific,
+                nativeCoin = runeCoin,
+                chain = Chain.ThorChain,
+            )
+
+        result shouldBe TokenValue(value = fee, token = runeCoin)
+    }
+
+    /**
+     * Swap helper must reject subtypes the swap branch in [JoinKeysignViewModel.loadTransaction]
+     * never reaches — guards against a future extension silently shipping a zero fee.
+     */
+    @Test
+    fun `swap helper throws for unsupported subtype`() {
+        val specific =
+            BlockChainSpecific.Solana(
+                recentBlockHash = "hash",
+                priorityFee = BigInteger.ZERO,
+                priorityLimit = BigInteger.ZERO,
+            )
+
+        shouldThrow<IllegalStateException> {
+            computeJoinKeysignSwapNetworkFee(
+                blockChainSpecific = specific,
+                nativeCoin = solCoin,
+                chain = Chain.Solana,
+            )
+        }
     }
 }

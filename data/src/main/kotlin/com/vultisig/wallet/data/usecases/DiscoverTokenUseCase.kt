@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.usecases
 
 import android.content.Context
-import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
@@ -17,25 +16,35 @@ interface DiscoverTokenUseCase : (String?, String?) -> Unit
 internal class DiscoverTokenUseCaseImpl
 @Inject
 constructor(@ApplicationContext private val context: Context) : DiscoverTokenUseCase {
-    override fun invoke(vaultId: String?, chainId: String?) {
-        val dataBuilder = Data.Builder()
-        if (!vaultId.isNullOrBlank()) {
-            dataBuilder.putString(TokenRefreshWorker.ARG_VAULT_ID, vaultId)
-        }
-        if (!chainId.isNullOrBlank()) {
-            dataBuilder.putString(TokenRefreshWorker.ARG_CHAIN, chainId)
-        }
-        val workData = dataBuilder.build()
 
+    override fun invoke(vaultId: String?, chainId: String?) {
+        val data =
+            Data.Builder()
+                .apply {
+                    vaultId?.takeIf(String::isNotBlank)?.let {
+                        putString(TokenRefreshWorker.ARG_VAULT_ID, it)
+                    }
+                    chainId?.takeIf(String::isNotBlank)?.let {
+                        putString(TokenRefreshWorker.ARG_CHAIN, it)
+                    }
+                }
+                .build()
+
+        val request =
+            OneTimeWorkRequestBuilder<TokenRefreshWorker>().setInputData(data).addTag(TAG).build()
+
+        // Unique name is scoped to (vault, chain) so concurrent enqueues for different
+        // scopes don't cancel each other (e.g. a full-vault scan on save vs. per-chain
+        // scans on chain-enable). REPLACE still collapses repeated calls for the same
+        // scope into the latest request.
         WorkManager.getInstance(context)
             .enqueueUniqueWork(
-                TAG,
+                uniqueWorkName(vaultId, chainId),
                 ExistingWorkPolicy.REPLACE,
-                OneTimeWorkRequestBuilder<TokenRefreshWorker>()
-                    .setInputData(workData)
-                    .setConstraints(Constraints.Builder().build())
-                    .addTag(TAG)
-                    .build(),
+                request,
             )
     }
+
+    private fun uniqueWorkName(vaultId: String?, chainId: String?): String =
+        "$TAG:${vaultId.orEmpty()}:${chainId.orEmpty()}"
 }

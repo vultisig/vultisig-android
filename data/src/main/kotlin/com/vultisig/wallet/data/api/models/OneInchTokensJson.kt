@@ -15,4 +15,13 @@ data class OneInchTokenJson(
     @SerialName("logoURI") val logoURI: String?,
     @SerialName("eip2612") val eip2612: Boolean? = null,
     @SerialName("tags") val tags: List<String>? = null,
+    @SerialName("providers") val providers: List<String>? = null,
 )
+
+/**
+ * Allowlist signal used by EVM token auto-discovery: CoinGecko-listed tokens are the legitimacy
+ * signal, replacing the empty-logo heuristic that was dropping legit small-caps. Mirrors the SDK
+ * `findEvmCoins` resolver and iOS `OneInchToken.isCoinGeckoVerified`.
+ */
+val OneInchTokenJson.isCoinGeckoVerified: Boolean
+    get() = providers?.contains("CoinGecko") == true
