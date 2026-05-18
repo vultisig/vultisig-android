@@ -40,7 +40,9 @@ class CardanoUtilsTest {
 
     @Test
     fun `createEnterpriseAddress throws for 1-byte hex`() {
-        assertThrows<IllegalArgumentException> { CardanoUtils.createEnterpriseAddress("aa") }
+        val ex =
+            assertThrows<IllegalArgumentException> { CardanoUtils.createEnterpriseAddress("aa") }
+        assertEquals("spending key must be 32 bytes, got 1", ex.message)
     }
 
     @Test
@@ -63,8 +65,19 @@ class CardanoUtilsTest {
 
     @Test
     fun `createExtendedKey throws for spending key longer than 32 bytes`() {
-        assertThrows<IllegalArgumentException> {
-            CardanoUtils.createExtendedKey("aa".repeat(33), "bb".repeat(32))
-        }
+        val ex =
+            assertThrows<IllegalArgumentException> {
+                CardanoUtils.createExtendedKey("aa".repeat(33), "bb".repeat(32))
+            }
+        assertEquals("spending key must be 32 bytes, got 33", ex.message)
+    }
+
+    @Test
+    fun `createExtendedKey throws for chain code longer than 32 bytes`() {
+        val ex =
+            assertThrows<IllegalArgumentException> {
+                CardanoUtils.createExtendedKey("aa".repeat(32), "bb".repeat(33))
+            }
+        assertEquals("chain code must be 32 bytes, got 33", ex.message)
     }
 }
