@@ -22,6 +22,9 @@ import kotlinx.serialization.json.jsonArray
  *   `#3 (address)`).
  * - [value] is the trailing text. It uses [UiText] so localised values like "Unlimited USDC" can be
  *   composed lazily at render time inside `@Composable` code rather than baked in here.
+ * - [copyableValue] is the unellipsised string that goes to the clipboard when the user taps the
+ *   copy icon next to the row. Non-null for address-typed rows so the full 0x… stays accessible
+ *   even though the rendered value is middle-ellipsised. Null suppresses the copy affordance.
  * - [secondary] supplements the trailing text — used for the friendly contract label that
  *   [com.vultisig.wallet.data.repositories.KnownEvmContracts] returns for known DEX routers.
  * - [isWarning] flips the row into the warning colour, mirroring the unlimited-approval banner.
@@ -30,6 +33,7 @@ import kotlinx.serialization.json.jsonArray
 internal data class DecodedFunctionParam(
     val label: UiText,
     val value: UiText,
+    val copyableValue: String? = null,
     val secondary: String? = null,
     val isWarning: Boolean = false,
 )
@@ -241,13 +245,12 @@ private fun genericParams(
                 append(')')
             }
         }
+        val isAddress = type != null && type.equals("address", ignoreCase = true)
         DecodedFunctionParam(
             label = UiText.DynamicString(labelText),
             value = UiText.DynamicString(value),
-            secondary =
-                if (type != null && type.equals("address", ignoreCase = true)) {
-                    contractLabel(value)
-                } else null,
+            copyableValue = if (isAddress) value.takeIf { it.isNotBlank() } else null,
+            secondary = if (isAddress) contractLabel(value) else null,
         )
     }
 }
@@ -260,6 +263,7 @@ private fun addressRow(
     DecodedFunctionParam(
         label = label,
         value = UiText.DynamicString(address),
+        copyableValue = address,
         secondary = contractLabel(address),
     )
 

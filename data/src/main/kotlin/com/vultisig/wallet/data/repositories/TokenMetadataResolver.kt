@@ -121,14 +121,15 @@ constructor(
             mutex.withLock { inFlight.remove(key) }
             owned.cancel(e)
             throw e
-        } catch (t: Throwable) {
+        } catch (e: Exception) {
             mutex.withLock { inFlight.remove(key) }
             // Followers must not observe the failure as a thrown exception — completing with
             // `null` (the standard "couldn't resolve" sentinel everywhere else in this resolver)
             // keeps every awaiter on the same code path. The failure is also not cached, so a
-            // transient outage doesn't poison the next [ttl] window.
+            // transient outage doesn't poison the next [ttl] window. `Error` subclasses (OOM
+            // etc.) propagate intentionally — they aren't ours to swallow.
             owned.complete(null)
-            Timber.w(t, "Token metadata fetch failed for %s on %s", contractAddress, chain.raw)
+            Timber.w(e, "Token metadata fetch failed for %s on %s", contractAddress, chain.raw)
             return null
         }
     }

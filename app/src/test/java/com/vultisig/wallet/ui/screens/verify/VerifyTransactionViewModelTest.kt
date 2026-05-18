@@ -315,6 +315,50 @@ internal class VerifyTransactionViewModelTest {
             actual.token.token.ticker shouldBe "OM"
         }
 
+    /**
+     * Verifies the EVM decode pipeline populates the new rich-row UI fields once
+     * `enrichDecodedCall` is wired in: `decodedFunctionParams` carries the parsed labelled rows and
+     * `dstContractLabel` resolves through the static [KnownEvmContracts] registry. With the
+     * destination set to the Uniswap V2 Router on Ethereum, the label must come back as `Uniswap V2
+     * Router`.
+     */
+    @Test
+    fun `decoded function parameters and dst contract label populate from enrichDecodedCall`() =
+        runTest(testDispatcher) {
+            val spender = "0x7a250d5630b4cf539739df2c5dacb4c659f2488d"
+            val memo =
+                "0x095ea7b3000000000000000000000000${spender.removePrefix("0x")}" +
+                    "0000000000000000000000000000000000000000000000000000000000000064"
+            val tx = mockk<Transaction>(relaxed = true)
+            // `Chain.Ethereum.standard` is already `TokenStandard.EVM` so the production code's
+            // `if (chain.standard == TokenStandard.EVM && !memo.isNullOrEmpty())` gate falls open
+            // on the real enum value — no need to stub `standard` separately.
+            every { tx.token } returns
+                mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.Ethereum }
+            every { tx.memo } returns memo
+            // `dstAddress` is the Uniswap V2 Router on Ethereum so the registry hit fires.
+            every { tx.dstAddress } returns spender
+            coEvery { transactionRepository.getTransaction(TX_ID) } returns tx
+            coEvery { mapTransactionToUiModel(tx) } returns
+                TransactionDetailsUiModel(dstAddress = spender)
+            coEvery { fourByteRepository.decodeFunction(memo) } returns "approve(address,uint256)"
+            every {
+                fourByteRepository.decodeFunctionArgs("approve(address,uint256)", memo)
+            } returns "[\"$spender\",\"100\"]"
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val actual = vm.uiState.value.transaction
+            actual.functionSignature shouldBe "approve(address,uint256)"
+            actual.dstContractLabel shouldBe "Uniswap V2 Router"
+            actual.decodedFunctionParams.shouldNotBeNull()
+            actual.decodedFunctionParams!!.size shouldBe 2
+            // First row is the spender, copyable to clipboard.
+            actual.decodedFunctionParams!![0].copyableValue shouldBe spender
+            actual.decodedFunctionParams!![0].secondary shouldBe "Uniswap V2 Router"
+        }
+
     private companion object {
         const val VAULT_ID = "vault-1"
         const val TX_ID = "tx-1"

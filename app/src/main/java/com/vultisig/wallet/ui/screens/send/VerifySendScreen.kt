@@ -133,6 +133,13 @@ internal fun VerifySendScreen(
     onBackClick: () -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
+    /**
+     * Opens the Transaction Details disclosure on first composition. Only the debug-only
+     * [com.vultisig.wallet.debug.PreviewActivity] passes `true` so the PR screenshots can capture
+     * the expanded rich-row layout without simulating a touch event; production paths keep the
+     * default `false` so the user still has to tap the expander.
+     */
+    initiallyExpandedDetails: Boolean = false,
 ) {
     V2Scaffold(
         title = stringResource(R.string.verify_send_send_overview).takeIf { hasToolbar },
@@ -353,6 +360,7 @@ internal fun VerifySendScreen(
                             functionSignature = tx.functionSignature,
                             functionInputs = tx.functionInputs,
                             decodedFunctionParams = tx.decodedFunctionParams,
+                            initiallyExpanded = initiallyExpandedDetails,
                         )
                     }
 
@@ -450,12 +458,13 @@ internal fun AddressField(title: String, address: String, divider: Boolean = tru
 }
 
 @Composable
-private fun TransactionDetailsSection(
+internal fun TransactionDetailsSection(
     functionSignature: String?,
     functionInputs: String?,
     decodedFunctionParams: List<DecodedFunctionParam>?,
+    initiallyExpanded: Boolean = false,
 ) {
-    var isExpanded by rememberSaveable { mutableStateOf(false) }
+    var isExpanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         // Whole row is the tap target so the WCAG 2.5.5 minimum (48dp) is met without enlarging

@@ -149,9 +149,12 @@ class PreviewActivity : ComponentActivity() {
                     "dapp_banner_verify_host_only" ->
                         DappBannerVerifyPreview(DappBannerVariant.HOST_ONLY)
                     "dapp_banner_send_done" -> DappBannerSendDonePreview()
-                    "decoded_function_before" -> DecodedFunctionDetailsBeforePreview()
-                    "decoded_function_after" -> DecodedFunctionDetailsAfterPreview()
-                    "decoded_function_transfer_after" -> DecodedFunctionTransferAfterPreview()
+                    "decoded_function_verify_collapsed" ->
+                        VerifyDecodedSendPreview(expanded = false)
+                    "decoded_function_verify_expanded_before" ->
+                        VerifyDecodedSendPreview(expanded = true, useRichRows = false)
+                    "decoded_function_verify_expanded_after" ->
+                        VerifyDecodedSendPreview(expanded = true, useRichRows = true)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -1125,121 +1128,47 @@ private fun SelectChainPopupPreview() {
 }
 
 /**
- * Stand-in for the verify-send card's Transaction Details section pre-expanded so the BEFORE /
- * AFTER screenshots for #4058 capture the actual rendered output rather than relying on the user to
- * tap the expander before a `screencap`. Mirrors the production layout in [VerifySendScreen]'s
- * `TransactionDetailsSection`; deviations from production rendering must be mirrored here so the PR
- * screenshot stays faithful.
+ * Full-screen [VerifySendScreen] preview wired for #4058 PR screenshots. Renders the real verify
+ * card with a mocked decoded `approve(USDC, ∞)` call and toggles the Transaction Details section
+ * between collapsed and expanded variants. The `useRichRows` switch lets the capture script show
+ * the BEFORE state (raw JSON) by stripping the decoded rows, then re-launch with the AFTER state
+ * (labelled rows + copy icons) — both renders are otherwise identical so the PR comparison is
+ * apples-to-apples.
  */
 @Composable
-private fun DecodedFunctionPreviewCard(
-    title: String,
-    functionSignature: String,
-    rich: List<com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam>?,
-    rawInputs: String?,
-) {
-    androidx.compose.foundation.layout.Box(
-        modifier =
-            Modifier.fillMaxSize()
-                .background(com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.primary)
-                .padding(horizontal = 16.dp, vertical = 24.dp),
-        contentAlignment = androidx.compose.ui.Alignment.TopCenter,
-    ) {
-        androidx.compose.foundation.layout.Column(
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            modifier =
-                Modifier.fillMaxWidth()
-                    .background(
-                        color = com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.secondary,
-                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                    )
-                    .padding(24.dp),
-        ) {
-            androidx.compose.material3.Text(
-                text = title,
-                style = com.vultisig.wallet.ui.theme.Theme.brockmann.headings.subtitle,
-                color = com.vultisig.wallet.ui.theme.Theme.v2.colors.text.primary,
-            )
-            androidx.compose.foundation.layout.Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .background(
-                            color = androidx.compose.ui.graphics.Color.Transparent,
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                        )
-                        .padding(top = 8.dp),
-            ) {
-                androidx.compose.foundation.layout.Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    androidx.compose.material3.Text(
-                        text = "Function Signature",
-                        style = com.vultisig.wallet.ui.theme.Theme.brockmann.supplementary.footnote,
-                        color = com.vultisig.wallet.ui.theme.Theme.v2.colors.text.tertiary,
-                    )
-                    androidx.compose.material3.Text(
-                        text = functionSignature,
-                        style =
-                            com.vultisig.wallet.ui.theme.Theme.brockmann.body.m.medium.copy(
-                                fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                            ),
-                        color = com.vultisig.wallet.ui.theme.Theme.v2.colors.alerts.success,
-                    )
-                }
-
-                if (!rich.isNullOrEmpty()) {
-                    com.vultisig.wallet.ui.screens.send.DecodedFunctionParamRows(params = rich)
-                } else if (rawInputs != null) {
-                    androidx.compose.foundation.layout.Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        androidx.compose.material3.Text(
-                            text = "Function Arguments",
-                            style =
-                                com.vultisig.wallet.ui.theme.Theme.brockmann.supplementary.footnote,
-                            color = com.vultisig.wallet.ui.theme.Theme.v2.colors.text.tertiary,
-                        )
-                        androidx.compose.material3.Text(
-                            text = rawInputs,
-                            style =
-                                com.vultisig.wallet.ui.theme.Theme.brockmann.body.m.medium.copy(
-                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
-                                ),
-                            color = com.vultisig.wallet.ui.theme.Theme.v2.colors.alerts.success,
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DecodedFunctionDetailsBeforePreview() {
-    DecodedFunctionPreviewCard(
-        title = "Transaction Details",
-        functionSignature = "approve(address,uint256)",
-        rich = null,
-        rawInputs =
-            "[\"0x7a250d5630b4cf539739df2c5dacb4c659f2488d\",\"11579208923731619542357098500868790785326998466564056403945758400791312963993" +
-                "5\"]",
+private fun VerifyDecodedSendPreview(expanded: Boolean = false, useRichRows: Boolean = true) {
+    VerifySendScreen(
+        state = decodedApproveSendState(useRichRows),
+        isConsentsEnabled = false,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+        initiallyExpandedDetails = expanded,
     )
 }
 
-@Composable
-private fun DecodedFunctionDetailsAfterPreview() {
-    val rows =
+private fun decodedApproveSendState(
+    useRichRows: Boolean
+): com.vultisig.wallet.ui.models.VerifyTransactionUiModel {
+    val ethCoin = Coins.Ethereum.ETH
+    val spender = "0x7a250d5630b4cf539739df2c5dacb4c659f2488d"
+    val rawArgs =
+        "[\"$spender\",\"115792089237316195423570985008687907853269984665640564039457584007913129639935\"]"
+    val richRows =
         listOf(
             com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
                 label =
                     com.vultisig.wallet.ui.utils.UiText.StringResource(
                         com.vultisig.wallet.R.string.erc20_approval_spender
                     ),
-                value =
-                    com.vultisig.wallet.ui.utils.UiText.DynamicString(
-                        "0x7a250d5630b4cf539739df2c5dacb4c659f2488d"
-                    ),
+                value = com.vultisig.wallet.ui.utils.UiText.DynamicString(spender),
+                copyableValue = spender,
                 secondary = "Uniswap V2 Router",
             ),
             com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
@@ -1255,41 +1184,54 @@ private fun DecodedFunctionDetailsAfterPreview() {
                 isWarning = true,
             ),
         )
-    DecodedFunctionPreviewCard(
-        title = "Transaction Details",
-        functionSignature = "approve(address,uint256)",
-        rich = rows,
-        rawInputs = null,
-    )
-}
-
-@Composable
-private fun DecodedFunctionTransferAfterPreview() {
-    val rows =
-        listOf(
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label =
-                    com.vultisig.wallet.ui.utils.UiText.StringResource(
-                        com.vultisig.wallet.R.string.verify_transaction_to_title
-                    ),
-                value =
-                    com.vultisig.wallet.ui.utils.UiText.DynamicString(
-                        "0x9876543210fedcba9876543210fedcba98765432"
-                    ),
-            ),
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label =
-                    com.vultisig.wallet.ui.utils.UiText.StringResource(
-                        com.vultisig.wallet.R.string.decoded_function_amount
-                    ),
-                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("125 USDC"),
-            ),
+    val tx =
+        com.vultisig.wallet.ui.models.TransactionDetailsUiModel(
+            token = ValuedToken(token = ethCoin, value = "0", fiatValue = "$0.00"),
+            srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+            srcVaultName = "Honeypot Vault DKLS",
+            // Realistic mock: approve(USDC, spender) — the call's destination is the USDC token
+            // contract, not the spender. `dstContractLabel` stays null because the USDC contract
+            // isn't on the [KnownEvmContracts] allowlist; the user sees "USDC" via `dstLabel`
+            // and the Uniswap V2 Router label only surfaces on the spender row.
+            dstAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            dstLabel = "USDC",
+            functionName = "Approve",
+            functionSignature = "approve(address,uint256)",
+            functionInputs = rawArgs,
+            isUnlimitedApproval = true,
+            approvalSpender = spender,
+            approvalTokenTicker = "USDC",
+            dstContractLabel = null,
+            decodedFunctionParams = if (useRichRows) richRows else null,
+            networkFeeFiatValue = "$1.84",
+            networkFeeTokenValue = "0.000482 ETH",
+            heroContent =
+                com.vultisig.wallet.ui.components.hero.HeroContent.Send(
+                    title = "Approve",
+                    coin =
+                        com.vultisig.wallet.ui.components.hero.HeroCoinAmount(
+                            amount = "Unlimited",
+                            ticker = "USDC",
+                            logo = "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+                        ),
+                ),
         )
-    DecodedFunctionPreviewCard(
-        title = "Transaction Details",
-        functionSignature = "transfer(address,uint256)",
-        rich = rows,
-        rawInputs = null,
+    return com.vultisig.wallet.ui.models.VerifyTransactionUiModel(
+        transaction = tx,
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = false,
+        txScanStatus =
+            com.vultisig.wallet.ui.models.TransactionScanStatus.Scanned(
+                com.vultisig.wallet.data.securityscanner.SecurityScannerResult(
+                    provider = "blockaid",
+                    isSecure = true,
+                    riskLevel = com.vultisig.wallet.data.securityscanner.SecurityRiskLevel.NONE,
+                    warnings = emptyList(),
+                    description = "Transaction is safe",
+                    recommendations = "",
+                )
+            ),
     )
 }
 
