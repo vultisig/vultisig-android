@@ -12,11 +12,11 @@ object CardanoUtils {
     fun createExtendedKey(spendingKeyHex: String, chainCodeHex: String): ByteArray {
         val spendingKeyData = Numeric.hexStringToByteArray(spendingKeyHex)
         val chainCodeData = Numeric.hexStringToByteArray(chainCodeHex)
-        if (spendingKeyData.size != 32) {
-            error("spending key must be 32 bytes, got ${spendingKeyData.size}")
+        require(spendingKeyData.size == 32) {
+            "spending key must be 32 bytes, got ${spendingKeyData.size}"
         }
-        if (chainCodeData.size != 32) {
-            error("chain code must be 32 bytes, got ${chainCodeData.size}")
+        require(chainCodeData.size == 32) {
+            "chain code must be 32 bytes, got ${chainCodeData.size}"
         }
 
         val extendedKeyData = ByteArray(128)
@@ -34,9 +34,8 @@ object CardanoUtils {
 
     fun createEnterpriseAddress(spendingKeyHex: String): String {
         val spendingKeyData = Numeric.hexStringToByteArray(spendingKeyHex)
-
-        if (spendingKeyData.size != 32) {
-            error("spending key must be 32 bytes, got ${spendingKeyData.size}")
+        require(spendingKeyData.size == 32) {
+            "spending key must be 32 bytes, got ${spendingKeyData.size}"
         }
 
         // Use Blake2b hash with 28 bytes output size
