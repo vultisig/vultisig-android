@@ -22,6 +22,7 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.screens.select.AssetSelected
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
@@ -54,6 +55,7 @@ constructor(
     val uiState = MutableStateFlow(SelectNetworkPopupSharedUiModel())
     lateinit var networkArgs: Route.SelectNetworkPopup
     lateinit var assetArgs: Route.SelectAssetPopup
+    private var assetLoadJob: Job? = null
 
     fun loadNetworkData() {
         val vaultId = networkArgs.vaultId
@@ -98,26 +100,28 @@ constructor(
      * full-screen picker.
      */
     fun loadAssetData() {
+        assetLoadJob?.cancel()
         val vaultId = assetArgs.vaultId
         val chain = Chain.fromRaw(assetArgs.preselectedNetworkId)
 
-        accountsRepository
-            .loadAddress(vaultId, chain)
-            .catch { Timber.e(it) }
-            .onEach { address ->
-                val assets =
-                    address.accounts
-                        .filterNot { it.token.isLpToken }
-                        .map { account ->
-                            FastAssetUiModel(
-                                token = account.token,
-                                logo = getCoinLogo(account.token.logo),
-                                title = account.token.ticker,
-                            )
-                        }
-                uiState.update { it.copy(assets = assets) }
-            }
-            .launchIn(viewModelScope)
+        assetLoadJob =
+            accountsRepository
+                .loadAddress(vaultId, chain)
+                .catch { Timber.e(it) }
+                .onEach { address ->
+                    val assets =
+                        address.accounts
+                            .filterNot { it.token.isLpToken }
+                            .map { account ->
+                                FastAssetUiModel(
+                                    token = account.token,
+                                    logo = getCoinLogo(account.token.logo),
+                                    title = account.token.ticker,
+                                )
+                            }
+                    uiState.update { it.copy(assets = assets) }
+                }
+                .launchIn(viewModelScope)
     }
 
     /** Stores the popup args and triggers async loading of the enabled tokens for the chain. */
