@@ -335,7 +335,34 @@ internal class EthereumFeeServiceTest {
         val fee = service.calculateFees(swap(Chain.Ethereum)) as Eip1559
 
         assertEquals(DEFAULT_SWAP_LIMIT, fee.limit)
-        assertEquals(gwei(110), fee.networkPrice)
+        // Ethereum swaps bump the base fee by 50% so the tx survives base-fee spikes
+        // during the MPC sign window and lands before the DEX deadline.
+        assertEquals(gwei(150), fee.networkPrice)
+    }
+
+    @Test
+    fun `Ethereum swap priority fee uses max reward when above the 2 GWEI floor`() = runTest {
+        stubFeeHistory(listOf(gwei(3), gwei(8), gwei(5)))
+
+        val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
+
+        assertEquals(gwei(8), fee.maxPriorityFeePerGas)
+    }
+
+    @Test
+    fun `Ethereum swap priority fee uses the 2 GWEI floor when max reward is below it`() = runTest {
+        stubFeeHistory(listOf(gwei(1), BigInteger.TEN, BigInteger.ONE))
+
+        val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
+
+        assertEquals(gwei(2), fee.maxPriorityFeePerGas)
+    }
+
+    @Test
+    fun `Ethereum swap priority fee falls back to the 2 GWEI floor on empty history`() = runTest {
+        val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
+
+        assertEquals(gwei(2), fee.maxPriorityFeePerGas)
     }
 
     @Test
