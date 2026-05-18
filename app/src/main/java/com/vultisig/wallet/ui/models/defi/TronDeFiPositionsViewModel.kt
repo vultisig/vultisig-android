@@ -192,12 +192,15 @@ constructor(
         val availableBalanceTrx = (account.balance ?: 0L).sunToTrx()
         val frozenTotal =
             account.frozenBandwidthSun.sunToTrx().add(account.frozenEnergySun.sunToTrx())
+        // Header reflects the user's DeFi-locked position: actively frozen TRX plus
+        // TRX in the unfreezing cooldown. Mirrors vultisig-ios `DefiBalanceService`.
+        val defiTotal = frozenTotal.add(account.unfreezingTotalSun.sunToTrx())
 
         val stats = resource.calculateResourceStats()
         val pendingWithdrawals = mapPendingWithdrawals(account)
 
         return TronStakingUiModel(
-            totalAmountPrice = currencyFormat.format(availableBalanceTrx.multiply(trxPrice)),
+            totalAmountPrice = currencyFormat.format(defiTotal.multiply(trxPrice)),
             frozenTotalPrice = currencyFormat.format(frozenTotal.multiply(trxPrice)),
             frozenTotalTrx = frozenTotal.stripTrailingZeros().toPlainString(),
             availableBandwidth = stats.availableBandwidth,
