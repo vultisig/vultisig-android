@@ -298,6 +298,27 @@ internal class CosmosBankCoinFinderTest {
         }
 
     @Test
+    fun `find honours a zero-decimal denom declared by chain metadata`() = runTest {
+        // Cosmos rarely ships NFT-like bank denoms, but when metadata declares no fractional unit
+        // we must surface zero decimals rather than the default six — otherwise a balance of 100
+        // would render as 0.000100.
+        coEvery { cosmosApi.getBalance(TERRA_ADDRESS) } returns
+            listOf(CosmosBalance(denom = "ticket", amount = "1"))
+        coEvery { cosmosApi.getDenomMetadata("ticket") } returns
+            DenomMetadata(
+                base = "ticket",
+                symbol = "TICKET",
+                display = "TICKET",
+                denomUnits = listOf(DenomUnit(denom = "ticket", exponent = 0)),
+            )
+
+        val coin = finder.find(Chain.Terra, TERRA_ADDRESS).single()
+
+        assertEquals(0, coin.decimal)
+        assertEquals("TICKET", coin.ticker)
+    }
+
+    @Test
     fun `find does not cache failing IBC denom traces so the next refresh retries`() = runTest {
         val ibcDenom = "ibc/FFFF0000000000000000000000000000000000000000000000000000000000"
         coEvery { cosmosApi.getBalance(TERRA_ADDRESS) } returns

@@ -182,7 +182,10 @@ constructor(private val cosmosApiFactory: CosmosApiFactory) : CosmosBankCoinFind
                 .firstNotNullOfOrNull { name ->
                     units.firstOrNull { it.denom == name }?.exponent?.takeIf { it > 0 }
                 }
-        return byName ?: units.mapNotNull { it.exponent }.maxOrNull()?.takeIf { it > 0 }
+        // The max fallback accepts `0` for genuine zero-decimal denoms — only the named lookup
+        // skips zero, where matching the base unit instead of the display unit signals malformed
+        // metadata that should fall through to the max.
+        return byName ?: units.mapNotNull { it.exponent }.maxOrNull()?.takeIf { it >= 0 }
     }
 
     /**
