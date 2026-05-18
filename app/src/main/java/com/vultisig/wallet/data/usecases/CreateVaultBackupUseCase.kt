@@ -26,36 +26,38 @@ constructor(private val encryption: VaultBackupEncryption, private val protoBuf:
     override fun invoke(vault: VaultProto, password: String?): String? {
         val vaultBytes = protoBuf.encodeToByteArray(vault)
         val effectivePassword = password?.takeUnless { it.isBlank() }
-
-        val payload =
-            if (effectivePassword == null) vaultBytes
-            else
-                runCatchingCancellable {
-                        encryption.encrypt(vaultBytes, effectivePassword.toByteArray())
-                    }
-                    .onFailure { Timber.e(it, "Vault backup encryption failed") }
-                    .getOrNull() ?: return null
-
-        val backup =
-            protoBuf
-                .encodeToByteArray(
-                    VaultContainerProto(
-                        version = VAULT_BACKUP_VERSION,
-                        vault = payload.encodeBase64(),
-                        isEncrypted = effectivePassword != null,
-                    )
-                )
-                .encodeBase64()
-
-        // Round-trip the just-produced backup with the same password before handing it back, so
+        val payload = encryptIfNeeded(vaultBytes, effectivePassword) ?: return null
+        val backup = wrapInContainer(payload, isEncrypted = effectivePassword != null)
+        // Round-trip the just-produced backup with the same password before handing it back so
         // we never return a file the user couldn't restore. Catches encryption-layer regressions
-        // and container-encoding drift at export time instead of weeks later.
+        // and container-encoding drift at export time instead of weeks later. Out of scope here:
+        // file-system corruption, transport corruption (sharing-app rewrites, line-ending fixes)
+        // and password input errors (autocorrect, lookalike characters) — those can only fail at
+        // import time, on the other client.
         if (!isRecoverable(backup, vaultBytes, effectivePassword)) {
             Timber.e("Vault backup self-check failed; refusing to return an unrecoverable backup")
             return null
         }
         return backup
     }
+
+    private fun encryptIfNeeded(vaultBytes: ByteArray, password: String?): ByteArray? {
+        if (password == null) return vaultBytes
+        return runCatchingCancellable { encryption.encrypt(vaultBytes, password.toByteArray()) }
+            .onFailure { Timber.e(it, "Vault backup encryption failed") }
+            .getOrNull()
+    }
+
+    private fun wrapInContainer(payload: ByteArray, isEncrypted: Boolean): String =
+        protoBuf
+            .encodeToByteArray(
+                VaultContainerProto(
+                    version = VAULT_BACKUP_VERSION,
+                    vault = payload.encodeBase64(),
+                    isEncrypted = isEncrypted,
+                )
+            )
+            .encodeBase64()
 
     private fun isRecoverable(
         backup: String,
