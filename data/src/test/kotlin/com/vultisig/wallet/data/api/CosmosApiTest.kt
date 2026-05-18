@@ -48,6 +48,72 @@ class CosmosApiTest {
         assertEquals(0, result?.txResponse?.code)
     }
 
+    @Test
+    fun `getDenomMetadata returns parsed metadata for a known denom`() = runBlocking {
+        val api =
+            cosmosApi(
+                MockEngine { request ->
+                    assertEquals(
+                        "/cosmos/bank/v1beta1/denoms_metadata/uluna",
+                        request.url.encodedPath,
+                    )
+                    respond(
+                        content =
+                            """{"metadata":{"base":"uluna","symbol":"LUNA","display":"luna",""" +
+                                """"denom_units":[{"denom":"uluna","exponent":0},""" +
+                                """{"denom":"luna","exponent":6}]}}""",
+                        status = HttpStatusCode.OK,
+                        headers = jsonHeaders,
+                    )
+                }
+            )
+
+        val metadata = api.getDenomMetadata("uluna")
+
+        assertEquals("uluna", metadata?.base)
+        assertEquals("LUNA", metadata?.symbol)
+        assertEquals(6, metadata?.denomUnits?.last()?.exponent)
+    }
+
+    @Test
+    fun `getDenomMetadata percent-encodes denoms with reserved characters`() = runBlocking {
+        var capturedPath: String? = null
+        val api =
+            cosmosApi(
+                MockEngine { request ->
+                    capturedPath = request.url.encodedPath
+                    respond(
+                        content = """{"metadata":null}""",
+                        status = HttpStatusCode.OK,
+                        headers = jsonHeaders,
+                    )
+                }
+            )
+
+        api.getDenomMetadata("ibc/ABC123")
+
+        assertEquals("/cosmos/bank/v1beta1/denoms_metadata/ibc%2FABC123", capturedPath)
+    }
+
+    @Test
+    fun `getDenomMetadata returns null on 404 without throwing`() = runBlocking {
+        val api = cosmosApi(MockEngine { respond(content = "", status = HttpStatusCode.NotFound) })
+
+        assertNull(api.getDenomMetadata("ibc/UNKNOWN"))
+    }
+
+    @Test
+    fun `getDenomMetadata returns null on 5xx without throwing`() = runBlocking {
+        val api =
+            cosmosApi(
+                MockEngine {
+                    respond(content = "boom", status = HttpStatusCode.InternalServerError)
+                }
+            )
+
+        assertNull(api.getDenomMetadata("uluna"))
+    }
+
     private fun cosmosApi(engine: MockEngine): CosmosApi {
         val json = Json { ignoreUnknownKeys = true }
         return CosmosApiImp(
