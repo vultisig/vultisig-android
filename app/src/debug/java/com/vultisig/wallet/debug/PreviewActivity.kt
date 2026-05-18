@@ -209,7 +209,7 @@ private fun SwapConfirmPreview() {
                     ),
                 vaultName = "Main Vault",
             ),
-        showToolbar = true,
+        hasToolbar = true,
         confirmTitle = "Sign",
         onFastSignClick = {},
         onConfirm = {},

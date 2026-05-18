@@ -15,15 +15,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.KeySignWrapperViewModel
-import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
-import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
-import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
-import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignError
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoverService
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoveringSessionID
@@ -34,11 +29,6 @@ import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.WaitingForKeysignS
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.VerifyUiModel
-import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
-import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
-import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
-import com.vultisig.wallet.ui.models.swap.ValuedToken
-import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
@@ -74,7 +64,7 @@ internal fun JoinKeysignView(navController: NavHostController) {
                     dappMetadata = dappMetadata,
                     isConsentsEnabled = false,
                     hasToolbar = true,
-                    confirmTitle = stringResource(R.string.verify_transaction_join_keysign),
+                    confirmTitle = stringResource(R.string.verify_swap_sign_button),
                     onBackClick = viewModel::navigateToHome,
                     onFastSignClick = {},
                     onConfirm = viewModel::joinKeysign,
@@ -85,7 +75,7 @@ internal fun JoinKeysignView(navController: NavHostController) {
                 VerifySwapScreen(
                     state = model.model,
                     dappMetadata = dappMetadata,
-                    showToolbar = true,
+                    hasToolbar = true,
                     onBackClick = viewModel::navigateToHome,
                     confirmTitle = stringResource(R.string.verify_swap_sign_button),
                     isConsentsEnabled = false,
@@ -260,94 +250,5 @@ private fun JoinKeysignViewPreview() {
                     ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
             )
         },
-    )
-}
-
-@Preview
-@Composable
-private fun JoinKeysignSendVerifyPreview() {
-    VerifySendScreen(
-        state =
-            VerifyTransactionUiModel(
-                transaction =
-                    TransactionDetailsUiModel(
-                        srcAddress = "0x1111111111111111111111111111111111111111",
-                        dstAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                    )
-            ),
-        isConsentsEnabled = false,
-        hasToolbar = true,
-        confirmTitle = stringResource(R.string.verify_transaction_join_keysign),
-        onBackClick = {},
-        onFastSignClick = {},
-        onConfirm = {},
-    )
-}
-
-@Preview
-@Composable
-private fun JoinKeysignSwapVerifyPreview() {
-    VerifySwapScreen(
-        state =
-            VerifySwapUiModel(
-                tx = SwapTransactionUiModel(totalFee = "1.00$", hasConsentAllowance = true),
-                vaultName = "Main Vault",
-            ),
-        showToolbar = true,
-        onBackClick = {},
-        confirmTitle = stringResource(R.string.verify_swap_sign_button),
-        isConsentsEnabled = false,
-        onFastSignClick = {},
-        onConfirm = {},
-    )
-}
-
-@Preview
-@Composable
-private fun JoinKeysignDepositVerifyPreview() {
-    VerifyDepositScreen(
-        state =
-            VerifyDepositUiModel(
-                depositTransactionUiModel =
-                    DepositTransactionUiModel(
-                        token =
-                            ValuedToken(
-                                token = Coins.ThorChain.RUNE,
-                                value = "1 RUNE",
-                                fiatValue = "$1.37",
-                            ),
-                        networkFeeFiatValue = "$0.03",
-                        networkFeeTokenValue = "0.02 RUNE",
-                        srcAddress = "thor1abc456bca",
-                        dstAddress = "thor1abc456bca",
-                        operation = "mint",
-                        memo = "BOND:addressHere",
-                    )
-            ),
-        hasToolbar = true,
-        confirmTitle = stringResource(R.string.verify_swap_sign_button),
-        onBackClick = {},
-        onFastSignClick = {},
-        onConfirm = {},
-    )
-}
-
-@Preview
-@Composable
-private fun JoinKeysignSignMessageVerifyPreview() {
-    VerifySignMessageScreen(
-        state =
-            VerifySignMessageUiModel(
-                model =
-                    SignMessageTransactionUiModel(
-                        method = "personal_sign",
-                        message = "Sign in to Uniswap",
-                    )
-            ),
-        hasToolbar = true,
-        confirmTitle = stringResource(R.string.verify_swap_sign_button),
-        onBackClick = {},
-        onFastSignClick = {},
-        onConfirm = {},
     )
 }

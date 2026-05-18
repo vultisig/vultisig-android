@@ -367,3 +367,33 @@ private fun VerifyDepositScreenPreview() {
         onFastSignClick = {},
     )
 }
+
+@Preview
+@Composable
+private fun JoinKeysignDepositVerifyPreview() {
+    VerifyDepositScreen(
+        state =
+            VerifyDepositUiModel(
+                depositTransactionUiModel =
+                    DepositTransactionUiModel(
+                        token =
+                            ValuedToken(
+                                token = Coins.ThorChain.RUNE,
+                                value = "1 RUNE",
+                                fiatValue = "$1.37",
+                            ),
+                        networkFeeFiatValue = "$0.03",
+                        networkFeeTokenValue = "0.02 RUNE",
+                        srcAddress = "thor1abc456bca",
+                        dstAddress = "thor1abc456bca",
+                        operation = "mint",
+                        memo = "BOND:addressHere",
+                    )
+            ),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onBackClick = {},
+        onFastSignClick = {},
+        onConfirm = {},
+    )
+}
