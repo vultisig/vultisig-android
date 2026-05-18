@@ -311,6 +311,8 @@
     <string name="deposit_error_has_not_reached_maturity">Ovaj depozit još nije dostigao rok dospijeća</string>
     <string name="deposit_error_lp_paused_pool">Dodavanje likvidnosti je pauzirano za %1$s. THORChain bi vratio ovu transakciju.</string>
     <string name="deposit_error_lp_halted_chain">Akcije likvidnosti na %1$s su trenutno zaustavljene. THORChain bi vratio ovu transakciju.</string>
+    <string name="deposit_error_thorchain_chain_halted">Pologi na %1$s su trenutno zaustavljeni na THORChain-u. Pokušajte ponovno kasnije.</string>
+    <string name="deposit_error_thorchain_inbound_unavailable">Nije moguće dohvatiti THORChain radi provjere dolaznog trezora. Pokušajte ponovno.</string>
     <string name="deposit_error_pool_not_available">Pool %1$s trenutno nije dostupan za depozite.</string>
     <string name="deposit_form_screen_assets">Imovina</string>
     <string name="deposit_form_screen_asset_selection">Odabir imovine</string>
