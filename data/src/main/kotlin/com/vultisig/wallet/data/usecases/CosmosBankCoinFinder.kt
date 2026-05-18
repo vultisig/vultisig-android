@@ -165,7 +165,10 @@ constructor(private val cosmosApiFactory: CosmosApiFactory) : CosmosBankCoinFind
             ?.let {
                 return it.value
             }
-        return fetch().also { cache[key] = CacheEntry(it, now + CACHE_TTL_MILLIS) }
+        // Cache only successful lookups. A `null` here is indistinguishable between a true 404 and
+        // a transient LCD failure the API method swallowed — pinning either for 24h would freeze
+        // the outage into the session, so retry on the next refresh instead.
+        return fetch()?.also { cache[key] = CacheEntry(it, now + CACHE_TTL_MILLIS) }
     }
 
     private fun DenomMetadata.symbolOrDisplay(): String? =
@@ -174,9 +177,11 @@ constructor(private val cosmosApiFactory: CosmosApiFactory) : CosmosBankCoinFind
     private fun DenomMetadata.decimalsFromUnits(): Int? {
         val units = denomUnits ?: return null
         val byName =
-            listOfNotNull(symbol, display).firstNotNullOfOrNull { name ->
-                units.firstOrNull { it.denom == name }?.exponent?.takeIf { it > 0 }
-            }
+            listOfNotNull(symbol, display)
+                .filter { it.isNotEmpty() }
+                .firstNotNullOfOrNull { name ->
+                    units.firstOrNull { it.denom == name }?.exponent?.takeIf { it > 0 }
+                }
         return byName ?: units.mapNotNull { it.exponent }.maxOrNull()?.takeIf { it > 0 }
     }
 
@@ -201,7 +206,7 @@ constructor(private val cosmosApiFactory: CosmosApiFactory) : CosmosBankCoinFind
 
     private data class DenomKey(val chainId: String, val denom: String)
 
-    private data class CacheEntry<T : Any>(val value: T?, val expiresAt: Long)
+    private data class CacheEntry<T : Any>(val value: T, val expiresAt: Long)
 
     companion object {
         /** Chains the bank auto-discovery is enabled for; matches the ticket scope. */

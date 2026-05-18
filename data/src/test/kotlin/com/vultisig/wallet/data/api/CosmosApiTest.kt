@@ -13,6 +13,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 
@@ -49,7 +50,7 @@ class CosmosApiTest {
     }
 
     @Test
-    fun `getDenomMetadata returns parsed metadata for a known denom`() = runBlocking {
+    fun `getDenomMetadata returns parsed metadata for a known denom`() = runTest {
         val api =
             cosmosApi(
                 MockEngine { request ->
@@ -76,7 +77,7 @@ class CosmosApiTest {
     }
 
     @Test
-    fun `getDenomMetadata percent-encodes denoms with reserved characters`() = runBlocking {
+    fun `getDenomMetadata percent-encodes denoms with reserved characters`() = runTest {
         var capturedPath: String? = null
         val api =
             cosmosApi(
@@ -96,14 +97,14 @@ class CosmosApiTest {
     }
 
     @Test
-    fun `getDenomMetadata returns null on 404 without throwing`() = runBlocking {
+    fun `getDenomMetadata returns null on 404 without throwing`() = runTest {
         val api = cosmosApi(MockEngine { respond(content = "", status = HttpStatusCode.NotFound) })
 
         assertNull(api.getDenomMetadata("ibc/UNKNOWN"))
     }
 
     @Test
-    fun `getDenomMetadata returns null on 5xx without throwing`() = runBlocking {
+    fun `getDenomMetadata returns null on 5xx without throwing`() = runTest {
         val api =
             cosmosApi(
                 MockEngine {

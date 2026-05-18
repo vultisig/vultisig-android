@@ -280,6 +280,37 @@ internal class CosmosBankCoinFinderTest {
         coVerify(exactly = 0) { cosmosApi.getDenomMetadata(any()) }
     }
 
+    @Test
+    fun `find does not cache null metadata so transient LCD failures retry next refresh`() =
+        runTest {
+            // A `null` from `getDenomMetadata` is indistinguishable between a true 404 and a 5xx
+            // the
+            // API method swallowed. Pinning either for 24h would freeze a transient LCD outage into
+            // the session — instead the next refresh must hit the endpoint again.
+            coEvery { cosmosApi.getBalance(TERRA_ADDRESS) } returns
+                listOf(CosmosBalance(denom = "uglitch", amount = "1"))
+            coEvery { cosmosApi.getDenomMetadata("uglitch") } returns null
+
+            finder.find(Chain.Terra, TERRA_ADDRESS)
+            finder.find(Chain.Terra, TERRA_ADDRESS)
+
+            coVerify(exactly = 2) { cosmosApi.getDenomMetadata("uglitch") }
+        }
+
+    @Test
+    fun `find does not cache failing IBC denom traces so the next refresh retries`() = runTest {
+        val ibcDenom = "ibc/FFFF0000000000000000000000000000000000000000000000000000000000"
+        coEvery { cosmosApi.getBalance(TERRA_ADDRESS) } returns
+            listOf(CosmosBalance(denom = ibcDenom, amount = "1"))
+        coEvery { cosmosApi.getDenomMetadata(any()) } returns null
+        coEvery { cosmosApi.getIbcDenomTraces(ibcDenom) } throws RuntimeException("LCD down")
+
+        finder.find(Chain.Terra, TERRA_ADDRESS)
+        finder.find(Chain.Terra, TERRA_ADDRESS)
+
+        coVerify(exactly = 2) { cosmosApi.getIbcDenomTraces(ibcDenom) }
+    }
+
     private companion object {
         const val TERRA_ADDRESS = "terra1abc"
         const val TERRA_CLASSIC_ADDRESS = "terra1classic"
