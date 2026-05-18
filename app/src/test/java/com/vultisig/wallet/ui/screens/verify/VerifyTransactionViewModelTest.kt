@@ -352,11 +352,11 @@ internal class VerifyTransactionViewModelTest {
             val actual = vm.uiState.value.transaction
             actual.functionSignature shouldBe "approve(address,uint256)"
             actual.dstContractLabel shouldBe "Uniswap V2 Router"
-            actual.decodedFunctionParams.shouldNotBeNull()
-            actual.decodedFunctionParams!!.size shouldBe 2
+            val decodedParams = actual.decodedFunctionParams.shouldNotBeNull()
+            decodedParams.size shouldBe 2
             // First row is the spender, copyable to clipboard.
-            actual.decodedFunctionParams!![0].copyableValue shouldBe spender
-            actual.decodedFunctionParams!![0].secondary shouldBe "Uniswap V2 Router"
+            decodedParams[0].copyableValue shouldBe spender
+            decodedParams[0].secondary shouldBe "Uniswap V2 Router"
         }
 
     private companion object {
