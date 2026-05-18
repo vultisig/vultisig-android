@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -8,7 +7,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.AppZipEntry
-import com.vultisig.wallet.data.common.fileContent
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
@@ -21,6 +19,7 @@ import com.vultisig.wallet.data.usecases.MalformedVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.usecases.WrongPasswordException
+import com.vultisig.wallet.data.usecases.file.VaultFileReaderUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -55,13 +54,13 @@ internal class ImportFileViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var navigator: Navigator<Destination>
-    private lateinit var context: Context
     private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
     private lateinit var saveVault: SaveVaultUseCase
     private lateinit var parseVaultFromString: ParseVaultFromStringUseCase
     private lateinit var vaultRepository: VaultRepository
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
     private lateinit var snackbarFlow: SnackbarFlow
+    private lateinit var vaultFileReader: VaultFileReaderUseCase
 
     @BeforeEach
     fun setUp() {
@@ -69,18 +68,17 @@ internal class ImportFileViewModelTest {
         mockkStatic("androidx.navigation.SavedStateHandleKt")
         every { any<SavedStateHandle>().toRoute<Route.ImportVault>() } returns Route.ImportVault()
         navigator = mockk(relaxed = true)
-        context = mockk(relaxed = true)
         vaultDataStoreRepository = mockk(relaxed = true)
         saveVault = mockk(relaxed = true)
         parseVaultFromString = mockk(relaxed = true)
         vaultRepository = mockk(relaxed = true)
         chainAccountAddressRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
+        vaultFileReader = mockk(relaxed = true)
     }
 
     @AfterEach
     fun tearDown() {
-        unmockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
         Dispatchers.resetMain()
     }
@@ -97,13 +95,13 @@ internal class ImportFileViewModelTest {
             ImportFileViewModel(
                 savedStateHandle = savedStateHandle,
                 navigator = navigator,
-                context = context,
                 vaultDataStoreRepository = vaultDataStoreRepository,
                 saveVault = saveVault,
                 parseVaultFromString = parseVaultFromString,
                 vaultRepository = vaultRepository,
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 snackBarFlow = snackbarFlow,
+                vaultFileReader = vaultFileReader,
                 defaultDispatcher = testDispatcher,
             )
         vm.uiModel.value =
@@ -345,8 +343,8 @@ internal class ImportFileViewModelTest {
     fun `parseFileContent on WrongPassword opens password prompt and clears stale hint`() =
         runTest {
             val uri = mockk<Uri>()
-            mockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
-            coEvery { uri.fileContent(context) } returns "encrypted-file-content"
+
+            coEvery { vaultFileReader.readContent(uri) } returns "encrypted-file-content"
             // Encrypted new-format without password → parser throws WrongPasswordException.
             coEvery { parseVaultFromString(any(), null) } throws WrongPasswordException()
 
@@ -364,8 +362,8 @@ internal class ImportFileViewModelTest {
     fun `parseFileContent on Malformed shows unsupported-file error and does not open prompt`() =
         runTest {
             val uri = mockk<Uri>()
-            mockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
-            coEvery { uri.fileContent(context) } returns "garbage"
+
+            coEvery { vaultFileReader.readContent(uri) } returns "garbage"
             coEvery { parseVaultFromString(any(), null) } throws MalformedVaultException()
 
             val vm = createViewModel(fileContent = null, isZip = false, fileName = "vault.bak")
@@ -383,8 +381,8 @@ internal class ImportFileViewModelTest {
     @Test
     fun `parseFileContent on Success imports without prompting for a password`() = runTest {
         val uri = mockk<Uri>()
-        mockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
-        coEvery { uri.fileContent(context) } returns "unencrypted-valid"
+
+        coEvery { vaultFileReader.readContent(uri) } returns "unencrypted-valid"
         coEvery { parseVaultFromString(any(), null) } returns testVault()
 
         val vm = createViewModel(fileContent = null, isZip = false, fileName = "vault.bak")
@@ -401,8 +399,8 @@ internal class ImportFileViewModelTest {
     @Test
     fun `parseFileContent on Duplicate closes any prompt and shows duplicate error`() = runTest {
         val uri = mockk<Uri>()
-        mockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
-        coEvery { uri.fileContent(context) } returns "unencrypted-duplicate"
+
+        coEvery { vaultFileReader.readContent(uri) } returns "unencrypted-duplicate"
         coEvery { parseVaultFromString(any(), null) } returns testVault()
         coEvery { saveVault(any(), false) } throws DuplicateVaultException()
 
@@ -428,8 +426,8 @@ internal class ImportFileViewModelTest {
         // would pop a password prompt and confuse the user into typing a password
         // for a vault that's already decoded.
         val uri = mockk<Uri>()
-        mockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
-        coEvery { uri.fileContent(context) } returns "valid-unencrypted"
+
+        coEvery { vaultFileReader.readContent(uri) } returns "valid-unencrypted"
         coEvery { parseVaultFromString(any(), null) } returns testVault()
         coEvery { saveVault(any(), false) } throws RuntimeException("db locked")
 
@@ -529,8 +527,8 @@ internal class ImportFileViewModelTest {
     @Test
     fun `saveFileToAppDir shows error state on SQLite constraint`() = runTest {
         val uri = mockk<Uri>()
-        mockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
-        coEvery { uri.fileContent(context) } returns "test-content"
+
+        coEvery { vaultFileReader.readContent(uri) } returns "test-content"
         coEvery { parseVaultFromString(any(), any()) } returns testVault()
         coEvery { saveVault(any(), false) } throws SQLiteConstraintException()
 
@@ -588,8 +586,8 @@ internal class ImportFileViewModelTest {
     @Test
     fun `saveFileToAppDir surfaces unsupported error when fileContent returns null`() = runTest {
         val uri = mockk<Uri>()
-        mockkStatic("com.vultisig.wallet.data.common.FileHelperKt")
-        coEvery { uri.fileContent(context) } returns null
+
+        coEvery { vaultFileReader.readContent(uri) } returns null
 
         val vm = createViewModel(fileContent = null)
         vm.uiModel.value =

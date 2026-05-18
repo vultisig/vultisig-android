@@ -109,4 +109,6 @@ internal interface UseCasesModule {
     fun bindGetKeysignTransactionSummaryUseCase(
         impl: GetKeysignTransactionSummaryUseCaseImpl
     ): GetKeysignTransactionSummaryUseCase
+
+    @Binds @Singleton fun bindShareBitmapUseCase(impl: ShareBitmapUseCaseImpl): ShareBitmapUseCase
 }

@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.runtime.Immutable
@@ -34,7 +33,6 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.services.PushNotificationManager
-import com.vultisig.wallet.data.services.pushNotificationErrorMessage
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
@@ -48,9 +46,9 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultIntroItem
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.pushNotificationErrorUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -123,7 +121,6 @@ internal data class AccountUiModel(
 internal class VaultAccountsViewModel
 @Inject
 constructor(
-    @param:ApplicationContext private val context: Context,
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
     private val requestResultRepository: RequestResultRepository,
@@ -689,10 +686,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.w(e, "Failed to opt in vaults for notifications")
-                snackbarFlow.showMessage(
-                    pushNotificationErrorMessage(e, context),
-                    SnackbarType.Error,
-                )
+                snackbarFlow.showMessage(pushNotificationErrorUiText(e), SnackbarType.Error)
             }
         ) {
             pushNotificationManager.setVaultsOptIn(vaultsToOptIn.map { it.vaultId to it.isEnabled })

@@ -41,6 +41,7 @@ import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.utils.SnackbarFlow
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -54,6 +55,8 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var appUpdateManager: AppUpdateManager
 
     @Inject lateinit var preventScreenshotsRepository: PreventScreenshotsRepository
+
+    @Inject internal lateinit var snackbarFlow: SnackbarFlow
 
     private val pushNotificationReceiver =
         object : BroadcastReceiver() {
@@ -116,6 +119,7 @@ class MainActivity : AppCompatActivity() {
                     MainActivityContent(
                         navController = navController,
                         mainViewModel = mainViewModel,
+                        snackbarFlow = snackbarFlow,
                         startDestination = screen,
                         onNavigationReady = { isNavigationReady = true },
                     )

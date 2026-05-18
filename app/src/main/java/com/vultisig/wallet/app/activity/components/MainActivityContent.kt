@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -39,6 +40,7 @@ import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.components.banners.ForegroundNotificationBanner
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
+import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.navigation.Route
@@ -46,6 +48,8 @@ import com.vultisig.wallet.ui.navigation.SetupNavGraph
 import com.vultisig.wallet.ui.navigation.route
 import com.vultisig.wallet.ui.screens.home.VaultAccountsScreen
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.SnackbarFlow
+import com.vultisig.wallet.ui.utils.asString
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -54,12 +58,23 @@ import kotlinx.coroutines.launch
 internal fun MainActivityContent(
     navController: NavHostController,
     mainViewModel: MainViewModel,
+    snackbarFlow: SnackbarFlow,
     startDestination: Any,
     onNavigationReady: () -> Unit,
 ) {
     val foregroundNotification by mainViewModel.foregroundNotification.collectAsStateWithLifecycle()
     var lastNotification by remember { mutableStateOf<ForegroundNotificationState?>(null) }
     if (foregroundNotification != null) lastNotification = foregroundNotification
+
+    val context = LocalContext.current
+    val snackbarState = rememberVsSnackbarState()
+    LaunchedEffect(snackbarFlow) {
+        snackbarFlow.collectMessage { (message, type) ->
+            val resolved = message.asString(context)
+            if (resolved.isBlank()) return@collectMessage
+            snackbarState.show(resolved, type)
+        }
+    }
 
     MainActivityContent(
         foregroundNotification = foregroundNotification,
@@ -101,7 +116,7 @@ internal fun MainActivityContent(
 
             VsSnackBar(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                snackbarState = mainViewModel.snakeBarHostState,
+                snackbarState = snackbarState,
             )
         },
     )
@@ -173,7 +188,8 @@ private fun MainActivityContentPreview() {
         ForegroundNotificationState(
             qrCodeData = "preview",
             vaultName = "Main Vault",
-            transactionSummary = "Swap 10 ETH → USDC",
+            transactionSummary =
+                com.vultisig.wallet.ui.utils.UiText.DynamicString("Swap 10 ETH → USDC"),
         )
     MainActivityContent(
         foregroundNotification = notification,

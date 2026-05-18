@@ -2,7 +2,6 @@
 
 package com.vultisig.wallet.ui.models.home
 
-import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
@@ -72,7 +71,6 @@ internal class VaultAccountsViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
-    private lateinit var context: Context
     private lateinit var navigator: Navigator<Destination>
     private lateinit var requestResultRepository: RequestResultRepository
     private lateinit var addressToUiModelMapper: AddressToUiModelMapper
@@ -99,7 +97,6 @@ internal class VaultAccountsViewModelTest {
         Dispatchers.setMain(testDispatcher)
         mockkStatic("androidx.navigation.SavedStateHandleKt")
         every { any<SavedStateHandle>().toRoute<Route.Home>() } returns Route.Home()
-        context = mockk(relaxed = true)
         navigator = mockk(relaxed = true)
         requestResultRepository = mockk(relaxed = true)
         addressToUiModelMapper = mockk(relaxed = true)
@@ -138,7 +135,6 @@ internal class VaultAccountsViewModelTest {
 
     private fun createViewModel() =
         VaultAccountsViewModel(
-            context = context,
             savedStateHandle = SavedStateHandle(),
             navigator = navigator,
             requestResultRepository = requestResultRepository,
