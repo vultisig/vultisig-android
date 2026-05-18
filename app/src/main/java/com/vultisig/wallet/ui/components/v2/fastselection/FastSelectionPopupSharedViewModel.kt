@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLpToken
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.NetworkUiModel
@@ -47,7 +46,6 @@ internal class FastSelectionPopupSharedViewModel
 @Inject
 constructor(
     private val vaultRepository: VaultRepository,
-    private val accountsRepository: AccountsRepository,
     private val requestResultRepository: RequestResultRepository,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
@@ -95,30 +93,39 @@ constructor(
 
     /**
      * Loads the vault's enabled tokens for the popup's preselected chain and exposes them via
-     * [uiState]. Mirrors [loadNetworkData] but operates on assets instead of chains; matches the
-     * existing `SelectAssetViewModel` source so the fast picker shows the same tokens as the
-     * full-screen picker.
+     * [uiState]. Mirrors [loadNetworkData] but operates on assets instead of chains. Reads coins
+     * directly from the vault to avoid the network side-effects (price refresh, SPL discovery) that
+     * `AccountsRepository.loadAddress` triggers — the popup only needs ticker and logo. Tokens are
+     * sorted native-first then alphabetically by ticker so the popup order matches the full-screen
+     * `SelectAssetViewModel`.
      */
     fun loadAssetData() {
         assetLoadJob?.cancel()
+        uiState.update { it.copy(assets = emptyList()) }
         val vaultId = assetArgs.vaultId
         val chain = Chain.fromRaw(assetArgs.preselectedNetworkId)
 
         assetLoadJob =
-            accountsRepository
-                .loadAddress(vaultId, chain)
+            vaultRepository
+                .getEnabledTokens(vaultId)
                 .catch { Timber.e(it) }
-                .onEach { address ->
+                .onEach { tokens ->
                     val assets =
-                        address.accounts
-                            .filterNot { it.token.isLpToken }
-                            .map { account ->
+                        tokens
+                            .asSequence()
+                            .filter { it.chain == chain }
+                            .filterNot { it.isLpToken }
+                            .sortedWith(
+                                compareByDescending<Coin> { it.isNativeToken }.thenBy { it.ticker }
+                            )
+                            .map { token ->
                                 FastAssetUiModel(
-                                    token = account.token,
-                                    logo = getCoinLogo(account.token.logo),
-                                    title = account.token.ticker,
+                                    token = token,
+                                    logo = getCoinLogo(token.logo),
+                                    title = token.ticker,
                                 )
                             }
+                            .toList()
                     uiState.update { it.copy(assets = assets) }
                 }
                 .launchIn(viewModelScope)
