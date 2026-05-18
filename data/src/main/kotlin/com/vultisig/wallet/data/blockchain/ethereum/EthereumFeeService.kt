@@ -250,7 +250,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_BLAST = BigInteger.TEN.pow(7) // 0.01 GWEI
-        private val ETHEREUM_SWAP_PRIORITY_FEE_FLOOR = GWEI * BigInteger.TWO
+        private val ETHEREUM_SWAP_PRIORITY_FEE_FLOOR = GWEI * BigInteger.valueOf(2)
 
         val DEFAULT_SWAP_LIMIT = "600000".toBigInteger()
         val DEFAULT_COIN_TRANSFER_LIMIT = "23000".toBigInteger()
