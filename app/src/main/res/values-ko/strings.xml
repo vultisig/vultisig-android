@@ -668,6 +668,8 @@
     <string name="referral_on_referred_swaps">\u0020추천 스왑으로 수익 창출</string>
     <string name="referral_save">절약\u0020</string>
     <string name="referral_add_referral">\u0020스왑 할인 - 추천 코드 추가</string>
+    <string name="referral_main_my_referral_title">내 추천</string>
+    <string name="referral_main_my_referral_body">추천 코드를 관리하고 보상을 받으세요.</string>
     <string name="referral_edit_referred">추천받은 코드 수정</string>
     <string name="referral_edit_referral">추천 수정</string>
     <string name="referral_external_linked">추천 코드가 성공적으로 연결되었습니다</string>

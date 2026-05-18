@@ -1,41 +1,26 @@
 package com.vultisig.wallet.ui.models.referral
 
-import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldInnerState
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Destination.Companion.ARG_VAULT_ID
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.asUiText
-import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-internal data class ReferralUiState(
-    val referralCode: String = "",
-    val referralMessage: UiText? = null,
-    val referralMessageState: VsTextInputFieldInnerState = VsTextInputFieldInnerState.Default,
-    val isLoading: Boolean = false,
-    val isSaveEnabled: Boolean = true,
-    val isCreateEnabled: Boolean = true,
-)
+internal data class ReferralUiState(val isCreateEnabled: Boolean = true)
 
 @HiltViewModel
 internal class ReferralViewModel
@@ -49,56 +34,17 @@ constructor(
 ) : ViewModel() {
     private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
-    val referralCodeTextFieldState = TextFieldState()
     val state = MutableStateFlow(ReferralUiState())
     private var remoteReferral: String? = null
 
     init {
         loadStatus()
-        observeReferralTextField()
-    }
-
-    private fun observeReferralTextField() {
-        viewModelScope.launch {
-            referralCodeTextFieldState
-                .textAsFlow()
-                .onEach {
-                    if (state.value.referralMessage != null) {
-                        if (it.length in MIN_LENGTH_REFERRAL_CODE..MAX_LENGTH_REFERRAL_CODE) {
-                            state.update { current ->
-                                current.copy(
-                                    referralMessage = null,
-                                    referralMessageState = VsTextInputFieldInnerState.Default,
-                                )
-                            }
-                        }
-                    }
-                }
-                .collect {}
-        }
     }
 
     private fun loadStatus() {
         viewModelScope.launch {
-            state.update { it.copy(isLoading = true) }
-
-            val (vaultReferral, externalReferral) =
-                withContext(Dispatchers.IO) {
-                    referralCodeRepository.getReferralCreatedBy(vaultId) to
-                        referralCodeRepository.getExternalReferralBy(vaultId)
-                }
-
-            state.update {
-                it.copy(
-                    referralCode = externalReferral ?: "",
-                    isLoading = false,
-                    isSaveEnabled = externalReferral.isNullOrEmpty(),
-                )
-            }
-
-            if (!externalReferral.isNullOrEmpty()) {
-                referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(externalReferral)
-            }
+            val vaultReferral =
+                withContext(Dispatchers.IO) { referralCodeRepository.getReferralCreatedBy(vaultId) }
 
             try {
                 val referrals =
@@ -115,19 +61,8 @@ constructor(
                     }
                 if (referrals.isNotEmpty()) {
                     state.update { it.copy(isCreateEnabled = false) }
-                    remoteReferral =
-                        referrals.first() // for now, we stick 1 vault - 1 referral created max
-
+                    remoteReferral = referrals.first()
                     referralCodeRepository.saveReferralCreated(vaultId, remoteReferral!!)
-                }
-
-                // Enable button edit always when vaults > 1
-                if (referrals.isEmpty()) {
-                    val hasMultipleReferrals =
-                        withContext(Dispatchers.IO) { vaultRepository.getAll().size > 1 }
-                    if (hasMultipleReferrals) {
-                        state.update { it.copy(isCreateEnabled = false) }
-                    }
                 }
             } catch (t: Throwable) {
                 if (t is kotlinx.coroutines.CancellationException) throw t
@@ -141,99 +76,18 @@ constructor(
             if (state.value.isCreateEnabled) {
                 navigator.route(Route.ReferralCreation(vaultId))
             } else {
-                navigator.navigate(Destination.ReferralView(vaultId, remoteReferral ?: ""))
+                navigator.navigate(Destination.ReferralView(vaultId, remoteReferral.orEmpty()))
             }
         }
     }
 
-    fun onSaveOrEditExternalReferral() {
+    fun onMyReferralClick() {
         viewModelScope.launch {
-            if (state.value.isSaveEnabled) {
-                state.update { it.copy(referralMessageState = VsTextInputFieldInnerState.Default) }
-                val referralCode = referralCodeTextFieldState.text.toString().trim()
-                validateReferralCode(referralCode)?.let { validationError ->
-                    state.update {
-                        it.copy(
-                            referralCode = referralCode,
-                            referralMessage = validationError,
-                            referralMessageState = VsTextInputFieldInnerState.Error,
-                        )
-                    }
-                    return@launch
-                }
-                checkAndSaveReferredCode(referralCode)
-            } else {
-                navigator.route(Route.ReferralExternalEdition(vaultId))
-            }
+            navigator.navigate(Destination.ReferralView(vaultId, remoteReferral.orEmpty()))
         }
-    }
-
-    private suspend fun checkAndSaveReferredCode(referralCode: String) {
-        state.update { it.copy(isLoading = true) }
-
-        runCatching {
-                withContext(Dispatchers.IO) { thorChainApi.existsReferralCode(referralCode) }
-            }
-            .onSuccess { exists ->
-                val (message, innerState) =
-                    if (exists) {
-                        withContext(Dispatchers.IO) {
-                            referralCodeRepository.saveExternalReferral(
-                                vaultId,
-                                referralCode.uppercase(),
-                            )
-                        }
-                        R.string.referral_external_linked.asUiText() to
-                            VsTextInputFieldInnerState.Success
-                    } else {
-                        R.string.referral_external_not_linked.asUiText() to
-                            VsTextInputFieldInnerState.Error
-                    }
-                val isSavedEnabled = innerState != VsTextInputFieldInnerState.Success
-
-                state.update {
-                    it.copy(
-                        referralMessage = message,
-                        referralMessageState = innerState,
-                        isSaveEnabled = isSavedEnabled,
-                        isLoading = false,
-                    )
-                }
-            }
-            .onFailure {
-                state.update {
-                    it.copy(
-                        referralMessage =
-                            UiText.StringResource(R.string.referral_external_link_failed),
-                        referralMessageState = VsTextInputFieldInnerState.Error,
-                        isLoading = false,
-                    )
-                }
-            }
-    }
-
-    fun onPasteIconClick(content: String) {
-        viewModelScope.launch {
-            val trimmedContent = content.trim()
-            referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(trimmedContent)
-            val validation = validateReferralCode(trimmedContent)
-            if (validation != null) {
-                state.update {
-                    it.copy(
-                        referralMessage = validation,
-                        referralMessageState = VsTextInputFieldInnerState.Error,
-                    )
-                }
-            }
-        }
-    }
-
-    fun onNewEditedReferral(newEditedReferral: String) {
-        referralCodeTextFieldState.setTextAndPlaceCursorAtEnd(newEditedReferral)
     }
 
     internal companion object {
         const val MAX_LENGTH_REFERRAL_CODE = 4
-        const val MIN_LENGTH_REFERRAL_CODE = 1
     }
 }

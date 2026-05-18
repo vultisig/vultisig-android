@@ -495,6 +495,8 @@
     <string name="referral_on_referred_swaps">\u0020sugli scambi invitati</string>
     <string name="referral_save">Risparmia\u0020</string>
     <string name="referral_add_referral">\u0020sugli swap - Aggiungi un referral</string>
+    <string name="referral_main_my_referral_title">Il mio referral</string>
+    <string name="referral_main_my_referral_body">Gestisci il tuo codice referral e raccogli ricompense.</string>
     <string name="referral_edit_referred">Modifica codice di riferimento</string>
     <string name="referral_edit_referral">Modifica referral</string>
     <string name="referral_external_linked">Codice referral collegato con successo</string>

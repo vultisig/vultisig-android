@@ -744,6 +744,8 @@
     <string name="referral_on_referred_swaps">在推荐交换上</string>
     <string name="referral_save">保存</string>
     <string name="referral_add_referral">在交换上 - 添加推荐</string>
+    <string name="referral_main_my_referral_title">我的推荐</string>
+    <string name="referral_main_my_referral_body">管理您的推荐代码并领取奖励。</string>
     <string name="referral_edit_referred">编辑推荐代码</string>
     <string name="referral_edit_referral">编辑推荐</string>
     <string name="referral_external_linked">推荐代码成功链接</string>

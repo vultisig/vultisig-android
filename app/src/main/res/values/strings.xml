@@ -676,6 +676,8 @@
     <string name="referral_on_referred_swaps">\u0020on referred swaps</string>
     <string name="referral_save">Save</string>
     <string name="referral_add_referral">\u0020on swaps - Add a Referral</string>
+    <string name="referral_main_my_referral_title">My Referral</string>
+    <string name="referral_main_my_referral_body">Manage your referral code and collect rewards.</string>
     <string name="referral_edit_referred">Edit referred code</string>
     <string name="referral_edit_referral">Edit referral</string>
     <string name="referral_external_linked">Referral code successfully linked</string>
