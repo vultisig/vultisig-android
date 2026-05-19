@@ -67,8 +67,6 @@ import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.ShowQrHelperBottomSheet
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.banners.Banner
-import com.vultisig.wallet.ui.components.banners.BannerVariant
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.clickOnce
@@ -151,7 +149,6 @@ internal fun KeygenPeerDiscoveryScreen(model: KeygenPeerDiscoveryViewModel = hil
                 onBackClick = model::back,
                 onHelpClick = { uriHandler.openUri(VsAuxiliaryLinks.CREATE_VAULT) },
                 onShareQrClick = { model.shareQr(context) },
-                onCloseHintClick = model::closeDevicesHint,
                 onSwitchModeClick = model::switchMode,
                 onDeviceClick = model::selectDevice,
                 onNextClick = model::next,
@@ -168,7 +165,6 @@ internal fun PeerDiscoveryScreen(
     onBackClick: () -> Unit,
     onHelpClick: () -> Unit,
     onShareQrClick: () -> Unit,
-    onCloseHintClick: () -> Unit,
     onSwitchModeClick: () -> Unit,
     onDeviceClick: (ParticipantName) -> Unit,
     onResendNotification: () -> Unit,
@@ -246,21 +242,6 @@ internal fun PeerDiscoveryScreen(
                             },
                         devicesSize = devicesSize,
                     )
-
-                    AnimatedVisibility(visible = state.showDevicesHint) {
-                        Column {
-                            Banner(
-                                text =
-                                    stringResource(
-                                        R.string.peer_discovery_recommended_devices_hint
-                                    ),
-                                variant = BannerVariant.Info,
-                                onCloseClick = onCloseHintClick,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                            UiSpacer(16.dp)
-                        }
-                    }
 
                     AnimatedVisibility(visible = state.network == NetworkOption.Local) {
                         Column {
@@ -787,7 +768,6 @@ private fun PeerDiscoveryScreenPreview() {
         onBackClick = {},
         onHelpClick = {},
         onShareQrClick = {},
-        onCloseHintClick = {},
         onSwitchModeClick = {},
         onDeviceClick = {},
         onNextClick = {},

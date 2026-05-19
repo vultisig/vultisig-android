@@ -551,7 +551,6 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">로컬 모드로 전환</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">인터넷 모드로 전환</string>
     <string name="peer_discovery_local_mode_hint">로컬 모드입니다</string>
-    <string name="peer_discovery_recommended_devices_hint">다른 기기로 QR을 스캔하세요. 3기기 설정을 권장하며, 2기기도 충분합니다.</string>
     <string name="fast_vault_name_screen_title">볼트 이름 지정</string>
     <string name="fast_vault_name_screen_desc">볼트 이름은 나중에 설정에서 변경할 수 있습니다</string>
     <string name="enter_email_screen_title">이메일 입력</string>

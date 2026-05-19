@@ -156,7 +156,6 @@ internal fun KeysignPeerDiscovery(
                     minimumDevices = minimumDevices,
                     minimumDevicesDisplayed = minimumDevices,
                     showQrHelpModal = false,
-                    showDevicesHint = false,
                     connectingToServer = null,
                     error = null,
                     enableNotification = uiModel.enableNotification,
@@ -166,7 +165,6 @@ internal fun KeysignPeerDiscovery(
             showHelp = false,
             onHelpClick = {},
             onShareQrClick = { sharedViewModel.shareQRCode(activity) },
-            onCloseHintClick = {},
             onDismissQrHelpModal = {},
             onSwitchModeClick = {
                 viewModel.changeNetworkPromptOption(
@@ -203,7 +201,6 @@ private fun KeysignPeerDiscoveryPreview() {
                 minimumDevices = 2,
                 minimumDevicesDisplayed = 2,
                 showQrHelpModal = false,
-                showDevicesHint = false,
                 connectingToServer = null,
                 error = null,
                 enableNotification = true,
@@ -212,7 +209,6 @@ private fun KeysignPeerDiscoveryPreview() {
         showHelp = false,
         onHelpClick = {},
         onShareQrClick = {},
-        onCloseHintClick = {},
         onDismissQrHelpModal = {},
         onSwitchModeClick = {},
         onDeviceClick = {},

@@ -854,7 +854,6 @@
     <string name="fast_vault_password_screen_hint">Dit gebeurt omdat het wachtwoord wordt gebruikt om het back-upbestand lokaal te versleutelen, vergelijkbaar met hoe een harde schijf wordt versleuteld. In de volgende stap kunt u een hint toevoegen.</string>
     <string name="fast_vault_password_screen_hint_title">Meer informatie</string>
     <string name="peer_discovery_local_mode_hint">Je bevindt je in de lokale modus.</string>
-    <string name="peer_discovery_recommended_devices_hint">Scan QR met een ander apparaat. Installatie van 3 apparaten aanbevolen, 2 is voldoende.</string>
     <string name="review_vault_devices_title">Controleer je kluis-apparaten</string>
     <string name="review_vault_devices_description">Zorg ervoor dat dit de juiste apparaten zijn die je hebt toegevoegd:</string>
     <string name="review_vault_devices_looks_good">Ziet er goed uit</string>

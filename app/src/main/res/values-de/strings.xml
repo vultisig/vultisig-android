@@ -859,7 +859,6 @@
     <string name="fast_vault_password_screen_hint">Dies geschieht, weil das Passwort zur lokalen Verschlüsselung der Sicherungsdatei verwendet wird, ähnlich wie bei der Festplattenverschlüsselung. Im nächsten Schritt können Sie einen Hinweis hinzufügen.</string>
     <string name="fast_vault_password_screen_hint_title">Weitere Informationen</string>
     <string name="peer_discovery_local_mode_hint">Sie befinden sich im lokalen Modus.</string>
-    <string name="peer_discovery_recommended_devices_hint">QR-Code mit einem anderen Gerät scannen. Einrichtung mit 3 Geräten empfohlen, 2 Geräte reichen aus.</string>
     <string name="review_vault_devices_title">Vault-Geräte überprüfen</string>
     <string name="review_vault_devices_description">Stellen Sie sicher, dass dies die richtigen Geräte sind, die Sie hinzugefügt haben:</string>
     <string name="review_vault_devices_looks_good">Sieht gut aus</string>
