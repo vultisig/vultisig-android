@@ -345,7 +345,13 @@ private fun AssetActionRow(
         if (rows.size >= 2 && rows.last().size == 1) {
             val upper = rows[rows.size - 2]
             if (upper.size >= 2) {
-                rows.last().add(0, upper.removeAt(upper.size - 1))
+                val candidate = upper.last()
+                val lastRow = rows.last()
+                val newLastRowWidth =
+                    lastRow.sumOf { it.width } + candidate.width + hGap * lastRow.size
+                if (newLastRowWidth <= outerWidth) {
+                    lastRow.add(0, upper.removeAt(upper.size - 1))
+                }
             }
         }
 
