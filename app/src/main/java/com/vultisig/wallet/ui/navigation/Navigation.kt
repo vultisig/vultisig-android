@@ -139,7 +139,6 @@ internal sealed class Route {
         val vaultId: VaultId,
         val preselectedNetworkId: ChainId,
         val selectedAssetId: String,
-        val networkFilters: Filters,
         val requestId: String,
         val pressX: Float = 0f,
         val pressY: Float = 0f,

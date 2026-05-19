@@ -1186,4 +1186,13 @@
     <string name="swap_error_approval_failed">Token-Genehmigungstransaktion fehlgeschlagen. Bitte versuchen Sie es erneut</string>
     <string name="erc20_approval_unlimited_amount">Unbegrenzte %1$s-Freigabe</string>
     <string name="erc20_approval_spender">Begünstigter</string>
+    <string name="decoded_function_owner">Inhaber</string>
+    <string name="decoded_function_operator">Operator</string>
+    <string name="decoded_function_status">Status</string>
+    <string name="decoded_function_status_approved">Genehmigt</string>
+    <string name="decoded_function_status_revoked">Widerrufen</string>
+    <string name="decoded_function_deadline">Frist</string>
+    <string name="decoded_function_amount">Betrag</string>
+    <string name="decoded_function_unlimited">Unbegrenzt</string>
+    <string name="decoded_function_unlimited_amount">Unbegrenzt %1$s</string>
 </resources>

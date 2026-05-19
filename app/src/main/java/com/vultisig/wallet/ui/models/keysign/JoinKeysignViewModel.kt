@@ -57,6 +57,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.repositories.TokenMetadataResolver
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
@@ -218,6 +219,7 @@ constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val routerApi: RouterApi,
     private val fourByteRepository: FourByteRepository,
+    private val tokenMetadataResolver: TokenMetadataResolver,
     private val securityScannerService: SecurityScannerContract,
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
@@ -1127,22 +1129,16 @@ constructor(
                                     .getOrNull()
                             } else null
                         } else null
-                    val approvalTokenTicker =
-                        if (
-                            isUnlimitedApproval &&
-                                isTokenContractApproval(functionInfo?.signature ?: "")
-                        ) {
-                            allVaults
-                                .flatMap { it.coins }
-                                .firstOrNull { coin ->
-                                    coin.chain == chain &&
-                                        coin.contractAddress.equals(
-                                            payload.toAddress,
-                                            ignoreCase = true,
-                                        )
-                                }
-                                ?.ticker
-                        } else null
+                    val decodedExtras =
+                        enrichDecodedCall(
+                            chain = chain,
+                            dstAddress = payload.toAddress,
+                            functionInfo = functionInfo,
+                            allVaults = allVaults,
+                            isUnlimitedApproval = isUnlimitedApproval,
+                            json = json,
+                            tokenMetadataResolver = tokenMetadataResolver,
+                        )
 
                     val namedTransactionUiModel =
                         transactionToUiModel.copy(
@@ -1154,7 +1150,9 @@ constructor(
                             functionName = functionInfo?.functionName,
                             isUnlimitedApproval = isUnlimitedApproval,
                             approvalSpender = approvalSpender,
-                            approvalTokenTicker = approvalTokenTicker,
+                            approvalTokenTicker = decodedExtras.approvalTokenTicker,
+                            dstContractLabel = decodedExtras.dstContractLabel,
+                            decodedFunctionParams = decodedExtras.decodedFunctionParams,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)

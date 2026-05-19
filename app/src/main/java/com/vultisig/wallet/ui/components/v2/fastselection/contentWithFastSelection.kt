@@ -8,6 +8,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
+import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectAssetPopup
 import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectChainPopup
 import com.vultisig.wallet.ui.navigation.Route
 
@@ -28,6 +29,13 @@ internal inline fun <reified T : Any, reified ParentRoute : Any> NavGraphBuilder
 
     dialog<Route.SelectNetworkPopup> { backStackEntry ->
         SelectChainPopup<ParentRoute>(
+            backStackEntry = backStackEntry,
+            navController = navController,
+        )
+    }
+
+    dialog<Route.SelectAssetPopup> { backStackEntry ->
+        SelectAssetPopup<ParentRoute>(
             backStackEntry = backStackEntry,
             navController = navController,
         )

@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
+import com.vultisig.wallet.data.repositories.TokenMetadataResolver
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -23,10 +24,11 @@ import com.vultisig.wallet.data.securityscanner.isChainSupported
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
 import com.vultisig.wallet.ui.models.keysign.FunctionInfo
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
 import com.vultisig.wallet.ui.models.keysign.approvalSpenderArgIndex
-import com.vultisig.wallet.ui.models.keysign.isTokenContractApproval
+import com.vultisig.wallet.ui.models.keysign.enrichDecodedCall
 import com.vultisig.wallet.ui.models.keysign.isUnlimitedApproval
 import com.vultisig.wallet.ui.models.keysign.prettifyEvmFunctionName
 import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
@@ -84,8 +86,26 @@ internal data class TransactionDetailsUiModel(
     val approvalSpender: String? = null,
     /**
      * Resolved ERC-20 ticker for the token contract being approved (overrides native coin ticker).
+     * For tokens the active vault doesn't hold, this falls through to an on-chain `symbol()` call
+     * via [com.vultisig.wallet.data.repositories.TokenMetadataResolver] so unknown stablecoins and
+     * LP tokens still surface a ticker in the warning row.
      */
     val approvalTokenTicker: String? = null,
+    /**
+     * Friendly label for the destination contract when it is on the
+     * [com.vultisig.wallet.data.repositories.KnownEvmContracts] allowlist (Uniswap routers,
+     * Permit2, etc.). Displayed alongside the contract address so the `To` row reads as `Uniswap V3
+     * Router (0x68b3…fC45)` instead of a bare hash.
+     */
+    val dstContractLabel: String? = null,
+    /**
+     * Per-parameter labelled rows rendered inside the expandable Transaction Details section. For
+     * known function shapes the rows carry semantic labels (`Spender`, `Recipient`, `Amount`);
+     * unknown signatures fall back to positional `#N (type)` rows. Null when the decoder couldn't
+     * interpret the call — in that case the screen hides the rich rows and the raw signature line
+     * still serves as the disclosure.
+     */
+    val decodedFunctionParams: List<DecodedFunctionParam>? = null,
     /**
      * Resolved hero content for the dApp signing screens. Populated by [BuildHeroContentUseCase]
      * once the Blockaid simulation completes. When non-null, screens render this in place of the
@@ -143,6 +163,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val addressBookRepository: AddressBookRepository,
     private val fourByteRepository: FourByteRepository,
+    private val tokenMetadataResolver: TokenMetadataResolver,
     @param:PrettyJson private val json: Json,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -340,16 +361,16 @@ constructor(
                             .getOrNull()
                     } else null
                 } else null
-            val approvalTokenTicker =
-                if (isUnlimitedApproval && isTokenContractApproval(functionInfo?.signature ?: "")) {
-                    allVaults
-                        .flatMap { it.coins }
-                        .firstOrNull { coin ->
-                            coin.chain == chain &&
-                                coin.contractAddress.equals(tx.dstAddress, ignoreCase = true)
-                        }
-                        ?.ticker
-                } else null
+            val decodedExtras =
+                enrichDecodedCall(
+                    chain = chain,
+                    dstAddress = tx.dstAddress,
+                    functionInfo = functionInfo,
+                    allVaults = allVaults,
+                    isUnlimitedApproval = isUnlimitedApproval,
+                    json = json,
+                    tokenMetadataResolver = tokenMetadataResolver,
+                )
 
             val namedUiModel =
                 transactionUiModel.copy(
@@ -361,7 +382,9 @@ constructor(
                     functionName = functionInfo?.functionName,
                     isUnlimitedApproval = isUnlimitedApproval,
                     approvalSpender = approvalSpender,
-                    approvalTokenTicker = approvalTokenTicker,
+                    approvalTokenTicker = decodedExtras.approvalTokenTicker,
+                    dstContractLabel = decodedExtras.dstContractLabel,
+                    decodedFunctionParams = decodedExtras.decodedFunctionParams,
                 )
 
             _uiState.update { it.copy(transaction = namedUiModel) }

@@ -1196,4 +1196,13 @@
     <string name="swap_error_approval_failed">Транзакция одобрения токена не удалась. Пожалуйста, попробуйте снова</string>
     <string name="erc20_approval_unlimited_amount">Неограниченное одобрение %1$s</string>
     <string name="erc20_approval_spender">Получатель</string>
+    <string name="decoded_function_owner">Владелец</string>
+    <string name="decoded_function_operator">Оператор</string>
+    <string name="decoded_function_status">Статус</string>
+    <string name="decoded_function_status_approved">Одобрено</string>
+    <string name="decoded_function_status_revoked">Отозвано</string>
+    <string name="decoded_function_deadline">Срок</string>
+    <string name="decoded_function_amount">Сумма</string>
+    <string name="decoded_function_unlimited">Без ограничений</string>
+    <string name="decoded_function_unlimited_amount">Без ограничений %1$s</string>
 </resources>

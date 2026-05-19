@@ -108,7 +108,7 @@ internal fun VerifySwapScreen(viewModel: VerifySwapViewModel = hiltViewModel()) 
 
     VerifySwapScreen(
         state = state,
-        showToolbar = true,
+        hasToolbar = true,
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
         onConsentReceiveAmount = viewModel::consentReceiveAmount,
         onConsentAmount = viewModel::consentAmount,
@@ -124,7 +124,7 @@ internal fun VerifySwapScreen(viewModel: VerifySwapViewModel = hiltViewModel()) 
 @Composable
 internal fun VerifySwapScreen(
     state: VerifySwapUiModel,
-    showToolbar: Boolean,
+    hasToolbar: Boolean,
     confirmTitle: String,
     isConsentsEnabled: Boolean = true,
     dappMetadata: DAppMetadata? = null,
@@ -138,7 +138,7 @@ internal fun VerifySwapScreen(
     onDismissRequest: () -> Unit = {},
 ) {
     VerifySwapScreen(
-        showToolbar = showToolbar,
+        hasToolbar = hasToolbar,
         tx = state.tx,
         scanStatus = state.txScanStatus,
         hasToShowWarningScanning = state.showScanningWarning,
@@ -164,7 +164,7 @@ internal fun VerifySwapScreen(
 
 @Composable
 private fun VerifySwapScreen(
-    showToolbar: Boolean,
+    hasToolbar: Boolean,
     tx: SwapTransactionUiModel,
     scanStatus: TransactionScanStatus,
     hasToShowWarningScanning: Boolean,
@@ -187,8 +187,8 @@ private fun VerifySwapScreen(
     onDismissRequest: () -> Unit,
 ) {
     V2Scaffold(
-        title = stringResource(R.string.verify_swap_swap_overview).takeIf { showToolbar },
-        onBackClick = onBackClick.takeIf { showToolbar },
+        title = stringResource(R.string.verify_swap_swap_overview).takeIf { hasToolbar },
+        onBackClick = onBackClick.takeIf { hasToolbar },
         content = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
@@ -652,7 +652,7 @@ internal fun VerifyCardJsonDetails(title: String, subtitle: String, modifier: Mo
 @Composable
 private fun VerifySwapScreenPreview() {
     VerifySwapScreen(
-        showToolbar = true,
+        hasToolbar = true,
         onBackClick = {},
         hasAllConsents = false,
         hasToShowWarningScanning = false,
@@ -672,5 +672,23 @@ private fun VerifySwapScreenPreview() {
         onConfirm = {},
         onContinueAnyway = {},
         onDismissRequest = {},
+    )
+}
+
+@Preview
+@Composable
+private fun JoinKeysignSwapVerifyPreview() {
+    VerifySwapScreen(
+        state =
+            VerifySwapUiModel(
+                tx = SwapTransactionUiModel(totalFee = "1.00$", hasConsentAllowance = true),
+                vaultName = "Main Vault",
+            ),
+        hasToolbar = true,
+        onBackClick = {},
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        isConsentsEnabled = false,
+        onFastSignClick = {},
+        onConfirm = {},
     )
 }

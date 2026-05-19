@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.usecases.CosmosBankCoinFinder
 import com.vultisig.wallet.data.usecases.EvmCoinFinder
 import java.math.BigInteger
 import javax.inject.Inject
@@ -45,6 +46,7 @@ constructor(
     private val thorApi: ThorChainApi,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val evmCoinFinder: EvmCoinFinder,
+    private val cosmosBankCoinFinder: CosmosBankCoinFinder,
 ) : TokenRepository {
 
     override suspend fun getToken(tokenId: String): Coin? =
@@ -159,6 +161,8 @@ constructor(
                     }
                 }
             }
+            Chain.Terra,
+            Chain.TerraClassic -> cosmosBankCoinFinder.find(chain, address)
             else -> {
                 if (chain.standard != TokenStandard.EVM) emptyList()
                 else evmCoinFinder.find(chain, address)
