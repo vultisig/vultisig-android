@@ -126,7 +126,6 @@
     <string name="verify_transaction_to_title">Aan</string>
     <string name="verify_transaction_amount_title">Bedrag</string>
     <string name="verify_transaction_value">Waarde</string>
-    <string name="verify_transaction_join_keysign">Doe mee met Keysign</string>
     <string name="verify_transaction_consent_address">Ik stuur naar het juiste adres</string>
     <string name="verify_transaction_consent_amount">Het bedrag is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Controleer alle toestemmingen</string>
@@ -847,8 +846,6 @@
     <string name="transfer_ibc_function_memo_title">Notitie</string>
     <string name="tx_overview_screen_tx_to">Aan</string>
     <string name="tx_overview_screen_tx_memo">Notitie</string>
-    <string name="verify_sign_message_message_field_title">Bericht</string>
-    <string name="verify_sign_message_method_field_title">Methode</string>
     <string name="fast_vault_password_screen_title">Kies een wachtwoord</string>
     <string name="fast_vault_password_screen_hint">Dit gebeurt omdat het wachtwoord wordt gebruikt om het back-upbestand lokaal te versleutelen, vergelijkbaar met hoe een harde schijf wordt versleuteld. In de volgende stap kunt u een hint toevoegen.</string>
     <string name="fast_vault_password_screen_hint_title">Meer informatie</string>

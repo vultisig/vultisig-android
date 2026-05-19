@@ -42,14 +42,14 @@
     <issue id="TypographyEllipsis" severity="warning" />
     <issue id="TypographyFractions" severity="warning" />
     <issue id="TypographyOther" severity="warning" />
-    <issue id="Typos" severity="warning" />
-    <issue id="UnnecessaryComposedModifier" severity="warning" />
+    <issue id="Typos" severity="fatal" />
+    <issue id="UnnecessaryComposedModifier" severity="fatal" />
     <issue id="UnusedAttribute" severity="fatal" />
-    <issue id="UnusedIds" severity="warning" />
+    <issue id="UnusedIds" severity="fatal" />
     <issue id="UnusedNamespace" severity="fatal" />
     <issue id="UnusedQuantity" severity="fatal" />
-    <issue id="UnusedResources" severity="warning" />
-    <issue id="UnusedTranslation" severity="warning" />
+    <issue id="UnusedResources" severity="fatal" />
+    <issue id="UnusedTranslation" severity="fatal" />
     <issue id="UnknownNullness" severity="fatal" />
     <issue id="VectorPath" severity="ignore" />
 </lint>

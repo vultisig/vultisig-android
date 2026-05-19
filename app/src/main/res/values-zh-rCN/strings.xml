@@ -227,7 +227,6 @@
     <string name="verify_transaction_amount_title">金额</string>
     <string name="verify_transaction_network_fee">网络费用</string>
     <string name="verify_transaction_value">价值</string>
-    <string name="verify_transaction_join_keysign">加入密钥签名</string>
     <string name="verify_transaction_consent_address">我正在发送到正确的地址</string>
     <string name="verify_transaction_consent_amount">金额正确</string>
     <string name="verify_transaction_error_not_enough_consent">请检查所有同意项</string>
@@ -1181,8 +1180,6 @@
     <string name="transfer_ibc_function_memo_title">备注</string>
     <string name="tx_overview_screen_tx_to">至</string>
     <string name="tx_overview_screen_tx_memo">备注</string>
-    <string name="verify_sign_message_message_field_title">消息</string>
-    <string name="verify_sign_message_method_field_title">方法</string>
     <string name="fast_vault_password_screen_title">选择密码</string>
     <string name="fast_vault_password_screen_hint">这是因为密码用于对备份文件进行本地加密，类似于硬盘的加密方式。下一步，您可以选择添加密码提示。</string>
     <string name="fast_vault_password_screen_hint_title">更多信息</string>
