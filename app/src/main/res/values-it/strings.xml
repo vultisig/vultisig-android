@@ -856,7 +856,6 @@
     <string name="fast_vault_password_screen_hint">Ciò si verifica perché la password viene utilizzata per crittografare localmente il file di backup, in modo simile a come viene crittografato un disco rigido. Nel passaggio successivo, è possibile aggiungere un suggerimento.</string>
     <string name="fast_vault_password_screen_hint_title">Ulteriori informazioni</string>
     <string name="peer_discovery_local_mode_hint">Sei in modalità locale</string>
-    <string name="peer_discovery_recommended_devices_hint">Scansiona il codice QR con un altro dispositivo. Si consiglia la configurazione a 3 dispositivi, 2 sono sufficienti.</string>
     <string name="review_vault_devices_title">Controlla i dispositivi del vault</string>
     <string name="review_vault_devices_description">Assicurati che questi siano i dispositivi corretti che hai aggiunto:</string>
     <string name="review_vault_devices_looks_good">Sembra corretto</string>

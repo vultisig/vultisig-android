@@ -855,7 +855,6 @@
     <string name="fast_vault_password_screen_hint">Isto porque a palavra-passe é utilizada para encriptar localmente o ficheiro de cópia de segurança, de forma semelhante à encriptação de um disco rígido. No passo seguinte, tem a opção de adicionar uma dica.</string>
     <string name="fast_vault_password_screen_hint_title">Mais informações</string>
     <string name="peer_discovery_local_mode_hint">Está no modo local</string>
-    <string name="peer_discovery_recommended_devices_hint">Leia o QR Code com outro dispositivo. Recomenda-se a configuração com 3 dispositivos, mas 2 são suficientes.</string>
     <string name="review_vault_devices_title">Revise os dispositivos do cofre</string>
     <string name="review_vault_devices_description">Certifique-se de que estes são os dispositivos corretos que adicionou:</string>
     <string name="review_vault_devices_looks_good">Parece correto</string>

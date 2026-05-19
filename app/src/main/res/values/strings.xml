@@ -559,7 +559,6 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Switch to local mode</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Switch back to internet mode</string>
     <string name="peer_discovery_local_mode_hint">You’re in local mode</string>
-    <string name="peer_discovery_recommended_devices_hint">Scan QR with other device. 3-device setup recommended, 2 is sufficient.</string>
     <string name="fast_vault_name_screen_title">Name your vault</string>
     <string name="fast_vault_name_screen_desc">You can always rename your vault later in the settings</string>
     <string name="enter_email_screen_title">Enter your email</string>
