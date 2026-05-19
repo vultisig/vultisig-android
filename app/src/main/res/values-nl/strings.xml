@@ -1187,4 +1187,10 @@
     <string name="decoded_function_amount">Bedrag</string>
     <string name="decoded_function_unlimited">Onbeperkt</string>
     <string name="decoded_function_unlimited_amount">Onbeperkt %1$s</string>
+    <string name="decoded_function_from_token">Bron-token</string>
+    <string name="decoded_function_to_token">Bestemmingstoken</string>
+    <string name="decoded_function_amount_in">Bedrag in</string>
+    <string name="decoded_function_max_amount_in">Max. bedrag in</string>
+    <string name="decoded_function_min_amount_out">Min. bedrag uit</string>
+    <string name="decoded_function_amount_out">Bedrag uit</string>
 </resources>

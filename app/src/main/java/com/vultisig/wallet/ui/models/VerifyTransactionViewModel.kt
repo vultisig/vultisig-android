@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -164,6 +165,7 @@ constructor(
     private val addressBookRepository: AddressBookRepository,
     private val fourByteRepository: FourByteRepository,
     private val tokenMetadataResolver: TokenMetadataResolver,
+    private val tokenRepository: TokenRepository,
     @param:PrettyJson private val json: Json,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -370,6 +372,7 @@ constructor(
                     isUnlimitedApproval = isUnlimitedApproval,
                     json = json,
                     tokenMetadataResolver = tokenMetadataResolver,
+                    nativeTokenLookup = { c -> nativeTokenOrNull(c.id) },
                 )
 
             val namedUiModel =
@@ -429,4 +432,20 @@ constructor(
             }
         }
     }
+
+    /**
+     * Fetches the chain's native coin for the Universal Router swap-intent decoder so a native-ETH
+     * leg renders the right ticker. Non-fatal — a failed RPC just means the row displays the bare
+     * zero address. [CancellationException] propagates so structured-concurrency cancellation isn't
+     * swallowed.
+     */
+    private suspend fun nativeTokenOrNull(chainId: String) =
+        try {
+            tokenRepository.getNativeToken(chainId)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (t: Throwable) {
+            Timber.w(t, "Failed to resolve native token for %s", chainId)
+            null
+        }
 }

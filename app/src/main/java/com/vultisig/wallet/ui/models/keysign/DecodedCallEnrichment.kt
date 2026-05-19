@@ -1,9 +1,11 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.KnownEvmContracts
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
+import com.vultisig.wallet.data.repositories.UniversalRouterDecoder
 import kotlinx.serialization.json.Json
 
 /**
@@ -53,6 +55,7 @@ internal suspend fun enrichDecodedCall(
     isUnlimitedApproval: Boolean,
     json: Json,
     tokenMetadataResolver: TokenMetadataResolver,
+    nativeTokenLookup: suspend (Chain) -> Coin? = { null },
 ): DecodedCallExtras {
     if (functionInfo == null) return EMPTY
 
@@ -70,16 +73,37 @@ internal suspend fun enrichDecodedCall(
 
     val dstContractLabel = KnownEvmContracts.lookup(chain, dstAddress)
 
+    // Universal Router execute(...) goes through a dedicated swap-intent decoder so the labelled
+    // rows render real swap context (from/to token + amounts) instead of the opaque positional
+    // fallback `decodedFunctionParams` would produce for `(bytes, bytes[], uint256)`. Gated on
+    // the destination being on the known-router allowlist so an unrelated `execute` overload on
+    // another contract never coincidentally gets framed as a swap.
+    val urRows =
+        if (
+            UniversalRouterDecoder.isUniversalRouterExecuteSignature(signature) &&
+                dstContractLabel != null &&
+                isUniversalRouterLabel(dstContractLabel)
+        ) {
+            universalRouterSwapRows(
+                chain = chain,
+                intent = UniversalRouterDecoder.decode(functionInfo.inputs, json),
+                allVaults = allVaults,
+                tokenMetadataResolver = tokenMetadataResolver,
+                nativeTokenLookup = nativeTokenLookup,
+            )
+        } else null
+
     val rows =
-        decodedFunctionParams(
-            signature = signature,
-            inputsJson = functionInfo.inputs,
-            json = json,
-            tokenSymbol = approvalToken?.symbol,
-            tokenDecimals = approvalToken?.decimals,
-            contractLabel = { address -> KnownEvmContracts.lookup(chain, address) },
-            isUnlimitedApproval = isUnlimitedApproval,
-        )
+        urRows
+            ?: decodedFunctionParams(
+                signature = signature,
+                inputsJson = functionInfo.inputs,
+                json = json,
+                tokenSymbol = approvalToken?.symbol,
+                tokenDecimals = approvalToken?.decimals,
+                contractLabel = { address -> KnownEvmContracts.lookup(chain, address) },
+                isUnlimitedApproval = isUnlimitedApproval,
+            )
 
     return DecodedCallExtras(
         decodedFunctionParams = rows,
@@ -87,6 +111,15 @@ internal suspend fun enrichDecodedCall(
         approvalTokenTicker = approvalToken?.symbol,
     )
 }
+
+/**
+ * `true` when [label] points at a Universal Router entry in
+ * [com.vultisig.wallet.data.repositories.KnownEvmContracts]. Matching on the label rather than the
+ * full address keeps the allowlist in one place — adding a new UR deployment to the registry
+ * automatically enables decoding without touching this gate.
+ */
+private fun isUniversalRouterLabel(label: String): Boolean =
+    label.startsWith("Uniswap Universal Router", ignoreCase = true)
 
 private suspend fun resolveApprovalToken(
     chain: Chain,
