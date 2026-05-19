@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string name="app_name">Vultisig</string>
     <string name="tokens">Tokens</string>
     <string name="signing_error_please_try_again_s">Erro ao Assinar. Por favor, tente novamente. %s</string>
@@ -603,7 +603,7 @@
     <string name="backup_password_request_title">Quer encriptar o seu backup com uma palavra‑passe?</string>
     <string name="backup_password_request_caution_encrypt_desc">Se optar por adicionar uma palavra-passe, esta será utilizada para encriptar o ficheiro de backup.</string>
     <string name="backup_password_request_highlight_encrypt">encriptar</string>
-    <string name="backup_password_request_caution_cannot_reset_desc" tools:ignore="Typos">Lembre-se: se se esquecer da palavra-passe do seu cofre, esta não poderá ser redefinida ou recuperada.</string>
+    <string name="backup_password_request_caution_cannot_reset_desc">Lembre-se: caso se esqueça da palavra-passe do seu cofre, esta não poderá ser redefinida ou recuperada.</string>
     <string name="backup_password_request_highlight_cannot">Não é possível</string>
     <string name="backup_password_request_caution_secure_without_desc">Por defeito, o seu backup é seguro sem uma palavra-passe extra, uma vez que armazena as partilhas do Vault em locais diferentes.</string>
     <string name="backup_password_request_highlight_secure_without">Seguro sem</string>
