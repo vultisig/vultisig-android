@@ -1509,4 +1509,13 @@
     <string name="swap_error_approval_failed">代币批准交易失败。请重试</string>
     <string name="erc20_approval_unlimited_amount">无限制 %1$s 授权</string>
     <string name="erc20_approval_spender">接收方</string>
+    <string name="decoded_function_owner">所有者</string>
+    <string name="decoded_function_operator">操作员</string>
+    <string name="decoded_function_status">状态</string>
+    <string name="decoded_function_status_approved">已批准</string>
+    <string name="decoded_function_status_revoked">已撤销</string>
+    <string name="decoded_function_deadline">截止时间</string>
+    <string name="decoded_function_amount">金额</string>
+    <string name="decoded_function_unlimited">无限制</string>
+    <string name="decoded_function_unlimited_amount">无限制 %1$s</string>
 </resources>

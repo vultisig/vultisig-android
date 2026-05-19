@@ -1194,4 +1194,13 @@
     <string name="swap_error_approval_failed">Transakcija odobrenja tokena nije uspjela. Molimo pokušajte ponovno</string>
     <string name="erc20_approval_unlimited_amount">Neograničeno odobrenje %1$s</string>
     <string name="erc20_approval_spender">Trošač</string>
+    <string name="decoded_function_owner">Vlasnik</string>
+    <string name="decoded_function_operator">Operator</string>
+    <string name="decoded_function_status">Status</string>
+    <string name="decoded_function_status_approved">Odobreno</string>
+    <string name="decoded_function_status_revoked">Opozvano</string>
+    <string name="decoded_function_deadline">Rok</string>
+    <string name="decoded_function_amount">Iznos</string>
+    <string name="decoded_function_unlimited">Neograničeno</string>
+    <string name="decoded_function_unlimited_amount">Neograničeno %1$s</string>
 </resources>

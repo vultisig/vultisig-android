@@ -1182,4 +1182,13 @@
     <string name="swap_error_approval_failed">A transação de aprovação do token falhou. Por favor tente novamente</string>
     <string name="erc20_approval_unlimited_amount">Aprovação ilimitada de %1$s</string>
     <string name="erc20_approval_spender">Destinatário</string>
+    <string name="decoded_function_owner">Proprietário</string>
+    <string name="decoded_function_operator">Operador</string>
+    <string name="decoded_function_status">Estado</string>
+    <string name="decoded_function_status_approved">Aprovado</string>
+    <string name="decoded_function_status_revoked">Revogado</string>
+    <string name="decoded_function_deadline">Prazo</string>
+    <string name="decoded_function_amount">Montante</string>
+    <string name="decoded_function_unlimited">Ilimitado</string>
+    <string name="decoded_function_unlimited_amount">Ilimitado %1$s</string>
 </resources>
