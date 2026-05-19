@@ -335,7 +335,48 @@ internal class EthereumFeeServiceTest {
         val fee = service.calculateFees(swap(Chain.Ethereum)) as Eip1559
 
         assertEquals(DEFAULT_SWAP_LIMIT, fee.limit)
-        assertEquals(gwei(110), fee.networkPrice)
+        // Ethereum swaps store networkPrice at baseFee × 1.5; the actual broadcast
+        // maxFeePerGas is baseFee × 1.5 × 1.2 + priorityFee = baseFee × 1.8 +
+        // priorityFee, sized to survive base-fee spikes during the MPC sign window
+        // and land before the DEX deadline.
+        assertEquals(gwei(150), fee.networkPrice)
+    }
+
+    @Test
+    fun `Ethereum swap priority fee uses last reward when above the 2 GWEI floor`() = runTest {
+        // getFeeHistory() returns ascending order, so lastOrNull() is the max.
+        stubFeeHistory(listOf(gwei(3), gwei(5), gwei(8)))
+
+        val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
+
+        assertEquals(gwei(8), fee.maxPriorityFeePerGas)
+    }
+
+    @Test
+    fun `Ethereum swap priority fee uses the 2 GWEI floor when last reward is below it`() =
+        runTest {
+            stubFeeHistory(listOf(BigInteger.ONE, BigInteger.TEN, gwei(1)))
+
+            val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
+
+            assertEquals(gwei(2), fee.maxPriorityFeePerGas)
+        }
+
+    @Test
+    fun `Ethereum swap priority fee is capped to ETHEREUM_SWAP_PRIORITY_FEE_CAP`() = runTest {
+        // MEV-burst outlier in the recent window must not propagate as the bond.
+        stubFeeHistory(listOf(gwei(3), gwei(5), gwei(100)))
+
+        val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
+
+        assertEquals(gwei(10), fee.maxPriorityFeePerGas)
+    }
+
+    @Test
+    fun `Ethereum swap priority fee falls back to the 2 GWEI floor on empty history`() = runTest {
+        val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
+
+        assertEquals(gwei(2), fee.maxPriorityFeePerGas)
     }
 
     @Test
