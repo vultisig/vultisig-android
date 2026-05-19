@@ -152,6 +152,7 @@ constructor(
 ) : ViewModel() {
 
     private val vaultId: String = savedStateHandle.toRoute<Route.TransactionHistory>().vaultId
+    private val chainId: String? = savedStateHandle.toRoute<Route.TransactionHistory>().chainId
 
     private val currentTime = MutableStateFlow(System.currentTimeMillis())
 
@@ -263,6 +264,7 @@ constructor(
                     transactionHistoryRepository.observeTransactions(
                         vaultId = vaultId,
                         type = tab.toRepositoryType(),
+                        chain = chainId,
                     )
                 }
                 .combine(currentTime) { entities, now ->
@@ -293,7 +295,11 @@ constructor(
     private fun observeAssetSearchItems() {
         viewModelScope.launch {
             transactionHistoryRepository
-                .observeTransactions(vaultId = vaultId, type = TransactionHistoryType.OVERVIEW)
+                .observeTransactions(
+                    vaultId = vaultId,
+                    type = TransactionHistoryType.OVERVIEW,
+                    chain = chainId,
+                )
                 .map { entities ->
                     entities
                         .flatMap { entity ->

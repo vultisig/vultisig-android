@@ -20,21 +20,22 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.theme.Theme
 
-enum class TransactionType {
+enum class AssetAction {
     SWAP,
     BUY,
     SEND,
     RECEIVE,
     FUNCTIONS,
+    HISTORY,
 }
 
 @Composable
-fun TransactionTypeButton(
+fun AssetActionButton(
     modifier: Modifier = Modifier,
-    txType: TransactionType,
+    action: AssetAction,
     isSelected: Boolean =
-        when (txType) {
-            TransactionType.SWAP -> true
+        when (action) {
+            AssetAction.SWAP -> true
             else -> false
         },
     onClick: () -> Unit = {},
@@ -45,14 +46,15 @@ fun TransactionTypeButton(
         else Theme.v2.colors.backgrounds.tertiary_2
 
     val (logo, title) =
-        when (txType) {
-            TransactionType.SWAP -> R.drawable.swap_v2 to R.string.transaction_type_button_swap
-            TransactionType.BUY -> R.drawable.buy to R.string.transaction_type_button_buy
-            TransactionType.SEND -> R.drawable.send to R.string.transaction_type_button_send
-            TransactionType.RECEIVE ->
-                R.drawable.receive to R.string.transaction_type_button_receive
-            TransactionType.FUNCTIONS ->
+        when (action) {
+            AssetAction.SWAP -> R.drawable.swap_v2 to R.string.transaction_type_button_swap
+            AssetAction.BUY -> R.drawable.buy to R.string.transaction_type_button_buy
+            AssetAction.SEND -> R.drawable.send to R.string.transaction_type_button_send
+            AssetAction.RECEIVE -> R.drawable.receive to R.string.transaction_type_button_receive
+            AssetAction.FUNCTIONS ->
                 R.drawable.functions to R.string.transaction_type_button_functions
+            AssetAction.HISTORY ->
+                R.drawable.calendar_clock to R.string.transaction_type_button_history
         }
 
     Column(
@@ -86,12 +88,12 @@ fun TransactionTypeButton(
 
 @Preview
 @Composable
-private fun PreviewTransactionTypeButton() {
-    TransactionTypeButton(txType = TransactionType.SWAP, isSelected = true)
+private fun PreviewAssetActionButtonSwap() {
+    AssetActionButton(action = AssetAction.SWAP, isSelected = true)
 }
 
 @Preview
 @Composable
-private fun PreviewTransactionTypeButton2() {
-    TransactionTypeButton(txType = TransactionType.SEND, isSelected = false)
+private fun PreviewAssetActionButtonSend() {
+    AssetActionButton(action = AssetAction.SEND, isSelected = false)
 }

@@ -655,6 +655,7 @@
     <string name="chain_selection_key_import_warning">Vanwege technische beperkingen van sleutelimport en seed-gebaseerde wallets kunnen alleen vooraf gegenereerde ketens worden geselecteerd.</string>
     <string name="chain_selection_enable_failed">Inschakelen mislukt: %1$s</string>
     <string name="transaction_type_button_functions">Functies</string>
+    <string name="transaction_type_button_history">Geschiedenis</string>
     <string name="copy_address">Kopieer adres</string>
     <string name="chain_tokens_qr_receive_label">Ontvang %1$s</string>
     <string name="address_copied">%1$s-adres gekopieerd</string>

@@ -856,6 +856,7 @@
     <string name="chain_selection_enable_failed">Failed to enable: %1$s</string>
     <string name="transaction_type_button_send">Send</string>
     <string name="transaction_type_button_functions">Function</string>
+    <string name="transaction_type_button_history">History</string>
     <string name="copy_address">Copy Address</string>
     <string name="chain_tokens_qr_receive_label">Receive %1$s</string>
     <string name="address_copied">%1$s address copied</string>

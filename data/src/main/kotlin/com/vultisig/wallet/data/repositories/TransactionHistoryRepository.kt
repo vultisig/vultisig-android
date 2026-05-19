@@ -27,6 +27,7 @@ interface TransactionHistoryRepository {
     fun observeTransactions(
         vaultId: String,
         type: TransactionHistoryType,
+        chain: String? = null,
     ): Flow<List<TransactionHistoryEntity>>
 
     suspend fun getPendingTransactions(vaultId: String): List<TransactionHistoryEntity>
@@ -36,7 +37,7 @@ interface TransactionHistoryRepository {
     /** Merge backfill data with existing rows without wiping local metadata. */
     suspend fun upsertFromBackfill(entity: TransactionHistoryEntity)
 
-    /** Explicit CONFIRMED -> FAILED demotion for chain reorganisations. */
+    /** Explicit CONFIRMED -> FAILED demotion for chain reorganizations. */
     suspend fun demoteForReorg(chain: String, txHash: String, reason: String)
 
     /** Bump retry counter on a transient-status row (drives exponential backoff). */
@@ -89,11 +90,20 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
     override fun observeTransactions(
         vaultId: String,
         type: TransactionHistoryType,
+        chain: String?,
     ): Flow<List<TransactionHistoryEntity>> =
-        when (type) {
-            TransactionHistoryType.OVERVIEW -> dao.observeAllByVault(vaultId)
-            TransactionHistoryType.SEND -> dao.observeSendByVault(vaultId)
-            TransactionHistoryType.SWAPS -> dao.observeSwapByVault(vaultId)
+        if (chain == null) {
+            when (type) {
+                TransactionHistoryType.OVERVIEW -> dao.observeAllByVault(vaultId)
+                TransactionHistoryType.SEND -> dao.observeSendByVault(vaultId)
+                TransactionHistoryType.SWAPS -> dao.observeSwapByVault(vaultId)
+            }
+        } else {
+            when (type) {
+                TransactionHistoryType.OVERVIEW -> dao.observeAllByVaultAndChain(vaultId, chain)
+                TransactionHistoryType.SEND -> dao.observeSendByVaultAndChain(vaultId, chain)
+                TransactionHistoryType.SWAPS -> dao.observeSwapByVaultAndChain(vaultId, chain)
+            }
         }
 
     override suspend fun getPendingTransactions(vaultId: String): List<TransactionHistoryEntity> =

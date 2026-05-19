@@ -78,9 +78,9 @@ import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CameraButton
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.screens.v2.home.pager.banner.UpgradeBanner
 import com.vultisig.wallet.ui.screens.v2.home.pager.container.HomePagePagerContainer
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
@@ -109,7 +109,7 @@ class PreviewActivity : ComponentActivity() {
             OnBoardingComposeTheme {
                 when (screen) {
                     "swap_confirm" -> SwapConfirmPreview()
-                    "transaction_type_button" -> TransactionTypeButtonPreview()
+                    "asset_action_button" -> AssetActionButtonPreview()
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
                     "send_tx_done" -> SendTxDonePreview()
@@ -163,12 +163,12 @@ class PreviewActivity : ComponentActivity() {
 }
 
 @Composable
-private fun TransactionTypeButtonPreview() {
+private fun AssetActionButtonPreview() {
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.padding(24.dp)) {
-        TransactionTypeButton(txType = TransactionType.SWAP, isSelected = true)
-        TransactionTypeButton(txType = TransactionType.SEND, isSelected = false)
-        TransactionTypeButton(txType = TransactionType.RECEIVE, isSelected = false)
-        TransactionTypeButton(txType = TransactionType.BUY, isSelected = false)
+        AssetActionButton(action = AssetAction.SWAP, isSelected = true)
+        AssetActionButton(action = AssetAction.SEND, isSelected = false)
+        AssetActionButton(action = AssetAction.RECEIVE, isSelected = false)
+        AssetActionButton(action = AssetAction.BUY, isSelected = false)
     }
 }
 

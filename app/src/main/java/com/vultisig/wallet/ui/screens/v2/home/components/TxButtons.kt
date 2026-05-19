@@ -23,13 +23,13 @@ internal fun TxButtons(
         horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
     ) {
         if (isSwapEnabled) {
-            TransactionTypeButton(txType = TransactionType.SWAP, onClick = onSwap)
+            AssetActionButton(action = AssetAction.SWAP, onClick = onSwap)
         }
 
-        TransactionTypeButton(txType = TransactionType.SEND, onClick = onSend)
+        AssetActionButton(action = AssetAction.SEND, onClick = onSend)
 
-        TransactionTypeButton(txType = TransactionType.BUY, onClick = onBuy)
+        AssetActionButton(action = AssetAction.BUY, onClick = onBuy)
 
-        TransactionTypeButton(txType = TransactionType.RECEIVE, onClick = onReceive)
+        AssetActionButton(action = AssetAction.RECEIVE, onClick = onReceive)
     }
 }

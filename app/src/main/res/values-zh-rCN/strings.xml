@@ -1040,6 +1040,7 @@
     <!-- Transaction Type -->
     <string name="transaction_type_button_send">发送</string>
     <string name="transaction_type_button_functions">功能</string>
+    <string name="transaction_type_button_history">历史</string>
 
     <!-- Copy Address -->
     <string name="copy_address">复制地址</string>

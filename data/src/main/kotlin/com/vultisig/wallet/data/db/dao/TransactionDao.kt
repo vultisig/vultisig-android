@@ -31,6 +31,18 @@ abstract class TransactionHistoryDao {
     @Query(
         """
         SELECT * FROM transaction_history
+        WHERE vaultId = :vaultId AND chain = :chain
+        ORDER BY timestamp DESC
+    """
+    )
+    abstract fun observeAllByVaultAndChain(
+        vaultId: String,
+        chain: String,
+    ): Flow<List<TransactionHistoryEntity>>
+
+    @Query(
+        """
+        SELECT * FROM transaction_history
         WHERE vaultId = :vaultId AND type = 'SEND'
         ORDER BY timestamp DESC
     """
@@ -40,11 +52,35 @@ abstract class TransactionHistoryDao {
     @Query(
         """
         SELECT * FROM transaction_history
+        WHERE vaultId = :vaultId AND chain = :chain AND type = 'SEND'
+        ORDER BY timestamp DESC
+    """
+    )
+    abstract fun observeSendByVaultAndChain(
+        vaultId: String,
+        chain: String,
+    ): Flow<List<TransactionHistoryEntity>>
+
+    @Query(
+        """
+        SELECT * FROM transaction_history
         WHERE vaultId = :vaultId AND type = 'SWAP'
         ORDER BY timestamp DESC
     """
     )
     abstract fun observeSwapByVault(vaultId: String): Flow<List<TransactionHistoryEntity>>
+
+    @Query(
+        """
+        SELECT * FROM transaction_history
+        WHERE vaultId = :vaultId AND chain = :chain AND type = 'SWAP'
+        ORDER BY timestamp DESC
+    """
+    )
+    abstract fun observeSwapByVaultAndChain(
+        vaultId: String,
+        chain: String,
+    ): Flow<List<TransactionHistoryEntity>>
 
     /** NotFound is transient (indexer lag) and must remain pollable. */
     @Query(

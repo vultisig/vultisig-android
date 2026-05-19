@@ -660,6 +660,7 @@
     <string name="chain_selection_key_import_warning">Aufgrund technischer Einschränkungen von Schlüsselimport- und Seed-basierten Wallets können nur vorab generierte Blockchains ausgewählt werden.</string>
     <string name="chain_selection_enable_failed">Aktivieren fehlgeschlagen: %1$s</string>
     <string name="transaction_type_button_functions">Funktionen</string>
+    <string name="transaction_type_button_history">Verlauf</string>
     <string name="copy_address">Adresse kopieren</string>
     <string name="chain_tokens_qr_receive_label">Empfange %1$s</string>
     <string name="address_copied">%1$s Adresse kopiert</string>

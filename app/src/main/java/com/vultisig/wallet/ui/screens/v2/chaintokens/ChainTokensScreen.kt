@@ -24,9 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.play.core.review.ReviewManagerFactory
@@ -53,9 +56,9 @@ import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.KeyboardAware
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -85,6 +88,7 @@ internal fun ChainTokensScreen(
         onDeposit = viewModel::deposit,
         onBuy = viewModel::buy,
         onReceive = viewModel::openAddressQr,
+        onHistory = viewModel::history,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
         onHideSearchBar = viewModel::hideSearchBar,
@@ -106,6 +110,7 @@ internal fun ChainTokensScreen(
     onBuy: () -> Unit,
     onDeposit: () -> Unit,
     onReceive: () -> Unit,
+    onHistory: () -> Unit,
     onSelectTokens: () -> Unit,
     onTokenClick: (ChainTokenUiModel) -> Unit,
     onShowReviewPopUp: () -> Unit,
@@ -192,48 +197,47 @@ internal fun ChainTokensScreen(
 
                 UiSpacer(size = 32.dp)
 
-                Row(
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            space = 12.dp,
-                            alignment = Alignment.CenterHorizontally,
-                        ),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
+                AssetActionRow(modifier = Modifier.fillMaxWidth()) {
                     if (uiModel.canSwap) {
-                        TransactionTypeButton(
-                            txType = TransactionType.SWAP,
+                        AssetActionButton(
+                            action = AssetAction.SWAP,
                             isSelected = true,
                             onClick = onSwap,
                         )
                     }
 
-                    TransactionTypeButton(
-                        txType = TransactionType.SEND,
+                    AssetActionButton(
+                        action = AssetAction.SEND,
                         isSelected = false,
                         onClick = onSend,
                     )
 
                     if (uiModel.canBuy) {
-                        TransactionTypeButton(
-                            txType = TransactionType.BUY,
+                        AssetActionButton(
+                            action = AssetAction.BUY,
                             isSelected = false,
                             onClick = onBuy,
                         )
                     }
 
                     if (uiModel.canDeposit) {
-                        TransactionTypeButton(
-                            txType = TransactionType.FUNCTIONS,
+                        AssetActionButton(
+                            action = AssetAction.FUNCTIONS,
                             isSelected = false,
                             onClick = onDeposit,
                         )
                     }
 
-                    TransactionTypeButton(
-                        txType = TransactionType.RECEIVE,
+                    AssetActionButton(
+                        action = AssetAction.RECEIVE,
                         isSelected = false,
                         onClick = onReceive,
+                    )
+
+                    AssetActionButton(
+                        action = AssetAction.HISTORY,
+                        isSelected = false,
+                        onClick = onHistory,
                     )
                 }
 
@@ -306,6 +310,63 @@ internal fun ChainTokensScreen(
     )
 }
 
+// Greedy packs children into rows by available width. If the last row would end with a single
+// item, pulls one from the row above so the last row has at least two.
+@Composable
+private fun AssetActionRow(
+    modifier: Modifier = Modifier,
+    horizontalGap: Dp = 12.dp,
+    verticalGap: Dp = 12.dp,
+    content: @Composable () -> Unit,
+) {
+    Layout(modifier = modifier, content = content) { measurables, constraints ->
+        val hGap = horizontalGap.roundToPx()
+        val vGap = verticalGap.roundToPx()
+        val placeables = measurables.map { it.measure(constraints.copy(minWidth = 0)) }
+        val outerWidth = constraints.maxWidth
+
+        val rows = mutableListOf<MutableList<Placeable>>()
+        var currentRow = mutableListOf<Placeable>()
+        var currentRowWidth = 0
+        placeables.forEach { p ->
+            val widthIfAdded =
+                if (currentRow.isEmpty()) p.width else currentRowWidth + hGap + p.width
+            if (currentRow.isNotEmpty() && widthIfAdded > outerWidth) {
+                rows.add(currentRow)
+                currentRow = mutableListOf(p)
+                currentRowWidth = p.width
+            } else {
+                currentRow.add(p)
+                currentRowWidth = widthIfAdded
+            }
+        }
+        if (currentRow.isNotEmpty()) rows.add(currentRow)
+
+        if (rows.size >= 2 && rows.last().size == 1) {
+            val upper = rows[rows.size - 2]
+            if (upper.size >= 2) {
+                rows.last().add(0, upper.removeAt(upper.size - 1))
+            }
+        }
+
+        val rowHeights = rows.map { row -> row.maxOf { it.height } }
+        val totalHeight = rowHeights.sum() + vGap * (rows.size - 1).coerceAtLeast(0)
+
+        layout(outerWidth, totalHeight) {
+            var y = 0
+            rows.forEachIndexed { idx, row ->
+                val rowWidth = row.sumOf { it.width } + hGap * (row.size - 1).coerceAtLeast(0)
+                var x = ((outerWidth - rowWidth) / 2).coerceAtLeast(0)
+                row.forEach { p ->
+                    p.place(x, y)
+                    x += p.width + hGap
+                }
+                y += rowHeights[idx] + vGap
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 private fun PreviewChainCoinScreen1() {
@@ -353,6 +414,7 @@ private fun PreviewChainCoinScreen1() {
         onBuy = {},
         onDeposit = {},
         onReceive = {},
+        onHistory = {},
         onSelectTokens = {},
         onTokenClick = {},
         onShowReviewPopUp = {},
