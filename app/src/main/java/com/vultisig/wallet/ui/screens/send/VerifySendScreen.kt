@@ -626,3 +626,24 @@ private fun PreviewVerifySendScreen() {
         onConfirm = {},
     )
 }
+
+@Preview
+@Composable
+private fun JoinKeysignSendVerifyPreview() {
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        srcAddress = "0x1111111111111111111111111111111111111111",
+                        dstAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                    )
+            ),
+        isConsentsEnabled = false,
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onBackClick = {},
+        onFastSignClick = {},
+        onConfirm = {},
+    )
+}
