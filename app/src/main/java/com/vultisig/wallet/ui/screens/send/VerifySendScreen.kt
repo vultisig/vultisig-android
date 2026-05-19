@@ -63,6 +63,7 @@ import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
+import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
 import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
@@ -132,9 +133,24 @@ internal fun VerifySendScreen(
     onBackClick: () -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
+    /**
+     * Opens the Transaction Details disclosure on first composition. Only the debug-only
+     * [com.vultisig.wallet.debug.PreviewActivity] passes `true` so the PR screenshots can capture
+     * the expanded rich-row layout without simulating a touch event; production paths keep the
+     * default `false` so the user still has to tap the expander.
+     */
+    initiallyExpandedDetails: Boolean = false,
 ) {
     V2Scaffold(
-        title = stringResource(R.string.verify_send_send_overview).takeIf { hasToolbar },
+        title =
+            stringResource(
+                    if (state.transaction.isUniversalRouterSwap) {
+                        R.string.verify_swap_swap_overview
+                    } else {
+                        R.string.verify_send_send_overview
+                    }
+                )
+                .takeIf { hasToolbar },
         onBackClick = onBackClick.takeIf { hasToolbar },
         bottomBar = {
             Column(
@@ -229,10 +245,18 @@ internal fun VerifySendScreen(
 
                     // Hero is the dApp signing source of truth — Blockaid simulation when
                     // resolved, function-name title when only the 4byte decode loaded, native
-                    // VsOverviewToken otherwise.
+                    // VsOverviewToken otherwise. For a decoded Universal Router swap we override
+                    // the raw `execute` function name with a localised "Swap" title so the user
+                    // sees real intent instead of the router's plumbing.
+                    val heroTitle =
+                        if (tx.isUniversalRouterSwap) {
+                            stringResource(R.string.decoded_function_swap_title)
+                        } else {
+                            tx.functionName
+                        }
                     TransactionHero(
                         heroContent = tx.heroContent,
-                        functionName = tx.functionName,
+                        functionName = heroTitle,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         VsOverviewToken(
@@ -256,7 +280,11 @@ internal fun VerifySendScreen(
 
                     VerifyCardDivider(0.dp)
 
-                    val toDstLabel = tx.dstVaultName ?: tx.dstAddressBookTitle ?: tx.dstLabel
+                    val toDstLabel =
+                        tx.dstVaultName
+                            ?: tx.dstAddressBookTitle
+                            ?: tx.dstContractLabel
+                            ?: tx.dstLabel
                     VerifyCardDetails(
                         title = stringResource(R.string.verify_transaction_to_title),
                         subtitle = toDstLabel ?: tx.dstAddress,
@@ -347,6 +375,8 @@ internal fun VerifySendScreen(
                         TransactionDetailsSection(
                             functionSignature = tx.functionSignature,
                             functionInputs = tx.functionInputs,
+                            decodedFunctionParams = tx.decodedFunctionParams,
+                            initiallyExpanded = initiallyExpandedDetails,
                         )
                     }
 
@@ -444,8 +474,13 @@ internal fun AddressField(title: String, address: String, divider: Boolean = tru
 }
 
 @Composable
-private fun TransactionDetailsSection(functionSignature: String?, functionInputs: String?) {
-    var isExpanded by rememberSaveable { mutableStateOf(false) }
+internal fun TransactionDetailsSection(
+    functionSignature: String?,
+    functionInputs: String?,
+    decodedFunctionParams: List<DecodedFunctionParam>?,
+    initiallyExpanded: Boolean = false,
+) {
+    var isExpanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         // Whole row is the tap target so the WCAG 2.5.5 minimum (48dp) is met without enlarging
@@ -498,11 +533,20 @@ private fun TransactionDetailsSection(functionSignature: String?, functionInputs
                     )
                 }
 
-                functionInputs?.let {
-                    VerifyCardJsonDetails(
-                        title = stringResource(R.string.verify_transaction_function_inputs_title),
-                        subtitle = it,
-                    )
+                // When the parser produces labelled rows we show them in place of the raw JSON —
+                // semantic labels read better than `["0xabc…", "115792…"]`. Fall back to the raw
+                // JSON when the function signature is something the parser doesn't recognise so
+                // the user still sees the underlying arguments rather than nothing.
+                if (!decodedFunctionParams.isNullOrEmpty()) {
+                    DecodedFunctionParamRows(params = decodedFunctionParams)
+                } else {
+                    functionInputs?.let {
+                        VerifyCardJsonDetails(
+                            title =
+                                stringResource(R.string.verify_transaction_function_inputs_title),
+                            subtitle = it,
+                        )
+                    }
                 }
             }
         }
@@ -622,6 +666,27 @@ private fun PreviewVerifySendScreen() {
         confirmTitle = stringResource(R.string.keysign_sign_transaction),
         onConsentAddress = {},
         onConsentAmount = {},
+        onFastSignClick = {},
+        onConfirm = {},
+    )
+}
+
+@Preview
+@Composable
+private fun JoinKeysignSendVerifyPreview() {
+    VerifySendScreen(
+        state =
+            VerifyTransactionUiModel(
+                transaction =
+                    TransactionDetailsUiModel(
+                        srcAddress = "0x1111111111111111111111111111111111111111",
+                        dstAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                    )
+            ),
+        isConsentsEnabled = false,
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onBackClick = {},
         onFastSignClick = {},
         onConfirm = {},
     )

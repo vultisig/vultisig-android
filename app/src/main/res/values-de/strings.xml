@@ -703,8 +703,7 @@
     <string name="send_form_enter_memo">Memo eingeben</string>
     <string name="name_vault_vault_with_this_name_already_exists">Ein Tresor mit diesem Namen ist bereits vorhanden.</string>
     <string name="name_vault_server_exists_warning_title">Schneller Tresor existiert bereits</string>
-    <string name="name_vault_server_exists_warning_message">Ein schneller Tresor mit dieser Seed-Phrase existiert bereits auf dem Server. Das Erstellen eines neuen schnellen Tresors ersetzt die Serverfreigabe und macht den bestehenden Tresor unbrauchbar. Erwägen Sie stattdessen einen sicheren Tresor.</string>
-    <string name="name_vault_server_exists_warning_continue">Weiter</string>
+    <string name="name_vault_server_exists_warning_message">Ein schneller Tresor für diese Seed-Phrase existiert bereits auf dem Server. Gehen Sie zurück und stellen Sie den bestehenden Tresor wieder her, oder wählen Sie einen sicheren Tresor für ein neues MPC-Setup.</string>
     <string name="name_vault_server_exists_warning_back">Zurück</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Unbekannt</string>
@@ -1186,4 +1185,20 @@
     <string name="swap_error_approval_failed">Token-Genehmigungstransaktion fehlgeschlagen. Bitte versuchen Sie es erneut</string>
     <string name="erc20_approval_unlimited_amount">Unbegrenzte %1$s-Freigabe</string>
     <string name="erc20_approval_spender">Begünstigter</string>
+    <string name="decoded_function_owner">Inhaber</string>
+    <string name="decoded_function_operator">Operator</string>
+    <string name="decoded_function_status">Status</string>
+    <string name="decoded_function_status_approved">Genehmigt</string>
+    <string name="decoded_function_status_revoked">Widerrufen</string>
+    <string name="decoded_function_deadline">Frist</string>
+    <string name="decoded_function_amount">Betrag</string>
+    <string name="decoded_function_unlimited">Unbegrenzt</string>
+    <string name="decoded_function_unlimited_amount">Unbegrenzt %1$s</string>
+    <string name="decoded_function_from_token">Quell-Token</string>
+    <string name="decoded_function_to_token">Ziel-Token</string>
+    <string name="decoded_function_amount_in">Eingangsbetrag</string>
+    <string name="decoded_function_max_amount_in">Max. Eingangsbetrag</string>
+    <string name="decoded_function_min_amount_out">Min. Ausgangsbetrag</string>
+    <string name="decoded_function_amount_out">Ausgangsbetrag</string>
+    <string name="decoded_function_swap_title">Tausch</string>
 </resources>

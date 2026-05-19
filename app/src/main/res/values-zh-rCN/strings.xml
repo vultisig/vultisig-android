@@ -896,8 +896,7 @@
     <!-- Vault Names -->
     <string name="name_vault_vault_with_this_name_already_exists">已存在此名称的保险库</string>
     <string name="name_vault_server_exists_warning_title">快速保险库已存在</string>
-    <string name="name_vault_server_exists_warning_message">使用此助记词的快速保险库已存在于服务器上。创建新的快速保险库将替换服务器份额，并使现有保险库无法使用。请考虑使用安全保险库。</string>
-    <string name="name_vault_server_exists_warning_continue">继续</string>
+    <string name="name_vault_server_exists_warning_message">此助记词的快速保险库已存在于服务器上。请返回并恢复现有保险库，或选择安全保险库进行新的 MPC 设置。</string>
     <string name="name_vault_server_exists_warning_back">返回</string>
 
     <!-- Errors -->
@@ -1509,4 +1508,20 @@
     <string name="swap_error_approval_failed">代币批准交易失败。请重试</string>
     <string name="erc20_approval_unlimited_amount">无限制 %1$s 授权</string>
     <string name="erc20_approval_spender">接收方</string>
+    <string name="decoded_function_owner">所有者</string>
+    <string name="decoded_function_operator">操作员</string>
+    <string name="decoded_function_status">状态</string>
+    <string name="decoded_function_status_approved">已批准</string>
+    <string name="decoded_function_status_revoked">已撤销</string>
+    <string name="decoded_function_deadline">截止时间</string>
+    <string name="decoded_function_amount">金额</string>
+    <string name="decoded_function_unlimited">无限制</string>
+    <string name="decoded_function_unlimited_amount">无限制 %1$s</string>
+    <string name="decoded_function_from_token">源代币</string>
+    <string name="decoded_function_to_token">目标代币</string>
+    <string name="decoded_function_amount_in">转入金额</string>
+    <string name="decoded_function_max_amount_in">最大转入金额</string>
+    <string name="decoded_function_min_amount_out">最小转出金额</string>
+    <string name="decoded_function_amount_out">转出金额</string>
+    <string name="decoded_function_swap_title">交换</string>
 </resources>

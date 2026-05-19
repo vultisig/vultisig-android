@@ -808,7 +808,6 @@ constructor(
                 Route.SelectAssetPopup(
                     vaultId = vaultId,
                     preselectedNetworkId = selectedChain.id,
-                    networkFilters = Route.SelectNetwork.Filters.None,
                     requestId = requestId,
                     pressX = position.x,
                     pressY = position.y,

@@ -698,8 +698,7 @@
     <string name="send_form_enter_memo">Memo invoeren</string>
     <string name="name_vault_vault_with_this_name_already_exists">Er bestaat al een kluis met deze naam</string>
     <string name="name_vault_server_exists_warning_title">Snelle kluis bestaat al</string>
-    <string name="name_vault_server_exists_warning_message">Er bestaat al een snelle kluis met deze herstelzin op de server. Het aanmaken van een nieuwe snelle kluis vervangt de servershare en maakt de bestaande kluis onbruikbaar. Overweeg in plaats daarvan een beveiligde kluis te gebruiken.</string>
-    <string name="name_vault_server_exists_warning_continue">Doorgaan</string>
+    <string name="name_vault_server_exists_warning_message">Er bestaat al een snelle kluis voor deze herstelzin op de server. Ga terug en herstel de bestaande kluis, of kies beveiligde kluis voor een nieuwe MPC-installatie.</string>
     <string name="name_vault_server_exists_warning_back">Terug</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Onbekend</string>
@@ -1178,4 +1177,20 @@
     <string name="swap_error_approval_failed">Tokengoedkeuringstransactie mislukt. Probeer het opnieuw.</string>
     <string name="erc20_approval_unlimited_amount">Onbeperkte goedkeuring van %1$s</string>
     <string name="erc20_approval_spender">Ontvanger</string>
+    <string name="decoded_function_owner">Eigenaar</string>
+    <string name="decoded_function_operator">Operator</string>
+    <string name="decoded_function_status">Status</string>
+    <string name="decoded_function_status_approved">Goedgekeurd</string>
+    <string name="decoded_function_status_revoked">Ingetrokken</string>
+    <string name="decoded_function_deadline">Deadline</string>
+    <string name="decoded_function_amount">Bedrag</string>
+    <string name="decoded_function_unlimited">Onbeperkt</string>
+    <string name="decoded_function_unlimited_amount">Onbeperkt %1$s</string>
+    <string name="decoded_function_from_token">Bron-token</string>
+    <string name="decoded_function_to_token">Bestemmingstoken</string>
+    <string name="decoded_function_amount_in">Bedrag in</string>
+    <string name="decoded_function_max_amount_in">Max. bedrag in</string>
+    <string name="decoded_function_min_amount_out">Min. bedrag uit</string>
+    <string name="decoded_function_amount_out">Bedrag uit</string>
+    <string name="decoded_function_swap_title">Swap</string>
 </resources>
