@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -107,6 +108,13 @@ internal data class TransactionDetailsUiModel(
      */
     val decodedFunctionParams: List<DecodedFunctionParam>? = null,
     /**
+     * True when the call decoded to an aggregate Uniswap Universal Router swap. The verify screen
+     * uses this to swap the toolbar title from "Send overview" to "Swap overview" and the card
+     * title from the raw `Execute` function name to "Swap" so the user sees real intent, not the
+     * router's `execute(...)` plumbing.
+     */
+    val isUniversalRouterSwap: Boolean = false,
+    /**
      * Resolved hero content for the dApp signing screens. Populated by [BuildHeroContentUseCase]
      * once the Blockaid simulation completes. When non-null, screens render this in place of the
      * function-name title or the native-amount `VsOverviewToken`. When null, screens fall back to
@@ -164,6 +172,7 @@ constructor(
     private val addressBookRepository: AddressBookRepository,
     private val fourByteRepository: FourByteRepository,
     private val tokenMetadataResolver: TokenMetadataResolver,
+    private val tokenRepository: TokenRepository,
     @param:PrettyJson private val json: Json,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -370,6 +379,7 @@ constructor(
                     isUnlimitedApproval = isUnlimitedApproval,
                     json = json,
                     tokenMetadataResolver = tokenMetadataResolver,
+                    nativeTokenLookup = { c -> nativeTokenOrNull(c.id) },
                 )
 
             val namedUiModel =
@@ -385,6 +395,7 @@ constructor(
                     approvalTokenTicker = decodedExtras.approvalTokenTicker,
                     dstContractLabel = decodedExtras.dstContractLabel,
                     decodedFunctionParams = decodedExtras.decodedFunctionParams,
+                    isUniversalRouterSwap = decodedExtras.isUniversalRouterSwap,
                 )
 
             _uiState.update { it.copy(transaction = namedUiModel) }
@@ -429,4 +440,20 @@ constructor(
             }
         }
     }
+
+    /**
+     * Fetches the chain's native coin for the Universal Router swap-intent decoder so a native-ETH
+     * leg renders the right ticker. Non-fatal — a failed RPC just means the row displays the bare
+     * zero address. [CancellationException] propagates so structured-concurrency cancellation isn't
+     * swallowed.
+     */
+    private suspend fun nativeTokenOrNull(chainId: String) =
+        try {
+            tokenRepository.getNativeToken(chainId)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to resolve native token for %s", chainId)
+            null
+        }
 }

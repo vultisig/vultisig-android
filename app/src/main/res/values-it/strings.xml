@@ -701,8 +701,7 @@
     <string name="send_form_enter_memo">Inserisci Memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Esiste già un Vault con questo nome</string>
     <string name="name_vault_server_exists_warning_title">Il vault veloce esiste già</string>
-    <string name="name_vault_server_exists_warning_message">Un vault veloce con questa frase seed esiste già sul server. La creazione di un nuovo vault veloce sostituirà la condivisione del server e renderà inutilizzabile il vault esistente. Considera invece l\'utilizzo di un vault sicuro.</string>
-    <string name="name_vault_server_exists_warning_continue">Continua</string>
+    <string name="name_vault_server_exists_warning_message">Un vault veloce per questa frase seed esiste già sul server. Torna indietro e ripristina il vault esistente, oppure scegli vault sicuro per una nuova configurazione MPC.</string>
     <string name="name_vault_server_exists_warning_back">Indietro</string>
     <string name="referral_create_status">Stato</string>
     <string name="referral_create_unknown">Sconosciuto</string>
@@ -1195,4 +1194,11 @@
     <string name="decoded_function_amount">Quantità</string>
     <string name="decoded_function_unlimited">Illimitato</string>
     <string name="decoded_function_unlimited_amount">Illimitato %1$s</string>
+    <string name="decoded_function_from_token">Token di origine</string>
+    <string name="decoded_function_to_token">Token di destinazione</string>
+    <string name="decoded_function_amount_in">Importo in entrata</string>
+    <string name="decoded_function_max_amount_in">Importo massimo in entrata</string>
+    <string name="decoded_function_min_amount_out">Importo minimo in uscita</string>
+    <string name="decoded_function_amount_out">Importo in uscita</string>
+    <string name="decoded_function_swap_title">Scambio</string>
 </resources>

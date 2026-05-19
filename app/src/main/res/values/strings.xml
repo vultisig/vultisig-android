@@ -909,8 +909,7 @@
     <string name="migration_password_enter_your_password_to_unlock">Enter your password to unlock your Server Share and start the upgrade</string>
     <string name="name_vault_vault_with_this_name_already_exists">Vault with this name already exists</string>
     <string name="name_vault_server_exists_warning_title">Fast vault already exists</string>
-    <string name="name_vault_server_exists_warning_message">A fast vault with this seed phrase already exists on the server. Creating a new fast vault will replace the server share and make the existing vault unusable. Consider using a secure vault instead.</string>
-    <string name="name_vault_server_exists_warning_continue">Continue</string>
+    <string name="name_vault_server_exists_warning_message">A fast vault for this seed phrase already exists on the server. Go back and recover the existing vault, or choose Secure Vault for a new MPC setup.</string>
     <string name="name_vault_server_exists_warning_back">Back</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Unknown</string>
@@ -1243,4 +1242,11 @@
     <string name="decoded_function_amount">Amount</string>
     <string name="decoded_function_unlimited">Unlimited</string>
     <string name="decoded_function_unlimited_amount">Unlimited %1$s</string>
+    <string name="decoded_function_from_token">From token</string>
+    <string name="decoded_function_to_token">To token</string>
+    <string name="decoded_function_amount_in">Amount in</string>
+    <string name="decoded_function_max_amount_in">Max amount in</string>
+    <string name="decoded_function_min_amount_out">Min amount out</string>
+    <string name="decoded_function_amount_out">Amount out</string>
+    <string name="decoded_function_swap_title">Swap</string>
 </resources>
