@@ -25,6 +25,7 @@ import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenViewModel
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -66,41 +67,42 @@ internal fun JoinKeygenScreen(model: JoinKeygenViewModel = hiltViewModel()) {
 
 @Composable
 private fun JoinKeygenScreen(state: JoinKeygenUiModel) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier =
-            Modifier.fillMaxSize()
-                .background(color = Theme.v2.colors.backgrounds.primary)
-                .padding(all = 36.dp),
+    OnboardingResponsiveContainer(
+        modifier = Modifier.background(color = Theme.v2.colors.backgrounds.primary)
     ) {
-        Text(
-            text = stringResource(R.string.join_key_gen_waiting_for_other_devices_to_join),
-            style = Theme.brockmann.headings.title1,
-            color = Theme.v2.colors.text.primary,
-            textAlign = TextAlign.Center,
-        )
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize().padding(all = 36.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.join_key_gen_waiting_for_other_devices_to_join),
+                style = Theme.brockmann.headings.title1,
+                color = Theme.v2.colors.text.primary,
+                textAlign = TextAlign.Center,
+            )
 
-        UiSpacer(12.dp)
+            UiSpacer(12.dp)
 
-        Text(
-            text = stringResource(R.string.join_key_gen_your_vault_will_start_generating),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.tertiary,
-            textAlign = TextAlign.Center,
-        )
+            Text(
+                text = stringResource(R.string.join_key_gen_your_vault_will_start_generating),
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.tertiary,
+                textAlign = TextAlign.Center,
+            )
 
-        UiSpacer(36.dp)
+            UiSpacer(36.dp)
 
-        RiveAnimation(
-            animation = R.raw.riv_connecting_with_server,
-            modifier = Modifier.size(24.dp),
-            onInit = {
-                if (state.isSuccess) {
-                    it.fireState("State Machine 1", "Succes")
-                }
-            },
-        )
+            RiveAnimation(
+                animation = R.raw.riv_connecting_with_server,
+                modifier = Modifier.size(24.dp),
+                onInit = {
+                    if (state.isSuccess) {
+                        it.fireState("State Machine 1", "Succes")
+                    }
+                },
+            )
+        }
     }
 }
 

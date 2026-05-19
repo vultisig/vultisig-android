@@ -54,6 +54,7 @@ import com.vultisig.wallet.ui.models.keygen.KeygenState
 import com.vultisig.wallet.ui.models.keygen.KeygenStepUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenViewModel
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -105,48 +106,54 @@ private fun KeygenScreen(state: KeygenUiModel, onTryAgainClick: () -> Unit) {
         applyScaffoldPaddings = false,
         topBar = {},
         content = {
-            Column(verticalArrangement = Arrangement.Center, modifier = Modifier.fillMaxSize()) {
-                val error = state.error
-                if (error == null) {
+            OnboardingResponsiveContainer {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    val error = state.error
+                    if (error == null) {
 
-                    val riveFile =
-                        rememberRiveResourceFile(resId = R.raw.riv_keygen).value ?: return@Column
-                    val vmi =
-                        rememberViewModelInstance(
+                        val riveFile =
+                            rememberRiveResourceFile(resId = R.raw.riv_keygen).value
+                                ?: return@Column
+                        val vmi =
+                            rememberViewModelInstance(
+                                file = riveFile,
+                                source = ViewModelSource.Named("ViewModel").defaultInstance(),
+                            )
+
+                        LaunchedEffect(Unit) { vmi.setBoolean("Connected", true) }
+
+                        val animatedValue by
+                            animateFloatAsState(
+                                targetValue = state.progress.times(100),
+                                animationSpec = tween(durationMillis = 300),
+                                label = "riv_progress_animation",
+                            )
+
+                        LaunchedEffect(animatedValue) {
+                            vmi.setNumber("progessPercentage", animatedValue)
+                        }
+
+                        RiveAnimation(
                             file = riveFile,
-                            source = ViewModelSource.Named("ViewModel").defaultInstance(),
+                            viewModelInstance = vmi,
+                            modifier = Modifier.fillMaxSize(),
+                            fit = Fit.Cover(),
                         )
-
-                    LaunchedEffect(Unit) { vmi.setBoolean("Connected", true) }
-
-                    val animatedValue by
-                        animateFloatAsState(
-                            targetValue = state.progress.times(100),
-                            animationSpec = tween(durationMillis = 300),
-                            label = "riv_progress_animation",
+                    } else {
+                        ErrorView(
+                            title = error.title.asString(),
+                            description = error.description.asString(),
+                            modifier = Modifier.fillMaxWidth(),
+                            buttonUiModel =
+                                ErrorViewButtonUiModel(
+                                    text = stringResource(R.string.try_again),
+                                    onClick = onTryAgainClick,
+                                ),
                         )
-
-                    LaunchedEffect(animatedValue) {
-                        vmi.setNumber("progessPercentage", animatedValue)
                     }
-
-                    RiveAnimation(
-                        file = riveFile,
-                        viewModelInstance = vmi,
-                        modifier = Modifier.fillMaxSize(),
-                        fit = Fit.Cover(),
-                    )
-                } else {
-                    ErrorView(
-                        title = error.title.asString(),
-                        description = error.description.asString(),
-                        modifier = Modifier.fillMaxWidth(),
-                        buttonUiModel =
-                            ErrorViewButtonUiModel(
-                                text = stringResource(R.string.try_again),
-                                onClick = onTryAgainClick,
-                            ),
-                    )
                 }
             }
         },

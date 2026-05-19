@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens.v3.onboarding
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,6 +37,8 @@ import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.v3.onboarding.ChooseDeviceCountUiEvent
 import com.vultisig.wallet.ui.models.v3.onboarding.ChooseDeviceCountViewModel
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -71,7 +72,7 @@ private fun ChooseDeviceCountScreen(onEvent: (ChooseDeviceCountUiEvent) -> Unit)
                 val a11yDescription =
                     stringResource(R.string.choose_device_count_a11y_description, deviceCountLabel)
 
-                Box(Modifier.fillMaxSize()) {
+                OnboardingResponsiveContainer {
                     RiveAnimation(
                         file = riveFile,
                         viewModelInstance = vmi,
@@ -118,5 +119,11 @@ private fun Tip() {
 @Preview
 @Composable
 private fun ChooseDeviceCountScreenPreview() {
+    ChooseDeviceCountScreen(onEvent = {})
+}
+
+@TabletPreview
+@Composable
+private fun ChooseDeviceCountScreenTabletPreview() {
     ChooseDeviceCountScreen(onEvent = {})
 }

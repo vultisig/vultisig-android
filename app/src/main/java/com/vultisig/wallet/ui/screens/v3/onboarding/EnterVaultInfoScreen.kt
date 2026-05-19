@@ -63,6 +63,8 @@ import com.vultisig.wallet.ui.models.v3.onboarding.EnterVaultInfoViewModel
 import com.vultisig.wallet.ui.models.v3.onboarding.StepState
 import com.vultisig.wallet.ui.models.v3.onboarding.StepType
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -114,146 +116,148 @@ internal fun EnterVaultInfoScreen(
         onBackClick = { onEvent(EnterVaultInfoEvent.Back) },
         actions = { AddReferralHeaderButton(hasReferral = hasReferral, onClick = onReferralClick) },
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            VaultInfoSteps(stepsState = uiState.stepAndStates)
-            UiSpacer(size = 32.dp)
-            Text(
-                text = uiState.activeStep.title.asString(),
-                style = Theme.brockmann.headings.title2,
-                color = Theme.v2.colors.text.primary,
-            )
-            UiSpacer(size = 12.dp)
-            val infoIconId = "info_icon"
-            val descText = uiState.activeStep.description.asString()
-            val descHighlight = uiState.activeStep.descriptionHighlight?.asString()
-            val baseAnnotated =
-                highlightedText(
-                    mainText = descText,
-                    highlightedWords = listOfNotNull(descHighlight),
-                    mainTextStyle = Theme.brockmann.body.s.medium,
-                    mainTextColor = Theme.v2.colors.text.tertiary,
-                    highlightTextStyle =
-                        Theme.brockmann.body.s.medium.copy(fontWeight = FontWeight.Bold),
-                    highlightTextColor = Theme.v2.colors.neutrals.n50,
+        OnboardingResponsiveContainer {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                VaultInfoSteps(stepsState = uiState.stepAndStates)
+                UiSpacer(size = 32.dp)
+                Text(
+                    text = uiState.activeStep.title.asString(),
+                    style = Theme.brockmann.headings.title2,
+                    color = Theme.v2.colors.text.primary,
                 )
-            val descAnnotated =
-                if (uiState.activeStep.showInfoIcon) {
-                    buildAnnotatedString {
-                        append(baseAnnotated)
-                        append(" ")
-                        appendInlineContent(infoIconId, "[i]")
-                    }
-                } else {
-                    baseAnnotated
-                }
-            Text(
-                text = descAnnotated,
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.body.s.medium,
-                textAlign = TextAlign.Center,
-                inlineContent =
-                    if (uiState.activeStep.showInfoIcon)
-                        mapOf(
-                            infoIconId to
-                                InlineTextContent(
-                                    placeholder =
-                                        Placeholder(
-                                            width = 16.sp,
-                                            height = 16.sp,
-                                            placeholderVerticalAlign =
-                                                PlaceholderVerticalAlign.Center,
-                                        )
-                                ) {
-                                    UiIcon(
-                                        drawableResId = R.drawable.circleinfo,
-                                        size = 16.dp,
-                                        tint = Theme.v2.colors.text.tertiary,
-                                        onClick = { onEvent(EnterVaultInfoEvent.ShowMoreInfo) },
-                                    )
-                                }
-                        )
-                    else emptyMap(),
-                modifier =
-                    Modifier.onGloballyPositioned { position ->
-                        hintBoxOffset =
-                            position.boundsInParent().bottom.toInt() + scaffoldVerticalPadding
-                    },
-            )
-            UiSpacer(size = 24.dp)
-
-            VsTextInputField(
-                textFieldState = uiState.inputTextFieldState,
-                trailingIcon = R.drawable.close_circle,
-                innerState = uiState.innerState,
-                type =
-                    if (uiState.activeStep.isPassword) {
-                        VsTextInputFieldType.Password(
-                            isVisible = uiState.isPasswordVisible,
-                            onVisibilityClick = {
-                                onEvent(EnterVaultInfoEvent.TogglePasswordVisibility)
-                            },
-                        )
+                UiSpacer(size = 12.dp)
+                val infoIconId = "info_icon"
+                val descText = uiState.activeStep.description.asString()
+                val descHighlight = uiState.activeStep.descriptionHighlight?.asString()
+                val baseAnnotated =
+                    highlightedText(
+                        mainText = descText,
+                        highlightedWords = listOfNotNull(descHighlight),
+                        mainTextStyle = Theme.brockmann.body.s.medium,
+                        mainTextColor = Theme.v2.colors.text.tertiary,
+                        highlightTextStyle =
+                            Theme.brockmann.body.s.medium.copy(fontWeight = FontWeight.Bold),
+                        highlightTextColor = Theme.v2.colors.neutrals.n50,
+                    )
+                val descAnnotated =
+                    if (uiState.activeStep.showInfoIcon) {
+                        buildAnnotatedString {
+                            append(baseAnnotated)
+                            append(" ")
+                            appendInlineContent(infoIconId, "[i]")
+                        }
                     } else {
-                        VsTextInputFieldType.Text
-                    },
-                onTrailingIconClick = { onEvent(EnterVaultInfoEvent.ClearInput) },
-                footNote = uiState.errorMessage?.asString(),
-                imeAction = ImeAction.Go,
-                onKeyboardAction = {
-                    if (canProceed) {
-                        onEvent(EnterVaultInfoEvent.Next)
+                        baseAnnotated
                     }
-                },
-                hint = uiState.textFieldHint.asString(),
-            )
+                Text(
+                    text = descAnnotated,
+                    color = Theme.v2.colors.text.tertiary,
+                    style = Theme.brockmann.body.s.medium,
+                    textAlign = TextAlign.Center,
+                    inlineContent =
+                        if (uiState.activeStep.showInfoIcon)
+                            mapOf(
+                                infoIconId to
+                                    InlineTextContent(
+                                        placeholder =
+                                            Placeholder(
+                                                width = 16.sp,
+                                                height = 16.sp,
+                                                placeholderVerticalAlign =
+                                                    PlaceholderVerticalAlign.Center,
+                                            )
+                                    ) {
+                                        UiIcon(
+                                            drawableResId = R.drawable.circleinfo,
+                                            size = 16.dp,
+                                            tint = Theme.v2.colors.text.tertiary,
+                                            onClick = { onEvent(EnterVaultInfoEvent.ShowMoreInfo) },
+                                        )
+                                    }
+                            )
+                        else emptyMap(),
+                    modifier =
+                        Modifier.onGloballyPositioned { position ->
+                            hintBoxOffset =
+                                position.boundsInParent().bottom.toInt() + scaffoldVerticalPadding
+                        },
+                )
+                UiSpacer(size = 24.dp)
 
-            if (uiState.activeStep.isPassword) {
-                UiSpacer(size = 8.dp)
                 VsTextInputField(
-                    textFieldState = uiState.confirmPasswordTextFieldState,
-                    type =
-                        VsTextInputFieldType.Password(
-                            isVisible = uiState.isConfirmPasswordVisible,
-                            onVisibilityClick = {
-                                onEvent(EnterVaultInfoEvent.ToggleConfirmPasswordVisibility)
-                            },
-                        ),
+                    textFieldState = uiState.inputTextFieldState,
                     trailingIcon = R.drawable.close_circle,
                     innerState = uiState.innerState,
-                    onTrailingIconClick = { onEvent(EnterVaultInfoEvent.ClearConfirmInput) },
+                    type =
+                        if (uiState.activeStep.isPassword) {
+                            VsTextInputFieldType.Password(
+                                isVisible = uiState.isPasswordVisible,
+                                onVisibilityClick = {
+                                    onEvent(EnterVaultInfoEvent.TogglePasswordVisibility)
+                                },
+                            )
+                        } else {
+                            VsTextInputFieldType.Text
+                        },
+                    onTrailingIconClick = { onEvent(EnterVaultInfoEvent.ClearInput) },
+                    footNote = uiState.errorMessage?.asString(),
                     imeAction = ImeAction.Go,
                     onKeyboardAction = {
-                        if (uiState.isNextButtonEnabled) {
+                        if (canProceed) {
                             onEvent(EnterVaultInfoEvent.Next)
                         }
                     },
-                    hint = uiState.confirmPasswordTextFieldHint.asString(),
+                    hint = uiState.textFieldHint.asString(),
                 )
+
+                if (uiState.activeStep.isPassword) {
+                    UiSpacer(size = 8.dp)
+                    VsTextInputField(
+                        textFieldState = uiState.confirmPasswordTextFieldState,
+                        type =
+                            VsTextInputFieldType.Password(
+                                isVisible = uiState.isConfirmPasswordVisible,
+                                onVisibilityClick = {
+                                    onEvent(EnterVaultInfoEvent.ToggleConfirmPasswordVisibility)
+                                },
+                            ),
+                        trailingIcon = R.drawable.close_circle,
+                        innerState = uiState.innerState,
+                        onTrailingIconClick = { onEvent(EnterVaultInfoEvent.ClearConfirmInput) },
+                        imeAction = ImeAction.Go,
+                        onKeyboardAction = {
+                            if (uiState.isNextButtonEnabled) {
+                                onEvent(EnterVaultInfoEvent.Next)
+                            }
+                        },
+                        hint = uiState.confirmPasswordTextFieldHint.asString(),
+                    )
+                }
+
+                UiSpacer(weight = 1f)
+                VsButton(
+                    label = stringResource(R.string.enter_email_screen_next),
+                    modifier = Modifier.fillMaxWidth(),
+                    state = if (canProceed) VsButtonState.Enabled else VsButtonState.Disabled,
+                ) {
+                    onEvent(EnterVaultInfoEvent.Next)
+                }
             }
 
-            UiSpacer(weight = 1f)
-            VsButton(
-                label = stringResource(R.string.enter_email_screen_next),
-                modifier = Modifier.fillMaxWidth(),
-                state = if (canProceed) VsButtonState.Enabled else VsButtonState.Disabled,
-            ) {
-                onEvent(EnterVaultInfoEvent.Next)
-            }
+            HintBox(
+                message = stringResource(R.string.fast_vault_password_screen_hint),
+                offset = IntOffset(x = 0, y = hintBoxOffset),
+                pointerAlignment = Alignment.End,
+                onDismissClick = { onEvent(EnterVaultInfoEvent.HideMoreInfo) },
+                modifier = Modifier.padding(horizontal = 16.dp),
+                isVisible = uiState.isMoreInfoVisible,
+                textColor = Theme.v2.colors.text.inverse,
+                textStyle = Theme.satoshi.price.bodyS,
+            )
         }
-
-        HintBox(
-            message = stringResource(R.string.fast_vault_password_screen_hint),
-            offset = IntOffset(x = 0, y = hintBoxOffset),
-            pointerAlignment = Alignment.End,
-            onDismissClick = { onEvent(EnterVaultInfoEvent.HideMoreInfo) },
-            modifier = Modifier.padding(horizontal = 16.dp),
-            isVisible = uiState.isMoreInfoVisible,
-            textColor = Theme.v2.colors.text.inverse,
-            textStyle = Theme.satoshi.price.bodyS,
-        )
     }
 }
 
@@ -348,6 +352,25 @@ private fun ServerVaultExistsWarningDialog(onContinue: () -> Unit, onDismiss: ()
 @Preview
 @Composable
 private fun EnterVaultInfoScreenPreview() {
+    EnterVaultInfoScreen(
+        uiState =
+            EnterVaultInfoUiState(
+                stepAndStates =
+                    mapOf(
+                        StepType.Name to StepState.Done,
+                        StepType.Email to StepState.Done,
+                        StepType.Password to StepState.InProgress,
+                    ),
+                activeStep = StepType.Password,
+                isMoreInfoVisible = true,
+            ),
+        onEvent = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun EnterVaultInfoScreenTabletPreview() {
     EnterVaultInfoScreen(
         uiState =
             EnterVaultInfoUiState(

@@ -16,7 +16,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +44,7 @@ import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.services.VultisigFirebaseMessagingService
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.v2.V2.colors
+import com.vultisig.wallet.ui.utils.LocalWindowSizeClass
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlinx.coroutines.launch
@@ -94,31 +98,38 @@ class MainActivity : AppCompatActivity() {
         observePreventScreenshots()
 
         setContent {
-            OnBoardingComposeTheme {
-                val screen by mainViewModel.startDestination.collectAsStateWithLifecycle()
+            @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+            val windowSizeClass = calculateWindowSizeClass(this)
+            CompositionLocalProvider(LocalWindowSizeClass provides windowSizeClass) {
+                OnBoardingComposeTheme {
+                    val screen by mainViewModel.startDestination.collectAsStateWithLifecycle()
 
-                val navController = rememberNavController()
+                    val navController = rememberNavController()
 
-                val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
-                var showSplash by remember { mutableStateOf(true) }
+                    val isLoading by mainViewModel.isLoading.collectAsStateWithLifecycle()
+                    var showSplash by remember { mutableStateOf(true) }
 
-                if (showSplash) {
-                    AnimatedSplash(isLoading = isLoading, onSplashComplete = { showSplash = false })
-                } else {
-                    var isNavigationReady by remember { mutableStateOf(false) }
+                    if (showSplash) {
+                        AnimatedSplash(
+                            isLoading = isLoading,
+                            onSplashComplete = { showSplash = false },
+                        )
+                    } else {
+                        var isNavigationReady by remember { mutableStateOf(false) }
 
-                    if (isNavigationReady) {
-                        CheckDeeplink(mainViewModel::openUri)
+                        if (isNavigationReady) {
+                            CheckDeeplink(mainViewModel::openUri)
+                        }
+
+                        CheckUpdates()
+
+                        MainActivityContent(
+                            navController = navController,
+                            mainViewModel = mainViewModel,
+                            startDestination = screen,
+                            onNavigationReady = { isNavigationReady = true },
+                        )
                     }
-
-                    CheckUpdates()
-
-                    MainActivityContent(
-                        navController = navController,
-                        mainViewModel = mainViewModel,
-                        startDestination = screen,
-                        onNavigationReady = { isNavigationReady = true },
-                    )
                 }
             }
         }

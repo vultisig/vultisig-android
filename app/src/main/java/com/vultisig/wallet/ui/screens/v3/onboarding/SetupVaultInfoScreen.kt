@@ -23,9 +23,12 @@ import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.v3.onboarding.SetupVaultInfoEvent
 import com.vultisig.wallet.ui.models.v3.onboarding.SetupVaultInfoUiState
 import com.vultisig.wallet.ui.models.v3.onboarding.SetupVaultInfoViewModel
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.SetupVaultGuideItem
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.SetupVaultHeader
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.SetupVaultRive
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -45,55 +48,61 @@ private fun SetupVaultInfoScreen(
         onBackClick = { onEvent(SetupVaultInfoEvent.Back) },
         applyDefaultPaddings = false,
         content = {
-            Column(modifier = Modifier.fillMaxSize()) {
-                Column(modifier = Modifier.padding(horizontal = V3Scaffold.PADDING_HORIZONTAL)) {
-                    UiSpacer(size = 20.dp)
-                    Text(
-                        text = stringResource(R.string.vault_setup_your_vault_setup),
-                        color = Theme.v2.colors.neutrals.n50,
-                        style = Theme.brockmann.headings.title2,
-                    )
-                    UiSpacer(size = 20.dp)
+            OnboardingResponsiveContainer {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = V3Scaffold.PADDING_HORIZONTAL)
+                    ) {
+                        UiSpacer(size = 20.dp)
+                        Text(
+                            text = stringResource(R.string.vault_setup_your_vault_setup),
+                            color = Theme.v2.colors.neutrals.n50,
+                            style = Theme.brockmann.headings.title2,
+                        )
+                        UiSpacer(size = 20.dp)
 
-                    SetupVaultHeader(
-                        logo = uiState.headerLogo,
-                        title = uiState.title.asString(),
-                        subTitle = uiState.subTitle.asString(),
-                    )
-                }
+                        SetupVaultHeader(
+                            logo = uiState.headerLogo,
+                            title = uiState.title.asString(),
+                            subTitle = uiState.subTitle.asString(),
+                        )
+                    }
 
-                UiSpacer(size = 14.dp)
+                    UiSpacer(size = 14.dp)
 
-                SetupVaultRive(animationRes = uiState.rive)
+                    SetupVaultRive(animationRes = uiState.rive)
 
-                UiSpacer(size = 33.dp)
+                    UiSpacer(size = 33.dp)
 
-                Column(
-                    modifier =
-                        Modifier.padding(
-                                horizontal = V3Scaffold.PADDING_HORIZONTAL,
-                                vertical = V3Scaffold.PADDING_VERTICAL,
-                            )
-                            .verticalScroll(rememberScrollState())
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        uiState.tips.forEach { (logo, title, subTitle) ->
-                            SetupVaultGuideItem(
-                                logo = logo,
-                                title = title.asString(),
-                                subTitle = subTitle.asString(),
-                            )
+                    Column(
+                        modifier =
+                            Modifier.padding(
+                                    horizontal = V3Scaffold.PADDING_HORIZONTAL,
+                                    vertical = V3Scaffold.PADDING_VERTICAL,
+                                )
+                                .verticalScroll(rememberScrollState())
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            uiState.tips.forEach { (logo, title, subTitle) ->
+                                SetupVaultGuideItem(
+                                    logo = logo,
+                                    title = title.asString(),
+                                    subTitle = subTitle.asString(),
+                                )
+                            }
                         }
                     }
                 }
             }
         },
         bottomBar = {
-            VsButton(
-                label = stringResource(R.string.key_import_device_count_get_started),
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { onEvent(SetupVaultInfoEvent.Next) },
-            )
+            OnboardingResponsiveBottomBar {
+                VsButton(
+                    label = stringResource(R.string.key_import_device_count_get_started),
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { onEvent(SetupVaultInfoEvent.Next) },
+                )
+            }
         },
     )
 }
@@ -101,5 +110,11 @@ private fun SetupVaultInfoScreen(
 @Composable
 @Preview
 private fun SetupVaultInfoScreenPreview() {
+    SetupVaultInfoScreen(uiState = SetupVaultInfoUiState(), onEvent = {})
+}
+
+@Composable
+@TabletPreview
+private fun SetupVaultInfoScreenTabletPreview() {
     SetupVaultInfoScreen(uiState = SetupVaultInfoUiState(), onEvent = {})
 }
