@@ -534,14 +534,7 @@ constructor(
 
     fun dismissServerVaultWarning() {
         uiState.update { it.copy(showServerVaultExistsWarning = false) }
-    }
-
-    fun continueWithServerVaultWarning() {
-        uiState.update { it.copy(showServerVaultExistsWarning = false) }
-        val name = nameTextFieldState.text.toString()
-        val email = emailTextFieldState.text.toString()
-        val password = passwordTextFieldState.text.toString()
-        viewModelScope.launch { navigateToPeerDiscovery(name, email, password) }
+        viewModelScope.launch { navigator.back() }
     }
 
     private fun isNameValid(): Boolean {

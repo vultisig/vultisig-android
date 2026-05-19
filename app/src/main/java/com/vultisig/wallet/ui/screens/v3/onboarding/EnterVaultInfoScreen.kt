@@ -80,10 +80,7 @@ internal fun EnterVaultInfoScreen(viewModel: EnterVaultInfoViewModel = hiltViewM
     )
 
     if (uiState.showServerVaultExistsWarning) {
-        ServerVaultExistsWarningDialog(
-            onContinue = viewModel::continueWithServerVaultWarning,
-            onDismiss = viewModel::dismissServerVaultWarning,
-        )
+        ServerVaultExistsWarningDialog(onDismiss = viewModel::dismissServerVaultWarning)
     }
 
     if (showReferralSheet) {
@@ -306,7 +303,7 @@ fun StepIcon(type: StepType, state: StepState) {
 }
 
 @Composable
-private fun ServerVaultExistsWarningDialog(onContinue: () -> Unit, onDismiss: () -> Unit) {
+private fun ServerVaultExistsWarningDialog(onDismiss: () -> Unit) {
     AlertDialog(
         containerColor = Theme.v2.colors.backgrounds.secondary,
         onDismissRequest = onDismiss,
@@ -325,15 +322,6 @@ private fun ServerVaultExistsWarningDialog(onContinue: () -> Unit, onDismiss: ()
             )
         },
         confirmButton = {
-            TextButton(onClick = onContinue) {
-                Text(
-                    text = stringResource(R.string.name_vault_server_exists_warning_continue),
-                    color = Theme.v2.colors.neutrals.n100,
-                    style = Theme.montserrat.body3,
-                )
-            }
-        },
-        dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text(
                     text = stringResource(R.string.name_vault_server_exists_warning_back),
