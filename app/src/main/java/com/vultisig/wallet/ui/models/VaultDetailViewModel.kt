@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.content.Context
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.lifecycle.SavedStateHandle
@@ -11,7 +10,7 @@ import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.utils.share
+import com.vultisig.wallet.ui.usecases.ShareBitmapUseCase
 import com.vultisig.wallet.ui.utils.shareVaultDetailName
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -37,8 +36,11 @@ internal data class DeviceMeta(val name: String, val isThisDevice: Boolean)
 @HiltViewModel
 internal class VaultDetailViewModel
 @Inject
-constructor(savedStateHandle: SavedStateHandle, private val vaultRepository: VaultRepository) :
-    ViewModel() {
+constructor(
+    savedStateHandle: SavedStateHandle,
+    private val vaultRepository: VaultRepository,
+    private val shareBitmap: ShareBitmapUseCase,
+) : ViewModel() {
 
     private val vaultId: String = savedStateHandle.toRoute<Route.Details>().vaultId
 
@@ -66,7 +68,7 @@ constructor(savedStateHandle: SavedStateHandle, private val vaultRepository: Vau
         }
     }
 
-    fun takeScreenShot(graphicsLayer: GraphicsLayer, context: Context) {
+    fun takeScreenShot(graphicsLayer: GraphicsLayer) {
         viewModelScope.launch {
             try {
                 val bitmap =
@@ -74,16 +76,14 @@ constructor(savedStateHandle: SavedStateHandle, private val vaultRepository: Vau
                         graphicsLayer.toImageBitmap().asAndroidBitmap()
                     }
                 try {
-                    withContext(Dispatchers.Main) {
-                        context.share(
-                            bitmap = bitmap,
-                            fileName =
-                                shareVaultDetailName(
-                                    vaultName = uiModel.value.name,
-                                    vaultPart = uiModel.value.vaultPart,
-                                ),
-                        )
-                    }
+                    shareBitmap(
+                        bitmap = bitmap,
+                        fileName =
+                            shareVaultDetailName(
+                                vaultName = uiModel.value.name,
+                                vaultPart = uiModel.value.vaultPart,
+                            ),
+                    )
                 } finally {
                     bitmap.recycle()
                 }

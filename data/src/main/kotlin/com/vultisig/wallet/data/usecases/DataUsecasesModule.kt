@@ -4,12 +4,18 @@ import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCaseImpl
 import com.vultisig.wallet.data.usecases.backup.CreateZipVaultBackupFileNameUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateZipVaultBackupFileNameUseCaseImpl
+import com.vultisig.wallet.data.usecases.backup.DeleteBackupDocumentUseCase
+import com.vultisig.wallet.data.usecases.backup.DeleteBackupDocumentUseCaseImpl
 import com.vultisig.wallet.data.usecases.backup.IsVaultBackupFileExtensionValidUseCase
 import com.vultisig.wallet.data.usecases.backup.IsVaultBackupFileExtensionValidUseCaseImpl
 import com.vultisig.wallet.data.usecases.backup.RequestServerBackupUseCase
 import com.vultisig.wallet.data.usecases.backup.RequestServerBackupUseCaseImpl
+import com.vultisig.wallet.data.usecases.backup.SaveBackupToUriUseCase
+import com.vultisig.wallet.data.usecases.backup.SaveBackupToUriUseCaseImpl
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCaseImpl
+import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCase
+import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCaseImpl
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCaseImpl
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
@@ -247,4 +253,18 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindThorchainMemoParser(impl: ThorchainMemoParserImpl): ThorchainMemoParser
+
+    @Binds
+    @Singleton
+    fun bindSaveBackupToUriUseCase(impl: SaveBackupToUriUseCaseImpl): SaveBackupToUriUseCase
+
+    @Binds
+    @Singleton
+    fun bindDeleteBackupDocumentUseCase(
+        impl: DeleteBackupDocumentUseCaseImpl
+    ): DeleteBackupDocumentUseCase
+
+    @Binds
+    @Singleton
+    fun bindUriFileReaderUseCase(impl: UriFileReaderUseCaseImpl): UriFileReaderUseCase
 }

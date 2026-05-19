@@ -2,7 +2,6 @@
 
 package com.vultisig.wallet.app.activity
 
-import android.content.Context
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
@@ -41,7 +40,6 @@ internal class MainViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
 
-    private val context: Context = mockk(relaxed = true)
     private val navigator: Navigator<Destination> = mockk(relaxed = true)
     private val snackbarFlow: SnackbarFlow = mockk(relaxed = true)
     private val vaultRepository: VaultRepository = mockk(relaxed = true)
@@ -68,7 +66,6 @@ internal class MainViewModelTest {
 
     private fun createViewModel() =
         MainViewModel(
-            context = context,
             navigator = navigator,
             snackbarFlow = snackbarFlow,
             vaultRepository = vaultRepository,

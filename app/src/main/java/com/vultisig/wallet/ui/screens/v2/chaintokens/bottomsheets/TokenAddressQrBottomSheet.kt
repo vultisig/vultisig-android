@@ -39,6 +39,8 @@ internal fun TokenAddressQrBottomSheet(viewModel: TokenAddressQrViewModel = hilt
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     val graphicsLayer = rememberGraphicsLayer()
+    val addressCopiedMessage =
+        stringResource(R.string.chain_token_screen_address_copied, uiState.chainName)
 
     TokenAddressQrBottomSheet(
         chainName = uiState.chainName,
@@ -47,12 +49,10 @@ internal fun TokenAddressQrBottomSheet(viewModel: TokenAddressQrViewModel = hilt
         graphicsLayer = graphicsLayer,
         onDismiss = viewModel::back,
         onBottomSheetExpanded = viewModel::loadData,
-        onShareQrClick = {
-            viewModel.shareQRCode(graphicsLayer = graphicsLayer, context = context)
-        },
+        onShareQrClick = { viewModel.shareQRCode(graphicsLayer = graphicsLayer) },
         onCopyAddressClick = {
             VsClipboardService.copy(context, uiState.chainAddress)
-            viewModel.copy()
+            viewModel.copy(addressCopiedMessage)
         },
     )
 }
