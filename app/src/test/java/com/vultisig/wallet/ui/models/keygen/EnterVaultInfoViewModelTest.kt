@@ -135,31 +135,17 @@ internal class EnterVaultInfoViewModelTest {
             vm.uiState.value.isPasswordVisible.shouldBeFalse()
         }
 
-    /** Verifies dismissServerVaultWarning clears showServerVaultExistsWarning. */
+    /** Verifies dismissServerVaultWarning clears the flag and navigates back. */
     @Test
-    fun `dismissServerVaultWarning clears showServerVaultExistsWarning`() =
+    fun `dismissServerVaultWarning clears flag and navigates back`() =
         runTest(testDispatcher) {
             val vm = createViewModel()
             vm.uiState.update { it.copy(showServerVaultExistsWarning = true) }
             vm.uiState.value.showServerVaultExistsWarning.shouldBeTrue()
             vm.dismissServerVaultWarning()
-            vm.uiState.value.showServerVaultExistsWarning.shouldBeFalse()
-        }
-
-    /**
-     * Verifies continueWithServerVaultWarning clears the warning flag and routes to peer discovery.
-     */
-    @Test
-    fun `continueWithServerVaultWarning navigates to PeerDiscovery and clears warning`() =
-        runTest(testDispatcher) {
-            every { any<SavedStateHandle>().toRoute<Route.EnterVaultInfo>() } returns
-                Route.EnterVaultInfo(count = 1, tssAction = TssAction.KeyImport)
-            val vm = createViewModel()
-            vm.uiState.update { it.copy(showServerVaultExistsWarning = true) }
-            vm.continueWithServerVaultWarning()
             advanceUntilIdle()
             vm.uiState.value.showServerVaultExistsWarning.shouldBeFalse()
-            coVerify { navigator.route(any<Route.Keygen.PeerDiscovery>()) }
+            coVerify { navigator.navigate(Destination.Back) }
         }
 
     /** Verifies Back event from Name step navigates back. */
