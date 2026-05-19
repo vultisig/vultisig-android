@@ -40,7 +40,6 @@ import com.vultisig.wallet.ui.components.BiometryAuthScreen
 import com.vultisig.wallet.ui.components.banners.ForegroundNotificationBanner
 import com.vultisig.wallet.ui.components.banners.OfflineBanner
 import com.vultisig.wallet.ui.components.v2.snackbar.VsSnackBar
-import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.VaultAccountsUiModel
 import com.vultisig.wallet.ui.navigation.Route
@@ -67,7 +66,7 @@ internal fun MainActivityContent(
     if (foregroundNotification != null) lastNotification = foregroundNotification
 
     val context = LocalContext.current
-    val snackbarState = rememberVsSnackbarState()
+    val snackbarState = mainViewModel.snackbarState
     LaunchedEffect(snackbarFlow) {
         snackbarFlow.collectMessage { (message, type) ->
             val resolved = message.asString(context)

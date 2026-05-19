@@ -10,7 +10,7 @@ import com.vultisig.wallet.data.common.processZip
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-interface VaultFileReaderUseCase {
+interface UriFileReaderUseCase {
     suspend fun readContent(uri: Uri): String?
 
     suspend fun readName(uri: Uri): String?
@@ -20,9 +20,9 @@ interface VaultFileReaderUseCase {
     suspend fun extractZipEntries(uri: Uri): List<AppZipEntry>
 }
 
-internal class VaultFileReaderUseCaseImpl
+internal class UriFileReaderUseCaseImpl
 @Inject
-constructor(@param:ApplicationContext private val context: Context) : VaultFileReaderUseCase {
+constructor(@param:ApplicationContext private val context: Context) : UriFileReaderUseCase {
     override suspend fun readContent(uri: Uri): String? = uri.fileContent(context)
 
     override suspend fun readName(uri: Uri): String? = uri.fileName(context)

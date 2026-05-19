@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCaseImpl
+import com.vultisig.wallet.ui.usecases.ShareBitmapUseCase
+import com.vultisig.wallet.ui.usecases.ShareBitmapUseCaseImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

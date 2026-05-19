@@ -14,8 +14,8 @@ import com.vultisig.wallet.data.usecases.backup.SaveBackupToUriUseCase
 import com.vultisig.wallet.data.usecases.backup.SaveBackupToUriUseCaseImpl
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCaseImpl
-import com.vultisig.wallet.data.usecases.file.VaultFileReaderUseCase
-import com.vultisig.wallet.data.usecases.file.VaultFileReaderUseCaseImpl
+import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCase
+import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCaseImpl
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCaseImpl
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
@@ -262,5 +262,5 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
-    fun bindVaultFileReaderUseCase(impl: VaultFileReaderUseCaseImpl): VaultFileReaderUseCase
+    fun bindUriFileReaderUseCase(impl: UriFileReaderUseCaseImpl): UriFileReaderUseCase
 }

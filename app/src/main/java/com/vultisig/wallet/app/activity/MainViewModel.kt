@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.data.usecases.KeysignTransactionSummary
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
+import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
@@ -87,6 +88,8 @@ constructor(
     val destination: Flow<NavigateAction<Destination>> = navigator.destination
 
     val route: Flow<NavigateAction<Any>> = navigator.route
+
+    val snackbarState: VSSnackbarState = VSSnackbarState(1.seconds, viewModelScope)
 
     init {
         viewModelScope.safeLaunch {

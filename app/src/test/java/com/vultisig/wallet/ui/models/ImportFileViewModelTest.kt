@@ -19,7 +19,7 @@ import com.vultisig.wallet.data.usecases.MalformedVaultException
 import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.usecases.WrongPasswordException
-import com.vultisig.wallet.data.usecases.file.VaultFileReaderUseCase
+import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -60,7 +60,7 @@ internal class ImportFileViewModelTest {
     private lateinit var vaultRepository: VaultRepository
     private lateinit var chainAccountAddressRepository: ChainAccountAddressRepository
     private lateinit var snackbarFlow: SnackbarFlow
-    private lateinit var vaultFileReader: VaultFileReaderUseCase
+    private lateinit var uriFileReader: UriFileReaderUseCase
 
     @BeforeEach
     fun setUp() {
@@ -74,7 +74,7 @@ internal class ImportFileViewModelTest {
         vaultRepository = mockk(relaxed = true)
         chainAccountAddressRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
-        vaultFileReader = mockk(relaxed = true)
+        uriFileReader = mockk(relaxed = true)
     }
 
     @AfterEach
@@ -101,7 +101,7 @@ internal class ImportFileViewModelTest {
                 vaultRepository = vaultRepository,
                 chainAccountAddressRepository = chainAccountAddressRepository,
                 snackBarFlow = snackbarFlow,
-                vaultFileReader = vaultFileReader,
+                uriFileReader = uriFileReader,
                 defaultDispatcher = testDispatcher,
             )
         vm.uiModel.value =
@@ -344,7 +344,7 @@ internal class ImportFileViewModelTest {
         runTest {
             val uri = mockk<Uri>()
 
-            coEvery { vaultFileReader.readContent(uri) } returns "encrypted-file-content"
+            coEvery { uriFileReader.readContent(uri) } returns "encrypted-file-content"
             // Encrypted new-format without password → parser throws WrongPasswordException.
             coEvery { parseVaultFromString(any(), null) } throws WrongPasswordException()
 
@@ -363,7 +363,7 @@ internal class ImportFileViewModelTest {
         runTest {
             val uri = mockk<Uri>()
 
-            coEvery { vaultFileReader.readContent(uri) } returns "garbage"
+            coEvery { uriFileReader.readContent(uri) } returns "garbage"
             coEvery { parseVaultFromString(any(), null) } throws MalformedVaultException()
 
             val vm = createViewModel(fileContent = null, isZip = false, fileName = "vault.bak")
@@ -382,7 +382,7 @@ internal class ImportFileViewModelTest {
     fun `parseFileContent on Success imports without prompting for a password`() = runTest {
         val uri = mockk<Uri>()
 
-        coEvery { vaultFileReader.readContent(uri) } returns "unencrypted-valid"
+        coEvery { uriFileReader.readContent(uri) } returns "unencrypted-valid"
         coEvery { parseVaultFromString(any(), null) } returns testVault()
 
         val vm = createViewModel(fileContent = null, isZip = false, fileName = "vault.bak")
@@ -400,7 +400,7 @@ internal class ImportFileViewModelTest {
     fun `parseFileContent on Duplicate closes any prompt and shows duplicate error`() = runTest {
         val uri = mockk<Uri>()
 
-        coEvery { vaultFileReader.readContent(uri) } returns "unencrypted-duplicate"
+        coEvery { uriFileReader.readContent(uri) } returns "unencrypted-duplicate"
         coEvery { parseVaultFromString(any(), null) } returns testVault()
         coEvery { saveVault(any(), false) } throws DuplicateVaultException()
 
@@ -427,7 +427,7 @@ internal class ImportFileViewModelTest {
         // for a vault that's already decoded.
         val uri = mockk<Uri>()
 
-        coEvery { vaultFileReader.readContent(uri) } returns "valid-unencrypted"
+        coEvery { uriFileReader.readContent(uri) } returns "valid-unencrypted"
         coEvery { parseVaultFromString(any(), null) } returns testVault()
         coEvery { saveVault(any(), false) } throws RuntimeException("db locked")
 
@@ -528,7 +528,7 @@ internal class ImportFileViewModelTest {
     fun `saveFileToAppDir shows error state on SQLite constraint`() = runTest {
         val uri = mockk<Uri>()
 
-        coEvery { vaultFileReader.readContent(uri) } returns "test-content"
+        coEvery { uriFileReader.readContent(uri) } returns "test-content"
         coEvery { parseVaultFromString(any(), any()) } returns testVault()
         coEvery { saveVault(any(), false) } throws SQLiteConstraintException()
 
@@ -587,7 +587,7 @@ internal class ImportFileViewModelTest {
     fun `saveFileToAppDir surfaces unsupported error when fileContent returns null`() = runTest {
         val uri = mockk<Uri>()
 
-        coEvery { vaultFileReader.readContent(uri) } returns null
+        coEvery { uriFileReader.readContent(uri) } returns null
 
         val vm = createViewModel(fileContent = null)
         vm.uiModel.value =

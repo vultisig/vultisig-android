@@ -24,7 +24,7 @@ import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.usecases.WrongPasswordException
 import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
-import com.vultisig.wallet.data.usecases.file.VaultFileReaderUseCase
+import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCase
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -72,7 +72,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val snackBarFlow: SnackbarFlow,
-    private val vaultFileReader: VaultFileReaderUseCase,
+    private val uriFileReader: UriFileReaderUseCase,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -280,7 +280,7 @@ constructor(
     fun saveFileToAppDir() {
         val uri = uiModel.value.fileUri ?: return
         viewModelScope.launch {
-            val fileContent = vaultFileReader.readContent(uri)
+            val fileContent = uriFileReader.readContent(uri)
             if (fileContent == null) {
                 uiModel.update {
                     it.copy(
@@ -301,12 +301,12 @@ constructor(
     fun fetchFileName(uri: Uri?) {
         uri ?: return
         viewModelScope.launch {
-            val fileName = vaultFileReader.readName(uri)?.takeUnless { it.isBlank() }
+            val fileName = uriFileReader.readName(uri)?.takeUnless { it.isBlank() }
             if (fileName == null) {
                 resetPickerWithError()
                 return@launch
             }
-            val isZip = vaultFileReader.isValidZip(uri)
+            val isZip = uriFileReader.isValidZip(uri)
             val hasAllowedExtension = File(fileName).extension in FILE_ALLOWED_EXTENSIONS
             when {
                 !isZip && !hasAllowedExtension -> resetPickerWithError()
@@ -329,7 +329,7 @@ constructor(
     }
 
     private suspend fun acceptZip(uri: Uri, fileName: String) {
-        val entries = vaultFileReader.extractZipEntries(uri)
+        val entries = uriFileReader.extractZipEntries(uri)
         uiModel.update {
             it.copy(
                 fileUri = uri,

@@ -10,11 +10,11 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GenerateAccountQrUseCase
 import com.vultisig.wallet.data.usecases.QrBitmapData
-import com.vultisig.wallet.data.usecases.ShareBitmapUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.usecases.ShareBitmapUseCase
 import com.vultisig.wallet.ui.utils.ShareType
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.shareFileName
@@ -63,22 +63,22 @@ constructor(
 
     fun shareQRCode(graphicsLayer: GraphicsLayer) {
         viewModelScope.launch {
+            var shared = false
             try {
                 val bitmap =
                     withContext(Dispatchers.Default) {
                         graphicsLayer.toImageBitmap().asAndroidBitmap()
                     }
                 try {
-                    withContext(Dispatchers.Main) {
-                        shareBitmap(
-                            bitmap = bitmap,
-                            fileName =
-                                shareFileName(
-                                    requireNotNull(vaultRepository.get(args.vaultId)),
-                                    ShareType.TOKENADDRESS,
-                                ),
-                        )
-                    }
+                    shareBitmap(
+                        bitmap = bitmap,
+                        fileName =
+                            shareFileName(
+                                requireNotNull(vaultRepository.get(args.vaultId)),
+                                ShareType.TOKENADDRESS,
+                            ),
+                    )
+                    shared = true
                 } finally {
                     bitmap.recycle()
                 }
@@ -87,7 +87,7 @@ constructor(
                 Timber.e(e, "Failed to capture and share qr address screenshot")
             }
 
-            back()
+            if (shared) back()
         }
     }
 
