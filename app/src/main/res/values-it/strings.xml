@@ -1202,4 +1202,5 @@
     <string name="decoded_function_max_amount_in">Importo massimo in entrata</string>
     <string name="decoded_function_min_amount_out">Importo minimo in uscita</string>
     <string name="decoded_function_amount_out">Importo in uscita</string>
+    <string name="decoded_function_swap_title">Scambio</string>
 </resources>

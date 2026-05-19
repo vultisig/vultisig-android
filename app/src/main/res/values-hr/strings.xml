@@ -1209,4 +1209,5 @@
     <string name="decoded_function_max_amount_in">Maksimalni ulazni iznos</string>
     <string name="decoded_function_min_amount_out">Minimalni izlazni iznos</string>
     <string name="decoded_function_amount_out">Izlazni iznos</string>
+    <string name="decoded_function_swap_title">Zamjena</string>
 </resources>

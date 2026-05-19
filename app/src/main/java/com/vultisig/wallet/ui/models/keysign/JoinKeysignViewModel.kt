@@ -1154,6 +1154,7 @@ constructor(
                             approvalTokenTicker = decodedExtras.approvalTokenTicker,
                             dstContractLabel = decodedExtras.dstContractLabel,
                             decodedFunctionParams = decodedExtras.decodedFunctionParams,
+                            isUniversalRouterSwap = decodedExtras.isUniversalRouterSwap,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)

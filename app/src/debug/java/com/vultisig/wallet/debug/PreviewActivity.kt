@@ -1351,6 +1351,7 @@ private fun decodedUniversalRouterSendState(
             functionSignature = "execute(bytes,bytes[],uint256)",
             functionInputs = rawArgs,
             decodedFunctionParams = if (useUrRows) urRows else genericRows,
+            isUniversalRouterSwap = useUrRows,
             networkFeeFiatValue = "$2.41",
             networkFeeTokenValue = "0.000632 ETH",
         )

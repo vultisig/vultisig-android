@@ -108,6 +108,13 @@ internal data class TransactionDetailsUiModel(
      */
     val decodedFunctionParams: List<DecodedFunctionParam>? = null,
     /**
+     * True when the call decoded to an aggregate Uniswap Universal Router swap. The verify screen
+     * uses this to swap the toolbar title from "Send overview" to "Swap overview" and the card
+     * title from the raw `Execute` function name to "Swap" so the user sees real intent, not the
+     * router's `execute(...)` plumbing.
+     */
+    val isUniversalRouterSwap: Boolean = false,
+    /**
      * Resolved hero content for the dApp signing screens. Populated by [BuildHeroContentUseCase]
      * once the Blockaid simulation completes. When non-null, screens render this in place of the
      * function-name title or the native-amount `VsOverviewToken`. When null, screens fall back to
@@ -388,6 +395,7 @@ constructor(
                     approvalTokenTicker = decodedExtras.approvalTokenTicker,
                     dstContractLabel = decodedExtras.dstContractLabel,
                     decodedFunctionParams = decodedExtras.decodedFunctionParams,
+                    isUniversalRouterSwap = decodedExtras.isUniversalRouterSwap,
                 )
 
             _uiState.update { it.copy(transaction = namedUiModel) }

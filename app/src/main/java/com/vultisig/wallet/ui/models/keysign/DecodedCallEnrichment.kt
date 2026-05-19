@@ -16,6 +16,7 @@ internal data class DecodedCallExtras(
     val decodedFunctionParams: List<DecodedFunctionParam>?,
     val dstContractLabel: String?,
     val approvalTokenTicker: String?,
+    val isUniversalRouterSwap: Boolean = false,
 )
 
 /**
@@ -109,6 +110,7 @@ internal suspend fun enrichDecodedCall(
         decodedFunctionParams = rows,
         dstContractLabel = dstContractLabel,
         approvalTokenTicker = approvalToken?.symbol,
+        isUniversalRouterSwap = urRows != null,
     )
 }
 
@@ -143,4 +145,4 @@ private suspend fun resolveApprovalToken(
     return ApprovalToken(symbol = resolved.symbol, decimals = resolved.decimals)
 }
 
-private val EMPTY = DecodedCallExtras(null, null, null)
+private val EMPTY = DecodedCallExtras(null, null, null, false)
