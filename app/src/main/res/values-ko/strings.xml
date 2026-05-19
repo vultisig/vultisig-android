@@ -1212,4 +1212,11 @@
     <string name="decoded_function_amount">금액</string>
     <string name="decoded_function_unlimited">무제한</string>
     <string name="decoded_function_unlimited_amount">무제한 %1$s</string>
+    <string name="decoded_function_from_token">보내는 토큰</string>
+    <string name="decoded_function_to_token">받는 토큰</string>
+    <string name="decoded_function_amount_in">보내는 금액</string>
+    <string name="decoded_function_max_amount_in">최대 보내는 금액</string>
+    <string name="decoded_function_min_amount_out">최소 받는 금액</string>
+    <string name="decoded_function_amount_out">받는 금액</string>
+    <string name="decoded_function_swap_title">스왑</string>
 </resources>

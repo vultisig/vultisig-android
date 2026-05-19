@@ -1205,4 +1205,11 @@
     <string name="decoded_function_amount">Сумма</string>
     <string name="decoded_function_unlimited">Без ограничений</string>
     <string name="decoded_function_unlimited_amount">Без ограничений %1$s</string>
+    <string name="decoded_function_from_token">Исходный токен</string>
+    <string name="decoded_function_to_token">Целевой токен</string>
+    <string name="decoded_function_amount_in">Сумма ввода</string>
+    <string name="decoded_function_max_amount_in">Макс. сумма ввода</string>
+    <string name="decoded_function_min_amount_out">Мин. сумма получения</string>
+    <string name="decoded_function_amount_out">Сумма получения</string>
+    <string name="decoded_function_swap_title">Обмен</string>
 </resources>

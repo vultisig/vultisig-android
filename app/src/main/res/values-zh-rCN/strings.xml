@@ -1518,4 +1518,11 @@
     <string name="decoded_function_amount">金额</string>
     <string name="decoded_function_unlimited">无限制</string>
     <string name="decoded_function_unlimited_amount">无限制 %1$s</string>
+    <string name="decoded_function_from_token">源代币</string>
+    <string name="decoded_function_to_token">目标代币</string>
+    <string name="decoded_function_amount_in">转入金额</string>
+    <string name="decoded_function_max_amount_in">最大转入金额</string>
+    <string name="decoded_function_min_amount_out">最小转出金额</string>
+    <string name="decoded_function_amount_out">转出金额</string>
+    <string name="decoded_function_swap_title">交换</string>
 </resources>
