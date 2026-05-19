@@ -49,17 +49,70 @@ internal fun JoinKeysignView() {
     val isKeysignFinished = keysignState is KeysignState.KeysignFinished
     val isKeysignInProgress = state == Keysign && keysignState.isInProgress
     val isSignMessageDone = isKeysignFinished && verifyUiModel is VerifyUiModel.SignMessage
+
+    if (state == JoinKeysign) {
+        // Each Verify*Screen owns its scaffold + toolbar, so the join path renders
+        // them directly — avoids the double V2Scaffold padding that previously
+        // pushed the verify card and its button off-position vs the initiator path.
+        BackHandler(onBack = viewModel::navigateToHome)
+        when (val model = verifyUiModel) {
+            is VerifyUiModel.Send -> {
+                VerifySendScreen(
+                    state = model.model,
+                    dappMetadata = dappMetadata,
+                    isConsentsEnabled = false,
+                    hasToolbar = true,
+                    confirmTitle = stringResource(R.string.verify_swap_sign_button),
+                    onBackClick = viewModel::navigateToHome,
+                    onFastSignClick = {},
+                    onConfirm = viewModel::joinKeysign,
+                )
+            }
+
+            is VerifyUiModel.Swap -> {
+                VerifySwapScreen(
+                    state = model.model,
+                    dappMetadata = dappMetadata,
+                    hasToolbar = true,
+                    onBackClick = viewModel::navigateToHome,
+                    confirmTitle = stringResource(R.string.verify_swap_sign_button),
+                    isConsentsEnabled = false,
+                    onFastSignClick = {},
+                    onConfirm = viewModel::joinKeysign,
+                )
+            }
+
+            is VerifyUiModel.Deposit -> {
+                VerifyDepositScreen(
+                    state = model.model,
+                    dappMetadata = dappMetadata,
+                    hasToolbar = true,
+                    confirmTitle = stringResource(R.string.verify_swap_sign_button),
+                    onBackClick = viewModel::navigateToHome,
+                    onFastSignClick = {},
+                    onConfirm = viewModel::joinKeysign,
+                )
+            }
+
+            is VerifyUiModel.SignMessage -> {
+                VerifySignMessageScreen(
+                    state = model.model,
+                    hasToolbar = true,
+                    confirmTitle = stringResource(R.string.verify_swap_sign_button),
+                    onBackClick = viewModel::navigateToHome,
+                    onFastSignClick = {},
+                    onConfirm = viewModel::joinKeysign,
+                )
+            }
+        }
+        return
+    }
+
     val title =
         stringResource(
             when {
                 isSignMessageDone -> R.string.transaction_done_overview
                 isKeysignFinished -> R.string.transaction_complete_screen_title
-                state == JoinKeysign && verifyUiModel is VerifyUiModel.Send ->
-                    R.string.verify_send_send_overview
-                state == JoinKeysign && verifyUiModel is VerifyUiModel.Swap ->
-                    R.string.verify_swap_swap_overview
-                state == JoinKeysign && verifyUiModel is VerifyUiModel.SignMessage ->
-                    R.string.verify_transaction_screen_title
                 else -> R.string.sign_transaction
             }
         )
@@ -68,8 +121,7 @@ internal fun JoinKeysignView() {
         onBack = viewModel::navigateToHome,
         isError = state is Error,
         fullScreen = isKeysignInProgress,
-        applyDefaultPaddings =
-            !(state == JoinKeysign && verifyUiModel is VerifyUiModel.Swap) && !isKeysignFinished,
+        applyDefaultPaddings = !isKeysignFinished,
     ) {
         when (state) {
             DiscoveringSessionID,
@@ -91,52 +143,7 @@ internal fun JoinKeysignView() {
                 KeysignLoadingScreen(text = stringResource(R.string.join_keysign_discovery_service))
             }
 
-            JoinKeysign -> {
-                when (val model = verifyUiModel) {
-                    is VerifyUiModel.Send -> {
-                        VerifySendScreen(
-                            state = model.model,
-                            dappMetadata = dappMetadata,
-                            isConsentsEnabled = false,
-                            confirmTitle = stringResource(R.string.verify_transaction_join_keysign),
-                            onFastSignClick = {},
-                            onConfirm = viewModel::joinKeysign,
-                        )
-                    }
-
-                    is VerifyUiModel.Swap -> {
-                        VerifySwapScreen(
-                            state = model.model,
-                            dappMetadata = dappMetadata,
-                            showToolbar = false,
-                            onBackClick = {},
-                            confirmTitle = stringResource(R.string.verify_swap_sign_button),
-                            isConsentsEnabled = false,
-                            onFastSignClick = {},
-                            onConfirm = viewModel::joinKeysign,
-                        )
-                    }
-
-                    is VerifyUiModel.Deposit -> {
-                        VerifyDepositScreen(
-                            state = model.model,
-                            dappMetadata = dappMetadata,
-                            confirmTitle = stringResource(R.string.verify_swap_sign_button),
-                            onFastSignClick = {},
-                            onConfirm = viewModel::joinKeysign,
-                        )
-                    }
-
-                    is VerifyUiModel.SignMessage -> {
-                        VerifySignMessageScreen(
-                            state = model.model,
-                            confirmTitle = stringResource(R.string.verify_swap_sign_button),
-                            onFastSignClick = {},
-                            onConfirm = viewModel::joinKeysign,
-                        )
-                    }
-                }
-            }
+            JoinKeysign -> Unit // handled above, before the JoinKeysignScreen wrapper
 
             Keysign -> {
                 val wrapperViewModel =

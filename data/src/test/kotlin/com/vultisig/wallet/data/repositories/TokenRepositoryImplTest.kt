@@ -7,6 +7,8 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.DenomMetadata
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.usecases.CosmosBankCoinFinder
 import com.vultisig.wallet.data.usecases.EvmCoinFinder
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -128,15 +130,65 @@ internal class TokenRepositoryImplTest {
             assertEquals(listOf("x/ruji"), coins.map { it.contractAddress })
         }
 
-    private fun newRepository(thorApi: ThorChainApi): TokenRepositoryImpl =
+    @Test
+    fun `getTokensWithBalance for Terra delegates to the Cosmos bank coin finder`() = runTest {
+        val cosmosBankCoinFinder: CosmosBankCoinFinder = mockk()
+        val expected = listOf(Coins.Terra.ASTRO_IBC)
+        coEvery { cosmosBankCoinFinder.find(Chain.Terra, TERRA_ADDRESS) } returns expected
+
+        val coins =
+            newRepository(cosmosBankCoinFinder = cosmosBankCoinFinder)
+                .getTokensWithBalance(Chain.Terra, TERRA_ADDRESS)
+
+        assertEquals(expected, coins)
+    }
+
+    @Test
+    fun `getTokensWithBalance for TerraClassic delegates to the Cosmos bank coin finder`() =
+        runTest {
+            val cosmosBankCoinFinder: CosmosBankCoinFinder = mockk()
+            val expected = listOf(Coins.TerraClassic.USTC)
+            coEvery { cosmosBankCoinFinder.find(Chain.TerraClassic, TERRA_CLASSIC_ADDRESS) } returns
+                expected
+
+            val coins =
+                newRepository(cosmosBankCoinFinder = cosmosBankCoinFinder)
+                    .getTokensWithBalance(Chain.TerraClassic, TERRA_CLASSIC_ADDRESS)
+
+            assertEquals(expected, coins)
+        }
+
+    @Test
+    fun `getTokensWithBalance leaves other Cosmos chains untouched and returns empty`() = runTest {
+        // Defensive: the dispatch must scope the new finder to Terra / TerraClassic only — the
+        // ticket explicitly limits this discovery to those two chains.
+        val cosmosBankCoinFinder: CosmosBankCoinFinder = mockk()
+
+        val coins =
+            newRepository(cosmosBankCoinFinder = cosmosBankCoinFinder)
+                .getTokensWithBalance(Chain.GaiaChain, COSMOS_ADDRESS)
+
+        assertTrue(coins.isEmpty())
+        coVerify(exactly = 0) { cosmosBankCoinFinder.find(any(), any()) }
+    }
+
+    private fun newRepository(
+        thorApi: ThorChainApi = mockk(relaxed = true),
+        evmCoinFinder: EvmCoinFinder = mockk(relaxed = true),
+        cosmosBankCoinFinder: CosmosBankCoinFinder = mockk(relaxed = true),
+    ): TokenRepositoryImpl =
         TokenRepositoryImpl(
             evmApiFactory = mockk<EvmApiFactory>(relaxed = true),
             thorApi = thorApi,
             chainAccountAddressRepository = mockk<ChainAccountAddressRepository>(relaxed = true),
-            evmCoinFinder = mockk<EvmCoinFinder>(relaxed = true),
+            evmCoinFinder = evmCoinFinder,
+            cosmosBankCoinFinder = cosmosBankCoinFinder,
         )
 
     private companion object {
         const val ADDRESS = "thor1mtqtupwgjwn397w3dx9fqmqgzrjcal5yxz8q7v"
+        const val TERRA_ADDRESS = "terra1abc"
+        const val TERRA_CLASSIC_ADDRESS = "terra1classic"
+        const val COSMOS_ADDRESS = "cosmos1abc"
     }
 }

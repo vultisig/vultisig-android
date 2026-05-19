@@ -2,6 +2,8 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
 import com.vultisig.wallet.data.api.errors.parseCosmosBroadcastResponse
+import com.vultisig.wallet.data.api.models.DenomMetadata
+import com.vultisig.wallet.data.api.models.MetadataResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalance
 import com.vultisig.wallet.data.api.models.cosmos.CosmosBalanceResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosIbcDenomTraceDenomTraceJson
@@ -11,6 +13,7 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.CosmosThorChainResponseSerializer
+import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -19,9 +22,12 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.util.encodeBase64
+import java.net.URLEncoder
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -38,6 +44,12 @@ interface CosmosApi {
     suspend fun getWasmTokenBalance(address: String, contractAddress: String): CosmosBalance
 
     suspend fun getIbcDenomTraces(contractAddress: String): CosmosIbcDenomTraceDenomTraceJson
+
+    /**
+     * Chain-declared metadata for the given bank denom, or `null` when the chain has no entry or
+     * the request fails. Used by token auto-discovery to resolve display ticker and decimals.
+     */
+    suspend fun getDenomMetadata(denom: String): DenomMetadata?
 
     suspend fun getLatestBlock(): String
 
@@ -149,6 +161,28 @@ internal class CosmosApiImp(
             .get("$rpcEndpoint/ibc/apps/transfer/v1/denom_traces/$hash")
             .body<CosmosIbcDenomTraceJson>()
             .denomTrace!!
+    }
+
+    override suspend fun getDenomMetadata(denom: String): DenomMetadata? {
+        return try {
+            val encoded = URLEncoder.encode(denom, Charsets.UTF_8.name())
+            httpClient
+                .get("$rpcEndpoint/cosmos/bank/v1beta1/denoms_metadata/$encoded")
+                .bodyOrThrow<MetadataResponse>()
+                .metadata
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: NetworkException) {
+            if (e.httpStatusCode == HttpStatusCode.NotFound.value) {
+                Timber.d("No denom metadata for %s (expected for non-standard denoms)", denom)
+            } else {
+                Timber.e(e, "Failed to fetch denom metadata for %s", denom)
+            }
+            null
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to fetch denom metadata for %s", denom)
+            null
+        }
     }
 
     override suspend fun getLatestBlock(): String {
