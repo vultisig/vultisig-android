@@ -1630,8 +1630,8 @@ constructor(
             tokenRepository.getNativeToken(chainId)
         } catch (e: CancellationException) {
             throw e
-        } catch (t: Throwable) {
-            Timber.w(t, "Failed to resolve native token for %s", chainId)
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to resolve native token for %s", chainId)
             null
         }
 }
