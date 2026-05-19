@@ -82,6 +82,10 @@ object UniversalRouterDecoder {
     private const val V4_ACTION_SWAP_EXACT_OUT = 0x09
 
     private const val WORD = 32
+    private const val V3_PATH_TOKEN_BYTES = 20
+    private const val V3_PATH_FEE_BYTES = 3
+    private const val V3_PATH_HOP_BYTES = V3_PATH_TOKEN_BYTES + V3_PATH_FEE_BYTES
+    private const val V3_PATH_MIN_BYTES = V3_PATH_TOKEN_BYTES + V3_PATH_HOP_BYTES
 
     private val EXECUTE_SIGNATURES =
         setOf("execute(bytes,bytes[],uint256)", "execute(bytes,bytes[])")
@@ -269,9 +273,13 @@ object UniversalRouterDecoder {
         val amountB = readUint(input, 2 * WORD) ?: return null
         val pathOffset = readPositiveInt(input, 3 * WORD) ?: return null
         val pathBytes = readBytes(input, pathOffset) ?: return null
-        if (pathBytes.size < 20) return null
+        // V3 packs the path as token(20) || fee(3) || token(20) || fee(3) || … so the byte count
+        // is always 20 + 23 * hops. Truncated / misaligned blobs would otherwise let
+        // `readAddress(pathBytes.size - 20)` surface arbitrary trailing bytes as a token address.
+        if (pathBytes.size < V3_PATH_MIN_BYTES) return null
+        if ((pathBytes.size - V3_PATH_TOKEN_BYTES) % V3_PATH_HOP_BYTES != 0) return null
         val firstToken = readAddress(pathBytes, 0)
-        val lastToken = readAddress(pathBytes, pathBytes.size - 20)
+        val lastToken = readAddress(pathBytes, pathBytes.size - V3_PATH_TOKEN_BYTES)
         return if (isExactOut) {
             SwapEntry(
                 fromToken = lastToken,
@@ -417,9 +425,12 @@ object UniversalRouterDecoder {
         val out = mutableListOf<String>()
         for (i in 0 until length) {
             val pointer = readPositiveInt(data, elementsStart + i * WORD) ?: return null
-            val keyStart = elementsStart + pointer
-            if (data.size < keyStart + WORD) return null
-            out += readAddressWord(data, keyStart)
+            // Long math so a hostile `pointer` near Int.MAX_VALUE can't wrap negative — without
+            // this guard `readAddressWord` would happily read at the wrapped index and surface the
+            // zero-address sentinel, framing a malformed payload as a native-token swap.
+            val keyStart = elementsStart.toLong() + pointer.toLong()
+            if (keyStart < 0 || keyStart > data.size - WORD) return null
+            out += readAddressWord(data, keyStart.toInt())
         }
         return out
     }
@@ -507,7 +518,12 @@ object UniversalRouterDecoder {
         val out = mutableListOf<ByteArray>()
         for (i in 0 until length) {
             val pointer = readPositiveInt(data, elementsStart + i * WORD) ?: return null
-            out += readBytes(data, elementsStart + pointer) ?: return null
+            // Long math so a hostile `pointer` near Int.MAX_VALUE can't wrap negative when added
+            // to `elementsStart`. Bounded against `data.size - WORD` so the subsequent length read
+            // inside `readBytes` is in range.
+            val elementStart = elementsStart.toLong() + pointer.toLong()
+            if (elementStart < 0 || elementStart > data.size - WORD) return null
+            out += readBytes(data, elementStart.toInt()) ?: return null
         }
         return out
     }

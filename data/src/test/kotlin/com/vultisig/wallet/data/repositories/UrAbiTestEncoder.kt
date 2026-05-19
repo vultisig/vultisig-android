@@ -206,13 +206,13 @@ internal object UrAbiTestEncoder {
 
     private fun hexToBytes(hex: String): ByteArray {
         val cleaned = hex.removePrefix("0x").removePrefix("0X")
-        require(cleaned.length % 2 == 0) { "odd-length hex" }
+        require(cleaned.length % 2 == 0) { "odd-length hex: $hex" }
         val out = ByteArray(cleaned.length / 2)
         for (i in out.indices) {
-            out[i] =
-                ((Character.digit(cleaned[i * 2], 16) shl 4) or
-                        Character.digit(cleaned[i * 2 + 1], 16))
-                    .toByte()
+            val hi = Character.digit(cleaned[i * 2], 16)
+            val lo = Character.digit(cleaned[i * 2 + 1], 16)
+            require(hi >= 0 && lo >= 0) { "invalid hex fixture: $hex" }
+            out[i] = ((hi shl 4) or lo).toByte()
         }
         return out
     }
