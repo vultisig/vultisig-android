@@ -277,7 +277,9 @@ internal fun PeerDiscoveryScreen(
                         Text(
                             text =
                                 stringResource(
-                                    R.string.peer_discovery_devices_n_of_n,
+                                    if (state.minimumDevicesDisplayed >= 4)
+                                        R.string.peer_discovery_devices_n_of_n_plus
+                                    else R.string.peer_discovery_devices_n_of_n,
                                     selectedDevicesSize,
                                     state.minimumDevicesDisplayed,
                                 ),
