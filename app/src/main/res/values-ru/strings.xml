@@ -703,8 +703,7 @@
     <string name="send_form_enter_memo">Ввести Memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Хранилище с таким именем уже существует.</string>
     <string name="name_vault_server_exists_warning_title">Быстрое хранилище уже существует</string>
-    <string name="name_vault_server_exists_warning_message">Быстрое хранилище с этой сид-фразой уже существует на сервере. Создание нового быстрого хранилища заменит общий доступ к серверу и сделает существующее хранилище непригодным для использования. Рассмотрите возможность использования безопасного хранилища.</string>
-    <string name="name_vault_server_exists_warning_continue">Продолжить</string>
+    <string name="name_vault_server_exists_warning_message">Быстрое хранилище для этой сид-фразы уже существует на сервере. Вернитесь и восстановите существующее хранилище или выберите безопасное хранилище для новой настройки MPC.</string>
     <string name="name_vault_server_exists_warning_back">Назад</string>
     <string name="referral_create_status">Статус</string>
     <string name="referral_create_unknown">Неизвестно</string>
@@ -1206,4 +1205,11 @@
     <string name="decoded_function_amount">Сумма</string>
     <string name="decoded_function_unlimited">Без ограничений</string>
     <string name="decoded_function_unlimited_amount">Без ограничений %1$s</string>
+    <string name="decoded_function_from_token">Исходный токен</string>
+    <string name="decoded_function_to_token">Целевой токен</string>
+    <string name="decoded_function_amount_in">Сумма ввода</string>
+    <string name="decoded_function_max_amount_in">Макс. сумма ввода</string>
+    <string name="decoded_function_min_amount_out">Мин. сумма получения</string>
+    <string name="decoded_function_amount_out">Сумма получения</string>
+    <string name="decoded_function_swap_title">Обмен</string>
 </resources>

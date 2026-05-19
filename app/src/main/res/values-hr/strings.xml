@@ -705,8 +705,7 @@
     <string name="send_form_enter_memo">Unesi memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Trezor s ovim nazivom već postoji</string>
     <string name="name_vault_server_exists_warning_title">Brzi trezor već postoji</string>
-    <string name="name_vault_server_exists_warning_message">Brzi trezor s ovom frazom za oporavak već postoji na serveru. Stvaranje novog brzog trezora zamijenit će serverski udio i učiniti postojeći trezor neupotrebljivim. Razmotrite korištenje sigurnog trezora umjesto toga.</string>
-    <string name="name_vault_server_exists_warning_continue">Nastavi</string>
+    <string name="name_vault_server_exists_warning_message">Brzi trezor za ovu frazu za oporavak već postoji na serveru. Vratite se i obnovite postojeći trezor ili odaberite sigurni trezor za novo MPC postavljanje.</string>
     <string name="name_vault_server_exists_warning_back">Nazad</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Nepoznato</string>
@@ -1204,4 +1203,11 @@
     <string name="decoded_function_amount">Iznos</string>
     <string name="decoded_function_unlimited">Neograničeno</string>
     <string name="decoded_function_unlimited_amount">Neograničeno %1$s</string>
+    <string name="decoded_function_from_token">Polazni token</string>
+    <string name="decoded_function_to_token">Odredišni token</string>
+    <string name="decoded_function_amount_in">Ulazni iznos</string>
+    <string name="decoded_function_max_amount_in">Maksimalni ulazni iznos</string>
+    <string name="decoded_function_min_amount_out">Minimalni izlazni iznos</string>
+    <string name="decoded_function_amount_out">Izlazni iznos</string>
+    <string name="decoded_function_swap_title">Zamjena</string>
 </resources>
