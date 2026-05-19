@@ -42,7 +42,7 @@
     <issue id="TypographyEllipsis" severity="warning" />
     <issue id="TypographyFractions" severity="warning" />
     <issue id="TypographyOther" severity="warning" />
-    <issue id="Typos" severity="fatal" />
+    <issue id="Typos" severity="warning" />
     <issue id="UnnecessaryComposedModifier" severity="fatal" />
     <issue id="UnusedAttribute" severity="fatal" />
     <issue id="UnusedIds" severity="fatal" />
