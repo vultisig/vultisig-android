@@ -99,6 +99,7 @@ data class PeerDiscoveryUiModel(
     val selectedDevices: List<String> = emptyList(),
     val minimumDevices: Int = MIN_KEYGEN_DEVICES,
     val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES,
+    val allowsMoreDevices: Boolean = false,
     val showQrHelpModal: Boolean = false,
     val showDevicesHint: Boolean = true,
     val connectingToServer: ConnectingToServerUiModel? = null,
