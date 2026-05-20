@@ -151,8 +151,9 @@ constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val vaultId: String = savedStateHandle.toRoute<Route.TransactionHistory>().vaultId
-    private val chainId: String? = savedStateHandle.toRoute<Route.TransactionHistory>().chainId
+    private val route: Route.TransactionHistory = savedStateHandle.toRoute()
+    private val vaultId: String = route.vaultId
+    private val chainId: String? = route.chainId
 
     private val currentTime = MutableStateFlow(System.currentTimeMillis())
 
@@ -233,7 +234,7 @@ constructor(
         ) {
             _uiState.update { it.copy(isRefreshing = true) }
             try {
-                refreshPendingTransactions(vaultId)
+                refreshPendingTransactions(vaultId, chainId)
                 delay(100.milliseconds) // prevent refresh ui freezing
             } finally {
                 _uiState.update { it.copy(isRefreshing = false) }
@@ -242,7 +243,7 @@ constructor(
     }
 
     private fun refreshOnEnter() {
-        viewModelScope.safeLaunch { refreshPendingTransactions(vaultId) }
+        viewModelScope.safeLaunch { refreshPendingTransactions(vaultId, chainId) }
     }
 
     private fun startTimeTicker() {

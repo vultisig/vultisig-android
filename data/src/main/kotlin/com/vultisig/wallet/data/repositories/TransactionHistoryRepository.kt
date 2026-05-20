@@ -91,20 +91,15 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
         vaultId: String,
         type: TransactionHistoryType,
         chain: String?,
-    ): Flow<List<TransactionHistoryEntity>> =
-        if (chain == null) {
-            when (type) {
-                TransactionHistoryType.OVERVIEW -> dao.observeAllByVault(vaultId)
-                TransactionHistoryType.SEND -> dao.observeSendByVault(vaultId)
-                TransactionHistoryType.SWAPS -> dao.observeSwapByVault(vaultId)
-            }
-        } else {
-            when (type) {
-                TransactionHistoryType.OVERVIEW -> dao.observeAllByVaultAndChain(vaultId, chain)
-                TransactionHistoryType.SEND -> dao.observeSendByVaultAndChain(vaultId, chain)
-                TransactionHistoryType.SWAPS -> dao.observeSwapByVaultAndChain(vaultId, chain)
-            }
+    ): Flow<List<TransactionHistoryEntity>> {
+        // Treat blank as unscoped so a round-tripped "" doesn't silently filter to zero rows.
+        val effectiveChain = chain?.takeIf { it.isNotBlank() }
+        return when (type) {
+            TransactionHistoryType.OVERVIEW -> dao.observeAllByVault(vaultId, effectiveChain)
+            TransactionHistoryType.SEND -> dao.observeSendByVault(vaultId, effectiveChain)
+            TransactionHistoryType.SWAPS -> dao.observeSwapByVault(vaultId, effectiveChain)
         }
+    }
 
     override suspend fun getPendingTransactions(vaultId: String): List<TransactionHistoryEntity> =
         dao.getPendingTransactions(vaultId)

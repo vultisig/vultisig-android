@@ -204,7 +204,7 @@ internal class TransactionHistoryViewModelTest {
      */
     @Test
     fun `empty repository flow yields empty groups and clears loading`() {
-        every { transactionHistoryRepository.observeTransactions(any(), any()) } returns
+        every { transactionHistoryRepository.observeTransactions(any(), any(), any()) } returns
             flowOf(emptyList())
 
         val vm = createViewModel()
