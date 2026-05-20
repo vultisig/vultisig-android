@@ -202,7 +202,6 @@
     <string name="verify_transaction_amount_title">Amount</string>
     <string name="verify_transaction_network_fee">Network Fee</string>
     <string name="verify_transaction_value">Value</string>
-    <string name="verify_transaction_join_keysign">Join Keysign</string>
     <string name="verify_transaction_consent_address">I’m sending to the right address</string>
     <string name="verify_transaction_consent_amount">The amount is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
@@ -459,9 +458,7 @@
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
 
 
-    <string name="verify_sign_message_method_field_title">Method</string>
     <string name="signing_error_transaction_timeout">Transaction timed out due to slow signing. Please try again.</string>
-    <string name="verify_sign_message_message_field_title">Message</string>
     <string name="hint_signing_method">Signing method</string>
     <string name="verify_sign_message_signing_method">Signing method</string>
     <string name="hint_message_to_sign">Message to sign</string>

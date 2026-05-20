@@ -127,7 +127,6 @@
     <string name="verify_transaction_from_title">De</string>
     <string name="verify_transaction_to_title">A</string>
     <string name="verify_transaction_amount_title">Cantidad</string>
-    <string name="verify_transaction_join_keysign">Unirse a la firma de clave</string>
     <string name="verify_transaction_consent_address">Estoy enviando a la dirección correcta</string>
     <string name="verify_transaction_consent_amount">La cantidad es correcta</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, revise todos los consentimientos</string>
@@ -850,8 +849,6 @@
     <string name="transfer_ibc_function_memo_title">Memorándum</string>
     <string name="tx_overview_screen_tx_to">A</string>
     <string name="tx_overview_screen_tx_memo">Memorándum</string>
-    <string name="verify_sign_message_message_field_title">Mensaje</string>
-    <string name="verify_sign_message_method_field_title">Método</string>
     <string name="fast_vault_password_screen_title">Elige una contraseña</string>
     <string name="fast_vault_password_screen_hint">Esto ocurre porque la contraseña se usa para cifrar localmente el archivo de copia de seguridad, de forma similar a como se cifra un disco duro. En el siguiente paso, tiene la opción de añadir una pista.</string>
     <string name="fast_vault_password_screen_hint_title">Más información</string>

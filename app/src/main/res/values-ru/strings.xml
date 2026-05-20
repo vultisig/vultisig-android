@@ -126,7 +126,6 @@
     <string name="verify_transaction_to_title">Кому</string>
     <string name="verify_transaction_amount_title">Сумма</string>
     <string name="verify_transaction_value">Стоимость</string>
-    <string name="verify_transaction_join_keysign">Присоединиться к ключевой подписи</string>
     <string name="verify_transaction_consent_address">Я отправляю на правильный адрес</string>
     <string name="verify_transaction_consent_amount">Сумма верна</string>
     <string name="verify_transaction_error_not_enough_consent">Пожалуйста, проверьте все согласия</string>
@@ -855,8 +854,6 @@
     <string name="transfer_ibc_function_memo_title">Памятка</string>
     <string name="tx_overview_screen_tx_to">В</string>
     <string name="tx_overview_screen_tx_memo">Памятка</string>
-    <string name="verify_sign_message_message_field_title">Сообщение</string>
-    <string name="verify_sign_message_method_field_title">Способ</string>
     <string name="fast_vault_password_screen_title">Выберите пароль</string>
     <string name="fast_vault_password_screen_hint">Это происходит потому, что пароль используется для локального шифрования файла резервной копии, аналогично шифрованию жёсткого диска. На следующем шаге вы можете добавить подсказку.</string>
     <string name="fast_vault_password_screen_hint_title">Подробнее</string>

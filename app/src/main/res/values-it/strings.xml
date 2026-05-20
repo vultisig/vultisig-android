@@ -104,7 +104,6 @@
     <string name="verify_transaction_from_title">Da</string>
     <string name="verify_transaction_to_title">A</string>
     <string name="verify_transaction_amount_title">Quantità</string>
-    <string name="verify_transaction_join_keysign">Unisciti alla firma chiave</string>
     <string name="verify_transaction_consent_address">Sto inviando all\'indirizzo corretto</string>
     <string name="verify_transaction_consent_amount">La quantità è corretta</string>
     <string name="transaction_done_title">Fatto</string>
@@ -850,8 +849,6 @@
     <string name="transfer_ibc_function_memo_title">Promemoria</string>
     <string name="tx_overview_screen_tx_to">A</string>
     <string name="tx_overview_screen_tx_memo">Promemoria</string>
-    <string name="verify_sign_message_message_field_title">Messaggio</string>
-    <string name="verify_sign_message_method_field_title">Metodo</string>
     <string name="fast_vault_password_screen_title">Scegli una password</string>
     <string name="fast_vault_password_screen_hint">Ciò si verifica perché la password viene utilizzata per crittografare localmente il file di backup, in modo simile a come viene crittografato un disco rigido. Nel passaggio successivo, è possibile aggiungere un suggerimento.</string>
     <string name="fast_vault_password_screen_hint_title">Ulteriori informazioni</string>
