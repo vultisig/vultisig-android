@@ -79,17 +79,16 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -953,40 +952,39 @@ constructor(
 
                 selectedToken.value = null
 
-                if (checked) {
-                    val regularAccounts =
+                // Process both cached and hydrated emissions instead of .first() — the
+                // cached snapshot may not yet contain sTCY/TCY on a slow network, and the
+                // hydrated emission is where the target token finally shows up. onEach
+                // republishes accountsState per emission; firstOrNull terminates the flow
+                // as soon as the target is found so we don't keep selecting on later
+                // hydration updates.
+                val target: Account? =
+                    if (checked) {
                         accountsRepository
                             .loadAddresses(vaultId)
                             .map { addrs -> addrs.flatMap { it.accounts } }
-                            .first()
-
-                    accountsState.value = AccountsLoadState.Loaded(regularAccounts)
-
-                    delay(300)
-
-                    regularAccounts
-                        .find {
-                            it.token.ticker.equals("sTCY", true) &&
-                                it.token.chain == Chain.ThorChain
-                        }
-                        ?.let { selectToken(it.token) }
-                } else {
-                    val defiAccounts =
+                            .onEach { accountsState.value = AccountsLoadState.Loaded(it) }
+                            .mapNotNull { accounts ->
+                                accounts.find {
+                                    it.token.ticker.equals("sTCY", true) &&
+                                        it.token.chain == Chain.ThorChain
+                                }
+                            }
+                            .firstOrNull()
+                    } else {
                         accountsRepository
                             .loadDeFiAddresses(vaultId, false)
                             .map { addrs -> addrs.flatMap { it.accounts } }
-                            .first()
-
-                    accountsState.value = AccountsLoadState.Loaded(defiAccounts)
-
-                    delay(300)
-
-                    defiAccounts
-                        .find {
-                            it.token.ticker.equals("TCY", true) && it.token.chain == Chain.ThorChain
-                        }
-                        ?.let { selectToken(it.token) }
-                }
+                            .onEach { accountsState.value = AccountsLoadState.Loaded(it) }
+                            .mapNotNull { accounts ->
+                                accounts.find {
+                                    it.token.ticker.equals("TCY", true) &&
+                                        it.token.chain == Chain.ThorChain
+                                }
+                            }
+                            .firstOrNull()
+                    }
+                target?.let { selectToken(it.token) }
             } finally {
                 isSwitchingAccounts.value = false
             }
