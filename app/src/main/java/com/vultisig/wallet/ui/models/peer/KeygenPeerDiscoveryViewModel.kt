@@ -100,7 +100,6 @@ data class PeerDiscoveryUiModel(
     val minimumDevices: Int = MIN_KEYGEN_DEVICES,
     val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES,
     val showQrHelpModal: Boolean = false,
-    val showDevicesHint: Boolean = true,
     val connectingToServer: ConnectingToServerUiModel? = null,
     val error: ErrorUiModel? = null,
     val warning: ErrorUiModel? = null,
@@ -250,10 +249,6 @@ constructor(
         val shareBitmap = createQrCodeSharingBitmap(qr, info)
 
         activity.share(shareBitmap, shareFileName(vaultName, vaultName.sha256(), ShareType.KEYGEN))
-    }
-
-    fun closeDevicesHint() {
-        state.update { it.copy(showDevicesHint = false) }
     }
 
     fun switchMode() {

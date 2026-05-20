@@ -9,6 +9,8 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
+import com.vultisig.wallet.data.repositories.TokenMetadataResolver
+import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -78,6 +80,8 @@ internal class VerifyTransactionViewModelTest {
     private lateinit var vaultRepository: VaultRepository
     private lateinit var addressBookRepository: AddressBookRepository
     private lateinit var fourByteRepository: FourByteRepository
+    private lateinit var tokenMetadataResolver: TokenMetadataResolver
+    private lateinit var tokenRepository: TokenRepository
     private val json: Json = Json
 
     /** Sets up mocks and test dispatcher before each test. */
@@ -97,6 +101,8 @@ internal class VerifyTransactionViewModelTest {
         vaultRepository = mockk(relaxed = true)
         addressBookRepository = mockk(relaxed = true)
         fourByteRepository = mockk(relaxed = true)
+        tokenMetadataResolver = mockk(relaxed = true)
+        tokenRepository = mockk(relaxed = true)
         // Function-type-interface mocks need explicit return-type stubs; relaxed mode auto-stubs
         // to a generic Object that fails the implicit cast at the VM call site.
         coEvery { isVaultHasFastSignById(any()) } returns false
@@ -132,6 +138,8 @@ internal class VerifyTransactionViewModelTest {
             vaultRepository = vaultRepository,
             addressBookRepository = addressBookRepository,
             fourByteRepository = fourByteRepository,
+            tokenMetadataResolver = tokenMetadataResolver,
+            tokenRepository = tokenRepository,
             json = json,
             ioDispatcher = testDispatcher,
         )
@@ -309,6 +317,122 @@ internal class VerifyTransactionViewModelTest {
             actual.token shouldBe expectedToken
             // Token symbol (ticker) round-trips through the ValuedToken's underlying Coin.
             actual.token.token.ticker shouldBe "OM"
+        }
+
+    /**
+     * Verifies the EVM decode pipeline populates the new rich-row UI fields once
+     * `enrichDecodedCall` is wired in: `decodedFunctionParams` carries the parsed labelled rows and
+     * `dstContractLabel` resolves through the static [KnownEvmContracts] registry. With the
+     * destination set to the Uniswap V2 Router on Ethereum, the label must come back as `Uniswap V2
+     * Router`.
+     */
+    @Test
+    fun `decoded function parameters and dst contract label populate from enrichDecodedCall`() =
+        runTest(testDispatcher) {
+            val spender = "0x7a250d5630b4cf539739df2c5dacb4c659f2488d"
+            val memo =
+                "0x095ea7b3000000000000000000000000${spender.removePrefix("0x")}" +
+                    "0000000000000000000000000000000000000000000000000000000000000064"
+            val tx = mockk<Transaction>(relaxed = true)
+            // `Chain.Ethereum.standard` is already `TokenStandard.EVM` so the production code's
+            // `if (chain.standard == TokenStandard.EVM && !memo.isNullOrEmpty())` gate falls open
+            // on the real enum value — no need to stub `standard` separately.
+            every { tx.token } returns
+                mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.Ethereum }
+            every { tx.memo } returns memo
+            // `dstAddress` is the Uniswap V2 Router on Ethereum so the registry hit fires.
+            every { tx.dstAddress } returns spender
+            coEvery { transactionRepository.getTransaction(TX_ID) } returns tx
+            coEvery { mapTransactionToUiModel(tx) } returns
+                TransactionDetailsUiModel(dstAddress = spender)
+            coEvery { fourByteRepository.decodeFunction(memo) } returns "approve(address,uint256)"
+            every {
+                fourByteRepository.decodeFunctionArgs("approve(address,uint256)", memo)
+            } returns "[\"$spender\",\"100\"]"
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val actual = vm.uiState.value.transaction
+            actual.functionSignature shouldBe "approve(address,uint256)"
+            actual.dstContractLabel shouldBe "Uniswap V2 Router"
+            val decodedParams = actual.decodedFunctionParams.shouldNotBeNull()
+            decodedParams.size shouldBe 2
+            // First row is the spender, copyable to clipboard.
+            decodedParams[0].copyableValue shouldBe spender
+            decodedParams[0].secondary shouldBe "Uniswap V2 Router"
+        }
+
+    /**
+     * Universal Router `execute(bytes,bytes[],uint256)` to the Ethereum UR V2 address: the decoder
+     * runs, resolves the from/to tokens, and replaces the generic positional rows with the labelled
+     * From token / Amount in / To token / Min amount out shape.
+     *
+     * `inputsJson` is built from a pre-encoded V2_SWAP_EXACT_IN input (recipient `0x11…11`,
+     * amountIn = 1_000_000, amountOutMin = 10^18, path = [USDC, DAI], payerIsUser = true) — kept
+     * inline rather than pulled from the data-module test encoder so this test stays inside
+     * `:app:test`.
+     */
+    @Test
+    fun `universal router execute populates swap-style rows when dst is a known router`() =
+        runTest(testDispatcher) {
+            val urAddress = "0x66a9893cc07d91d95644aedd05d03f95e1dba8af"
+            val usdc = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+            val dai = "0x6b175474e89094c44da98b954eedeac495271d0f"
+            val v2Input =
+                "0x" +
+                    "0000000000000000000000001111111111111111111111111111111111111111" +
+                    "00000000000000000000000000000000000000000000000000000000000f4240" +
+                    "0000000000000000000000000000000000000000000000000de0b6b3a7640000" +
+                    "00000000000000000000000000000000000000000000000000000000000000a0" +
+                    "0000000000000000000000000000000000000000000000000000000000000001" +
+                    "0000000000000000000000000000000000000000000000000000000000000002" +
+                    "000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" +
+                    "0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f"
+            val inputsJson = """["0x08",["$v2Input"],"0"]"""
+            val memo = "0x3593564c"
+
+            val tx = mockk<Transaction>(relaxed = true)
+            every { tx.token } returns
+                mockk<Coin>(relaxed = true).apply { every { chain } returns Chain.Ethereum }
+            every { tx.memo } returns memo
+            every { tx.dstAddress } returns urAddress
+            coEvery { transactionRepository.getTransaction(TX_ID) } returns tx
+            coEvery { mapTransactionToUiModel(tx) } returns
+                TransactionDetailsUiModel(dstAddress = urAddress)
+            coEvery { fourByteRepository.decodeFunction(memo) } returns
+                "execute(bytes,bytes[],uint256)"
+            every {
+                fourByteRepository.decodeFunctionArgs("execute(bytes,bytes[],uint256)", memo)
+            } returns inputsJson
+            // Resolver returns USDC / DAI on chain metadata lookup (vault has neither here).
+            coEvery { tokenMetadataResolver.resolve(Chain.Ethereum, usdc) } returns
+                com.vultisig.wallet.data.repositories.TokenMetadata("USDC", 6)
+            coEvery { tokenMetadataResolver.resolve(Chain.Ethereum, dai) } returns
+                com.vultisig.wallet.data.repositories.TokenMetadata("DAI", 18)
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            val actual = vm.uiState.value.transaction
+            actual.dstContractLabel shouldBe "Uniswap Universal Router V2"
+            val rows = actual.decodedFunctionParams.shouldNotBeNull()
+            rows.size shouldBe 4
+            (rows[0].label as com.vultisig.wallet.ui.utils.UiText.StringResource).resId shouldBe
+                com.vultisig.wallet.R.string.decoded_function_from_token
+            (rows[0].value as com.vultisig.wallet.ui.utils.UiText.DynamicString).text shouldBe
+                "USDC"
+            (rows[1].label as com.vultisig.wallet.ui.utils.UiText.StringResource).resId shouldBe
+                com.vultisig.wallet.R.string.decoded_function_amount_in
+            (rows[1].value as com.vultisig.wallet.ui.utils.UiText.DynamicString).text shouldBe
+                "1 USDC"
+            (rows[2].label as com.vultisig.wallet.ui.utils.UiText.StringResource).resId shouldBe
+                com.vultisig.wallet.R.string.decoded_function_to_token
+            (rows[2].value as com.vultisig.wallet.ui.utils.UiText.DynamicString).text shouldBe "DAI"
+            (rows[3].label as com.vultisig.wallet.ui.utils.UiText.StringResource).resId shouldBe
+                com.vultisig.wallet.R.string.decoded_function_min_amount_out
+            (rows[3].value as com.vultisig.wallet.ui.utils.UiText.DynamicString).text shouldBe
+                "1 DAI"
         }
 
     private companion object {

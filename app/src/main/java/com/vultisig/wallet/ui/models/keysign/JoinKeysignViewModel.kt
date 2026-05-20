@@ -57,6 +57,7 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.repositories.TokenMetadataResolver
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
@@ -218,6 +219,7 @@ constructor(
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val routerApi: RouterApi,
     private val fourByteRepository: FourByteRepository,
+    private val tokenMetadataResolver: TokenMetadataResolver,
     private val securityScannerService: SecurityScannerContract,
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
@@ -1127,22 +1129,17 @@ constructor(
                                     .getOrNull()
                             } else null
                         } else null
-                    val approvalTokenTicker =
-                        if (
-                            isUnlimitedApproval &&
-                                isTokenContractApproval(functionInfo?.signature ?: "")
-                        ) {
-                            allVaults
-                                .flatMap { it.coins }
-                                .firstOrNull { coin ->
-                                    coin.chain == chain &&
-                                        coin.contractAddress.equals(
-                                            payload.toAddress,
-                                            ignoreCase = true,
-                                        )
-                                }
-                                ?.ticker
-                        } else null
+                    val decodedExtras =
+                        enrichDecodedCall(
+                            chain = chain,
+                            dstAddress = payload.toAddress,
+                            functionInfo = functionInfo,
+                            allVaults = allVaults,
+                            isUnlimitedApproval = isUnlimitedApproval,
+                            json = json,
+                            tokenMetadataResolver = tokenMetadataResolver,
+                            nativeTokenLookup = { c -> nativeTokenOrNull(c.id) },
+                        )
 
                     val namedTransactionUiModel =
                         transactionToUiModel.copy(
@@ -1154,7 +1151,10 @@ constructor(
                             functionName = functionInfo?.functionName,
                             isUnlimitedApproval = isUnlimitedApproval,
                             approvalSpender = approvalSpender,
-                            approvalTokenTicker = approvalTokenTicker,
+                            approvalTokenTicker = decodedExtras.approvalTokenTicker,
+                            dstContractLabel = decodedExtras.dstContractLabel,
+                            decodedFunctionParams = decodedExtras.decodedFunctionParams,
+                            isUniversalRouterSwap = decodedExtras.isUniversalRouterSwap,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)
@@ -1618,6 +1618,22 @@ constructor(
         } else {
             withContext(Dispatchers.IO) { feeServiceComposite.calculateFees(blockchainTransaction) }
                 .amount
+        }
+
+    /**
+     * Fetches the chain's native coin for the Universal Router swap-intent decoder so a native-ETH
+     * leg renders the right ticker. Non-fatal — a failed RPC just means the row displays the bare
+     * zero address. [CancellationException] propagates so structured-concurrency cancellation isn't
+     * swallowed.
+     */
+    private suspend fun nativeTokenOrNull(chainId: String) =
+        try {
+            tokenRepository.getNativeToken(chainId)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to resolve native token for %s", chainId)
+            null
         }
 }
 

@@ -201,7 +201,6 @@
     <string name="verify_transaction_amount_title">금액</string>
     <string name="verify_transaction_network_fee">네트워크 수수료</string>
     <string name="verify_transaction_value">금액</string>
-    <string name="verify_transaction_join_keysign">서명 참여</string>
     <string name="verify_transaction_consent_address">올바른 주소로 보내고 있습니다</string>
     <string name="verify_transaction_consent_amount">금액이 정확합니다</string>
     <string name="verify_transaction_error_not_enough_consent">모든 동의 항목을 확인해 주세요</string>
@@ -450,9 +449,7 @@
     <string name="send_form_polka_reaping_warning">수수료를 충당할 충분한 자금을 남겨두세요. 계정 잔액이 1 DOT(최소 예치금) 아래로 떨어지면 계정이 비활성화(수확)되고 남은 자금이 손실됩니다. 언제든지 최소 예치금보다 큰 새 입금으로 주소를 재활성화할 수 있습니다. 그러나 손실된 자금은 복구되지 않습니다.</string>
 
 
-    <string name="verify_sign_message_method_field_title">방식</string>
     <string name="signing_error_transaction_timeout">서명 지연으로 거래 시간이 초과되었습니다. 다시 시도해 주세요.</string>
-    <string name="verify_sign_message_message_field_title">메시지</string>
     <string name="hint_signing_method">서명 방식</string>
     <string name="verify_sign_message_signing_method">서명 방식</string>
     <string name="hint_message_to_sign">서명할 메시지</string>
@@ -551,7 +548,6 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">로컬 모드로 전환</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">인터넷 모드로 전환</string>
     <string name="peer_discovery_local_mode_hint">로컬 모드입니다</string>
-    <string name="peer_discovery_recommended_devices_hint">다른 기기로 QR을 스캔하세요. 3기기 설정을 권장하며, 2기기도 충분합니다.</string>
     <string name="fast_vault_name_screen_title">볼트 이름 지정</string>
     <string name="fast_vault_name_screen_desc">볼트 이름은 나중에 설정에서 변경할 수 있습니다</string>
     <string name="enter_email_screen_title">이메일 입력</string>
@@ -891,8 +887,7 @@
     <string name="migration_password_enter_your_password_to_unlock">서버 공유를 잠금 해제하고 업그레이드를 시작하려면 비밀번호를 입력하세요</string>
     <string name="name_vault_vault_with_this_name_already_exists">이 이름의 볼트가 이미 존재합니다</string>
     <string name="name_vault_server_exists_warning_title">빠른 볼트가 이미 존재합니다</string>
-    <string name="name_vault_server_exists_warning_message">이 시드 구문을 사용하는 빠른 볼트가 이미 서버에 존재합니다. 새로운 빠른 볼트를 생성하면 서버 공유가 대체되어 기존 볼트를 사용할 수 없게 됩니다. 대신 보안 볼트 사용을 고려하세요.</string>
-    <string name="name_vault_server_exists_warning_continue">계속</string>
+    <string name="name_vault_server_exists_warning_message">이 시드 구문에 대한 빠른 볼트가 이미 서버에 존재합니다. 뒤로 가서 기존 볼트를 복구하거나, 새 MPC 설정을 위해 보안 볼트를 선택하세요.</string>
     <string name="name_vault_server_exists_warning_back">뒤로</string>
     <string name="referral_create_status">상태</string>
     <string name="referral_create_unknown">알 수 없음</string>
@@ -1205,4 +1200,20 @@
     <string name="swap_error_approval_failed">토큰 승인 거래에 실패했습니다. 다시 시도해 주세요</string>
     <string name="erc20_approval_unlimited_amount">무제한 %1$s 승인</string>
     <string name="erc20_approval_spender">수신자</string>
+    <string name="decoded_function_owner">소유자</string>
+    <string name="decoded_function_operator">운영자</string>
+    <string name="decoded_function_status">상태</string>
+    <string name="decoded_function_status_approved">승인됨</string>
+    <string name="decoded_function_status_revoked">취소됨</string>
+    <string name="decoded_function_deadline">마감 시각</string>
+    <string name="decoded_function_amount">금액</string>
+    <string name="decoded_function_unlimited">무제한</string>
+    <string name="decoded_function_unlimited_amount">무제한 %1$s</string>
+    <string name="decoded_function_from_token">보내는 토큰</string>
+    <string name="decoded_function_to_token">받는 토큰</string>
+    <string name="decoded_function_amount_in">보내는 금액</string>
+    <string name="decoded_function_max_amount_in">최대 보내는 금액</string>
+    <string name="decoded_function_min_amount_out">최소 받는 금액</string>
+    <string name="decoded_function_amount_out">받는 금액</string>
+    <string name="decoded_function_swap_title">스왑</string>
 </resources>

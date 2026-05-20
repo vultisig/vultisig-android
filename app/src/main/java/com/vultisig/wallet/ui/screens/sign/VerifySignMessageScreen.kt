@@ -25,6 +25,8 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
+import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
+import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.sign.VerifySignMessageViewModel
 import com.vultisig.wallet.ui.utils.asString
@@ -56,8 +58,10 @@ internal fun VerifySignMessageScreen(viewModel: VerifySignMessageViewModel = hil
 
     VerifySignMessageScreen(
         state = state,
+        hasToolbar = false,
         confirmTitle = stringResource(R.string.verify_swap_sign_button),
         onConfirm = viewModel::confirm,
+        onBackClick = {},
         onFastSignClick = {
             if (!viewModel.tryToFastSignWithPassword()) {
                 authorize()
@@ -69,9 +73,11 @@ internal fun VerifySignMessageScreen(viewModel: VerifySignMessageViewModel = hil
 @Composable
 internal fun VerifySignMessageScreen(
     state: VerifySignMessageUiModel,
+    hasToolbar: Boolean,
     confirmTitle: String,
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
     val transactionUiModel = state.model
     VerifySignMessageScreen(
@@ -81,6 +87,8 @@ internal fun VerifySignMessageScreen(
         hasFastSign = state.hasFastSign,
         onFastSignClick = onFastSignClick,
         onConfirm = onConfirm,
+        hasToolbar = hasToolbar,
+        onBackClick = onBackClick,
     )
 }
 
@@ -89,12 +97,22 @@ private fun VerifySignMessageScreen(
     method: String,
     message: String,
     hasFastSign: Boolean,
+    hasToolbar: Boolean,
     confirmTitle: String,
     onFastSignClick: () -> Unit,
     onConfirm: () -> Unit,
+    onBackClick: () -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        topBar = {
+            if (hasToolbar) {
+                VsTopAppBar(
+                    title = stringResource(R.string.verify_transaction_screen_title),
+                    onBackClick = onBackClick,
+                )
+            }
+        },
         bottomBar = {
             Column(modifier = Modifier.fillMaxWidth().padding(all = 16.dp)) {
                 if (hasFastSign) {
@@ -150,6 +168,28 @@ private fun VerifySignMessageScreenPreview() {
         message = "message",
         confirmTitle = "Sign",
         hasFastSign = false,
+        hasToolbar = false,
+        onFastSignClick = {},
+        onConfirm = {},
+        onBackClick = {},
+    )
+}
+
+@Preview
+@Composable
+private fun JoinKeysignSignMessageVerifyPreview() {
+    VerifySignMessageScreen(
+        state =
+            VerifySignMessageUiModel(
+                model =
+                    SignMessageTransactionUiModel(
+                        method = "personal_sign",
+                        message = "Sign in to Uniswap",
+                    )
+            ),
+        hasToolbar = true,
+        confirmTitle = stringResource(R.string.verify_swap_sign_button),
+        onBackClick = {},
         onFastSignClick = {},
         onConfirm = {},
     )

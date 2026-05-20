@@ -123,8 +123,10 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
 
         val rewardsFeeHistory = feeHistoryDeferred.await()
 
-        val maxPriorityFeePerGas = calculateMaxPriorityFeePerGas(rewardsFeeHistory, chain, evmApi)
-        val baseNetworkPrice = calculateBaseNetworkPrice(baseNetworkPriceDeferred.await(), isSwap)
+        val maxPriorityFeePerGas =
+            calculateMaxPriorityFeePerGas(rewardsFeeHistory, chain, isSwap, evmApi)
+        val baseNetworkPrice =
+            calculateBaseNetworkPrice(baseNetworkPriceDeferred.await(), isSwap, chain)
         val maxFeePerGas = calculateMaxFeePerGas(baseNetworkPrice, maxPriorityFeePerGas)
 
         Eip1559(
@@ -143,9 +145,21 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         return baseNetworkPrice.increaseByPercent(20).add(maxPriorityFeePerGas)
     }
 
-    private fun calculateBaseNetworkPrice(baseNetworkPrice: BigInteger, swap: Boolean): BigInteger {
+    private fun calculateBaseNetworkPrice(
+        baseNetworkPrice: BigInteger,
+        swap: Boolean,
+        chain: Chain,
+    ): BigInteger {
         if (swap) {
-            return baseNetworkPrice.increaseByPercent(10)
+            // Ethereum swap calldata embeds a short deadline (1inch ~1–5 min, Kyber 20 min).
+            // The stored Eip1559.networkPrice ends up at baseFee × 1.5 for Ethereum
+            // (× 1.1 for other chains), and calculateMaxFeePerGas then bumps it by a
+            // further 20%, so the broadcast ceiling is baseFee × 1.8 + priorityFee on
+            // Ethereum (× 1.32 elsewhere). This is sized to survive base-fee spikes
+            // during the MPC review + sign window so the tx still lands before the
+            // deadline.
+            val bumpPercent = if (chain == Chain.Ethereum) 50 else 10
+            return baseNetworkPrice.increaseByPercent(bumpPercent)
         }
         return baseNetworkPrice
     }
@@ -153,10 +167,25 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
     private suspend fun calculateMaxPriorityFeePerGas(
         rewardsFeeHistory: List<BigInteger>,
         chain: Chain,
+        isSwap: Boolean,
         evmApi: EvmApi,
     ): BigInteger {
         return if (chain.id == Chain.Avalanche.id) {
             evmApi.getMaxPriorityFeePerGas() // exception for avalanche
+        } else if (chain == Chain.Ethereum && isSwap) {
+            // Ethereum swaps: track the top of the recent reward window so the tx gets
+            // included before the embedded DEX deadline (1inch OrderExpired revert was
+            // the original failure mode). getFeeHistory() returns the window sorted
+            // ascending, so lastOrNull() picks the max. The sample is clamped at
+            // ETHEREUM_SWAP_PRIORITY_FEE_CAP so a single MEV-burst block doesn't
+            // balloon the user-displayed bond (priorityFee × DEFAULT_SWAP_LIMIT), and
+            // the 2 GWEI floor keeps inclusion fast on a quiet window.
+            if (rewardsFeeHistory.isEmpty()) {
+                Timber.w("Fee history is empty for %s, using fallback", chain)
+            }
+            val sample = rewardsFeeHistory.lastOrNull() ?: BigInteger.ZERO
+            val capped = sample.min(ETHEREUM_SWAP_PRIORITY_FEE_CAP)
+            maxOf(capped, ETHEREUM_SWAP_PRIORITY_FEE_FLOOR)
         } else {
             when (chain) {
                 // Arb and Mantle requires no miner tip
@@ -186,7 +215,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
                     )
                 }
 
-                // picked medium with min of 1 GWEI (ETH etc..)
+                // picked medium with min of 1 GWEI (other EVM chains, plus non-swap Ethereum)
                 else -> {
                     if (rewardsFeeHistory.isEmpty()) {
                         Timber.w("Fee history is empty for %s, using fallback", chain)
@@ -226,6 +255,13 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_BLAST = BigInteger.TEN.pow(7) // 0.01 GWEI
+        private val ETHEREUM_SWAP_PRIORITY_FEE_FLOOR = GWEI * BigInteger.valueOf(2)
+        // Upper bound on the per-block reward sample so a single MEV-burst block doesn't
+        // propagate as the authorized tip. EIP-1559 means the actual paid amount stays
+        // near baseFee + priorityFee, but the user-displayed bond is sized off
+        // maxPriorityFeePerGas × DEFAULT_SWAP_LIMIT (600k), so we cap the bond surface
+        // even though inclusion would tolerate higher tips.
+        private val ETHEREUM_SWAP_PRIORITY_FEE_CAP = GWEI * BigInteger.valueOf(10)
 
         val DEFAULT_SWAP_LIMIT = "600000".toBigInteger()
         val DEFAULT_COIN_TRANSFER_LIMIT = "23000".toBigInteger()

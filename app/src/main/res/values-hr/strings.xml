@@ -104,7 +104,6 @@
     <string name="verify_transaction_from_title">Od</string>
     <string name="verify_transaction_to_title">Do</string>
     <string name="verify_transaction_amount_title">Iznos</string>
-    <string name="verify_transaction_join_keysign">Pridruži se potpisu ključa</string>
     <string name="verify_transaction_consent_address">Šaljem na pravu adresu</string>
     <string name="verify_transaction_consent_amount">Iznos je točan</string>
     <string name="transaction_done_title">Gotovo</string>
@@ -706,8 +705,7 @@
     <string name="send_form_enter_memo">Unesi memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Trezor s ovim nazivom već postoji</string>
     <string name="name_vault_server_exists_warning_title">Brzi trezor već postoji</string>
-    <string name="name_vault_server_exists_warning_message">Brzi trezor s ovom frazom za oporavak već postoji na serveru. Stvaranje novog brzog trezora zamijenit će serverski udio i učiniti postojeći trezor neupotrebljivim. Razmotrite korištenje sigurnog trezora umjesto toga.</string>
-    <string name="name_vault_server_exists_warning_continue">Nastavi</string>
+    <string name="name_vault_server_exists_warning_message">Brzi trezor za ovu frazu za oporavak već postoji na serveru. Vratite se i obnovite postojeći trezor ili odaberite sigurni trezor za novo MPC postavljanje.</string>
     <string name="name_vault_server_exists_warning_back">Nazad</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Nepoznato</string>
@@ -858,13 +856,10 @@
     <string name="transfer_ibc_function_memo_title">dopis</string>
     <string name="tx_overview_screen_tx_to">Do</string>
     <string name="tx_overview_screen_tx_memo">dopis</string>
-    <string name="verify_sign_message_message_field_title">Poruka</string>
-    <string name="verify_sign_message_method_field_title">Metoda</string>
     <string name="fast_vault_password_screen_title">Odaberite lozinku</string>
     <string name="fast_vault_password_screen_hint">To se događa jer se lozinka koristi za lokalno šifriranje datoteke sigurnosne kopije, slično kao što se šifrira tvrdi disk. U sljedećem koraku imate mogućnost dodati podsjetnik.</string>
     <string name="fast_vault_password_screen_hint_title">Više informacija</string>
     <string name="peer_discovery_local_mode_hint">U lokalnom ste načinu rada</string>
-    <string name="peer_discovery_recommended_devices_hint">Skenirajte QR s drugim uređajem. Preporučuje se postavljanje s 3 uređaja, 2 su dovoljna.</string>
     <string name="review_vault_devices_title">Pregledaj uređaje trezora</string>
     <string name="review_vault_devices_description">Provjerite jesu li ovo ispravni uređaji koje ste dodali:</string>
     <string name="review_vault_devices_looks_good">Izgleda dobro</string>
@@ -1196,4 +1191,20 @@
     <string name="swap_error_approval_failed">Transakcija odobrenja tokena nije uspjela. Molimo pokušajte ponovno</string>
     <string name="erc20_approval_unlimited_amount">Neograničeno odobrenje %1$s</string>
     <string name="erc20_approval_spender">Trošač</string>
+    <string name="decoded_function_owner">Vlasnik</string>
+    <string name="decoded_function_operator">Operator</string>
+    <string name="decoded_function_status">Status</string>
+    <string name="decoded_function_status_approved">Odobreno</string>
+    <string name="decoded_function_status_revoked">Opozvano</string>
+    <string name="decoded_function_deadline">Rok</string>
+    <string name="decoded_function_amount">Iznos</string>
+    <string name="decoded_function_unlimited">Neograničeno</string>
+    <string name="decoded_function_unlimited_amount">Neograničeno %1$s</string>
+    <string name="decoded_function_from_token">Polazni token</string>
+    <string name="decoded_function_to_token">Odredišni token</string>
+    <string name="decoded_function_amount_in">Ulazni iznos</string>
+    <string name="decoded_function_max_amount_in">Maksimalni ulazni iznos</string>
+    <string name="decoded_function_min_amount_out">Minimalni izlazni iznos</string>
+    <string name="decoded_function_amount_out">Izlazni iznos</string>
+    <string name="decoded_function_swap_title">Zamjena</string>
 </resources>

@@ -106,7 +106,6 @@
     <string name="verify_transaction_from_title">Von</string>
     <string name="verify_transaction_to_title">Zu</string>
     <string name="verify_transaction_amount_title">Menge</string>
-    <string name="verify_transaction_join_keysign">Dem Schlüsselunterschriftsprozess beitreten</string>
     <string name="verify_transaction_consent_address">Ich sende an die richtige Adresse</string>
     <string name="verify_transaction_consent_amount">Die Menge ist korrekt</string>
     <string name="transaction_done_title">Fertig</string>
@@ -705,8 +704,7 @@
     <string name="send_form_enter_memo">Memo eingeben</string>
     <string name="name_vault_vault_with_this_name_already_exists">Ein Tresor mit diesem Namen ist bereits vorhanden.</string>
     <string name="name_vault_server_exists_warning_title">Schneller Tresor existiert bereits</string>
-    <string name="name_vault_server_exists_warning_message">Ein schneller Tresor mit dieser Seed-Phrase existiert bereits auf dem Server. Das Erstellen eines neuen schnellen Tresors ersetzt die Serverfreigabe und macht den bestehenden Tresor unbrauchbar. Erwägen Sie stattdessen einen sicheren Tresor.</string>
-    <string name="name_vault_server_exists_warning_continue">Weiter</string>
+    <string name="name_vault_server_exists_warning_message">Ein schneller Tresor für diese Seed-Phrase existiert bereits auf dem Server. Gehen Sie zurück und stellen Sie den bestehenden Tresor wieder her, oder wählen Sie einen sicheren Tresor für ein neues MPC-Setup.</string>
     <string name="name_vault_server_exists_warning_back">Zurück</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Unbekannt</string>
@@ -855,13 +853,10 @@
     <string name="transfer_ibc_function_memo_title">Memo</string>
     <string name="tx_overview_screen_tx_to">Zu</string>
     <string name="tx_overview_screen_tx_memo">Memo</string>
-    <string name="verify_sign_message_message_field_title">Nachricht</string>
-    <string name="verify_sign_message_method_field_title">Methode</string>
     <string name="fast_vault_password_screen_title">Passwort wählen</string>
     <string name="fast_vault_password_screen_hint">Dies geschieht, weil das Passwort zur lokalen Verschlüsselung der Sicherungsdatei verwendet wird, ähnlich wie bei der Festplattenverschlüsselung. Im nächsten Schritt können Sie einen Hinweis hinzufügen.</string>
     <string name="fast_vault_password_screen_hint_title">Weitere Informationen</string>
     <string name="peer_discovery_local_mode_hint">Sie befinden sich im lokalen Modus.</string>
-    <string name="peer_discovery_recommended_devices_hint">QR-Code mit einem anderen Gerät scannen. Einrichtung mit 3 Geräten empfohlen, 2 Geräte reichen aus.</string>
     <string name="review_vault_devices_title">Vault-Geräte überprüfen</string>
     <string name="review_vault_devices_description">Stellen Sie sicher, dass dies die richtigen Geräte sind, die Sie hinzugefügt haben:</string>
     <string name="review_vault_devices_looks_good">Sieht gut aus</string>
@@ -1188,4 +1183,20 @@
     <string name="swap_error_approval_failed">Token-Genehmigungstransaktion fehlgeschlagen. Bitte versuchen Sie es erneut</string>
     <string name="erc20_approval_unlimited_amount">Unbegrenzte %1$s-Freigabe</string>
     <string name="erc20_approval_spender">Begünstigter</string>
+    <string name="decoded_function_owner">Inhaber</string>
+    <string name="decoded_function_operator">Operator</string>
+    <string name="decoded_function_status">Status</string>
+    <string name="decoded_function_status_approved">Genehmigt</string>
+    <string name="decoded_function_status_revoked">Widerrufen</string>
+    <string name="decoded_function_deadline">Frist</string>
+    <string name="decoded_function_amount">Betrag</string>
+    <string name="decoded_function_unlimited">Unbegrenzt</string>
+    <string name="decoded_function_unlimited_amount">Unbegrenzt %1$s</string>
+    <string name="decoded_function_from_token">Quell-Token</string>
+    <string name="decoded_function_to_token">Ziel-Token</string>
+    <string name="decoded_function_amount_in">Eingangsbetrag</string>
+    <string name="decoded_function_max_amount_in">Max. Eingangsbetrag</string>
+    <string name="decoded_function_min_amount_out">Min. Ausgangsbetrag</string>
+    <string name="decoded_function_amount_out">Ausgangsbetrag</string>
+    <string name="decoded_function_swap_title">Tausch</string>
 </resources>

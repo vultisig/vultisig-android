@@ -32,7 +32,8 @@ internal fun <T : Any> SelectPopup(
     itemContent: @Composable (T, distanceFromCenter: Int) -> Unit,
 ) {
     val visibleItems = 7
-    var currentSelectionIndex by remember { mutableIntStateOf(uiModel.initialIndex) }
+    var currentSelectionIndex by
+        remember(uiModel.initialIndex) { mutableIntStateOf(uiModel.initialIndex) }
     var accumulatedDragY by remember { mutableFloatStateOf(0f) }
     var measuredItemHeight by remember { mutableIntStateOf(0) }
     var lastKnownY by remember { mutableStateOf<Float?>(null) }

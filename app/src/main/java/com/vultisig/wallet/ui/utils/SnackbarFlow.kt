@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 @Singleton
 internal class SnackbarFlow @Inject constructor() {
 
-    private val messageFlow = Channel<Pair<UiText, SnackbarType>>()
+    private val messageFlow = Channel<Pair<UiText, SnackbarType>>(capacity = Channel.BUFFERED)
 
     suspend fun showMessage(message: String, type: SnackbarType = SnackbarType.Success) {
         showMessage(message.asUiText(), type)

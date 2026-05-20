@@ -1,6 +1,5 @@
 package com.vultisig.wallet.ui.models
 
-import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import android.net.Uri
 import androidx.annotation.StringRes
@@ -13,10 +12,6 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.DefaultDispatcher
 import com.vultisig.wallet.data.common.AppZipEntry
-import com.vultisig.wallet.data.common.fileContent
-import com.vultisig.wallet.data.common.fileName
-import com.vultisig.wallet.data.common.isValidZipFile
-import com.vultisig.wallet.data.common.processZip
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
@@ -29,6 +24,7 @@ import com.vultisig.wallet.data.usecases.ParseVaultFromStringUseCase
 import com.vultisig.wallet.data.usecases.SaveVaultUseCase
 import com.vultisig.wallet.data.usecases.WrongPasswordException
 import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
+import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCase
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
@@ -38,7 +34,6 @@ import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -71,13 +66,13 @@ internal class ImportFileViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    @param:ApplicationContext private val context: Context,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val saveVault: SaveVaultUseCase,
     private val parseVaultFromString: ParseVaultFromStringUseCase,
     private val vaultRepository: VaultRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val snackBarFlow: SnackbarFlow,
+    private val uriFileReader: UriFileReaderUseCase,
     @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -152,11 +147,11 @@ constructor(
 
     private fun showSuccessImport() =
         showSnackBarMessage(
-            message = context.getString(R.string.import_file_screen_success_import),
+            message = UiText.StringResource(R.string.import_file_screen_success_import),
             type = SnackbarType.Success,
         )
 
-    private fun showSnackBarMessage(message: String, type: SnackbarType) {
+    private fun showSnackBarMessage(message: UiText, type: SnackbarType) {
         viewModelScope.launch { snackBarFlow.showMessage(message = message, type = type) }
     }
 
@@ -178,7 +173,7 @@ constructor(
             // The archive itself stays usable (fileName/fileUri preserved); only the bad
             // entry is pruned from zipOutputs and its content cleared, so the user can pick
             // another share from the same zip.
-            showSnackBarMessage(context.getString(resId), SnackbarType.Error)
+            showSnackBarMessage(UiText.StringResource(resId), SnackbarType.Error)
             if (policy == FailurePolicy.DropFile) {
                 val badContent = state.fileContent
                 uiModel.update {
@@ -285,7 +280,7 @@ constructor(
     fun saveFileToAppDir() {
         val uri = uiModel.value.fileUri ?: return
         viewModelScope.launch {
-            val fileContent = uri.fileContent(context)
+            val fileContent = uriFileReader.readContent(uri)
             if (fileContent == null) {
                 uiModel.update {
                     it.copy(
@@ -306,12 +301,12 @@ constructor(
     fun fetchFileName(uri: Uri?) {
         uri ?: return
         viewModelScope.launch {
-            val fileName = uri.fileName(context)?.takeUnless { it.isBlank() }
+            val fileName = uriFileReader.readName(uri)?.takeUnless { it.isBlank() }
             if (fileName == null) {
                 resetPickerWithError()
                 return@launch
             }
-            val isZip = uri.isValidZipFile(context)
+            val isZip = uriFileReader.isValidZip(uri)
             val hasAllowedExtension = File(fileName).extension in FILE_ALLOWED_EXTENSIONS
             when {
                 !isZip && !hasAllowedExtension -> resetPickerWithError()
@@ -334,7 +329,7 @@ constructor(
     }
 
     private suspend fun acceptZip(uri: Uri, fileName: String) {
-        val entries = uri.processZip(context)
+        val entries = uriFileReader.extractZipEntries(uri)
         uiModel.update {
             it.copy(
                 fileUri = uri,

@@ -202,7 +202,6 @@
     <string name="verify_transaction_amount_title">Amount</string>
     <string name="verify_transaction_network_fee">Network Fee</string>
     <string name="verify_transaction_value">Value</string>
-    <string name="verify_transaction_join_keysign">Join Keysign</string>
     <string name="verify_transaction_consent_address">I’m sending to the right address</string>
     <string name="verify_transaction_consent_amount">The amount is correct</string>
     <string name="verify_transaction_error_not_enough_consent">Please check all consents</string>
@@ -459,9 +458,7 @@
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
 
 
-    <string name="verify_sign_message_method_field_title">Method</string>
     <string name="signing_error_transaction_timeout">Transaction timed out due to slow signing. Please try again.</string>
-    <string name="verify_sign_message_message_field_title">Message</string>
     <string name="hint_signing_method">Signing method</string>
     <string name="verify_sign_message_signing_method">Signing method</string>
     <string name="hint_message_to_sign">Message to sign</string>
@@ -559,7 +556,6 @@
     <string name="peer_discovery_switch_network_mode_switch_to_local">Switch to local mode</string>
     <string name="peer_discovery_switch_network_mode_switch_to_internet">Switch back to internet mode</string>
     <string name="peer_discovery_local_mode_hint">You’re in local mode</string>
-    <string name="peer_discovery_recommended_devices_hint">Scan QR with other device. 3-device setup recommended, 2 is sufficient.</string>
     <string name="fast_vault_name_screen_title">Name your vault</string>
     <string name="fast_vault_name_screen_desc">You can always rename your vault later in the settings</string>
     <string name="enter_email_screen_title">Enter your email</string>
@@ -912,8 +908,7 @@
     <string name="migration_password_enter_your_password_to_unlock">Enter your password to unlock your Server Share and start the upgrade</string>
     <string name="name_vault_vault_with_this_name_already_exists">Vault with this name already exists</string>
     <string name="name_vault_server_exists_warning_title">Fast vault already exists</string>
-    <string name="name_vault_server_exists_warning_message">A fast vault with this seed phrase already exists on the server. Creating a new fast vault will replace the server share and make the existing vault unusable. Consider using a secure vault instead.</string>
-    <string name="name_vault_server_exists_warning_continue">Continue</string>
+    <string name="name_vault_server_exists_warning_message">A fast vault for this seed phrase already exists on the server. Go back and recover the existing vault, or choose Secure Vault for a new MPC setup.</string>
     <string name="name_vault_server_exists_warning_back">Back</string>
     <string name="referral_create_status">Status</string>
     <string name="referral_create_unknown">Unknown</string>
@@ -1237,4 +1232,20 @@
     <string name="swap_error_approval_failed">Token approval transaction failed. Please try again</string>
     <string name="erc20_approval_unlimited_amount">Unlimited %1$s approval</string>
     <string name="erc20_approval_spender">Spender</string>
+    <string name="decoded_function_owner">Owner</string>
+    <string name="decoded_function_operator">Operator</string>
+    <string name="decoded_function_status">Status</string>
+    <string name="decoded_function_status_approved">Approved</string>
+    <string name="decoded_function_status_revoked">Revoked</string>
+    <string name="decoded_function_deadline">Deadline</string>
+    <string name="decoded_function_amount">Amount</string>
+    <string name="decoded_function_unlimited">Unlimited</string>
+    <string name="decoded_function_unlimited_amount">Unlimited %1$s</string>
+    <string name="decoded_function_from_token">From token</string>
+    <string name="decoded_function_to_token">To token</string>
+    <string name="decoded_function_amount_in">Amount in</string>
+    <string name="decoded_function_max_amount_in">Max amount in</string>
+    <string name="decoded_function_min_amount_out">Min amount out</string>
+    <string name="decoded_function_amount_out">Amount out</string>
+    <string name="decoded_function_swap_title">Swap</string>
 </resources>

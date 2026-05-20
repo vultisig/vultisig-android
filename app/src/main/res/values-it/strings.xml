@@ -104,7 +104,6 @@
     <string name="verify_transaction_from_title">Da</string>
     <string name="verify_transaction_to_title">A</string>
     <string name="verify_transaction_amount_title">Quantità</string>
-    <string name="verify_transaction_join_keysign">Unisciti alla firma chiave</string>
     <string name="verify_transaction_consent_address">Sto inviando all\'indirizzo corretto</string>
     <string name="verify_transaction_consent_amount">La quantità è corretta</string>
     <string name="transaction_done_title">Fatto</string>
@@ -703,8 +702,7 @@
     <string name="send_form_enter_memo">Inserisci Memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Esiste già un Vault con questo nome</string>
     <string name="name_vault_server_exists_warning_title">Il vault veloce esiste già</string>
-    <string name="name_vault_server_exists_warning_message">Un vault veloce con questa frase seed esiste già sul server. La creazione di un nuovo vault veloce sostituirà la condivisione del server e renderà inutilizzabile il vault esistente. Considera invece l\'utilizzo di un vault sicuro.</string>
-    <string name="name_vault_server_exists_warning_continue">Continua</string>
+    <string name="name_vault_server_exists_warning_message">Un vault veloce per questa frase seed esiste già sul server. Torna indietro e ripristina il vault esistente, oppure scegli vault sicuro per una nuova configurazione MPC.</string>
     <string name="name_vault_server_exists_warning_back">Indietro</string>
     <string name="referral_create_status">Stato</string>
     <string name="referral_create_unknown">Sconosciuto</string>
@@ -853,13 +851,10 @@
     <string name="transfer_ibc_function_memo_title">Promemoria</string>
     <string name="tx_overview_screen_tx_to">A</string>
     <string name="tx_overview_screen_tx_memo">Promemoria</string>
-    <string name="verify_sign_message_message_field_title">Messaggio</string>
-    <string name="verify_sign_message_method_field_title">Metodo</string>
     <string name="fast_vault_password_screen_title">Scegli una password</string>
     <string name="fast_vault_password_screen_hint">Ciò si verifica perché la password viene utilizzata per crittografare localmente il file di backup, in modo simile a come viene crittografato un disco rigido. Nel passaggio successivo, è possibile aggiungere un suggerimento.</string>
     <string name="fast_vault_password_screen_hint_title">Ulteriori informazioni</string>
     <string name="peer_discovery_local_mode_hint">Sei in modalità locale</string>
-    <string name="peer_discovery_recommended_devices_hint">Scansiona il codice QR con un altro dispositivo. Si consiglia la configurazione a 3 dispositivi, 2 sono sufficienti.</string>
     <string name="review_vault_devices_title">Controlla i dispositivi del vault</string>
     <string name="review_vault_devices_description">Assicurati che questi siano i dispositivi corretti che hai aggiunto:</string>
     <string name="review_vault_devices_looks_good">Sembra corretto</string>
@@ -1189,4 +1184,20 @@
     <string name="swap_error_approval_failed">La transazione di approvazione del token non è riuscita. Riprova</string>
     <string name="erc20_approval_unlimited_amount">Approvazione illimitata di %1$s</string>
     <string name="erc20_approval_spender">Destinatario</string>
+    <string name="decoded_function_owner">Proprietario</string>
+    <string name="decoded_function_operator">Operatore</string>
+    <string name="decoded_function_status">Stato</string>
+    <string name="decoded_function_status_approved">Approvato</string>
+    <string name="decoded_function_status_revoked">Revocato</string>
+    <string name="decoded_function_deadline">Scadenza</string>
+    <string name="decoded_function_amount">Quantità</string>
+    <string name="decoded_function_unlimited">Illimitato</string>
+    <string name="decoded_function_unlimited_amount">Illimitato %1$s</string>
+    <string name="decoded_function_from_token">Token di origine</string>
+    <string name="decoded_function_to_token">Token di destinazione</string>
+    <string name="decoded_function_amount_in">Importo in entrata</string>
+    <string name="decoded_function_max_amount_in">Importo massimo in entrata</string>
+    <string name="decoded_function_min_amount_out">Importo minimo in uscita</string>
+    <string name="decoded_function_amount_out">Importo in uscita</string>
+    <string name="decoded_function_swap_title">Scambio</string>
 </resources>

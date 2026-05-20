@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,13 +52,12 @@ internal fun VaultDetailScreen(
     val state by model.uiModel.collectAsState()
     val snackbarState = rememberVsSnackbarState()
     val graphicsLayer = rememberGraphicsLayer()
-    val context = LocalContext.current
 
     VaultDetailScreen(
         state = state,
         snackBarState = snackbarState,
         graphicsLayer = graphicsLayer,
-        onShareClick = { model.takeScreenShot(graphicsLayer = graphicsLayer, context = context) },
+        onShareClick = { model.takeScreenShot(graphicsLayer = graphicsLayer) },
         onBackClick = { navHostController.popBackStack() },
     )
 }

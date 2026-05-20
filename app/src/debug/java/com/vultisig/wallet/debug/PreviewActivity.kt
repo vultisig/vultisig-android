@@ -149,6 +149,18 @@ class PreviewActivity : ComponentActivity() {
                     "dapp_banner_verify_host_only" ->
                         DappBannerVerifyPreview(DappBannerVariant.HOST_ONLY)
                     "dapp_banner_send_done" -> DappBannerSendDonePreview()
+                    "decoded_function_verify_collapsed" ->
+                        VerifyDecodedSendPreview(expanded = false)
+                    "decoded_function_verify_expanded_before" ->
+                        VerifyDecodedSendPreview(expanded = true, useRichRows = false)
+                    "decoded_function_verify_expanded_after" ->
+                        VerifyDecodedSendPreview(expanded = true, useRichRows = true)
+                    "universal_router_verify_collapsed" ->
+                        VerifyUniversalRouterPreview(expanded = false)
+                    "universal_router_verify_before" ->
+                        VerifyUniversalRouterPreview(expanded = true, useUrRows = false)
+                    "universal_router_verify_after" ->
+                        VerifyUniversalRouterPreview(expanded = true, useUrRows = true)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -209,7 +221,7 @@ private fun SwapConfirmPreview() {
                     ),
                 vaultName = "Main Vault",
             ),
-        showToolbar = true,
+        hasToolbar = true,
         confirmTitle = "Sign",
         onFastSignClick = {},
         onConfirm = {},
@@ -1118,6 +1130,237 @@ private fun SelectChainPopupPreview() {
         itemContent = { item, distanceFromCenter ->
             ChainSelectorPickerItem(item = item, distanceFromCenter = distanceFromCenter)
         },
+    )
+}
+
+/**
+ * Full-screen [VerifySendScreen] preview wired for #4058 PR screenshots. Renders the real verify
+ * card with a mocked decoded `approve(USDC, ∞)` call and toggles the Transaction Details section
+ * between collapsed and expanded variants. The `useRichRows` switch lets the capture script show
+ * the BEFORE state (raw JSON) by stripping the decoded rows, then re-launch with the AFTER state
+ * (labelled rows + copy icons) — both renders are otherwise identical so the PR comparison is
+ * apples-to-apples.
+ */
+@Composable
+private fun VerifyDecodedSendPreview(expanded: Boolean = false, useRichRows: Boolean = true) {
+    VerifySendScreen(
+        state = decodedApproveSendState(useRichRows),
+        isConsentsEnabled = false,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+        initiallyExpandedDetails = expanded,
+    )
+}
+
+private fun decodedApproveSendState(
+    useRichRows: Boolean
+): com.vultisig.wallet.ui.models.VerifyTransactionUiModel {
+    val ethCoin = Coins.Ethereum.ETH
+    val spender = "0x7a250d5630b4cf539739df2c5dacb4c659f2488d"
+    val rawArgs =
+        "[\"$spender\",\"115792089237316195423570985008687907853269984665640564039457584007913129639935\"]"
+    val richRows =
+        listOf(
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label =
+                    com.vultisig.wallet.ui.utils.UiText.StringResource(
+                        com.vultisig.wallet.R.string.erc20_approval_spender
+                    ),
+                value = com.vultisig.wallet.ui.utils.UiText.DynamicString(spender),
+                copyableValue = spender,
+                secondary = "Uniswap V2 Router",
+            ),
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label =
+                    com.vultisig.wallet.ui.utils.UiText.StringResource(
+                        com.vultisig.wallet.R.string.decoded_function_amount
+                    ),
+                value =
+                    com.vultisig.wallet.ui.utils.UiText.FormattedText(
+                        com.vultisig.wallet.R.string.decoded_function_unlimited_amount,
+                        listOf("USDC"),
+                    ),
+                isWarning = true,
+            ),
+        )
+    val tx =
+        com.vultisig.wallet.ui.models.TransactionDetailsUiModel(
+            token = ValuedToken(token = ethCoin, value = "0", fiatValue = "$0.00"),
+            srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+            srcVaultName = "Honeypot Vault DKLS",
+            // Realistic mock: approve(USDC, spender) — the call's destination is the USDC token
+            // contract, not the spender. `dstContractLabel` stays null because the USDC contract
+            // isn't on the [KnownEvmContracts] allowlist; the user sees "USDC" via `dstLabel`
+            // and the Uniswap V2 Router label only surfaces on the spender row.
+            dstAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            dstLabel = "USDC",
+            functionName = "Approve",
+            functionSignature = "approve(address,uint256)",
+            functionInputs = rawArgs,
+            isUnlimitedApproval = true,
+            approvalSpender = spender,
+            approvalTokenTicker = "USDC",
+            dstContractLabel = null,
+            decodedFunctionParams = if (useRichRows) richRows else null,
+            networkFeeFiatValue = "$1.84",
+            networkFeeTokenValue = "0.000482 ETH",
+            heroContent =
+                com.vultisig.wallet.ui.components.hero.HeroContent.Send(
+                    title = "Approve",
+                    coin =
+                        com.vultisig.wallet.ui.components.hero.HeroCoinAmount(
+                            amount = "Unlimited",
+                            ticker = "USDC",
+                            logo = "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
+                        ),
+                ),
+        )
+    return com.vultisig.wallet.ui.models.VerifyTransactionUiModel(
+        transaction = tx,
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = false,
+        txScanStatus =
+            com.vultisig.wallet.ui.models.TransactionScanStatus.Scanned(
+                com.vultisig.wallet.data.securityscanner.SecurityScannerResult(
+                    provider = "blockaid",
+                    isSecure = true,
+                    riskLevel = com.vultisig.wallet.data.securityscanner.SecurityRiskLevel.NONE,
+                    warnings = emptyList(),
+                    description = "Transaction is safe",
+                    recommendations = "",
+                )
+            ),
+    )
+}
+
+/**
+ * Full-screen [VerifySendScreen] preview wired for #4059 PR screenshots. Renders the real verify
+ * card with a mocked decoded Uniswap Universal Router `execute(...)` call (V3_SWAP_EXACT_IN USDC →
+ * DAI). `useUrRows = false` reproduces the BEFORE state — the same call passed through Phase-2A's
+ * generic positional decoder that can't see inside `bytes[]`. `useUrRows = true` shows the AFTER
+ * state with the four labelled swap rows. Both renders share device, layout, and mock data so the
+ * PR diff is apples-to-apples.
+ */
+@Composable
+private fun VerifyUniversalRouterPreview(expanded: Boolean = true, useUrRows: Boolean = true) {
+    VerifySendScreen(
+        state = decodedUniversalRouterSendState(useUrRows),
+        isConsentsEnabled = false,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+        initiallyExpandedDetails = expanded,
+    )
+}
+
+private fun decodedUniversalRouterSendState(
+    useUrRows: Boolean
+): com.vultisig.wallet.ui.models.VerifyTransactionUiModel {
+    val ethCoin = Coins.Ethereum.ETH
+    val urAddress = "0x66a9893cc07d91d95644aedd05d03f95e1dba8af"
+    val usdc = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    val dai = "0x6b175474e89094c44da98b954eedeac495271d0f"
+    // Realistic V3_SWAP_EXACT_IN inputs blob — the same shape the 4byte path emits for a
+    // 1 USDC → 0.99 DAI Universal Router swap.
+    val v3SwapInput =
+        "0x" +
+            "0000000000000000000000001111111111111111111111111111111111111111" +
+            "00000000000000000000000000000000000000000000000000000000000f4240" +
+            "0000000000000000000000000000000000000000000000000dbd2fca82fa0000" +
+            "00000000000000000000000000000000000000000000000000000000000000a0" +
+            "0000000000000000000000000000000000000000000000000000000000000001" +
+            "0000000000000000000000000000000000000000000000000000000000000002" +
+            "000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" +
+            "0000000000000000000000006b175474e89094c44da98b954eedeac495271d0f"
+    val rawArgs = """["0x08",["$v3SwapInput"],"0"]"""
+    val urRows =
+        listOf(
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label =
+                    com.vultisig.wallet.ui.utils.UiText.StringResource(
+                        com.vultisig.wallet.R.string.decoded_function_from_token
+                    ),
+                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("USDC"),
+                copyableValue = usdc,
+                secondary = usdc,
+            ),
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label =
+                    com.vultisig.wallet.ui.utils.UiText.StringResource(
+                        com.vultisig.wallet.R.string.decoded_function_amount_in
+                    ),
+                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("1 USDC"),
+            ),
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label =
+                    com.vultisig.wallet.ui.utils.UiText.StringResource(
+                        com.vultisig.wallet.R.string.decoded_function_to_token
+                    ),
+                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("DAI"),
+                copyableValue = dai,
+                secondary = dai,
+            ),
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label =
+                    com.vultisig.wallet.ui.utils.UiText.StringResource(
+                        com.vultisig.wallet.R.string.decoded_function_min_amount_out
+                    ),
+                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("0.99 DAI"),
+            ),
+        )
+    val genericRows =
+        listOf(
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label = com.vultisig.wallet.ui.utils.UiText.DynamicString("#1 (bytes)"),
+                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("0x08"),
+            ),
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label = com.vultisig.wallet.ui.utils.UiText.DynamicString("#2 (bytes[])"),
+                value =
+                    com.vultisig.wallet.ui.utils.UiText.DynamicString(
+                        "[$v3SwapInput]".take(64) + "…"
+                    ),
+            ),
+            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
+                label = com.vultisig.wallet.ui.utils.UiText.DynamicString("#3 (uint256)"),
+                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("0"),
+            ),
+        )
+    val tx =
+        com.vultisig.wallet.ui.models.TransactionDetailsUiModel(
+            token = ValuedToken(token = ethCoin, value = "0", fiatValue = "$0.00"),
+            srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
+            srcVaultName = "Honeypot Vault DKLS",
+            dstAddress = urAddress,
+            dstContractLabel = "Uniswap Universal Router V2",
+            functionName = "Execute",
+            functionSignature = "execute(bytes,bytes[],uint256)",
+            functionInputs = rawArgs,
+            decodedFunctionParams = if (useUrRows) urRows else genericRows,
+            isUniversalRouterSwap = useUrRows,
+            networkFeeFiatValue = "$2.41",
+            networkFeeTokenValue = "0.000632 ETH",
+        )
+    return com.vultisig.wallet.ui.models.VerifyTransactionUiModel(
+        transaction = tx,
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = false,
+        txScanStatus = com.vultisig.wallet.ui.models.TransactionScanStatus.NotStarted,
     )
 }
 
