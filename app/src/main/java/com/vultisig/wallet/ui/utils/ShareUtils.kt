@@ -47,9 +47,10 @@ fun Context.share(bitmap: Bitmap, fileName: String) {
             shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             shareIntent.setDataAndType(contentUri, contentResolver.getType(contentUri))
             shareIntent.putExtra(Intent.EXTRA_STREAM, contentUri)
-            startActivity(
+            val chooser =
                 Intent.createChooser(shareIntent, getString(R.string.share_qr_utils_choose_an_app))
-            )
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(chooser)
         }
     } catch (e: IOException) {
         e.printStackTrace()

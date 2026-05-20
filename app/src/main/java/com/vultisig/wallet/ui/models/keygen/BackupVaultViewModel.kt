@@ -1,14 +1,11 @@
 package com.vultisig.wallet.ui.models.keygen
 
-import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.common.deleteDocument
-import com.vultisig.wallet.data.common.saveContentToUri
 import com.vultisig.wallet.data.mappers.MapVaultToProto
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
@@ -17,8 +14,10 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.CreateVaultBackupUseCase
 import com.vultisig.wallet.data.usecases.backup.CreateVaultBackupFileNameUseCase
+import com.vultisig.wallet.data.usecases.backup.DeleteBackupDocumentUseCase
 import com.vultisig.wallet.data.usecases.backup.FILE_ALLOWED_EXTENSIONS
 import com.vultisig.wallet.data.usecases.backup.IsVaultBackupFileExtensionValidUseCase
+import com.vultisig.wallet.data.usecases.backup.SaveBackupToUriUseCase
 import com.vultisig.wallet.data.usecases.backup.toMimeType
 import com.vultisig.wallet.ui.navigation.BackupPasswordTypeNavType
 import com.vultisig.wallet.ui.navigation.BackupType
@@ -30,9 +29,7 @@ import com.vultisig.wallet.ui.navigation.Route.BackupVault.BackupPasswordType
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.reflect.typeOf
 import kotlinx.coroutines.Dispatchers
@@ -49,7 +46,6 @@ internal class BackupVaultViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    @param:ApplicationContext private val context: Context,
     private val vaultRepository: VaultRepository,
     private val createVaultBackupFileName: CreateVaultBackupFileNameUseCase,
     private val isFileExtensionValid: IsVaultBackupFileExtensionValidUseCase,
@@ -57,6 +53,8 @@ constructor(
     private val mapVaultToProto: MapVaultToProto,
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val snackbarFlow: SnackbarFlow,
+    private val saveBackupToUri: SaveBackupToUriUseCase,
+    private val deleteBackupDocument: DeleteBackupDocumentUseCase,
 ) : ViewModel() {
 
     private val args =
@@ -139,7 +137,7 @@ constructor(
                 val isSuccess = backupCurrentVault(password, uri)
                 completeBackupVault(isSuccess)
             } else {
-                context.deleteDocument(uri)
+                deleteBackupDocument(uri)
                 showError(
                     UiText.FormattedText(
                         R.string.vault_settings_error_extension_backup_file,
@@ -169,11 +167,11 @@ constructor(
             return false
         }
 
-        return context.saveContentToUri(uri, backup)
+        return saveBackupToUri(uri, backup)
     }
 
     private suspend fun showError(message: UiText) {
-        snackbarFlow.showMessage(message.asString(context))
+        snackbarFlow.showMessage(message)
     }
 
     private fun completeBackupVault(backupSuccess: Boolean) {
@@ -196,7 +194,7 @@ constructor(
                 }
 
                 snackbarFlow.showMessage(
-                    context.getString(R.string.vault_settings_success_backup_message)
+                    UiText.StringResource(R.string.vault_settings_success_backup_message)
                 )
 
                 when (backupType.action) {

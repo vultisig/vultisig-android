@@ -1,6 +1,5 @@
 package com.vultisig.wallet.app.activity
 
-import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,15 +24,12 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.SnackbarFlow
-import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,14 +49,13 @@ import timber.log.Timber
 internal data class ForegroundNotificationState(
     val qrCodeData: String,
     val vaultName: String = "",
-    val transactionSummary: String = "",
+    val transactionSummary: UiText = UiText.Empty,
 )
 
 @HiltViewModel
 internal class MainViewModel
 @Inject
 constructor(
-    @param:ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     private val snackbarFlow: SnackbarFlow,
     private val vaultRepository: VaultRepository,
@@ -94,19 +89,12 @@ constructor(
 
     val route: Flow<NavigateAction<Any>> = navigator.route
 
-    val snakeBarHostState =
-        VSSnackbarState(duration = 1.seconds, coroutineScope = CoroutineScope(Dispatchers.Default))
+    val snackbarState: VSSnackbarState = VSSnackbarState(1.seconds, viewModelScope)
 
     init {
         viewModelScope.safeLaunch {
             _startDestination.value = resolveStartDestination()
             _isLoading.value = false
-
-            snackbarFlow.collectMessage { (message, type) ->
-                val resolved = message.asString(context)
-                if (resolved.isBlank()) return@collectMessage
-                snakeBarHostState.show(resolved, type)
-            }
         }
 
         viewModelScope.safeLaunch {
@@ -144,20 +132,22 @@ constructor(
             viewModelScope.safeLaunch {
                 val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
                 val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
-                val transactionSummary =
+                val transactionSummary: UiText =
                     when (val summary = getKeysignTransactionSummary(qrCodeData)) {
                         is KeysignTransactionSummary.Swap ->
-                            context.getString(
+                            UiText.FormattedText(
                                 R.string.notification_banner_swap_summary,
-                                mapTokenValueToStringWithUnit(summary.srcTokenValue),
-                                summary.dstTicker,
+                                listOf(
+                                    mapTokenValueToStringWithUnit(summary.srcTokenValue),
+                                    summary.dstTicker,
+                                ),
                             )
                         is KeysignTransactionSummary.Send ->
-                            context.getString(
+                            UiText.FormattedText(
                                 R.string.notification_banner_send_summary,
-                                mapTokenValueToStringWithUnit(summary.tokenValue),
+                                listOf(mapTokenValueToStringWithUnit(summary.tokenValue)),
                             )
-                        null -> ""
+                        null -> UiText.Empty
                     }
                 _foregroundNotification.value =
                     ForegroundNotificationState(
@@ -186,7 +176,7 @@ constructor(
             val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
             if (vault == null) {
                 snackbarFlow.showMessage(
-                    context.getString(R.string.push_notification_vault_not_found),
+                    UiText.StringResource(R.string.push_notification_vault_not_found),
                     SnackbarType.Error,
                 )
                 return@safeLaunch

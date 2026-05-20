@@ -127,7 +127,6 @@
     <string name="verify_transaction_from_title">De</string>
     <string name="verify_transaction_to_title">A</string>
     <string name="verify_transaction_amount_title">Cantidad</string>
-    <string name="verify_transaction_join_keysign">Unirse a la firma de clave</string>
     <string name="verify_transaction_consent_address">Estoy enviando a la dirección correcta</string>
     <string name="verify_transaction_consent_amount">La cantidad es correcta</string>
     <string name="verify_transaction_error_not_enough_consent">Por favor, revise todos los consentimientos</string>
@@ -701,8 +700,7 @@
     <string name="send_form_enter_memo">Ingresar Memo</string>
     <string name="name_vault_vault_with_this_name_already_exists">Ya existe una bóveda con este nombre.</string>
     <string name="name_vault_server_exists_warning_title">La bóveda rápida ya existe</string>
-    <string name="name_vault_server_exists_warning_message">Ya existe una bóveda rápida con esta frase semilla en el servidor. Crear una nueva bóveda rápida reemplazará el recurso compartido del servidor y hará que la bóveda existente quede inutilizable. Considere usar una bóveda segura en su lugar.</string>
-    <string name="name_vault_server_exists_warning_continue">Continuar</string>
+    <string name="name_vault_server_exists_warning_message">Ya existe una bóveda rápida para esta frase semilla en el servidor. Vuelva y recupere la bóveda existente, o elija bóveda segura para una nueva configuración MPC.</string>
     <string name="name_vault_server_exists_warning_back">Volver</string>
     <string name="referral_create_status">Estado</string>
     <string name="referral_create_unknown">Desconocido</string>
@@ -851,13 +849,10 @@
     <string name="transfer_ibc_function_memo_title">Memorándum</string>
     <string name="tx_overview_screen_tx_to">A</string>
     <string name="tx_overview_screen_tx_memo">Memorándum</string>
-    <string name="verify_sign_message_message_field_title">Mensaje</string>
-    <string name="verify_sign_message_method_field_title">Método</string>
     <string name="fast_vault_password_screen_title">Elige una contraseña</string>
     <string name="fast_vault_password_screen_hint">Esto ocurre porque la contraseña se usa para cifrar localmente el archivo de copia de seguridad, de forma similar a como se cifra un disco duro. En el siguiente paso, tiene la opción de añadir una pista.</string>
     <string name="fast_vault_password_screen_hint_title">Más información</string>
     <string name="peer_discovery_local_mode_hint">Estás en modo local</string>
-    <string name="peer_discovery_recommended_devices_hint">Escanear código QR con otro dispositivo. Se recomienda configurar 3 dispositivos, pero con 2 es suficiente.</string>
     <string name="review_vault_devices_title">Revisar los dispositivos del vault</string>
     <string name="review_vault_devices_description">Asegúrate de que estos son los dispositivos correctos que has añadido:</string>
     <string name="review_vault_devices_looks_good">Se ve bien</string>
@@ -1193,4 +1188,11 @@
     <string name="decoded_function_amount">Cantidad</string>
     <string name="decoded_function_unlimited">Ilimitado</string>
     <string name="decoded_function_unlimited_amount">Ilimitado %1$s</string>
+    <string name="decoded_function_from_token">Token de origen</string>
+    <string name="decoded_function_to_token">Token de destino</string>
+    <string name="decoded_function_amount_in">Cantidad de entrada</string>
+    <string name="decoded_function_max_amount_in">Cantidad máxima de entrada</string>
+    <string name="decoded_function_min_amount_out">Cantidad mínima de salida</string>
+    <string name="decoded_function_amount_out">Cantidad de salida</string>
+    <string name="decoded_function_swap_title">Intercambio</string>
 </resources>

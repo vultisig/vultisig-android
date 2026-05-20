@@ -31,6 +31,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
@@ -70,10 +72,11 @@ private fun Modifier.bannerBackground(
 internal fun ForegroundNotificationBanner(
     qrCodeData: String,
     vaultName: String,
-    transactionSummary: String,
+    transactionSummary: UiText,
     onTap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val summary = transactionSummary.asString()
     val shape = RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp)
     val imagePainter = painterResource(R.drawable.foreground_layer)
 
@@ -132,9 +135,9 @@ internal fun ForegroundNotificationBanner(
                 UiSpacer(size = 8.dp)
             }
 
-            if (transactionSummary.isNotEmpty()) {
+            if (summary.isNotEmpty()) {
                 Text(
-                    text = transactionSummary,
+                    text = summary,
                     style = Theme.brockmann.supplementary.footnote,
                     color = Theme.v2.colors.text.secondary,
                     textAlign = TextAlign.Center,
@@ -158,7 +161,7 @@ private fun ForegroundNotificationBannerPreview() {
     ForegroundNotificationBanner(
         qrCodeData = "preview",
         vaultName = "Vault #2",
-        transactionSummary = "Swap 10 ETH → USDC",
+        transactionSummary = UiText.DynamicString("Swap 10 ETH → USDC"),
         onTap = {},
     )
 }

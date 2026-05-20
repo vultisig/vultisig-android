@@ -142,7 +142,15 @@ internal fun VerifySendScreen(
     initiallyExpandedDetails: Boolean = false,
 ) {
     V2Scaffold(
-        title = stringResource(R.string.verify_send_send_overview).takeIf { hasToolbar },
+        title =
+            stringResource(
+                    if (state.transaction.isUniversalRouterSwap) {
+                        R.string.verify_swap_swap_overview
+                    } else {
+                        R.string.verify_send_send_overview
+                    }
+                )
+                .takeIf { hasToolbar },
         onBackClick = onBackClick.takeIf { hasToolbar },
         bottomBar = {
             Column(
@@ -237,10 +245,18 @@ internal fun VerifySendScreen(
 
                     // Hero is the dApp signing source of truth — Blockaid simulation when
                     // resolved, function-name title when only the 4byte decode loaded, native
-                    // VsOverviewToken otherwise.
+                    // VsOverviewToken otherwise. For a decoded Universal Router swap we override
+                    // the raw `execute` function name with a localised "Swap" title so the user
+                    // sees real intent instead of the router's plumbing.
+                    val heroTitle =
+                        if (tx.isUniversalRouterSwap) {
+                            stringResource(R.string.decoded_function_swap_title)
+                        } else {
+                            tx.functionName
+                        }
                     TransactionHero(
                         heroContent = tx.heroContent,
-                        functionName = tx.functionName,
+                        functionName = heroTitle,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         VsOverviewToken(
