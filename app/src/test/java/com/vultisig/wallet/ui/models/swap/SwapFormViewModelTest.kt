@@ -572,6 +572,33 @@ internal class SwapFormViewModelTest {
         }
 
     @Test
+    fun `flipSelectedTokens swaps correctly when dst was not explicitly set`() =
+        runTest(mainDispatcher) {
+            // BTC is first so the auto-selection of dst (dstTokenId=null) picks BTC;
+            // ETH is found by explicit srcTokenId. Mirrors the src=null test but in reverse.
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcAddress(), ethAddress()),
+                    srcTokenId = ETH_COIN.id,
+                    dstTokenId = null,
+                )
+            advanceUntilIdle()
+
+            val srcBefore = vm.uiState.value.selectedSrcToken?.model?.account?.token?.id
+            val dstBefore = vm.uiState.value.selectedDstToken?.model?.account?.token?.id
+            assertEquals(ETH_COIN.id, srcBefore)
+            assertEquals(BTC_COIN.id, dstBefore)
+
+            vm.flipSelectedTokens()
+            advanceUntilIdle()
+
+            val srcAfter = vm.uiState.value.selectedSrcToken?.model?.account?.token?.id
+            val dstAfter = vm.uiState.value.selectedDstToken?.model?.account?.token?.id
+            assertEquals(BTC_COIN.id, srcAfter, "src should now be BTC after flip")
+            assertEquals(ETH_COIN.id, dstAfter, "dst should now be ETH after flip")
+        }
+
+    @Test
     fun `flipSelectedTokens resets quote state`() =
         runTest(mainDispatcher) {
             val vm = createViewModelWithAddresses()

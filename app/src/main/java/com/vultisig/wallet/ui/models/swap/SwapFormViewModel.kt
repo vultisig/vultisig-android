@@ -665,8 +665,12 @@ constructor(
 
         resetQuoteState()
 
-        selectedSrcId.value = currentDstTokenId
-        selectedDstId.value = currentSrcTokenId
+        // Fall back to the raw ID when the resolved SendSrc hasn't loaded yet, so a race between
+        // the flip gesture and token resolution never silently clobbers both slots with null.
+        val newSrcId = currentDstTokenId ?: selectedDstId.value
+        val newDstId = currentSrcTokenId ?: selectedSrcId.value
+        selectedSrcId.value = newSrcId
+        selectedDstId.value = newDstId
 
         // collectSelectedTokens() observes the IDs above and resolves selectedSrc/selectedDst
         // synchronously under Main.immediate. A manual swap of those resolved StateFlows here
