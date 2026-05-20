@@ -665,9 +665,8 @@ constructor(
 
         resetQuoteState()
 
-        val previousSrcId = selectedSrcId.value
-        selectedSrcId.value = selectedDstId.value
-        selectedDstId.value = previousSrcId
+        selectedSrcId.value = currentDstTokenId
+        selectedDstId.value = currentSrcTokenId
 
         // collectSelectedTokens() observes the IDs above and resolves selectedSrc/selectedDst
         // synchronously under Main.immediate. A manual swap of those resolved StateFlows here

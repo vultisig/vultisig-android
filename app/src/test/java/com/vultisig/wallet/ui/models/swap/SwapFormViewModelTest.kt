@@ -543,6 +543,35 @@ internal class SwapFormViewModelTest {
         }
 
     @Test
+    fun `flipSelectedTokens swaps correctly when src was not explicitly set`() =
+        runTest(mainDispatcher) {
+            // Reproduces issue #4581: srcTokenId is null (user navigated without pre-selecting
+            // a source), user then changes the destination, then taps switch. Before the fix,
+            // selectedSrcId stayed null after the flip so selectedDst resolved back to the old
+            // dst (BCH in the bug report), making both slots show the same asset.
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(ethAddress(), btcAddress()),
+                    srcTokenId = null,
+                    dstTokenId = BTC_COIN.id,
+                )
+            advanceUntilIdle()
+
+            val srcBefore = vm.uiState.value.selectedSrcToken?.model?.account?.token?.id
+            val dstBefore = vm.uiState.value.selectedDstToken?.model?.account?.token?.id
+            assertEquals(ETH_COIN.id, srcBefore)
+            assertEquals(BTC_COIN.id, dstBefore)
+
+            vm.flipSelectedTokens()
+            advanceUntilIdle()
+
+            val srcAfter = vm.uiState.value.selectedSrcToken?.model?.account?.token?.id
+            val dstAfter = vm.uiState.value.selectedDstToken?.model?.account?.token?.id
+            assertEquals(BTC_COIN.id, srcAfter, "src should now be BTC after flip")
+            assertEquals(ETH_COIN.id, dstAfter, "dst should now be ETH after flip")
+        }
+
+    @Test
     fun `flipSelectedTokens resets quote state`() =
         runTest(mainDispatcher) {
             val vm = createViewModelWithAddresses()
