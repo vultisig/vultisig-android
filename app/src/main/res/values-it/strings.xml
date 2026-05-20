@@ -658,7 +658,6 @@
     <string name="chain_selection_key_import_warning">A causa di limitazioni tecniche dell\'importazione delle chiavi e dei portafogli basati su seed, è possibile selezionare solo le catene pre-generate.</string>
     <string name="chain_selection_enable_failed">Impossibile abilitare: %1$s</string>
     <string name="transaction_type_button_functions">Funzioni</string>
-    <string name="transaction_type_button_history">Cronologia</string>
     <string name="copy_address">Copia indirizzo</string>
     <string name="chain_tokens_qr_receive_label">Ricevi %1$s</string>
     <string name="address_copied">Indirizzo %1$s copiato</string>

@@ -26,7 +26,6 @@ enum class AssetAction {
     SEND,
     RECEIVE,
     FUNCTIONS,
-    HISTORY,
 }
 
 @Composable
@@ -53,8 +52,6 @@ fun AssetActionButton(
             AssetAction.RECEIVE -> R.drawable.receive to R.string.transaction_type_button_receive
             AssetAction.FUNCTIONS ->
                 R.drawable.functions to R.string.transaction_type_button_functions
-            AssetAction.HISTORY ->
-                R.drawable.calendar_clock to R.string.transaction_type_button_history
         }
 
     Column(

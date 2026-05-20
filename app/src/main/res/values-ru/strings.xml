@@ -661,7 +661,6 @@
     <string name="chain_selection_key_import_warning">Из-за технических ограничений импорта ключей и кошельков на основе сид-фразы можно выбрать только предварительно сгенерированные сети.</string>
     <string name="chain_selection_enable_failed">Не удалось включить: %1$s</string>
     <string name="transaction_type_button_functions">Функции</string>
-    <string name="transaction_type_button_history">История</string>
     <string name="copy_address">Копировать адрес</string>
     <string name="chain_tokens_qr_receive_label">Получить %1$s</string>
     <string name="address_copied">Адрес %1$s скопирован</string>
