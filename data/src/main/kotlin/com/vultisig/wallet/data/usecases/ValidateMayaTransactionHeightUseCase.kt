@@ -47,29 +47,31 @@ interface GetMayaCacaoMaturityStatusUseCase : suspend (String) -> MayaCacaoMatur
 internal class GetMayaCacaoMaturityStatusUseCaseImpl
 @Inject
 constructor(private val mayaChainApi: MayaChainApi) : GetMayaCacaoMaturityStatusUseCase {
-    override suspend fun invoke(address: String): MayaCacaoMaturityStatus = coroutineScope {
+    override suspend fun invoke(address: String): MayaCacaoMaturityStatus =
         try {
-            val latestBlock = async { mayaChainApi.getLatestBlock() }
-            val mayaConstants = async { mayaChainApi.getMayaConstants() }
-            val cacaoProvider = async { mayaChainApi.getCacaoProvider(address) }
+            coroutineScope {
+                val latestBlock = async { mayaChainApi.getLatestBlock() }
+                val mayaConstants = async { mayaChainApi.getMayaConstants() }
+                val cacaoProvider = async { mayaChainApi.getCacaoProvider(address) }
 
-            val currentBlockHeight = latestBlock.await().block.header.height.toLong()
-            val depositMaturity =
-                mayaConstants.await()[CACAO_POOL_DEPOSIT_MATURITY_BLOCKS]
-                    ?: error("missing $CACAO_POOL_DEPOSIT_MATURITY_BLOCKS mimir")
-            val lastDepositHeight = cacaoProvider.await().lastDepositHeight
+                val currentBlockHeight = latestBlock.await().block.header.height.toLong()
+                val depositMaturity =
+                    mayaConstants.await()[CACAO_POOL_DEPOSIT_MATURITY_BLOCKS]
+                        ?: error("missing $CACAO_POOL_DEPOSIT_MATURITY_BLOCKS mimir")
+                val lastDepositHeight = cacaoProvider.await().lastDepositHeight
 
-            val remainingBlocks =
-                (lastDepositHeight + depositMaturity - currentBlockHeight).coerceAtLeast(0)
-            MayaCacaoMaturityStatus(
-                isMature = remainingBlocks == 0L,
-                remainingBlocks = remainingBlocks,
-                remainingSeconds = remainingBlocks * MAYA_BLOCK_TIME_SECONDS,
-            )
+                val remainingBlocks =
+                    (lastDepositHeight + depositMaturity - currentBlockHeight).coerceAtLeast(0)
+                MayaCacaoMaturityStatus(
+                    isMature = remainingBlocks == 0L,
+                    remainingBlocks = remainingBlocks,
+                    remainingSeconds = remainingBlocks * MAYA_BLOCK_TIME_SECONDS,
+                )
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e(e, "Failed to read CACAO maturity status")
             MayaCacaoMaturityStatus(isMature = false, remainingBlocks = 0, remainingSeconds = 0)
         }
-    }
 }
