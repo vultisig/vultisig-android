@@ -47,6 +47,8 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.keygen.StartViewModel
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.startScreenAnimations
 
@@ -85,92 +87,98 @@ private fun StartScreen(
     }
 
     V3Scaffold(onBackClick = if (hasBackButton) onBackClick else null) {
-        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = CenterHorizontally) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = CenterHorizontally,
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "vultisig",
-                    modifier = Modifier.width(74.5.dp).scale(logoScale.value),
-                )
-                UiSpacer(12.dp)
-                Text(
-                    text = stringResource(R.string.create_new_vault_screen_vultisig),
-                    color = Theme.v2.colors.text.primary,
-                    style = Theme.brockmann.headings.title1,
-                )
-            }
+        OnboardingResponsiveContainer {
+            Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = CenterHorizontally) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = CenterHorizontally,
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "vultisig",
+                        modifier = Modifier.width(74.5.dp).scale(logoScale.value),
+                    )
+                    UiSpacer(12.dp)
+                    Text(
+                        text = stringResource(R.string.create_new_vault_screen_vultisig),
+                        color = Theme.v2.colors.text.primary,
+                        style = Theme.brockmann.headings.title1,
+                    )
+                }
 
-            Row {
-                VsButton(
-                    variant = VsButtonVariant.Secondary,
-                    onClick = onScanQrCodeClick,
-                    modifier = Modifier.weight(1f).startScreenAnimations(delay = 350),
-                    content = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (!hasVaults) {
-                                UiIcon(drawableResId = R.drawable.scan_qr, size = 16.dp)
+                Row {
+                    VsButton(
+                        variant = VsButtonVariant.Secondary,
+                        onClick = onScanQrCodeClick,
+                        modifier = Modifier.weight(1f).startScreenAnimations(delay = 350),
+                        content = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                if (!hasVaults) {
+                                    UiIcon(drawableResId = R.drawable.scan_qr, size = 16.dp)
 
-                                UiSpacer(size = 6.dp)
-                            }
+                                    UiSpacer(size = 6.dp)
+                                }
 
-                            Text(
-                                text = stringResource(R.string.home_screen_scan_qr_code),
-                                style = Theme.brockmann.button.medium.medium,
-                                color = Theme.v2.colors.text.button.primary,
-                            )
-                        }
-                    },
-                )
-                UiSpacer(size = 8.dp)
-
-                VsButton(
-                    variant = VsButtonVariant.Secondary,
-                    onClick = { isChooseImportTypeBottomSheetVisible = true },
-                    modifier = Modifier.weight(1f).startScreenAnimations(delay = 450),
-                    content = {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            val icon = if (hasVaults.not()) R.drawable.import_vault else null
-
-                            icon?.let { iconRes ->
-                                UiIcon(drawableResId = iconRes, size = 20.dp, modifier = Modifier)
-                                UiSpacer(6.dp)
-                            }
-
-                            Text(
-                                text = stringResource(R.string.import_seedphrase_import_button),
-                                style = Theme.brockmann.button.medium.medium,
-                                color = Theme.v2.colors.variables.textPrimary,
-                                modifier = Modifier.alignByBaseline(),
-                            )
-                            if (hasVaults)
-                                NewBadge(
-                                    modifier = Modifier.offset(x = 10.dp),
-                                    starSize = 8.dp,
-                                    fontStyle = Theme.brockmann.supplementary.captionSmall,
+                                Text(
+                                    text = stringResource(R.string.home_screen_scan_qr_code),
+                                    style = Theme.brockmann.button.medium.medium,
+                                    color = Theme.v2.colors.text.button.primary,
                                 )
-                        }
-                    },
+                            }
+                        },
+                    )
+                    UiSpacer(size = 8.dp)
+
+                    VsButton(
+                        variant = VsButtonVariant.Secondary,
+                        onClick = { isChooseImportTypeBottomSheetVisible = true },
+                        modifier = Modifier.weight(1f).startScreenAnimations(delay = 450),
+                        content = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                val icon = if (hasVaults.not()) R.drawable.import_vault else null
+
+                                icon?.let { iconRes ->
+                                    UiIcon(
+                                        drawableResId = iconRes,
+                                        size = 20.dp,
+                                        modifier = Modifier,
+                                    )
+                                    UiSpacer(6.dp)
+                                }
+
+                                Text(
+                                    text = stringResource(R.string.import_seedphrase_import_button),
+                                    style = Theme.brockmann.button.medium.medium,
+                                    color = Theme.v2.colors.variables.textPrimary,
+                                    modifier = Modifier.alignByBaseline(),
+                                )
+                                if (hasVaults)
+                                    NewBadge(
+                                        modifier = Modifier.offset(x = 10.dp),
+                                        starSize = 8.dp,
+                                        fontStyle = Theme.brockmann.supplementary.captionSmall,
+                                    )
+                            }
+                        },
+                    )
+                }
+
+                UiSpacer(size = 16.dp)
+
+                VsButton(
+                    label = stringResource(R.string.referral_onboarding_get_started),
+                    modifier =
+                        Modifier.startScreenAnimations(delay = 100)
+                            .fillMaxWidth()
+                            .testTag("StartScreen.createNewVault"),
+                    onClick = onCreateNewVaultClick,
                 )
             }
-
-            UiSpacer(size = 16.dp)
-
-            VsButton(
-                label = stringResource(R.string.referral_onboarding_get_started),
-                modifier =
-                    Modifier.startScreenAnimations(delay = 100)
-                        .fillMaxWidth()
-                        .testTag("StartScreen.createNewVault"),
-                onClick = onCreateNewVaultClick,
-            )
         }
     }
 
@@ -307,6 +315,19 @@ private fun ChooseImportTypeBottomSheetContentPreview() {
 @Preview
 @Composable
 private fun StartScreenPreview() {
+    StartScreen(
+        hasBackButton = true,
+        onCreateNewVaultClick = {},
+        onScanQrCodeClick = {},
+        onImportVaultClick = {},
+        onImportSeedphraseClick = {},
+        onBackClick = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun StartScreenTabletPreview() {
     StartScreen(
         hasBackButton = true,
         onCreateNewVaultClick = {},
