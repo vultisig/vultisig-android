@@ -980,6 +980,7 @@
     <string name="key_import_spotlight_get_started">Começar</string>
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">Histórico</string>
+    <string name="transaction_history_title_chain">Histórico de %1$s</string>
     <string name="transaction_history_tab_overview">Visão geral</string>
     <string name="transaction_history_tab_send">Enviar</string>
     <string name="transaction_history_tab_swap">Swaps</string>

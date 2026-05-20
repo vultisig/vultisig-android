@@ -139,6 +139,7 @@ data class TransactionHistoryUiState(
     val assetSearchItems: List<TransactionAssetUiModel> = emptyList(),
     val selectedAssetIds: Set<String> = emptySet(),
     val selectedAssets: List<TransactionAssetUiModel> = emptyList(),
+    val chainName: String? = null,
 )
 
 @HiltViewModel
@@ -153,13 +154,13 @@ constructor(
 
     private val route: Route.TransactionHistory = savedStateHandle.toRoute()
     private val vaultId: String = route.vaultId
-    private val chainId: String? = route.chainId
+    private val chainId: String? = route.chainId?.takeIf { it.isNotBlank() }
 
     private val currentTime = MutableStateFlow(System.currentTimeMillis())
 
     val assetSearchTextFieldState = TextFieldState()
 
-    private val _uiState = MutableStateFlow(TransactionHistoryUiState())
+    private val _uiState = MutableStateFlow(TransactionHistoryUiState(chainName = chainId))
     val uiState: StateFlow<TransactionHistoryUiState> = _uiState.asStateFlow()
 
     init {

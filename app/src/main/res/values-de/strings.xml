@@ -981,6 +981,7 @@
     <string name="key_import_spotlight_get_started">Loslegen</string>
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">Verlauf</string>
+    <string name="transaction_history_title_chain">%1$s-Verlauf</string>
     <string name="transaction_history_tab_overview">Übersicht</string>
     <string name="transaction_history_tab_send">Senden</string>
     <string name="transaction_history_tab_swap">Swaps</string>
