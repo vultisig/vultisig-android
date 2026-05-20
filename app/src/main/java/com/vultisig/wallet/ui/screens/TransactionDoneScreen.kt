@@ -249,10 +249,12 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
 
         UiHorizontalDivider()
 
-        AddressField(
-            title = stringResource(R.string.verify_transaction_to_title),
-            address = transaction.dstAddress,
-        )
+        if (transaction.dstAddress.isNotBlank()) {
+            AddressField(
+                title = stringResource(R.string.verify_transaction_to_title),
+                address = transaction.dstAddress,
+            )
+        }
 
         if (!transaction.memo.isNullOrEmpty())
             OtherField(
