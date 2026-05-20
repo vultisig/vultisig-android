@@ -85,10 +85,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -952,39 +950,36 @@ constructor(
 
                 selectedToken.value = null
 
-                // Process both cached and hydrated emissions instead of .first() — the
-                // cached snapshot may not yet contain sTCY/TCY on a slow network, and the
-                // hydrated emission is where the target token finally shows up. onEach
-                // republishes accountsState per emission; firstOrNull terminates the flow
-                // as soon as the target is found so we don't keep selecting on later
-                // hydration updates.
-                val target: Account? =
+                // Process BOTH cached and hydrated emissions — every emission republishes
+                // accountsState so the form refreshes balances when hydration arrives. The
+                // tokenSelected flag pins the selection to the first emission that contains
+                // the target ticker, so a later hydration emission doesn't re-call
+                // selectToken (which would wipe the user's typed amount via
+                // resetUserInputCache).
+                val targetTicker = if (checked) "sTCY" else "TCY"
+                var tokenSelected = false
+                val addressesFlow =
                     if (checked) {
-                        accountsRepository
-                            .loadAddresses(vaultId)
-                            .map { addrs -> addrs.flatMap { it.accounts } }
-                            .onEach { accountsState.value = AccountsLoadState.Loaded(it) }
-                            .mapNotNull { accounts ->
-                                accounts.find {
-                                    it.token.ticker.equals("sTCY", true) &&
-                                        it.token.chain == Chain.ThorChain
-                                }
-                            }
-                            .firstOrNull()
+                        accountsRepository.loadAddresses(vaultId)
                     } else {
-                        accountsRepository
-                            .loadDeFiAddresses(vaultId, false)
-                            .map { addrs -> addrs.flatMap { it.accounts } }
-                            .onEach { accountsState.value = AccountsLoadState.Loaded(it) }
-                            .mapNotNull { accounts ->
-                                accounts.find {
-                                    it.token.ticker.equals("TCY", true) &&
+                        accountsRepository.loadDeFiAddresses(vaultId, false)
+                    }
+                addressesFlow
+                    .map { addrs -> addrs.flatMap { it.accounts } }
+                    .collect { loadedAccounts ->
+                        accountsState.value = AccountsLoadState.Loaded(loadedAccounts)
+                        if (!tokenSelected) {
+                            loadedAccounts
+                                .find {
+                                    it.token.ticker.equals(targetTicker, true) &&
                                         it.token.chain == Chain.ThorChain
                                 }
-                            }
-                            .firstOrNull()
+                                ?.let {
+                                    tokenSelected = true
+                                    selectToken(it.token)
+                                }
+                        }
                     }
-                target?.let { selectToken(it.token) }
             } finally {
                 isSwitchingAccounts.value = false
             }
