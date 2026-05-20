@@ -438,7 +438,7 @@ class UtxoHelper(
             val derivedIsChange = output.address.isNotEmpty() && output.address == vaultAddress
             require(output.isChange == derivedIsChange) {
                 "PSBT output is_change=${output.isChange} contradicts the Windows-companion " +
-                    "derivation (address=='${output.address}' ⇒ change=$derivedIsChange) for " +
+                    "derivation (address=='${output.address}' => change=$derivedIsChange) for " +
                     "vault '$vaultAddress'"
             }
             if (output.isChange) {

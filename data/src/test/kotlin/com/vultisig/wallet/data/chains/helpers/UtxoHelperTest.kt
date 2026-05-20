@@ -667,7 +667,7 @@ class UtxoHelperTest {
                         ),
                 )
             // Verify screen would show a third unrelated address; verifyOwnership must abort.
-            val displayedToAddress = vault // any non-empty address that differs from recipient
+            val displayedToAddress = addressFor(secondAttackerPubKeyHex)
             assertThrows(IllegalArgumentException::class.java) {
                 helper.getPreSignedImageHashFromSignBitcoin(
                     signBitcoin,
@@ -831,6 +831,56 @@ class UtxoHelperTest {
                                 amount = 50_000L,
                                 address = hiddenPayee,
                                 scriptPubKey = scriptHexFor(hiddenPayee),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(vault),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects PSBT that duplicates the legitimate payee output`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            // dApp splits the displayed payment into two outputs that both lock
+                            // to expectedToAddress. Sum non-change = 60_000 still matches the
+                            // payload, the divergence check passes (no non-matching output), but
+                            // the Verify screen lists a single payee while the signed tx funds
+                            // two — caught by the `matches == 1` invariant.
+                            BitcoinOutput(
+                                amount = 30_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 30_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
                                 isChange = false,
                             ),
                             BitcoinOutput(
