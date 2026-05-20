@@ -1136,7 +1136,11 @@ constructor(
                     state.copy(
                         isUnstakeMature = status.isMature,
                         unstakeUnlocksInText =
-                            if (status.isMature) null else status.toUnlocksInText(),
+                            if (status.isMature || status.remainingSeconds <= 0L) {
+                                null
+                            } else {
+                                status.toUnlocksInText()
+                            },
                     )
                 }
             }
