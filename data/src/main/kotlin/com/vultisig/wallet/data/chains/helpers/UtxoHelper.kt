@@ -440,12 +440,6 @@ class UtxoHelper(
                     "derivation (address=='${output.address}' ⇒ change=$derivedIsChange) for " +
                     "vault '$vaultAddress'"
             }
-            if (output.isChange) {
-                require(output.address == vaultAddress) {
-                    "PSBT output marked is_change=true does not belong to this vault " +
-                        "(address='${output.address}', expected='$vaultAddress')"
-                }
-            }
         }
         verifyDestinationBinding(outputs, expectedToAddress, expectedToAmount)
     }
