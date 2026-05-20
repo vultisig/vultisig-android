@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.models.keygen.FastVaultEmailState
 import com.vultisig.wallet.ui.models.keygen.FastVaultEmailViewModel
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -133,6 +134,18 @@ private fun FastVaultEmailScreen(
 @Preview
 @Composable
 private fun FastVaultEmailScreenPreview() {
+    FastVaultEmailScreen(
+        state = FastVaultEmailState(),
+        textFieldState = rememberTextFieldState(),
+        onNextClick = {},
+        onClearClick = {},
+        onBackClick = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun FastVaultEmailScreenTabletPreview() {
     FastVaultEmailScreen(
         state = FastVaultEmailState(),
         textFieldState = rememberTextFieldState(),

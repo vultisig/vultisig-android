@@ -48,6 +48,7 @@ import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.keygen.StartViewModel
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.startScreenAnimations
 
@@ -314,6 +315,19 @@ private fun ChooseImportTypeBottomSheetContentPreview() {
 @Preview
 @Composable
 private fun StartScreenPreview() {
+    StartScreen(
+        hasBackButton = true,
+        onCreateNewVaultClick = {},
+        onScanQrCodeClick = {},
+        onImportVaultClick = {},
+        onImportSeedphraseClick = {},
+        onBackClick = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun StartScreenTabletPreview() {
     StartScreen(
         hasBackButton = true,
         onCreateNewVaultClick = {},

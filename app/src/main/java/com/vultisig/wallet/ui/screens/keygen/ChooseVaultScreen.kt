@@ -65,6 +65,7 @@ import com.vultisig.wallet.ui.models.keygen.ChooseVaultViewModel
 import com.vultisig.wallet.ui.models.keygen.SelectVaultTypeUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultType
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.asString
@@ -328,6 +329,18 @@ private fun TextAndIcon(
 @Preview
 @Composable
 internal fun SelectVaultTypeScreenPreview() {
+    ChooseVaultScreen(
+        state = SelectVaultTypeUiModel(vaultType = VaultType.Secure),
+        onTabClick = {},
+        onStartClick = {},
+        onBackClick = {},
+        onHelpClick = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun SelectVaultTypeScreenTabletPreview() {
     ChooseVaultScreen(
         state = SelectVaultTypeUiModel(vaultType = VaultType.Secure),
         onTabClick = {},

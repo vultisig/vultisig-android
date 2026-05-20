@@ -229,7 +229,7 @@ internal fun EnterVaultInfoScreen(
                         onTrailingIconClick = { onEvent(EnterVaultInfoEvent.ClearConfirmInput) },
                         imeAction = ImeAction.Go,
                         onKeyboardAction = {
-                            if (uiState.isNextButtonEnabled) {
+                            if (canProceed) {
                                 onEvent(EnterVaultInfoEvent.Next)
                             }
                         },

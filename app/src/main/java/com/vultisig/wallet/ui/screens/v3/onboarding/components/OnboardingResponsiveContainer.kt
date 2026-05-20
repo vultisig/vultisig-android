@@ -10,24 +10,23 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.ui.utils.rememberWindowWidthSizeClass
 
 @Composable
 internal fun OnboardingResponsiveContainer(
     modifier: Modifier = Modifier,
+    maxWidth: Dp = OnboardingDefaults.MaxContentWidth,
+    maxHeight: Dp = OnboardingDefaults.MaxContentHeight,
     content: @Composable BoxScope.() -> Unit,
 ) {
     if (isCompactWidth()) {
         Box(modifier = modifier.fillMaxSize(), content = content)
     } else {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Box(
-                modifier =
-                    modifier
-                        .widthIn(max = OnboardingDefaults.MaxContentWidth)
-                        .heightIn(max = OnboardingDefaults.MaxContentHeight)
-                        .fillMaxSize(),
+                modifier = Modifier.widthIn(max = maxWidth).heightIn(max = maxHeight).fillMaxSize(),
                 content = content,
             )
         }
@@ -37,17 +36,14 @@ internal fun OnboardingResponsiveContainer(
 @Composable
 internal fun OnboardingResponsiveBottomBar(
     modifier: Modifier = Modifier,
+    maxWidth: Dp = OnboardingDefaults.MaxContentWidth,
     content: @Composable BoxScope.() -> Unit,
 ) {
     if (isCompactWidth()) {
         Box(modifier = modifier.fillMaxWidth(), content = content)
     } else {
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Box(
-                modifier =
-                    modifier.widthIn(max = OnboardingDefaults.MaxContentWidth).fillMaxWidth(),
-                content = content,
-            )
+        Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.widthIn(max = maxWidth).fillMaxWidth(), content = content)
         }
     }
 }

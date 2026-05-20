@@ -26,6 +26,7 @@ import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.JoinKeygenViewModel
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -109,5 +110,11 @@ private fun JoinKeygenScreen(state: JoinKeygenUiModel) {
 @Preview
 @Composable
 private fun JoinKeygenScreenPreview() {
+    JoinKeygenScreen(state = JoinKeygenUiModel())
+}
+
+@TabletPreview
+@Composable
+private fun JoinKeygenScreenTabletPreview() {
     JoinKeygenScreen(state = JoinKeygenUiModel())
 }

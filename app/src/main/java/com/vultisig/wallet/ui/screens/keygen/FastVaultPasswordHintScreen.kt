@@ -33,6 +33,7 @@ import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordHintUiModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordHintViewModel
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -127,6 +128,18 @@ private fun FastVaultPasswordHintScreen(
 @Preview
 @Composable
 private fun FastVaultPasswordHintScreenPreview() {
+    FastVaultPasswordHintScreen(
+        state = FastVaultPasswordHintUiModel(),
+        textFieldState = rememberTextFieldState(),
+        onNextClick = {},
+        onBackClick = {},
+        onSkipClick = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun FastVaultPasswordHintScreenTabletPreview() {
     FastVaultPasswordHintScreen(
         state = FastVaultPasswordHintUiModel(),
         textFieldState = rememberTextFieldState(),

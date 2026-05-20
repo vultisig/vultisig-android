@@ -55,6 +55,7 @@ import com.vultisig.wallet.ui.models.keygen.KeygenStepUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenUiModel
 import com.vultisig.wallet.ui.models.keygen.KeygenViewModel
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -222,54 +223,54 @@ private fun LoadingStageItem(text: String, isLoading: Boolean, modifier: Modifie
 
 @Composable
 private fun Success() {
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary),
+    OnboardingResponsiveContainer(
+        modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            RiveAnimation(
-                animation = R.raw.riv_vault_created,
-                modifier = Modifier.fillMaxWidth().weight(1f),
-            )
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                RiveAnimation(
+                    animation = R.raw.riv_vault_created,
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                )
 
-            var isSuccessVisible by remember { mutableStateOf(false) }
+                var isSuccessVisible by remember { mutableStateOf(false) }
 
-            LaunchedEffect(Unit) { isSuccessVisible = true }
+                LaunchedEffect(Unit) { isSuccessVisible = true }
 
-            AnimatedVisibility(
-                visible = isSuccessVisible,
-                enter =
-                    fadeIn(tween(SUCCESS_ENTER_DURATION_MS)) +
-                        slideInVertically(tween(SUCCESS_ENTER_DURATION_MS)) +
-                        scaleIn(tween(SUCCESS_ENTER_DURATION_MS)),
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    val successText = buildAnnotatedString {
-                        append(stringResource(R.string.keygen_vault_created_success_part_1))
-                        appendLine(" ")
-                        withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
-                            append(stringResource(R.string.vault_created_success_part_2))
+                AnimatedVisibility(
+                    visible = isSuccessVisible,
+                    enter =
+                        fadeIn(tween(SUCCESS_ENTER_DURATION_MS)) +
+                            slideInVertically(tween(SUCCESS_ENTER_DURATION_MS)) +
+                            scaleIn(tween(SUCCESS_ENTER_DURATION_MS)),
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val successText = buildAnnotatedString {
+                            append(stringResource(R.string.keygen_vault_created_success_part_1))
+                            appendLine(" ")
+                            withStyle(SpanStyle(brush = Theme.v2.colors.gradients.primary)) {
+                                append(stringResource(R.string.vault_created_success_part_2))
+                            }
                         }
+
+                        Text(
+                            text = successText,
+                            style = Theme.brockmann.headings.title1,
+                            color = Theme.v2.colors.text.primary,
+                            textAlign = TextAlign.Center,
+                        )
+
+                        UiSpacer(12.dp)
+
+                        RiveAnimation(
+                            animation = R.raw.riv_connecting_with_server,
+                            modifier = Modifier.size(24.dp),
+                        )
                     }
-
-                    Text(
-                        text = successText,
-                        style = Theme.brockmann.headings.title1,
-                        color = Theme.v2.colors.text.primary,
-                        textAlign = TextAlign.Center,
-                    )
-
-                    UiSpacer(12.dp)
-
-                    RiveAnimation(
-                        animation = R.raw.riv_connecting_with_server,
-                        modifier = Modifier.size(24.dp),
-                    )
                 }
-            }
 
-            UiSpacer(60.dp)
+                UiSpacer(60.dp)
+            }
         }
     }
 }
@@ -279,6 +280,28 @@ private const val SUCCESS_ENTER_DURATION_MS = 375
 @Preview
 @Composable
 private fun KeygenScreenPreview() {
+    KeygenScreen(
+        state =
+            KeygenUiModel(
+                steps =
+                    listOf(
+                        KeygenStepUiModel(
+                            UiText.StringResource(R.string.keygen_step_preparing_vault),
+                            isLoading = true,
+                        ),
+                        KeygenStepUiModel(
+                            UiText.StringResource(R.string.keygen_step_generating_ecdsa),
+                            isLoading = false,
+                        ),
+                    )
+            ),
+        onTryAgainClick = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun KeygenScreenTabletPreview() {
     KeygenScreen(
         state =
             KeygenUiModel(

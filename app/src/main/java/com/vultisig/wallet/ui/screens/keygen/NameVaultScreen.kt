@@ -36,6 +36,7 @@ import com.vultisig.wallet.ui.models.keygen.NameVaultUiModel
 import com.vultisig.wallet.ui.models.keygen.NameVaultViewModel
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -130,6 +131,18 @@ private fun NameVaultScreen(
 @Preview
 @Composable
 private fun FastVaultNameScreenPreview() {
+    NameVaultScreen(
+        state = NameVaultUiModel(),
+        textFieldState = rememberTextFieldState(),
+        onNextClick = {},
+        onClearClick = {},
+        onBackClick = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun FastVaultNameScreenTabletPreview() {
     NameVaultScreen(
         state = NameVaultUiModel(),
         textFieldState = rememberTextFieldState(),

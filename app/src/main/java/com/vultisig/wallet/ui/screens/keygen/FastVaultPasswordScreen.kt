@@ -57,6 +57,7 @@ import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordViewModel
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
 import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
@@ -282,6 +283,23 @@ private fun WarningCard(modifier: Modifier, onShowMoreInfo: () -> Unit) {
 @Composable
 @Preview
 private fun FastVaultPasswordScreenPreview() {
+    FastVaultPasswordScreen(
+        state = FastVaultPasswordUiModel(isMoreInfoVisible = true),
+        passwordTextFieldState = rememberTextFieldState(),
+        confirmPasswordTextFieldState = rememberTextFieldState(),
+        title = stringResource(R.string.fast_vault_password_screen_title),
+        onNextClick = {},
+        onBackClick = {},
+        onShowMoreInfo = {},
+        onHideMoreInfo = {},
+        onToggleConfirmPasswordVisibilityClick = {},
+        onTogglePasswordVisibilityClick = {},
+    )
+}
+
+@Composable
+@TabletPreview
+private fun FastVaultPasswordScreenTabletPreview() {
     FastVaultPasswordScreen(
         state = FastVaultPasswordUiModel(isMoreInfoVisible = true),
         passwordTextFieldState = rememberTextFieldState(),
