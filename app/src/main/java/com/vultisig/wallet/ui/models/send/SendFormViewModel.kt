@@ -934,14 +934,19 @@ constructor(
     fun onAutoCompound(checked: Boolean) {
         viewModelScope.launch {
             isSwitchingAccounts.value = true
+            // Reset on every exit path — including early returns and exceptions in the
+            // suspend chain below — so collectSelectedAccount doesn't stay suppressed.
+            try {
+                uiState.update { it.copy(isAutocompound = checked) }
 
-            uiState.update { it.copy(isAutocompound = checked) }
+                val vaultId = vaultId
+                if (
+                    (defiType != DeFiNavActions.UNSTAKE_TCY &&
+                        defiType != DeFiNavActions.UNSTAKE_STCY) || vaultId == null
+                ) {
+                    return@launch
+                }
 
-            val vaultId = vaultId
-            if (
-                (defiType == DeFiNavActions.UNSTAKE_TCY ||
-                    defiType == DeFiNavActions.UNSTAKE_STCY) && vaultId != null
-            ) {
                 selectedToken.value = null
 
                 if (checked) {
@@ -978,6 +983,7 @@ constructor(
                         }
                         ?.let { selectToken(it.token) }
                 }
+            } finally {
                 isSwitchingAccounts.value = false
             }
         }

@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import java.math.BigInteger
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -325,6 +324,4 @@ internal class TokenPreselectionServiceTest {
             fiatValue = null,
             price = null,
         )
-
-    @Suppress("unused") private fun unused(): Coin? = null.also { assertNull(it) }
 }

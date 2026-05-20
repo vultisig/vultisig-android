@@ -29,6 +29,9 @@ internal class AccountsLoader(
 
     fun load(vaultId: VaultId) {
         loadAccountsJob?.cancel()
+        // Reset before launching the new load so a vault/action switch doesn't leave the
+        // previous session's Loaded(...) visible while the new collector spins up.
+        accountsState.value = AccountsLoadState.Uninitialized
         loadAccountsJob =
             when (defiTypeProvider()) {
                 DeFiNavActions.WITHDRAW_RUJI ->
@@ -115,7 +118,9 @@ internal class AccountsLoader(
                 )
             publishLoaded(listOf(ethereumAccount, usdcCircleAccount))
         } else {
-            Timber.e("MSCA address not available for Circle USDC withdrawal")
+            // Pre-setup state (MSCA not yet provisioned), not an error — use warn so this
+            // doesn't flood error logs on the cached emission before the MSCA resolves.
+            Timber.w("MSCA address not available for Circle USDC withdrawal")
             publishLoaded(
                 listOf(
                     ethereumAccount,

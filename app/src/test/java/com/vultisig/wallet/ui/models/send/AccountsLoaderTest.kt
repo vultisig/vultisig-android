@@ -26,13 +26,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.yield
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -52,6 +56,7 @@ internal class AccountsLoaderTest {
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(mainDispatcher)
+        accountsState.value = AccountsLoadState.Uninitialized
     }
 
     @AfterEach
@@ -242,23 +247,31 @@ internal class AccountsLoaderTest {
                 cachedRune.copy(tokenValue = TokenValue(BigInteger("999999"), cachedRune.token))
             val hydratedRuji =
                 cachedRuji.copy(tokenValue = TokenValue(BigInteger("888888"), cachedRuji.token))
+            // yield() between emissions gives the accountsState subscriber a chance to
+            // observe the cached snapshot — without it StateFlow conflates the two writes
+            // and the test only sees the final hydrated value.
             every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
-                flowOf(
-                    listOf(
-                        Address(
-                            chain = Chain.ThorChain,
-                            address = "thor1",
-                            accounts = listOf(cachedRune, cachedRuji),
+                flow {
+                    emit(
+                        listOf(
+                            Address(
+                                chain = Chain.ThorChain,
+                                address = "thor1",
+                                accounts = listOf(cachedRune, cachedRuji),
+                            )
                         )
-                    ),
-                    listOf(
-                        Address(
-                            chain = Chain.ThorChain,
-                            address = "thor1",
-                            accounts = listOf(hydratedRune, hydratedRuji),
+                    )
+                    yield()
+                    emit(
+                        listOf(
+                            Address(
+                                chain = Chain.ThorChain,
+                                address = "thor1",
+                                accounts = listOf(hydratedRune, hydratedRuji),
+                            )
                         )
-                    ),
-                )
+                    )
+                }
             coEvery {
                 stakingDetailsRepository.getStakingDetailsByCoindId(
                     VAULT_ID,
@@ -267,17 +280,18 @@ internal class AccountsLoaderTest {
             } returns stakingDetails(rewards = BigDecimal("123"))
             val loader = build(backgroundScope)
 
+            val observed = collectLoadedEmissions(this)
+
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
-            // The final published state reflects the hydrated emission — meaning the loader
-            // re-ran the publish for each emission instead of dropping the cached one with
-            // firstOrNull. (If the cached emission had been skipped, we'd never have seen
-            // the form populated until the hydrated emission arrived; if the hydrated
-            // emission had been dropped, accounts here would still hold cached balances.)
-            val accounts = loadedAccounts
-            assertEquals(BigInteger("999999"), accounts[1].tokenValue?.value)
-            assertEquals(BigInteger("888888"), accounts[2].tokenValue?.value)
+            // Two Loaded emissions: cached snapshot first, hydrated second. Asserting only
+            // the final state would let a regression that drops the cached emission pass.
+            assertEquals(2, observed.size)
+            assertEquals(BigInteger("1000000"), observed[0][1].tokenValue?.value) // cached RUNE
+            assertEquals(BigInteger("1000000"), observed[0][2].tokenValue?.value) // cached RUJI
+            assertEquals(BigInteger("999999"), observed[1][1].tokenValue?.value) // hydrated RUNE
+            assertEquals(BigInteger("888888"), observed[1][2].tokenValue?.value) // hydrated RUJI
         }
 
     // ──────── WITHDRAW_USDC_CIRCLE ────────
@@ -360,7 +374,77 @@ internal class AccountsLoaderTest {
             coVerify(exactly = 0) { stakingDetailsRepository.getStakingDetailsById(any(), any()) }
         }
 
+    @Test
+    fun `WITHDRAW_USDC_CIRCLE publishes cached snapshot first then hydrated balances`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE
+            mscaAddress = "0xMSCA"
+            val cachedEth = ethAccount()
+            // Hydrated emission uses a different balance so we can tell the two apart.
+            val hydratedEth =
+                cachedEth.copy(tokenValue = TokenValue(BigInteger("123456789"), Coins.Ethereum.ETH))
+            // yield() between emissions — see WITHDRAW_RUJI dual-emission test.
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
+                flow {
+                    emit(
+                        listOf(
+                            Address(
+                                chain = Chain.Ethereum,
+                                address = cachedEth.token.address,
+                                accounts = listOf(cachedEth),
+                            )
+                        )
+                    )
+                    yield()
+                    emit(
+                        listOf(
+                            Address(
+                                chain = Chain.Ethereum,
+                                address = hydratedEth.token.address,
+                                accounts = listOf(hydratedEth),
+                            )
+                        )
+                    )
+                }
+            coEvery { stakingDetailsRepository.getStakingDetailsById(VAULT_ID, any()) } returns
+                stakingDetails(stakeAmount = BigInteger("789"))
+            val loader = build(backgroundScope)
+
+            val observed = collectLoadedEmissions(this)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            // Two Loaded emissions: cached then hydrated. USDC stake amount stays consistent
+            // (sourced from staking details, not balances), but the ETH balance reflects
+            // each emission — proves loadCircleUSDCAccount re-runs publishCircleUsdc per
+            // emission instead of dropping the cached snapshot.
+            assertEquals(2, observed.size)
+            assertEquals(
+                BigInteger("1000000000000000000"),
+                observed[0][0].tokenValue?.value,
+            ) // cached ETH
+            assertEquals(BigInteger("123456789"), observed[1][0].tokenValue?.value) // hydrated ETH
+            assertEquals(BigInteger("789"), observed[1][1].tokenValue?.value) // USDC stake
+        }
+
     // ──────── helpers ────────
+
+    // Captures every Loaded emission published to accountsState into the returned list,
+    // so dual-emission tests can assert cached and hydrated snapshots independently
+    // instead of only checking the final state. The collector runs on the test's
+    // backgroundScope (auto-cancelled at test end).
+    private fun collectLoadedEmissions(
+        scope: kotlinx.coroutines.test.TestScope
+    ): List<List<Account>> {
+        val emissions = mutableListOf<List<Account>>()
+        scope.backgroundScope.launch {
+            accountsState.filterIsInstance<AccountsLoadState.Loaded>().collect {
+                emissions.add(it.accounts)
+            }
+        }
+        return emissions
+    }
 
     private fun build(scope: CoroutineScope) =
         AccountsLoader(
