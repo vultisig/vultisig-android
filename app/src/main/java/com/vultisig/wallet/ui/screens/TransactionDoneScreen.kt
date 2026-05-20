@@ -247,9 +247,8 @@ private fun SwapTransactionDetail(swapTransaction: SwapTransactionUiModel) {
 private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
     if (transaction != null) {
 
-        UiHorizontalDivider()
-
         if (transaction.dstAddress.isNotBlank()) {
+            UiHorizontalDivider()
             AddressField(
                 title = stringResource(R.string.verify_transaction_to_title),
                 address = transaction.dstAddress,
