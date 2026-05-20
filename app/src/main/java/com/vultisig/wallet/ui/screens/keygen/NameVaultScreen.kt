@@ -34,6 +34,9 @@ import com.vultisig.wallet.ui.components.referral.AddReferralHeaderButton
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.NameVaultUiModel
 import com.vultisig.wallet.ui.models.keygen.NameVaultViewModel
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -77,44 +80,50 @@ private fun NameVaultScreen(
         onBackClick = onBackClick,
         actions = { AddReferralHeaderButton(hasReferral = hasReferral, onClick = onReferralClick) },
         bottomBar = {
-            VsButton(
-                label = stringResource(R.string.fast_vault_name_screen_next),
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 24.dp)
-                        .testTag("NameVaultScreen.continue"),
-                state =
-                    if (state.isNextButtonEnabled) VsButtonState.Enabled
-                    else VsButtonState.Disabled,
-                onClick = onNextClick,
-            )
+            OnboardingResponsiveBottomBar {
+                VsButton(
+                    label = stringResource(R.string.fast_vault_name_screen_next),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 24.dp)
+                            .testTag("NameVaultScreen.continue"),
+                    state =
+                        if (state.isNextButtonEnabled) VsButtonState.Enabled
+                        else VsButtonState.Disabled,
+                    onClick = onNextClick,
+                )
+            }
         },
     ) {
         val focusRequester = remember { FocusRequester() }
         LaunchedEffect(Unit) { focusRequester.requestFocus() }
-        Column {
-            Text(
-                text = stringResource(R.string.fast_vault_name_screen_title),
-                style = Theme.brockmann.headings.largeTitle,
-                color = Theme.v2.colors.text.primary,
-            )
-            UiSpacer(16.dp)
-            Text(
-                text = stringResource(R.string.fast_vault_name_screen_desc),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary,
-            )
-            VsTextInputField(
-                textFieldState = textFieldState,
-                trailingIcon = R.drawable.close_circle,
-                onTrailingIconClick = onClearClick,
-                focusRequester = focusRequester,
-                footNote = state.errorMessage?.asString(),
-                imeAction = ImeAction.Go,
-                onKeyboardAction = { onNextClick() },
-                modifier =
-                    Modifier.fillMaxSize().wrapContentHeight().testTag("NameVaultScreen.nameField"),
-            )
+        OnboardingResponsiveContainer {
+            Column {
+                Text(
+                    text = stringResource(R.string.fast_vault_name_screen_title),
+                    style = Theme.brockmann.headings.largeTitle,
+                    color = Theme.v2.colors.text.primary,
+                )
+                UiSpacer(16.dp)
+                Text(
+                    text = stringResource(R.string.fast_vault_name_screen_desc),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                VsTextInputField(
+                    textFieldState = textFieldState,
+                    trailingIcon = R.drawable.close_circle,
+                    onTrailingIconClick = onClearClick,
+                    focusRequester = focusRequester,
+                    footNote = state.errorMessage?.asString(),
+                    imeAction = ImeAction.Go,
+                    onKeyboardAction = { onNextClick() },
+                    modifier =
+                        Modifier.fillMaxSize()
+                            .wrapContentHeight()
+                            .testTag("NameVaultScreen.nameField"),
+                )
+            }
         }
     }
 }
@@ -122,6 +131,18 @@ private fun NameVaultScreen(
 @Preview
 @Composable
 private fun FastVaultNameScreenPreview() {
+    NameVaultScreen(
+        state = NameVaultUiModel(),
+        textFieldState = rememberTextFieldState(),
+        onNextClick = {},
+        onClearClick = {},
+        onBackClick = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun FastVaultNameScreenTabletPreview() {
     NameVaultScreen(
         state = NameVaultUiModel(),
         textFieldState = rememberTextFieldState(),

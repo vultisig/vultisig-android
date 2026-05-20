@@ -1143,6 +1143,7 @@
     <string name="peer_discovery_topbar_title">扫描二维码</string>
     <string name="peer_discovery_waiting_for_devices_action">正在等待设备……</string>
     <string name="peer_discovery_devices_n_of_n">设备（%1$s/%2$s）</string>
+    <string name="peer_discovery_devices_n_of_n_plus">设备（%1$s/%2$s+）</string>
     <string name="onboarding_desc_page_5_part_2">单独发送</string>
     <string name="onboarding_desc_page_5_part_3">其他位置</string>
     <string name="scan_qr_code_modal_annotation">在另一台设备上打开应用并点击“扫描二维码”进行连接。</string>
