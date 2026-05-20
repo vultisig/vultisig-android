@@ -25,6 +25,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.GetMayaCacaoMaturityStatusUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
@@ -81,6 +82,8 @@ internal class DepositFormViewModelTest {
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase = mockk(relaxed = true)
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase =
         mockk(relaxed = true)
+    private val getMayaCacaoMaturityStatus: GetMayaCacaoMaturityStatusUseCase =
+        mockk(relaxed = true)
     private val feeServiceComposite: FeeServiceComposite = mockk(relaxed = true)
     private val vaultRepository: VaultRepository = mockk(relaxed = true)
     private val tokenRepository: TokenRepository = mockk(relaxed = true)
@@ -119,6 +122,7 @@ internal class DepositFormViewModelTest {
             balanceRepository = balanceRepository,
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
             validateMayaTransactionHeight = validateMayaTransactionHeight,
+            getMayaCacaoMaturityStatus = getMayaCacaoMaturityStatus,
             feeServiceComposite = feeServiceComposite,
             vaultRepository = vaultRepository,
             tokenRepository = tokenRepository,

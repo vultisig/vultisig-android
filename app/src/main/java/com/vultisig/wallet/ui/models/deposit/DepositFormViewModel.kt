@@ -61,7 +61,9 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.GetMayaCacaoMaturityStatusUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
+import com.vultisig.wallet.data.usecases.MayaCacaoMaturityStatus
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
@@ -170,6 +172,8 @@ internal data class DepositFormUiModel(
     val selectedUnMergeCoin: TokenMergeInfo = tokensToMerge.first(),
     val coinList: List<TokenMergeInfo> = tokensToMerge,
     val unstakableAmount: String? = null,
+    val isUnstakeMature: Boolean = true,
+    val unstakeUnlocksInText: UiText? = null,
     val rewardsAmount: String? = null,
     val availableSecuredAssets: List<TokenWithdrawSecureAsset> = emptyList(),
     val selectedSecuredAsset: TokenWithdrawSecureAsset =
@@ -215,6 +219,7 @@ constructor(
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
+    private val getMayaCacaoMaturityStatus: GetMayaCacaoMaturityStatusUseCase,
     private val feeServiceComposite: FeeServiceComposite,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
@@ -1093,6 +1098,7 @@ constructor(
 
     private suspend fun handleRemoveCacaoOption() {
         val addressValue = address.value?.address ?: return
+        loadCacaoMaturityStatus(addressValue)
         try {
             val balance = mayaChainApi.getUnStakeCacaoBalance(addressValue)
             balance?.let {
@@ -1118,6 +1124,25 @@ constructor(
                 )
             }
         }
+    }
+
+    private fun loadCacaoMaturityStatus(addressValue: String) {
+        viewModelScope.safeLaunch {
+            val status = getMayaCacaoMaturityStatus(addressValue)
+            _state.update { state ->
+                state.copy(
+                    isUnstakeMature = status.isMature,
+                    unstakeUnlocksInText = if (status.isMature) null else status.toUnlocksInText(),
+                )
+            }
+        }
+    }
+
+    private fun MayaCacaoMaturityStatus.toUnlocksInText(): UiText {
+        val totalSeconds = remainingSeconds
+        val days = totalSeconds / SECONDS_PER_DAY
+        val hours = (totalSeconds % SECONDS_PER_DAY) / SECONDS_PER_HOUR
+        return UiText.FormattedText(R.string.unstake_cacao_unlocks_in_format, listOf(days, hours))
     }
 
     fun selectDstChain(chain: Chain) {
@@ -3086,6 +3111,9 @@ constructor(
 
         /** THORChain inbound-addresses chain key used by the Switch (Gaia/ATOM) deposit option. */
         private const val SWITCH_INBOUND_CHAIN = "GAIA"
+
+        private const val SECONDS_PER_DAY = 86_400L
+        private const val SECONDS_PER_HOUR = 3_600L
     }
 }
 
