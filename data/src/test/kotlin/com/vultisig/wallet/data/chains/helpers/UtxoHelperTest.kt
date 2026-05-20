@@ -904,6 +904,61 @@ class UtxoHelperTest {
     }
 
     @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects is_ours=true input whose witness pubkey hash diverges from the vault hash`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            // Craft an input shaped exactly like ours (p2wpkh, isOurs=true) but whose witness
+            // program is HASH160(attackerPubKey), not HASH160(vaultPubKey). This is the core
+            // is_ours-spoofing shape the binding is meant to reject: a dApp flips the flag
+            // hoping to coerce the wallet into signing for a UTXO it doesn't actually own.
+            val attackerKeyHash =
+                BitcoinScript.lockScriptForAddress(recipient, CoinType.BITCOIN)
+                    .matchPayToWitnessPublicKeyHash()
+            val maliciousInput =
+                BitcoinInput(
+                    hash = "0000000000000000000000000000000000000000000000000000000000000001",
+                    index = 0u,
+                    amount = 100_000L,
+                    scriptPubKey = "0014" + Numeric.toHexStringNoPrefix(attackerKeyHash),
+                    scriptType = "p2wpkh",
+                    isOurs = true,
+                )
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(maliciousInput),
+                    outputs =
+                        listOf(
+                            BitcoinOutput(
+                                amount = 60_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(vault),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
     fun `getPreSignedImageHashFromSignBitcoin - happy path with OP_RETURN as second non-change output`() {
         try {
             val helper = ownedHelper()

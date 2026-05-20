@@ -422,8 +422,16 @@ class UtxoHelper(
         expectedToAddress: String,
         expectedToAmount: BigInteger,
     ) {
+        val inputs = signBitcoin.inputs.filterNotNull()
+        // Reject payloads that strip the `is_ours` flag from every input. The loop below would
+        // otherwise no-op, computeOurSighashes would return an empty list, and the keysign
+        // pipeline would hand the MPC engine zero hashes — a confusing downstream failure
+        // mode instead of a hard reject here. Matches the iOS `noSignableInputs` behavior.
+        require(inputs.any { it.isOurs }) {
+            "PSBT payload contains no inputs marked is_ours=true; nothing to co-sign"
+        }
         val expectedPubKeyHash = deriveExpectedPubKeyHash()
-        signBitcoin.inputs.filterNotNull().forEach { input ->
+        inputs.forEach { input ->
             if (!input.isOurs) return@forEach
             val actual = extractWitnessPubKeyHash(input)
             require(actual.contentEquals(expectedPubKeyHash)) {
@@ -446,7 +454,7 @@ class UtxoHelper(
                 // pin the bytes directly so a "address=vault, scriptPubKey=attacker" payload
                 // can't sneak past the address-only equality check above.
                 require(
-                    Numeric.hexStringToByteArray(output.scriptPubKey)
+                    decodeScriptHex(output.scriptPubKey, "change output")
                         .contentEquals(expectedChangeScript)
                 ) {
                     "PSBT output marked is_change=true does not lock to this vault " +
@@ -480,9 +488,19 @@ class UtxoHelper(
                 "$expectedToAmount; Verify screen would diverge from the signed outputs"
         }
         val expectedScript = BitcoinScript.lockScriptForAddress(expectedToAddress, coinType).data()
+        // `lockScriptForAddress` returns an empty `Data` for addresses Trust Wallet Core can't
+        // decode for this coin (wrong HRP, witness-v2 bech32, mis-sized v1 program, …). Without
+        // this guard, an empty `expectedScript` would silently `contentEquals` any output that
+        // happens to carry an empty `scriptPubKey`, matching everything.
+        require(expectedScript.isNotEmpty()) {
+            "PSBT co-signing: payload.toAddress '$expectedToAddress' is not a valid " +
+                "$coinType address — refusing to bind against an empty lock script"
+        }
         val scriptMatches =
             nonChange.map { out ->
-                out to Numeric.hexStringToByteArray(out.scriptPubKey).contentEquals(expectedScript)
+                out to
+                    decodeScriptHex(out.scriptPubKey, "non-change output")
+                        .contentEquals(expectedScript)
             }
         // A non-change output with a positive amount that does NOT lock to the displayed
         // destination is a second, hidden recipient — the Verify screen would show one payee
@@ -538,6 +556,21 @@ class UtxoHelper(
             sha256d(preimage)
         }
     }
+
+    /**
+     * Strict hex decoder for dApp-supplied scriptPubKey fields. `Numeric.hexStringToByteArray`
+     * silently casts `Character.digit(c, 16) == -1` (any non-hex char) to a byte, so a malformed
+     * scriptPubKey would yield a junk byte array that flows into `contentEquals` checks — a
+     * security primitive should not silently accept invalid input. Reject up front.
+     */
+    private fun decodeScriptHex(hex: String, context: String): ByteArray {
+        require(hex.length % 2 == 0 && hex.all { it.isHexChar() }) {
+            "PSBT $context has malformed hex scriptPubKey '$hex'"
+        }
+        return Numeric.hexStringToByteArray(hex)
+    }
+
+    private fun Char.isHexChar(): Boolean = this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
 
     private fun deriveVaultPublicKey(): PublicKey {
         val derivedPublicKey =
