@@ -432,6 +432,7 @@ class UtxoHelper(
             }
         }
         val vaultAddress = deriveVaultAddress()
+        val expectedChangeScript = BitcoinScript.lockScriptForAddress(vaultAddress, coinType).data()
         val outputs = signBitcoin.outputs.filterNotNull()
         outputs.forEach { output ->
             val derivedIsChange = output.address.isNotEmpty() && output.address == vaultAddress
@@ -439,6 +440,18 @@ class UtxoHelper(
                 "PSBT output is_change=${output.isChange} contradicts the Windows-companion " +
                     "derivation (address=='${output.address}' ⇒ change=$derivedIsChange) for " +
                     "vault '$vaultAddress'"
+            }
+            if (output.isChange) {
+                // The sighash commits to scriptPubKey, not to the dApp-supplied address string —
+                // pin the bytes directly so a "address=vault, scriptPubKey=attacker" payload
+                // can't sneak past the address-only equality check above.
+                require(
+                    Numeric.hexStringToByteArray(output.scriptPubKey)
+                        .contentEquals(expectedChangeScript)
+                ) {
+                    "PSBT output marked is_change=true does not lock to this vault " +
+                        "(scriptPubKey='${output.scriptPubKey}' does not match expected lock script)"
+                }
             }
         }
         verifyDestinationBinding(outputs, expectedToAddress, expectedToAmount)
@@ -467,10 +480,18 @@ class UtxoHelper(
                 "$expectedToAmount; Verify screen would diverge from the signed outputs"
         }
         val expectedScript = BitcoinScript.lockScriptForAddress(expectedToAddress, coinType).data()
-        val matches =
-            nonChange.count { out ->
-                Numeric.hexStringToByteArray(out.scriptPubKey).contentEquals(expectedScript)
+        val scriptMatches =
+            nonChange.map { out ->
+                out to Numeric.hexStringToByteArray(out.scriptPubKey).contentEquals(expectedScript)
             }
+        // A non-change output with a positive amount that does NOT lock to the displayed
+        // destination is a second, hidden recipient — the Verify screen would show one payee
+        // while the signed tx funds two. The sum check above doesn't catch this when the
+        // attacker's output offsets a reduced legitimate output (e.g. 10k+50k vs 60k expected).
+        require(scriptMatches.none { (out, matches) -> out.amount > 0 && !matches }) {
+            "PSBT contains an extra value-bearing non-change output not shown on the Verify screen"
+        }
+        val matches = scriptMatches.count { (_, matches) -> matches }
         require(matches == 1) {
             "PSBT must contain exactly one non-change output paying to '$expectedToAddress' " +
                 "but found $matches"

@@ -605,6 +605,10 @@ class UtxoHelperTest {
     // SECP256K1 generator G — an unrelated pubkey we use to derive a stable "attacker" address.
     private val attackerPubKeyHex =
         "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+    // SECP256K1 2*G — a second unrelated pubkey for tests that need three distinct parties
+    // (vault, displayed recipient, hidden second recipient).
+    private val secondAttackerPubKeyHex =
+        "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5"
 
     private fun ownedHelper(): UtxoHelper = UtxoHelper(CoinType.BITCOIN, vaultPubKeyHex, "")
 
@@ -740,6 +744,99 @@ class UtxoHelperTest {
                                 amount = 39_500L,
                                 address = recipient,
                                 scriptPubKey = scriptHexFor(recipient),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects is_change=true whose scriptPubKey does not lock to the vault`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            BitcoinOutput(
+                                amount = 60_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            // dApp sets address=vault to pass the Windows-companion derivation
+                            // but points scriptPubKey at the attacker — the sighash commits to
+                            // scriptPubKey, so without a byte-level check this would sign away
+                            // 39_500 sats to the attacker disguised as harmless change.
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects extra value-bearing non-change output even when sum matches`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            val hiddenPayee = addressFor(secondAttackerPubKeyHex)
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            // Legitimate but reduced output to the displayed recipient...
+                            BitcoinOutput(
+                                amount = 10_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            // ...paired with a second non-change output siphoning value to a
+                            // third party. Sum still = 60_000 and one output matches
+                            // expectedScript, but Verify screen lists only the displayed recipient.
+                            BitcoinOutput(
+                                amount = 50_000L,
+                                address = hiddenPayee,
+                                scriptPubKey = scriptHexFor(hiddenPayee),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(vault),
                                 isChange = true,
                             ),
                         ),
