@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.getDustThreshold
 import java.io.ByteArrayOutputStream
+import java.math.BigInteger
 import java.security.MessageDigest
 import timber.log.Timber
 import tss.KeysignResponse
@@ -380,12 +381,22 @@ class UtxoHelper(
      * Bitcoin-only: the witness-program shapes parsed here (`0x00 0x14 <20-byte hash>`) are
      * meaningful only for the Bitcoin chain. UTXO siblings (BCH, Doge, LTC, Dash, Zcash) use legacy
      * P2PKH and must not route through this path.
+     *
+     * @param expectedToAddress destination shown on the Verify screen (`payload.toAddress`); pinned
+     *   to a non-change output via its scriptPubKey so the displayed address can't drift from what
+     *   the sighashes commit to.
+     * @param expectedToAmount destination amount shown on the Verify screen (`payload.toAmount`);
+     *   pinned to the sum of non-change outputs.
      */
-    fun getPreSignedImageHashFromSignBitcoin(signBitcoin: SignBitcoin): List<String> {
+    fun getPreSignedImageHashFromSignBitcoin(
+        signBitcoin: SignBitcoin,
+        expectedToAddress: String,
+        expectedToAmount: BigInteger,
+    ): List<String> {
         require(coinType == CoinType.BITCOIN) {
             "SignBitcoin PSBT co-signing is only supported on Bitcoin, got $coinType"
         }
-        verifyOwnership(signBitcoin)
+        verifyOwnership(signBitcoin, expectedToAddress, expectedToAmount)
         return computeOurSighashes(signBitcoin).map { Numeric.toHexStringNoPrefix(it) }.sorted()
     }
 
@@ -396,12 +407,21 @@ class UtxoHelper(
      * HASH160(pubkey). The wallet only ever signs for its own derivation path; a lying dApp that
      * toggles `is_ours` on an unrelated input gets a hard failure instead of a usable signature.
      *
-     * Outputs: any output flagged `is_change=true` must decode to this vault's own address. Without
-     * this binding, a malicious initiator can flag an attacker output `is_change=true` to skew the
-     * change/fee totals fed into [getBitcoinTransactionPlanFromSignBitcoin] (mirroring the Windows
-     * companion which derives `isChange` from `outputAddress === senderAddress`).
+     * Outputs: mirrors the Windows companion which derives `isChange` from `outputAddress ===
+     * senderAddress`. The proto `is_change` flag must agree with that derivation (catches both an
+     * attacker output flagged as change and a payment back to the vault flagged as a payment), and
+     * an output flagged change must also decode to this vault's own address.
+     *
+     * Destination: the non-change outputs in the structured PSBT are tied to the Verify screen's
+     * displayed [expectedToAddress]/[expectedToAmount] (which come from the unverified legacy
+     * `KeysignPayload`), so a dApp cannot show the user one destination while the sighashes commit
+     * to another.
      */
-    private fun verifyOwnership(signBitcoin: SignBitcoin) {
+    private fun verifyOwnership(
+        signBitcoin: SignBitcoin,
+        expectedToAddress: String,
+        expectedToAmount: BigInteger,
+    ) {
         val expectedPubKeyHash = deriveExpectedPubKeyHash()
         signBitcoin.inputs.filterNotNull().forEach { input ->
             if (!input.isOurs) return@forEach
@@ -412,12 +432,54 @@ class UtxoHelper(
             }
         }
         val vaultAddress = deriveVaultAddress()
-        signBitcoin.outputs.filterNotNull().forEach { output ->
-            if (!output.isChange) return@forEach
-            require(output.address == vaultAddress) {
-                "PSBT output marked is_change=true does not belong to this vault " +
-                    "(address='${output.address}', expected='$vaultAddress')"
+        val outputs = signBitcoin.outputs.filterNotNull()
+        outputs.forEach { output ->
+            val derivedIsChange = output.address.isNotEmpty() && output.address == vaultAddress
+            require(output.isChange == derivedIsChange) {
+                "PSBT output is_change=${output.isChange} contradicts the Windows-companion " +
+                    "derivation (address=='${output.address}' ⇒ change=$derivedIsChange) for " +
+                    "vault '$vaultAddress'"
             }
+            if (output.isChange) {
+                require(output.address == vaultAddress) {
+                    "PSBT output marked is_change=true does not belong to this vault " +
+                        "(address='${output.address}', expected='$vaultAddress')"
+                }
+            }
+        }
+        verifyDestinationBinding(outputs, expectedToAddress, expectedToAmount)
+    }
+
+    /**
+     * Asserts that the structural PSBT outputs reproduce the Verify screen's displayed destination.
+     * The non-change outputs must sum to [expectedToAmount], and exactly one of them must carry a
+     * scriptPubKey equal to the lock script of [expectedToAddress] — comparing the actual script
+     * bytes rather than the dApp-supplied `address` string, since the scriptPubKey is what the
+     * sighash commits to.
+     */
+    private fun verifyDestinationBinding(
+        outputs: List<BitcoinOutput>,
+        expectedToAddress: String,
+        expectedToAmount: BigInteger,
+    ) {
+        require(expectedToAddress.isNotEmpty()) {
+            "PSBT co-signing requires a non-empty payload.toAddress to bind against"
+        }
+        val nonChange = outputs.filterNot { it.isChange }
+        val sumNonChange =
+            nonChange.fold(BigInteger.ZERO) { acc, o -> acc + BigInteger.valueOf(o.amount) }
+        require(sumNonChange == expectedToAmount) {
+            "PSBT non-change outputs sum to $sumNonChange satoshis but payload.toAmount is " +
+                "$expectedToAmount; Verify screen would diverge from the signed outputs"
+        }
+        val expectedScript = BitcoinScript.lockScriptForAddress(expectedToAddress, coinType).data()
+        val matches =
+            nonChange.count { out ->
+                Numeric.hexStringToByteArray(out.scriptPubKey).contentEquals(expectedScript)
+            }
+        require(matches == 1) {
+            "PSBT must contain exactly one non-change output paying to '$expectedToAddress' " +
+                "but found $matches"
         }
     }
 

@@ -146,7 +146,11 @@ object SigningHelper {
                         // siblings (BCH, Doge, LTC, Dash, Zcash) use legacy P2PKH, so route them
                         // through the WalletCore path even if a `signBitcoin` block slipped in.
                         if (chain == Chain.Bitcoin && sb != null) {
-                            utxo.getPreSignedImageHashFromSignBitcoin(sb)
+                            utxo.getPreSignedImageHashFromSignBitcoin(
+                                signBitcoin = sb,
+                                expectedToAddress = payload.toAddress,
+                                expectedToAmount = payload.toAmount,
+                            )
                         } else {
                             utxo.getPreSignedImageHash(payload)
                         }
