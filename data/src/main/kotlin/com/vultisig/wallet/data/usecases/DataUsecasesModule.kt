@@ -188,9 +188,9 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
-    fun bindValidateMayaTransactionHeightUseCase(
-        impl: ValidateMayaTransactionHeightUseCaseImpl
-    ): ValidateMayaTransactionHeightUseCase
+    fun bindGetCacaoUnstakeMaturityUseCase(
+        impl: GetCacaoUnstakeMaturityUseCaseImpl
+    ): GetCacaoUnstakeMaturityUseCase
 
     @Binds
     @Singleton

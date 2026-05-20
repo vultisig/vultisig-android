@@ -58,14 +58,15 @@ import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.CacaoUnstakeMaturity
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.GetCacaoUnstakeMaturityUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
-import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.getChain
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -170,6 +171,9 @@ internal data class DepositFormUiModel(
     val selectedUnMergeCoin: TokenMergeInfo = tokensToMerge.first(),
     val coinList: List<TokenMergeInfo> = tokensToMerge,
     val unstakableAmount: String? = null,
+    // null while the maturity fetch is in-flight or not started; otherwise the live result.
+    // Drives CTA gating + "Unlocks in N days, H hours" hint on the Unstake CACAO screen.
+    val unstakeMaturity: CacaoUnstakeMaturity? = null,
     val rewardsAmount: String? = null,
     val availableSecuredAssets: List<TokenWithdrawSecureAsset> = emptyList(),
     val selectedSecuredAsset: TokenWithdrawSecureAsset =
@@ -214,7 +218,7 @@ constructor(
     private val mayachainBondRepository: MayachainBondRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
-    private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
+    private val getCacaoUnstakeMaturity: GetCacaoUnstakeMaturityUseCase,
     private val feeServiceComposite: FeeServiceComposite,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
@@ -1093,6 +1097,13 @@ constructor(
 
     private suspend fun handleRemoveCacaoOption() {
         val addressValue = address.value?.address ?: return
+        // Reset maturity to null so the UI shows loading instead of stale state when the
+        // user re-enters the screen.
+        _state.update { it.copy(unstakeMaturity = null) }
+        viewModelScope.safeLaunch {
+            val maturity = getCacaoUnstakeMaturity(addressValue)
+            _state.update { it.copy(unstakeMaturity = maturity) }
+        }
         try {
             val balance = mayaChainApi.getUnStakeCacaoBalance(addressValue)
             balance?.let {
@@ -2032,10 +2043,11 @@ constructor(
 
         val srcAddress = selectedToken.address
 
-        validateMayaTransactionHeight(srcAddress) ||
+        if (getCacaoUnstakeMaturity(srcAddress) !is CacaoUnstakeMaturity.Mature) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.deposit_error_has_not_reached_maturity)
             )
+        }
 
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
 

@@ -521,6 +521,10 @@
     <string name="stake_cacao_title">Стейкинг CACAO</string>
     <string name="unstake_cacao_title">Анстейкинг CACAO</string>
     <string name="unstake_cacao_available_format">Доступно: %1$s</string>
+    <string name="unstake_cacao_unlocks_in_days_hours_format">Разблокируется через %1$d д. %2$d ч.</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Разблокируется через %1$d ч.</string>
+    <string name="unstake_cacao_unlocks_soon">Скоро разблокируется</string>
+    <string name="unstake_cacao_maturity_check_failed">Не удалось проверить позицию. Попробуйте снова.</string>
     <string name="cacaopool_only_cacao_supported">Для операций пула поддерживается только токен CACAO.</string>
     <string name="referral_create_info_title">Реферальная программа</string>
     <string name="referral_create_info_content">Реферальная программа применяется к обменам THORChain и работает на основе максимальных усилий. Вам необходимо зарегистрировать THORName для использования реферальной программы Vultisig. Плата за регистрацию составляет 10 RUNE и 1 RUNE за каждый год, которая выплачивается сети THORChain.</string>

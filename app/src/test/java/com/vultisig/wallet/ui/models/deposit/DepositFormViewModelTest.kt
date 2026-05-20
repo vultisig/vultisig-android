@@ -25,12 +25,12 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.GetCacaoUnstakeMaturityUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
-import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -79,8 +79,7 @@ internal class DepositFormViewModelTest {
     private val mayachainBondRepository: MayachainBondRepository = mockk(relaxed = true)
     private val balanceRepository: BalanceRepository = mockk(relaxed = true)
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase = mockk(relaxed = true)
-    private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase =
-        mockk(relaxed = true)
+    private val getCacaoUnstakeMaturity: GetCacaoUnstakeMaturityUseCase = mockk(relaxed = true)
     private val feeServiceComposite: FeeServiceComposite = mockk(relaxed = true)
     private val vaultRepository: VaultRepository = mockk(relaxed = true)
     private val tokenRepository: TokenRepository = mockk(relaxed = true)
@@ -118,7 +117,7 @@ internal class DepositFormViewModelTest {
             mayachainBondRepository = mayachainBondRepository,
             balanceRepository = balanceRepository,
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            validateMayaTransactionHeight = validateMayaTransactionHeight,
+            getCacaoUnstakeMaturity = getCacaoUnstakeMaturity,
             feeServiceComposite = feeServiceComposite,
             vaultRepository = vaultRepository,
             tokenRepository = tokenRepository,

@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.getUnstakeDeFiNavAction
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.cacaoUnlocksInUiText
 import java.math.BigDecimal
 
 /** Tab content listing staking positions with stake, unstake, withdraw, and transfer actions. */
@@ -214,6 +215,19 @@ internal fun StakingWidget(
             )
 
             UiSpacer(16.dp)
+        }
+
+        if (
+            state.stakeAmount > BigDecimal.ZERO &&
+                !state.canUnstake &&
+                state.unstakeUnlocksInSeconds != null
+        ) {
+            Text(
+                text = cacaoUnlocksInUiText(state.unstakeUnlocksInSeconds).asString(),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
         }
 
         Row(

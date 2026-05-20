@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.usecases.CacaoUnstakeMaturity
 import com.vultisig.wallet.ui.components.PercentageChip
 import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -43,6 +44,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.cacaoUnlocksInUiText
 
 @Composable
 internal fun UnstakeCacaoScreen(
@@ -201,31 +203,117 @@ private fun UnstakeCacaoContent(
             )
         }
 
+        val maturityHint: UiText? =
+            when (val maturity = state.unstakeMaturity) {
+                is CacaoUnstakeMaturity.Locked -> cacaoUnlocksInUiText(maturity.remainingSeconds)
+
+                CacaoUnstakeMaturity.Unknown ->
+                    UiText.StringResource(R.string.unstake_cacao_maturity_check_failed)
+
+                CacaoUnstakeMaturity.Mature,
+                null -> null
+            }
+
+        if (maturityHint != null) {
+            Text(
+                text = maturityHint.asString(),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+        }
+
+        val hasAmount = (tokenAmountFieldState.text.toString().toIntOrNull() ?: 0) > 0
+        val isMature = state.unstakeMaturity is CacaoUnstakeMaturity.Mature
         VsButton(
             label = stringResource(R.string.send_continue_button),
             variant = VsButtonVariant.CTA,
             modifier = Modifier.fillMaxWidth(),
             onClick = onDeposit,
             state =
-                if (
-                    (tokenAmountFieldState.text.toString().toIntOrNull() ?: 0) > 0 &&
-                        !state.isLoading
-                )
-                    VsButtonState.Enabled
+                if (hasAmount && isMature && !state.isLoading) VsButtonState.Enabled
                 else VsButtonState.Disabled,
         )
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Mature — CTA enabled")
 @Composable
-private fun UnstakeCacaoContentPreview() {
+private fun UnstakeCacaoContentMaturePreview() {
     Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
         UnstakeCacaoContent(
             state =
                 DepositFormUiModel(
                     unstakableAmount = "5,000 CACAO",
                     balance = UiText.DynamicString("24,000 CACAO"),
+                    unstakeMaturity = CacaoUnstakeMaturity.Mature,
+                ),
+            tokenAmountFieldState = TextFieldState("50"),
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Locked — days + hours countdown")
+@Composable
+private fun UnstakeCacaoContentLockedDaysHoursPreview() {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
+        UnstakeCacaoContent(
+            state =
+                DepositFormUiModel(
+                    unstakableAmount = "5,000 CACAO",
+                    balance = UiText.DynamicString("24,000 CACAO"),
+                    unstakeMaturity =
+                        CacaoUnstakeMaturity.Locked(
+                            remainingBlocks = (5L * 24L * 600L) + (3L * 600L)
+                        ),
+                ),
+            tokenAmountFieldState = TextFieldState("50"),
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Locked — hours-only countdown")
+@Composable
+private fun UnstakeCacaoContentLockedHoursOnlyPreview() {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
+        UnstakeCacaoContent(
+            state =
+                DepositFormUiModel(
+                    unstakableAmount = "5,000 CACAO",
+                    balance = UiText.DynamicString("24,000 CACAO"),
+                    unstakeMaturity = CacaoUnstakeMaturity.Locked(remainingBlocks = 7L * 600L),
+                ),
+            tokenAmountFieldState = TextFieldState("50"),
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Maturity check failed (Unknown)")
+@Composable
+private fun UnstakeCacaoContentUnknownPreview() {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
+        UnstakeCacaoContent(
+            state =
+                DepositFormUiModel(
+                    unstakableAmount = "5,000 CACAO",
+                    balance = UiText.DynamicString("24,000 CACAO"),
+                    unstakeMaturity = CacaoUnstakeMaturity.Unknown,
+                ),
+            tokenAmountFieldState = TextFieldState("50"),
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Loading maturity")
+@Composable
+private fun UnstakeCacaoContentLoadingPreview() {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary)) {
+        UnstakeCacaoContent(
+            state =
+                DepositFormUiModel(
+                    unstakableAmount = "5,000 CACAO",
+                    balance = UiText.DynamicString("24,000 CACAO"),
+                    unstakeMaturity = null,
                 ),
             tokenAmountFieldState = TextFieldState("50"),
         )
