@@ -48,6 +48,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.AmountFraction.F100
@@ -932,7 +933,10 @@ constructor(
     }
 
     fun onAutoCompound(checked: Boolean) {
-        viewModelScope.launch {
+        // safeLaunch — the loadAddresses/loadDeFiAddresses calls below are network-touching
+        // and should funnel through the project's standard error handler instead of
+        // crashing the ViewModel on a transient repository failure.
+        viewModelScope.safeLaunch {
             isSwitchingAccounts.value = true
             // Reset on every exit path — including early returns and exceptions in the
             // suspend chain below — so collectSelectedAccount doesn't stay suppressed.
@@ -944,7 +948,7 @@ constructor(
                     (defiType != DeFiNavActions.UNSTAKE_TCY &&
                         defiType != DeFiNavActions.UNSTAKE_STCY) || vaultId == null
                 ) {
-                    return@launch
+                    return@safeLaunch
                 }
 
                 selectedToken.value = null
