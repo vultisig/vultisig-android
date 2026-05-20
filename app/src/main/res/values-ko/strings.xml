@@ -201,7 +201,6 @@
     <string name="verify_transaction_amount_title">금액</string>
     <string name="verify_transaction_network_fee">네트워크 수수료</string>
     <string name="verify_transaction_value">금액</string>
-    <string name="verify_transaction_join_keysign">서명 참여</string>
     <string name="verify_transaction_consent_address">올바른 주소로 보내고 있습니다</string>
     <string name="verify_transaction_consent_amount">금액이 정확합니다</string>
     <string name="verify_transaction_error_not_enough_consent">모든 동의 항목을 확인해 주세요</string>
@@ -450,9 +449,7 @@
     <string name="send_form_polka_reaping_warning">수수료를 충당할 충분한 자금을 남겨두세요. 계정 잔액이 1 DOT(최소 예치금) 아래로 떨어지면 계정이 비활성화(수확)되고 남은 자금이 손실됩니다. 언제든지 최소 예치금보다 큰 새 입금으로 주소를 재활성화할 수 있습니다. 그러나 손실된 자금은 복구되지 않습니다.</string>
 
 
-    <string name="verify_sign_message_method_field_title">방식</string>
     <string name="signing_error_transaction_timeout">서명 지연으로 거래 시간이 초과되었습니다. 다시 시도해 주세요.</string>
-    <string name="verify_sign_message_message_field_title">메시지</string>
     <string name="hint_signing_method">서명 방식</string>
     <string name="verify_sign_message_signing_method">서명 방식</string>
     <string name="hint_message_to_sign">서명할 메시지</string>

@@ -108,7 +108,6 @@
     <string name="verify_transaction_from_title">De</string>
     <string name="verify_transaction_to_title">Para</string>
     <string name="verify_transaction_amount_title">Montante</string>
-    <string name="verify_transaction_join_keysign">Juntar-se à assinatura de chave</string>
     <string name="verify_transaction_consent_address">Estou enviando para o endereço correto</string>
     <string name="verify_transaction_consent_amount">A quantidade está correta</string>
     <string name="transaction_done_title">Concluído</string>
@@ -604,7 +603,7 @@
     <string name="backup_password_request_title">Quer encriptar o seu backup com uma palavra‑passe?</string>
     <string name="backup_password_request_caution_encrypt_desc">Se optar por adicionar uma palavra-passe, esta será utilizada para encriptar o ficheiro de backup.</string>
     <string name="backup_password_request_highlight_encrypt">encriptar</string>
-    <string name="backup_password_request_caution_cannot_reset_desc">Lembre-se: se se esquecer da palavra-passe do seu cofre, esta não poderá ser redefinida ou recuperada.</string>
+    <string name="backup_password_request_caution_cannot_reset_desc">Lembre-se: caso se esqueça da palavra-passe do seu cofre, esta não poderá ser redefinida ou recuperada.</string>
     <string name="backup_password_request_highlight_cannot">Não é possível</string>
     <string name="backup_password_request_caution_secure_without_desc">Por defeito, o seu backup é seguro sem uma palavra-passe extra, uma vez que armazena as partilhas do Vault em locais diferentes.</string>
     <string name="backup_password_request_highlight_secure_without">Seguro sem</string>
@@ -849,8 +848,6 @@
     <string name="transfer_ibc_function_memo_title">Memorando</string>
     <string name="tx_overview_screen_tx_to">Para</string>
     <string name="tx_overview_screen_tx_memo">Memorando</string>
-    <string name="verify_sign_message_message_field_title">Mensagem</string>
-    <string name="verify_sign_message_method_field_title">Método</string>
     <string name="fast_vault_password_screen_title">Escolha uma palavra-passe</string>
     <string name="fast_vault_password_screen_hint">Isto porque a palavra-passe é utilizada para encriptar localmente o ficheiro de cópia de segurança, de forma semelhante à encriptação de um disco rígido. No passo seguinte, tem a opção de adicionar uma dica.</string>
     <string name="fast_vault_password_screen_hint_title">Mais informações</string>

@@ -106,7 +106,6 @@
     <string name="verify_transaction_from_title">Von</string>
     <string name="verify_transaction_to_title">Zu</string>
     <string name="verify_transaction_amount_title">Menge</string>
-    <string name="verify_transaction_join_keysign">Dem Schlüsselunterschriftsprozess beitreten</string>
     <string name="verify_transaction_consent_address">Ich sende an die richtige Adresse</string>
     <string name="verify_transaction_consent_amount">Die Menge ist korrekt</string>
     <string name="transaction_done_title">Fertig</string>
@@ -852,8 +851,6 @@
     <string name="transfer_ibc_function_memo_title">Memo</string>
     <string name="tx_overview_screen_tx_to">Zu</string>
     <string name="tx_overview_screen_tx_memo">Memo</string>
-    <string name="verify_sign_message_message_field_title">Nachricht</string>
-    <string name="verify_sign_message_method_field_title">Methode</string>
     <string name="fast_vault_password_screen_title">Passwort wählen</string>
     <string name="fast_vault_password_screen_hint">Dies geschieht, weil das Passwort zur lokalen Verschlüsselung der Sicherungsdatei verwendet wird, ähnlich wie bei der Festplattenverschlüsselung. Im nächsten Schritt können Sie einen Hinweis hinzufügen.</string>
     <string name="fast_vault_password_screen_hint_title">Weitere Informationen</string>
