@@ -35,6 +35,9 @@ import com.vultisig.wallet.ui.components.referral.AddReferralHeaderButton
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.FastVaultEmailState
 import com.vultisig.wallet.ui.models.keygen.FastVaultEmailViewModel
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -77,49 +80,53 @@ private fun FastVaultEmailScreen(
         onBackClick = onBackClick,
         actions = { AddReferralHeaderButton(hasReferral = hasReferral, onClick = onReferralClick) },
         bottomBar = {
-            VsButton(
-                label = stringResource(R.string.enter_email_screen_next),
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 24.dp)
-                        .testTag("FastVaultEmailScreen.next"),
-                onClick = onNextClick,
-                state =
-                    if (state.innerState == VsTextInputFieldInnerState.Success)
-                        VsButtonState.Enabled
-                    else VsButtonState.Disabled,
-            )
+            OnboardingResponsiveBottomBar {
+                VsButton(
+                    label = stringResource(R.string.enter_email_screen_next),
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 24.dp)
+                            .testTag("FastVaultEmailScreen.next"),
+                    onClick = onNextClick,
+                    state =
+                        if (state.innerState == VsTextInputFieldInnerState.Success)
+                            VsButtonState.Enabled
+                        else VsButtonState.Disabled,
+                )
+            }
         },
     ) {
-        Column {
-            val focusRequester = remember { FocusRequester() }
-            LaunchedEffect(Unit) { focusRequester.requestFocus() }
-            Text(
-                text = stringResource(R.string.enter_email_screen_title),
-                style = Theme.brockmann.headings.largeTitle,
-                color = Theme.v2.colors.text.primary,
-            )
-            UiSpacer(16.dp)
-            Text(
-                text = stringResource(R.string.enter_email_screen_desc),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary,
-            )
-            VsTextInputField(
-                textFieldState = textFieldState,
-                innerState = state.innerState,
-                hint = stringResource(R.string.enter_email_screen_hint),
-                trailingIcon = R.drawable.close_circle,
-                onTrailingIconClick = onClearClick,
-                footNote = state.errorMessage.asString(),
-                focusRequester = focusRequester,
-                imeAction = ImeAction.Go,
-                onKeyboardAction = { onNextClick() },
-                modifier =
-                    Modifier.fillMaxSize()
-                        .wrapContentHeight()
-                        .testTag("FastVaultEmailScreen.emailField"),
-            )
+        OnboardingResponsiveContainer {
+            Column {
+                val focusRequester = remember { FocusRequester() }
+                LaunchedEffect(Unit) { focusRequester.requestFocus() }
+                Text(
+                    text = stringResource(R.string.enter_email_screen_title),
+                    style = Theme.brockmann.headings.largeTitle,
+                    color = Theme.v2.colors.text.primary,
+                )
+                UiSpacer(16.dp)
+                Text(
+                    text = stringResource(R.string.enter_email_screen_desc),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                VsTextInputField(
+                    textFieldState = textFieldState,
+                    innerState = state.innerState,
+                    hint = stringResource(R.string.enter_email_screen_hint),
+                    trailingIcon = R.drawable.close_circle,
+                    onTrailingIconClick = onClearClick,
+                    footNote = state.errorMessage.asString(),
+                    focusRequester = focusRequester,
+                    imeAction = ImeAction.Go,
+                    onKeyboardAction = { onNextClick() },
+                    modifier =
+                        Modifier.fillMaxSize()
+                            .wrapContentHeight()
+                            .testTag("FastVaultEmailScreen.emailField"),
+                )
+            }
         }
     }
 }
@@ -127,6 +134,18 @@ private fun FastVaultEmailScreen(
 @Preview
 @Composable
 private fun FastVaultEmailScreenPreview() {
+    FastVaultEmailScreen(
+        state = FastVaultEmailState(),
+        textFieldState = rememberTextFieldState(),
+        onNextClick = {},
+        onClearClick = {},
+        onBackClick = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun FastVaultEmailScreenTabletPreview() {
     FastVaultEmailScreen(
         state = FastVaultEmailState(),
         textFieldState = rememberTextFieldState(),
