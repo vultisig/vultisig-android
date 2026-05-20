@@ -767,6 +767,7 @@
     <string name="unstake_cacao_title">解除质押 CACAO</string>
     <string name="unstake_cacao_available_format">可用: %1$s</string>
     <string name="unstake_cacao_unlocks_in_format">%1$d 天 %2$d 小时后解锁</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">%1$d 小时 %2$d 分钟后解锁</string>
     <string name="cacaopool_only_cacao_supported">池操作仅支持 CACAO 代币</string>
     <string name="referral_create_info_content">推荐计划适用于 THORChain 交换，并尽力而为。您需要注册 THORName 才能使用 Vultisig 推荐。注册费为 10 RUNE，每年 1 RUNE，支付给 THORChain 网络。</string>
     <string name="referral_create_info_title">推荐计划</string>

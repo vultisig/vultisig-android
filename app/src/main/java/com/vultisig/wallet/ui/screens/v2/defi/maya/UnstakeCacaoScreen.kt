@@ -146,14 +146,6 @@ private fun UnstakeCacaoContent(
                             style = Theme.brockmann.body.m.medium,
                             color = Theme.v2.colors.text.tertiary,
                         )
-                        val unlocksInText = state.unstakeUnlocksInText?.asString()
-                        if (unlocksInText != null) {
-                            Text(
-                                text = unlocksInText,
-                                style = Theme.brockmann.supplementary.caption,
-                                color = Theme.v2.colors.alerts.warning,
-                            )
-                        }
                     } else {
                         UiPlaceholderLoader(modifier = Modifier.height(20.dp).width(120.dp))
                     }
@@ -223,6 +215,16 @@ private fun UnstakeCacaoContent(
                     VsButtonState.Enabled
                 else VsButtonState.Disabled,
         )
+
+        val unlocksInText = state.unstakeUnlocksInText?.asString()
+        if (unlocksInText != null) {
+            Text(
+                text = unlocksInText,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.alerts.warning,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+        }
     }
 }
 

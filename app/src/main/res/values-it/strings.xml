@@ -523,6 +523,7 @@
     <string name="unstake_cacao_title">Rimuovi puntata CACAO</string>
     <string name="unstake_cacao_available_format">Disponibile: %1$s</string>
     <string name="unstake_cacao_unlocks_in_format">Si sblocca tra %1$dg %2$dh</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Si sblocca tra %1$dh %2$dmin</string>
     <string name="cacaopool_only_cacao_supported">Per le operazioni del pool è supportato solo il token CACAO</string>
     <string name="referral_create_info_title">Programma referral</string>
     <string name="referral_create_info_content">Il programma referral si applica agli scambi THORChain ed è su base best effort. Devi registrare un THORName per utilizzare il referral Vultisig. La tassa di registrazione è di 10 RUNE e 1 RUNE per ogni anno, che viene pagata alla rete THORChain.</string>

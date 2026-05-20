@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.GetMayaCacaoMaturityStatusUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
+import com.vultisig.wallet.data.usecases.MayaCacaoMaturityStatus
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
@@ -281,6 +282,85 @@ internal class DepositFormViewModelTest {
             R.string.deposit_error_lp_paused_pool,
             (errorText as UiText.FormattedText).resId,
         )
+    }
+
+    @Test
+    fun `RemoveCacaoPool with mature status enables CTA and clears unlocksIn text`() = runTest {
+        val vm = buildViewModel()
+        coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.MayaChain,
+                    address = "maya1someaddress",
+                    accounts =
+                        listOf(
+                            Account(
+                                token = Coins.MayaChain.CACAO,
+                                tokenValue = null,
+                                fiatValue = null,
+                                price = null,
+                            )
+                        ),
+                )
+            )
+        coEvery { mayaChainApi.getUnStakeCacaoBalance("maya1someaddress") } returns "0"
+        coEvery { getMayaCacaoMaturityStatus.invoke("maya1someaddress") } returns
+            MayaCacaoMaturityStatus(isMature = true, remainingBlocks = 0L, remainingSeconds = 0L)
+
+        vm.loadData("vault1", Chain.MayaChain.raw, "unstake_cacao", null)
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isUnstakeMature)
+        assertEquals(null, vm.state.value.unstakeUnlocksInText)
+    }
+
+    @Test
+    fun `RemoveCacaoPool with under-one-hour remaining formats hours and minutes not 0d 0h`() =
+        runTest {
+            val vm = buildViewModel()
+            coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
+                flowOf(
+                    Address(
+                        chain = Chain.MayaChain,
+                        address = "maya1someaddress",
+                        accounts =
+                            listOf(
+                                Account(
+                                    token = Coins.MayaChain.CACAO,
+                                    tokenValue = null,
+                                    fiatValue = null,
+                                    price = null,
+                                )
+                            ),
+                    )
+                )
+            coEvery { mayaChainApi.getUnStakeCacaoBalance("maya1someaddress") } returns "0"
+            coEvery { getMayaCacaoMaturityStatus.invoke("maya1someaddress") } returns
+                MayaCacaoMaturityStatus(
+                    isMature = false,
+                    remainingBlocks = 300L,
+                    remainingSeconds = 1_800L, // 30 minutes
+                )
+
+            vm.loadData("vault1", Chain.MayaChain.raw, "unstake_cacao", null)
+            advanceUntilIdle()
+
+            assertTrue(!vm.state.value.isUnstakeMature)
+            val unlocksIn = vm.state.value.unstakeUnlocksInText
+            assertNotNull(unlocksIn)
+            assertTrue(unlocksIn is UiText.FormattedText)
+            assertEquals(
+                R.string.unstake_cacao_unlocks_in_hours_format,
+                (unlocksIn as UiText.FormattedText).resId,
+            )
+            assertEquals(listOf<Any>(0L, 30L), unlocksIn.formatArgs)
+        }
+
+    @Test
+    fun `RemoveCacaoPool default state keeps CTA disabled before maturity resolves`() = runTest {
+        val vm = buildViewModel()
+
+        assertTrue(!vm.state.value.isUnstakeMature)
     }
 
     @Test

@@ -172,7 +172,7 @@ internal data class DepositFormUiModel(
     val selectedUnMergeCoin: TokenMergeInfo = tokensToMerge.first(),
     val coinList: List<TokenMergeInfo> = tokensToMerge,
     val unstakableAmount: String? = null,
-    val isUnstakeMature: Boolean = true,
+    val isUnstakeMature: Boolean = false,
     val unstakeUnlocksInText: UiText? = null,
     val rewardsAmount: String? = null,
     val availableSecuredAssets: List<TokenWithdrawSecureAsset> = emptyList(),
@@ -285,6 +285,7 @@ constructor(
     private var whitelistJob: Job? = null
     private var loadLpJob: Job? = null
     private var switchInboundJob: Job? = null
+    private var cacaoMaturityJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
@@ -1127,22 +1128,33 @@ constructor(
     }
 
     private fun loadCacaoMaturityStatus(addressValue: String) {
-        viewModelScope.safeLaunch {
-            val status = getMayaCacaoMaturityStatus(addressValue)
-            _state.update { state ->
-                state.copy(
-                    isUnstakeMature = status.isMature,
-                    unstakeUnlocksInText = if (status.isMature) null else status.toUnlocksInText(),
-                )
+        cacaoMaturityJob?.cancel()
+        cacaoMaturityJob =
+            viewModelScope.safeLaunch {
+                val status = getMayaCacaoMaturityStatus(addressValue)
+                _state.update { state ->
+                    state.copy(
+                        isUnstakeMature = status.isMature,
+                        unstakeUnlocksInText =
+                            if (status.isMature) null else status.toUnlocksInText(),
+                    )
+                }
             }
-        }
     }
 
     private fun MayaCacaoMaturityStatus.toUnlocksInText(): UiText {
         val totalSeconds = remainingSeconds
         val days = totalSeconds / SECONDS_PER_DAY
         val hours = (totalSeconds % SECONDS_PER_DAY) / SECONDS_PER_HOUR
-        return UiText.FormattedText(R.string.unstake_cacao_unlocks_in_format, listOf(days, hours))
+        val minutes = (totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
+        return if (days > 0) {
+            UiText.FormattedText(R.string.unstake_cacao_unlocks_in_format, listOf(days, hours))
+        } else {
+            UiText.FormattedText(
+                R.string.unstake_cacao_unlocks_in_hours_format,
+                listOf(hours, minutes),
+            )
+        }
     }
 
     fun selectDstChain(chain: Chain) {
@@ -3114,6 +3126,7 @@ constructor(
 
         private const val SECONDS_PER_DAY = 86_400L
         private const val SECONDS_PER_HOUR = 3_600L
+        private const val SECONDS_PER_MINUTE = 60L
     }
 }
 
