@@ -14,13 +14,12 @@ import java.math.BigInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 internal class AccountsLoader(
     private val scope: CoroutineScope,
-    private val accounts: MutableStateFlow<List<Account>>,
+    private val accountsState: MutableStateFlow<AccountsLoadState>,
     private val accountsRepository: AccountsRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val defiTypeProvider: () -> DeFiNavActions?,
@@ -54,7 +53,7 @@ internal class AccountsLoader(
                         accountsRepository
                             .loadAddresses(vaultId)
                             .map { addrs -> addrs.flatMap { it.accounts } }
-                            .collect(accounts)
+                            .collect { publishLoaded(it) }
                     }
 
                 else ->
@@ -62,30 +61,38 @@ internal class AccountsLoader(
                         accountsRepository
                             .loadDeFiAddresses(vaultId, false)
                             .map { addrs -> addrs.flatMap { it.accounts } }
-                            .collect(accounts)
+                            .collect { publishLoaded(it) }
                     }
             }
+    }
+
+    private fun publishLoaded(accounts: List<Account>) {
+        accountsState.value = AccountsLoadState.Loaded(accounts)
     }
 
     private suspend fun onLoadError(error: Throwable) {
         Timber.e(error, "Failed to load accounts")
     }
 
+    // Collect both cached and hydrated emissions from loadAddresses (isRefresh = false) so
+    // the form renders the cached snapshot immediately and then re-renders once balances
+    // have been refreshed from the network. Using isRefresh = true here would skip the
+    // cached pre-emission and block the form on slow networks.
     private suspend fun loadCircleUSDCAccount(vaultId: VaultId) {
-        // isRefresh = true skips the cached pre-emission so firstOrNull() returns the
-        // hydrated list — the ETH account we copy into accounts.value is then shown with
-        // refreshed balances rather than whatever fetchAccountFromDb wrote on a prior load.
-        val accountsLoaded =
-            accountsRepository.loadAddresses(vaultId, isRefresh = true).firstOrNull()?.flatMap {
-                it.accounts
-            }
+        accountsRepository
+            .loadAddresses(vaultId, isRefresh = false)
+            .map { addrs -> addrs.flatMap { it.accounts } }
+            .collect { accountsLoaded -> publishCircleUsdc(vaultId, accountsLoaded) }
+    }
+
+    private suspend fun publishCircleUsdc(vaultId: VaultId, accountsLoaded: List<Account>) {
         val ethereumAccount =
-            accountsLoaded?.find { it.token.id.equals(Coins.Ethereum.ETH.id, true) }
+            accountsLoaded.find { it.token.id.equals(Coins.Ethereum.ETH.id, true) }
         if (ethereumAccount == null) {
             // Without a vault-bound ETH account the address copied onto USDC below would be
             // empty, which silently breaks any later submit through WithdrawUsdcCircleStrategy.
             Timber.e("Ethereum account not available for Circle USDC withdrawal")
-            accounts.value = emptyList()
+            publishLoaded(emptyList())
             return
         }
 
@@ -106,10 +113,10 @@ internal class AccountsLoader(
                     fiatValue = null,
                     price = null,
                 )
-            accounts.value = listOf(ethereumAccount, usdcCircleAccount)
+            publishLoaded(listOf(ethereumAccount, usdcCircleAccount))
         } else {
             Timber.e("MSCA address not available for Circle USDC withdrawal")
-            accounts.value =
+            publishLoaded(
                 listOf(
                     ethereumAccount,
                     Account(
@@ -119,27 +126,31 @@ internal class AccountsLoader(
                         price = null,
                     ),
                 )
+            )
         }
     }
 
+    // Collect both cached and hydrated emissions so the form renders cached RUNE/RUJI
+    // balances immediately, then refreshes when network balances arrive.
     private suspend fun loadRewardsAccount(vaultId: VaultId) {
-        // isRefresh = true skips the cached pre-emission — RUNE and RUJI accounts pushed
-        // into accounts.value below are then shown with hydrated balances.
-        val accountsLoaded =
-            accountsRepository.loadAddresses(vaultId, isRefresh = true).firstOrNull()?.flatMap {
-                it.accounts
-            }
+        accountsRepository
+            .loadAddresses(vaultId, isRefresh = false)
+            .map { addrs -> addrs.flatMap { it.accounts } }
+            .collect { accountsLoaded -> publishRewards(vaultId, accountsLoaded) }
+    }
+
+    private suspend fun publishRewards(vaultId: VaultId, accountsLoaded: List<Account>) {
         val thorchainAccount =
-            accountsLoaded?.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
+            accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
                 ?: run {
-                    accounts.value = emptyList()
+                    publishLoaded(emptyList())
                     return
                 }
 
         val rujiAccount =
             accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
                 ?: run {
-                    accounts.value = emptyList()
+                    publishLoaded(emptyList())
                     return
                 }
 
@@ -158,9 +169,9 @@ internal class AccountsLoader(
                     fiatValue = null,
                     price = null,
                 )
-            accounts.value = listOf(rewardsAccount, thorchainAccount, rujiAccount)
+            publishLoaded(listOf(rewardsAccount, thorchainAccount, rujiAccount))
         } else {
-            accounts.value = emptyList()
+            publishLoaded(emptyList())
         }
     }
 }

@@ -20,6 +20,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Date
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +42,7 @@ internal class AccountsLoaderTest {
     private val scheduler = TestCoroutineScheduler()
     private val mainDispatcher = UnconfinedTestDispatcher(scheduler)
 
-    private val accounts = MutableStateFlow<List<Account>>(emptyList())
+    private val accountsState = MutableStateFlow<AccountsLoadState>(AccountsLoadState.Uninitialized)
     private val accountsRepository: AccountsRepository = mockk(relaxed = true)
     private val stakingDetailsRepository: StakingDetailsRepository = mockk(relaxed = true)
 
@@ -57,6 +58,13 @@ internal class AccountsLoaderTest {
     fun tearDown() {
         Dispatchers.resetMain()
     }
+
+    private val loadedAccounts: List<Account>
+        get() {
+            val state = accountsState.value
+            assertIs<AccountsLoadState.Loaded>(state)
+            return state.accounts
+        }
 
     // ──────── default + DeFi flow paths ────────
 
@@ -80,7 +88,7 @@ internal class AccountsLoaderTest {
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
-            assertEquals(listOf(ethAccount), accounts.value)
+            assertEquals(listOf(ethAccount), loadedAccounts)
             coVerify(exactly = 0) { accountsRepository.loadDeFiAddresses(any(), any()) }
         }
 
@@ -104,7 +112,7 @@ internal class AccountsLoaderTest {
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
-            assertEquals(listOf(tcyAccount), accounts.value)
+            assertEquals(listOf(tcyAccount), loadedAccounts)
             coVerify(exactly = 0) { accountsRepository.loadAddresses(any(), any()) }
         }
 
@@ -128,7 +136,7 @@ internal class AccountsLoaderTest {
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
-            assertEquals(listOf(runeAccount), accounts.value)
+            assertEquals(listOf(runeAccount), loadedAccounts)
         }
 
     // ──────── WITHDRAW_RUJI ────────
@@ -139,7 +147,7 @@ internal class AccountsLoaderTest {
             defiType = DeFiNavActions.WITHDRAW_RUJI
             val runeAccount = thorAccount(Coins.ThorChain.RUNE.copy(address = "thor1"))
             val rujiAccount = thorAccount(Coins.ThorChain.RUJI.copy(address = "thor1"))
-            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
                 flowOf(
                     listOf(
                         Address(
@@ -161,11 +169,12 @@ internal class AccountsLoaderTest {
             advanceUntilIdle()
 
             // Order matters: rewards account first, then thor (RUNE), then ruji.
-            assertEquals(3, accounts.value.size)
-            assertTrue(accounts.value[0].token.ticker.equals(RUJI_REWARDS_COIN.ticker, true))
-            assertEquals(BigInteger("123"), accounts.value[0].tokenValue?.value)
-            assertEquals(runeAccount, accounts.value[1])
-            assertEquals(rujiAccount, accounts.value[2])
+            val accounts = loadedAccounts
+            assertEquals(3, accounts.size)
+            assertTrue(accounts[0].token.ticker.equals(RUJI_REWARDS_COIN.ticker, true))
+            assertEquals(BigInteger("123"), accounts[0].tokenValue?.value)
+            assertEquals(runeAccount, accounts[1])
+            assertEquals(rujiAccount, accounts[2])
         }
 
     @Test
@@ -174,7 +183,7 @@ internal class AccountsLoaderTest {
             defiType = DeFiNavActions.WITHDRAW_RUJI
             val runeAccount = thorAccount(Coins.ThorChain.RUNE)
             val rujiAccount = thorAccount(Coins.ThorChain.RUJI)
-            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
                 flowOf(
                     listOf(
                         Address(
@@ -195,7 +204,9 @@ internal class AccountsLoaderTest {
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
-            assertEquals(emptyList(), accounts.value)
+            // Loaded(emptyList) — an intentional empty publish that TokenPreselectionService
+            // is expected to handle (fall through to default-coin map).
+            assertEquals(AccountsLoadState.Loaded(emptyList()), accountsState.value)
         }
 
     @Test
@@ -203,20 +214,70 @@ internal class AccountsLoaderTest {
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.WITHDRAW_RUJI
             // No RUNE account in the vault — short-circuits before staking-details lookup.
-            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
                 flowOf(emptyList())
             val loader = build(backgroundScope)
 
             // Pre-existing state from a prior nav action — must not leak through.
-            accounts.value = listOf(thorAccount(Coins.ThorChain.RUJI))
+            accountsState.value =
+                AccountsLoadState.Loaded(listOf(thorAccount(Coins.ThorChain.RUJI)))
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
             // Cleared — otherwise the UI would render stale rows from the previous flow.
-            assertEquals(emptyList(), accounts.value)
+            assertEquals(AccountsLoadState.Loaded(emptyList()), accountsState.value)
             coVerify(exactly = 0) {
                 stakingDetailsRepository.getStakingDetailsByCoindId(any(), any())
             }
+        }
+
+    @Test
+    fun `WITHDRAW_RUJI publishes cached snapshot first then hydrated balances`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.WITHDRAW_RUJI
+            val cachedRune = thorAccount(Coins.ThorChain.RUNE.copy(address = "thor1"))
+            val cachedRuji = thorAccount(Coins.ThorChain.RUJI.copy(address = "thor1"))
+            // Hydrated emission uses a different balance so we can tell the two apart.
+            val hydratedRune =
+                cachedRune.copy(tokenValue = TokenValue(BigInteger("999999"), cachedRune.token))
+            val hydratedRuji =
+                cachedRuji.copy(tokenValue = TokenValue(BigInteger("888888"), cachedRuji.token))
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
+                flowOf(
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts = listOf(cachedRune, cachedRuji),
+                        )
+                    ),
+                    listOf(
+                        Address(
+                            chain = Chain.ThorChain,
+                            address = "thor1",
+                            accounts = listOf(hydratedRune, hydratedRuji),
+                        )
+                    ),
+                )
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.RUJI.id,
+                )
+            } returns stakingDetails(rewards = BigDecimal("123"))
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            // The final published state reflects the hydrated emission — meaning the loader
+            // re-ran the publish for each emission instead of dropping the cached one with
+            // firstOrNull. (If the cached emission had been skipped, we'd never have seen
+            // the form populated until the hydrated emission arrived; if the hydrated
+            // emission had been dropped, accounts here would still hold cached balances.)
+            val accounts = loadedAccounts
+            assertEquals(BigInteger("999999"), accounts[1].tokenValue?.value)
+            assertEquals(BigInteger("888888"), accounts[2].tokenValue?.value)
         }
 
     // ──────── WITHDRAW_USDC_CIRCLE ────────
@@ -227,7 +288,7 @@ internal class AccountsLoaderTest {
             defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE
             mscaAddress = null
             val ethAccount = ethAccount()
-            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
                 flowOf(
                     listOf(
                         Address(
@@ -242,10 +303,11 @@ internal class AccountsLoaderTest {
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
-            assertEquals(2, accounts.value.size)
-            assertEquals(ethAccount, accounts.value[0])
-            assertTrue(accounts.value[1].token.ticker.equals("USDC", true))
-            assertEquals(BigInteger.ZERO, accounts.value[1].tokenValue?.value)
+            val accounts = loadedAccounts
+            assertEquals(2, accounts.size)
+            assertEquals(ethAccount, accounts[0])
+            assertTrue(accounts[1].token.ticker.equals("USDC", true))
+            assertEquals(BigInteger.ZERO, accounts[1].tokenValue?.value)
             // No staking-details lookup happens without an MSCA address.
             coVerify(exactly = 0) { stakingDetailsRepository.getStakingDetailsById(any(), any()) }
         }
@@ -256,7 +318,7 @@ internal class AccountsLoaderTest {
             defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE
             mscaAddress = "0xMSCA"
             val ethAccount = ethAccount()
-            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
                 flowOf(
                     listOf(
                         Address(
@@ -273,8 +335,9 @@ internal class AccountsLoaderTest {
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
-            assertEquals(2, accounts.value.size)
-            assertEquals(BigInteger("789"), accounts.value[1].tokenValue?.value)
+            val accounts = loadedAccounts
+            assertEquals(2, accounts.size)
+            assertEquals(BigInteger("789"), accounts[1].tokenValue?.value)
         }
 
     @Test
@@ -285,15 +348,15 @@ internal class AccountsLoaderTest {
             // No ETH account in the vault → falling back to a zero-address ETH placeholder
             // would silently produce a USDC token with no address bound, which breaks any
             // later submit. The loader must publish empty instead.
-            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = true) } returns
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
                 flowOf(emptyList())
             val loader = build(backgroundScope)
 
-            accounts.value = listOf(ethAccount()) // sentinel
+            accountsState.value = AccountsLoadState.Loaded(listOf(ethAccount())) // sentinel
             loader.load(VAULT_ID)
             advanceUntilIdle()
 
-            assertEquals(emptyList(), accounts.value)
+            assertEquals(AccountsLoadState.Loaded(emptyList()), accountsState.value)
             coVerify(exactly = 0) { stakingDetailsRepository.getStakingDetailsById(any(), any()) }
         }
 
@@ -302,7 +365,7 @@ internal class AccountsLoaderTest {
     private fun build(scope: CoroutineScope) =
         AccountsLoader(
             scope = scope,
-            accounts = accounts,
+            accountsState = accountsState,
             accountsRepository = accountsRepository,
             stakingDetailsRepository = stakingDetailsRepository,
             defiTypeProvider = { defiType },

@@ -15,7 +15,7 @@ import timber.log.Timber
 
 internal class TokenPreselectionService(
     private val scope: CoroutineScope,
-    private val accounts: StateFlow<List<Account>>,
+    private val accountsState: StateFlow<AccountsLoadState>,
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val selectedTokenProvider: () -> Coin?,
     private val onTokenSelected: (Coin) -> Unit,
@@ -38,11 +38,12 @@ internal class TokenPreselectionService(
         preSelectTokenJob =
             scope.launch {
                 var forced = forcePreselection
-                accounts.collect { accounts ->
-                    // Skip the initial empty StateFlow value so we don't lock in a static
-                    // default-coin template (which has no chain address bound) before
-                    // AccountsLoader publishes the real list.
-                    if (accounts.isEmpty()) return@collect
+                accountsState.collect { state ->
+                    // Wait until AccountsLoader publishes a Loaded state — Uninitialized is
+                    // the sentinel for "haven't loaded yet". An intentional Loaded(emptyList)
+                    // (e.g. DeFi prerequisites missing) still falls through to the default-
+                    // coin map in findDeFiPreselectedToken.
+                    val accounts = (state as? AccountsLoadState.Loaded)?.accounts ?: return@collect
 
                     val preSelectedToken =
                         if (defiTypeProvider() == null) {
@@ -57,9 +58,9 @@ internal class TokenPreselectionService(
 
                     Timber.d("Found a new token to pre select %s", preSelectedToken)
 
-                    // Force preselection fires once on the first non-empty emission, then
-                    // defers to the user — otherwise every later accounts hydration would
-                    // wipe their typed amount via selectToken → resetUserInputCache.
+                    // Force preselection fires once on the first Loaded emission, then defers
+                    // to the user — otherwise every later accounts hydration would wipe their
+                    // typed amount via selectToken → resetUserInputCache.
                     if ((forced || selectedTokenProvider() == null) && preSelectedToken != null) {
                         onTokenSelected(preSelectedToken)
                         forced = false

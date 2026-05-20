@@ -81,6 +81,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
@@ -256,7 +257,12 @@ constructor(
     private val selectedTokenValue: Coin?
         get() = selectedToken.value
 
-    private val accounts = MutableStateFlow(emptyList<Account>())
+    private val accountsState = MutableStateFlow<AccountsLoadState>(AccountsLoadState.Uninitialized)
+
+    private val accounts: StateFlow<List<Account>> =
+        accountsState
+            .map { it.accountsOrEmpty }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val selectedAccount: Account?
         get() {
@@ -289,7 +295,7 @@ constructor(
     private val tokenPreselectionService =
         TokenPreselectionService(
             scope = viewModelScope,
-            accounts = accounts,
+            accountsState = accountsState,
             defiTypeProvider = { defiType },
             selectedTokenProvider = { selectedTokenValue },
             onTokenSelected = ::selectToken,
@@ -298,7 +304,7 @@ constructor(
     private val accountsLoader =
         AccountsLoader(
             scope = viewModelScope,
-            accounts = accounts,
+            accountsState = accountsState,
             accountsRepository = accountsRepository,
             stakingDetailsRepository = stakingDetailsRepository,
             defiTypeProvider = { defiType },
@@ -945,7 +951,7 @@ constructor(
                             .map { addrs -> addrs.flatMap { it.accounts } }
                             .first()
 
-                    accounts.value = regularAccounts
+                    accountsState.value = AccountsLoadState.Loaded(regularAccounts)
 
                     delay(300)
 
@@ -962,7 +968,7 @@ constructor(
                             .map { addrs -> addrs.flatMap { it.accounts } }
                             .first()
 
-                    accounts.value = defiAccounts
+                    accountsState.value = AccountsLoadState.Loaded(defiAccounts)
 
                     delay(300)
 
