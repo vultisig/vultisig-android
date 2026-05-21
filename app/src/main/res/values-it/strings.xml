@@ -487,18 +487,13 @@
     <string name="verify_deposit_sign_transaction">Firma la transazione</string>
     <string name="referral_invite_sheet_description">Condividi il tuo codice di riferimento unico per invitare i tuoi amici. Loro riceveranno uno sconto e più operano, più guadagni tu, direttamente nel tuo deposito.</string>
     <string name="referral_create_referral">Crea referral</string>
-    <string name="referral_save_referral_code">Salva codice referral</string>
     <string name="referral_invite_onboarding_3">Risparmia sulle commissioni.</string>
-    <string name="referral_or">O</string>
     <string name="referral_create_code_and_earn">Crea il tuo codice e guadagna\u0020</string>
     <string name="referral_on_referred_swaps">\u0020sugli scambi invitati</string>
-    <string name="referral_save">Risparmia\u0020</string>
-    <string name="referral_add_referral">\u0020sugli swap - Aggiungi un referral</string>
     <string name="referral_main_my_referral_title">Il mio referral</string>
     <string name="referral_main_my_referral_body">Gestisci il tuo codice referral e raccogli ricompense.</string>
-    <string name="referral_edit_referred">Modifica codice di riferimento</string>
+    <string name="referral_view_friend_active">Attivo</string>
     <string name="referral_edit_referral">Modifica referral</string>
-    <string name="referral_external_linked">Codice referral collegato con successo</string>
     <string name="referral_external_not_linked">Il codice referral non esiste</string>
     <string name="referral_external_link_failed">Impossibile verificare il codice referral</string>
     <string name="referral_invite_next">Avanti</string>
@@ -565,7 +560,6 @@
     <string name="referral_view_selected_vault">Vault selezionato</string>
     <string name="referral_view_your_referral_code">Il tuo codice referral</string>
     <string name="referral_view_edit_referral">Modifica referral</string>
-    <string name="referral_view_your_friend_referral">Codice referral del tuo amico</string>
     <string name="referral_view_collected_rewards">Ricompense raccolte</string>
     <string name="referral_view_add_friend">Aggiungi referral di un amico</string>
     <string name="referral_view_save">Salva</string>

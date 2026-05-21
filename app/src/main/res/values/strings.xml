@@ -667,17 +667,12 @@
     <string name="referral_screen_title">Vultisig - Referral</string>
     <string name="referral_screen_code_hint">Enter up to 4 characters</string>
     <string name="referral_create_referral">Create referral</string>
-    <string name="referral_save_referral_code">Save referral code</string>
-    <string name="referral_or">OR</string>
     <string name="referral_create_code_and_earn">Create your own code and earn\u0020</string>
     <string name="referral_on_referred_swaps">\u0020on referred swaps</string>
-    <string name="referral_save">Save</string>
-    <string name="referral_add_referral">\u0020on swaps - Add a Referral</string>
     <string name="referral_main_my_referral_title">My Referral</string>
     <string name="referral_main_my_referral_body">Manage your referral code and collect rewards.</string>
-    <string name="referral_edit_referred">Edit referred code</string>
+    <string name="referral_view_friend_active">Active</string>
     <string name="referral_edit_referral">Edit referral</string>
-    <string name="referral_external_linked">Referral code successfully linked</string>
     <string name="referral_external_not_linked">Referral code does not exist</string>
     <string name="referral_external_link_failed">Failed to check referral code</string>
     <string name="referral_onboarding_title">Referral</string>
@@ -760,7 +755,6 @@
     <string name="referral_view_selected_vault">Vault Selected</string>
     <string name="referral_view_your_referral_code">Your referral code</string>
     <string name="referral_view_edit_referral">Edit referral</string>
-    <string name="referral_view_your_friend_referral">Your Friend Referral Code</string>
     <string name="referral_view_collected_rewards">Collected Rewards</string>
     <string name="referral_view_add_friend">Add a Friend\'s Referral</string>
     <string name="referral_view_save">Save</string>

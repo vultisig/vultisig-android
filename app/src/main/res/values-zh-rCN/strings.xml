@@ -736,18 +736,13 @@
     <string name="referral_screen_title">Vultisig - 推荐链接</string>
     <string name="referral_screen_code_hint">输入最多 4 个字符</string>
     <string name="referral_create_referral">创建推荐</string>
-    <string name="referral_save_referral_code">保存推荐代码</string>
     <string name="referral_invite_onboarding_3">节省费用。</string>
-    <string name="referral_or">或</string>
     <string name="referral_create_code_and_earn">创建您自己的代码并赚取</string>
     <string name="referral_on_referred_swaps">在推荐交换上</string>
-    <string name="referral_save">保存</string>
-    <string name="referral_add_referral">在交换上 - 添加推荐</string>
     <string name="referral_main_my_referral_title">我的推荐</string>
     <string name="referral_main_my_referral_body">管理您的推荐代码并领取奖励。</string>
-    <string name="referral_edit_referred">编辑推荐代码</string>
+    <string name="referral_view_friend_active">已激活</string>
     <string name="referral_edit_referral">编辑推荐</string>
-    <string name="referral_external_linked">推荐代码成功链接</string>
     <string name="referral_external_not_linked">推荐代码不存在</string>
     <string name="referral_external_link_failed">检查推荐代码失败</string>
     <string name="referral_onboarding_title">推荐</string>
@@ -804,7 +799,6 @@
     <string name="referral_view_selected_vault">已选择保险库</string>
     <string name="referral_view_your_referral_code">您的推荐代码</string>
     <string name="referral_view_edit_referral">编辑推荐</string>
-    <string name="referral_view_your_friend_referral">您朋友的推荐代码</string>
     <string name="referral_view_collected_rewards">收集的奖励</string>
     <string name="referral_view_add_friend">添加朋友的推荐</string>
     <string name="referral_view_save">保存</string>

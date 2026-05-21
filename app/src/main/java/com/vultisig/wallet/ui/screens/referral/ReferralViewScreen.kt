@@ -34,6 +34,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -140,7 +141,10 @@ internal fun ReferralViewScreen(
                         .imePadding()
                         .navigationBarsPadding()
             ) {
-                FriendReferralBanner(onClick = onClickFriendReferralBanner)
+                FriendReferralBanner(
+                    isActive = state.referralFriendCode.isNotEmpty(),
+                    onClick = onClickFriendReferralBanner,
+                )
 
                 UiSpacer(16.dp)
 
@@ -259,7 +263,7 @@ private fun ReferralExpirationItem(expiration: String = "25 May of 2027", isLoad
 }
 
 @Composable
-private fun FriendReferralBanner(onClick: () -> Unit) {
+private fun FriendReferralBanner(isActive: Boolean, onClick: () -> Unit) {
     Box(
         modifier =
             Modifier.fillMaxWidth()
@@ -301,8 +305,39 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
                 style = Theme.brockmann.body.s.medium,
             )
         }
+
+        if (isActive) {
+            FriendActiveChip(
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp)
+            )
+        }
     }
 }
+
+@Composable
+private fun FriendActiveChip(modifier: Modifier = Modifier) {
+    Row(
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(999.dp))
+                .background(Theme.v2.colors.primary.accent4.copy(alpha = 0.16f))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier =
+                Modifier.size(6.dp).clip(RoundedCornerShape(3.dp)).background(FRIEND_ACTIVE_DOT)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = stringResource(R.string.referral_view_friend_active),
+            color = Theme.v2.colors.primary.accent4,
+            style = Theme.brockmann.supplementary.caption,
+        )
+    }
+}
+
+private val FRIEND_ACTIVE_DOT = Color(0xFF4ADE80)
 
 @Composable
 private fun ReferralRewardsBanner(rewards: String, isLoading: Boolean) {

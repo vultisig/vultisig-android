@@ -22,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -60,6 +61,13 @@ private fun ReferralScreen(
     onCreateCardClick: () -> Unit,
     onMyReferralCardClick: () -> Unit,
 ) {
+    val ready = state as? ReferralUiState.Ready
+    val createEnabled = ready != null
+    val createLabel =
+        if (ready?.hasReferral == true) R.string.referral_edit_referral
+        else R.string.referral_create_referral
+    val myReferralEnabled = state !is ReferralUiState.Loading
+
     V2Scaffold(
         onBackClick = onBackPressed,
         title = stringResource(R.string.referral_screen_title),
@@ -72,28 +80,28 @@ private fun ReferralScreen(
                     .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // TODO(#4449): replace crypto_natives_v2 with the new gift-box hero
-            // illustration once exported from Figma (node 59573:165994).
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Image(
-                    painter = painterResource(id = R.drawable.crypto_natives_v2),
+                    painter = painterResource(id = R.drawable.referral_hero),
                     contentDescription = null,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
 
-            UiSpacer(1f)
 
-            CreateReferralCard(isCreateEnabled = state.isCreateEnabled, onClick = onCreateCardClick)
+            CreateReferralCard(
+                titleRes = createLabel,
+                enabled = createEnabled,
+                onClick = onCreateCardClick,
+            )
 
             UiSpacer(14.dp)
 
-            // TODO(#4449): replace ic_user placeholder with IconImageAvatarSparkle
-            // once exported from Figma (node 59573:166227).
             ReferralEntryCard(
-                iconRes = R.drawable.ic_user,
+                iconRes = R.drawable.ic_image_avatar_sparkle,
                 title = stringResource(R.string.referral_main_my_referral_title),
                 bodyText = stringResource(R.string.referral_main_my_referral_body),
+                enabled = myReferralEnabled,
                 onClick = onMyReferralCardClick,
             )
 
@@ -103,13 +111,14 @@ private fun ReferralScreen(
 }
 
 @Composable
-private fun CreateReferralCard(isCreateEnabled: Boolean, onClick: () -> Unit) {
+private fun CreateReferralCard(titleRes: Int, enabled: Boolean, onClick: () -> Unit) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .background(Theme.v2.colors.backgrounds.surface1)
-                .clickable(onClick = onClick)
+                .clickable(enabled = enabled, onClick = onClick)
+                .alpha(if (enabled) 1f else DISABLED_CARD_ALPHA)
                 .padding(24.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -125,11 +134,7 @@ private fun CreateReferralCard(isCreateEnabled: Boolean, onClick: () -> Unit) {
                     modifier = Modifier.size(24.dp),
                 )
                 Text(
-                    text =
-                        stringResource(
-                            if (isCreateEnabled) R.string.referral_create_referral
-                            else R.string.referral_edit_referral
-                        ),
+                    text = stringResource(titleRes),
                     style = Theme.brockmann.headings.title3,
                     color = Theme.v2.colors.text.primary,
                 )
@@ -162,13 +167,20 @@ private fun CreateReferralCard(isCreateEnabled: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun ReferralEntryCard(iconRes: Int, title: String, bodyText: String, onClick: () -> Unit) {
+private fun ReferralEntryCard(
+    iconRes: Int,
+    title: String,
+    bodyText: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .background(Theme.v2.colors.backgrounds.surface1)
-                .clickable(onClick = onClick)
+                .clickable(enabled = enabled, onClick = onClick)
+                .alpha(if (enabled) 1f else DISABLED_CARD_ALPHA)
                 .padding(24.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -203,12 +215,38 @@ private fun ReferralEntryCard(iconRes: Int, title: String, bodyText: String, onC
     }
 }
 
+private const val DISABLED_CARD_ALPHA = 0.5f
+
 @SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true)
 @Composable
-private fun ReferralScreenPreview() {
+private fun ReferralScreenLoadingPreview() {
     ReferralScreen(
-        state = ReferralUiState(isCreateEnabled = true),
+        state = ReferralUiState.Loading,
+        onBackPressed = {},
+        onCreateCardClick = {},
+        onMyReferralCardClick = {},
+    )
+}
+
+@SuppressLint("UnrememberedMutableState")
+@Preview(showBackground = true, name = "Ready – no referral")
+@Composable
+private fun ReferralScreenReadyEmptyPreview() {
+    ReferralScreen(
+        state = ReferralUiState.Ready(hasReferral = false),
+        onBackPressed = {},
+        onCreateCardClick = {},
+        onMyReferralCardClick = {},
+    )
+}
+
+@SuppressLint("UnrememberedMutableState")
+@Preview(showBackground = true, name = "Ready – has referral")
+@Composable
+private fun ReferralScreenReadyWithReferralPreview() {
+    ReferralScreen(
+        state = ReferralUiState.Ready(hasReferral = true),
         onBackPressed = {},
         onCreateCardClick = {},
         onMyReferralCardClick = {},

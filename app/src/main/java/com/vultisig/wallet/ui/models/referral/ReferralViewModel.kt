@@ -13,14 +13,20 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
-internal data class ReferralUiState(val isCreateEnabled: Boolean = true)
+internal sealed interface ReferralUiState {
+    data object Loading : ReferralUiState
+
+    data object Unavailable : ReferralUiState
+
+    data class Ready(val hasReferral: Boolean) : ReferralUiState
+}
 
 @HiltViewModel
 internal class ReferralViewModel
@@ -34,7 +40,7 @@ constructor(
 ) : ViewModel() {
     private val vaultId: String = requireNotNull(savedStateHandle[ARG_VAULT_ID])
 
-    val state = MutableStateFlow(ReferralUiState())
+    val state = MutableStateFlow<ReferralUiState>(ReferralUiState.Loading)
     private var remoteReferral: String? = null
 
     init {
@@ -43,45 +49,63 @@ constructor(
 
     private fun loadStatus() {
         viewModelScope.launch {
-            val vaultReferral =
-                withContext(Dispatchers.IO) { referralCodeRepository.getReferralCreatedBy(vaultId) }
-
             try {
+                val vaultReferral =
+                    withContext(Dispatchers.IO) {
+                        referralCodeRepository.getReferralCreatedBy(vaultId)
+                    }
+
                 val referrals =
                     if (vaultReferral.isNullOrEmpty()) {
-                        withContext(Dispatchers.IO) {
-                            val coin =
+                        val coin =
+                            withContext(Dispatchers.IO) {
                                 vaultRepository.get(vaultId)?.coins?.find {
                                     it.chain.id == Chain.ThorChain.id && it.isNativeToken
-                                } ?: error("Coin not found")
+                                }
+                            }
+                        if (coin == null) {
+                            state.value = ReferralUiState.Unavailable
+                            return@launch
+                        }
+                        withContext(Dispatchers.IO) {
                             thorChainApi.getReferralCodesByAddress(coin.address)
                         }
                     } else {
                         listOf(vaultReferral)
                     }
-                if (referrals.isNotEmpty()) {
-                    state.update { it.copy(isCreateEnabled = false) }
-                    remoteReferral = referrals.first()
-                    referralCodeRepository.saveReferralCreated(vaultId, remoteReferral!!)
+
+                val hasReferral = referrals.isNotEmpty()
+                if (hasReferral) {
+                    val first = referrals.first()
+                    remoteReferral = first
+                    withContext(Dispatchers.IO) {
+                        referralCodeRepository.saveReferralCreated(vaultId, first)
+                    }
                 }
+                state.value = ReferralUiState.Ready(hasReferral = hasReferral)
+            } catch (e: CancellationException) {
+                throw e
             } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
-                Timber.e(t)
+                Timber.e(t, "Failed to load referral status")
+                state.value = ReferralUiState.Unavailable
             }
         }
     }
 
     fun onCreateOrEditReferral() {
+        val current = state.value as? ReferralUiState.Ready ?: return
         viewModelScope.launch {
-            if (state.value.isCreateEnabled) {
-                navigator.route(Route.ReferralCreation(vaultId))
+            if (current.hasReferral) {
+                val code = remoteReferral ?: return@launch
+                navigator.navigate(Destination.ReferralView(vaultId, code))
             } else {
-                navigator.navigate(Destination.ReferralView(vaultId, remoteReferral.orEmpty()))
+                navigator.route(Route.ReferralCreation(vaultId))
             }
         }
     }
 
     fun onMyReferralClick() {
+        if (state.value is ReferralUiState.Loading) return
         viewModelScope.launch {
             navigator.navigate(Destination.ReferralView(vaultId, remoteReferral.orEmpty()))
         }
