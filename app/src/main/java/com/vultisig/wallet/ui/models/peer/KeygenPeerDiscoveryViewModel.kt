@@ -80,7 +80,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -99,6 +101,7 @@ data class PeerDiscoveryUiModel(
     val selectedDevices: List<String> = emptyList(),
     val minimumDevices: Int = MIN_KEYGEN_DEVICES,
     val minimumDevicesDisplayed: Int = MIN_KEYGEN_DEVICES,
+    val deviceCount: Int? = null,
     val allowsMoreDevices: Boolean = false,
     val showQrHelpModal: Boolean = false,
     val connectingToServer: ConnectingToServerUiModel? = null,
@@ -150,6 +153,7 @@ constructor(
             PeerDiscoveryUiModel(
                 minimumDevices = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
                 minimumDevicesDisplayed = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
+                deviceCount = args?.deviceCount,
                 enableNotification = false,
             )
         )
@@ -192,11 +196,40 @@ constructor(
 
     private var serverUrl: String = VULTISIG_RELAY_URL
 
+    private var hasAutoStartedKeygen: Boolean = false
+
     init {
         if (args == null) {
             viewModelScope.launch { navigator.navigate(Destination.Back) }
         } else {
             loadData()
+            observeAutoStartKeygen()
+        }
+    }
+
+    /**
+     * Auto-kicks off keygen for 2/2 and 3/3 secure-vault flows so the initiator does not have to
+     * tap Next once the deterministic peer threshold has been met. Mirrors the Windows
+     * `AutoStartKeygen` component. Skipped for Fast Vault, which already auto-fires from
+     * [startVultiServerConnection] when the server peer is discovered — double-firing would launch
+     * two concurrent session-start attempts.
+     */
+    private fun observeAutoStartKeygen() {
+        val args = args ?: return
+        val targetDeviceCount = args.deviceCount ?: return
+        if (targetDeviceCount > 3) return
+        if (!email.isNullOrBlank() && !password.isNullOrBlank()) return
+
+        viewModelScope.launch {
+            state
+                .map { it.selectedDevices.size }
+                .distinctUntilChanged()
+                .collect { selectedSize ->
+                    if (!hasAutoStartedKeygen && selectedSize + 1 == targetDeviceCount) {
+                        hasAutoStartedKeygen = true
+                        next()
+                    }
+                }
         }
     }
 
