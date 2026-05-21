@@ -4,24 +4,29 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Request body sent to SwapKit `POST /v3/quote`. The Vultisig proxy attaches the partner API key
- * server-side; no `x-api-key` is set on the device.
+ * Request body sent to SwapKit `POST /v3/quote` per the V3 spec at
+ * https://docs.swapkit.dev/llms-full.txt. The Vultisig proxy attaches the partner `x-api-key`
+ * server-side; affiliate identifiers (THORName, MAYAName, Chainflip broker, NEAR name) are
+ * configured server-side via the partner dashboard, so no affiliate id is sent on the wire — only
+ * the optional [affiliateFee] basis-points override is.
  */
 @Serializable
 data class SwapKitQuoteRequest(
     @SerialName("sellAsset") val sellAsset: String,
     @SerialName("buyAsset") val buyAsset: String,
     @SerialName("sellAmount") val sellAmount: String,
-    @SerialName("sourceAddress") val sourceAddress: String,
-    @SerialName("destinationAddress") val destinationAddress: String,
+    /** Optional — V3 allows quoting before the wallet has picked an account. */
+    @SerialName("sourceAddress") val sourceAddress: String? = null,
+    /** Optional — V3 allows quoting before the wallet has picked an account. */
+    @SerialName("destinationAddress") val destinationAddress: String? = null,
+    /** Limits the liquidity providers considered. Omit to let SwapKit pick from all available. */
+    @SerialName("providers") val providers: List<String>? = null,
+    /** Max slippage as percentage. `1` means 1% (NOT basis points). */
     @SerialName("slippage") val slippage: Double = DEFAULT_SLIPPAGE,
-    @SerialName("affiliate") val affiliate: String = DEFAULT_AFFILIATE,
-    @SerialName("affiliateFee") val affiliateBps: Int = 0,
-    @SerialName("includeTx") val includeTx: Boolean = false,
+    /** Affiliate fee override in basis points (range 0..1000, max 10%). */
+    @SerialName("affiliateFee") val affiliateFee: Int = 0,
 ) {
     companion object {
-        /** Until the partner-dashboard affiliate ids are set up Vultisig collects nothing. */
-        const val DEFAULT_AFFILIATE: String = "notconfigured.near"
         const val DEFAULT_SLIPPAGE: Double = 1.0
     }
 }
@@ -29,22 +34,34 @@ data class SwapKitQuoteRequest(
 /**
  * Response envelope returned by `POST /v3/quote`. Each [SwapKitRoute] is a candidate path; the
  * client filters out THORChain/Maya, drops multi-hop, then ranks the survivors by
- * [SwapKitRoute.expectedBuyAmount].
+ * [SwapKitRoute.expectedBuyAmount]. Phase 2+ may surface [providerErrors] in the UI.
  */
 @Serializable
 data class SwapKitQuoteResponseJson(
+    @SerialName("quoteId") val quoteId: String? = null,
     @SerialName("routes") val routes: List<SwapKitRoute> = emptyList(),
+    @SerialName("providerErrors") val providerErrors: List<SwapKitProviderError> = emptyList(),
     @SerialName("error") val error: String? = null,
     @SerialName("message") val message: String? = null,
 )
 
+/** Per-provider error surfaced alongside successful routes when other providers failed. */
+@Serializable
+data class SwapKitProviderError(
+    @SerialName("provider") val provider: String? = null,
+    @SerialName("errorCode") val errorCode: String? = null,
+    @SerialName("message") val message: String? = null,
+)
+
 /**
- * A single candidate quote in the SwapKit `/v3/quote` response. [providers] lists the sub-providers
- * that compose the route (e.g. `["CHAINFLIP"]`); routes with more than one entry are filtered out
+ * A single candidate quote in the SwapKit `/v3/quote` response. [routeId] is the UUID the caller
+ * must echo to `POST /v3/swap` to execute the route. [providers] lists the sub-providers that
+ * compose the route (e.g. `["CHAINFLIP"]`); routes with more than one entry are filtered out
  * client-side until multi-hop is enabled in a later phase.
  */
 @Serializable
 data class SwapKitRoute(
+    @SerialName("routeId") val routeId: String? = null,
     @SerialName("providers") val providers: List<String> = emptyList(),
     @SerialName("sellAsset") val sellAsset: String = "",
     @SerialName("buyAsset") val buyAsset: String = "",
@@ -102,9 +119,17 @@ data class SwapKitWarning(
     @SerialName("display") val display: String? = null,
 )
 
-/** Route-level metadata used to compute price-impact badges and quote-mode labelling. */
+/** Route-level metadata. `tags` may include `FASTEST` / `RECOMMENDED` / `CHEAPEST` per V3 spec. */
 @Serializable
 data class SwapKitRouteMeta(
-    @SerialName("priceImpact") val priceImpact: Double? = null,
-    @SerialName("quoteMode") val quoteMode: String? = null,
+    @SerialName("assets") val assets: List<SwapKitMetaAsset> = emptyList(),
+    @SerialName("tags") val tags: List<String> = emptyList(),
+)
+
+/** Asset metadata referenced from [SwapKitRouteMeta.assets]. */
+@Serializable
+data class SwapKitMetaAsset(
+    @SerialName("asset") val asset: String? = null,
+    @SerialName("price") val price: Double? = null,
+    @SerialName("image") val image: String? = null,
 )

@@ -31,6 +31,6 @@ internal class SwapKitConfigImpl @Inject constructor(private val dataStore: AppD
 
     companion object {
         /** DataStore key persisting the user's Advanced Settings → SwapKit toggle. */
-        val SWAPKIT_ENABLED_KEY = booleanPreferencesKey("swapkit_enabled")
+        private val SWAPKIT_ENABLED_KEY = booleanPreferencesKey("swapkit_enabled")
     }
 }

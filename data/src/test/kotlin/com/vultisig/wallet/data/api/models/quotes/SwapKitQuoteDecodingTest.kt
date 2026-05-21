@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -30,8 +31,10 @@ class SwapKitQuoteDecodingTest {
         val payload =
             """
             {
+              "quoteId": "11111111-1111-1111-1111-111111111111",
               "routes": [
                 {
+                  "routeId": "22222222-2222-2222-2222-222222222222",
                   "providers": ["CHAINFLIP"],
                   "sellAsset": "ETH.USDC-0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
                   "buyAsset": "ETH.USDT-0xdAC17F958D2ee523a2206206994597C13D831ec7",
@@ -55,7 +58,7 @@ class SwapKitQuoteDecodingTest {
                     { "type": "network", "amount": "21000", "asset": "ETH.ETH", "chain": "ETH" }
                   ],
                   "warnings": [],
-                  "meta": { "priceImpact": -0.05, "quoteMode": "FAST" }
+                  "meta": { "tags": ["FASTEST", "RECOMMENDED"], "assets": [] }
                 }
               ]
             }
@@ -64,8 +67,10 @@ class SwapKitQuoteDecodingTest {
 
         val decoded = json.decodeFromString<SwapKitQuoteResponseJson>(payload)
 
+        assertEquals("11111111-1111-1111-1111-111111111111", decoded.quoteId)
         assertEquals(1, decoded.routes.size)
         val route = decoded.routes.single()
+        assertEquals("22222222-2222-2222-2222-222222222222", route.routeId)
         assertEquals(listOf("CHAINFLIP"), route.providers)
         assertEquals("chainflip", route.primaryProviderId)
         assertEquals("999500000", route.expectedBuyAmount)
@@ -74,7 +79,7 @@ class SwapKitQuoteDecodingTest {
         assertEquals(1, route.legs.size)
         assertEquals("CHAINFLIP", route.legs.single().provider)
         assertEquals(54.0, route.estimatedTime?.total)
-        assertEquals("FAST", route.meta?.quoteMode)
+        assertEquals(listOf("FASTEST", "RECOMMENDED"), route.meta?.tags)
         assertNull(decoded.error)
     }
 
@@ -100,6 +105,7 @@ class SwapKitQuoteDecodingTest {
             {
               "routes": [
                 {
+                  "routeId": "abc",
                   "providers": ["CHAINFLIP", "NEAR_INTENTS"],
                   "sellAsset": "BTC.BTC",
                   "buyAsset": "ETH.USDT",
@@ -132,19 +138,19 @@ class SwapKitQuoteDecodingTest {
         val payload =
             """
             {
+              "swapId": "33333333-3333-3333-3333-333333333333",
               "tx": {
-                "meta": { "txType": "evm", "chain": "ETH", "subProvider": "chainflip" },
-                "payload": {
-                  "from": "0xSender",
-                  "to": "0xRouter",
-                  "data": "0xabcdef",
-                  "value": "0",
-                  "gas": "210000",
-                  "gasPrice": "12000000000",
-                  "chainId": "1",
-                  "nonce": "7"
-                }
+                "from": "0xSender",
+                "to": "0xRouter",
+                "data": "0xabcdef",
+                "value": "0",
+                "gas": "210000",
+                "gasPrice": "12000000000",
+                "chainId": "1",
+                "nonce": "7"
               },
+              "meta": { "txType": "evm", "tags": ["RECOMMENDED"], "chain": "ETH", "subProvider": "chainflip" },
+              "targetAddress": "0xRouter",
               "expectedBuyAmount": "999500000",
               "providers": ["CHAINFLIP"]
             }
@@ -153,13 +159,16 @@ class SwapKitQuoteDecodingTest {
 
         val response = json.decodeFromString<SwapKitSwapResponseJson>(payload)
 
-        assertEquals(SwapKitTxMeta.TYPE_EVM, response.tx.meta.type)
-        assertEquals("ETH", response.tx.meta.chain)
-        assertEquals("chainflip", response.tx.meta.subProvider)
+        assertEquals("33333333-3333-3333-3333-333333333333", response.swapId)
+        assertEquals(SwapKitTxMeta.TYPE_EVM, response.meta.type)
+        assertEquals("ETH", response.meta.chain)
+        assertEquals("chainflip", response.meta.subProvider)
+        assertEquals(listOf("RECOMMENDED"), response.meta.tags)
+        assertEquals("0xRouter", response.targetAddress)
         assertEquals("999500000", response.expectedBuyAmount)
 
-        // payload is JsonElement until the caller decodes onto the matching DTO
-        val evm = json.decodeFromJsonElement(SwapKitEvmTx.serializer(), response.tx.payload)
+        // tx is JsonElement until the caller decodes onto the matching DTO
+        val evm = json.decodeFromJsonElement(SwapKitEvmTx.serializer(), response.tx)
         assertEquals("0xRouter", evm.to)
         assertEquals("0xabcdef", evm.data)
         assertEquals("210000", evm.gas)
@@ -171,10 +180,8 @@ class SwapKitQuoteDecodingTest {
         val payload =
             """
             {
-              "tx": {
-                "meta": { "txType": "SOLANA", "chain": "SOL", "subProvider": "jupiter" },
-                "payload": { "swapTransaction": "AQID" }
-              }
+              "tx": { "swapTransaction": "AQID" },
+              "meta": { "txType": "SOLANA", "chain": "SOL", "subProvider": "jupiter" }
             }
             """
                 .trimIndent()
@@ -182,8 +189,8 @@ class SwapKitQuoteDecodingTest {
         val response = json.decodeFromString<SwapKitSwapResponseJson>(payload)
 
         // type is lower-cased so dispatch is case-insensitive
-        assertEquals(SwapKitTxMeta.TYPE_SOLANA, response.tx.meta.type)
-        val solana = json.decodeFromJsonElement(SwapKitSolanaTx.serializer(), response.tx.payload)
+        assertEquals(SwapKitTxMeta.TYPE_SOLANA, response.meta.type)
+        val solana = json.decodeFromJsonElement(SwapKitSolanaTx.serializer(), response.tx)
         assertEquals("AQID", solana.swapTransaction)
     }
 
@@ -192,41 +199,37 @@ class SwapKitQuoteDecodingTest {
         val payload =
             """
             {
-              "tx": {
-                "meta": { "txType": "utxo" },
-                "payload": {}
-              }
+              "tx": {},
+              "meta": { "txType": "utxo" }
             }
             """
                 .trimIndent()
 
         val response = json.decodeFromString<SwapKitSwapResponseJson>(payload)
-        assertEquals("utxo", response.tx.meta.type)
+        assertEquals("utxo", response.meta.type)
     }
 
     @Test
-    fun `decodes providers response`() {
+    fun `decodes providers response as top-level array with supportedChainIds`() {
         val payload =
             """
-            {
-              "providers": [
-                { "provider": "CHAINFLIP", "enabledChainIds": ["ETH", "BSC", "BTC"] },
-                { "provider": "NEAR_INTENTS", "enabledChainIds": ["SOL", "ETH"] }
-              ]
-            }
+            [
+              { "provider": "CHAINFLIP", "supportedChainIds": ["ETH", "BSC", "BTC"] },
+              { "provider": "NEAR_INTENTS", "supportedChainIds": ["SOL", "ETH"] }
+            ]
             """
                 .trimIndent()
 
         val decoded = json.decodeFromString<SwapKitProvidersResponseJson>(payload)
 
-        assertEquals(2, decoded.providers.size)
-        assertEquals("CHAINFLIP", decoded.providers.first().provider)
-        assertEquals(listOf("ETH", "BSC", "BTC"), decoded.providers.first().enabledChainIds)
-        assertEquals(listOf("SOL", "ETH"), decoded.providers[1].enabledChainIds)
+        assertEquals(2, decoded.size)
+        assertEquals("CHAINFLIP", decoded.first().provider)
+        assertEquals(listOf("ETH", "BSC", "BTC"), decoded.first().supportedChainIds)
+        assertEquals(listOf("SOL", "ETH"), decoded[1].supportedChainIds)
     }
 
     @Test
-    fun `quote request serializes defaults including affiliate stamp`() {
+    fun `quote request serializes only documented fields`() {
         val request =
             SwapKitQuoteRequest(
                 sellAsset = "ETH.ETH",
@@ -239,12 +242,52 @@ class SwapKitQuoteDecodingTest {
         val encoded = Json { encodeDefaults = true }.encodeToString(request)
         val body = Json.parseToJsonElement(encoded).jsonObject
 
-        // Phase 1 affiliate id is hardwired to notconfigured.near at 0 bps until the partner
-        // dashboard is set up. If this assertion drifts, Vultisig may start collecting fees before
-        // the partner side is ready.
-        assertEquals("notconfigured.near", body["affiliate"]?.jsonPrimitive?.content)
+        // Affiliate identifier is server-side via the partner dashboard — no `affiliate` key on the
+        // wire. Only `affiliateFee` (basis points) is part of the documented V3 quote request.
+        assertFalse(body.containsKey("affiliate"))
         assertEquals("0", body["affiliateFee"]?.jsonPrimitive?.content)
         assertEquals("1", body["slippage"]?.jsonPrimitive?.content?.substringBefore('.'))
+    }
+
+    @Test
+    fun `quote request omits source and destination when null`() {
+        // V3 marks both addresses optional so quote discovery flows can price before the wallet
+        // has picked an account.
+        val request =
+            SwapKitQuoteRequest(sellAsset = "ETH.ETH", buyAsset = "ETH.USDC", sellAmount = "1")
+
+        val encoded =
+            Json {
+                    encodeDefaults = true
+                    explicitNulls = false
+                }
+                .encodeToString(request)
+        val body = Json.parseToJsonElement(encoded).jsonObject
+
+        assertFalse(body.containsKey("sourceAddress"))
+        assertFalse(body.containsKey("destinationAddress"))
+    }
+
+    @Test
+    fun `swap request carries routeId and addresses only`() {
+        // POST /v3/swap is identified by routeId from the previous quote, not the full route blob.
+        val request =
+            SwapKitSwapRequest(
+                routeId = "22222222-2222-2222-2222-222222222222",
+                sourceAddress = "0xSender",
+                destinationAddress = "0xRecipient",
+            )
+
+        val encoded = Json.encodeToString(request)
+        val body = Json.parseToJsonElement(encoded).jsonObject
+
+        assertEquals(
+            "22222222-2222-2222-2222-222222222222",
+            body["routeId"]?.jsonPrimitive?.content,
+        )
+        assertEquals("0xSender", body["sourceAddress"]?.jsonPrimitive?.content)
+        assertEquals("0xRecipient", body["destinationAddress"]?.jsonPrimitive?.content)
+        assertFalse(body.containsKey("route"))
     }
 
     @Test
@@ -283,6 +326,7 @@ class SwapKitQuoteDecodingTest {
             {
               "routes": [
                 {
+                  "routeId": "x",
                   "providers": ["CHAINFLIP"],
                   "expectedBuyAmount": "1",
                   "futureField": { "anything": true }
@@ -298,21 +342,19 @@ class SwapKitQuoteDecodingTest {
     }
 
     @Test
-    fun `tx payload is preserved as JsonElement for lazy downstream decoding`() {
+    fun `swap response tx is preserved as JsonElement for lazy downstream decoding`() {
         val payload =
             """
             {
-              "tx": {
-                "meta": { "txType": "evm" },
-                "payload": { "to": "0xRouter", "data": "0x", "value": "0" }
-              }
+              "tx": { "to": "0xRouter", "data": "0x", "value": "0" },
+              "meta": { "txType": "evm" }
             }
             """
                 .trimIndent()
 
         val response = json.decodeFromString<SwapKitSwapResponseJson>(payload)
-        // payload stays raw — caller picks the matching DTO based on meta.type
-        val obj = response.tx.payload as JsonObject
+        // tx stays raw — caller picks the matching DTO based on meta.type
+        val obj = response.tx as JsonObject
         assertEquals("0xRouter", obj["to"]?.jsonPrimitive?.content)
     }
 }

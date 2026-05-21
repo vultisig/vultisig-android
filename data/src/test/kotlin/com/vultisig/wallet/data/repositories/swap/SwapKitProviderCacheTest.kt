@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.repositories.swap
 
 import com.vultisig.wallet.data.api.models.quotes.SwapKitProviderEntry
-import com.vultisig.wallet.data.api.models.quotes.SwapKitProvidersResponseJson
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.models.Chain
 import io.mockk.coEvery
@@ -34,12 +33,9 @@ internal class SwapKitProviderCacheTest {
         SwapKitProviderCacheImpl(api).also { it.clock = clock }
 
     private fun providersResponse(vararg entries: Pair<String, List<String>>) =
-        SwapKitProvidersResponseJson(
-            providers =
-                entries.map { (provider, chains) ->
-                    SwapKitProviderEntry(provider = provider, enabledChainIds = chains)
-                }
-        )
+        entries.map { (provider, chains) ->
+            SwapKitProviderEntry(provider = provider, supportedChainIds = chains)
+        }
 
     @Test
     fun `isEnabled returns true for cached chain id`() = runTest {
@@ -62,7 +58,7 @@ internal class SwapKitProviderCacheTest {
     }
 
     @Test
-    fun `isEnabled unions enabledChainIds across sub-providers`() = runTest {
+    fun `isEnabled unions supportedChainIds across sub-providers`() = runTest {
         coEvery { api.providers() } returns
             providersResponse(
                 "CHAINFLIP" to listOf("ETH", "BTC"),

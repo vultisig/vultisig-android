@@ -4,45 +4,41 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
-/** Body sent to `POST /v3/swap` — echoes the winning route returned by `/v3/quote`. */
+/**
+ * Body sent to `POST /v3/swap`. Per the SwapKit V3 docs the caller picks a route by [routeId] and
+ * supplies the wallet addresses — the upstream resolves the rest from server-side state.
+ */
 @Serializable
 data class SwapKitSwapRequest(
-    @SerialName("route") val route: SwapKitRoute,
+    @SerialName("routeId") val routeId: String,
     @SerialName("sourceAddress") val sourceAddress: String,
     @SerialName("destinationAddress") val destinationAddress: String,
 )
 
 /**
- * Response envelope from `POST /v3/swap`. SwapKit's `tx` payload is polymorphic — the
- * [SwapKitTxMeta.txType] discriminator drives which downstream signer (EVM, Solana, …) the client
- * builds for. Unknown `txType` values must be rejected before signing.
+ * Response envelope from `POST /v3/swap`. `tx` and `meta` are siblings at the root of the response
+ * per SwapKit V3; `tx`'s shape varies by [SwapKitTxMeta.txType] (EVM holds
+ * `from/to/data/value/gas`, Solana holds Jupiter's wire format) so it is kept as a raw
+ * [JsonElement] and decoded lazily by the caller onto the matching DTO ([SwapKitEvmTx] /
+ * [SwapKitSolanaTx]). Unknown `txType` values must be rejected before signing.
  */
 @Serializable
 data class SwapKitSwapResponseJson(
-    @SerialName("tx") val tx: SwapKitTx,
+    @SerialName("swapId") val swapId: String? = null,
+    @SerialName("tx") val tx: JsonElement,
+    @SerialName("meta") val meta: SwapKitTxMeta,
+    @SerialName("targetAddress") val targetAddress: String? = null,
     @SerialName("expectedBuyAmount") val expectedBuyAmount: String? = null,
     @SerialName("providers") val providers: List<String> = emptyList(),
     @SerialName("error") val error: String? = null,
     @SerialName("message") val message: String? = null,
 )
 
-/** Polymorphic transaction envelope; [meta] tags which signer should interpret [payload]. */
-@Serializable
-data class SwapKitTx(
-    @SerialName("meta") val meta: SwapKitTxMeta,
-    /**
-     * Raw transaction payload. Shape varies by [SwapKitTxMeta.txType]: EVM holds
-     * `from`/`to`/`data`/`value`/`gas`, Solana holds a base64 `message` matching Jupiter's wire
-     * format. Decoded lazily by the caller into the matching DTO ([SwapKitEvmTx] /
-     * [SwapKitSolanaTx]).
-     */
-    @SerialName("payload") val payload: JsonElement,
-)
-
-/** Discriminator metadata sitting alongside a [SwapKitTx.payload]. */
+/** Discriminator metadata sitting alongside [SwapKitSwapResponseJson.tx]. */
 @Serializable
 data class SwapKitTxMeta(
     @SerialName("txType") val txType: String,
+    @SerialName("tags") val tags: List<String> = emptyList(),
     @SerialName("chain") val chain: String? = null,
     @SerialName("subProvider") val subProvider: String? = null,
 ) {
@@ -56,7 +52,7 @@ data class SwapKitTxMeta(
     }
 }
 
-/** EVM `tx.payload` shape. Trust [gas] (mirrors 1inch behaviour); re-estimate [gasPrice]. */
+/** EVM `tx` shape. Trust [gas] (mirrors 1inch behaviour); re-estimate [gasPrice]. */
 @Serializable
 data class SwapKitEvmTx(
     @SerialName("from") val from: String? = null,
@@ -69,7 +65,7 @@ data class SwapKitEvmTx(
     @SerialName("nonce") val nonce: String? = null,
 )
 
-/** Solana `tx.payload` shape — same wire format Jupiter returns today. */
+/** Solana `tx` shape — same wire format Jupiter returns today. */
 @Serializable
 data class SwapKitSolanaTx(
     @SerialName("message") val message: String? = null,
