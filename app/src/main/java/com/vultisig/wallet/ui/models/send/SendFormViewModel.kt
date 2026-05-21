@@ -48,7 +48,6 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
-import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.AmountFraction.F100
@@ -930,64 +929,40 @@ constructor(
     }
 
     fun onAutoCompound(checked: Boolean) {
-        // safeLaunch — the loadAddresses/loadDeFiAddresses calls below are network-touching
-        // and should funnel through the project's standard error handler instead of
-        // crashing the ViewModel on a transient repository failure.
-        viewModelScope.safeLaunch {
-            isSwitchingAccounts.value = true
-            // Reset on every exit path — including early returns and exceptions in the
-            // suspend chain below — so collectSelectedAccount doesn't stay suppressed.
-            try {
-                uiState.update { it.copy(isAutocompound = checked) }
+        uiState.update { it.copy(isAutocompound = checked) }
 
-                val vaultId = vaultId
-                if (
-                    (defiType != DeFiNavActions.UNSTAKE_TCY &&
-                        defiType != DeFiNavActions.UNSTAKE_STCY) || vaultId == null
-                ) {
-                    return@safeLaunch
-                }
+        val vaultId = vaultId
+        if (
+            (defiType != DeFiNavActions.UNSTAKE_TCY && defiType != DeFiNavActions.UNSTAKE_STCY) ||
+                vaultId == null
+        ) {
+            return
+        }
 
-                selectedToken.value = null
+        isSwitchingAccounts.value = true
+        selectedToken.value = null
 
-                // Process BOTH cached and hydrated emissions — every emission republishes
-                // accountsState so the form refreshes balances when hydration arrives. The
-                // tokenSelected flag pins the selection to the first emission that contains
-                // the target ticker, so a later hydration emission doesn't re-call
-                // selectToken (which would wipe the user's typed amount via
-                // resetUserInputCache).
-                val targetTicker = if (checked) "sTCY" else "TCY"
-                var tokenSelected = false
-                val addressesFlow =
-                    if (checked) {
-                        accountsRepository.loadAddresses(vaultId)
-                    } else {
-                        accountsRepository.loadDeFiAddresses(vaultId, false)
+        // Route the data-source switch through AccountsLoader so accountsState has a single
+        // writer — the previous in-VM collect raced against the already-running loader,
+        // and for UNSTAKE_TCY the two collectors pulled from different APIs. The callback
+        // runs per emission so we can pin the token selection on the first emission
+        // containing the target ticker (the tokenSelected flag prevents a later hydration
+        // emission from re-calling selectToken, which would wipe the user's typed amount).
+        val targetTicker = if (checked) "sTCY" else "TCY"
+        var tokenSelected = false
+        accountsLoader.loadForAutoCompoundSwitch(vaultId = vaultId, useStableCompound = checked) {
+            loadedAccounts ->
+            if (!tokenSelected) {
+                loadedAccounts
+                    .find {
+                        it.token.ticker.equals(targetTicker, true) &&
+                            it.token.chain == Chain.ThorChain
                     }
-                addressesFlow
-                    .map { addrs -> addrs.flatMap { it.accounts } }
-                    .collect { loadedAccounts ->
-                        accountsState.value = AccountsLoadState.Loaded(loadedAccounts)
-                        if (!tokenSelected) {
-                            loadedAccounts
-                                .find {
-                                    it.token.ticker.equals(targetTicker, true) &&
-                                        it.token.chain == Chain.ThorChain
-                                }
-                                ?.let {
-                                    tokenSelected = true
-                                    // loadAddresses is a channelFlow ending in awaitClose() so
-                                    // this collect never returns and `finally` only runs if the
-                                    // job is cancelled — unblock collectSelectedAccount as soon
-                                    // as the target token is selected instead of waiting for the
-                                    // flow to terminate.
-                                    isSwitchingAccounts.value = false
-                                    selectToken(it.token)
-                                }
-                        }
+                    ?.let {
+                        tokenSelected = true
+                        isSwitchingAccounts.value = false
+                        selectToken(it.token)
                     }
-            } finally {
-                isSwitchingAccounts.value = false
             }
         }
     }

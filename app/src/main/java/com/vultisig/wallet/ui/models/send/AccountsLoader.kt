@@ -80,6 +80,39 @@ internal class AccountsLoader(
             }
     }
 
+    // Routes the autocompound switch through this single component so accountsState only
+    // ever has one writer. The previous in-VM `collect` raced against this loader — and
+    // for UNSTAKE_TCY the two sources were different APIs (loadAddresses vs
+    // loadDeFiAddresses), so interleaved emissions would overwrite each other with data
+    // sourced from different endpoints. Token selection still happens in the VM via
+    // onAccountsLoaded, but the publish to accountsState happens here under the same
+    // cancel + generation discipline as `load()`.
+    fun loadForAutoCompoundSwitch(
+        vaultId: VaultId,
+        useStableCompound: Boolean,
+        onAccountsLoaded: suspend (List<Account>) -> Unit,
+    ) {
+        loadAccountsJob?.cancel()
+        val generation = ++currentGeneration
+        accountsState.value = AccountsLoadState.Uninitialized
+        loadAccountsJob =
+            scope.safeLaunch(onError = ::onLoadError) {
+                val addressesFlow =
+                    if (useStableCompound) {
+                        accountsRepository.loadAddresses(vaultId)
+                    } else {
+                        accountsRepository.loadDeFiAddresses(vaultId, false)
+                    }
+                addressesFlow
+                    .map { addrs -> addrs.flatMap { it.accounts } }
+                    .collect { accounts ->
+                        if (generation != currentGeneration) return@collect
+                        accountsState.value = AccountsLoadState.Loaded(accounts)
+                        onAccountsLoaded(accounts)
+                    }
+            }
+    }
+
     private fun publishLoaded(accounts: List<Account>, generation: Long) {
         if (generation != currentGeneration) return
         accountsState.value = AccountsLoadState.Loaded(accounts)
