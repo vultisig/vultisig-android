@@ -1332,6 +1332,7 @@
     <string name="transaction_history_elapsed_days">%1$d天前</string>
     <string name="transaction_history_elapsed_hours">%1$d小时前</string>
     <string name="transaction_history_elapsed_minutes">%1$d分钟前</string>
+    <string name="transaction_history_elapsed_minutes_and_seconds">%1$d分%2$d秒前</string>
     <string name="transaction_history_detail_status">状态</string>
     <string name="transaction_history_detail_from">发送方</string>
     <string name="transaction_history_detail_to">接收方</string>

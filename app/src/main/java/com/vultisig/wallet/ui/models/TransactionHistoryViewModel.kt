@@ -31,13 +31,11 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -62,7 +60,7 @@ data class TransactionHistoryGroupUiModel(
 sealed interface TransactionStatusUiModel {
     data object Broadcasted : TransactionStatusUiModel
 
-    data class Pending(val elapsedTime: UiText) : TransactionStatusUiModel
+    data object Pending : TransactionStatusUiModel
 
     data object Confirmed : TransactionStatusUiModel
 
@@ -157,15 +155,12 @@ constructor(
     private val vaultId: String = route.vaultId
     private val chainId: String? = route.chainId?.takeIf { it.isNotBlank() }
 
-    private val currentTime = MutableStateFlow(System.currentTimeMillis())
-
     val assetSearchTextFieldState = TextFieldState()
 
     private val _uiState = MutableStateFlow(TransactionHistoryUiState(chainName = chainId))
     val uiState: StateFlow<TransactionHistoryUiState> = _uiState.asStateFlow()
 
     init {
-        startTimeTicker()
         observeTransactions()
         observeAssetSearchItems()
         refreshOnEnter()
@@ -248,28 +243,6 @@ constructor(
         viewModelScope.safeLaunch { refreshPendingTransactions(vaultId, chainId) }
     }
 
-    private fun startTimeTicker() {
-        // Only tick while at least one Pending tx is visible; otherwise idle so we don't burn
-        // cycles when the list is fully confirmed. iOS does the same.
-        viewModelScope.launch {
-            _uiState
-                .map { state ->
-                    state.groups.any { group ->
-                        group.transactions.any { it.status is TransactionStatusUiModel.Pending }
-                    }
-                }
-                .distinctUntilChanged()
-                .collectLatest { hasPending ->
-                    if (hasPending) {
-                        while (true) {
-                            delay(1.seconds)
-                            currentTime.value = System.currentTimeMillis()
-                        }
-                    }
-                }
-        }
-    }
-
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeTransactions() {
         viewModelScope.launch {
@@ -283,8 +256,9 @@ constructor(
                         chain = chainId,
                     )
                 }
-                .combine(currentTime) { entities, now ->
-                    entities.mapNotNull { it.toUiModel(now) }.groupByDate(now)
+                .map { entities ->
+                    val now = System.currentTimeMillis()
+                    entities.mapNotNull { it.toUiModel() }.groupByDate(now)
                 }
                 .combine(_uiState.map { it.selectedAssetIds }.distinctUntilChanged()) { groups, ids
                     ->
@@ -373,12 +347,11 @@ constructor(
             TransactionHistoryTab.SEND -> TransactionHistoryType.SEND
         }
 
-    private fun TransactionHistoryEntity.toUiModel(now: Long): TransactionHistoryItemUiModel? {
+    private fun TransactionHistoryEntity.toUiModel(): TransactionHistoryItemUiModel? {
         val statusUiModel =
             when (status) {
                 TransactionStatus.BROADCASTED -> TransactionStatusUiModel.Broadcasted
-                TransactionStatus.PENDING ->
-                    TransactionStatusUiModel.Pending(elapsedTime = formatElapsed(now - timestamp))
+                TransactionStatus.PENDING -> TransactionStatusUiModel.Pending
 
                 TransactionStatus.CONFIRMED -> TransactionStatusUiModel.Confirmed
                 TransactionStatus.FAILED ->
@@ -386,8 +359,7 @@ constructor(
                 TransactionStatus.REFUNDED ->
                     TransactionStatusUiModel.Refunded(UiText.DynamicString(failureReason.orEmpty()))
                 // NotFound is transient — the indexer has not seen the tx yet. Render as Pending.
-                TransactionStatus.NotFound ->
-                    TransactionStatusUiModel.Pending(elapsedTime = formatElapsed(now - timestamp))
+                TransactionStatus.NotFound -> TransactionStatusUiModel.Pending
             }
 
         return when (val p = payload) {
@@ -464,24 +436,5 @@ constructor(
                     dateKey = date.toString(),
                 )
             }
-    }
-
-    private fun formatElapsed(elapsedMs: Long): UiText {
-        // Coerce against wall-clock skew (NTP correction, DST, manual date change).
-        val seconds = elapsedMs.coerceAtLeast(0L) / 1_000
-        val minutes = seconds / 60
-        val hours = minutes / 60
-        val days = hours / 24
-        return when {
-            days > 0 ->
-                UiText.FormattedText(R.string.transaction_history_elapsed_days, listOf(days))
-            hours > 0 ->
-                UiText.FormattedText(R.string.transaction_history_elapsed_hours, listOf(hours))
-            minutes > 0 ->
-                UiText.FormattedText(R.string.transaction_history_elapsed_minutes, listOf(minutes))
-            seconds > 0 ->
-                UiText.FormattedText(R.string.transaction_history_elapsed_seconds, listOf(seconds))
-            else -> UiText.StringResource(R.string.transaction_history_elapsed_just_now)
-        }
     }
 }

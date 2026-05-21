@@ -40,7 +40,6 @@ import com.vultisig.wallet.ui.screens.transaction.components.TransactionStatusWi
 import com.vultisig.wallet.ui.screens.transaction.components.TypeBadge
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.UiText
 
 @Composable
 internal fun SwapTransactionCard(
@@ -67,7 +66,7 @@ internal fun SwapTransactionCard(
                         iconRes = R.drawable.swap,
                         label = stringResource(R.string.transaction_type_button_swap),
                     )
-                    TransactionStatusWidget(status = item.status)
+                    TransactionStatusWidget(status = item.status, timestamp = item.timestamp)
                 }
 
                 if (isInProgress) {
@@ -239,7 +238,8 @@ private fun PreviewSwapCardPending() {
         SwapTransactionCard(
             item =
                 previewSwapItem.copy(
-                    status = Pending(elapsedTime = UiText.DynamicString("5s ago"))
+                    status = Pending,
+                    timestamp = System.currentTimeMillis() - 5_000L,
                 ),
             modifier = Modifier.fillMaxWidth().padding(16.dp),
         )

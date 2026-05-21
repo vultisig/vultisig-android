@@ -1031,6 +1031,7 @@
     <string name="transaction_history_elapsed_days">%1$d일 전</string>
     <string name="transaction_history_elapsed_hours">%1$d시간 전</string>
     <string name="transaction_history_elapsed_minutes">%1$d분 전</string>
+    <string name="transaction_history_elapsed_minutes_and_seconds">%1$d분 %2$d초 전</string>
     <string name="transaction_history_detail_status">상태</string>
     <string name="transaction_history_detail_from">보낸 주소</string>
     <string name="transaction_history_detail_to">받는 주소</string>

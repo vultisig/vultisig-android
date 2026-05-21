@@ -1079,6 +1079,7 @@
     <string name="transaction_history_elapsed_days">%1$dd ago</string>
     <string name="transaction_history_elapsed_hours">%1$dh ago</string>
     <string name="transaction_history_elapsed_minutes">%1$dm ago</string>
+    <string name="transaction_history_elapsed_minutes_and_seconds">%1$dm %2$ds ago</string>
     <string name="transaction_history_detail_status">Status</string>
     <string name="transaction_history_detail_from">From</string>
     <string name="transaction_history_detail_to">To</string>
