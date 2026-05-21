@@ -576,11 +576,6 @@
     <string name="faq_settings_a9">Die Plattform basiert auf der MPC-Technologie, die Seed-Phrasen überflüssig macht und mehrere Blockchains unterstützt. Dadurch ist Vultisig flexibel und Blockchain-unabhängig.</string>
     <string name="vault_settings_advanced_title">Fortschrittlich</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit Aggregator</string>
-    <string name="swapkit_error_no_routes">Keine SwapKit-Routen verfügbar</string>
-    <string name="swapkit_error_unsupported_tx_type">SwapKit hat einen nicht unterstützten Transaktionstyp zurückgegeben</string>
-    <string name="swapkit_error_network">SwapKit-Netzwerkfehler</string>
-    <string name="swapkit_error_decoding">SwapKit-Antwort konnte nicht dekodiert werden</string>
-    <string name="swapkit_error_quote_deviation">SwapKit-Angebot hat sich geändert — bitte bestätigen, um fortzufahren</string>
     <string name="sign_message_continue">Weiter</string>
     <string name="hint_signing_method">Signaturmethode</string>
     <string name="verify_sign_message_signing_method" >Signaturmethode</string>

@@ -761,11 +761,6 @@
     <string name="faq_settings_a9">MPC 기술을 기반으로 하여 시드 구문이 필요 없고 여러 블록체인을 지원하여 Vultisig는 유연하고 체인에 구애받지 않습니다.</string>
     <string name="vault_settings_advanced_title">고급</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit 어그리게이터</string>
-    <string name="swapkit_error_no_routes">사용 가능한 SwapKit 경로가 없습니다</string>
-    <string name="swapkit_error_unsupported_tx_type">SwapKit가 지원되지 않는 트랜잭션 유형을 반환했습니다</string>
-    <string name="swapkit_error_network">SwapKit 네트워크 오류</string>
-    <string name="swapkit_error_decoding">SwapKit 응답을 디코딩할 수 없습니다</string>
-    <string name="swapkit_error_quote_deviation">SwapKit 견적이 변경되었습니다 — 계속하려면 확인하세요</string>
     <string name="sign_message_continue">계속</string>
     <string name="address_book_empty_description">모든 중요한 주소를 한곳에서 관리하세요.</string>
     <string name="address_book_empty_title">주소록이 비어 있습니다</string>

@@ -826,11 +826,6 @@
     <!-- Vault Settings Advanced -->
     <string name="vault_settings_advanced_title">高级</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit 聚合器</string>
-    <string name="swapkit_error_no_routes">没有可用的 SwapKit 路线</string>
-    <string name="swapkit_error_unsupported_tx_type">SwapKit 返回了不支持的交易类型</string>
-    <string name="swapkit_error_network">SwapKit 网络错误</string>
-    <string name="swapkit_error_decoding">无法解码 SwapKit 响应</string>
-    <string name="swapkit_error_quote_deviation">SwapKit 报价已变更 — 请确认以继续</string>
 
     <!-- Sign Message -->
     <string name="sign_message_continue">继续</string>
