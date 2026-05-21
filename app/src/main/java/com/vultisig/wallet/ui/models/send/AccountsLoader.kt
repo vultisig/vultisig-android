@@ -27,18 +27,29 @@ internal class AccountsLoader(
 ) {
     private var loadAccountsJob: Job? = null
 
+    // Job.cancel() is cooperative, so a previous collector can still execute one more
+    // publish after `load()` resets the state to `Uninitialized` — stamping each load with
+    // a generation and gating publishes on the current generation drops those stale
+    // emissions instead of letting them flash superseded data into accountsState.
+    private var currentGeneration: Long = 0L
+
     fun load(vaultId: VaultId) {
         loadAccountsJob?.cancel()
+        val generation = ++currentGeneration
         // Reset before launching the new load so a vault/action switch doesn't leave the
         // previous session's Loaded(...) visible while the new collector spins up.
         accountsState.value = AccountsLoadState.Uninitialized
         loadAccountsJob =
             when (defiTypeProvider()) {
                 DeFiNavActions.WITHDRAW_RUJI ->
-                    scope.safeLaunch(onError = ::onLoadError) { loadRewardsAccount(vaultId) }
+                    scope.safeLaunch(onError = ::onLoadError) {
+                        loadRewardsAccount(vaultId, generation)
+                    }
 
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE ->
-                    scope.safeLaunch(onError = ::onLoadError) { loadCircleUSDCAccount(vaultId) }
+                    scope.safeLaunch(onError = ::onLoadError) {
+                        loadCircleUSDCAccount(vaultId, generation)
+                    }
 
                 null,
                 DeFiNavActions.BOND,
@@ -56,7 +67,7 @@ internal class AccountsLoader(
                         accountsRepository
                             .loadAddresses(vaultId)
                             .map { addrs -> addrs.flatMap { it.accounts } }
-                            .collect { publishLoaded(it) }
+                            .collect { publishLoaded(it, generation) }
                     }
 
                 else ->
@@ -64,12 +75,13 @@ internal class AccountsLoader(
                         accountsRepository
                             .loadDeFiAddresses(vaultId, false)
                             .map { addrs -> addrs.flatMap { it.accounts } }
-                            .collect { publishLoaded(it) }
+                            .collect { publishLoaded(it, generation) }
                     }
             }
     }
 
-    private fun publishLoaded(accounts: List<Account>) {
+    private fun publishLoaded(accounts: List<Account>, generation: Long) {
+        if (generation != currentGeneration) return
         accountsState.value = AccountsLoadState.Loaded(accounts)
     }
 
@@ -81,21 +93,26 @@ internal class AccountsLoader(
     // the form renders the cached snapshot immediately and then re-renders once balances
     // have been refreshed from the network. Using isRefresh = true here would skip the
     // cached pre-emission and block the form on slow networks.
-    private suspend fun loadCircleUSDCAccount(vaultId: VaultId) {
+    private suspend fun loadCircleUSDCAccount(vaultId: VaultId, generation: Long) {
         accountsRepository
             .loadAddresses(vaultId, isRefresh = false)
             .map { addrs -> addrs.flatMap { it.accounts } }
-            .collect { accountsLoaded -> publishCircleUsdc(vaultId, accountsLoaded) }
+            .collect { accountsLoaded -> publishCircleUsdc(vaultId, accountsLoaded, generation) }
     }
 
-    private suspend fun publishCircleUsdc(vaultId: VaultId, accountsLoaded: List<Account>) {
+    private suspend fun publishCircleUsdc(
+        vaultId: VaultId,
+        accountsLoaded: List<Account>,
+        generation: Long,
+    ) {
+        if (generation != currentGeneration) return
         val ethereumAccount =
             accountsLoaded.find { it.token.id.equals(Coins.Ethereum.ETH.id, true) }
         if (ethereumAccount == null) {
             // Without a vault-bound ETH account the address copied onto USDC below would be
             // empty, which silently breaks any later submit through WithdrawUsdcCircleStrategy.
             Timber.e("Ethereum account not available for Circle USDC withdrawal")
-            publishLoaded(emptyList())
+            publishLoaded(emptyList(), generation)
             return
         }
 
@@ -116,7 +133,7 @@ internal class AccountsLoader(
                     fiatValue = null,
                     price = null,
                 )
-            publishLoaded(listOf(ethereumAccount, usdcCircleAccount))
+            publishLoaded(listOf(ethereumAccount, usdcCircleAccount), generation)
         } else {
             // Pre-setup state (MSCA not yet provisioned), not an error — use warn so this
             // doesn't flood error logs on the cached emission before the MSCA resolves.
@@ -130,32 +147,38 @@ internal class AccountsLoader(
                         fiatValue = null,
                         price = null,
                     ),
-                )
+                ),
+                generation,
             )
         }
     }
 
     // Collect both cached and hydrated emissions so the form renders cached RUNE/RUJI
     // balances immediately, then refreshes when network balances arrive.
-    private suspend fun loadRewardsAccount(vaultId: VaultId) {
+    private suspend fun loadRewardsAccount(vaultId: VaultId, generation: Long) {
         accountsRepository
             .loadAddresses(vaultId, isRefresh = false)
             .map { addrs -> addrs.flatMap { it.accounts } }
-            .collect { accountsLoaded -> publishRewards(vaultId, accountsLoaded) }
+            .collect { accountsLoaded -> publishRewards(vaultId, accountsLoaded, generation) }
     }
 
-    private suspend fun publishRewards(vaultId: VaultId, accountsLoaded: List<Account>) {
+    private suspend fun publishRewards(
+        vaultId: VaultId,
+        accountsLoaded: List<Account>,
+        generation: Long,
+    ) {
+        if (generation != currentGeneration) return
         val thorchainAccount =
             accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
                 ?: run {
-                    publishLoaded(emptyList())
+                    publishLoaded(emptyList(), generation)
                     return
                 }
 
         val rujiAccount =
             accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
                 ?: run {
-                    publishLoaded(emptyList())
+                    publishLoaded(emptyList(), generation)
                     return
                 }
 
@@ -174,9 +197,9 @@ internal class AccountsLoader(
                     fiatValue = null,
                     price = null,
                 )
-            publishLoaded(listOf(rewardsAccount, thorchainAccount, rujiAccount))
+            publishLoaded(listOf(rewardsAccount, thorchainAccount, rujiAccount), generation)
         } else {
-            publishLoaded(emptyList())
+            publishLoaded(emptyList(), generation)
         }
     }
 }
