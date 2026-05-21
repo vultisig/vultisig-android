@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.getDustThreshold
 import java.io.ByteArrayOutputStream
+import java.math.BigInteger
 import java.security.MessageDigest
 import timber.log.Timber
 import tss.KeysignResponse
@@ -380,12 +381,22 @@ class UtxoHelper(
      * Bitcoin-only: the witness-program shapes parsed here (`0x00 0x14 <20-byte hash>`) are
      * meaningful only for the Bitcoin chain. UTXO siblings (BCH, Doge, LTC, Dash, Zcash) use legacy
      * P2PKH and must not route through this path.
+     *
+     * @param expectedToAddress destination shown on the Verify screen (`payload.toAddress`); pinned
+     *   to a non-change output via its scriptPubKey so the displayed address can't drift from what
+     *   the sighashes commit to.
+     * @param expectedToAmount destination amount shown on the Verify screen (`payload.toAmount`);
+     *   pinned to the sum of non-change outputs.
      */
-    fun getPreSignedImageHashFromSignBitcoin(signBitcoin: SignBitcoin): List<String> {
+    fun getPreSignedImageHashFromSignBitcoin(
+        signBitcoin: SignBitcoin,
+        expectedToAddress: String,
+        expectedToAmount: BigInteger,
+    ): List<String> {
         require(coinType == CoinType.BITCOIN) {
             "SignBitcoin PSBT co-signing is only supported on Bitcoin, got $coinType"
         }
-        verifyOwnership(signBitcoin)
+        verifyOwnership(signBitcoin, expectedToAddress, expectedToAmount)
         return computeOurSighashes(signBitcoin).map { Numeric.toHexStringNoPrefix(it) }.sorted()
     }
 
@@ -396,14 +407,31 @@ class UtxoHelper(
      * HASH160(pubkey). The wallet only ever signs for its own derivation path; a lying dApp that
      * toggles `is_ours` on an unrelated input gets a hard failure instead of a usable signature.
      *
-     * Outputs: any output flagged `is_change=true` must decode to this vault's own address. Without
-     * this binding, a malicious initiator can flag an attacker output `is_change=true` to skew the
-     * change/fee totals fed into [getBitcoinTransactionPlanFromSignBitcoin] (mirroring the Windows
-     * companion which derives `isChange` from `outputAddress === senderAddress`).
+     * Outputs: mirrors the Windows companion which derives `isChange` from `outputAddress ===
+     * senderAddress`. The proto `is_change` flag must agree with that derivation (catches both an
+     * attacker output flagged as change and a payment back to the vault flagged as a payment), and
+     * an output flagged change must also decode to this vault's own address.
+     *
+     * Destination: the non-change outputs in the structured PSBT are tied to the Verify screen's
+     * displayed [expectedToAddress]/[expectedToAmount] (which come from the unverified legacy
+     * `KeysignPayload`), so a dApp cannot show the user one destination while the sighashes commit
+     * to another.
      */
-    private fun verifyOwnership(signBitcoin: SignBitcoin) {
+    private fun verifyOwnership(
+        signBitcoin: SignBitcoin,
+        expectedToAddress: String,
+        expectedToAmount: BigInteger,
+    ) {
+        val inputs = signBitcoin.inputs.filterNotNull()
+        // Reject payloads that strip the `is_ours` flag from every input. The loop below would
+        // otherwise no-op, computeOurSighashes would return an empty list, and the keysign
+        // pipeline would hand the MPC engine zero hashes — a confusing downstream failure
+        // mode instead of a hard reject here. Matches the iOS `noSignableInputs` behavior.
+        require(inputs.any { it.isOurs }) {
+            "PSBT payload contains no inputs marked is_ours=true; nothing to co-sign"
+        }
         val expectedPubKeyHash = deriveExpectedPubKeyHash()
-        signBitcoin.inputs.filterNotNull().forEach { input ->
+        inputs.forEach { input ->
             if (!input.isOurs) return@forEach
             val actual = extractWitnessPubKeyHash(input)
             require(actual.contentEquals(expectedPubKeyHash)) {
@@ -412,12 +440,79 @@ class UtxoHelper(
             }
         }
         val vaultAddress = deriveVaultAddress()
-        signBitcoin.outputs.filterNotNull().forEach { output ->
-            if (!output.isChange) return@forEach
-            require(output.address == vaultAddress) {
-                "PSBT output marked is_change=true does not belong to this vault " +
-                    "(address='${output.address}', expected='$vaultAddress')"
+        val expectedChangeScript = BitcoinScript.lockScriptForAddress(vaultAddress, coinType).data()
+        val outputs = signBitcoin.outputs.filterNotNull()
+        outputs.forEach { output ->
+            val derivedIsChange = output.address.isNotEmpty() && output.address == vaultAddress
+            require(output.isChange == derivedIsChange) {
+                "PSBT output is_change=${output.isChange} contradicts the Windows-companion " +
+                    "derivation (address=='${output.address}' => change=$derivedIsChange) for " +
+                    "vault '$vaultAddress'"
             }
+            if (output.isChange) {
+                // The sighash commits to scriptPubKey, not to the dApp-supplied address string —
+                // pin the bytes directly so a "address=vault, scriptPubKey=attacker" payload
+                // can't sneak past the address-only equality check above.
+                require(
+                    decodeScriptHex(output.scriptPubKey, "change output")
+                        .contentEquals(expectedChangeScript)
+                ) {
+                    "PSBT output marked is_change=true does not lock to this vault " +
+                        "(scriptPubKey='${output.scriptPubKey}' does not match expected lock script)"
+                }
+            }
+        }
+        verifyDestinationBinding(outputs, expectedToAddress, expectedToAmount)
+    }
+
+    /**
+     * Asserts that the structural PSBT outputs reproduce the Verify screen's displayed destination.
+     * The non-change outputs must sum to [expectedToAmount], and exactly one of them must carry a
+     * scriptPubKey equal to the lock script of [expectedToAddress] — comparing the actual script
+     * bytes rather than the dApp-supplied `address` string, since the scriptPubKey is what the
+     * sighash commits to.
+     */
+    private fun verifyDestinationBinding(
+        outputs: List<BitcoinOutput>,
+        expectedToAddress: String,
+        expectedToAmount: BigInteger,
+    ) {
+        require(expectedToAddress.isNotEmpty()) {
+            "PSBT co-signing requires a non-empty payload.toAddress to bind against"
+        }
+        val nonChange = outputs.filterNot { it.isChange }
+        val sumNonChange =
+            nonChange.fold(BigInteger.ZERO) { acc, o -> acc + BigInteger.valueOf(o.amount) }
+        require(sumNonChange == expectedToAmount) {
+            "PSBT non-change outputs sum to $sumNonChange satoshis but payload.toAmount is " +
+                "$expectedToAmount; Verify screen would diverge from the signed outputs"
+        }
+        val expectedScript = BitcoinScript.lockScriptForAddress(expectedToAddress, coinType).data()
+        // `lockScriptForAddress` returns an empty `Data` for addresses Trust Wallet Core can't
+        // decode for this coin (wrong HRP, witness-v2 bech32, mis-sized v1 program, …). Without
+        // this guard, an empty `expectedScript` would silently `contentEquals` any output that
+        // happens to carry an empty `scriptPubKey`, matching everything.
+        require(expectedScript.isNotEmpty()) {
+            "PSBT co-signing: payload.toAddress '$expectedToAddress' is not a valid " +
+                "$coinType address — refusing to bind against an empty lock script"
+        }
+        val scriptMatches =
+            nonChange.map { out ->
+                out to
+                    decodeScriptHex(out.scriptPubKey, "non-change output")
+                        .contentEquals(expectedScript)
+            }
+        // A non-change output with a positive amount that does NOT lock to the displayed
+        // destination is a second, hidden recipient — the Verify screen would show one payee
+        // while the signed tx funds two. The sum check above doesn't catch this when the
+        // attacker's output offsets a reduced legitimate output (e.g. 10k+50k vs 60k expected).
+        require(scriptMatches.none { (out, matches) -> out.amount > 0 && !matches }) {
+            "PSBT contains an extra value-bearing non-change output not shown on the Verify screen"
+        }
+        val matches = scriptMatches.count { (_, matches) -> matches }
+        require(matches == 1) {
+            "PSBT must contain exactly one non-change output paying to '$expectedToAddress' " +
+                "but found $matches"
         }
     }
 
@@ -461,6 +556,21 @@ class UtxoHelper(
             sha256d(preimage)
         }
     }
+
+    /**
+     * Strict hex decoder for dApp-supplied scriptPubKey fields. `Numeric.hexStringToByteArray`
+     * silently casts `Character.digit(c, 16) == -1` (any non-hex char) to a byte, so a malformed
+     * scriptPubKey would yield a junk byte array that flows into `contentEquals` checks — a
+     * security primitive should not silently accept invalid input. Reject up front.
+     */
+    private fun decodeScriptHex(hex: String, context: String): ByteArray {
+        require(hex.length % 2 == 0 && hex.all { it.isHexChar() }) {
+            "PSBT $context has malformed hex scriptPubKey '$hex'"
+        }
+        return Numeric.hexStringToByteArray(hex)
+    }
+
+    private fun Char.isHexChar(): Boolean = this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
 
     private fun deriveVaultPublicKey(): PublicKey {
         val derivedPublicKey =
