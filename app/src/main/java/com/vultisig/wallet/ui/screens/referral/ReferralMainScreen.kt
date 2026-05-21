@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -80,14 +81,14 @@ private fun ReferralScreen(
                     .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Image(
                     painter = painterResource(id = R.drawable.referral_hero),
                     contentDescription = null,
                     modifier = Modifier.fillMaxWidth(),
+                    contentScale = ContentScale.FillWidth,
                 )
             }
-
 
             CreateReferralCard(
                 titleRes = createLabel,
