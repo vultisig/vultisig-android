@@ -53,9 +53,9 @@ import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
 import com.vultisig.wallet.ui.screens.v2.home.components.CopiableAddress
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.KeyboardAware
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -85,6 +85,7 @@ internal fun ChainTokensScreen(
         onDeposit = viewModel::deposit,
         onBuy = viewModel::buy,
         onReceive = viewModel::openAddressQr,
+        onHistory = viewModel::history,
         onSelectTokens = viewModel::selectTokens,
         onTokenClick = viewModel::openToken,
         onHideSearchBar = viewModel::hideSearchBar,
@@ -106,6 +107,7 @@ internal fun ChainTokensScreen(
     onBuy: () -> Unit,
     onDeposit: () -> Unit,
     onReceive: () -> Unit,
+    onHistory: () -> Unit,
     onSelectTokens: () -> Unit,
     onTokenClick: (ChainTokenUiModel) -> Unit,
     onShowReviewPopUp: () -> Unit,
@@ -142,14 +144,26 @@ internal fun ChainTokensScreen(
                         type = VsCircleButtonType.Secondary,
                         designType = DesignType.Shined,
                     )
-                    if (uiModel.explorerURL.isNotEmpty()) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         VsCircleButton(
-                            onClick = { uriHandler.openUri(uiModel.explorerURL) },
+                            onClick = onHistory,
                             size = VsCircleButtonSize.Small,
-                            icon = R.drawable.explor,
+                            icon = R.drawable.calendar_clock,
                             type = VsCircleButtonType.Secondary,
                             designType = DesignType.Shined,
                         )
+                        if (uiModel.explorerURL.isNotEmpty()) {
+                            VsCircleButton(
+                                onClick = { uriHandler.openUri(uiModel.explorerURL) },
+                                size = VsCircleButtonSize.Small,
+                                icon = R.drawable.explor,
+                                type = VsCircleButtonType.Secondary,
+                                designType = DesignType.Shined,
+                            )
+                        }
                     }
                 }
 
@@ -193,45 +207,43 @@ internal fun ChainTokensScreen(
                 UiSpacer(size = 32.dp)
 
                 Row(
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            space = 12.dp,
-                            alignment = Alignment.CenterHorizontally,
-                        ),
                     modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement =
+                        Arrangement.spacedBy(12.dp, alignment = Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     if (uiModel.canSwap) {
-                        TransactionTypeButton(
-                            txType = TransactionType.SWAP,
+                        AssetActionButton(
+                            action = AssetAction.SWAP,
                             isSelected = true,
                             onClick = onSwap,
                         )
                     }
 
-                    TransactionTypeButton(
-                        txType = TransactionType.SEND,
+                    AssetActionButton(
+                        action = AssetAction.SEND,
                         isSelected = false,
                         onClick = onSend,
                     )
 
                     if (uiModel.canBuy) {
-                        TransactionTypeButton(
-                            txType = TransactionType.BUY,
+                        AssetActionButton(
+                            action = AssetAction.BUY,
                             isSelected = false,
                             onClick = onBuy,
                         )
                     }
 
                     if (uiModel.canDeposit) {
-                        TransactionTypeButton(
-                            txType = TransactionType.FUNCTIONS,
+                        AssetActionButton(
+                            action = AssetAction.FUNCTIONS,
                             isSelected = false,
                             onClick = onDeposit,
                         )
                     }
 
-                    TransactionTypeButton(
-                        txType = TransactionType.RECEIVE,
+                    AssetActionButton(
+                        action = AssetAction.RECEIVE,
                         isSelected = false,
                         onClick = onReceive,
                     )
@@ -353,6 +365,7 @@ private fun PreviewChainCoinScreen1() {
         onBuy = {},
         onDeposit = {},
         onReceive = {},
+        onHistory = {},
         onSelectTokens = {},
         onTokenClick = {},
         onShowReviewPopUp = {},

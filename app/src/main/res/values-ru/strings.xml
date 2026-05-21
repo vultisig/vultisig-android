@@ -983,6 +983,7 @@
     <string name="key_import_spotlight_get_started">Начать</string>
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">История</string>
+    <string name="transaction_history_title_chain">История · %1$s</string>
     <string name="transaction_history_tab_overview">Обзор</string>
     <string name="transaction_history_tab_send">Отправить</string>
     <string name="transaction_history_tab_swap">Свопы</string>

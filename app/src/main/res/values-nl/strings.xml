@@ -973,6 +973,7 @@
     <string name="key_import_spotlight_get_started">Aan de slag</string>
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">Geschiedenis</string>
+    <string name="transaction_history_title_chain">%1$s-geschiedenis</string>
     <string name="transaction_history_tab_overview">Overzicht</string>
     <string name="transaction_history_tab_send">Sturen</string>
     <string name="transaction_history_tab_swap">Swaps</string>

@@ -177,6 +177,7 @@ private fun ChainDashboardScreenPreview() {
                 onBuy = {},
                 onDeposit = {},
                 onReceive = {},
+                onHistory = {},
                 onSelectTokens = {},
                 onTokenClick = {},
                 onShowReviewPopUp = {},

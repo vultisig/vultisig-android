@@ -23,28 +23,45 @@ abstract class TransactionHistoryDao {
         """
         SELECT * FROM transaction_history
         WHERE vaultId = :vaultId
+          AND (:chain IS NULL OR chain = :chain)
         ORDER BY timestamp DESC
     """
     )
-    abstract fun observeAllByVault(vaultId: String): Flow<List<TransactionHistoryEntity>>
+    abstract fun observeAllByVault(
+        vaultId: String,
+        chain: String?,
+    ): Flow<List<TransactionHistoryEntity>>
 
     @Query(
         """
         SELECT * FROM transaction_history
         WHERE vaultId = :vaultId AND type = 'SEND'
+          AND (:chain IS NULL OR chain = :chain)
         ORDER BY timestamp DESC
     """
     )
-    abstract fun observeSendByVault(vaultId: String): Flow<List<TransactionHistoryEntity>>
+    abstract fun observeSendByVault(
+        vaultId: String,
+        chain: String?,
+    ): Flow<List<TransactionHistoryEntity>>
 
+    /**
+     * Filters by the source chain only — cross-chain swaps persist the source on the `chain` column
+     * (see `KeysignViewModel` writing `chain = payload.coin.chain.raw`), so a BTC→ETH swap will
+     * surface when [chain] is `"Bitcoin"` but not when it is `"Ethereum"`.
+     */
     @Query(
         """
         SELECT * FROM transaction_history
         WHERE vaultId = :vaultId AND type = 'SWAP'
+          AND (:chain IS NULL OR chain = :chain)
         ORDER BY timestamp DESC
     """
     )
-    abstract fun observeSwapByVault(vaultId: String): Flow<List<TransactionHistoryEntity>>
+    abstract fun observeSwapByVault(
+        vaultId: String,
+        chain: String?,
+    ): Flow<List<TransactionHistoryEntity>>
 
     /** NotFound is transient (indexer lag) and must remain pollable. */
     @Query(

@@ -1007,6 +1007,7 @@
     <string name="key_import_spotlight_get_started">시작하기</string>
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">거래 내역</string>
+    <string name="transaction_history_title_chain">%1$s 거래 내역</string>
     <string name="transaction_history_tab_overview">개요</string>
     <string name="transaction_history_tab_send">보내기</string>
     <string name="transaction_history_tab_swap">스왑</string>

@@ -130,11 +130,12 @@ private fun TransactionHistoryScreen(
         )
     }
 
-    V2Scaffold(
-        title = stringResource(R.string.transaction_history_title),
-        onBackClick = onBack,
-        applyDefaultPaddings = false,
-    ) {
+    val title =
+        state.chainName
+            ?.takeIf { it.isNotBlank() }
+            ?.let { stringResource(R.string.transaction_history_title_chain, it) }
+            ?: stringResource(R.string.transaction_history_title)
+    V2Scaffold(title = title, onBackClick = onBack, applyDefaultPaddings = false) {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
@@ -619,6 +620,49 @@ private fun PreviewEmptyState() {
         state =
             TransactionHistoryUiState(
                 selectedTab = TransactionHistoryTab.SEND,
+                groups = emptyList(),
+                isLoading = false,
+            ),
+        onBack = {},
+        onTabSelected = {},
+        onRefresh = {},
+        onItemClick = {},
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewChainScoped() {
+    TransactionHistoryScreen(
+        state =
+            TransactionHistoryUiState(
+                selectedTab = TransactionHistoryTab.OVERVIEW,
+                chainName = "Bitcoin",
+                groups =
+                    listOf(
+                        TransactionHistoryGroupUiModel(
+                            datePrefix = UiText.DynamicString("Today"),
+                            dateSuffix = UiText.DynamicString("Sept 2, 2025"),
+                            transactions = listOf(previewSendInProgress),
+                            dateKey = "2025-09-02",
+                        )
+                    ),
+            ),
+        onBack = {},
+        onTabSelected = {},
+        onRefresh = {},
+        onItemClick = {},
+    )
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewChainScopedEmpty() {
+    TransactionHistoryScreen(
+        state =
+            TransactionHistoryUiState(
+                selectedTab = TransactionHistoryTab.OVERVIEW,
+                chainName = "Bitcoin",
                 groups = emptyList(),
                 isLoading = false,
             ),
