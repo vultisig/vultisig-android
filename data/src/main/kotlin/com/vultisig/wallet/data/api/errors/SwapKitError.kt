@@ -16,8 +16,16 @@ sealed class SwapKitError(message: String, cause: Throwable? = null) : Exception
      */
     class UnsupportedTxType(txType: String) : SwapKitError("Unsupported SwapKit tx type: $txType")
 
-    /** Transport-level failure talking to the Vultisig SwapKit proxy. */
+    /** Transport-level failure (no HTTP response received: timeout, DNS, SSL, connection reset). */
     class Network(message: String, cause: Throwable? = null) : SwapKitError(message, cause)
+
+    /**
+     * SwapKit returned an HTTP error response (4xx/5xx) with no recognised typed `code`. Kept
+     * distinct from [Network] so retry/UX decisions can differentiate a transport failure from a
+     * server-side rejection.
+     */
+    class Server(val httpStatus: Int?, message: String, cause: Throwable? = null) :
+        SwapKitError(message, cause)
 
     /** SwapKit response shape did not deserialize against the expected V3 schema. */
     class Decoding(message: String, cause: Throwable? = null) : SwapKitError(message, cause)
@@ -30,16 +38,25 @@ sealed class SwapKitError(message: String, cause: Throwable? = null) : Exception
         SwapKitError(message)
 
     companion object {
-        /** Maps SwapKit V3 documented error code strings into a typed [SwapKitError]. */
-        fun fromCode(code: String?, fallbackMessage: String? = null): SwapKitError {
+        /**
+         * Maps SwapKit V3 documented error code strings into a typed [SwapKitError]. When no typed
+         * mapping exists and an HTTP status is supplied, the fallback is [Server] (not [Network])
+         * so callers can tell a server-side rejection apart from a transport failure.
+         */
+        fun fromCode(
+            code: String?,
+            fallbackMessage: String? = null,
+            httpStatus: Int? = null,
+        ): SwapKitError {
             val raw = code?.trim().orEmpty()
+            val message = fallbackMessage ?: raw.ifEmpty { "SwapKit request failed" }
             return when (raw.lowercase()) {
                 "noroutesfound",
                 "no_routes_found",
                 "no_routes" -> NoRoutes(fallbackMessage ?: raw)
                 "outputamountdeviationtoohigh",
                 "output_amount_deviation_too_high" -> QuoteDeviation(fallbackMessage ?: raw)
-                else -> Network(fallbackMessage ?: raw.ifEmpty { "SwapKit request failed" })
+                else -> if (httpStatus != null) Server(httpStatus, message) else Network(message)
             }
         }
     }

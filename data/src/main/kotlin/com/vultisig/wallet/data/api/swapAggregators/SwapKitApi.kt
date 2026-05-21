@@ -95,8 +95,12 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
                     throw SwapKitError.fromCode(
                         code = code,
                         fallbackMessage = body.ifEmpty { status },
+                        httpStatus = response.status.value,
                     )
                 }
+                // Deliberately uses raw `body<T>()` rather than the project-wide `bodyOrThrow`
+                // helper: SwapKit needs typed `SwapKitError.Decoding` for the swap UI, not the
+                // generic `NetworkException` that `bodyOrThrow` wraps deserialization failures in.
                 try {
                     response.body<T>()
                 } catch (e: SerializationException) {
