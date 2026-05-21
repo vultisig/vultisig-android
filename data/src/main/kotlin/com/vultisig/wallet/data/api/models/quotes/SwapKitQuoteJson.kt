@@ -66,7 +66,12 @@ data class SwapKitRoute(
     @SerialName("sellAsset") val sellAsset: String = "",
     @SerialName("buyAsset") val buyAsset: String = "",
     @SerialName("sellAmount") val sellAmount: String = "",
-    @SerialName("expectedBuyAmount") val expectedBuyAmount: String = "0",
+    /**
+     * Nullable so a route with a missing or unparseable amount is distinguishable from a genuine
+     * zero quote — the ranking path must handle absent amounts explicitly rather than treating them
+     * as `BigDecimal.ZERO`.
+     */
+    @SerialName("expectedBuyAmount") val expectedBuyAmount: String? = null,
     @SerialName("expectedBuyAmountMaxSlippage") val expectedBuyAmountMaxSlippage: String? = null,
     @SerialName("sourceAddress") val sourceAddress: String? = null,
     @SerialName("destinationAddress") val destinationAddress: String? = null,

@@ -8,6 +8,8 @@ import com.vultisig.wallet.data.api.swapAggregators.KyberApi
 import com.vultisig.wallet.data.api.swapAggregators.KyberApiImpl
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApiImpl
+import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
+import com.vultisig.wallet.data.api.swapAggregators.SwapKitApiImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -67,6 +69,8 @@ internal interface ApiModule {
     @Binds @Singleton fun bindCardanoApi(impl: CardanoApiImpl): CardanoApi
 
     @Binds @Singleton fun bindKyberApi(impl: KyberApiImpl): KyberApi
+
+    @Binds @Singleton fun bindSwapKitApi(impl: SwapKitApiImpl): SwapKitApi
 
     @Binds @Singleton fun circleApi(impl: CircleApiImpl): CircleApi
 

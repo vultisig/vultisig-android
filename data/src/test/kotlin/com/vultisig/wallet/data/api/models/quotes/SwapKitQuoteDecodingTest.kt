@@ -214,8 +214,8 @@ class SwapKitQuoteDecodingTest {
         val payload =
             """
             [
-              { "provider": "CHAINFLIP", "supportedChainIds": ["ETH", "BSC", "BTC"] },
-              { "provider": "NEAR_INTENTS", "supportedChainIds": ["SOL", "ETH"] }
+              { "provider": "CHAINFLIP", "supportedChainIds": ["1", "56", "bitcoin"] },
+              { "provider": "NEAR_INTENTS", "supportedChainIds": ["solana", "1"] }
             ]
             """
                 .trimIndent()
@@ -224,8 +224,8 @@ class SwapKitQuoteDecodingTest {
 
         assertEquals(2, decoded.size)
         assertEquals("CHAINFLIP", decoded.first().provider)
-        assertEquals(listOf("ETH", "BSC", "BTC"), decoded.first().supportedChainIds)
-        assertEquals(listOf("SOL", "ETH"), decoded[1].supportedChainIds)
+        assertEquals(listOf("1", "56", "bitcoin"), decoded.first().supportedChainIds)
+        assertEquals(listOf("solana", "1"), decoded[1].supportedChainIds)
     }
 
     @Test

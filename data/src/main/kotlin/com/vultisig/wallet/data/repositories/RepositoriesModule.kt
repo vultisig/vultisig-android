@@ -17,6 +17,8 @@ import com.vultisig.wallet.data.repositories.swap.MayaQuoteSource
 import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSource
 import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
 import com.vultisig.wallet.data.repositories.swap.SwapKitConfigImpl
+import com.vultisig.wallet.data.repositories.swap.SwapKitProviderCache
+import com.vultisig.wallet.data.repositories.swap.SwapKitProviderCacheImpl
 import com.vultisig.wallet.data.repositories.swap.SwapProviderKey
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTable
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTableImpl
@@ -306,6 +308,10 @@ internal interface RepositoriesModule {
     ): PreventScreenshotsRepository
 
     @Binds @Singleton fun bindSwapKitConfig(impl: SwapKitConfigImpl): SwapKitConfig
+
+    @Binds
+    @Singleton
+    fun bindSwapKitProviderCache(impl: SwapKitProviderCacheImpl): SwapKitProviderCache
 }
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class PrettyJson

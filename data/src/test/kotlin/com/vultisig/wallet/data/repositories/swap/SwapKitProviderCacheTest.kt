@@ -39,7 +39,7 @@ internal class SwapKitProviderCacheTest {
 
     @Test
     fun `isEnabled returns true for cached chain id`() = runTest {
-        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("ETH", "SOL"))
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1", "solana"))
 
         val cache = cache()
 
@@ -49,7 +49,7 @@ internal class SwapKitProviderCacheTest {
 
     @Test
     fun `isEnabled returns false for chain not present in providers response`() = runTest {
-        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("ETH"))
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
 
         val cache = cache()
 
@@ -61,9 +61,9 @@ internal class SwapKitProviderCacheTest {
     fun `isEnabled unions supportedChainIds across sub-providers`() = runTest {
         coEvery { api.providers() } returns
             providersResponse(
-                "CHAINFLIP" to listOf("ETH", "BTC"),
-                "NEAR_INTENTS" to listOf("SOL", "ARB"),
-                "GARDEN" to listOf("BSC"),
+                "CHAINFLIP" to listOf("1", "bitcoin"),
+                "NEAR_INTENTS" to listOf("solana", "42161"),
+                "GARDEN" to listOf("56"),
             )
 
         val cache = cache()
@@ -76,7 +76,7 @@ internal class SwapKitProviderCacheTest {
 
     @Test
     fun `api is hit only once across repeated calls within TTL`() = runTest {
-        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("ETH"))
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
 
         val clock = FakeClock(now = 1_000L)
         val cache = cache(clock)
@@ -92,7 +92,7 @@ internal class SwapKitProviderCacheTest {
 
     @Test
     fun `api is refetched once TTL has elapsed`() = runTest {
-        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("ETH"))
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
 
         // Start at a non-zero clock so we exercise the TTL boundary, not the
         // `fetchedAtMillis == 0` sentinel that means "never fetched yet".
@@ -112,8 +112,8 @@ internal class SwapKitProviderCacheTest {
     fun `chain set picks up updates after a refetch`() = runTest {
         coEvery { api.providers() } returnsMany
             listOf(
-                providersResponse("CHAINFLIP" to listOf("ETH")),
-                providersResponse("CHAINFLIP" to listOf("ETH", "SOL")),
+                providersResponse("CHAINFLIP" to listOf("1")),
+                providersResponse("CHAINFLIP" to listOf("1", "solana")),
             )
 
         val clock = FakeClock(now = 1_000L)
@@ -133,8 +133,13 @@ internal class SwapKitProviderCacheTest {
         assertFalse(cache.isEnabled(Chain.Ethereum))
 
         // failure must not poison the cache — a recovered API call should populate it
-        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("ETH"))
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
         assertTrue(cache.isEnabled(Chain.Ethereum))
+
+        // Pin the retry behaviour itself: a regression that started caching the failure for the
+        // TTL window would still produce `true` above if the second call happened to land inside
+        // the new TTL, but it wouldn't actually re-hit the API.
+        coVerify(exactly = 2) { api.providers() }
     }
 
     @Test
@@ -148,7 +153,7 @@ internal class SwapKitProviderCacheTest {
 
     @Test
     fun `invalidate forces a refetch on next call`() = runTest {
-        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("ETH"))
+        coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("1"))
 
         val clock = FakeClock(now = 1_000L)
         val cache = cache(clock)
@@ -168,21 +173,26 @@ internal class SwapKitProviderCacheTest {
         // the aliases iOS Phase 1 honours and the proxy is allowed to return.
         val aliases =
             mapOf(
-                "ETH" to Chain.Ethereum,
-                "ETHEREUM" to Chain.Ethereum,
-                "BSC" to Chain.BscChain,
-                "BNB" to Chain.BscChain,
-                "AVAX" to Chain.Avalanche,
-                "AVALANCHE" to Chain.Avalanche,
-                "ARB" to Chain.Arbitrum,
-                "ARBITRUM" to Chain.Arbitrum,
-                "OP" to Chain.Optimism,
-                "OPTIMISM" to Chain.Optimism,
-                "BASE" to Chain.Base,
-                "MATIC" to Chain.Polygon,
-                "POL" to Chain.Polygon,
-                "POLYGON" to Chain.Polygon,
-                "SOL" to Chain.Solana,
+                // V3 returns EVM chain ids as decimal strings and lowercase named ids for non-EVM.
+                "1" to Chain.Ethereum,
+                "ethereum" to Chain.Ethereum,
+                "56" to Chain.BscChain,
+                "bsc" to Chain.BscChain,
+                "bnb" to Chain.BscChain,
+                "43114" to Chain.Avalanche,
+                "avalanche" to Chain.Avalanche,
+                "42161" to Chain.Arbitrum,
+                "arbitrum" to Chain.Arbitrum,
+                "10" to Chain.Optimism,
+                "optimism" to Chain.Optimism,
+                "8453" to Chain.Base,
+                "base" to Chain.Base,
+                "137" to Chain.Polygon,
+                "polygon" to Chain.Polygon,
+                "matic" to Chain.Polygon,
+                "solana" to Chain.Solana,
+                // Case-insensitivity sanity check.
+                "Ethereum" to Chain.Ethereum,
                 "SOLANA" to Chain.Solana,
             )
 
@@ -203,9 +213,10 @@ internal class SwapKitProviderCacheTest {
 
     @Test
     fun `unsupported chain ids map to null and never enable a chain`() = runTest {
-        // BTC / TON / SUI / TRX / ADA are Phase 2/3 sources — they must NOT light up in Phase 1.
+        // Bitcoin / TON / Sui / Tron / Cardano are Phase 2/3 sources — they must NOT light up in
+        // Phase 1, regardless of which V3 id format the proxy returns.
         coEvery { api.providers() } returns
-            providersResponse("CHAINFLIP" to listOf("BTC", "TON", "SUI", "TRX", "ADA"))
+            providersResponse("CHAINFLIP" to listOf("bitcoin", "ton", "sui", "tron", "cardano"))
 
         val cache = cache()
 
@@ -215,8 +226,8 @@ internal class SwapKitProviderCacheTest {
         assertFalse(cache.isEnabled(Chain.Tron))
         assertFalse(cache.isEnabled(Chain.Cardano))
 
-        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("BTC"))
-        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("XRP"))
+        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("bitcoin"))
+        assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig("xrp"))
         assertNull(SwapKitProviderCacheImpl.swapKitChainToVultisig(""))
     }
 }

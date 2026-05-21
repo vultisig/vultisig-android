@@ -18,11 +18,12 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import io.ktor.serialization.ContentConvertException
+import io.ktor.serialization.JsonConvertException
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -57,8 +58,8 @@ internal class SwapKitApiImpl
 constructor(private val httpClient: HttpClient, private val json: Json) : SwapKitApi {
 
     override suspend fun quote(request: SwapKitQuoteRequest): SwapKitQuoteResponseJson =
-        execute("$BASE_URL/quote") {
-            httpClient.post("$BASE_URL/quote") {
+        execute(QUOTE_URL) {
+            httpClient.post(QUOTE_URL) {
                 headers { accept(ContentType.Application.Json) }
                 contentType(ContentType.Application.Json)
                 setBody(json.encodeToString(request))
@@ -66,8 +67,8 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
         }
 
     override suspend fun swap(request: SwapKitSwapRequest): SwapKitSwapResponseJson =
-        execute("$BASE_URL/swap") {
-            httpClient.post("$BASE_URL/swap") {
+        execute(SWAP_URL) {
+            httpClient.post(SWAP_URL) {
                 headers { accept(ContentType.Application.Json) }
                 contentType(ContentType.Application.Json)
                 setBody(json.encodeToString(request))
@@ -75,10 +76,8 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
         }
 
     override suspend fun providers(): SwapKitProvidersResponseJson =
-        execute("$BASE_URL/providers") {
-            httpClient.get("$BASE_URL/providers") {
-                headers { accept(ContentType.Application.Json) }
-            }
+        execute(PROVIDERS_URL) {
+            httpClient.get(PROVIDERS_URL) { headers { accept(ContentType.Application.Json) } }
         }
 
     private suspend inline fun <reified T> execute(
@@ -89,7 +88,14 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
             withTimeout(REQUEST_TIMEOUT_MS) {
                 val response = call()
                 if (!response.status.isSuccess()) {
-                    val body = runCatching { response.bodyAsText() }.getOrNull().orEmpty()
+                    val body =
+                        try {
+                            response.bodyAsText()
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (_: Exception) {
+                            ""
+                        }
                     val code = extractErrorCode(body)
                     val status = response.status.description
                     throw SwapKitError.fromCode(
@@ -101,9 +107,17 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
                 // Deliberately uses raw `body<T>()` rather than the project-wide `bodyOrThrow`
                 // helper: SwapKit needs typed `SwapKitError.Decoding` for the swap UI, not the
                 // generic `NetworkException` that `bodyOrThrow` wraps deserialization failures in.
+                // Ktor's content-negotiation plugin wraps decode failures in `JsonConvertException`
+                // (a subclass of `ContentConvertException`), not `kotlinx.serialization`'s
+                // `SerializationException`, so we catch the Ktor types here.
                 try {
                     response.body<T>()
-                } catch (e: SerializationException) {
+                } catch (e: JsonConvertException) {
+                    throw SwapKitError.Decoding(
+                        message = e.message ?: "Failed to decode SwapKit response",
+                        cause = e,
+                    )
+                } catch (e: ContentConvertException) {
                     throw SwapKitError.Decoding(
                         message = e.message ?: "Failed to decode SwapKit response",
                         cause = e,
@@ -152,8 +166,17 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
         }
 
     companion object {
-        /** Vultisig SwapKit proxy. iOS uses `/swapkit/`, Windows `/swapkit-win/`. */
-        private const val BASE_URL = "https://api.vultisig.com/swapkit-a/v3"
+        /** Vultisig SwapKit proxy base. iOS uses `/swapkit/`, Windows `/swapkit-win/`. */
+        private const val BASE_URL = "https://api.vultisig.com/swapkit-a"
+
+        /**
+         * Per the SwapKit V3 docs `/quote` and `/swap` sit under `/v3` whereas `/providers` is
+         * unversioned. The constants below pin both paths in lockstep with the error message used
+         * inside [execute] so they can never drift.
+         */
+        private const val QUOTE_URL = "$BASE_URL/v3/quote"
+        private const val SWAP_URL = "$BASE_URL/v3/swap"
+        private const val PROVIDERS_URL = "$BASE_URL/providers"
         private const val REQUEST_TIMEOUT_MS = 30_000L
     }
 }

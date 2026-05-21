@@ -9,6 +9,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import timber.log.Timber
 
 /**
  * 24h in-memory cache for SwapKit `/providers` enablement data. Phase 1 source chains (EVM +
@@ -59,8 +60,12 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
 
     override suspend fun invalidate() =
         mutex.withLock {
-            fetchedAtMillis = 0
+            // Publish through `fetchedAtMillis` last to match the refresh-path ordering
+            // (chains-then-timestamp). A reader on the fast path that sees the reset timestamp is
+            // then guaranteed to see the cleared chains too — without this swap the two volatile
+            // writes have no joint happens-before and a brief stale read is observable.
             enabledChains = emptySet()
+            fetchedAtMillis = 0
         }
 
     private suspend fun ensureFresh(): Set<Chain>? {
@@ -88,36 +93,43 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
     }
 
     private fun SwapKitProvidersResponseJson.toEnabledChains(): Set<Chain> =
-        flatMap { it.supportedChainIds }.mapNotNull { swapKitChainToVultisig(it) }.toSet()
+        flatMap { it.supportedChainIds }
+            .mapNotNull { id ->
+                swapKitChainToVultisig(id).also {
+                    if (it == null) Timber.w("Unknown SwapKit chain id: %s", id)
+                }
+            }
+            .toSet()
 
     companion object {
         /** Cache TTL — 24h, matching the iOS SwapKit Phase 1 implementation. */
         private const val TTL_MILLIS: Long = 24L * 60L * 60L * 1000L
 
         /**
-         * Maps a SwapKit V3 chain identifier (e.g. `"ETH"`, `"BSC"`) to Vultisig's [Chain] enum.
-         * Returns `null` for chains not yet supported in Phase 1 — those are filtered out before
-         * `isEnabled` is checked anyway via [SwapProviderTable], so a `null` here just keeps the
-         * cache focused on the chains we actually quote against.
+         * Maps a SwapKit V3 `supportedChainIds` entry to Vultisig's [Chain] enum. Per the V3 docs
+         * these are EVM chain ids as decimal strings (`"1"`, `"56"`, `"137"`, `"42161"`, ...) and
+         * lowercase named ids for non-EVM (`"solana"`, `"bitcoin"`, ...). Returns `null` for chains
+         * not yet supported in Phase 1.
          */
         internal fun swapKitChainToVultisig(swapKitChain: String): Chain? =
-            when (swapKitChain.uppercase()) {
-                "ETH",
-                "ETHEREUM" -> Chain.Ethereum
-                "BSC",
-                "BNB" -> Chain.BscChain
-                "AVAX",
-                "AVALANCHE" -> Chain.Avalanche
-                "ARB",
-                "ARBITRUM" -> Chain.Arbitrum
-                "OP",
-                "OPTIMISM" -> Chain.Optimism
-                "BASE" -> Chain.Base
-                "MATIC",
-                "POL",
-                "POLYGON" -> Chain.Polygon
-                "SOL",
-                "SOLANA" -> Chain.Solana
+            when (swapKitChain.lowercase()) {
+                "1",
+                "ethereum" -> Chain.Ethereum
+                "56",
+                "bsc",
+                "bnb" -> Chain.BscChain
+                "43114",
+                "avalanche" -> Chain.Avalanche
+                "42161",
+                "arbitrum" -> Chain.Arbitrum
+                "10",
+                "optimism" -> Chain.Optimism
+                "8453",
+                "base" -> Chain.Base
+                "137",
+                "polygon",
+                "matic" -> Chain.Polygon
+                "solana" -> Chain.Solana
                 else -> null
             }
     }

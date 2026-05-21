@@ -420,7 +420,7 @@ constructor(
     }
 
     private fun toggleSwapKit(currentValue: Boolean) {
-        viewModelScope.launch { swapKitConfig.setFeatureEnabled(!currentValue) }
+        viewModelScope.safeLaunch { swapKitConfig.setFeatureEnabled(!currentValue) }
     }
 
     private fun updateBiometricFastSignUiModel(
