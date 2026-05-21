@@ -31,9 +31,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * Ktor client for SwapKit V3 hit through the Vultisig proxy at
- * `https://api.vultisig.com/swapkit-a/v3` (the proxy attaches the partner API key server-side, so
- * the device never holds it).
+ * Ktor client for SwapKit V3 hit through the Vultisig proxy at `https://api.vultisig.com/swapkit-a`
+ * (the proxy attaches the partner API key server-side, so the device never holds it).
  *
  * Exposed surface in Phase 1:
  * - [quote] — POST /v3/quote: candidate routes
