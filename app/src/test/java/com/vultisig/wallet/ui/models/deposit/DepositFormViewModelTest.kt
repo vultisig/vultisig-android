@@ -315,46 +315,44 @@ internal class DepositFormViewModelTest {
     }
 
     @Test
-    fun `RemoveCacaoPool with under-one-hour remaining formats hours and minutes not 0d 0h`() =
-        runTest {
-            val vm = buildViewModel()
-            coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
-                flowOf(
-                    Address(
-                        chain = Chain.MayaChain,
-                        address = "maya1someaddress",
-                        accounts =
-                            listOf(
-                                Account(
-                                    token = Coins.MayaChain.CACAO,
-                                    tokenValue = null,
-                                    fiatValue = null,
-                                    price = null,
-                                )
-                            ),
-                    )
+    fun `RemoveCacaoPool with under-one-hour remaining shows unlocks soon`() = runTest {
+        val vm = buildViewModel()
+        coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.MayaChain,
+                    address = "maya1someaddress",
+                    accounts =
+                        listOf(
+                            Account(
+                                token = Coins.MayaChain.CACAO,
+                                tokenValue = null,
+                                fiatValue = null,
+                                price = null,
+                            )
+                        ),
                 )
-            coEvery { mayaChainApi.getUnStakeCacaoBalance("maya1someaddress") } returns "0"
-            coEvery { getMayaCacaoMaturityStatus.invoke("maya1someaddress") } returns
-                MayaCacaoMaturityStatus(
-                    isMature = false,
-                    remainingBlocks = 300L,
-                    remainingSeconds = 1_800L, // 30 minutes
-                )
-
-            vm.loadData("vault1", Chain.MayaChain.raw, "unstake_cacao", null)
-            advanceUntilIdle()
-
-            assertTrue(!vm.state.value.isUnstakeMature)
-            val unlocksIn = vm.state.value.unstakeUnlocksInText
-            assertNotNull(unlocksIn)
-            assertTrue(unlocksIn is UiText.FormattedText)
-            assertEquals(
-                R.string.unstake_cacao_unlocks_in_hours_format,
-                (unlocksIn as UiText.FormattedText).resId,
             )
-            assertEquals(listOf<Any>(0L, 30L), unlocksIn.formatArgs)
-        }
+        coEvery { mayaChainApi.getUnStakeCacaoBalance("maya1someaddress") } returns "0"
+        coEvery { getMayaCacaoMaturityStatus.invoke("maya1someaddress") } returns
+            MayaCacaoMaturityStatus(
+                isMature = false,
+                remainingBlocks = 300L,
+                remainingSeconds = 1_800L, // 30 minutes
+            )
+
+        vm.loadData("vault1", Chain.MayaChain.raw, "unstake_cacao", null)
+        advanceUntilIdle()
+
+        assertTrue(!vm.state.value.isUnstakeMature)
+        val unlocksIn = vm.state.value.unstakeUnlocksInText
+        assertNotNull(unlocksIn)
+        assertTrue(unlocksIn is UiText.StringResource)
+        assertEquals(
+            R.string.unstake_cacao_unlocks_soon,
+            (unlocksIn as UiText.StringResource).resId,
+        )
+    }
 
     @Test
     fun `RemoveCacaoPool default state keeps CTA disabled before maturity resolves`() = runTest {
@@ -398,10 +396,10 @@ internal class DepositFormViewModelTest {
         assertNotNull(unlocksIn)
         assertTrue(unlocksIn is UiText.FormattedText)
         assertEquals(
-            R.string.unstake_cacao_unlocks_in_format,
+            R.string.unstake_cacao_unlocks_in_days_hours_format,
             (unlocksIn as UiText.FormattedText).resId,
         )
-        assertEquals(listOf<Any>(1L, 1L), unlocksIn.formatArgs)
+        assertEquals(listOf<Any>(1, 1), unlocksIn.formatArgs)
     }
 
     @Test

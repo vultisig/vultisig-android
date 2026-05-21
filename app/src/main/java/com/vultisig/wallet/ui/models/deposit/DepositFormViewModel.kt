@@ -86,6 +86,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.cacaoUnlocksInUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
@@ -351,11 +352,10 @@ constructor(
             )
         }
 
-        val coinList =
-            tokensToMerge.let {
-                if (chain == Chain.Osmosis) it.filter { it.ticker.equals("LVN", ignoreCase = true) }
-                else it
-            }
+        val coinList = tokensToMerge.let {
+            if (chain == Chain.Osmosis) it.filter { it.ticker.equals("LVN", ignoreCase = true) }
+            else it
+        }
         _state.update {
             it.copy(
                 selectedCoin = coinList.first(),
@@ -553,85 +553,83 @@ constructor(
             )
         }
         loadLpJob?.cancel()
-        loadLpJob =
-            viewModelScope.safeLaunch {
-                val userAddress =
-                    withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
-                        ?.address
-                        ?: run {
-                            _state.update {
-                                it.copy(
-                                    errorText =
-                                        UiText.StringResource(R.string.dialog_default_error_body)
-                                )
-                            }
-                            return@safeLaunch
+        loadLpJob = viewModelScope.safeLaunch {
+            val userAddress =
+                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                    ?.address
+                    ?: run {
+                        _state.update {
+                            it.copy(
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body)
+                            )
                         }
-                val memberDetails =
-                    withContext(Dispatchers.IO) {
-                        mayachainBondRepository.getMemberDetails(userAddress)
+                        return@safeLaunch
                     }
-                val userLpUnits =
-                    memberDetails.pools.find { it.pool == poolId }?.liquidityUnits
-                        ?: run {
-                            _state.update {
-                                it.copy(
-                                    availableLpUnits = null,
-                                    removeLpUnitsDivisor = BigInteger.ZERO,
-                                    removeLpPoolDepth = BigInteger.ZERO,
-                                    errorText =
-                                        UiText.StringResource(R.string.dialog_default_error_body),
-                                )
-                            }
-                            return@safeLaunch
-                        }
-                val poolStats =
-                    withContext(Dispatchers.IO) { mayachainBondRepository.getLpPoolStats() }
-                val pool =
-                    poolStats.find { it.asset == poolId }
-                        ?: run {
-                            _state.update {
-                                it.copy(
-                                    availableLpUnits = null,
-                                    removeLpUnitsDivisor = BigInteger.ZERO,
-                                    removeLpPoolDepth = BigInteger.ZERO,
-                                    errorText =
-                                        UiText.StringResource(R.string.dialog_default_error_body),
-                                )
-                            }
-                            return@safeLaunch
-                        }
-                val totalPoolUnits = pool.units.toBigIntegerOrNull() ?: BigInteger.ZERO
-                val cacaoDepth = pool.cacaoDepth.toBigIntegerOrNull() ?: BigInteger.ZERO
-                val userAvailableUnits = userLpUnits.toLongOrNull()
-                val userCacao =
-                    if (userAvailableUnits != null) {
-                        RemoveLpCalculator.computeAmountDisplay(
-                            selectedUnits = userAvailableUnits,
-                            poolDepth = cacaoDepth,
-                            totalPoolUnits = totalPoolUnits,
-                            decimals = RemoveLpCalculator.CACAO_DECIMALS,
-                        )
-                    } else null
-                val balanceText =
-                    if (userCacao != null) {
-                        UiText.FormattedText(
-                            R.string.remove_pool_amount_format,
-                            listOf(userCacao, "CACAO"),
-                        )
-                    } else UiText.Empty
-                _state.update {
-                    it.copy(
-                        availableLpUnits = userLpUnits,
-                        removeLpUnitsDivisor = totalPoolUnits,
-                        removeLpPoolDepth = cacaoDepth,
-                        removeLpDecimals = RemoveLpCalculator.CACAO_DECIMALS,
-                        removeLpTokenSymbol = "CACAO",
-                        balance = balanceText,
-                    )
+            val memberDetails =
+                withContext(Dispatchers.IO) {
+                    mayachainBondRepository.getMemberDetails(userAddress)
                 }
-                setRemoveLpPercent(state.value.removeLpPercent)
+            val userLpUnits =
+                memberDetails.pools.find { it.pool == poolId }?.liquidityUnits
+                    ?: run {
+                        _state.update {
+                            it.copy(
+                                availableLpUnits = null,
+                                removeLpUnitsDivisor = BigInteger.ZERO,
+                                removeLpPoolDepth = BigInteger.ZERO,
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body),
+                            )
+                        }
+                        return@safeLaunch
+                    }
+            val poolStats = withContext(Dispatchers.IO) { mayachainBondRepository.getLpPoolStats() }
+            val pool =
+                poolStats.find { it.asset == poolId }
+                    ?: run {
+                        _state.update {
+                            it.copy(
+                                availableLpUnits = null,
+                                removeLpUnitsDivisor = BigInteger.ZERO,
+                                removeLpPoolDepth = BigInteger.ZERO,
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body),
+                            )
+                        }
+                        return@safeLaunch
+                    }
+            val totalPoolUnits = pool.units.toBigIntegerOrNull() ?: BigInteger.ZERO
+            val cacaoDepth = pool.cacaoDepth.toBigIntegerOrNull() ?: BigInteger.ZERO
+            val userAvailableUnits = userLpUnits.toLongOrNull()
+            val userCacao =
+                if (userAvailableUnits != null) {
+                    RemoveLpCalculator.computeAmountDisplay(
+                        selectedUnits = userAvailableUnits,
+                        poolDepth = cacaoDepth,
+                        totalPoolUnits = totalPoolUnits,
+                        decimals = RemoveLpCalculator.CACAO_DECIMALS,
+                    )
+                } else null
+            val balanceText =
+                if (userCacao != null) {
+                    UiText.FormattedText(
+                        R.string.remove_pool_amount_format,
+                        listOf(userCacao, "CACAO"),
+                    )
+                } else UiText.Empty
+            _state.update {
+                it.copy(
+                    availableLpUnits = userLpUnits,
+                    removeLpUnitsDivisor = totalPoolUnits,
+                    removeLpPoolDepth = cacaoDepth,
+                    removeLpDecimals = RemoveLpCalculator.CACAO_DECIMALS,
+                    removeLpTokenSymbol = "CACAO",
+                    balance = balanceText,
+                )
             }
+            setRemoveLpPercent(state.value.removeLpPercent)
+        }
     }
 
     private fun loadThorChainRemoveLpData() {
@@ -664,89 +662,85 @@ constructor(
             )
         }
         loadLpJob?.cancel()
-        loadLpJob =
-            viewModelScope.safeLaunch {
-                val userAddress =
-                    withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
-                        ?.address
-                        ?: run {
-                            _state.update {
-                                it.copy(
-                                    errorText =
-                                        UiText.StringResource(R.string.dialog_default_error_body)
-                                )
-                            }
-                            return@safeLaunch
+        loadLpJob = viewModelScope.safeLaunch {
+            val userAddress =
+                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                    ?.address
+                    ?: run {
+                        _state.update {
+                            it.copy(
+                                errorText =
+                                    UiText.StringResource(R.string.dialog_default_error_body)
+                            )
                         }
-                val currentVaultId = vaultId
-                val pairedAddress =
-                    if (currentVaultId != null) {
-                        resolvePairedAddress(Chain.ThorChain, currentVaultId, poolId)
-                    } else null
-                val position =
-                    withContext(Dispatchers.IO) {
-                        getThorChainLpPositionUseCase(
-                            poolId = poolId,
-                            runeAddress = userAddress,
-                            assetAddress = pairedAddress,
-                        )
+                        return@safeLaunch
                     }
-
-                if (position == null || position.units <= BigInteger.ZERO) {
-                    _state.update {
-                        it.copy(
-                            availableLpUnits = null,
-                            removeLpUnitsDivisor = BigInteger.ZERO,
-                            removeLpPoolDepth = BigInteger.ZERO,
-                            balance = UiText.Empty,
-                            errorText = UiText.StringResource(R.string.dialog_default_error_body),
-                        )
-                    }
-                    return@safeLaunch
-                }
-
-                // Use the pre-computed redeem value from the use case as `poolDepth` and the user's
-                // own
-                // units as `totalPoolUnits`. With selectedUnits = percent * userUnits, the
-                // calculator
-                // produces percent * runeRedeemValue, which is the symmetric RUNE half of
-                // withdrawal.
-                // Keep BigInteger end-to-end for whale positions whose units exceed Long.MAX_VALUE.
-                val userUnits = position.units
-                val runeRedeemBase = position.runeRedeemValue
-                val symbol = Coins.ThorChain.RUNE.ticker
-                val userUnitsLongOrNull =
-                    userUnits
-                        .takeIf { it.signum() > 0 && it.bitLength() < Long.SIZE_BITS }
-                        ?.toLong()
-                val userRune =
-                    userUnitsLongOrNull?.let { userUnitsLong ->
-                        RemoveLpCalculator.computeAmountDisplay(
-                            selectedUnits = userUnitsLong,
-                            poolDepth = runeRedeemBase,
-                            totalPoolUnits = userUnits,
-                            decimals = RemoveLpCalculator.RUNE_DECIMALS,
-                        )
-                    }
-                val balanceText =
-                    if (userRune != null) {
-                        UiText.FormattedText(
-                            R.string.remove_pool_amount_format,
-                            listOf(userRune, symbol),
-                        )
-                    } else UiText.Empty
-                _state.update {
-                    it.copy(
-                        availableLpUnits = userUnits.toString(),
-                        removeLpUnitsDivisor = userUnits,
-                        removeLpPoolDepth = runeRedeemBase,
-                        removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
-                        removeLpTokenSymbol = symbol,
-                        balance = balanceText,
+            val currentVaultId = vaultId
+            val pairedAddress =
+                if (currentVaultId != null) {
+                    resolvePairedAddress(Chain.ThorChain, currentVaultId, poolId)
+                } else null
+            val position =
+                withContext(Dispatchers.IO) {
+                    getThorChainLpPositionUseCase(
+                        poolId = poolId,
+                        runeAddress = userAddress,
+                        assetAddress = pairedAddress,
                     )
                 }
-                setRemoveLpPercent(state.value.removeLpPercent)
+
+            if (position == null || position.units <= BigInteger.ZERO) {
+                _state.update {
+                    it.copy(
+                        availableLpUnits = null,
+                        removeLpUnitsDivisor = BigInteger.ZERO,
+                        removeLpPoolDepth = BigInteger.ZERO,
+                        balance = UiText.Empty,
+                        errorText = UiText.StringResource(R.string.dialog_default_error_body),
+                    )
+                }
+                return@safeLaunch
             }
+
+            // Use the pre-computed redeem value from the use case as `poolDepth` and the user's
+            // own
+            // units as `totalPoolUnits`. With selectedUnits = percent * userUnits, the
+            // calculator
+            // produces percent * runeRedeemValue, which is the symmetric RUNE half of
+            // withdrawal.
+            // Keep BigInteger end-to-end for whale positions whose units exceed Long.MAX_VALUE.
+            val userUnits = position.units
+            val runeRedeemBase = position.runeRedeemValue
+            val symbol = Coins.ThorChain.RUNE.ticker
+            val userUnitsLongOrNull =
+                userUnits.takeIf { it.signum() > 0 && it.bitLength() < Long.SIZE_BITS }?.toLong()
+            val userRune = userUnitsLongOrNull?.let { userUnitsLong ->
+                RemoveLpCalculator.computeAmountDisplay(
+                    selectedUnits = userUnitsLong,
+                    poolDepth = runeRedeemBase,
+                    totalPoolUnits = userUnits,
+                    decimals = RemoveLpCalculator.RUNE_DECIMALS,
+                )
+            }
+            val balanceText =
+                if (userRune != null) {
+                    UiText.FormattedText(
+                        R.string.remove_pool_amount_format,
+                        listOf(userRune, symbol),
+                    )
+                } else UiText.Empty
+            _state.update {
+                it.copy(
+                    availableLpUnits = userUnits.toString(),
+                    removeLpUnitsDivisor = userUnits,
+                    removeLpPoolDepth = runeRedeemBase,
+                    removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
+                    removeLpTokenSymbol = symbol,
+                    balance = balanceText,
+                )
+            }
+            setRemoveLpPercent(state.value.removeLpPercent)
+        }
     }
 
     fun selectBondAsset(asset: String) {
@@ -851,17 +845,16 @@ constructor(
 
     private fun loadAddress(vaultId: String, chain: Chain) {
         addressJob?.cancel()
-        addressJob =
-            viewModelScope.launch {
-                try {
-                    accountsRepository.loadAddress(vaultId, chain).collect { address ->
-                        this@DepositFormViewModel.address.value = address
-                    }
-                } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
-                    Timber.e(e)
+        addressJob = viewModelScope.launch {
+            try {
+                accountsRepository.loadAddress(vaultId, chain).collect { address ->
+                    this@DepositFormViewModel.address.value = address
                 }
+            } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                Timber.e(e)
             }
+        }
     }
 
     fun selectToken() {
@@ -901,53 +894,47 @@ constructor(
 
             when (option) {
                 DepositOption.Switch -> {
-                    switchInboundJob =
-                        viewModelScope.launch {
-                            val vaultId = vaultId ?: return@launch
-                            try {
-                                when (
-                                    val result = fetchThorChainInboundForChain(SWITCH_INBOUND_CHAIN)
-                                ) {
-                                    is InboundAddressResult.Available -> {
-                                        nodeAddressFieldState.setTextAndPlaceCursorAtEnd(
-                                            result.address
+                    switchInboundJob = viewModelScope.launch {
+                        val vaultId = vaultId ?: return@launch
+                        try {
+                            when (
+                                val result = fetchThorChainInboundForChain(SWITCH_INBOUND_CHAIN)
+                            ) {
+                                is InboundAddressResult.Available -> {
+                                    nodeAddressFieldState.setTextAndPlaceCursorAtEnd(result.address)
+                                    _state.update { it.copy(dstAddressError = null) }
+                                }
+                                InboundAddressResult.Halted ->
+                                    _state.update {
+                                        it.copy(
+                                            dstAddressError =
+                                                UiText.FormattedText(
+                                                    R.string.deposit_error_thorchain_chain_halted,
+                                                    listOf(Chain.GaiaChain.raw),
+                                                )
                                         )
-                                        _state.update { it.copy(dstAddressError = null) }
                                     }
-                                    InboundAddressResult.Halted ->
-                                        _state.update {
-                                            it.copy(
-                                                dstAddressError =
-                                                    UiText.FormattedText(
-                                                        R.string
-                                                            .deposit_error_thorchain_chain_halted,
-                                                        listOf(Chain.GaiaChain.raw),
-                                                    )
-                                            )
-                                        }
-                                    InboundAddressResult.FetchFailed,
-                                    InboundAddressResult.Unsupported ->
-                                        _state.update {
-                                            it.copy(
-                                                dstAddressError =
-                                                    UiText.StringResource(
-                                                        R.string
-                                                            .deposit_error_thorchain_inbound_unavailable
-                                                    )
-                                            )
-                                        }
-                                }
-                                accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect {
-                                    addresses ->
-                                    thorAddressFieldState.setTextAndPlaceCursorAtEnd(
-                                        addresses.address
-                                    )
-                                }
-                            } catch (e: Exception) {
-                                if (e is kotlinx.coroutines.CancellationException) throw e
-                                Timber.e(e)
+                                InboundAddressResult.FetchFailed,
+                                InboundAddressResult.Unsupported ->
+                                    _state.update {
+                                        it.copy(
+                                            dstAddressError =
+                                                UiText.StringResource(
+                                                    R.string
+                                                        .deposit_error_thorchain_inbound_unavailable
+                                                )
+                                        )
+                                    }
                             }
+                            accountsRepository.loadAddress(vaultId, Chain.ThorChain).collect {
+                                addresses ->
+                                thorAddressFieldState.setTextAndPlaceCursorAtEnd(addresses.address)
+                            }
+                        } catch (e: Exception) {
+                            if (e is kotlinx.coroutines.CancellationException) throw e
+                            Timber.e(e)
                         }
+                    }
                 }
 
                 DepositOption.Bond,
@@ -1072,8 +1059,9 @@ constructor(
     private suspend fun fetchThorChainInboundForChain(chainName: String): InboundAddressResult =
         try {
             val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
-            val inboundAddress =
-                inboundAddresses.firstOrNull { it.chain.equals(chainName, ignoreCase = true) }
+            val inboundAddress = inboundAddresses.firstOrNull {
+                it.chain.equals(chainName, ignoreCase = true)
+            }
             when {
                 inboundAddress == null -> InboundAddressResult.Unsupported
                 inboundAddress.halted ||
@@ -1129,37 +1117,23 @@ constructor(
 
     private fun loadCacaoMaturityStatus(addressValue: String) {
         cacaoMaturityJob?.cancel()
-        cacaoMaturityJob =
-            viewModelScope.safeLaunch {
-                val status = getMayaCacaoMaturityStatus(addressValue)
-                _state.update { state ->
-                    state.copy(
-                        isUnstakeMature = status.isMature,
-                        unstakeUnlocksInText =
-                            if (status.isMature || status.remainingSeconds <= 0L) {
-                                null
-                            } else {
-                                status.toUnlocksInText()
-                            },
-                    )
-                }
+        cacaoMaturityJob = viewModelScope.safeLaunch {
+            val status = getMayaCacaoMaturityStatus(addressValue)
+            _state.update { state ->
+                state.copy(
+                    isUnstakeMature = status.isMature,
+                    unstakeUnlocksInText = status.toUnlocksInText(),
+                )
             }
-    }
-
-    private fun MayaCacaoMaturityStatus.toUnlocksInText(): UiText {
-        val totalSeconds = remainingSeconds
-        val days = totalSeconds / SECONDS_PER_DAY
-        val hours = (totalSeconds % SECONDS_PER_DAY) / SECONDS_PER_HOUR
-        val minutes = (totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
-        return if (days > 0) {
-            UiText.FormattedText(R.string.unstake_cacao_unlocks_in_format, listOf(days, hours))
-        } else {
-            UiText.FormattedText(
-                R.string.unstake_cacao_unlocks_in_hours_format,
-                listOf(hours, minutes),
-            )
         }
     }
+
+    private fun MayaCacaoMaturityStatus.toUnlocksInText(): UiText? =
+        when {
+            isUnknown -> UiText.StringResource(R.string.unstake_cacao_maturity_check_failed)
+            isMature || remainingSeconds <= 0L -> null
+            else -> cacaoUnlocksInUiText(remainingSeconds)
+        }
 
     fun selectDstChain(chain: Chain) {
         nodeAddressFieldState.clearText()
@@ -2959,44 +2933,39 @@ constructor(
 
     private fun collectAmountChanges() {
         if (amountChangesJob != null) return
-        amountChangesJob =
-            viewModelScope.safeLaunch {
-                combine(
-                        state.map { it.selectedToken }.distinctUntilChanged(),
-                        tokenAmountFieldState.textAsFlow(),
-                        fiatAmountFieldState.textAsFlow(),
-                    ) { selectedToken, tokenFieldValue, fiatFieldValue ->
-                        val tokenString = tokenFieldValue.toString()
-                        val fiatString = fiatFieldValue.toString()
-                        if (lastTokenValueUserInput != tokenString) {
-                            val fiatValue =
-                                convertAmountValue(tokenString, selectedToken) { value, price ->
-                                        value
-                                            .multiply(price)
-                                            .setScale(selectedToken.decimal, RoundingMode.DOWN)
-                                            .stripTrailingZeros()
-                                    }
-                                    ?.takeIf { it.isNotEmpty() } ?: return@combine
-                            lastTokenValueUserInput = tokenString
-                            lastFiatValueUserInput = fiatValue
-                            fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
-                        } else if (lastFiatValueUserInput != fiatString) {
-                            val tokenValue =
-                                convertAmountValue(fiatString, selectedToken) { value, price ->
-                                        value.divide(
-                                            price,
-                                            selectedToken.decimal,
-                                            RoundingMode.DOWN,
-                                        )
-                                    }
-                                    ?.takeIf { it.isNotEmpty() } ?: return@combine
-                            lastTokenValueUserInput = tokenValue
-                            lastFiatValueUserInput = fiatString
-                            tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
-                        }
+        amountChangesJob = viewModelScope.safeLaunch {
+            combine(
+                    state.map { it.selectedToken }.distinctUntilChanged(),
+                    tokenAmountFieldState.textAsFlow(),
+                    fiatAmountFieldState.textAsFlow(),
+                ) { selectedToken, tokenFieldValue, fiatFieldValue ->
+                    val tokenString = tokenFieldValue.toString()
+                    val fiatString = fiatFieldValue.toString()
+                    if (lastTokenValueUserInput != tokenString) {
+                        val fiatValue =
+                            convertAmountValue(tokenString, selectedToken) { value, price ->
+                                    value
+                                        .multiply(price)
+                                        .setScale(selectedToken.decimal, RoundingMode.DOWN)
+                                        .stripTrailingZeros()
+                                }
+                                ?.takeIf { it.isNotEmpty() } ?: return@combine
+                        lastTokenValueUserInput = tokenString
+                        lastFiatValueUserInput = fiatValue
+                        fiatAmountFieldState.setTextAndPlaceCursorAtEnd(fiatValue)
+                    } else if (lastFiatValueUserInput != fiatString) {
+                        val tokenValue =
+                            convertAmountValue(fiatString, selectedToken) { value, price ->
+                                    value.divide(price, selectedToken.decimal, RoundingMode.DOWN)
+                                }
+                                ?.takeIf { it.isNotEmpty() } ?: return@combine
+                        lastTokenValueUserInput = tokenValue
+                        lastFiatValueUserInput = fiatString
+                        tokenAmountFieldState.setTextAndPlaceCursorAtEnd(tokenValue)
                     }
-                    .collect()
-            }
+                }
+                .collect()
+        }
     }
 
     private suspend fun convertAmountValue(
@@ -3127,10 +3096,6 @@ constructor(
 
         /** THORChain inbound-addresses chain key used by the Switch (Gaia/ATOM) deposit option. */
         private const val SWITCH_INBOUND_CHAIN = "GAIA"
-
-        private const val SECONDS_PER_DAY = 86_400L
-        private const val SECONDS_PER_HOUR = 3_600L
-        private const val SECONDS_PER_MINUTE = 60L
     }
 }
 

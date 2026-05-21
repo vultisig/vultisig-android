@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.getUnstakeDeFiNavAction
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
+import com.vultisig.wallet.ui.utils.cacaoUnlocksInUiText
 import java.math.BigDecimal
 
 /** Tab content listing staking positions with stake, unstake, withdraw, and transfer actions. */
@@ -216,6 +217,19 @@ internal fun StakingWidget(
             UiSpacer(16.dp)
         }
 
+        if (
+            state.stakeAmount > BigDecimal.ZERO &&
+                !state.canUnstake &&
+                state.unstakeUnlocksInSeconds != null
+        ) {
+            Text(
+                text = cacaoUnlocksInUiText(state.unstakeUnlocksInSeconds).asString(),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.tertiary,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -338,6 +352,33 @@ private fun StakingWidgetFullActionsPreview() {
                     rewards = "50 RUJI",
                     nextReward = "5 RUJI",
                     nextPayout = "Jan 15, 2025",
+                ),
+            onClickStake = {},
+            onClickUnstake = {},
+            onClickWithdraw = {},
+            onClickTransfer = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Staking Widget - CACAO Unstake Locked")
+@Composable
+private fun StakingWidgetCacaoUnstakeLockedPreview() {
+    Box(modifier = Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp)) {
+        StakingWidget(
+            state =
+                StakePositionUiModel(
+                    coin = Coins.MayaChain.CACAO,
+                    stakeAssetHeader = UiText.StringResource(R.string.cacao_pool),
+                    stakeAmount = BigDecimal("5000"),
+                    stakedAmountDisplay = "5000 CACAO",
+                    stakedFiatDisplay = "$1,234.56",
+                    apy = "12.4%",
+                    canWithdraw = false,
+                    canStake = true,
+                    canUnstake = false,
+                    // 5 days, 3 hours
+                    unstakeUnlocksInSeconds = (5L * 24L * 3_600L) + (3L * 3_600L),
                 ),
             onClickStake = {},
             onClickUnstake = {},

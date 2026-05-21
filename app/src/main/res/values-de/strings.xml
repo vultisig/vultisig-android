@@ -522,8 +522,10 @@
     <string name="stake_cacao_title">CACAO staken</string>
     <string name="unstake_cacao_title">CACAO entstaken</string>
     <string name="unstake_cacao_available_format">Verfügbar: %1$s</string>
-    <string name="unstake_cacao_unlocks_in_format">Freischaltung in %1$dT %2$dStd</string>
-    <string name="unstake_cacao_unlocks_in_hours_format">Freischaltung in %1$dStd %2$dMin</string>
+    <string name="unstake_cacao_unlocks_in_days_hours_format">Freigabe in %1$dT %2$dStd</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Freigabe in %1$dStd</string>
+    <string name="unstake_cacao_unlocks_soon">Bald verfügbar</string>
+    <string name="unstake_cacao_maturity_check_failed">Position konnte nicht überprüft werden. Erneut versuchen.</string>
     <string name="cacaopool_only_cacao_supported">Nur das CACAO-Token wird für Poolvorgänge unterstützt</string>
     <string name="referral_create_info_title">Empfehlungsprogramm</string>
     <string name="referral_create_info_content">Das Empfehlungsprogramm gilt für THORChain-Swaps und erfolgt nach bestem Bemühen. Sie müssen einen THORName registrieren, um die Vultisig-Empfehlung zu nutzen. Die Registrierungsgebühr beträgt 10 RUNE und 1 RUNE für jedes Jahr, die an das THORChain-Netzwerk gezahlt wird.</string>

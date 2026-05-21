@@ -29,18 +29,32 @@ constructor(private val getMayaCacaoMaturityStatus: GetMayaCacaoMaturityStatusUs
  * @property remainingBlocks blocks left until maturity; clamped at 0 once mature.
  * @property remainingSeconds wall-clock seconds left, computed from [remainingBlocks] at the MAYA
  *   block time of 6s/block.
+ * @property isUnknown true when the live read failed; lets the UI render an explicit "Couldn't
+ *   verify position" hint instead of a silent disabled button.
  */
 data class MayaCacaoMaturityStatus(
     val isMature: Boolean,
     val remainingBlocks: Long,
     val remainingSeconds: Long,
-)
+    val isUnknown: Boolean = false,
+) {
+    companion object {
+        val UNKNOWN: MayaCacaoMaturityStatus =
+            MayaCacaoMaturityStatus(
+                isMature = false,
+                remainingBlocks = 0L,
+                remainingSeconds = 0L,
+                isUnknown = true,
+            )
+    }
+}
 
 /**
  * Reads the on-chain CACAO pool maturity status for [address] so the Unstake UI can gate the CTA
- * and render an accurate countdown instead of guessing against a hardcoded 7-day window. Returns a
- * fail-closed default (`isMature = false`) on RPC error so transient failures keep the CTA disabled
- * rather than letting users hit `deposit_error_has_not_reached_maturity` at submit time.
+ * and render an accurate countdown instead of guessing against a hardcoded 7-day window. Returns
+ * [MayaCacaoMaturityStatus.UNKNOWN] on RPC error so transient failures keep the CTA disabled (the
+ * legacy [ValidateMayaTransactionHeightUseCase] wrapper still reads `isMature = false`) while
+ * letting the UI distinguish "couldn't verify" from "still locked".
  */
 interface GetMayaCacaoMaturityStatusUseCase : suspend (String) -> MayaCacaoMaturityStatus
 
@@ -72,6 +86,6 @@ constructor(private val mayaChainApi: MayaChainApi) : GetMayaCacaoMaturityStatus
             throw e
         } catch (e: Exception) {
             Timber.e(e, "Failed to read CACAO maturity status")
-            MayaCacaoMaturityStatus(isMature = false, remainingBlocks = 0, remainingSeconds = 0)
+            MayaCacaoMaturityStatus.UNKNOWN
         }
 }

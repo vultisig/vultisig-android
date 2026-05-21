@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.blockchain.maya
 
 import com.vultisig.wallet.data.api.MayaChainApi
 import com.vultisig.wallet.data.models.Coins
-import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
+import com.vultisig.wallet.data.usecases.GetMayaCacaoMaturityStatusUseCase
 import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -17,13 +17,17 @@ data class MayaCacaoStakingDetails(
     val stakeAmount: BigInteger,
     val apr: Double?,
     val canUnstake: Boolean,
+    // null when there is no stake position, the position is already mature, or the
+    // maturity fetch failed. UI uses this only to render a "Unlocks in N days, H hours"
+    // hint next to the disabled Unstake action.
+    val unstakeUnlocksInSeconds: Long? = null,
 )
 
 class MayaCacaoStakingService
 @Inject
 constructor(
     private val mayaChainApi: MayaChainApi,
-    private val validateMayaTransactionHeightUseCase: ValidateMayaTransactionHeightUseCase,
+    private val getMayaCacaoMaturityStatus: GetMayaCacaoMaturityStatusUseCase,
 ) {
     fun getStakingDetails(address: String): Flow<MayaCacaoStakingDetails> =
         flow {
@@ -31,21 +35,29 @@ constructor(
                     val details = supervisorScope {
                         val providerDeferred = async { mayaChainApi.getCacaoProvider(address) }
                         val networkDeferred = async { mayaChainApi.getMidgardNetworkData() }
-                        val canUnstakeDeferred = async {
-                            validateMayaTransactionHeightUseCase(address)
-                        }
+                        val maturityDeferred = async { getMayaCacaoMaturityStatus(address) }
 
                         val provider = providerDeferred.await()
                         val network = networkDeferred.await()
-                        val canUnstake = canUnstakeDeferred.await()
+                        val maturity = maturityDeferred.await()
 
                         val stakeAmount = provider.value.toBigIntegerOrNull() ?: BigInteger.ZERO
                         val apr = network.liquidityAPY.toDoubleOrNull()?.takeIf { it > 0.0 }
+                        val hasPosition = stakeAmount > BigInteger.ZERO
 
                         MayaCacaoStakingDetails(
                             stakeAmount = stakeAmount,
                             apr = apr,
-                            canUnstake = canUnstake && stakeAmount > BigInteger.ZERO,
+                            canUnstake = hasPosition && maturity.isMature,
+                            unstakeUnlocksInSeconds =
+                                if (
+                                    hasPosition &&
+                                        !maturity.isMature &&
+                                        !maturity.isUnknown &&
+                                        maturity.remainingSeconds > 0L
+                                )
+                                    maturity.remainingSeconds
+                                else null,
                         )
                     }
                     emit(details)
