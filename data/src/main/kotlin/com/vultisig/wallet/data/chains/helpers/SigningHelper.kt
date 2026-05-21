@@ -143,10 +143,20 @@ object SigningHelper {
                         val utxo = UtxoHelper(payload.coin.coinType, ecdsaKey, ecdsaChainCode)
                         val sb = payload.signBitcoin
                         // PSBT co-signing helper supports P2WPKH / P2SH-P2WPKH only; the UTXO
-                        // siblings (BCH, Doge, LTC, Dash, Zcash) use legacy P2PKH, so route them
-                        // through the WalletCore path even if a `signBitcoin` block slipped in.
-                        if (chain == Chain.Bitcoin && sb != null) {
-                            utxo.getPreSignedImageHashFromSignBitcoin(sb)
+                        // siblings (BCH, Doge, LTC, Dash, Zcash) use legacy P2PKH, so a
+                        // `signBitcoin` block must never reach the silent fall-through. Fail
+                        // loudly here so a future PSBT integration on those chains can't ship
+                        // with zero binding-check enforcement.
+                        require(chain == Chain.Bitcoin || sb == null) {
+                            "PSBT co-signing (signBitcoin) is only supported on Bitcoin; " +
+                                "got chain $chain — UTXO-sibling dispatch needs updating"
+                        }
+                        if (sb != null) {
+                            utxo.getPreSignedImageHashFromSignBitcoin(
+                                signBitcoin = sb,
+                                expectedToAddress = payload.toAddress,
+                                expectedToAmount = payload.toAmount,
+                            )
                         } else {
                             utxo.getPreSignedImageHash(payload)
                         }

@@ -974,6 +974,7 @@
     <string name="key_import_spotlight_get_started">Inizia</string>
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">Cronologia</string>
+    <string name="transaction_history_title_chain">Cronologia di %1$s</string>
     <string name="transaction_history_tab_overview">Panoramica</string>
     <string name="transaction_history_tab_send">Invia</string>
     <string name="transaction_history_tab_swap">Scambia</string>

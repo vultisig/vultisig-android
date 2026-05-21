@@ -1051,6 +1051,7 @@
     <string name="key_import_spotlight_get_started">Get started</string>
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">History</string>
+    <string name="transaction_history_title_chain">%1$s History</string>
     <string name="transaction_history_tab_overview">Overview</string>
     <string name="transaction_history_tab_send">Send</string>
     <string name="transaction_history_tab_swap">Swaps</string>
