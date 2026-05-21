@@ -976,6 +976,12 @@ constructor(
                                 }
                                 ?.let {
                                     tokenSelected = true
+                                    // loadAddresses is a channelFlow ending in awaitClose() so
+                                    // this collect never returns and `finally` only runs if the
+                                    // job is cancelled — unblock collectSelectedAccount as soon
+                                    // as the target token is selected instead of waiting for the
+                                    // flow to terminate.
+                                    isSwitchingAccounts.value = false
                                     selectToken(it.token)
                                 }
                         }
