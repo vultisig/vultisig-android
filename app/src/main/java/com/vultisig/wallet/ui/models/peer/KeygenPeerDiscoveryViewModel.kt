@@ -80,7 +80,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -196,8 +195,6 @@ constructor(
 
     private var serverUrl: String = VULTISIG_RELAY_URL
 
-    private var hasAutoStartedKeygen: Boolean = false
-
     init {
         if (args == null) {
             viewModelScope.launch { navigator.navigate(Destination.Back) }
@@ -217,19 +214,12 @@ constructor(
     private fun observeAutoStartKeygen() {
         val args = args ?: return
         val targetDeviceCount = args.deviceCount ?: return
-        if (targetDeviceCount > 3) return
+        if (targetDeviceCount !in 2..3) return
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) return
 
         viewModelScope.launch {
-            state
-                .map { it.selectedDevices.size }
-                .distinctUntilChanged()
-                .collect { selectedSize ->
-                    if (!hasAutoStartedKeygen && selectedSize + 1 == targetDeviceCount) {
-                        hasAutoStartedKeygen = true
-                        next()
-                    }
-                }
+            state.map { it.selectedDevices.size }.first { it == targetDeviceCount - 1 }
+            next()
         }
     }
 
