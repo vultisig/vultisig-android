@@ -6,6 +6,7 @@ import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.models.Chain
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -69,14 +70,17 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
             if (fetchedAtMillis != 0L && (nowInner - fetchedAtMillis) < TTL_MILLIS) {
                 return@withLock enabledChains
             }
-            runCatching { api.providers() }
-                .map { response ->
-                    val chains = response.toEnabledChains()
-                    enabledChains = chains
-                    fetchedAtMillis = nowInner
-                    chains
-                }
-                .getOrNull()
+            try {
+                val response = api.providers()
+                val chains = response.toEnabledChains()
+                enabledChains = chains
+                fetchedAtMillis = nowInner
+                chains
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
         }
     }
 

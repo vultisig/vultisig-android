@@ -5,7 +5,7 @@ package com.vultisig.wallet.data.api.errors
  * failure mode documented at https://docs.swapkit.dev (or a client-side filter outcome) and is
  * paired with a localized message key consumed by the swap UI.
  */
-sealed class SwapKitError(message: String) : Exception(message) {
+sealed class SwapKitError(message: String, cause: Throwable? = null) : Exception(message, cause) {
 
     /** No SwapKit route survived the THORChain/Maya and single-hop filters. */
     class NoRoutes(message: String = "No SwapKit route available") : SwapKitError(message)
@@ -17,10 +17,10 @@ sealed class SwapKitError(message: String) : Exception(message) {
     class UnsupportedTxType(txType: String) : SwapKitError("Unsupported SwapKit tx type: $txType")
 
     /** Transport-level failure talking to the Vultisig SwapKit proxy. */
-    class Network(message: String) : SwapKitError(message)
+    class Network(message: String, cause: Throwable? = null) : SwapKitError(message, cause)
 
     /** SwapKit response shape did not deserialize against the expected V3 schema. */
-    class Decoding(message: String) : SwapKitError(message)
+    class Decoding(message: String, cause: Throwable? = null) : SwapKitError(message, cause)
 
     /**
      * Live `/v3/swap` price drifted further from the user's accepted `/v3/quote` than tolerated. UI

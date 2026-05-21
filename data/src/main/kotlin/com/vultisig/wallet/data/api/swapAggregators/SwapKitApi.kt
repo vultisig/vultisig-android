@@ -98,17 +98,23 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
                 try {
                     response.body<T>()
                 } catch (e: SerializationException) {
-                    throw SwapKitError.Decoding(e.message ?: "Failed to decode SwapKit response")
+                    throw SwapKitError.Decoding(
+                        message = e.message ?: "Failed to decode SwapKit response",
+                        cause = e,
+                    )
                 }
             }
-        } catch (_: TimeoutCancellationException) {
-            throw SwapKitError.Network("SwapKit request to $url timed out")
+        } catch (e: TimeoutCancellationException) {
+            throw SwapKitError.Network(message = "SwapKit request to $url timed out", cause = e)
         } catch (e: CancellationException) {
             throw e
         } catch (e: SwapKitError) {
             throw e
         } catch (e: Exception) {
-            throw SwapKitError.Network(e.message ?: "SwapKit request to $url failed")
+            throw SwapKitError.Network(
+                message = e.message ?: "SwapKit request to $url failed",
+                cause = e,
+            )
         }
 
     /** Pulls a SwapKit error `code` out of a JSON error body, if present. */
