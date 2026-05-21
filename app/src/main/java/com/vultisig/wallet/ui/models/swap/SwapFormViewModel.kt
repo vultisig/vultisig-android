@@ -825,7 +825,13 @@ constructor(
                         }
                     } else if (previousChain != chain) {
                         // UTXO non-Cardano + chain transitioned (initial selection or token
-                        // switch). The plan-fee block in calculateFees() may have already run
+                        // switch). Clear any stale fee from the previous chain immediately so
+                        // selectSrcPercentage() doesn't subtract a cross-chain fee value
+                        // (e.g. ETH wei subtracted from ZEC satoshis) before calculateFees()
+                        // can compute the correct UTXO plan fee.
+                        estimatedNetworkFeeTokenValue.value = null
+                        estimatedNetworkFeeFiatValue.value = null
+                        // The plan-fee block in calculateFees() may have already run
                         // with a stale or null gasFeeChain and skipped via its chain guard,
                         // leaving the form fee blank; re-fire so it can compute with the byte
                         // fee for this chain.
