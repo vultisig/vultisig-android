@@ -521,7 +521,6 @@
     <string name="unstake_cacao_available_format">Beschikbaar: %1$s</string>
     <string name="unstake_cacao_unlocks_in_days_hours_format">Ontgrendelt over %1$dd %2$du</string>
     <string name="unstake_cacao_unlocks_in_hours_format">Ontgrendelt over %1$du %2$dm</string>
-    <string name="unstake_cacao_unlocks_soon">Ontgrendelt binnenkort</string>
     <string name="unstake_cacao_maturity_check_failed">Kan positie niet verifiëren. Probeer opnieuw.</string>
     <string name="cacaopool_only_cacao_supported">Alleen CACAO-tokens worden ondersteund voor pooloperaties</string>
     <string name="referral_create_info_title">Verwijzingsprogramma</string>
