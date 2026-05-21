@@ -154,7 +154,7 @@ internal class SwapKitProviderCacheTest {
     fun `invalidate forces a refetch on next call`() = runTest {
         coEvery { api.providers() } returns providersResponse("CHAINFLIP" to listOf("ETH"))
 
-        val clock = FakeClock(now = 0L)
+        val clock = FakeClock(now = 1_000L)
         val cache = cache(clock)
 
         cache.isEnabled(Chain.Ethereum)
