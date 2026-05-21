@@ -202,35 +202,38 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         isAffiliate = from.isAffiliate,
                     )
                 } else null,
+            // SwapKit reuses the OneInch proto frame on the wire — peers identify the variant by
+            // the `provider` string ("SwapKit") so the inbound mapper can re-emit
+            // SwapPayload.SwapKit instead of SwapPayload.EVM. Until a SwapKit-specific proto field
+            // is added to commondata, this avoids a schema bump while still round-tripping.
             oneinchSwapPayload =
-                if (swapPayload is SwapPayload.EVM) {
-                    val from = swapPayload.data
-                    OneInchSwapPayload(
-                        fromCoin = from.fromCoin.toCoinProto(),
-                        toCoin = from.toCoin.toCoinProto(),
-                        fromAmount = from.fromAmount.toString(),
-                        toAmountDecimal = from.toAmountDecimal.toPlainString(),
-                        quote =
-                            from.quote.let { it ->
-                                OneInchQuote(
-                                    dstAmount = it.dstAmount,
-                                    tx =
-                                        it.tx.let {
-                                            OneInchTransaction(
-                                                from = it.from,
-                                                to = it.to,
-                                                `data` = it.data,
-                                                `value` = it.value,
-                                                gasPrice = it.gasPrice,
-                                                gas = it.gas,
-                                                swapFee = it.swapFee,
-                                            )
-                                        },
-                                )
-                            },
-                        provider = from.provider,
-                    )
-                } else null,
+                when (swapPayload) {
+                    is SwapPayload.EVM ->
+                        swapPayload.data.let { from ->
+                            OneInchSwapPayload(
+                                fromCoin = from.fromCoin.toCoinProto(),
+                                toCoin = from.toCoin.toCoinProto(),
+                                fromAmount = from.fromAmount.toString(),
+                                toAmountDecimal = from.toAmountDecimal.toPlainString(),
+                                quote = from.quote.toOneInchQuote(),
+                                provider = from.provider,
+                            )
+                        }
+
+                    is SwapPayload.SwapKit ->
+                        swapPayload.data.let { from ->
+                            OneInchSwapPayload(
+                                fromCoin = from.fromCoin.toCoinProto(),
+                                toCoin = from.toCoin.toCoinProto(),
+                                fromAmount = from.fromAmount.toString(),
+                                toAmountDecimal = from.toAmountDecimal.toPlainString(),
+                                quote = from.quote.toOneInchQuote(),
+                                provider = from.provider,
+                            )
+                        }
+
+                    else -> null
+                },
             wasmExecuteContractPayload = keysignPayload.wasmExecuteContractPayload,
             erc20ApprovePayload =
                 if (approvePayload is ERC20ApprovePayload) {
