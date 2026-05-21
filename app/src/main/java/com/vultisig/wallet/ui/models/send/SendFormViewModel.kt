@@ -83,6 +83,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -256,9 +257,17 @@ constructor(
 
     private val accountsState = MutableStateFlow<AccountsLoadState>(AccountsLoadState.Uninitialized)
 
+    // Filter out Uninitialized so reload transitions (vault switch, mscaChanged,
+    // autocompound toggle) don't flash `accounts` to emptyList() — that flash would
+    // transiently clear the gas fee, fail validation in accountValidator, and render a
+    // placeholder row in collectSelectedAccount. Downstream consumers here only care
+    // about the actual list and keep the prior Loaded(...) value until the new one
+    // arrives. TokenPreselectionService still consumes accountsState directly and
+    // correctly observes the Uninitialized reset.
     private val accounts: StateFlow<List<Account>> =
         accountsState
-            .map { it.accountsOrEmpty }
+            .filterIsInstance<AccountsLoadState.Loaded>()
+            .map { it.accounts }
             .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val selectedAccount: Account?
