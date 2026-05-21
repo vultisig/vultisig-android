@@ -32,6 +32,7 @@ import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Broadcasted
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Confirmed
+import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Pending
 import com.vultisig.wallet.ui.screens.transaction.components.SendAmountText
 import com.vultisig.wallet.ui.screens.transaction.components.ToSeparator
 import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle
@@ -39,6 +40,7 @@ import com.vultisig.wallet.ui.screens.transaction.components.TransactionStatusWi
 import com.vultisig.wallet.ui.screens.transaction.components.TypeBadge
 import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
 
 @Composable
 internal fun SwapTransactionCard(
@@ -225,6 +227,20 @@ private fun PreviewSwapCardInProgress() {
     OnBoardingComposeTheme {
         SwapTransactionCard(
             item = previewSwapItem.copy(status = Broadcasted),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewSwapCardPending() {
+    OnBoardingComposeTheme {
+        SwapTransactionCard(
+            item =
+                previewSwapItem.copy(
+                    status = Pending(elapsedTime = UiText.DynamicString("5s ago"))
+                ),
             modifier = Modifier.fillMaxWidth().padding(16.dp),
         )
     }

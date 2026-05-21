@@ -998,6 +998,7 @@
     <string name="transaction_history_date_today">Oggi</string>
     <string name="transaction_history_date_yesterday">Ieri</string>
     <string name="transaction_history_elapsed_just_now">proprio adesso</string>
+    <string name="transaction_history_elapsed_seconds">%1$ds fa</string>
     <string name="transaction_history_elapsed_days">%1$dg fa</string>
     <string name="transaction_history_elapsed_hours">%1$dh fa</string>
     <string name="transaction_history_elapsed_minutes">%1$dmin fa</string>

@@ -998,6 +998,7 @@
     <string name="transaction_history_date_today">Heute</string>
     <string name="transaction_history_date_yesterday">Gestern</string>
     <string name="transaction_history_elapsed_just_now">gerade eben</string>
+    <string name="transaction_history_elapsed_seconds">vor %1$ds</string>
     <string name="transaction_history_elapsed_days">vor %1$dT</string>
     <string name="transaction_history_elapsed_hours">vor %1$dh</string>
     <string name="transaction_history_elapsed_minutes">vor %1$dmin</string>

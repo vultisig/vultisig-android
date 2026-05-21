@@ -1027,6 +1027,7 @@
     <string name="transaction_history_date_today">오늘</string>
     <string name="transaction_history_date_yesterday">어제</string>
     <string name="transaction_history_elapsed_just_now">방금 전</string>
+    <string name="transaction_history_elapsed_seconds">%1$d초 전</string>
     <string name="transaction_history_elapsed_days">%1$d일 전</string>
     <string name="transaction_history_elapsed_hours">%1$d시간 전</string>
     <string name="transaction_history_elapsed_minutes">%1$d분 전</string>

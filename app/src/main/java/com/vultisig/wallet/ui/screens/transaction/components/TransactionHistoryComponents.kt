@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,12 +23,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.ui.components.TokenLogo
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
+import com.vultisig.wallet.ui.theme.OnBoardingComposeTheme
 import com.vultisig.wallet.ui.theme.Theme
+import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asString
 
 @Composable
 internal fun TypeBadge(iconRes: Int, label: String, modifier: Modifier = Modifier) {
@@ -66,47 +71,70 @@ internal fun TransactionStatusWidget(
     status: TransactionStatusUiModel,
     modifier: Modifier = Modifier,
 ) {
-    val isInProgress =
-        status is TransactionStatusUiModel.Broadcasted || status is TransactionStatusUiModel.Pending
-
-    if (isInProgress) {
-        Text(
-            text = stringResource(R.string.transaction_status_in_progress_label),
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.tertiary,
-            modifier =
-                modifier
-                    .background(
-                        color = Theme.v2.colors.backgrounds.primary,
-                        shape = RoundedCornerShape(100.dp),
-                    )
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-        )
-    } else {
-        val (label, color) =
-            when (status) {
-                TransactionStatusUiModel.Confirmed ->
-                    stringResource(R.string.transaction_status_confirmed_label) to
-                        Theme.v2.colors.alerts.success
-
-                is TransactionStatusUiModel.Failed ->
-                    stringResource(R.string.transaction_status_failed_label) to
-                        Theme.v2.colors.alerts.error
-
-                is TransactionStatusUiModel.Refunded ->
-                    stringResource(R.string.transaction_status_refunded_label) to
-                        Theme.v2.colors.alerts.warning
-
-                else -> "" to Theme.v2.colors.text.tertiary
+    when (status) {
+        is TransactionStatusUiModel.Pending -> {
+            // Live counter — matches iOS: "In progress... <elapsedTime>" pill with the elapsed
+            // segment in primary text color so the user can see it tick.
+            Row(
+                modifier =
+                    modifier
+                        .background(
+                            color = Theme.v2.colors.backgrounds.primary,
+                            shape = RoundedCornerShape(100.dp),
+                        )
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.transaction_status_in_progress_label) + " ",
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                Text(
+                    text = status.elapsedTime.asString(),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.primary,
+                )
             }
-        if (label.isNotEmpty()) {
+        }
+
+        TransactionStatusUiModel.Broadcasted ->
             Text(
-                text = label,
+                text = stringResource(R.string.transaction_status_in_progress_label),
                 style = Theme.brockmann.supplementary.caption,
-                color = color,
+                color = Theme.v2.colors.text.tertiary,
+                modifier =
+                    modifier
+                        .background(
+                            color = Theme.v2.colors.backgrounds.primary,
+                            shape = RoundedCornerShape(100.dp),
+                        )
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+            )
+
+        TransactionStatusUiModel.Confirmed ->
+            Text(
+                text = stringResource(R.string.transaction_status_confirmed_label),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.alerts.success,
                 modifier = modifier,
             )
-        }
+
+        is TransactionStatusUiModel.Failed ->
+            Text(
+                text = stringResource(R.string.transaction_status_failed_label),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.alerts.error,
+                modifier = modifier,
+            )
+
+        is TransactionStatusUiModel.Refunded ->
+            Text(
+                text = stringResource(R.string.transaction_status_refunded_label),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.alerts.warning,
+                modifier = modifier,
+            )
     }
 }
 
@@ -186,3 +214,30 @@ internal fun String.abbreviateAddress(): String {
     if (length <= 10) return this
     return "${take(6)}...${takeLast(4)}"
 }
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewTransactionStatusWidget() {
+    OnBoardingComposeTheme {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            TransactionStatusWidget(
+                status = TransactionStatusUiModel.Pending(elapsedTime = "5s ago".asUi())
+            )
+            TransactionStatusWidget(
+                status = TransactionStatusUiModel.Pending(elapsedTime = "3m ago".asUi())
+            )
+            TransactionStatusWidget(
+                status = TransactionStatusUiModel.Pending(elapsedTime = "2h ago".asUi())
+            )
+            TransactionStatusWidget(status = TransactionStatusUiModel.Broadcasted)
+            TransactionStatusWidget(status = TransactionStatusUiModel.Confirmed)
+            TransactionStatusWidget(status = TransactionStatusUiModel.Failed(reason = null))
+            TransactionStatusWidget(status = TransactionStatusUiModel.Refunded(reason = null))
+        }
+    }
+}
+
+private fun String.asUi(): UiText = UiText.DynamicString(this)

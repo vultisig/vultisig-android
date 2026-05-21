@@ -993,6 +993,7 @@
     <string name="transaction_history_date_today">Vandaag</string>
     <string name="transaction_history_date_yesterday">Gisteren</string>
     <string name="transaction_history_elapsed_just_now">zojuist</string>
+    <string name="transaction_history_elapsed_seconds">%1$ds geleden</string>
     <string name="transaction_history_elapsed_days">%1$dd geleden</string>
     <string name="transaction_history_elapsed_hours">%1$du geleden</string>
     <string name="transaction_history_elapsed_minutes">%1$dmin geleden</string>

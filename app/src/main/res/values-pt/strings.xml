@@ -997,6 +997,7 @@
     <string name="transaction_history_date_today">Hoje</string>
     <string name="transaction_history_date_yesterday">Ontem</string>
     <string name="transaction_history_elapsed_just_now">agora mesmo</string>
+    <string name="transaction_history_elapsed_seconds">há %1$ds</string>
     <string name="transaction_history_elapsed_days">há %1$dd</string>
     <string name="transaction_history_elapsed_hours">há %1$dh</string>
     <string name="transaction_history_elapsed_minutes">há %1$dmin</string>

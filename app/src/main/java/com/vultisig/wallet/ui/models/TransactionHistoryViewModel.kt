@@ -31,12 +31,13 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
@@ -248,11 +249,24 @@ constructor(
     }
 
     private fun startTimeTicker() {
+        // Only tick while at least one Pending tx is visible; otherwise idle so we don't burn
+        // cycles when the list is fully confirmed. iOS does the same.
         viewModelScope.launch {
-            while (true) {
-                delay(1.minutes)
-                currentTime.value = System.currentTimeMillis()
-            }
+            _uiState
+                .map { state ->
+                    state.groups.any { group ->
+                        group.transactions.any { it.status is TransactionStatusUiModel.Pending }
+                    }
+                }
+                .distinctUntilChanged()
+                .collectLatest { hasPending ->
+                    if (hasPending) {
+                        while (true) {
+                            delay(1.seconds)
+                            currentTime.value = System.currentTimeMillis()
+                        }
+                    }
+                }
         }
     }
 
@@ -454,7 +468,8 @@ constructor(
 
     private fun formatElapsed(elapsedMs: Long): UiText {
         // Coerce against wall-clock skew (NTP correction, DST, manual date change).
-        val minutes = elapsedMs.coerceAtLeast(0L) / 60_000
+        val seconds = elapsedMs.coerceAtLeast(0L) / 1_000
+        val minutes = seconds / 60
         val hours = minutes / 60
         val days = hours / 24
         return when {
@@ -464,6 +479,8 @@ constructor(
                 UiText.FormattedText(R.string.transaction_history_elapsed_hours, listOf(hours))
             minutes > 0 ->
                 UiText.FormattedText(R.string.transaction_history_elapsed_minutes, listOf(minutes))
+            seconds > 0 ->
+                UiText.FormattedText(R.string.transaction_history_elapsed_seconds, listOf(seconds))
             else -> UiText.StringResource(R.string.transaction_history_elapsed_just_now)
         }
     }

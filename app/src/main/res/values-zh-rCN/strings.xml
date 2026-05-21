@@ -1328,6 +1328,7 @@
     <string name="transaction_history_date_today">今天</string>
     <string name="transaction_history_date_yesterday">昨天</string>
     <string name="transaction_history_elapsed_just_now">刚刚</string>
+    <string name="transaction_history_elapsed_seconds">%1$d秒前</string>
     <string name="transaction_history_elapsed_days">%1$d天前</string>
     <string name="transaction_history_elapsed_hours">%1$d小时前</string>
     <string name="transaction_history_elapsed_minutes">%1$d分钟前</string>

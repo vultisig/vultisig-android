@@ -42,9 +42,9 @@ import org.junit.jupiter.api.Timeout
 /**
  * Unit tests for [TransactionHistoryViewModel].
  *
- * The production VM starts a perpetual `while (true) delay(1.minutes)` ticker in `init` via
- * `viewModelScope.launch`. Standard `runTest` would loop forever advancing virtual time over that
- * ticker, so this suite avoids `runTest` entirely:
+ * The production VM starts a perpetual `while (true) delay(1.seconds)` ticker in `init` via
+ * `viewModelScope.launch` (gated on visible Pending txs). Standard `runTest` would loop forever
+ * advancing virtual time over that ticker, so this suite avoids `runTest` entirely:
  * - We use [StandardTestDispatcher], which never auto-runs coroutines. The ticker `launch` is
  *   queued but never fires unless we explicitly call [TestScope.runCurrent].
  * - Each test reads `vm.uiState.value` synchronously (StateFlow updates happen on the calling

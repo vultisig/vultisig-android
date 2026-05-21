@@ -1075,6 +1075,7 @@
     <string name="transaction_history_date_today">Today</string>
     <string name="transaction_history_date_yesterday">Yesterday</string>
     <string name="transaction_history_elapsed_just_now">just now</string>
+    <string name="transaction_history_elapsed_seconds">%1$ds ago</string>
     <string name="transaction_history_elapsed_days">%1$dd ago</string>
     <string name="transaction_history_elapsed_hours">%1$dh ago</string>
     <string name="transaction_history_elapsed_minutes">%1$dm ago</string>
