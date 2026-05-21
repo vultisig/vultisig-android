@@ -23,6 +23,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -159,6 +160,136 @@ internal class SendFormViewModelAutoCompoundTest {
             assertTrue(
                 balancesPassedToMapper.contains(BigInteger("999")),
                 "hydrated balance never reached the mapper",
+            )
+        }
+
+    @Test
+    fun `onAutoCompound(true) releases isSwitchingAccounts gate even when sTCY absent from vault`() =
+        runTest(mainDispatcher) {
+            // UNSTAKE_TCY form — defiType comes from setUp.
+            coEvery { accountsRepository.loadDeFiAddresses(VAULT_ID, false) } answers
+                {
+                    channelFlow<List<Address>> {
+                        send(emptyList())
+                        awaitClose()
+                    }
+                }
+            // Autocompound switch: loadAddresses returns only TCY — sTCY is absent.
+            // The target ticker "sTCY" will never be found, so selectToken is never called
+            // inside the callback. The gate must still release on the first emission.
+            val tcy = thorAccount(Coins.ThorChain.TCY, BigInteger("1"))
+            every { accountsRepository.loadAddresses(VAULT_ID) } answers
+                {
+                    channelFlow {
+                        send(
+                            listOf(
+                                Address(
+                                    chain = Chain.ThorChain,
+                                    address = "thor1",
+                                    accounts = listOf(tcy),
+                                )
+                            )
+                        )
+                        awaitClose()
+                    }
+                }
+
+            var captureMapper = false
+            var mapperCallCount = 0
+            val mapper = mockk<AccountToTokenBalanceUiModelMapper>()
+            coEvery { mapper.invoke(any()) } answers
+                {
+                    val src = firstArg<SendSrc>()
+                    if (captureMapper) mapperCallCount++
+                    TokenBalanceUiModel(
+                        model = mockk(relaxed = true),
+                        title = src.account.token.ticker,
+                        balance = src.account.tokenValue?.value?.toString() ?: "null",
+                        fiatValue = null,
+                        isNativeToken = src.account.token.isNativeToken,
+                        isLayer2 = false,
+                        tokenStandard = null,
+                        tokenLogo = "",
+                        chainLogo = 0,
+                    )
+                }
+
+            val vm = buildViewModel(mapper)
+            advanceUntilIdle()
+            captureMapper = true // only count calls that happen after the toggle
+
+            vm.onAutoCompound(true)
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.isAutocompound)
+            // With the gate stuck (isSwitchingAccounts = true), the combine in
+            // collectSelectedAccount keeps returning null and the mapper is never called
+            // again. A call count > 0 proves isSwitchingAccounts returned to false even
+            // though the target ticker sTCY was absent from every emission.
+            assertTrue(
+                mapperCallCount > 0,
+                "isSwitchingAccounts gate is stuck — mapper was never called after the toggle",
+            )
+        }
+
+    @Test
+    fun `onAutoCompound(false) on UNSTAKE_STCY releases gate even when TCY absent from vault`() =
+        runTest(mainDispatcher) {
+            every { savedStateHandle.toRoute<Route.Send>() } returns
+                Route.Send(vaultId = VAULT_ID, type = "UNSTAKE_STCY")
+
+            // UNSTAKE_STCY initial load and autocompound-off switch both use
+            // loadDeFiAddresses. Return only sTCY — TCY is absent in this vault.
+            val stcy = thorAccount(Coins.ThorChain.sTCY, BigInteger("200"))
+            coEvery { accountsRepository.loadDeFiAddresses(VAULT_ID, false) } answers
+                {
+                    channelFlow {
+                        send(
+                            listOf(
+                                Address(
+                                    chain = Chain.ThorChain,
+                                    address = "thor1",
+                                    accounts = listOf(stcy),
+                                )
+                            )
+                        )
+                        awaitClose()
+                    }
+                }
+
+            var captureMapper = false
+            var mapperCallCount = 0
+            val mapper = mockk<AccountToTokenBalanceUiModelMapper>()
+            coEvery { mapper.invoke(any()) } answers
+                {
+                    val src = firstArg<SendSrc>()
+                    if (captureMapper) mapperCallCount++
+                    TokenBalanceUiModel(
+                        model = mockk(relaxed = true),
+                        title = src.account.token.ticker,
+                        balance = src.account.tokenValue?.value?.toString() ?: "null",
+                        fiatValue = null,
+                        isNativeToken = src.account.token.isNativeToken,
+                        isLayer2 = false,
+                        tokenStandard = null,
+                        tokenLogo = "",
+                        chainLogo = 0,
+                    )
+                }
+
+            val vm = buildViewModel(mapper)
+            advanceUntilIdle()
+            captureMapper = true
+
+            vm.onAutoCompound(false)
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.isAutocompound)
+            // Same gate-release invariant as the sTCY case: TCY absent → gate must still
+            // release on the first emission so the form does not remain frozen.
+            assertTrue(
+                mapperCallCount > 0,
+                "isSwitchingAccounts gate is stuck — mapper was never called after onAutoCompound(false)",
             )
         }
 

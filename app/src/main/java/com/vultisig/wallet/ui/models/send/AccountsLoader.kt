@@ -107,16 +107,17 @@ internal class AccountsLoader(
                 addressesFlow
                     .map { addrs -> addrs.flatMap { it.accounts } }
                     .collect { accounts ->
-                        if (generation != currentGeneration) return@collect
-                        accountsState.value = AccountsLoadState.Loaded(accounts)
-                        onAccountsLoaded(accounts)
+                        if (publishLoaded(accounts, generation)) {
+                            onAccountsLoaded(accounts)
+                        }
                     }
             }
     }
 
-    private fun publishLoaded(accounts: List<Account>, generation: Long) {
-        if (generation != currentGeneration) return
+    private fun publishLoaded(accounts: List<Account>, generation: Long): Boolean {
+        if (generation != currentGeneration) return false
         accountsState.value = AccountsLoadState.Loaded(accounts)
+        return true
     }
 
     private suspend fun onLoadError(error: Throwable) {

@@ -961,6 +961,10 @@ constructor(
         var tokenSelected = false
         accountsLoader.loadForAutoCompoundSwitch(vaultId = vaultId, useStableCompound = checked) {
             loadedAccounts ->
+            // Release the gate on every emission — if the target ticker is never found the
+            // form must still become interactive rather than staying gated forever. Setting
+            // to false repeatedly is a no-op once already false.
+            isSwitchingAccounts.value = false
             if (!tokenSelected) {
                 loadedAccounts
                     .find {
@@ -969,7 +973,6 @@ constructor(
                     }
                     ?.let {
                         tokenSelected = true
-                        isSwitchingAccounts.value = false
                         selectToken(it.token)
                     }
             }
