@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import java.math.BigDecimal
 import java.math.BigInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -127,15 +128,35 @@ internal class AccountsLoader(
     // have been refreshed from the network. Using isRefresh = true here would skip the
     // cached pre-emission and block the form on slow networks.
     private suspend fun loadCircleUSDCAccount(vaultId: VaultId, generation: Long) {
+        // Resolve staking details once for the lifetime of this load — generateId only
+        // depends on Coins.Ethereum.USDC + mscaAddress (neither of which change between
+        // cached and hydrated emissions), and the stake amount doesn't change when ETH
+        // balances hydrate. Repeating the lookup per emission was a wasted DB hit.
+        val mscaAddress = mscaAddressProvider()
+        val cachedDetails =
+            mscaAddress?.let { msca ->
+                stakingDetailsRepository.getStakingDetailsById(
+                    vaultId,
+                    Coins.Ethereum.USDC.generateId(msca),
+                )
+            }
         accountsRepository
             .loadAddresses(vaultId, isRefresh = false)
             .map { addrs -> addrs.flatMap { it.accounts } }
-            .collect { accountsLoaded -> publishCircleUsdc(vaultId, accountsLoaded, generation) }
+            .collect { accountsLoaded ->
+                publishCircleUsdc(
+                    accountsLoaded,
+                    mscaAddress,
+                    cachedDetails?.stakeAmount,
+                    generation,
+                )
+            }
     }
 
-    private suspend fun publishCircleUsdc(
-        vaultId: VaultId,
+    private fun publishCircleUsdc(
         accountsLoaded: List<Account>,
+        mscaAddress: String?,
+        stakeAmount: BigInteger?,
         generation: Long,
     ) {
         if (generation != currentGeneration) return
@@ -150,19 +171,12 @@ internal class AccountsLoader(
         }
 
         val usdc = Coins.Ethereum.USDC.copy(address = ethereumAccount.token.address)
-        val mscaAddress = mscaAddressProvider()
 
         if (mscaAddress != null) {
-            val id = usdc.generateId(mscaAddress)
-            val cachedDetails = stakingDetailsRepository.getStakingDetailsById(vaultId, id)
             val usdcCircleAccount =
                 Account(
                     token = usdc,
-                    tokenValue =
-                        TokenValue(
-                            value = cachedDetails?.stakeAmount ?: BigInteger.ZERO,
-                            token = usdc,
-                        ),
+                    tokenValue = TokenValue(value = stakeAmount ?: BigInteger.ZERO, token = usdc),
                     fiatValue = null,
                     price = null,
                 )
@@ -189,15 +203,23 @@ internal class AccountsLoader(
     // Collect both cached and hydrated emissions so the form renders cached RUNE/RUJI
     // balances immediately, then refreshes when network balances arrive.
     private suspend fun loadRewardsAccount(vaultId: VaultId, generation: Long) {
+        // Resolve staking details once for the lifetime of this load. The rewards row is
+        // sourced from staking details (not from the addresses flow), so the same value
+        // should back both the cached and hydrated emissions instead of re-querying the
+        // repo on every upstream emission.
+        val cachedDetails =
+            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
         accountsRepository
             .loadAddresses(vaultId, isRefresh = false)
             .map { addrs -> addrs.flatMap { it.accounts } }
-            .collect { accountsLoaded -> publishRewards(vaultId, accountsLoaded, generation) }
+            .collect { accountsLoaded ->
+                publishRewards(accountsLoaded, cachedDetails?.rewards, generation)
+            }
     }
 
-    private suspend fun publishRewards(
-        vaultId: VaultId,
+    private fun publishRewards(
         accountsLoaded: List<Account>,
+        rewards: BigDecimal?,
         generation: Long,
     ) {
         if (generation != currentGeneration) return
@@ -215,18 +237,12 @@ internal class AccountsLoader(
                     return
                 }
 
-        val cachedDetails =
-            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
-
-        if (cachedDetails != null) {
+        if (rewards != null) {
             val rewardsAccount =
                 Account(
                     token = RUJI_REWARDS_COIN.copy(address = thorchainAccount.token.address),
                     tokenValue =
-                        TokenValue(
-                            value = cachedDetails.rewards?.toBigInteger() ?: BigInteger.ZERO,
-                            token = RUJI_REWARDS_COIN,
-                        ),
+                        TokenValue(value = rewards.toBigInteger(), token = RUJI_REWARDS_COIN),
                     fiatValue = null,
                     price = null,
                 )

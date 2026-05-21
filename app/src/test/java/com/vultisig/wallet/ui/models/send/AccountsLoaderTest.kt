@@ -220,7 +220,7 @@ internal class AccountsLoaderTest {
     fun `WITHDRAW_RUJI clears stale accounts when the RUNE account is missing`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.WITHDRAW_RUJI
-            // No RUNE account in the vault — short-circuits before staking-details lookup.
+            // No RUNE account in the vault — publishRewards short-circuits to empty.
             every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
                 flowOf(emptyList())
             val loader = build(backgroundScope)
@@ -233,9 +233,6 @@ internal class AccountsLoaderTest {
 
             // Cleared — otherwise the UI would render stale rows from the previous flow.
             assertEquals(AccountsLoadState.Loaded(emptyList()), accountsState.value)
-            coVerify(exactly = 0) {
-                stakingDetailsRepository.getStakingDetailsByCoindId(any(), any())
-            }
         }
 
     @Test
@@ -294,6 +291,57 @@ internal class AccountsLoaderTest {
             assertEquals(BigInteger("1000000"), observed[0][2].tokenValue?.value) // cached RUJI
             assertEquals(BigInteger("999999"), observed[1][1].tokenValue?.value) // hydrated RUNE
             assertEquals(BigInteger("888888"), observed[1][2].tokenValue?.value) // hydrated RUJI
+        }
+
+    @Test
+    fun `WITHDRAW_RUJI resolves staking details exactly once across cached and hydrated emissions`() =
+        runTest(mainDispatcher) {
+            // The rewards row is sourced from the staking-details repo, not from the
+            // addresses flow — its value doesn't change between the cached and the
+            // hydrated emission. The lookup must run once per load(), not per upstream
+            // emission, to avoid N DB hits when the flow produces N emissions.
+            defiType = DeFiNavActions.WITHDRAW_RUJI
+            val runeAccount = thorAccount(Coins.ThorChain.RUNE.copy(address = "thor1"))
+            val rujiAccount = thorAccount(Coins.ThorChain.RUJI.copy(address = "thor1"))
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
+                flow {
+                    emit(
+                        listOf(
+                            Address(
+                                chain = Chain.ThorChain,
+                                address = "thor1",
+                                accounts = listOf(runeAccount, rujiAccount),
+                            )
+                        )
+                    )
+                    yield()
+                    emit(
+                        listOf(
+                            Address(
+                                chain = Chain.ThorChain,
+                                address = "thor1",
+                                accounts = listOf(runeAccount, rujiAccount),
+                            )
+                        )
+                    )
+                }
+            coEvery {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.RUJI.id,
+                )
+            } returns stakingDetails(rewards = BigDecimal("123"))
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) {
+                stakingDetailsRepository.getStakingDetailsByCoindId(
+                    VAULT_ID,
+                    Coins.ThorChain.RUJI.id,
+                )
+            }
         }
 
     // ──────── WITHDRAW_USDC_CIRCLE ────────
@@ -373,7 +421,6 @@ internal class AccountsLoaderTest {
             advanceUntilIdle()
 
             assertEquals(AccountsLoadState.Loaded(emptyList()), accountsState.value)
-            coVerify(exactly = 0) { stakingDetailsRepository.getStakingDetailsById(any(), any()) }
         }
 
     @Test
@@ -428,6 +475,51 @@ internal class AccountsLoaderTest {
             ) // cached ETH
             assertEquals(BigInteger("123456789"), observed[1][0].tokenValue?.value) // hydrated ETH
             assertEquals(BigInteger("789"), observed[1][1].tokenValue?.value) // USDC stake
+        }
+
+    @Test
+    fun `WITHDRAW_USDC_CIRCLE resolves staking details exactly once across cached and hydrated emissions`() =
+        runTest(mainDispatcher) {
+            // Same N-DB-hit concern as the WITHDRAW_RUJI variant — generateId only
+            // depends on Coins.Ethereum.USDC + mscaAddress (constant for the load), so the
+            // staking-details lookup must run once per load(), not per upstream emission.
+            defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE
+            mscaAddress = "0xMSCA"
+            val cachedEth = ethAccount()
+            val hydratedEth =
+                cachedEth.copy(tokenValue = TokenValue(BigInteger("42"), Coins.Ethereum.ETH))
+            every { accountsRepository.loadAddresses(VAULT_ID, isRefresh = false) } returns
+                flow {
+                    emit(
+                        listOf(
+                            Address(
+                                chain = Chain.Ethereum,
+                                address = cachedEth.token.address,
+                                accounts = listOf(cachedEth),
+                            )
+                        )
+                    )
+                    yield()
+                    emit(
+                        listOf(
+                            Address(
+                                chain = Chain.Ethereum,
+                                address = hydratedEth.token.address,
+                                accounts = listOf(hydratedEth),
+                            )
+                        )
+                    )
+                }
+            coEvery { stakingDetailsRepository.getStakingDetailsById(VAULT_ID, any()) } returns
+                stakingDetails(stakeAmount = BigInteger("789"))
+            val loader = build(backgroundScope)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            coVerify(exactly = 1) {
+                stakingDetailsRepository.getStakingDetailsById(VAULT_ID, any())
+            }
         }
 
     // ──────── never-closing channelFlow semantics ────────
