@@ -13,9 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -76,12 +74,13 @@ private fun ReferralScreen(
         Column(
             modifier =
                 Modifier.fillMaxSize()
-                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp)
+                    .padding(bottom = 16.dp)
                     .navigationBarsPadding(),
+            verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Image(
                     painter = painterResource(id = R.drawable.referral_hero),
                     contentDescription = null,
@@ -90,23 +89,23 @@ private fun ReferralScreen(
                 )
             }
 
-            CreateReferralCard(
-                titleRes = createLabel,
-                enabled = createEnabled,
-                onClick = onCreateCardClick,
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                CreateReferralCard(
+                    titleRes = createLabel,
+                    enabled = createEnabled,
+                    onClick = onCreateCardClick,
+                )
 
-            UiSpacer(14.dp)
+                UiSpacer(14.dp)
 
-            ReferralEntryCard(
-                iconRes = R.drawable.ic_image_avatar_sparkle,
-                title = stringResource(R.string.referral_main_my_referral_title),
-                bodyText = stringResource(R.string.referral_main_my_referral_body),
-                enabled = myReferralEnabled,
-                onClick = onMyReferralCardClick,
-            )
-
-            UiSpacer(16.dp)
+                ReferralEntryCard(
+                    iconRes = R.drawable.ic_image_avatar_sparkle,
+                    title = stringResource(R.string.referral_main_my_referral_title),
+                    bodyText = stringResource(R.string.referral_main_my_referral_body),
+                    enabled = myReferralEnabled,
+                    onClick = onMyReferralCardClick,
+                )
+            }
         }
     }
 }
