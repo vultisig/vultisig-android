@@ -163,24 +163,24 @@ internal class TokenPreselectionServiceTest {
         }
 
     @Test
-    fun `preSelect WITHDRAW_RUJI - Loaded(empty) intentional emission still picks the default coin`() =
+    fun `preSelect WITHDRAW_RUJI - Loaded(empty) does not preselect static template coin`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.WITHDRAW_RUJI
             // AccountsLoader publishes Loaded(emptyList) when prerequisites are missing
-            // (e.g. no RUNE/RUJI in vault). The service must NOT swallow that — it should
-            // still surface the static template coin from the default-coin map so the form
-            // is not stuck blank.
+            // (e.g. no RUNE/RUJI in vault). Returning RUJI_REWARDS_COIN here would cause
+            // collectSelectedAccount to synthesize an Account with tokenValue = null, making
+            // the WITHDRAW form look submittable when there is nothing real to withdraw.
             accountsState.value = AccountsLoadState.Loaded(emptyList())
             val service = build(backgroundScope)
 
             service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
             advanceUntilIdle()
 
-            assertEquals(listOf(RUJI_REWARDS_COIN), selectedTokens)
+            assertEquals(emptyList<Any>(), selectedTokens)
         }
 
     @Test
-    fun `preSelect WITHDRAW_USDC_CIRCLE - Loaded(empty) intentional emission picks USDC default`() =
+    fun `preSelect WITHDRAW_USDC_CIRCLE - Loaded(empty) does not preselect static template coin`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE
             accountsState.value = AccountsLoadState.Loaded(emptyList())
@@ -189,7 +189,7 @@ internal class TokenPreselectionServiceTest {
             service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
             advanceUntilIdle()
 
-            assertEquals(listOf(Coins.Ethereum.USDC), selectedTokens)
+            assertEquals(emptyList<Any>(), selectedTokens)
         }
 
     // ──────── forcePreselection ────────

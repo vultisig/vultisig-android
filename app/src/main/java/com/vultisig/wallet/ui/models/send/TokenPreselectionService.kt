@@ -105,6 +105,20 @@ internal class TokenPreselectionService(
         preSelectedChainIds: List<ChainId?>,
         preSelectedTokenId: TokenId?,
     ): Coin? {
+        // For WITHDRAW types, empty accounts means prerequisites are missing (e.g. no
+        // RUNE/RUJI in vault for WITHDRAW_RUJI, no ETH for WITHDRAW_USDC_CIRCLE). Returning
+        // a static template coin here would cause collectSelectedAccount to synthesize an
+        // Account with tokenValue = null, making the form look submittable when it isn't.
+        // STAKE types keep their defaults even on empty accounts because the default coin
+        // guides the user toward what they would be staking.
+        if (accounts.isEmpty()) {
+            return when (defiTypeProvider()) {
+                DeFiNavActions.WITHDRAW_RUJI,
+                DeFiNavActions.WITHDRAW_USDC_CIRCLE -> null
+                else -> defaultDefiCoin(accounts, preSelectedChainIds, preSelectedTokenId)
+            }
+        }
+
         for (account in accounts) {
             val accountToken = account.token
             if (accountToken.id.equals(preSelectedTokenId, ignoreCase = true)) {
@@ -112,8 +126,16 @@ internal class TokenPreselectionService(
             }
         }
 
-        // default coins, in case the account does not exist
-        return when (defiTypeProvider()) {
+        return defaultDefiCoin(accounts, preSelectedChainIds, preSelectedTokenId)
+    }
+
+    // default coins, in case the account does not exist
+    private fun defaultDefiCoin(
+        accounts: List<Account>,
+        preSelectedChainIds: List<ChainId?>,
+        preSelectedTokenId: TokenId?,
+    ): Coin? =
+        when (defiTypeProvider()) {
             DeFiNavActions.STAKE_RUJI,
             DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI
 
@@ -139,5 +161,4 @@ internal class TokenPreselectionService(
             DeFiNavActions.UNFREEZE_TRX -> Coins.Tron.TRX
             null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
         }
-    }
 }
