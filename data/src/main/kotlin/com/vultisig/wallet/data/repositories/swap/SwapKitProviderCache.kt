@@ -10,9 +10,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * 24h in-memory cache for SwapKit `/providers` enablement data. Phase 1 source chains
- * (EVM + Solana) are derived by unioning every provider's `enabledChainIds` and mapping back to
- * Vultisig's [Chain] enum.
+ * 24h in-memory cache for SwapKit `/providers` enablement data. Phase 1 source chains (EVM +
+ * Solana) are derived by unioning every provider's `enabledChainIds` and mapping back to Vultisig's
+ * [Chain] enum.
  *
  * The cache is intentionally process-scoped (no disk persistence) — a cold launch every 24h is
  * cheap, and stale enablement is the failure mode we want to avoid most.
@@ -81,10 +81,7 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
     }
 
     private fun SwapKitProvidersResponseJson.toEnabledChains(): Set<Chain> =
-        providers
-            .flatMap { it.enabledChainIds }
-            .mapNotNull { swapKitChainToVultisig(it) }
-            .toSet()
+        providers.flatMap { it.enabledChainIds }.mapNotNull { swapKitChainToVultisig(it) }.toSet()
 
     companion object {
         /** Cache TTL — 24h, matching the iOS SwapKit Phase 1 implementation. */

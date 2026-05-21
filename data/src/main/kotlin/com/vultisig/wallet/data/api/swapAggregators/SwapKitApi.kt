@@ -35,7 +35,7 @@ import kotlinx.serialization.json.JsonPrimitive
  *
  * Exposed surface in Phase 1:
  * - [quote] — POST /v3/quote: candidate routes
- * - [swap]  — POST /v3/swap: unsigned tx for the winning route
+ * - [swap] — POST /v3/swap: unsigned tx for the winning route
  * - [providers] — GET /providers: per-provider chain enablement (cached upstream, 24h TTL)
  */
 interface SwapKitApi {

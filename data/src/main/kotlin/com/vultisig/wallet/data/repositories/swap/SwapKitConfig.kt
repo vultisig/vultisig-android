@@ -6,8 +6,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
 /**
- * DataStore-backed feature flag for the SwapKit aggregator. Default is `false` — when the toggle
- * is off the [SwapKitQuoteSource] short-circuits without network I/O, so behaviour is identical to
+ * DataStore-backed feature flag for the SwapKit aggregator. Default is `false` — when the toggle is
+ * off the [SwapKitQuoteSource] short-circuits without network I/O, so behaviour is identical to
  * before the SwapKit integration shipped.
  */
 interface SwapKitConfig {

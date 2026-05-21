@@ -14,8 +14,7 @@ sealed class SwapKitError(message: String) : Exception(message) {
      * SwapKit returned a `tx.meta.txType` that this phase does not support (utxo/cosmos/tron/ton).
      * EVM and Solana are the only honored types in Phase 1.
      */
-    class UnsupportedTxType(txType: String) :
-        SwapKitError("Unsupported SwapKit tx type: $txType")
+    class UnsupportedTxType(txType: String) : SwapKitError("Unsupported SwapKit tx type: $txType")
 
     /** Transport-level failure talking to the Vultisig SwapKit proxy. */
     class Network(message: String) : SwapKitError(message)
@@ -24,8 +23,8 @@ sealed class SwapKitError(message: String) : Exception(message) {
     class Decoding(message: String) : SwapKitError(message)
 
     /**
-     * Live `/v3/swap` price drifted further from the user's accepted `/v3/quote` than tolerated.
-     * UI surfaces a confirmation dialog (matches 1inch UX).
+     * Live `/v3/swap` price drifted further from the user's accepted `/v3/quote` than tolerated. UI
+     * surfaces a confirmation dialog (matches 1inch UX).
      */
     class QuoteDeviation(message: String = "Output amount deviation too high") :
         SwapKitError(message)
@@ -39,8 +38,7 @@ sealed class SwapKitError(message: String) : Exception(message) {
                 "no_routes_found",
                 "no_routes" -> NoRoutes(fallbackMessage ?: raw)
                 "outputamountdeviationtoohigh",
-                "output_amount_deviation_too_high" ->
-                    QuoteDeviation(fallbackMessage ?: raw)
+                "output_amount_deviation_too_high" -> QuoteDeviation(fallbackMessage ?: raw)
                 else -> Network(fallbackMessage ?: raw.ifEmpty { "SwapKit request failed" })
             }
         }
