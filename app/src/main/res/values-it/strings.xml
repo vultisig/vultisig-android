@@ -575,6 +575,12 @@
     <string name="faq_settings_a8">Vultisig non memorizza alcuna informazione dell\'utente nelle sue app mobili.</string>
     <string name="faq_settings_a9">È basato sulla tecnologia MPC, che elimina la necessità di frasi seed e supporta più blockchain, rendendo Vultisig flessibile e indipendente dalla catena.</string>
     <string name="vault_settings_advanced_title">Avanzato</string>
+    <string name="settings_advanced_swapkit_toggle">Aggregatore SwapKit</string>
+    <string name="swapkit_error_no_routes">Nessun percorso SwapKit disponibile</string>
+    <string name="swapkit_error_unsupported_tx_type">SwapKit ha restituito un tipo di transazione non supportato</string>
+    <string name="swapkit_error_network">Errore di rete SwapKit</string>
+    <string name="swapkit_error_decoding">Impossibile decodificare la risposta SwapKit</string>
+    <string name="swapkit_error_quote_deviation">Il preventivo SwapKit è cambiato — conferma per continuare</string>
     <string name="sign_message_continue">Continua</string>
     <string name="hint_signing_method">Metodo di firma</string>
     <string name="verify_sign_message_signing_method" >Metodo di firma</string>
