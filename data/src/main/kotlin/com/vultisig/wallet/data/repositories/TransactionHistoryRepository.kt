@@ -27,6 +27,7 @@ interface TransactionHistoryRepository {
     fun observeTransactions(
         vaultId: String,
         type: TransactionHistoryType,
+        chain: String? = null,
     ): Flow<List<TransactionHistoryEntity>>
 
     suspend fun getPendingTransactions(vaultId: String): List<TransactionHistoryEntity>
@@ -36,7 +37,7 @@ interface TransactionHistoryRepository {
     /** Merge backfill data with existing rows without wiping local metadata. */
     suspend fun upsertFromBackfill(entity: TransactionHistoryEntity)
 
-    /** Explicit CONFIRMED -> FAILED demotion for chain reorganisations. */
+    /** Explicit CONFIRMED -> FAILED demotion for chain reorganizations. */
     suspend fun demoteForReorg(chain: String, txHash: String, reason: String)
 
     /** Bump retry counter on a transient-status row (drives exponential backoff). */
@@ -89,12 +90,16 @@ class TransactionHistoryRepositoryImpl @Inject constructor(private val dao: Tran
     override fun observeTransactions(
         vaultId: String,
         type: TransactionHistoryType,
-    ): Flow<List<TransactionHistoryEntity>> =
-        when (type) {
-            TransactionHistoryType.OVERVIEW -> dao.observeAllByVault(vaultId)
-            TransactionHistoryType.SEND -> dao.observeSendByVault(vaultId)
-            TransactionHistoryType.SWAPS -> dao.observeSwapByVault(vaultId)
+        chain: String?,
+    ): Flow<List<TransactionHistoryEntity>> {
+        // Treat blank as unscoped so a round-tripped "" doesn't silently filter to zero rows.
+        val effectiveChain = chain?.takeIf { it.isNotBlank() }
+        return when (type) {
+            TransactionHistoryType.OVERVIEW -> dao.observeAllByVault(vaultId, effectiveChain)
+            TransactionHistoryType.SEND -> dao.observeSendByVault(vaultId, effectiveChain)
+            TransactionHistoryType.SWAPS -> dao.observeSwapByVault(vaultId, effectiveChain)
         }
+    }
 
     override suspend fun getPendingTransactions(vaultId: String): List<TransactionHistoryEntity> =
         dao.getPendingTransactions(vaultId)

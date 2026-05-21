@@ -165,6 +165,14 @@ constructor(
         }
     }
 
+    fun history() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            val chainRaw = chainRaw ?: return@launch
+            navigator.route(Route.TransactionHistory(vaultId = vaultId, chainId = chainRaw))
+        }
+    }
+
     fun selectTokens() {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch

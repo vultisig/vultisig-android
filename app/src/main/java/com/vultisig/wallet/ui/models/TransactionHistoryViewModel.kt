@@ -139,6 +139,7 @@ data class TransactionHistoryUiState(
     val assetSearchItems: List<TransactionAssetUiModel> = emptyList(),
     val selectedAssetIds: Set<String> = emptySet(),
     val selectedAssets: List<TransactionAssetUiModel> = emptyList(),
+    val chainName: String? = null,
 )
 
 @HiltViewModel
@@ -151,13 +152,15 @@ constructor(
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val vaultId: String = savedStateHandle.toRoute<Route.TransactionHistory>().vaultId
+    private val route: Route.TransactionHistory = savedStateHandle.toRoute()
+    private val vaultId: String = route.vaultId
+    private val chainId: String? = route.chainId?.takeIf { it.isNotBlank() }
 
     private val currentTime = MutableStateFlow(System.currentTimeMillis())
 
     val assetSearchTextFieldState = TextFieldState()
 
-    private val _uiState = MutableStateFlow(TransactionHistoryUiState())
+    private val _uiState = MutableStateFlow(TransactionHistoryUiState(chainName = chainId))
     val uiState: StateFlow<TransactionHistoryUiState> = _uiState.asStateFlow()
 
     init {
@@ -232,7 +235,7 @@ constructor(
         ) {
             _uiState.update { it.copy(isRefreshing = true) }
             try {
-                refreshPendingTransactions(vaultId)
+                refreshPendingTransactions(vaultId, chainId)
                 delay(100.milliseconds) // prevent refresh ui freezing
             } finally {
                 _uiState.update { it.copy(isRefreshing = false) }
@@ -241,7 +244,7 @@ constructor(
     }
 
     private fun refreshOnEnter() {
-        viewModelScope.safeLaunch { refreshPendingTransactions(vaultId) }
+        viewModelScope.safeLaunch { refreshPendingTransactions(vaultId, chainId) }
     }
 
     private fun startTimeTicker() {
@@ -263,6 +266,7 @@ constructor(
                     transactionHistoryRepository.observeTransactions(
                         vaultId = vaultId,
                         type = tab.toRepositoryType(),
+                        chain = chainId,
                     )
                 }
                 .combine(currentTime) { entities, now ->
@@ -293,7 +297,11 @@ constructor(
     private fun observeAssetSearchItems() {
         viewModelScope.launch {
             transactionHistoryRepository
-                .observeTransactions(vaultId = vaultId, type = TransactionHistoryType.OVERVIEW)
+                .observeTransactions(
+                    vaultId = vaultId,
+                    type = TransactionHistoryType.OVERVIEW,
+                    chain = chainId,
+                )
                 .map { entities ->
                     entities
                         .flatMap { entity ->

@@ -21,7 +21,10 @@ import org.junit.jupiter.api.Test
 import vultisig.keysign.v1.BitcoinInput
 import vultisig.keysign.v1.BitcoinOutput
 import vultisig.keysign.v1.SignBitcoin
+import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
+import wallet.core.jni.PublicKey
+import wallet.core.jni.PublicKeyType
 import wallet.core.jni.proto.Common.SigningError
 
 /**
@@ -590,6 +593,416 @@ class UtxoHelperTest {
         assertEquals(60_000L, plan.amount)
         assertEquals(100_000L, plan.availableAmount)
         assertEquals(39_500L, plan.change)
+    }
+
+    // Destination-binding tests (#4488): the Verify screen displays payload.toAddress /
+    // payload.toAmount, so getPreSignedImageHashFromSignBitcoin must reject any PSBT whose
+    // non-change outputs would render those legacy fields a lie. Each test exercises one
+    // failure mode of the binding plus the Windows-companion isChange semantic.
+
+    private val vaultPubKeyHex =
+        "025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357"
+    // SECP256K1 generator G — an unrelated pubkey we use to derive a stable "attacker" address.
+    private val attackerPubKeyHex =
+        "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+    // SECP256K1 2*G — a second unrelated pubkey for tests that need three distinct parties
+    // (vault, displayed recipient, hidden second recipient).
+    private val secondAttackerPubKeyHex =
+        "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5"
+
+    private fun ownedHelper(): UtxoHelper = UtxoHelper(CoinType.BITCOIN, vaultPubKeyHex, "")
+
+    private fun addressFor(pubKeyHex: String): String =
+        CoinType.BITCOIN.deriveAddressFromPublicKey(
+            PublicKey(Numeric.hexStringToByteArray(pubKeyHex), PublicKeyType.SECP256K1)
+        )
+
+    private fun vaultAddress(): String = addressFor(vaultPubKeyHex)
+
+    private fun scriptHexFor(address: String): String =
+        Numeric.toHexStringNoPrefix(
+            BitcoinScript.lockScriptForAddress(address, CoinType.BITCOIN).data()
+        )
+
+    private fun ownedInput(amount: Long = 100_000L): BitcoinInput {
+        val keyHash =
+            BitcoinScript.lockScriptForAddress(vaultAddress(), CoinType.BITCOIN)
+                .matchPayToWitnessPublicKeyHash()
+        return BitcoinInput(
+            hash = "0000000000000000000000000000000000000000000000000000000000000001",
+            index = 0u,
+            amount = amount,
+            scriptPubKey = "0014" + Numeric.toHexStringNoPrefix(keyHash),
+            scriptType = "p2wpkh",
+            isOurs = true,
+        )
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects PSBT whose non-change output diverges from payload toAddress`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            // dApp pays the attacker instead of the address the user sees.
+                            BitcoinOutput(
+                                amount = 60_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(vault),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            // Verify screen would show a third unrelated address; verifyOwnership must abort.
+            val displayedToAddress = addressFor(secondAttackerPubKeyHex)
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = displayedToAddress,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects PSBT whose non-change sum diverges from payload toAmount`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            BitcoinOutput(
+                                amount = 50_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 49_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(vault),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            // Verify shows toAmount=60_000 but the signed non-change total is 50_000.
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects is_change=true on an output whose address is not the sender`() {
+        try {
+            val helper = ownedHelper()
+            val recipient = addressFor(attackerPubKeyHex)
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            BitcoinOutput(
+                                amount = 60_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            // dApp flips the change flag onto an attacker-controlled output —
+                            // Windows-companion semantic says change iff address == senderAddress.
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects is_change=true whose scriptPubKey does not lock to the vault`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            BitcoinOutput(
+                                amount = 60_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            // dApp sets address=vault to pass the Windows-companion derivation
+                            // but points scriptPubKey at the attacker — the sighash commits to
+                            // scriptPubKey, so without a byte-level check this would sign away
+                            // 39_500 sats to the attacker disguised as harmless change.
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects extra value-bearing non-change output even when sum matches`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            val hiddenPayee = addressFor(secondAttackerPubKeyHex)
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            // Legitimate but reduced output to the displayed recipient...
+                            BitcoinOutput(
+                                amount = 10_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            // ...paired with a second non-change output siphoning value to a
+                            // third party. Sum still = 60_000 and one output matches
+                            // expectedScript, but Verify screen lists only the displayed recipient.
+                            BitcoinOutput(
+                                amount = 50_000L,
+                                address = hiddenPayee,
+                                scriptPubKey = scriptHexFor(hiddenPayee),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(vault),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects PSBT that duplicates the legitimate payee output`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            // dApp splits the displayed payment into two outputs that both lock
+                            // to expectedToAddress. Sum non-change = 60_000 still matches the
+                            // payload, the divergence check passes (no non-matching output), but
+                            // the Verify screen lists a single payee while the signed tx funds
+                            // two — caught by the `matches == 1` invariant.
+                            BitcoinOutput(
+                                amount = 30_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 30_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(vault),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects is_ours=true input whose witness pubkey hash diverges from the vault hash`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            // Craft an input shaped exactly like ours (p2wpkh, isOurs=true) but whose witness
+            // program is HASH160(attackerPubKey), not HASH160(vaultPubKey). This is the core
+            // is_ours-spoofing shape the binding is meant to reject: a dApp flips the flag
+            // hoping to coerce the wallet into signing for a UTXO it doesn't actually own.
+            val attackerKeyHash =
+                BitcoinScript.lockScriptForAddress(recipient, CoinType.BITCOIN)
+                    .matchPayToWitnessPublicKeyHash()
+            val maliciousInput =
+                BitcoinInput(
+                    hash = "0000000000000000000000000000000000000000000000000000000000000001",
+                    index = 0u,
+                    amount = 100_000L,
+                    scriptPubKey = "0014" + Numeric.toHexStringNoPrefix(attackerKeyHash),
+                    scriptType = "p2wpkh",
+                    isOurs = true,
+                )
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(maliciousInput),
+                    outputs =
+                        listOf(
+                            BitcoinOutput(
+                                amount = 60_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(vault),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - happy path with OP_RETURN as second non-change output`() {
+        try {
+            val helper = ownedHelper()
+            val vault = vaultAddress()
+            val recipient = addressFor(attackerPubKeyHex)
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            BitcoinOutput(
+                                amount = 60_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 0L,
+                                address = "",
+                                scriptPubKey = "6a04deadbeef",
+                                isChange = false,
+                            ),
+                            BitcoinOutput(
+                                amount = 39_500L,
+                                address = vault,
+                                scriptPubKey = scriptHexFor(vault),
+                                isChange = true,
+                            ),
+                        ),
+                )
+            // OP_RETURN with 0 sats is non-change; sum non-change = 60_000 matches the legacy
+            // payload, and there's exactly one non-change output decoding to toAddress.
+            val hashes =
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            assertEquals(1, hashes.size)
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
     }
 
     private fun newHelper(): UtxoHelper = UtxoHelper(CoinType.BITCOIN, "", "")

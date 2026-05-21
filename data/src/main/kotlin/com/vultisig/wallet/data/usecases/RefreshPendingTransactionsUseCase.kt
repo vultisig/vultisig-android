@@ -15,7 +15,12 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 interface RefreshPendingTransactionsUseCase {
-    suspend operator fun invoke(vaultId: String)
+    /**
+     * Refresh pending transactions for [vaultId]. When [chain] is non-null and non-blank, only
+     * transactions on that chain are polled — this avoids hitting indexers for unrelated chains
+     * when the user is viewing a single-chain history.
+     */
+    suspend operator fun invoke(vaultId: String, chain: String? = null)
 }
 
 class RefreshPendingTransactionsUseCaseImpl
@@ -26,10 +31,12 @@ constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : RefreshPendingTransactionsUseCase {
 
-    override suspend fun invoke(vaultId: String) {
+    override suspend fun invoke(vaultId: String, chain: String?) {
+        val effectiveChain = chain?.takeIf { it.isNotBlank() }
         withContext(dispatcher) {
             transactionHistoryRepository
                 .getPendingTransactions(vaultId)
+                .filter { effectiveChain == null || it.chain == effectiveChain }
                 .filter { it.shouldPollNow() }
                 .map { tx -> async { refreshTransaction(tx) } }
                 .awaitAll()

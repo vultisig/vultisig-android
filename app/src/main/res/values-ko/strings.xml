@@ -516,6 +516,7 @@
     <string name="peer_discovery_scan_with_n_device">%1$s 기기로 스캔</string>
     <string name="peer_discovery_waiting_for_devices_action">기기 대기 중…</string>
     <string name="peer_discovery_devices_n_of_n">기기 (%1$s/%2$s)</string>
+    <string name="peer_discovery_devices_n_of_n_plus">기기 (%1$s/%2$s+)</string>
     <string name="scan_qr_code_modal_annotation">다른 기기에서 앱을 열고 \'QR 코드 스캔\'을 탭하여 연결하세요.</string>
     <string name="scan_qr_code_modal_next">스캔 시작</string>
     <string name="scan_qr_code_modal_scan_the">다른 기기에서 QR을 스캔하세요</string>
@@ -1006,6 +1007,7 @@
     <string name="key_import_spotlight_get_started">시작하기</string>
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">거래 내역</string>
+    <string name="transaction_history_title_chain">%1$s 거래 내역</string>
     <string name="transaction_history_tab_overview">개요</string>
     <string name="transaction_history_tab_send">보내기</string>
     <string name="transaction_history_tab_swap">스왑</string>

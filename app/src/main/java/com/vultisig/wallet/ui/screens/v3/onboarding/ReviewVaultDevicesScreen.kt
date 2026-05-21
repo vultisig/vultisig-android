@@ -35,6 +35,9 @@ import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesEvent
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesUiState
 import com.vultisig.wallet.ui.models.v3.ReviewVaultDevicesViewModel
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -51,77 +54,87 @@ private fun ReviewVaultDevicesScreen(
     V3Scaffold(
         onBackClick = { onEvent(ReviewVaultDevicesEvent.Back) },
         bottomBar = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier =
-                    Modifier.fillMaxWidth().padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
-            ) {
-                VsButton(
-                    label = stringResource(R.string.review_vault_devices_looks_good),
-                    variant = VsButtonVariant.CTA,
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { onEvent(ReviewVaultDevicesEvent.LooksGood) },
-                )
-
-                UiSpacer(size = 20.dp)
-
-                Text(
-                    text = stringResource(R.string.review_vault_devices_something_wrong),
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.secondary,
+            OnboardingResponsiveBottomBar {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier =
-                        Modifier.clickable { onEvent(ReviewVaultDevicesEvent.SomethingsWrong) },
-                )
+                        Modifier.fillMaxWidth().padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
+                ) {
+                    VsButton(
+                        label = stringResource(R.string.review_vault_devices_looks_good),
+                        variant = VsButtonVariant.CTA,
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = { onEvent(ReviewVaultDevicesEvent.LooksGood) },
+                    )
 
-                UiSpacer(size = 12.dp)
+                    UiSpacer(size = 20.dp)
+
+                    Text(
+                        text = stringResource(R.string.review_vault_devices_something_wrong),
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.secondary,
+                        modifier =
+                            Modifier.clickable { onEvent(ReviewVaultDevicesEvent.SomethingsWrong) },
+                    )
+
+                    UiSpacer(size = 12.dp)
+                }
             }
         },
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            RiveAnimation(animation = R.raw.riv_review_devices, modifier = Modifier.fillMaxWidth())
+        OnboardingResponsiveContainer {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                RiveAnimation(
+                    animation = R.raw.riv_review_devices,
+                    modifier = Modifier.fillMaxWidth(),
+                )
 
-            UiSpacer(size = 30.dp)
+                UiSpacer(size = 30.dp)
 
-            Text(
-                text = stringResource(R.string.review_vault_devices_title),
-                style = Theme.brockmann.headings.title2,
-                color = Theme.v2.colors.text.primary,
-                textAlign = TextAlign.Center,
-            )
+                Text(
+                    text = stringResource(R.string.review_vault_devices_title),
+                    style = Theme.brockmann.headings.title2,
+                    color = Theme.v2.colors.text.primary,
+                    textAlign = TextAlign.Center,
+                )
 
-            UiSpacer(size = 12.dp)
+                UiSpacer(size = 12.dp)
 
-            Text(
-                text = stringResource(R.string.review_vault_devices_description),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary,
-                textAlign = TextAlign.Center,
-                modifier =
-                    Modifier.fillMaxWidth().padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
-            )
+                Text(
+                    text = stringResource(R.string.review_vault_devices_description),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.tertiary,
+                    textAlign = TextAlign.Center,
+                    modifier =
+                        Modifier.fillMaxWidth().padding(horizontal = V3Scaffold.PADDING_HORIZONTAL),
+                )
 
-            UiSpacer(size = 32.dp)
+                UiSpacer(size = 32.dp)
 
-            // Uniqueness of device strings is guaranteed by
-            // ReviewVaultDevicesViewModel.uniqueDevices.
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                itemsIndexed(uiState.devices, key = { _, device -> device }) { index, device ->
-                    VaultDeviceItem(
-                        label =
-                            if (device.equals(uiState.localPartyId, ignoreCase = true)) {
+                // Uniqueness of device strings is guaranteed by
+                // ReviewVaultDevicesViewModel.uniqueDevices.
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    itemsIndexed(uiState.devices, key = { _, device -> device }) { index, device ->
+                        VaultDeviceItem(
+                            label =
+                                if (device.equals(uiState.localPartyId, ignoreCase = true)) {
+                                    stringResource(
+                                        R.string.review_vault_devices_this_device_label,
+                                        device,
+                                    )
+                                } else {
+                                    device
+                                },
+                            subtitle =
                                 stringResource(
-                                    R.string.review_vault_devices_this_device_label,
-                                    device,
-                                )
-                            } else {
-                                device
-                            },
-                        subtitle =
-                            stringResource(R.string.review_vault_devices_device_index, index + 1),
-                    )
+                                    R.string.review_vault_devices_device_index,
+                                    index + 1,
+                                ),
+                        )
+                    }
                 }
             }
         }
@@ -173,6 +186,19 @@ private fun VaultDeviceItem(label: String, subtitle: String, modifier: Modifier 
 @Preview
 @Composable
 private fun ReviewVaultDevicesScreenPreview() {
+    ReviewVaultDevicesScreen(
+        uiState =
+            ReviewVaultDevicesUiState(
+                localPartyId = "iPhone",
+                devices = listOf("iPhone", "Extension", "MacBook"),
+            ),
+        onEvent = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun ReviewVaultDevicesScreenTabletPreview() {
     ReviewVaultDevicesScreen(
         uiState =
             ReviewVaultDevicesUiState(

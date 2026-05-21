@@ -31,6 +31,9 @@ import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordHintUiModel
 import com.vultisig.wallet.ui.models.keygen.FastVaultPasswordHintViewModel
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveContainer
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 
@@ -61,59 +64,63 @@ private fun FastVaultPasswordHintScreen(
         title = null,
         onBackClick = onBackClick,
         bottomBar = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
-            ) {
-                VsButton(
-                    label = stringResource(R.string.fast_vault_password_hint_skip),
-                    onClick = onSkipClick,
-                    variant = VsButtonVariant.Secondary,
-                    modifier = Modifier.weight(1f).testTag("FastVaultPasswordHintScreen.skip"),
-                )
+            OnboardingResponsiveBottomBar {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp),
+                ) {
+                    VsButton(
+                        label = stringResource(R.string.fast_vault_password_hint_skip),
+                        onClick = onSkipClick,
+                        variant = VsButtonVariant.Secondary,
+                        modifier = Modifier.weight(1f).testTag("FastVaultPasswordHintScreen.skip"),
+                    )
 
-                VsButton(
-                    label = stringResource(R.string.fast_vault_password_hint_next),
-                    state =
-                        if (state.isNextAvailable) VsButtonState.Enabled
-                        else VsButtonState.Disabled,
-                    onClick = {
-                        keyboardController?.hide()
-                        onNextClick()
-                    },
-                    modifier = Modifier.weight(1f),
-                )
+                    VsButton(
+                        label = stringResource(R.string.fast_vault_password_hint_next),
+                        state =
+                            if (state.isNextAvailable) VsButtonState.Enabled
+                            else VsButtonState.Disabled,
+                        onClick = {
+                            keyboardController?.hide()
+                            onNextClick()
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         },
     ) {
         val focusRequester = remember { FocusRequester() }
         LaunchedEffect(Unit) { focusRequester.requestFocus() }
-        Column {
-            Text(
-                text = stringResource(R.string.fast_vault_password_hint_screen_title),
-                style = Theme.brockmann.headings.largeTitle,
-                color = Theme.v2.colors.text.primary,
-            )
-            UiSpacer(16.dp)
-            Text(
-                text = stringResource(R.string.fast_vault_password_hint_screen_desc),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.tertiary,
-            )
-            VsTextInputField(
-                textFieldState = textFieldState,
-                hint = stringResource(R.string.fast_vault_password_hint_screen_hint),
-                footNote = state.errorMessage?.asString(),
-                trailingIcon = R.drawable.ic_question_mark,
-                focusRequester = focusRequester,
-                type = VsTextInputFieldType.MultiLine(5),
-                imeAction = ImeAction.Go,
-                onKeyboardAction = {
-                    keyboardController?.hide()
-                    onNextClick()
-                },
-                modifier = Modifier.padding(top = 16.dp),
-            )
+        OnboardingResponsiveContainer {
+            Column {
+                Text(
+                    text = stringResource(R.string.fast_vault_password_hint_screen_title),
+                    style = Theme.brockmann.headings.largeTitle,
+                    color = Theme.v2.colors.text.primary,
+                )
+                UiSpacer(16.dp)
+                Text(
+                    text = stringResource(R.string.fast_vault_password_hint_screen_desc),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                VsTextInputField(
+                    textFieldState = textFieldState,
+                    hint = stringResource(R.string.fast_vault_password_hint_screen_hint),
+                    footNote = state.errorMessage?.asString(),
+                    trailingIcon = R.drawable.ic_question_mark,
+                    focusRequester = focusRequester,
+                    type = VsTextInputFieldType.MultiLine(5),
+                    imeAction = ImeAction.Go,
+                    onKeyboardAction = {
+                        keyboardController?.hide()
+                        onNextClick()
+                    },
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+            }
         }
     }
 }
@@ -121,6 +128,18 @@ private fun FastVaultPasswordHintScreen(
 @Preview
 @Composable
 private fun FastVaultPasswordHintScreenPreview() {
+    FastVaultPasswordHintScreen(
+        state = FastVaultPasswordHintUiModel(),
+        textFieldState = rememberTextFieldState(),
+        onNextClick = {},
+        onBackClick = {},
+        onSkipClick = {},
+    )
+}
+
+@TabletPreview
+@Composable
+private fun FastVaultPasswordHintScreenTabletPreview() {
     FastVaultPasswordHintScreen(
         state = FastVaultPasswordHintUiModel(),
         textFieldState = rememberTextFieldState(),

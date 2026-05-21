@@ -34,8 +34,8 @@ import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.TokenDetailUiModel
 import com.vultisig.wallet.ui.models.TokenDetailViewModel
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionType
-import com.vultisig.wallet.ui.screens.v2.home.components.TransactionTypeButton
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
+import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 
@@ -139,30 +139,18 @@ private fun TokenDetailsContent(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
         ) {
             if (uiModel.canSwap) {
-                TransactionTypeButton(
-                    txType = TransactionType.SWAP,
-                    isSelected = true,
-                    onClick = onSwap,
-                )
+                AssetActionButton(action = AssetAction.SWAP, isSelected = true, onClick = onSwap)
             }
 
-            TransactionTypeButton(
-                txType = TransactionType.SEND,
-                isSelected = false,
-                onClick = onSend,
-            )
+            AssetActionButton(action = AssetAction.SEND, isSelected = false, onClick = onSend)
 
             if (uiModel.canBuy) {
-                TransactionTypeButton(
-                    txType = TransactionType.BUY,
-                    isSelected = false,
-                    onClick = onBuy,
-                )
+                AssetActionButton(action = AssetAction.BUY, isSelected = false, onClick = onBuy)
             }
 
             if (uiModel.canDeposit) {
-                TransactionTypeButton(
-                    txType = TransactionType.FUNCTIONS,
+                AssetActionButton(
+                    action = AssetAction.FUNCTIONS,
                     isSelected = false,
                     onClick = onDeposit,
                 )

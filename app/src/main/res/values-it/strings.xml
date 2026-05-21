@@ -808,6 +808,7 @@
     <string name="peer_discovery_topbar_title">Scansiona il codice QR</string>
     <string name="peer_discovery_waiting_for_devices_action">In attesa dei dispositivi…</string>
     <string name="peer_discovery_devices_n_of_n">Dispositivi (%1$s/%2$s)</string>
+    <string name="peer_discovery_devices_n_of_n_plus">Dispositivi (%1$s/%2$s+)</string>
     <string name="vault_backup_screen_email_sent_to">Inviato a %s.</string>
     <string name="vault_backup_screen_donot_receive_email">Non hai ricevuto un\'email?</string>
     <string name="onboarding_desc_page_5_part_2">separatamente in un</string>
@@ -977,6 +978,7 @@
     <string name="key_import_spotlight_get_started">Inizia</string>
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">Cronologia</string>
+    <string name="transaction_history_title_chain">Cronologia di %1$s</string>
     <string name="transaction_history_tab_overview">Panoramica</string>
     <string name="transaction_history_tab_send">Invia</string>
     <string name="transaction_history_tab_swap">Scambia</string>

@@ -38,6 +38,8 @@ import com.vultisig.wallet.ui.components.rive.rememberRiveResourceFile
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.v3.onboarding.ChooseDeviceCountUiEvent
 import com.vultisig.wallet.ui.models.v3.onboarding.ChooseDeviceCountViewModel
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.OnboardingResponsiveBottomBar
+import com.vultisig.wallet.ui.screens.v3.onboarding.components.TabletPreview
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -71,7 +73,7 @@ private fun ChooseDeviceCountScreen(onEvent: (ChooseDeviceCountUiEvent) -> Unit)
                 val a11yDescription =
                     stringResource(R.string.choose_device_count_a11y_description, deviceCountLabel)
 
-                Box(Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.fillMaxSize()) {
                     RiveAnimation(
                         file = riveFile,
                         viewModelInstance = vmi,
@@ -82,15 +84,19 @@ private fun ChooseDeviceCountScreen(onEvent: (ChooseDeviceCountUiEvent) -> Unit)
                                 liveRegion = LiveRegionMode.Polite
                             },
                     )
-                    Column(modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter)) {
-                        Tip()
-                        UiSpacer(size = 16.dp)
-                        VsButton(
-                            label = stringResource(R.string.referral_onboarding_get_started),
-                            modifier = Modifier.fillMaxWidth(),
-                            variant = VsButtonVariant.CTA,
-                            onClick = { onEvent(ChooseDeviceCountUiEvent.Next) },
-                        )
+                    OnboardingResponsiveBottomBar(
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Tip()
+                            UiSpacer(size = 16.dp)
+                            VsButton(
+                                label = stringResource(R.string.referral_onboarding_get_started),
+                                modifier = Modifier.fillMaxWidth(),
+                                variant = VsButtonVariant.CTA,
+                                onClick = { onEvent(ChooseDeviceCountUiEvent.Next) },
+                            )
+                        }
                     }
                 }
             }
@@ -118,5 +124,11 @@ private fun Tip() {
 @Preview
 @Composable
 private fun ChooseDeviceCountScreenPreview() {
+    ChooseDeviceCountScreen(onEvent = {})
+}
+
+@TabletPreview
+@Composable
+private fun ChooseDeviceCountScreenTabletPreview() {
     ChooseDeviceCountScreen(onEvent = {})
 }

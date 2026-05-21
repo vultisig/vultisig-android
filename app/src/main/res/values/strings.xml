@@ -524,6 +524,7 @@
     <string name="peer_discovery_scan_with_n_device">Scan with %1$s device</string>
     <string name="peer_discovery_waiting_for_devices_action">Waiting for devices to connect…</string>
     <string name="peer_discovery_devices_n_of_n">Devices (%1$s/%2$s)</string>
+    <string name="peer_discovery_devices_n_of_n_plus">Devices (%1$s/%2$s+)</string>
     <string name="scan_qr_code_modal_annotation">On your other device, open the app and tap \"Scan QR\" to connect it.</string>
     <string name="scan_qr_code_modal_next">Start scanning</string>
     <string name="scan_qr_code_modal_scan_the">Scan the QR on your other devices</string>
@@ -1054,6 +1055,7 @@
     <string name="key_import_spotlight_get_started">Get started</string>
     <!-- Transaction History Screen -->
     <string name="transaction_history_title">History</string>
+    <string name="transaction_history_title_chain">%1$s History</string>
     <string name="transaction_history_tab_overview">Overview</string>
     <string name="transaction_history_tab_send">Send</string>
     <string name="transaction_history_tab_swap">Swaps</string>
