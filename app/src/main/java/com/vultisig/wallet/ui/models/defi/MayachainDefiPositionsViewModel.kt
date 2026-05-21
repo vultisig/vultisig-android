@@ -368,6 +368,7 @@ constructor(
                             canStake = true,
                             canUnstake = details.canUnstake,
                             unstakeUnlocksInSeconds = details.unstakeUnlocksInSeconds,
+                            isUnstakeMaturityUnknown = details.isUnstakeMaturityUnknown,
                         )
                     updateModel {
                         it.copy(staking = StakingTabUiModel(positions = listOf(position)))

@@ -522,7 +522,7 @@
     <string name="unstake_cacao_title">Анстейкинг CACAO</string>
     <string name="unstake_cacao_available_format">Доступно: %1$s</string>
     <string name="unstake_cacao_unlocks_in_days_hours_format">Разблокируется через %1$d д. %2$d ч.</string>
-    <string name="unstake_cacao_unlocks_in_hours_format">Разблокируется через %1$d ч.</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Разблокируется через %1$d ч. %2$d мин.</string>
     <string name="unstake_cacao_unlocks_soon">Скоро разблокируется</string>
     <string name="unstake_cacao_maturity_check_failed">Не удалось проверить позицию. Попробуйте снова.</string>
     <string name="cacaopool_only_cacao_supported">Для операций пула поддерживается только токен CACAO.</string>

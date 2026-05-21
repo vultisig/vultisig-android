@@ -524,7 +524,7 @@
     <string name="unstake_cacao_title">Povuci CACAO</string>
     <string name="unstake_cacao_available_format">Dostupno: %1$s</string>
     <string name="unstake_cacao_unlocks_in_days_hours_format">Otključava se za %1$dd %2$dh</string>
-    <string name="unstake_cacao_unlocks_in_hours_format">Otključava se za %1$dh</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Otključava se za %1$dh %2$dm</string>
     <string name="unstake_cacao_unlocks_soon">Uskoro se otključava</string>
     <string name="unstake_cacao_maturity_check_failed">Nije moguće provjeriti poziciju. Pokušajte ponovno.</string>
     <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>

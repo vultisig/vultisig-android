@@ -712,7 +712,7 @@
     <string name="unstake_cacao_title">Unstake CACAO</string>
     <string name="unstake_cacao_available_format">Available: %1$s</string>
     <string name="unstake_cacao_unlocks_in_days_hours_format">Unlocks in %1$dd %2$dh</string>
-    <string name="unstake_cacao_unlocks_in_hours_format">Unlocks in %1$dh</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Unlocks in %1$dh %2$dm</string>
     <string name="unstake_cacao_unlocks_soon">Unlocks soon</string>
     <string name="unstake_cacao_maturity_check_failed">Couldn\'t verify position. Try again.</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>

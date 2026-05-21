@@ -767,7 +767,7 @@
     <string name="unstake_cacao_title">解除质押 CACAO</string>
     <string name="unstake_cacao_available_format">可用: %1$s</string>
     <string name="unstake_cacao_unlocks_in_days_hours_format">%1$d天%2$d小时后解锁</string>
-    <string name="unstake_cacao_unlocks_in_hours_format">%1$d小时后解锁</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">%1$d小时%2$d分钟后解锁</string>
     <string name="unstake_cacao_unlocks_soon">即将解锁</string>
     <string name="unstake_cacao_maturity_check_failed">无法验证仓位。请重试。</string>
     <string name="cacaopool_only_cacao_supported">池操作仅支持 CACAO 代币</string>

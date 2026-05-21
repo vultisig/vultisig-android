@@ -523,7 +523,7 @@
     <string name="unstake_cacao_title">Desapostar CACAO</string>
     <string name="unstake_cacao_available_format">Disponible: %1$s</string>
     <string name="unstake_cacao_unlocks_in_days_hours_format">Se desbloquea en %1$dd %2$dh</string>
-    <string name="unstake_cacao_unlocks_in_hours_format">Se desbloquea en %1$dh</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Se desbloquea en %1$dh %2$dm</string>
     <string name="unstake_cacao_unlocks_soon">Se desbloquea pronto</string>
     <string name="unstake_cacao_maturity_check_failed">No se pudo verificar la posición. Inténtelo de nuevo.</string>
     <string name="cacaopool_only_cacao_supported">Solo se admite el token CACAO para las operaciones del pool</string>

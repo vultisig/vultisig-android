@@ -21,6 +21,10 @@ data class MayaCacaoStakingDetails(
     // maturity fetch failed. UI uses this only to render a "Unlocks in N days, H hours"
     // hint next to the disabled Unstake action.
     val unstakeUnlocksInSeconds: Long? = null,
+    // true when the position exists but the maturity read returned UNKNOWN (transient RPC
+    // failure). Lets the staking tab surface the same "Couldn't verify position" hint the
+    // UnstakeCacao screen already renders, so a disabled Unstake button isn't unexplained.
+    val isUnstakeMaturityUnknown: Boolean = false,
 )
 
 class MayaCacaoStakingService
@@ -58,6 +62,7 @@ constructor(
                                 )
                                     maturity.remainingSeconds
                                 else null,
+                            isUnstakeMaturityUnknown = hasPosition && maturity.isUnknown,
                         )
                     }
                     emit(details)

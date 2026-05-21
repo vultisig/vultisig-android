@@ -523,7 +523,7 @@
     <string name="unstake_cacao_title">CACAO entstaken</string>
     <string name="unstake_cacao_available_format">Verfügbar: %1$s</string>
     <string name="unstake_cacao_unlocks_in_days_hours_format">Freigabe in %1$dT %2$dStd</string>
-    <string name="unstake_cacao_unlocks_in_hours_format">Freigabe in %1$dStd</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Freigabe in %1$dStd %2$dMin</string>
     <string name="unstake_cacao_unlocks_soon">Bald verfügbar</string>
     <string name="unstake_cacao_maturity_check_failed">Position konnte nicht überprüft werden. Erneut versuchen.</string>
     <string name="cacaopool_only_cacao_supported">Nur das CACAO-Token wird für Poolvorgänge unterstützt</string>

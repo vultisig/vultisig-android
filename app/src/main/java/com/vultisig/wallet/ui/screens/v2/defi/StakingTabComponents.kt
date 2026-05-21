@@ -217,17 +217,26 @@ internal fun StakingWidget(
             UiSpacer(16.dp)
         }
 
-        if (
-            state.stakeAmount > BigDecimal.ZERO &&
-                !state.canUnstake &&
-                state.unstakeUnlocksInSeconds != null
-        ) {
-            Text(
-                text = cacaoUnlocksInUiText(state.unstakeUnlocksInSeconds).asString(),
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.tertiary,
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
+        if (state.stakeAmount > BigDecimal.ZERO && !state.canUnstake) {
+            val hintText: String? =
+                when {
+                    state.unstakeUnlocksInSeconds != null ->
+                        cacaoUnlocksInUiText(state.unstakeUnlocksInSeconds).asString()
+                    // Mirror UnstakeCacaoScreen's "Couldn't verify position" copy so a maturity
+                    // RPC failure doesn't leave the user staring at a disabled Unstake button
+                    // with nothing on screen explaining why.
+                    state.isUnstakeMaturityUnknown ->
+                        stringResource(R.string.unstake_cacao_maturity_check_failed)
+                    else -> null
+                }
+            if (hintText != null) {
+                Text(
+                    text = hintText,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.tertiary,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+            }
         }
 
         Row(

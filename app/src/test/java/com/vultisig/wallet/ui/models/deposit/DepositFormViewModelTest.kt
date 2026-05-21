@@ -315,7 +315,7 @@ internal class DepositFormViewModelTest {
     }
 
     @Test
-    fun `RemoveCacaoPool with under-one-hour remaining shows unlocks soon`() = runTest {
+    fun `RemoveCacaoPool with under-one-hour remaining uses hours and minutes format`() = runTest {
         val vm = buildViewModel()
         coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
             flowOf(
@@ -347,11 +347,14 @@ internal class DepositFormViewModelTest {
         assertTrue(!vm.state.value.isUnstakeMature)
         val unlocksIn = vm.state.value.unstakeUnlocksInText
         assertNotNull(unlocksIn)
-        assertTrue(unlocksIn is UiText.StringResource)
+        assertTrue(unlocksIn is UiText.FormattedText)
         assertEquals(
-            R.string.unstake_cacao_unlocks_soon,
-            (unlocksIn as UiText.StringResource).resId,
+            R.string.unstake_cacao_unlocks_in_hours_format,
+            (unlocksIn as UiText.FormattedText).resId,
         )
+        // 30 minutes -> "0h 30m"; the precision is what the formatter change protects against
+        // the prior "Unlocks soon" collapse.
+        assertEquals(listOf<Any>(0, 30), unlocksIn.formatArgs)
     }
 
     @Test
