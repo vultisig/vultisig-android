@@ -14,6 +14,7 @@ data class SwapKitProvidersResponseJson(
     @SerialName("providers") val providers: List<SwapKitProviderEntry> = emptyList()
 )
 
+/** A single sub-provider entry from `GET /providers` listing the SwapKit chain ids it routes on. */
 @Serializable
 data class SwapKitProviderEntry(
     @SerialName("provider") val provider: String = "",

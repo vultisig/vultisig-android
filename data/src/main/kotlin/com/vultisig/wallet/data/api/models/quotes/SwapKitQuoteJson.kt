@@ -66,6 +66,7 @@ data class SwapKitRoute(
         get() = providers.firstOrNull().orEmpty().lowercase()
 }
 
+/** Single hop inside a [SwapKitRoute]. Phase 1 only honours routes with exactly one leg. */
 @Serializable
 data class SwapKitRouteLeg(
     @SerialName("provider") val provider: String = "",
@@ -75,6 +76,7 @@ data class SwapKitRouteLeg(
     @SerialName("buyAmount") val buyAmount: String? = null,
 )
 
+/** SwapKit's per-leg time estimate (seconds) used to populate ETA labels in the swap UI. */
 @Serializable
 data class SwapKitEstimatedTime(
     @SerialName("inbound") val inbound: Double? = null,
@@ -83,6 +85,7 @@ data class SwapKitEstimatedTime(
     @SerialName("total") val total: Double? = null,
 )
 
+/** A fee entry returned alongside a route — gas, network, affiliate, etc. */
 @Serializable
 data class SwapKitFee(
     @SerialName("type") val type: String? = null,
@@ -92,12 +95,14 @@ data class SwapKitFee(
     @SerialName("protocol") val protocol: String? = null,
 )
 
+/** Non-fatal advisory attached to a route (e.g. high price impact); surfaced in the verify UI. */
 @Serializable
 data class SwapKitWarning(
     @SerialName("code") val code: String? = null,
     @SerialName("display") val display: String? = null,
 )
 
+/** Route-level metadata used to compute price-impact badges and quote-mode labelling. */
 @Serializable
 data class SwapKitRouteMeta(
     @SerialName("priceImpact") val priceImpact: Double? = null,

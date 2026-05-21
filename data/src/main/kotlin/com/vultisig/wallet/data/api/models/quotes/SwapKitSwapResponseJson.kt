@@ -26,6 +26,7 @@ data class SwapKitSwapResponseJson(
     @SerialName("message") val message: String? = null,
 )
 
+/** Polymorphic transaction envelope; [meta] tags which signer should interpret [payload]. */
 @Serializable
 data class SwapKitTx(
     @SerialName("meta") val meta: SwapKitTxMeta,
@@ -38,6 +39,7 @@ data class SwapKitTx(
     @SerialName("payload") val payload: JsonElement,
 )
 
+/** Discriminator metadata sitting alongside a [SwapKitTx.payload]. */
 @Serializable
 data class SwapKitTxMeta(
     @SerialName("txType") val txType: String,

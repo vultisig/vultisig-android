@@ -30,6 +30,9 @@ interface SwapKitProviderCache {
     suspend fun invalidate()
 }
 
+/**
+ * In-memory [SwapKitProviderCache] with a 24h TTL, mutex-guarded refresh, and fail-closed reads.
+ */
 @Singleton
 internal class SwapKitProviderCacheImpl @Inject constructor(private val api: SwapKitApi) :
     SwapKitProviderCache {
@@ -43,7 +46,7 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
      * Overridable clock so tests can advance time deterministically; production uses
      * `System.currentTimeMillis`. Not [Inject]ed to keep Hilt wiring trivial.
      */
-    @VisibleForTesting internal var clock: Clock = Clock { java.lang.System.currentTimeMillis() }
+    @VisibleForTesting internal var clock: Clock = Clock { System.currentTimeMillis() }
 
     private val mutex = Mutex()
     @Volatile private var enabledChains: Set<Chain> = emptySet()

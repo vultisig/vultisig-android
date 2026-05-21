@@ -16,7 +16,6 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import javax.inject.Inject
@@ -25,6 +24,8 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -50,6 +51,7 @@ interface SwapKitApi {
     suspend fun providers(): SwapKitProvidersResponseJson
 }
 
+/** Ktor-backed [SwapKitApi] hitting the Vultisig SwapKit proxy with a 30s per-request timeout. */
 internal class SwapKitApiImpl
 @Inject
 constructor(private val httpClient: HttpClient, private val json: Json) : SwapKitApi {
@@ -89,7 +91,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
                 if (!response.status.isSuccess()) {
                     val body = runCatching { response.bodyAsText() }.getOrNull().orEmpty()
                     val code = extractErrorCode(body)
-                    val status = HttpStatusCode.fromValue(response.status.value).description
+                    val status = response.status.description
                     throw SwapKitError.fromCode(
                         code = code,
                         fallbackMessage = body.ifEmpty { status },
@@ -117,16 +119,33 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
             )
         }
 
-    /** Pulls a SwapKit error `code` out of a JSON error body, if present. */
+    /**
+     * Pulls a SwapKit error `code` out of a JSON error body, if present. Searches recursively so
+     * envelopes like `{"error": {"code": ...}}` or `{"errors": [{"code": ...}]}` still resolve to a
+     * typed [SwapKitError]; falls back to a top-level `error` string when no `code` is found.
+     */
     private fun extractErrorCode(body: String): String? {
         if (body.isBlank()) return null
         return runCatching {
                 val element = json.parseToJsonElement(body)
-                val obj = element as? JsonObject ?: return null
-                (obj["code"] ?: obj["error"])?.let { it as? JsonPrimitive }?.content
+                findStringRecursively(element, "code")
+                    ?: (element as? JsonObject)?.get("error")?.let { it as? JsonPrimitive }?.content
             }
             .getOrNull()
     }
+
+    private fun findStringRecursively(element: JsonElement, key: String): String? =
+        when (element) {
+            is JsonObject ->
+                (element[key] as? JsonPrimitive)?.content
+                    ?: element.values
+                        .asSequence()
+                        .mapNotNull { findStringRecursively(it, key) }
+                        .firstOrNull()
+            is JsonArray ->
+                element.asSequence().mapNotNull { findStringRecursively(it, key) }.firstOrNull()
+            else -> null
+        }
 
     companion object {
         /** Vultisig SwapKit proxy. iOS uses `/swapkit/`, Windows `/swapkit-win/`. */
