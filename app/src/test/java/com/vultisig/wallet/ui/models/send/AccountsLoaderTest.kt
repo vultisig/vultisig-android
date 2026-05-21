@@ -25,7 +25,9 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -428,6 +430,118 @@ internal class AccountsLoaderTest {
             assertEquals(BigInteger("789"), observed[1][1].tokenValue?.value) // USDC stake
         }
 
+    // ──────── never-closing channelFlow semantics ────────
+
+    @Test
+    fun `load consumes cached and hydrated emissions from a never-closing channelFlow`() =
+        runTest(mainDispatcher) {
+            // Mirrors production: loadAddresses returns a channelFlow that emits cached +
+            // hydrated then suspends in awaitClose() forever — never completes. flowOf()
+            // would let collect return after the last emission, which hides the real
+            // shape from these tests.
+            defiType = null
+            val cachedEth = ethAccount()
+            val hydratedEth =
+                cachedEth.copy(tokenValue = TokenValue(BigInteger("42"), Coins.Ethereum.ETH))
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                channelFlow {
+                    send(
+                        listOf(
+                            Address(
+                                chain = Chain.Ethereum,
+                                address = cachedEth.token.address,
+                                accounts = listOf(cachedEth),
+                            )
+                        )
+                    )
+                    // yield() lets the accountsState subscriber observe the cached
+                    // snapshot — without it StateFlow conflates the two writes and only
+                    // the hydrated value is seen.
+                    yield()
+                    send(
+                        listOf(
+                            Address(
+                                chain = Chain.Ethereum,
+                                address = hydratedEth.token.address,
+                                accounts = listOf(hydratedEth),
+                            )
+                        )
+                    )
+                    awaitClose()
+                }
+            val loader = build(backgroundScope)
+            val observed = collectLoadedEmissions(this)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+
+            // Both emissions observed even though the flow never closes. The collect inside
+            // AccountsLoader keeps running (it's only released by job cancellation), but
+            // the cached -> hydrated transition still propagates.
+            assertEquals(2, observed.size)
+            assertEquals(BigInteger("1000000000000000000"), observed[0][0].tokenValue?.value)
+            assertEquals(BigInteger("42"), observed[1][0].tokenValue?.value)
+        }
+
+    @Test
+    fun `second load cancels the prior never-closing collector and drops its stale publishes`() =
+        runTest(mainDispatcher) {
+            // The previous collector is parked inside awaitClose() when load() is called
+            // again — Job.cancel() is cooperative so it could still execute one more
+            // publishLoaded after the reset to Uninitialized. Generation gating (added in
+            // the publishes-gated-by-generation commit) must drop those stale writes so
+            // accountsState only reflects the new vault's data.
+            defiType = null
+            val firstEth =
+                ethAccount().copy(tokenValue = TokenValue(BigInteger("1"), Coins.Ethereum.ETH))
+            val secondEth =
+                ethAccount().copy(tokenValue = TokenValue(BigInteger("2"), Coins.Ethereum.ETH))
+            every { accountsRepository.loadAddresses(VAULT_ID) } returns
+                channelFlow {
+                    send(
+                        listOf(
+                            Address(
+                                chain = Chain.Ethereum,
+                                address = firstEth.token.address,
+                                accounts = listOf(firstEth),
+                            )
+                        )
+                    )
+                    awaitClose()
+                }
+            every { accountsRepository.loadAddresses(VAULT_ID_2) } returns
+                channelFlow {
+                    send(
+                        listOf(
+                            Address(
+                                chain = Chain.Ethereum,
+                                address = secondEth.token.address,
+                                accounts = listOf(secondEth),
+                            )
+                        )
+                    )
+                    awaitClose()
+                }
+            val loader = build(backgroundScope)
+            val observed = collectLoadedEmissions(this)
+
+            loader.load(VAULT_ID)
+            advanceUntilIdle()
+            loader.load(VAULT_ID_2)
+            advanceUntilIdle()
+
+            // First load emits firstEth; reset to Uninitialized flips the derived flow
+            // off (filterIsInstance drops it from `observed`); second load emits
+            // secondEth. The final state must be secondEth — not firstEth bleeding
+            // through after cancel.
+            assertEquals(BigInteger("2"), (observed.last())[0].tokenValue?.value)
+            assertIs<AccountsLoadState.Loaded>(accountsState.value)
+            assertEquals(
+                BigInteger("2"),
+                (accountsState.value as AccountsLoadState.Loaded).accounts[0].tokenValue?.value,
+            )
+        }
+
     // ──────── helpers ────────
 
     // Captures every Loaded emission published to accountsState into the returned list,
@@ -490,5 +604,6 @@ internal class AccountsLoaderTest {
 
     private companion object {
         const val VAULT_ID = "vault-id"
+        const val VAULT_ID_2 = "vault-id-2"
     }
 }
