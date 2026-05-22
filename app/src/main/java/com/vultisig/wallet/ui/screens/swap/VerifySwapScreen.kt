@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.swap
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,13 +30,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -623,34 +620,6 @@ internal fun VerifyProviderRow(provider: String, modifier: Modifier = Modifier) 
                 maxLines = 1,
             )
         }
-    }
-}
-
-@Composable
-internal fun VerifyCardJsonDetails(
-    title: String,
-    subtitle: String,
-    modifier: Modifier = Modifier,
-    subtitleColor: Color = Theme.v2.colors.alerts.success,
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
-    ) {
-        Text(
-            text = title,
-            style = Theme.brockmann.supplementary.footnote,
-            color = Theme.v2.colors.text.tertiary,
-            maxLines = 1,
-        )
-
-        Text(
-            text = subtitle,
-            style = Theme.brockmann.body.m.medium.copy(fontFamily = FontFamily.Monospace),
-            color = subtitleColor,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-        )
     }
 }
 

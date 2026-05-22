@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,40 +32,14 @@ import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.ParsedSolanaTransaction
 import com.vultisig.wallet.data.chains.helpers.SolanaTransactionParser
-import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
 import vultisig.keysign.v1.SignSolana
 
 @Composable
 fun SignSolanaDisplayView(signSolana: SignSolana, modifier: Modifier = Modifier) {
-    val allInstructions =
-        remember(signSolana) {
-            signSolana.rawTransactions.flatMap { tx ->
-                try {
-                    SolanaTransactionParser.parse(tx).instructions
-                } catch (e: Exception) {
-                    Timber.w(e, "Failed to parse Solana transaction")
-                    emptyList()
-                }
-            }
-        }
-
-    SignSolanaDisplayContent(
-        instructions = allInstructions,
-        rawTransactions = signSolana.rawTransactions,
-        modifier = modifier,
-    )
-}
-
-@Composable
-private fun SignSolanaDisplayContent(
-    instructions: List<ParsedSolanaTransaction.ParsedInstruction>,
-    rawTransactions: List<String>,
-    modifier: Modifier = Modifier,
-    initiallyExpanded: Boolean = false,
-) {
-    var isExpanded by remember { mutableStateOf(initiallyExpanded) }
+    var isExpanded by rememberSaveable { mutableStateOf(false) }
+    val rawTransactions = signSolana.rawTransactions
 
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -92,6 +67,21 @@ private fun SignSolanaDisplayContent(
         }
 
         AnimatedVisibility(visible = isExpanded) {
+            // SolanaTransactionParser.parse is wallet-core JNI work; deferring it until first
+            // expansion means non-expanding users never pay the parse cost on the composition
+            // thread.
+            val instructions =
+                remember(rawTransactions) {
+                    rawTransactions.flatMap { tx ->
+                        try {
+                            SolanaTransactionParser.parse(tx).instructions
+                        } catch (e: Exception) {
+                            Timber.w(e, "Failed to parse Solana transaction")
+                            emptyList()
+                        }
+                    }
+                }
+
             Column(
                 modifier =
                     Modifier.fillMaxWidth()
@@ -140,12 +130,9 @@ private fun InstructionsSummarySection(
 @Composable
 private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstruction, index: Int) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        // Combine instruction type and program name into a single header
-        // ("Instruction N: <type> (<programName>)") so the row matches the extension layout.
-        val headerSuffix = buildString {
-            instruction.instructionType?.let { append(": ", it) }
-            instruction.programName?.let { append(" (", it, ")") }
-        }
+        // Header "Instruction N: <type>" mirrors the browser extension; programName is rendered
+        // separately below so a long name can't truncate the instruction type.
+        val headerSuffix = instruction.instructionType?.let { ": $it" }.orEmpty()
         Text(
             text = stringResource(R.string.solana_instruction_number, index + 1) + headerSuffix,
             style = Theme.brockmann.button.medium.medium,
@@ -184,7 +171,6 @@ private fun RawTransactionsSection(rawTransactions: List<String>) {
     VerifyCardJsonDetails(
         title = stringResource(R.string.raw_transaction_data),
         subtitle = rawTransactions.joinToString(separator = "\n"),
-        subtitleColor = Theme.v2.colors.alerts.info,
         modifier =
             Modifier.fillMaxWidth()
                 .background(
@@ -216,19 +202,15 @@ private val PREVIEW_RAW_TRANSACTIONS =
 
 @Preview
 @Composable
-private fun PreviewSignSolanaDisplayViewCollapsed() {
-    SignSolanaDisplayContent(
-        instructions = PREVIEW_INSTRUCTIONS,
-        rawTransactions = PREVIEW_RAW_TRANSACTIONS,
-    )
+private fun PreviewSignSolanaInstructionsSection() {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        InstructionsSummarySection(PREVIEW_INSTRUCTIONS)
+        RawTransactionsSection(PREVIEW_RAW_TRANSACTIONS)
+    }
 }
 
 @Preview
 @Composable
-private fun PreviewSignSolanaDisplayViewExpanded() {
-    SignSolanaDisplayContent(
-        instructions = PREVIEW_INSTRUCTIONS,
-        rawTransactions = PREVIEW_RAW_TRANSACTIONS,
-        initiallyExpanded = true,
-    )
+private fun PreviewSignSolanaDisplayView() {
+    SignSolanaDisplayView(signSolana = SignSolana(rawTransactions = PREVIEW_RAW_TRANSACTIONS))
 }

@@ -214,7 +214,6 @@
     <string name="share_qr_screen_permission_required">Per le operazioni di condivisione è richiesta l\'autorizzazione del file.</string>
     <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Sono d\'accordo con la fornitura di un\'indennità ERC20 illimitata</string>
-    <string name="deposit_screen_title">Firma della funzione</string>
     <string name="deposit_screen_amount_title">Quantità</string>
     <string name="verify_deposit_memo_title">Promemoria</string>
     <string name="verify_deposit_node_address_title">Indirizzo del nodo</string>

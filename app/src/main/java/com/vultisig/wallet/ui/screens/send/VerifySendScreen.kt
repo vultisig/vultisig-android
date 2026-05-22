@@ -37,6 +37,7 @@ import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -55,7 +56,6 @@ import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
-import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 import vultisig.keysign.v1.SignSolana
@@ -121,7 +121,12 @@ internal fun VerifySendScreen(
     onBackClick: () -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
-    // Preview-only override so previews can render the disclosure already expanded.
+    /**
+     * Opens the Transaction Details disclosure on first composition. Only the debug-only
+     * [com.vultisig.wallet.debug.PreviewActivity] passes `true` so the PR screenshots can capture
+     * the expanded rich-row layout without simulating a touch event; production paths keep the
+     * default `false` so the user still has to tap the expander.
+     */
     initiallyExpandedDetails: Boolean = false,
 ) {
     if (state.showScanningWarning && state.txScanStatus is TransactionScanStatus.Scanned) {

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.screens.send
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -26,8 +27,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
-import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.theme.Theme
 
 /**
@@ -60,7 +61,7 @@ internal fun TransactionDetailsSection(
             modifier =
                 Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
+                    indication = LocalIndication.current,
                     role = Role.Button,
                     onClickLabel = toggleLabel,
                 ) {
