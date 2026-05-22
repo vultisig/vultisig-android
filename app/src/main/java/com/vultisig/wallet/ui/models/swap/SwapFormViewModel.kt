@@ -726,8 +726,9 @@ constructor(
         val maxUsableTokenAmount =
             srcTokenValue.value -
                 swapFee -
-                (estimatedNetworkFeeTokenValue.value?.value?.takeIf { srcToken.isNativeToken }
-                    ?: BigInteger.ZERO)
+                (estimatedNetworkFeeTokenValue.value?.value?.takeIf {
+                    srcToken.isNativeToken && gasFeeChain.value == srcToken.chain
+                } ?: BigInteger.ZERO)
 
         if (maxUsableTokenAmount <= BigInteger.ZERO) {
             srcAmountState.setTextAndPlaceCursorAtEnd("0")
@@ -831,6 +832,7 @@ constructor(
                         // can compute the correct UTXO plan fee.
                         estimatedNetworkFeeTokenValue.value = null
                         estimatedNetworkFeeFiatValue.value = null
+                        uiState.update { it.copy(networkFee = "", networkFeeFiat = "") }
                         // The plan-fee block in calculateFees() may have already run
                         // with a stale or null gasFeeChain and skipped via its chain guard,
                         // leaving the form fee blank; re-fire so it can compute with the byte
