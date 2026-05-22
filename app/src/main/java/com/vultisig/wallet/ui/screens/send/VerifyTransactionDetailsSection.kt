@@ -101,10 +101,8 @@ internal fun TransactionDetailsSection(
                     )
                 }
 
-                // When the parser produces labelled rows we show them in place of the raw JSON —
-                // semantic labels read better than `["0xabc…", "115792…"]`. Fall back to the raw
-                // JSON when the function signature is something the parser doesn't recognise so
-                // the user still sees the underlying arguments rather than nothing.
+                // Prefer labelled rows; fall back to raw JSON so unrecognised signatures still
+                // show their arguments.
                 if (!decodedFunctionParams.isNullOrEmpty()) {
                     DecodedFunctionParamRows(params = decodedFunctionParams)
                 } else {

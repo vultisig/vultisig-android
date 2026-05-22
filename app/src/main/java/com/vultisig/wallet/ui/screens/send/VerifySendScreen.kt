@@ -121,12 +121,7 @@ internal fun VerifySendScreen(
     onBackClick: () -> Unit = {},
     onConfirmScanning: () -> Unit = {},
     onDismissScanning: () -> Unit = {},
-    /**
-     * Opens the Transaction Details disclosure on first composition. Only the debug-only
-     * [com.vultisig.wallet.debug.PreviewActivity] passes `true` so the PR screenshots can capture
-     * the expanded rich-row layout without simulating a touch event; production paths keep the
-     * default `false` so the user still has to tap the expander.
-     */
+    // Preview-only override so previews can render the disclosure already expanded.
     initiallyExpandedDetails: Boolean = false,
 ) {
     if (state.showScanningWarning && state.txScanStatus is TransactionScanStatus.Scanned) {
@@ -193,9 +188,8 @@ internal fun VerifySendScreen(
 
                 SecurityScannerBadget(state.txScanStatus)
 
-                // Visually anchor the verify card to the badge above when Blockaid
-                // confirms the transaction is benign — Figma uses a thin success
-                // border around the card to reinforce the scanned state.
+                // Success border ties the card to the scanner badge above when the scan came back
+                // benign.
                 val isScannedBenign =
                     (state.txScanStatus as? TransactionScanStatus.Scanned)?.result?.let { r ->
                         r.isSecure &&
@@ -225,11 +219,8 @@ internal fun VerifySendScreen(
                 Column(modifier = cardModifier) {
                     UiSpacer(12.dp)
 
-                    // Hero is the dApp signing source of truth — Blockaid simulation when
-                    // resolved, function-name title when only the 4byte decode loaded, native
-                    // VsOverviewToken otherwise. For a decoded Universal Router swap we override
-                    // the raw `execute` function name with a localised "Swap" title so the user
-                    // sees real intent instead of the router's plumbing.
+                    // Universal Router decodes to the raw `execute` selector; show "Swap" so users
+                    // see intent, not router plumbing.
                     val heroTitle =
                         if (tx.isUniversalRouterSwap) {
                             stringResource(R.string.decoded_function_swap_title)

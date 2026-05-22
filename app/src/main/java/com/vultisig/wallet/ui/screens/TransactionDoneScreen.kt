@@ -261,8 +261,8 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                 value = transaction.memo,
             )
 
-        // OtherField has its own bottom divider; an explicit one stacks and orphans when memo is
-        // absent.
+        // OtherField draws its own bottom divider — don't add another or it doubles up (and
+        // orphans when memo is null).
         if (transaction.functionSignature != null) {
             OtherField(
                 title = stringResource(R.string.deposit_screen_title),
