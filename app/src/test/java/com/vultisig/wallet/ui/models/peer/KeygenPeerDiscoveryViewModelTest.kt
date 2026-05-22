@@ -113,12 +113,18 @@ internal class KeygenPeerDiscoveryViewModelTest {
         unmockkObject(Utils)
     }
 
-    private fun stubRoute(deviceCount: Int? = null) {
+    private fun stubRoute(
+        deviceCount: Int? = null,
+        email: String? = null,
+        password: String? = null,
+    ) {
         every { any<SavedStateHandle>().toRoute<Route.Keygen.PeerDiscovery>() } returns
             Route.Keygen.PeerDiscovery(
                 action = TssAction.KEYGEN,
                 vaultName = "Test Vault",
                 deviceCount = deviceCount,
+                email = email,
+                password = password,
             )
     }
 
@@ -403,5 +409,76 @@ internal class KeygenPeerDiscoveryViewModelTest {
 
         // navigate(Back) called exactly once (from init), not a second time from tryAgain
         coVerify(exactly = 1) { navigator.navigate(Destination.Back) }
+    }
+
+    // --- Auto-kickoff tests (issue #4552) ---
+
+    @Test
+    fun `auto-start fires for 2-of-2 secure vault when first peer is selected`() {
+        stubRoute(deviceCount = 2)
+        val vm = createViewModel()
+
+        vm.selectDevice("peer-1")
+
+        coVerify(exactly = 1) { sessionApi.startWithCommittee(any(), any(), any()) }
+    }
+
+    @Test
+    fun `auto-start fires for 3-of-3 secure vault when both peers are selected`() {
+        stubRoute(deviceCount = 3)
+        val vm = createViewModel()
+
+        vm.selectDevice("peer-1")
+        // Threshold not yet reached — should not fire
+        coVerify(exactly = 0) { sessionApi.startWithCommittee(any(), any(), any()) }
+
+        vm.selectDevice("peer-2")
+        coVerify(exactly = 1) { sessionApi.startWithCommittee(any(), any(), any()) }
+    }
+
+    @Test
+    fun `auto-start does not fire for 4-of-4 secure vault`() {
+        stubRoute(deviceCount = 4)
+        val vm = createViewModel()
+
+        simulateAutoDiscovery(vm, listOf("d1", "d2", "d3"))
+        // 4-device flow keeps manual Next; the auto-start collector must not fire.
+        coVerify(exactly = 0) { sessionApi.startWithCommittee(any(), any(), any()) }
+    }
+
+    @Test
+    fun `auto-start does not fire for Fast Vault even at 2-of-2 threshold`() {
+        // Fast Vault has its own auto-kickoff via startVultiServerConnection; the new collector
+        // must skip this path or two concurrent next() calls would race.
+        stubRoute(deviceCount = 2, email = "user@example.com", password = "secret")
+        val vm = createViewModel()
+
+        vm.selectDevice("server-peer")
+
+        coVerify(exactly = 0) { sessionApi.startWithCommittee(any(), any(), any()) }
+    }
+
+    @Test
+    fun `auto-start does not fire when deviceCount is null`() {
+        // ReShare and similar flows pass deviceCount=null; never auto-start.
+        stubRoute(deviceCount = null)
+        val vm = createViewModel()
+
+        vm.selectDevice("peer-1")
+
+        coVerify(exactly = 0) { sessionApi.startWithCommittee(any(), any(), any()) }
+    }
+
+    @Test
+    fun `auto-start fires only once even when selection fluctuates around threshold`() {
+        stubRoute(deviceCount = 3)
+        val vm = createViewModel()
+
+        vm.selectDevice("peer-1")
+        vm.selectDevice("peer-2") // threshold met → fires once
+        vm.selectDevice("peer-1") // deselect → size drops back to 1
+        vm.selectDevice("peer-1") // reselect → size back to 2
+
+        coVerify(exactly = 1) { sessionApi.startWithCommittee(any(), any(), any()) }
     }
 }
