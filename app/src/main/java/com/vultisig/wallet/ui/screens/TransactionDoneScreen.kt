@@ -265,7 +265,7 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
         // orphans when memo is null).
         if (transaction.functionSignature != null) {
             OtherField(
-                title = stringResource(R.string.deposit_screen_title),
+                title = stringResource(R.string.verify_transaction_function_signature_title),
                 value = transaction.functionSignature,
             )
         }
