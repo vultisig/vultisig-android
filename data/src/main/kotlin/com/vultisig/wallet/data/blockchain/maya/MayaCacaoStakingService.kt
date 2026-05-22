@@ -7,10 +7,10 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 
 data class MayaCacaoStakingDetails(
@@ -36,14 +36,14 @@ constructor(
     fun getStakingDetails(address: String): Flow<MayaCacaoStakingDetails> =
         flow {
                 try {
-                    val details = supervisorScope {
+                    val details = coroutineScope {
                         val providerDeferred = async { mayaChainApi.getCacaoProvider(address) }
                         val networkDeferred = async { mayaChainApi.getMidgardNetworkData() }
-                        val maturityDeferred = async { getMayaCacaoMaturityStatus(address) }
 
                         val provider = providerDeferred.await()
                         val network = networkDeferred.await()
-                        val maturity = maturityDeferred.await()
+                        // Pass lastDepositHeight directly so getCacaoProvider is not fetched twice.
+                        val maturity = getMayaCacaoMaturityStatus(provider.lastDepositHeight)
 
                         val stakeAmount = provider.value.toBigIntegerOrNull() ?: BigInteger.ZERO
                         val apr = network.liquidityAPY.toDoubleOrNull()?.takeIf { it > 0.0 }

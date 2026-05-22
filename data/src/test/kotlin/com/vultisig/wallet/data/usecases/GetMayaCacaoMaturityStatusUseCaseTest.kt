@@ -89,6 +89,45 @@ internal class GetMayaCacaoMaturityStatusUseCaseTest {
         assertFalse(status.isMature)
     }
 
+    @Test
+    fun `invoke with lastDepositHeight skips provider fetch and returns correct status`() =
+        runTest {
+            coEvery { mayaChainApi.getLatestBlock() } returns latestBlock(1_000_000L)
+            coEvery { mayaChainApi.getMayaConstants() } returns
+                mapOf("CACAOPOOLDEPOSITMATURITYBLOCKS" to 500_000L)
+
+            val status = useCase(500_000L)
+
+            assertTrue(status.isMature)
+            assertEquals(0L, status.remainingBlocks)
+            assertEquals(0L, status.remainingSeconds)
+        }
+
+    @Test
+    fun `invoke with lastDepositHeight returns not-mature when blocks remain`() = runTest {
+        coEvery { mayaChainApi.getLatestBlock() } returns latestBlock(999_999L)
+        coEvery { mayaChainApi.getMayaConstants() } returns
+            mapOf("CACAOPOOLDEPOSITMATURITYBLOCKS" to 500_000L)
+
+        val status = useCase(500_000L)
+
+        assertFalse(status.isMature)
+        assertEquals(1L, status.remainingBlocks)
+        assertEquals(6L, status.remainingSeconds)
+    }
+
+    @Test
+    fun `invoke with lastDepositHeight returns UNKNOWN on RPC error`() = runTest {
+        coEvery { mayaChainApi.getLatestBlock() } throws RuntimeException("boom")
+        coEvery { mayaChainApi.getMayaConstants() } returns
+            mapOf("CACAOPOOLDEPOSITMATURITYBLOCKS" to 500_000L)
+
+        val status = useCase(500_000L)
+
+        assertTrue(status.isUnknown)
+        assertFalse(status.isMature)
+    }
+
     private fun stubChain(currentHeight: Long, lastDepositHeight: Long, maturity: Long) {
         coEvery { mayaChainApi.getLatestBlock() } returns latestBlock(currentHeight)
         coEvery { mayaChainApi.getMayaConstants() } returns
