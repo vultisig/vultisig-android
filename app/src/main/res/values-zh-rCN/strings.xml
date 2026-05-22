@@ -692,6 +692,7 @@
     <!-- Scan QR Screen -->
 
     <!-- Verify Transaction -->
+    <string name="verify_transaction_function_signature_title">功能签名</string>
     <string name="verify_transaction_function_inputs_title">函数参数</string>
     <string name="dapp_hero_unverified_function_title">未验证的功能</string>
     <string name="dapp_hero_unverified_function_subtitle">请在签名前查看下方详情</string>
@@ -914,6 +915,8 @@
 
     <!-- Transaction -->
     <string name="tx_done_transaction_details">交易详情</string>
+    <string name="tx_done_transaction_details_expand">展开</string>
+    <string name="tx_done_transaction_details_collapse">收起</string>
 
     <!-- Vault Confirmation -->
     <string name="vault_confirmation_vault_upgraded">保险库已升级</string>

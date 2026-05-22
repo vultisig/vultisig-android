@@ -417,6 +417,7 @@
     <string name="deposit_option_withdraw_ruji">Povuci RUJI</string>
     <string name="withdraw_amount">Povuci %s</string>
     <string name="deposit_form_unstake_percentage_hint">Unesite postotak za deblokiranje</string>
+    <string name="verify_transaction_function_signature_title">Potpis funkcije</string>
     <string name="verify_transaction_function_inputs_title">Argumenti funkcije</string>
     <string name="dapp_hero_unverified_function_title">Neprovjerena funkcija</string>
     <string name="dapp_hero_unverified_function_subtitle">Pregledajte detalje prije potpisivanja</string>
@@ -683,6 +684,8 @@
     <string name="token_selection_screen_enable_at_least_one">Omogućite barem jedan token za pregled stanja i upravljanje pozicijama.</string>
     <string name="transfer_ibc_destination_chain">Lanac odredišta</string>
     <string name="tx_done_transaction_details">Detalji transakcije</string>
+    <string name="tx_done_transaction_details_expand">Proširi</string>
+    <string name="tx_done_transaction_details_collapse">Sažmi</string>
     <string name="vault_confirmation_vault_upgraded">Trezor nadograđen</string>
     <string name="vault_confirmation_well_done">Odlično.</string>
     <string name="this_amount_would_leave_too_little_change">Ovaj iznos bi ostavio premalo kusura. 💡 Pokušajte s \'Pošalji maksimum\' (%1$s ADA) kako biste izbjegli ovaj problem.</string>

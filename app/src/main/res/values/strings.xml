@@ -621,6 +621,7 @@
     <string name="transfer_ibc_function_memo_title">Memo</string>
     <string name="merge_account_doesnt_exist">Selected token is not found for this address</string>
     <string name="keygen_email_error">Incorrect email, please check</string>
+    <string name="verify_transaction_function_signature_title">Function Signature</string>
     <string name="verify_transaction_function_inputs_title">Function Arguments</string>
     <string name="dapp_hero_unverified_function_title">Unverified function</string>
     <string name="dapp_hero_unverified_function_subtitle">Review the details below before signing</string>
@@ -933,6 +934,8 @@
     <string name="token_selection_screen_enable_at_least_one">Enable at least one token to view balances and manage positions.</string>
     <string name="transfer_ibc_destination_chain">Destination Chain</string>
     <string name="tx_done_transaction_details">Transaction Details</string>
+    <string name="tx_done_transaction_details_expand">Expand</string>
+    <string name="tx_done_transaction_details_collapse">Collapse</string>
     <string name="vault_confirmation_vault_upgraded">"Vault upgraded"</string>
     <string name="vault_confirmation_well_done">Well done.</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">You’re ready to use a new wallet standard.</string>

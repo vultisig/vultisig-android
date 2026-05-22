@@ -416,6 +416,7 @@
     <string name="deposit_option_withdraw_ruji">RUJI abheben</string>
     <string name="withdraw_amount">%s abheben</string>
     <string name="deposit_form_unstake_percentage_hint">Prozentsatz zum Unstaking eingeben</string>
+    <string name="verify_transaction_function_signature_title">Funktionssignatur</string>
     <string name="verify_transaction_function_inputs_title">Funktionsargumente</string>
     <string name="dapp_hero_unverified_function_title">Nicht verifizierte Funktion</string>
     <string name="dapp_hero_unverified_function_subtitle">Überprüfen Sie die Details unten, bevor Sie signieren</string>
@@ -682,6 +683,8 @@
     <string name="token_selection_screen_enable_at_least_one">Aktivieren Sie mindestens einen Token, um Salden anzuzeigen und Positionen zu verwalten.</string>
     <string name="transfer_ibc_destination_chain">Zielkette</string>
     <string name="tx_done_transaction_details">Transaktionsdetails</string>
+    <string name="tx_done_transaction_details_expand">Erweitern</string>
+    <string name="tx_done_transaction_details_collapse">Reduzieren</string>
     <string name="vault_confirmation_vault_upgraded">Tresor aktualisiert</string>
     <string name="vault_confirmation_well_done">Gut gemacht!</string>
     <string name="this_amount_would_leave_too_little_change">Bei diesem Betrag bleibt zu wenig Wechselgeld übrig. 💡 Versuchen Sie „Max. senden“ (%1$s ADA), um dieses Problem zu vermeiden.</string>
