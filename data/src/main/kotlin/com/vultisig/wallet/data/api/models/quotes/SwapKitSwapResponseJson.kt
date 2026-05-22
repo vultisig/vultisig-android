@@ -42,9 +42,12 @@ data class SwapKitTxMeta(
     @SerialName("chain") val chain: String? = null,
     @SerialName("subProvider") val subProvider: String? = null,
 ) {
-    /** Lower-cased txType used to dispatch onto an EVM or Solana signer. */
-    val type: String
-        get() = txType.lowercase()
+    /**
+     * Lower-cased txType used to dispatch onto an EVM or Solana signer. Computed once at
+     * construction so the swap-path filter + signer-pick reads don't reallocate the string. Lives
+     * in the class body (not the constructor) so kotlinx.serialization ignores it.
+     */
+    val type: String = txType.lowercase()
 
     companion object {
         const val TYPE_EVM = "evm"

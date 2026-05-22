@@ -25,7 +25,12 @@ internal class SwapKitProviderCacheTest {
 
     private val api: SwapKitApi = mockk()
 
-    private class FakeClock(var now: Long = 0L) : SwapKitProviderCacheImpl.Clock {
+    /**
+     * Default `now` is non-zero so `fetchedAtMillis` after the first fetch never collides with
+     * `SwapKitProviderCache`'s `fetchedAtMillis == 0L` "never fetched" sentinel — otherwise a test
+     * that intends to read from the cache would silently re-hit the API instead.
+     */
+    private class FakeClock(var now: Long = 1_000L) : SwapKitProviderCacheImpl.Clock {
         override fun nowMillis(): Long = now
     }
 
@@ -170,7 +175,7 @@ internal class SwapKitProviderCacheTest {
     fun `provider chain id mapping covers Phase 1 EVM and Solana aliases`() {
         val map = SwapKitProviderCacheImpl::class.java
         // Spot-check via the cache itself rather than reflecting the private function — these are
-        // the aliases iOS Phase 1 honours and the proxy is allowed to return.
+        // the V3 identifier shapes the proxy is allowed to return per the SwapKit docs.
         val aliases =
             mapOf(
                 // V3 returns EVM chain ids as decimal strings and lowercase named ids for non-EVM.

@@ -165,7 +165,7 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
         }
 
     companion object {
-        /** Vultisig SwapKit proxy base. iOS uses `/swapkit/`, Windows `/swapkit-win/`. */
+        /** Vultisig SwapKit proxy base. */
         private const val BASE_URL = "https://api.vultisig.com/swapkit-a"
 
         /**

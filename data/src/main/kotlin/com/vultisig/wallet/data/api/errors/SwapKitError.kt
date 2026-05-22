@@ -11,8 +11,8 @@ sealed class SwapKitError(message: String, cause: Throwable? = null) : Exception
     class NoRoutes(message: String = "No SwapKit route available") : SwapKitError(message)
 
     /**
-     * SwapKit returned a `tx.meta.txType` that this phase does not support (utxo/cosmos/tron/ton).
-     * EVM and Solana are the only honored types in Phase 1.
+     * SwapKit returned a `meta.txType` that this phase does not support (utxo/cosmos/tron/ton). EVM
+     * and Solana are the only honored types in Phase 1.
      */
     class UnsupportedTxType(txType: String) : SwapKitError("Unsupported SwapKit tx type: $txType")
 

@@ -102,7 +102,7 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
             .toSet()
 
     companion object {
-        /** Cache TTL — 24h, matching the iOS SwapKit Phase 1 implementation. */
+        /** Cache TTL — 24h. */
         private const val TTL_MILLIS: Long = 24L * 60L * 60L * 1000L
 
         /**
