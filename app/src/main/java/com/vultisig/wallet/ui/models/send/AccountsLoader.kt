@@ -10,17 +10,17 @@ import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import java.math.BigDecimal
 import java.math.BigInteger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 internal class AccountsLoader(
     private val scope: CoroutineScope,
-    private val accounts: MutableStateFlow<List<Account>>,
+    private val accountsState: MutableStateFlow<AccountsLoadState>,
     private val accountsRepository: AccountsRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val defiTypeProvider: () -> DeFiNavActions?,
@@ -28,15 +28,29 @@ internal class AccountsLoader(
 ) {
     private var loadAccountsJob: Job? = null
 
+    // Job.cancel() is cooperative, so a previous collector can still execute one more
+    // publish after `load()` resets the state to `Uninitialized` — stamping each load with
+    // a generation and gating publishes on the current generation drops those stale
+    // emissions instead of letting them flash superseded data into accountsState.
+    private var currentGeneration: Long = 0L
+
     fun load(vaultId: VaultId) {
         loadAccountsJob?.cancel()
+        val generation = ++currentGeneration
+        // Reset before launching the new load so a vault/action switch doesn't leave the
+        // previous session's Loaded(...) visible while the new collector spins up.
+        accountsState.value = AccountsLoadState.Uninitialized
         loadAccountsJob =
             when (defiTypeProvider()) {
                 DeFiNavActions.WITHDRAW_RUJI ->
-                    scope.safeLaunch(onError = ::onLoadError) { loadRewardsAccount(vaultId) }
+                    scope.safeLaunch(onError = ::onLoadError) {
+                        loadRewardsAccount(vaultId, generation)
+                    }
 
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE ->
-                    scope.safeLaunch(onError = ::onLoadError) { loadCircleUSDCAccount(vaultId) }
+                    scope.safeLaunch(onError = ::onLoadError) {
+                        loadCircleUSDCAccount(vaultId, generation)
+                    }
 
                 null,
                 DeFiNavActions.BOND,
@@ -54,7 +68,7 @@ internal class AccountsLoader(
                         accountsRepository
                             .loadAddresses(vaultId)
                             .map { addrs -> addrs.flatMap { it.accounts } }
-                            .collect(accounts)
+                            .collect { publishLoaded(it, generation) }
                     }
 
                 else ->
@@ -62,54 +76,117 @@ internal class AccountsLoader(
                         accountsRepository
                             .loadDeFiAddresses(vaultId, false)
                             .map { addrs -> addrs.flatMap { it.accounts } }
-                            .collect(accounts)
+                            .collect { publishLoaded(it, generation) }
                     }
             }
+    }
+
+    // Routes the autocompound switch through this single component so accountsState only
+    // ever has one writer. The previous in-VM `collect` raced against this loader — and
+    // for UNSTAKE_TCY the two sources were different APIs (loadAddresses vs
+    // loadDeFiAddresses), so interleaved emissions would overwrite each other with data
+    // sourced from different endpoints. Token selection still happens in the VM via
+    // onAccountsLoaded, but the publish to accountsState happens here under the same
+    // cancel + generation discipline as `load()`.
+    fun loadForAutoCompoundSwitch(
+        vaultId: VaultId,
+        useStableCompound: Boolean,
+        onAccountsLoaded: suspend (List<Account>) -> Unit,
+    ) {
+        loadAccountsJob?.cancel()
+        val generation = ++currentGeneration
+        accountsState.value = AccountsLoadState.Uninitialized
+        loadAccountsJob =
+            scope.safeLaunch(onError = ::onLoadError) {
+                val addressesFlow =
+                    if (useStableCompound) {
+                        accountsRepository.loadAddresses(vaultId)
+                    } else {
+                        accountsRepository.loadDeFiAddresses(vaultId, false)
+                    }
+                addressesFlow
+                    .map { addrs -> addrs.flatMap { it.accounts } }
+                    .collect { accounts ->
+                        if (publishLoaded(accounts, generation)) {
+                            onAccountsLoaded(accounts)
+                        }
+                    }
+            }
+    }
+
+    private fun publishLoaded(accounts: List<Account>, generation: Long): Boolean {
+        if (generation != currentGeneration) return false
+        accountsState.value = AccountsLoadState.Loaded(accounts)
+        return true
     }
 
     private suspend fun onLoadError(error: Throwable) {
         Timber.e(error, "Failed to load accounts")
     }
 
-    private suspend fun loadCircleUSDCAccount(vaultId: VaultId) {
-        // isRefresh = true skips the cached pre-emission so firstOrNull() returns the
-        // hydrated list — the ETH account we copy into accounts.value is then shown with
-        // refreshed balances rather than whatever fetchAccountFromDb wrote on a prior load.
-        val accountsLoaded =
-            accountsRepository.loadAddresses(vaultId, isRefresh = true).firstOrNull()?.flatMap {
-                it.accounts
+    // Collect both cached and hydrated emissions from loadAddresses (isRefresh = false) so
+    // the form renders the cached snapshot immediately and then re-renders once balances
+    // have been refreshed from the network. Using isRefresh = true here would skip the
+    // cached pre-emission and block the form on slow networks.
+    private suspend fun loadCircleUSDCAccount(vaultId: VaultId, generation: Long) {
+        // Resolve staking details once for the lifetime of this load — generateId only
+        // depends on Coins.Ethereum.USDC + mscaAddress (neither of which change between
+        // cached and hydrated emissions), and the stake amount doesn't change when ETH
+        // balances hydrate. Repeating the lookup per emission was a wasted DB hit.
+        val mscaAddress = mscaAddressProvider()
+        val cachedDetails =
+            mscaAddress?.let { msca ->
+                stakingDetailsRepository.getStakingDetailsById(
+                    vaultId,
+                    Coins.Ethereum.USDC.generateId(msca),
+                )
             }
+        accountsRepository
+            .loadAddresses(vaultId, isRefresh = false)
+            .map { addrs -> addrs.flatMap { it.accounts } }
+            .collect { accountsLoaded ->
+                publishCircleUsdc(
+                    accountsLoaded,
+                    mscaAddress,
+                    cachedDetails?.stakeAmount,
+                    generation,
+                )
+            }
+    }
+
+    private fun publishCircleUsdc(
+        accountsLoaded: List<Account>,
+        mscaAddress: String?,
+        stakeAmount: BigInteger?,
+        generation: Long,
+    ) {
+        if (generation != currentGeneration) return
         val ethereumAccount =
-            accountsLoaded?.find { it.token.id.equals(Coins.Ethereum.ETH.id, true) }
+            accountsLoaded.find { it.token.id.equals(Coins.Ethereum.ETH.id, true) }
         if (ethereumAccount == null) {
             // Without a vault-bound ETH account the address copied onto USDC below would be
             // empty, which silently breaks any later submit through WithdrawUsdcCircleStrategy.
             Timber.e("Ethereum account not available for Circle USDC withdrawal")
-            accounts.value = emptyList()
+            publishLoaded(emptyList(), generation)
             return
         }
 
         val usdc = Coins.Ethereum.USDC.copy(address = ethereumAccount.token.address)
-        val mscaAddress = mscaAddressProvider()
 
         if (mscaAddress != null) {
-            val id = usdc.generateId(mscaAddress)
-            val cachedDetails = stakingDetailsRepository.getStakingDetailsById(vaultId, id)
             val usdcCircleAccount =
                 Account(
                     token = usdc,
-                    tokenValue =
-                        TokenValue(
-                            value = cachedDetails?.stakeAmount ?: BigInteger.ZERO,
-                            token = usdc,
-                        ),
+                    tokenValue = TokenValue(value = stakeAmount ?: BigInteger.ZERO, token = usdc),
                     fiatValue = null,
                     price = null,
                 )
-            accounts.value = listOf(ethereumAccount, usdcCircleAccount)
+            publishLoaded(listOf(ethereumAccount, usdcCircleAccount), generation)
         } else {
-            Timber.e("MSCA address not available for Circle USDC withdrawal")
-            accounts.value =
+            // Pre-setup state (MSCA not yet provisioned), not an error — use warn so this
+            // doesn't flood error logs on the cached emission before the MSCA resolves.
+            Timber.w("MSCA address not available for Circle USDC withdrawal")
+            publishLoaded(
                 listOf(
                     ethereumAccount,
                     Account(
@@ -118,49 +195,61 @@ internal class AccountsLoader(
                         fiatValue = null,
                         price = null,
                     ),
-                )
+                ),
+                generation,
+            )
         }
     }
 
-    private suspend fun loadRewardsAccount(vaultId: VaultId) {
-        // isRefresh = true skips the cached pre-emission — RUNE and RUJI accounts pushed
-        // into accounts.value below are then shown with hydrated balances.
-        val accountsLoaded =
-            accountsRepository.loadAddresses(vaultId, isRefresh = true).firstOrNull()?.flatMap {
-                it.accounts
+    // Collect both cached and hydrated emissions so the form renders cached RUNE/RUJI
+    // balances immediately, then refreshes when network balances arrive.
+    private suspend fun loadRewardsAccount(vaultId: VaultId, generation: Long) {
+        // Resolve staking details once for the lifetime of this load. The rewards row is
+        // sourced from staking details (not from the addresses flow), so the same value
+        // should back both the cached and hydrated emissions instead of re-querying the
+        // repo on every upstream emission.
+        val cachedDetails =
+            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
+        accountsRepository
+            .loadAddresses(vaultId, isRefresh = false)
+            .map { addrs -> addrs.flatMap { it.accounts } }
+            .collect { accountsLoaded ->
+                publishRewards(accountsLoaded, cachedDetails?.rewards, generation)
             }
+    }
+
+    private fun publishRewards(
+        accountsLoaded: List<Account>,
+        rewards: BigDecimal?,
+        generation: Long,
+    ) {
+        if (generation != currentGeneration) return
         val thorchainAccount =
-            accountsLoaded?.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
+            accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUNE.id, true) }
                 ?: run {
-                    accounts.value = emptyList()
+                    publishLoaded(emptyList(), generation)
                     return
                 }
 
         val rujiAccount =
             accountsLoaded.find { it.token.id.equals(Coins.ThorChain.RUJI.id, true) }
                 ?: run {
-                    accounts.value = emptyList()
+                    publishLoaded(emptyList(), generation)
                     return
                 }
 
-        val cachedDetails =
-            stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
-
-        if (cachedDetails != null) {
+        if (rewards != null) {
             val rewardsAccount =
                 Account(
                     token = RUJI_REWARDS_COIN.copy(address = thorchainAccount.token.address),
                     tokenValue =
-                        TokenValue(
-                            value = cachedDetails.rewards?.toBigInteger() ?: BigInteger.ZERO,
-                            token = RUJI_REWARDS_COIN,
-                        ),
+                        TokenValue(value = rewards.toBigInteger(), token = RUJI_REWARDS_COIN),
                     fiatValue = null,
                     price = null,
                 )
-            accounts.value = listOf(rewardsAccount, thorchainAccount, rujiAccount)
+            publishLoaded(listOf(rewardsAccount, thorchainAccount, rujiAccount), generation)
         } else {
-            accounts.value = emptyList()
+            publishLoaded(emptyList(), generation)
         }
     }
 }
