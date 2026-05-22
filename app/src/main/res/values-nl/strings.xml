@@ -484,16 +484,13 @@
     <string name="verify_deposit_sign_transaction">Transactie ondertekenen</string>
     <string name="referral_invite_sheet_description">Deel je unieke verwijzingscode om vrienden uit te nodigen. Zij krijgen een korting en hoe meer ze handelen, hoe meer jij verdient - direct geleverd in je kluis.</string>
     <string name="referral_create_referral">Verwijzing maken</string>
-    <string name="referral_save_referral_code">Verwijzingscode opslaan</string>
     <string name="referral_invite_onboarding_3">Bespaar op kosten.</string>
-    <string name="referral_or">OF</string>
     <string name="referral_create_code_and_earn">Maak je eigen code en verdien\u0020</string>
     <string name="referral_on_referred_swaps">\u0020op doorverwezen swaps</string>
-    <string name="referral_save">Bespaar\u0020</string>
-    <string name="referral_add_referral">\u0020op swaps - Voeg een referral toe</string>
-    <string name="referral_edit_referred">Bewerk verwijzingscode</string>
+    <string name="referral_main_my_referral_title">Mijn verwijzing</string>
+    <string name="referral_main_my_referral_body">Beheer je verwijzingscode en verzamel beloningen.</string>
+    <string name="referral_view_friend_active">Actief</string>
     <string name="referral_edit_referral">Bewerk verwijzing</string>
-    <string name="referral_external_linked">Referralcode succesvol gekoppeld</string>
     <string name="referral_external_not_linked">Referralcode bestaat niet</string>
     <string name="referral_external_link_failed">Controleren van referralcode mislukt</string>
     <string name="referral_invite_next">Volgende</string>
@@ -560,7 +557,6 @@
     <string name="referral_view_selected_vault">Kluis geselecteerd</string>
     <string name="referral_view_your_referral_code">Jouw verwijzingscode</string>
     <string name="referral_view_edit_referral">Verwijzing bewerken</string>
-    <string name="referral_view_your_friend_referral">Verwijzingscode van je vriend</string>
     <string name="referral_view_collected_rewards">Verzamelde beloningen</string>
     <string name="referral_view_add_friend">Verwijzing van vriend toevoegen</string>
     <string name="referral_view_save">Opslaan</string>
