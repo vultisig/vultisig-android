@@ -487,16 +487,13 @@
     <string name="verify_deposit_sign_transaction">Transaktion signieren</string>
     <string name="referral_invite_sheet_description">Teilen Sie Ihren einzigartigen Empfehlungscode, um Freunde einzuladen. Sie erhalten einen Rabatt und je mehr sie handeln, desto mehr verdienen Sie – direkt in Ihren Tresor geliefert.</string>
     <string name="referral_create_referral">Empfehlung erstellen</string>
-    <string name="referral_save_referral_code">Empfehlungscode speichern</string>
     <string name="referral_invite_onboarding_3">Gebühren sparen.</string>
-    <string name="referral_or">ODER</string>
     <string name="referral_create_code_and_earn">Erstellen Sie Ihren eigenen Code und verdienen Sie\u0020</string>
     <string name="referral_on_referred_swaps">\u0020bei empfohlenen Swaps</string>
-    <string name="referral_save">Sparen\u0020</string>
-    <string name="referral_add_referral">\u0020bei Swaps - Empfehlung hinzufügen</string>
-    <string name="referral_edit_referred">Empfehlungscode bearbeiten</string>
+    <string name="referral_main_my_referral_title">Meine Empfehlung</string>
+    <string name="referral_main_my_referral_body">Verwalten Sie Ihren Empfehlungscode und sammeln Sie Belohnungen.</string>
+    <string name="referral_view_friend_active">Aktiv</string>
     <string name="referral_edit_referral">Empfehlung bearbeiten</string>
-    <string name="referral_external_linked">Referral-Code erfolgreich verknüpft</string>
     <string name="referral_external_not_linked">Referral-Code existiert nicht</string>
     <string name="referral_external_link_failed">Fehler beim Überprüfen des Referral-Codes</string>
     <string name="referral_invite_next">Weiter</string>
@@ -563,7 +560,6 @@
     <string name="referral_view_selected_vault">Tresor ausgewählt</string>
     <string name="referral_view_your_referral_code">Ihr Empfehlungscode</string>
     <string name="referral_view_edit_referral">Empfehlung bearbeiten</string>
-    <string name="referral_view_your_friend_referral">Empfehlungscode Ihres Freundes</string>
     <string name="referral_view_collected_rewards">Gesammelte Belohnungen</string>
     <string name="referral_view_add_friend">Freundesempfehlung hinzufügen</string>
     <string name="referral_view_save">Speichern</string>
