@@ -194,6 +194,12 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindGetMayaCacaoMaturityStatusUseCase(
+        impl: GetMayaCacaoMaturityStatusUseCaseImpl
+    ): GetMayaCacaoMaturityStatusUseCase
+
+    @Binds
+    @Singleton
     fun bindParseCosmosMessageUseCase(
         impl: ParseCosmosMessageUseCaseImpl
     ): ParseCosmosMessageUseCase

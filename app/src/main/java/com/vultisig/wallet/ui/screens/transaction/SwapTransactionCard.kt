@@ -32,6 +32,7 @@ import com.vultisig.wallet.ui.models.TransactionHistoryItemUiModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Broadcasted
 import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Confirmed
+import com.vultisig.wallet.ui.models.TransactionStatusUiModel.Pending
 import com.vultisig.wallet.ui.screens.transaction.components.SendAmountText
 import com.vultisig.wallet.ui.screens.transaction.components.ToSeparator
 import com.vultisig.wallet.ui.screens.transaction.components.TokenCircle
@@ -65,7 +66,7 @@ internal fun SwapTransactionCard(
                         iconRes = R.drawable.swap,
                         label = stringResource(R.string.transaction_type_button_swap),
                     )
-                    TransactionStatusWidget(status = item.status)
+                    TransactionStatusWidget(status = item.status, timestamp = item.timestamp)
                 }
 
                 if (isInProgress) {
@@ -225,6 +226,21 @@ private fun PreviewSwapCardInProgress() {
     OnBoardingComposeTheme {
         SwapTransactionCard(
             item = previewSwapItem.copy(status = Broadcasted),
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF02122B)
+@Composable
+private fun PreviewSwapCardPending() {
+    OnBoardingComposeTheme {
+        SwapTransactionCard(
+            item =
+                previewSwapItem.copy(
+                    status = Pending,
+                    timestamp = System.currentTimeMillis() - 5_000L,
+                ),
             modifier = Modifier.fillMaxWidth().padding(16.dp),
         )
     }

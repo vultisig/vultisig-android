@@ -200,15 +200,22 @@ internal fun PeerDiscoveryScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.padding(vertical = 12.dp, horizontal = 24.dp),
             ) {
-                VsButton(
-                    label =
-                        if (hasEnoughDevices)
-                            stringResource(R.string.peer_discovery_action_next_title)
-                        else stringResource(R.string.peer_discovery_waiting_for_devices_action),
-                    state = if (hasEnoughDevices) VsButtonState.Enabled else VsButtonState.Disabled,
-                    onClick = onNextClick,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                // 2/2 and 3/3 vaults auto-start keygen once the peer threshold is met (see
+                // KeygenPeerDiscoveryViewModel.observeAutoStartKeygen), so the Next button is
+                // hidden entirely. For 4+ device vaults the initiator still picks which peers
+                // to commit, so the button stays visible.
+                if (state.deviceCount == null || state.deviceCount > 3) {
+                    VsButton(
+                        label =
+                            if (hasEnoughDevices)
+                                stringResource(R.string.peer_discovery_action_next_title)
+                            else stringResource(R.string.peer_discovery_waiting_for_devices_action),
+                        state =
+                            if (hasEnoughDevices) VsButtonState.Enabled else VsButtonState.Disabled,
+                        onClick = onNextClick,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
 
                 Text(
                     text =

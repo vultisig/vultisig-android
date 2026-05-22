@@ -34,6 +34,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -97,7 +98,6 @@ internal fun ReferralViewScreen(
             navController.popBackStack()
         },
         onClickFriendReferralBanner = model::navigateToStoreFriendReferralBanner,
-        onEditFriendReferralCode = model::navigateToStoreFriendReferralBanner,
         onDismissErrorDialog = model::onDismissErrorDialog,
         onClickEditReferral = model::onClickedEditReferral,
         onVaultClicked = model::onVaultClicked,
@@ -114,7 +114,6 @@ internal fun ReferralViewScreen(
     state: ReferralViewUiState,
     onBackPressed: () -> Unit,
     onClickFriendReferralBanner: () -> Unit,
-    onEditFriendReferralCode: () -> Unit,
     onCopyReferralCode: (String) -> Unit,
     onDismissErrorDialog: () -> Unit,
     onClickEditReferral: () -> Unit,
@@ -142,14 +141,10 @@ internal fun ReferralViewScreen(
                         .imePadding()
                         .navigationBarsPadding()
             ) {
-                if (state.referralFriendCode.isEmpty()) {
-                    FriendReferralBanner(onClick = onClickFriendReferralBanner)
-                } else {
-                    FriendReferralCode(
-                        text = state.referralFriendCode,
-                        onEditFriendReferralCode = onEditFriendReferralCode,
-                    )
-                }
+                FriendReferralBanner(
+                    isActive = state.referralFriendCode.isNotEmpty(),
+                    onClick = onClickFriendReferralBanner,
+                )
 
                 UiSpacer(16.dp)
 
@@ -236,38 +231,6 @@ private fun ReferralDetails(state: ReferralViewUiState, onCopyReferralCode: (Str
 }
 
 @Composable
-private fun FriendReferralCode(text: String, onEditFriendReferralCode: () -> Unit) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .border(
-                    border = BorderStroke(width = 1.dp, color = Theme.v2.colors.border.light),
-                    shape = RoundedCornerShape(12.dp),
-                )
-                .padding(12.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.referral_view_your_friend_referral),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
-        )
-
-        UiSpacer(8.dp)
-
-        ContentRow(
-            text = text,
-            icon = {
-                UiIcon(
-                    drawableResId = R.drawable.ic_edit_pencil,
-                    size = 18.dp,
-                    onClick = { onEditFriendReferralCode() },
-                )
-            },
-        )
-    }
-}
-
-@Composable
 private fun ReferralExpirationItem(expiration: String = "25 May of 2027", isLoading: Boolean) {
     Column(
         modifier =
@@ -300,7 +263,7 @@ private fun ReferralExpirationItem(expiration: String = "25 May of 2027", isLoad
 }
 
 @Composable
-private fun FriendReferralBanner(onClick: () -> Unit) {
+private fun FriendReferralBanner(isActive: Boolean, onClick: () -> Unit) {
     Box(
         modifier =
             Modifier.fillMaxWidth()
@@ -342,8 +305,39 @@ private fun FriendReferralBanner(onClick: () -> Unit) {
                 style = Theme.brockmann.body.s.medium,
             )
         }
+
+        if (isActive) {
+            FriendActiveChip(
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp)
+            )
+        }
     }
 }
+
+@Composable
+private fun FriendActiveChip(modifier: Modifier = Modifier) {
+    Row(
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(999.dp))
+                .background(Theme.v2.colors.primary.accent4.copy(alpha = 0.16f))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier =
+                Modifier.size(6.dp).clip(RoundedCornerShape(3.dp)).background(FRIEND_ACTIVE_DOT)
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = stringResource(R.string.referral_view_friend_active),
+            color = Theme.v2.colors.primary.accent4,
+            style = Theme.brockmann.supplementary.caption,
+        )
+    }
+}
+
+private val FRIEND_ACTIVE_DOT = Color(0xFF4ADE80)
 
 @Composable
 private fun ReferralRewardsBanner(rewards: String, isLoading: Boolean) {
@@ -545,7 +539,6 @@ private fun ReferralViewScreenPreview() {
             ),
         onBackPressed = {},
         onClickFriendReferralBanner = {},
-        onEditFriendReferralCode = {},
         onCopyReferralCode = {},
         onDismissErrorDialog = {},
         onClickEditReferral = {},
@@ -571,7 +564,6 @@ private fun ReferralViewScreenLoadingPreview() {
             ),
         onBackPressed = {},
         onClickFriendReferralBanner = {},
-        onEditFriendReferralCode = {},
         onCopyReferralCode = {},
         onDismissErrorDialog = {},
         onClickEditReferral = {},
@@ -597,7 +589,6 @@ private fun ReferralViewScreenErrorPreview() {
             ),
         onBackPressed = {},
         onClickFriendReferralBanner = {},
-        onEditFriendReferralCode = {},
         onCopyReferralCode = {},
         onDismissErrorDialog = {},
         onClickEditReferral = {},
