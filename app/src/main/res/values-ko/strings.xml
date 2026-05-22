@@ -756,6 +756,7 @@
     <string name="faq_settings_a8">Vultisig는 모바일 앱에서 사용자 정보를 저장하지 않습니다.</string>
     <string name="faq_settings_a9">MPC 기술을 기반으로 하여 시드 구문이 필요 없고 여러 블록체인을 지원하여 Vultisig는 유연하고 체인에 구애받지 않습니다.</string>
     <string name="vault_settings_advanced_title">고급</string>
+    <string name="settings_advanced_swapkit_toggle">SwapKit 어그리게이터</string>
     <string name="sign_message_continue">계속</string>
     <string name="address_book_empty_description">모든 중요한 주소를 한곳에서 관리하세요.</string>
     <string name="address_book_empty_title">주소록이 비어 있습니다</string>

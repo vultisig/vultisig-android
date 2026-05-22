@@ -821,6 +821,7 @@
 
     <!-- Vault Settings Advanced -->
     <string name="vault_settings_advanced_title">高级</string>
+    <string name="settings_advanced_swapkit_toggle">SwapKit 聚合器</string>
 
     <!-- Sign Message -->
     <string name="sign_message_continue">继续</string>
