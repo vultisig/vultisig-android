@@ -1016,11 +1016,10 @@
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="solana_instructions_summary">Transaction Instructions Summary</string>
     <string name="solana_instruction_number">Instruction %1$d</string>
-    <string name="solana_program_name">Program: %1$s</string>
     <string name="solana_program_id">Program ID: %1$s</string>
     <plurals name="solana_accounts_data">
-        <item quantity="one">Accounts: %1$d | Data length: %2$d bytes</item>
-        <item quantity="other">Accounts: %1$d | Data length: %2$d bytes</item>
+        <item quantity="one">Accounts: %1$d | Data Length: %2$d bytes</item>
+        <item quantity="other">Accounts: %1$d | Data Length: %2$d bytes</item>
     </plurals>
 
     <!-- Vault count plural -->

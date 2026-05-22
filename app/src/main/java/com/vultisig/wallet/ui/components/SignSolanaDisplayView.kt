@@ -24,20 +24,47 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.ParsedSolanaTransaction
 import com.vultisig.wallet.data.chains.helpers.SolanaTransactionParser
+import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.theme.Theme
 import timber.log.Timber
 import vultisig.keysign.v1.SignSolana
 
 @Composable
 fun SignSolanaDisplayView(signSolana: SignSolana, modifier: Modifier = Modifier) {
-    var isExpanded by remember { mutableStateOf(false) }
+    val allInstructions =
+        remember(signSolana) {
+            signSolana.rawTransactions.flatMap { tx ->
+                try {
+                    SolanaTransactionParser.parse(tx).instructions
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to parse Solana transaction")
+                    emptyList()
+                }
+            }
+        }
+
+    SignSolanaDisplayContent(
+        instructions = allInstructions,
+        rawTransactions = signSolana.rawTransactions,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun SignSolanaDisplayContent(
+    instructions: List<ParsedSolanaTransaction.ParsedInstruction>,
+    rawTransactions: List<String>,
+    modifier: Modifier = Modifier,
+    initiallyExpanded: Boolean = false,
+) {
+    var isExpanded by remember { mutableStateOf(initiallyExpanded) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -69,50 +96,42 @@ fun SignSolanaDisplayView(signSolana: SignSolana, modifier: Modifier = Modifier)
                 modifier =
                     Modifier.fillMaxWidth()
                         .heightIn(max = 400.dp)
-                        .background(
-                            color = Theme.v2.colors.variables.bordersLight,
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .padding(8.dp)
                         .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                InstructionsSummarySection(signSolana)
-
-                RawTransactionsSection(signSolana)
+                if (instructions.isNotEmpty()) {
+                    InstructionsSummarySection(instructions)
+                }
+                RawTransactionsSection(rawTransactions)
             }
         }
     }
 }
 
 @Composable
-private fun InstructionsSummarySection(signSolana: SignSolana) {
-    val allInstructions =
-        remember(signSolana) {
-            signSolana.rawTransactions.flatMap { tx ->
-                try {
-                    val parsed = SolanaTransactionParser.parse(tx)
-                    parsed.instructions
-                } catch (e: Exception) {
-                    Timber.w(e, "Failed to parse Solana transaction")
-                    emptyList()
-                }
-            }
-        }
+private fun InstructionsSummarySection(
+    instructions: List<ParsedSolanaTransaction.ParsedInstruction>
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.variables.bordersLight,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.solana_instructions_summary),
+            style = Theme.brockmann.button.medium.regular,
+            color = Theme.v2.colors.text.primary,
+            fontSize = 13.sp,
+        )
 
-    if (allInstructions.isNotEmpty()) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.solana_instructions_summary),
-                style = Theme.brockmann.button.medium.regular,
-                color = Theme.v2.colors.text.primary,
-                fontSize = 13.sp,
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                allInstructions.forEachIndexed { index, instruction ->
-                    InstructionRow(instruction = instruction, index = index)
-                }
+            instructions.forEachIndexed { index, instruction ->
+                InstructionRow(instruction = instruction, index = index)
             }
         }
     }
@@ -120,44 +139,21 @@ private fun InstructionsSummarySection(signSolana: SignSolana) {
 
 @Composable
 private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstruction, index: Int) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .background(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Theme.v2.colors.backgrounds.dark,
-                )
-                .padding(6.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.solana_instruction_number, index + 1),
-                style = Theme.brockmann.button.medium.regular,
-                color = Theme.v2.colors.text.primary,
-                fontSize = 10.sp,
-            )
-
-            instruction.instructionType?.let { type ->
-                Text(
-                    text = ": $type",
-                    style = Theme.brockmann.button.medium.medium,
-                    color = Theme.v2.colors.text.primary,
-                    fontSize = 10.sp,
-                )
-            }
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Combine instruction type and program name into a single header
+        // ("Instruction N: <type> (<programName>)") so the row matches the extension layout.
+        val headerSuffix = buildString {
+            instruction.instructionType?.let { append(": ", it) }
+            instruction.programName?.let { append(" (", it, ")") }
         }
-
-        instruction.programName?.let { name ->
-            Text(
-                text = stringResource(R.string.solana_program_name, name),
-                style = Theme.brockmann.button.medium.medium,
-                color = Theme.v2.colors.neutrals.n100,
-                fontSize = 10.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+        Text(
+            text = stringResource(R.string.solana_instruction_number, index + 1) + headerSuffix,
+            style = Theme.brockmann.button.medium.medium,
+            color = Theme.v2.colors.text.primary,
+            fontSize = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
 
         Text(
             text = stringResource(R.string.solana_program_id, instruction.programId),
@@ -184,33 +180,55 @@ private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstructio
 }
 
 @Composable
-private fun RawTransactionsSection(signSolana: SignSolana) {
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text(
-            text = stringResource(R.string.raw_transaction_data),
-            style = Theme.brockmann.button.medium.regular,
-            color = Theme.v2.colors.text.primary,
-            lineHeight = 13.sp,
-        )
-        Column(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .background(
-                        color = Theme.v2.colors.backgrounds.dark,
-                        shape = RoundedCornerShape(8.dp),
-                    )
-                    .padding(6.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            signSolana.rawTransactions.forEach { tx ->
-                Text(
-                    text = tx,
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = Theme.v2.colors.buttons.primary,
-                    lineHeight = 12.sp,
+private fun RawTransactionsSection(rawTransactions: List<String>) {
+    VerifyCardJsonDetails(
+        title = stringResource(R.string.raw_transaction_data),
+        subtitle = rawTransactions.joinToString(separator = "\n"),
+        subtitleColor = Theme.v2.colors.alerts.info,
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.variables.bordersLight,
+                    shape = RoundedCornerShape(12.dp),
                 )
-            }
-        }
-    }
+                .padding(horizontal = 12.dp),
+    )
+}
+
+private val PREVIEW_INSTRUCTIONS =
+    listOf(
+        ParsedSolanaTransaction.ParsedInstruction(
+            programId = "11111111111111111111111111111111",
+            programName = "System Program",
+            instructionType = "Transfer",
+            accountsCount = 2,
+            dataLength = 12,
+        )
+    )
+
+private val PREVIEW_RAW_TRANSACTIONS =
+    listOf(
+        "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAQABAqdMNPQM3" +
+            "nr75Ukqx/zFBFIHhNkCGoXIlsLwyeYKWoaMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADD" +
+            "OLRVT/C1k5XaiywNYKqgs08HADdd04+OEUp8yem+pwEBAgAADAIAAACAlpgAAAAAAA=="
+    )
+
+@Preview
+@Composable
+private fun PreviewSignSolanaDisplayViewCollapsed() {
+    SignSolanaDisplayContent(
+        instructions = PREVIEW_INSTRUCTIONS,
+        rawTransactions = PREVIEW_RAW_TRANSACTIONS,
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewSignSolanaDisplayViewExpanded() {
+    SignSolanaDisplayContent(
+        instructions = PREVIEW_INSTRUCTIONS,
+        rawTransactions = PREVIEW_RAW_TRANSACTIONS,
+        initiallyExpanded = true,
+    )
 }

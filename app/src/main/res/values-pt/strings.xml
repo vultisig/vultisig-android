@@ -960,7 +960,6 @@
     <string name="solana_raw_transaction">Transação bruta de Solana</string>
     <string name="solana_instructions_summary">Resumo das instruções da transação</string>
     <string name="solana_instruction_number">Instrução %1$d</string>
-    <string name="solana_program_name">Programa: %1$s</string>
     <string name="solana_program_id">ID do programa: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Conta: %1$d | Tamanho dos dados: %2$d bytes</item>

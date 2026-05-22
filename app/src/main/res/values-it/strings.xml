@@ -961,7 +961,6 @@
     <string name="solana_raw_transaction">Transazioni grezze Solana</string>
     <string name="solana_instructions_summary">Riepilogo istruzioni della transazione</string>
     <string name="solana_instruction_number">Istruzione %1$d</string>
-    <string name="solana_program_name">Programma: %1$s</string>
     <string name="solana_program_id">ID programma: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Account: %1$d | Dimensione dati: %2$d byte</item>

@@ -991,7 +991,6 @@
     <string name="solana_raw_transaction">Solana 원시 거래</string>
     <string name="solana_instructions_summary">거래 명령어 요약</string>
     <string name="solana_instruction_number">명령어 %1$d</string>
-    <string name="solana_program_name">프로그램: %1$s</string>
     <string name="solana_program_id">프로그램 ID: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="other">계정: %1$d | 데이터 길이: %2$d 바이트</item>

@@ -959,7 +959,6 @@
     <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
     <string name="solana_instructions_summary">Resumen de instrucciones de transacción</string>
     <string name="solana_instruction_number">Instrucción %1$d</string>
-    <string name="solana_program_name">Programa: %1$s</string>
     <string name="solana_program_id">ID del programa: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Cuenta: %1$d | Longitud de datos: %2$d byte</item>

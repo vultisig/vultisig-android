@@ -1292,7 +1292,6 @@
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
     <string name="solana_instructions_summary">交易指令摘要</string>
     <string name="solana_instruction_number">指令 %1$d</string>
-    <string name="solana_program_name">程序：%1$s</string>
     <string name="solana_program_id">程序 ID：%1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="other">账户：%1$d | 数据长度：%2$d 字节</item>

@@ -964,7 +964,6 @@
     <string name="solana_raw_transaction">Solana Sirova transakcija</string>
     <string name="solana_instructions_summary">Sažetak uputa transakcije</string>
     <string name="solana_instruction_number">Uputa %1$d</string>
-    <string name="solana_program_name">Program: %1$s</string>
     <string name="solana_program_id">ID programa: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Računi: %1$d | Duljina podataka: %2$d bajtova</item>

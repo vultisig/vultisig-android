@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -626,7 +627,12 @@ internal fun VerifyProviderRow(provider: String, modifier: Modifier = Modifier) 
 }
 
 @Composable
-internal fun VerifyCardJsonDetails(title: String, subtitle: String, modifier: Modifier = Modifier) {
+internal fun VerifyCardJsonDetails(
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+    subtitleColor: Color = Theme.v2.colors.alerts.success,
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -641,7 +647,7 @@ internal fun VerifyCardJsonDetails(title: String, subtitle: String, modifier: Mo
         Text(
             text = subtitle,
             style = Theme.brockmann.body.m.medium.copy(fontFamily = FontFamily.Monospace),
-            color = Theme.v2.colors.alerts.success,
+            color = subtitleColor,
             textAlign = TextAlign.Start,
             modifier = Modifier.horizontalScroll(rememberScrollState()),
         )

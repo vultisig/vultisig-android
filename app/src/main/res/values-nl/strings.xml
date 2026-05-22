@@ -956,7 +956,6 @@
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
     <string name="solana_instructions_summary">Overzicht transactie-instructies</string>
     <string name="solana_instruction_number">Instructie %1$d</string>
-    <string name="solana_program_name">Programma: %1$s</string>
     <string name="solana_program_id">Programma-ID: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Accounts: %1$d | Gegevenslengte: %2$d bytes</item>
