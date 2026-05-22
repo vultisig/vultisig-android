@@ -517,6 +517,9 @@
     <string name="stake_cacao_title">Apostar CACAO</string>
     <string name="unstake_cacao_title">Desapostar CACAO</string>
     <string name="unstake_cacao_available_format">Disponível: %1$s</string>
+    <string name="unstake_cacao_unlocks_in_days_hours_format">Desbloqueia em %1$dd %2$dh</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Desbloqueia em %1$dh %2$dm</string>
+    <string name="unstake_cacao_maturity_check_failed">Não foi possível verificar a posição. Tente novamente.</string>
     <string name="cacaopool_only_cacao_supported">Apenas o token CACAO é suportado neste pool</string>
     <string name="referral_create_info_title">Programa de referência</string>
     <string name="referral_create_info_content">O programa de referência aplica-se a trocas THORChain e é feito com base no melhor esforço. Você precisa registrar um THORName para usar a referência Vultisig. A taxa de registro é de 10 RUNE e 1 RUNE por cada ano, que é paga à rede THORChain.</string>

@@ -520,6 +520,9 @@
     <string name="stake_cacao_title">Uloži CACAO</string>
     <string name="unstake_cacao_title">Povuci CACAO</string>
     <string name="unstake_cacao_available_format">Dostupno: %1$s</string>
+    <string name="unstake_cacao_unlocks_in_days_hours_format">Otključava se za %1$dd %2$dh</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Otključava se za %1$dh %2$dm</string>
+    <string name="unstake_cacao_maturity_check_failed">Nije moguće provjeriti poziciju. Pokušajte ponovno.</string>
     <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>
     <string name="referral_create_info_title">Program preporuka</string>
     <string name="referral_create_info_content">Program preporuka primjenjuje se na THORChain razmjene i provodi se po najboljoj mogućnosti. Morate registrirati THORName za korištenje Vultisig preporuke. Naknada za registraciju je 10 RUNE i 1 RUNE za svaku godinu, koja se plaća THORChain mreži.</string>
