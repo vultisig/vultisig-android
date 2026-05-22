@@ -1002,9 +1002,10 @@
     <string name="transaction_history_date_today">Сегодня</string>
     <string name="transaction_history_date_yesterday">Вчера</string>
     <string name="transaction_history_elapsed_just_now">только что</string>
+    <string name="transaction_history_elapsed_seconds">%1$d с. назад</string>
     <string name="transaction_history_elapsed_days">%1$d дн. назад</string>
     <string name="transaction_history_elapsed_hours">%1$d ч. назад</string>
-    <string name="transaction_history_elapsed_minutes">%1$d мин. назад</string>
+    <string name="transaction_history_elapsed_minutes_and_seconds">%1$d мин. %2$d с. назад</string>
     <string name="transaction_history_detail_status">Статус</string>
     <string name="transaction_history_detail_from">От</string>
     <string name="transaction_history_detail_to">Кому</string>
