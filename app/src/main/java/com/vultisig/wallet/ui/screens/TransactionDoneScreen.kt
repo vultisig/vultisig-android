@@ -255,11 +255,12 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
             )
         }
 
-        if (!transaction.memo.isNullOrEmpty())
+        if (!transaction.memo.isNullOrEmpty()) {
             OtherField(
                 title = stringResource(R.string.verify_transaction_memo_title),
                 value = transaction.memo,
             )
+        }
 
         // OtherField draws its own bottom divider — don't add another or it doubles up (and
         // orphans when memo is null).

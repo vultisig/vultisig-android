@@ -46,8 +46,8 @@ internal fun TransactionDetailsSection(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         // Whole row is the tap target so the WCAG 2.5.5 minimum (48dp) is met without enlarging
-        // the visual chevron, and TalkBack announces "Transaction details, button, expanded /
-        // collapsed" instead of two separate nodes.
+        // the visual chevron. `onClickLabel` announces the action ("expand" / "collapse"); the
+        // current expanded/collapsed state is not announced.
         val expandLabel = stringResource(R.string.tx_done_transaction_details)
         val toggleLabel =
             stringResource(
