@@ -486,16 +486,13 @@
     <string name="verify_deposit_sign_transaction">Подписать транзакцию</string>
     <string name="referral_invite_sheet_description">Поделитесь своим уникальным реферальным кодом, чтобы пригласить друзей. Они получат скидку, а чем больше они торгуют, тем больше вы зарабатываете — напрямую в вашем хранилище.</string>
     <string name="referral_create_referral">Создать реферала</string>
-    <string name="referral_save_referral_code">Сохранить реферальный код</string>
     <string name="referral_invite_onboarding_3">Экономьте на комиссиях.</string>
-    <string name="referral_or">ИЛИ</string>
     <string name="referral_create_code_and_earn">Создайте свой код и зарабатывайте\u0020</string>
     <string name="referral_on_referred_swaps">\u0020на рекомендованных обменах</string>
-    <string name="referral_save">Сохраните\u0020</string>
-    <string name="referral_add_referral">\u0020на свопах - Добавить реферала</string>
-    <string name="referral_edit_referred">Редактировать реферальный код</string>
+    <string name="referral_main_my_referral_title">Мой реферал</string>
+    <string name="referral_main_my_referral_body">Управляйте своим реферальным кодом и получайте награды.</string>
+    <string name="referral_view_friend_active">Активен</string>
     <string name="referral_edit_referral">Редактировать приглашение</string>
-    <string name="referral_external_linked">Реферальный код успешно привязан</string>
     <string name="referral_external_not_linked">Реферальный код не существует</string>
     <string name="referral_external_link_failed">Не удалось проверить реферальный код</string>
     <string name="referral_invite_next">Далее</string>
@@ -564,7 +561,6 @@
     <string name="referral_view_selected_vault">Выбранное хранилище</string>
     <string name="referral_view_your_referral_code">Ваш реферальный код</string>
     <string name="referral_view_edit_referral">Редактировать реферал</string>
-    <string name="referral_view_your_friend_referral">Реферальный код вашего друга</string>
     <string name="referral_view_collected_rewards">Собранные награды</string>
     <string name="referral_view_add_friend">Добавить реферала друга</string>
     <string name="referral_view_save">Сохранить</string>
