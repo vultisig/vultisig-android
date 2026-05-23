@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import java.math.BigInteger
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +31,7 @@ internal class TokenPreselectionServiceTest {
     private val scheduler = TestCoroutineScheduler()
     private val mainDispatcher = UnconfinedTestDispatcher(scheduler)
 
-    private val accounts = MutableStateFlow<List<Account>>(emptyList())
+    private val accountsState = MutableStateFlow<AccountsLoadState>(AccountsLoadState.Uninitialized)
     private var defiType: DeFiNavActions? = null
     private var selectedToken: Coin? = null
     private val selectedTokens = mutableListOf<Coin>()
@@ -42,13 +41,17 @@ internal class TokenPreselectionServiceTest {
         Dispatchers.setMain(mainDispatcher)
         defiType = null
         selectedToken = null
-        accounts.value = emptyList()
+        accountsState.value = AccountsLoadState.Uninitialized
         selectedTokens.clear()
     }
 
     @AfterEach
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    private fun loaded(vararg accounts: Account) {
+        accountsState.value = AccountsLoadState.Loaded(accounts.toList())
     }
 
     // ──────── null defi type → findPreselectedToken ────────
@@ -59,7 +62,7 @@ internal class TokenPreselectionServiceTest {
             defiType = null
             val ethNative = ethAccount(Coins.Ethereum.ETH)
             val ethUsdc = ethAccount(Coins.Ethereum.USDC)
-            accounts.value = listOf(ethNative, ethUsdc)
+            loaded(ethNative, ethUsdc)
             val service = build(backgroundScope)
 
             service.preSelect(
@@ -78,7 +81,7 @@ internal class TokenPreselectionServiceTest {
             defiType = null
             val ethUsdc = ethAccount(Coins.Ethereum.USDC) // non-native
             val ethNative = ethAccount(Coins.Ethereum.ETH) // native
-            accounts.value = listOf(ethUsdc, ethNative)
+            loaded(ethUsdc, ethNative)
             val service = build(backgroundScope)
 
             service.preSelect(
@@ -96,7 +99,7 @@ internal class TokenPreselectionServiceTest {
         runTest(mainDispatcher) {
             defiType = null
             val first = ethAccount(Coins.Ethereum.USDC)
-            accounts.value = listOf(first)
+            loaded(first)
             val service = build(backgroundScope)
 
             service.preSelect(
@@ -114,10 +117,10 @@ internal class TokenPreselectionServiceTest {
     fun `preSelect WITHDRAW_RUJI - default coin is the RUJI rewards coin when no account match`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.WITHDRAW_RUJI
-            // Non-empty accounts list with no token-id match → falls through to the
-            // default-coin map. (Empty accounts is an initial-emission sentinel; the service
-            // intentionally waits for AccountsLoader to publish the real list.)
-            accounts.value = listOf(thorAccount(Coins.ThorChain.RUNE))
+            // Non-empty Loaded list with no token-id match → falls through to the default-coin
+            // map. Uninitialized would still be skipped; Loaded(empty) would also fall through
+            // to the default-coin map (covered separately).
+            loaded(thorAccount(Coins.ThorChain.RUNE))
             val service = build(backgroundScope)
 
             service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
@@ -131,7 +134,7 @@ internal class TokenPreselectionServiceTest {
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.STAKE_RUJI
             val rujiAccount = thorAccount(Coins.ThorChain.RUJI.copy(address = "thor-addr"))
-            accounts.value = listOf(rujiAccount)
+            loaded(rujiAccount)
             val service = build(backgroundScope)
 
             service.preSelect(
@@ -148,9 +151,7 @@ internal class TokenPreselectionServiceTest {
     fun `preSelect FREEZE_TRX - default coin is TRX`() =
         runTest(mainDispatcher) {
             defiType = DeFiNavActions.FREEZE_TRX
-            // Need at least one account so the observer doesn't skip the empty initial
-            // emission; no token-id match → falls through to the default-coin map.
-            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH))
+            loaded(ethAccount(Coins.Ethereum.ETH))
             val service = build(backgroundScope)
 
             service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
@@ -161,6 +162,36 @@ internal class TokenPreselectionServiceTest {
             assertEquals(Chain.Tron, selectedTokens[0].chain)
         }
 
+    @Test
+    fun `preSelect WITHDRAW_RUJI - Loaded(empty) does not preselect static template coin`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.WITHDRAW_RUJI
+            // AccountsLoader publishes Loaded(emptyList) when prerequisites are missing
+            // (e.g. no RUNE/RUJI in vault). Returning RUJI_REWARDS_COIN here would cause
+            // collectSelectedAccount to synthesize an Account with tokenValue = null, making
+            // the WITHDRAW form look submittable when there is nothing real to withdraw.
+            accountsState.value = AccountsLoadState.Loaded(emptyList())
+            val service = build(backgroundScope)
+
+            service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
+            advanceUntilIdle()
+
+            assertEquals(emptyList<Any>(), selectedTokens)
+        }
+
+    @Test
+    fun `preSelect WITHDRAW_USDC_CIRCLE - Loaded(empty) does not preselect static template coin`() =
+        runTest(mainDispatcher) {
+            defiType = DeFiNavActions.WITHDRAW_USDC_CIRCLE
+            accountsState.value = AccountsLoadState.Loaded(emptyList())
+            val service = build(backgroundScope)
+
+            service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
+            advanceUntilIdle()
+
+            assertEquals(emptyList<Any>(), selectedTokens)
+        }
+
     // ──────── forcePreselection ────────
 
     @Test
@@ -168,7 +199,7 @@ internal class TokenPreselectionServiceTest {
         runTest(mainDispatcher) {
             defiType = null
             selectedToken = Coins.Ethereum.USDC // user has already chosen
-            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH))
+            loaded(ethAccount(Coins.Ethereum.ETH))
             val service = build(backgroundScope)
 
             service.preSelect(
@@ -187,7 +218,7 @@ internal class TokenPreselectionServiceTest {
         runTest(mainDispatcher) {
             defiType = null
             selectedToken = Coins.Ethereum.USDC
-            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH))
+            loaded(ethAccount(Coins.Ethereum.ETH))
             val service = build(backgroundScope)
 
             service.preSelect(
@@ -201,20 +232,20 @@ internal class TokenPreselectionServiceTest {
         }
 
     @Test
-    fun `preSelect skips the empty initial emission and only fires once accounts arrives`() =
+    fun `preSelect skips the Uninitialized sentinel and only fires once Loaded arrives`() =
         runTest(mainDispatcher) {
             defiType = null
-            accounts.value = emptyList() // initial StateFlow value
+            accountsState.value = AccountsLoadState.Uninitialized
             val service = build(backgroundScope)
 
             service.preSelect(preSelectedChainIds = listOf(null), preSelectedTokenId = null)
             advanceUntilIdle()
-            // Empty emission must not trigger preselection — otherwise we'd lock in a static
-            // template that lacks an address binding.
+            // Uninitialized must not trigger preselection — otherwise we'd lock in a static
+            // template before AccountsLoader publishes the real list.
             assertEquals(emptyList(), selectedTokens)
 
             // Real accounts land — now we preselect.
-            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH))
+            loaded(ethAccount(Coins.Ethereum.ETH))
             advanceUntilIdle()
             assertEquals(listOf(Coins.Ethereum.ETH), selectedTokens)
         }
@@ -224,7 +255,7 @@ internal class TokenPreselectionServiceTest {
         runTest(mainDispatcher) {
             defiType = null
             selectedToken = null
-            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH))
+            loaded(ethAccount(Coins.Ethereum.ETH))
             val service = build(backgroundScope)
 
             service.preSelect(
@@ -239,7 +270,7 @@ internal class TokenPreselectionServiceTest {
             // forced. A subsequent accounts hydration must not re-fire onTokenSelected and
             // wipe their input via resetUserInputCache.
             selectedToken = Coins.Ethereum.ETH
-            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH), ethAccount(Coins.Ethereum.USDC))
+            loaded(ethAccount(Coins.Ethereum.ETH), ethAccount(Coins.Ethereum.USDC))
             advanceUntilIdle()
             assertEquals(listOf(Coins.Ethereum.ETH), selectedTokens) // unchanged
         }
@@ -248,7 +279,7 @@ internal class TokenPreselectionServiceTest {
     fun `preSelect cancels the in-flight observer when invoked twice`() =
         runTest(mainDispatcher) {
             defiType = null
-            accounts.value = listOf(ethAccount(Coins.Ethereum.ETH))
+            loaded(ethAccount(Coins.Ethereum.ETH))
             val service = build(backgroundScope)
 
             // First call — token id match would pick USDC, but it's not in accounts, so it falls
@@ -272,7 +303,7 @@ internal class TokenPreselectionServiceTest {
     private fun build(scope: CoroutineScope) =
         TokenPreselectionService(
             scope = scope,
-            accounts = accounts,
+            accountsState = accountsState,
             defiTypeProvider = { defiType },
             selectedTokenProvider = { selectedToken },
             onTokenSelected = { selectedTokens.add(it) },
@@ -293,6 +324,4 @@ internal class TokenPreselectionServiceTest {
             fiatValue = null,
             price = null,
         )
-
-    @Suppress("unused") private fun unused(): Coin? = null.also { assertNull(it) }
 }
