@@ -76,7 +76,7 @@ internal fun DepositScreen(
             DeFiNavActions.REMOVE_LP.type -> stringResource(R.string.remove_lp_title, chainName)
             DeFiNavActions.STAKE_CACAO.type -> stringResource(R.string.stake_cacao_title)
             DeFiNavActions.UNSTAKE_CACAO.type -> stringResource(R.string.unstake_cacao_title)
-            else -> stringResource(R.string.deposit_screen_title)
+            else -> stringResource(R.string.tx_overview_screen_tx_deposit)
         }
 
     when (route) {

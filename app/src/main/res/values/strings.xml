@@ -296,7 +296,6 @@
     <string name="share_qr_screen_permission_required">File permission is required for share operations.</string>
     <string name="token_selection_search_hint">Search…</string>
     <string name="verify_swap_agree_allowance">I agree with providing ERC20 allowance</string>
-    <string name="deposit_screen_title">Function Signature</string>
     <string name="deposit_screen_amount_title">Amount</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Node Address</string>
@@ -621,6 +620,7 @@
     <string name="transfer_ibc_function_memo_title">Memo</string>
     <string name="merge_account_doesnt_exist">Selected token is not found for this address</string>
     <string name="keygen_email_error">Incorrect email, please check</string>
+    <string name="verify_transaction_function_signature_title">Function Signature</string>
     <string name="verify_transaction_function_inputs_title">Function Arguments</string>
     <string name="dapp_hero_unverified_function_title">Unverified function</string>
     <string name="dapp_hero_unverified_function_subtitle">Review the details below before signing</string>
@@ -933,6 +933,8 @@
     <string name="token_selection_screen_enable_at_least_one">Enable at least one token to view balances and manage positions.</string>
     <string name="transfer_ibc_destination_chain">Destination Chain</string>
     <string name="tx_done_transaction_details">Transaction Details</string>
+    <string name="tx_done_transaction_details_expand">Expand</string>
+    <string name="tx_done_transaction_details_collapse">Collapse</string>
     <string name="vault_confirmation_vault_upgraded">"Vault upgraded"</string>
     <string name="vault_confirmation_well_done">Well done.</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">You’re ready to use a new wallet standard.</string>
@@ -1013,7 +1015,6 @@
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="solana_instructions_summary">Transaction Instructions Summary</string>
     <string name="solana_instruction_number">Instruction %1$d</string>
-    <string name="solana_program_name">Program: %1$s</string>
     <string name="solana_program_id">Program ID: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Accounts: %1$d | Data length: %2$d bytes</item>

@@ -214,7 +214,6 @@
     <string name="share_qr_screen_permission_required">Für Freigabevorgänge sind Dateiberechtigungen erforderlich.</string>
     <string name="token_selection_search_hint">Suchen…</string>
     <string name="verify_swap_agree_allowance">Ich bin mit der Bereitstellung eines unbegrenzten ERC20-Kontingents einverstanden</string>
-    <string name="deposit_screen_title">Funktionssignatur</string>
     <string name="deposit_screen_amount_title">Betrag</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Knotenadresse</string>
@@ -416,6 +415,7 @@
     <string name="deposit_option_withdraw_ruji">RUJI abheben</string>
     <string name="withdraw_amount">%s abheben</string>
     <string name="deposit_form_unstake_percentage_hint">Prozentsatz zum Unstaking eingeben</string>
+    <string name="verify_transaction_function_signature_title">Funktionssignatur</string>
     <string name="verify_transaction_function_inputs_title">Funktionsargumente</string>
     <string name="dapp_hero_unverified_function_title">Nicht verifizierte Funktion</string>
     <string name="dapp_hero_unverified_function_subtitle">Überprüfen Sie die Details unten, bevor Sie signieren</string>
@@ -682,6 +682,8 @@
     <string name="token_selection_screen_enable_at_least_one">Aktivieren Sie mindestens einen Token, um Salden anzuzeigen und Positionen zu verwalten.</string>
     <string name="transfer_ibc_destination_chain">Zielkette</string>
     <string name="tx_done_transaction_details">Transaktionsdetails</string>
+    <string name="tx_done_transaction_details_expand">Erweitern</string>
+    <string name="tx_done_transaction_details_collapse">Reduzieren</string>
     <string name="vault_confirmation_vault_upgraded">Tresor aktualisiert</string>
     <string name="vault_confirmation_well_done">Gut gemacht!</string>
     <string name="this_amount_would_leave_too_little_change">Bei diesem Betrag bleibt zu wenig Wechselgeld übrig. 💡 Versuchen Sie „Max. senden“ (%1$s ADA), um dieses Problem zu vermeiden.</string>
@@ -958,7 +960,6 @@
     <string name="solana_raw_transaction">Solana-Rohdaten der Transaktion</string>
     <string name="solana_instructions_summary">Transaktionsanweisungen – Übersicht</string>
     <string name="solana_instruction_number">Anweisung %1$d</string>
-    <string name="solana_program_name">Programm: %1$s</string>
     <string name="solana_program_id">Programm-ID: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Konto: %1$d | Datenlänge: %2$d Byte</item>

@@ -215,7 +215,6 @@
     <string name="share_qr_screen_permission_required">Se requiere permiso de archivo para realizar operaciones de compartir.</string>
     <string name="token_selection_search_hint">Buscar…</string>
     <string name="verify_swap_agree_allowance">Estoy de acuerdo con proporcionar una asignación ilimitada de ERC20</string>
-    <string name="deposit_screen_title">Firma de función</string>
     <string name="deposit_screen_amount_title">Cantidad</string>
     <string name="verify_deposit_node_address_title">Dirección del nodo</string>
     <string name="verify_deposit_gas_title">Tarifa de red</string>
@@ -416,6 +415,7 @@
     <string name="deposit_option_withdraw_ruji">Retirar RUJI</string>
     <string name="withdraw_amount">Retirar %s</string>
     <string name="deposit_form_unstake_percentage_hint">Ingrese el porcentaje a desbloquear</string>
+    <string name="verify_transaction_function_signature_title">Firma de función</string>
     <string name="verify_transaction_function_inputs_title">Argumentos de función</string>
     <string name="dapp_hero_unverified_function_title">Función no verificada</string>
     <string name="dapp_hero_unverified_function_subtitle">Revisa los detalles antes de firmar</string>
@@ -680,6 +680,8 @@
     <string name="token_selection_screen_enable_at_least_one">Habilite al menos un token para ver saldos y gestionar posiciones.</string>
     <string name="transfer_ibc_destination_chain">Cadena de destino</string>
     <string name="tx_done_transaction_details">Detalles de la transacción</string>
+    <string name="tx_done_transaction_details_expand">Expandir</string>
+    <string name="tx_done_transaction_details_collapse">Contraer</string>
     <string name="vault_confirmation_vault_upgraded">Bóveda mejorada</string>
     <string name="vault_confirmation_well_done">¡Bien hecho!</string>
     <string name="this_amount_would_leave_too_little_change">Con este importe, quedaría muy poco cambio. 💡 Prueba \"Enviar Máximo\" (%1$s ADA) para evitar este problema.</string>
@@ -956,7 +958,6 @@
     <string name="solana_raw_transaction">Transacción sin procesar de Solana</string>
     <string name="solana_instructions_summary">Resumen de instrucciones de transacción</string>
     <string name="solana_instruction_number">Instrucción %1$d</string>
-    <string name="solana_program_name">Programa: %1$s</string>
     <string name="solana_program_id">ID del programa: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Cuenta: %1$d | Longitud de datos: %2$d byte</item>

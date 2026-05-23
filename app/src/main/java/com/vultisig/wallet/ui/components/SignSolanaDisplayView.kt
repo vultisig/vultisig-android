@@ -18,16 +18,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.protobuf.InvalidProtocolBufferException
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.ParsedSolanaTransaction
 import com.vultisig.wallet.data.chains.helpers.SolanaTransactionParser
@@ -37,7 +39,8 @@ import vultisig.keysign.v1.SignSolana
 
 @Composable
 fun SignSolanaDisplayView(signSolana: SignSolana, modifier: Modifier = Modifier) {
-    var isExpanded by remember { mutableStateOf(false) }
+    var isExpanded by rememberSaveable { mutableStateOf(false) }
+    val rawTransactions = signSolana.rawTransactions
 
     Column(
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -65,54 +68,69 @@ fun SignSolanaDisplayView(signSolana: SignSolana, modifier: Modifier = Modifier)
         }
 
         AnimatedVisibility(visible = isExpanded) {
+            // SolanaTransactionParser.parse is wallet-core JNI work; deferring it until first
+            // expansion means non-expanding users never pay the parse cost on the composition
+            // thread.
+            val instructions =
+                remember(rawTransactions) {
+                    rawTransactions.flatMap { tx ->
+                        try {
+                            SolanaTransactionParser.parse(tx).instructions
+                        } catch (e: Exception) {
+                            when (e) {
+                                is IllegalArgumentException,
+                                is IllegalStateException,
+                                is NumberFormatException,
+                                is InvalidProtocolBufferException -> {
+                                    Timber.w(e, "Failed to parse Solana transaction")
+                                    emptyList()
+                                }
+                                else -> throw e
+                            }
+                        }
+                    }
+                }
+
             Column(
                 modifier =
                     Modifier.fillMaxWidth()
                         .heightIn(max = 400.dp)
-                        .background(
-                            color = Theme.v2.colors.variables.bordersLight,
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .padding(8.dp)
                         .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                InstructionsSummarySection(signSolana)
-
-                RawTransactionsSection(signSolana)
+                if (instructions.isNotEmpty()) {
+                    InstructionsSummarySection(instructions)
+                }
+                RawTransactionsSection(rawTransactions)
             }
         }
     }
 }
 
 @Composable
-private fun InstructionsSummarySection(signSolana: SignSolana) {
-    val allInstructions =
-        remember(signSolana) {
-            signSolana.rawTransactions.flatMap { tx ->
-                try {
-                    val parsed = SolanaTransactionParser.parse(tx)
-                    parsed.instructions
-                } catch (e: Exception) {
-                    Timber.w(e, "Failed to parse Solana transaction")
-                    emptyList()
-                }
-            }
-        }
+private fun InstructionsSummarySection(
+    instructions: List<ParsedSolanaTransaction.ParsedInstruction>
+) {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.variables.bordersLight,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.solana_instructions_summary),
+            style = Theme.brockmann.button.medium.regular,
+            color = Theme.v2.colors.text.primary,
+            fontSize = 13.sp,
+        )
 
-    if (allInstructions.isNotEmpty()) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.solana_instructions_summary),
-                style = Theme.brockmann.button.medium.regular,
-                color = Theme.v2.colors.text.primary,
-                fontSize = 13.sp,
-            )
-
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                allInstructions.forEachIndexed { index, instruction ->
-                    InstructionRow(instruction = instruction, index = index)
-                }
+            instructions.forEachIndexed { index, instruction ->
+                InstructionRow(instruction = instruction, index = index)
             }
         }
     }
@@ -120,44 +138,18 @@ private fun InstructionsSummarySection(signSolana: SignSolana) {
 
 @Composable
 private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstruction, index: Int) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .background(
-                    shape = RoundedCornerShape(8.dp),
-                    color = Theme.v2.colors.backgrounds.dark,
-                )
-                .padding(6.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.solana_instruction_number, index + 1),
-                style = Theme.brockmann.button.medium.regular,
-                color = Theme.v2.colors.text.primary,
-                fontSize = 10.sp,
-            )
-
-            instruction.instructionType?.let { type ->
-                Text(
-                    text = ": $type",
-                    style = Theme.brockmann.button.medium.medium,
-                    color = Theme.v2.colors.text.primary,
-                    fontSize = 10.sp,
-                )
-            }
-        }
-
-        instruction.programName?.let { name ->
-            Text(
-                text = stringResource(R.string.solana_program_name, name),
-                style = Theme.brockmann.button.medium.medium,
-                color = Theme.v2.colors.neutrals.n100,
-                fontSize = 10.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        // Header "Instruction N: <type>" mirrors the browser extension and drops the
+        // `(programName)` suffix so the instruction type can't truncate at `maxLines = 1`.
+        val headerSuffix = instruction.instructionType?.let { ": $it" }.orEmpty()
+        Text(
+            text = stringResource(R.string.solana_instruction_number, index + 1) + headerSuffix,
+            style = Theme.brockmann.button.medium.medium,
+            color = Theme.v2.colors.text.primary,
+            fontSize = 10.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
 
         Text(
             text = stringResource(R.string.solana_program_id, instruction.programId),
@@ -184,33 +176,50 @@ private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstructio
 }
 
 @Composable
-private fun RawTransactionsSection(signSolana: SignSolana) {
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text(
-            text = stringResource(R.string.raw_transaction_data),
-            style = Theme.brockmann.button.medium.regular,
-            color = Theme.v2.colors.text.primary,
-            lineHeight = 13.sp,
-        )
-        Column(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .background(
-                        color = Theme.v2.colors.backgrounds.dark,
-                        shape = RoundedCornerShape(8.dp),
-                    )
-                    .padding(6.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            signSolana.rawTransactions.forEach { tx ->
-                Text(
-                    text = tx,
-                    fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = Theme.v2.colors.buttons.primary,
-                    lineHeight = 12.sp,
+private fun RawTransactionsSection(rawTransactions: List<String>) {
+    VerifyCardJsonDetails(
+        title = stringResource(R.string.raw_transaction_data),
+        subtitle = rawTransactions.joinToString(separator = "\n"),
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.variables.bordersLight,
+                    shape = RoundedCornerShape(12.dp),
                 )
-            }
-        }
+                .padding(horizontal = 12.dp),
+    )
+}
+
+private val PREVIEW_INSTRUCTIONS =
+    listOf(
+        ParsedSolanaTransaction.ParsedInstruction(
+            programId = "11111111111111111111111111111111",
+            programName = "System Program",
+            instructionType = "Transfer",
+            accountsCount = 2,
+            dataLength = 12,
+        )
+    )
+
+private val PREVIEW_RAW_TRANSACTIONS =
+    listOf(
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" +
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    )
+
+@Preview
+@Composable
+private fun PreviewSignSolanaInstructionsSection() {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        InstructionsSummarySection(PREVIEW_INSTRUCTIONS)
+        RawTransactionsSection(PREVIEW_RAW_TRANSACTIONS)
     }
+}
+
+@Preview
+@Composable
+private fun PreviewSignSolanaDisplayView() {
+    SignSolanaDisplayView(signSolana = SignSolana(rawTransactions = PREVIEW_RAW_TRANSACTIONS))
 }

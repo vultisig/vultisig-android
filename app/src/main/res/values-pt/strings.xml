@@ -215,7 +215,6 @@
     <string name="share_qr_screen_permission_required">A permissão de ficheiro é necessária para operações de partilha.</string>
     <string name="token_selection_search_hint">Pesquisa…</string>
     <string name="verify_swap_agree_allowance">Concordo em fornecer subsídio ERC20 ilimitado</string>
-    <string name="deposit_screen_title">Assinatura de Função</string>
     <string name="deposit_screen_amount_title">Montante</string>
     <string name="verify_deposit_memo_title">Memorando</string>
     <string name="verify_deposit_node_address_title">Endereço do nó</string>
@@ -416,6 +415,7 @@
     <string name="deposit_option_withdraw_ruji">Sacar RUJI</string>
     <string name="withdraw_amount">Sacar %s</string>
     <string name="deposit_form_unstake_percentage_hint">Insira a percentagem para desbloquear</string>
+    <string name="verify_transaction_function_signature_title">Assinatura de Função</string>
     <string name="verify_transaction_function_inputs_title">Argumentos de função</string>
     <string name="dapp_hero_unverified_function_title">Função não verificada</string>
     <string name="dapp_hero_unverified_function_subtitle">Reveja os detalhes antes de assinar</string>
@@ -679,6 +679,8 @@
     <string name="token_selection_screen_enable_at_least_one">Ative pelo menos um token para visualizar saldos e gerir posições.</string>
     <string name="transfer_ibc_destination_chain">Cadeia de Destino</string>
     <string name="tx_done_transaction_details">Detalhes da Transação</string>
+    <string name="tx_done_transaction_details_expand">Expandir</string>
+    <string name="tx_done_transaction_details_collapse">Recolher</string>
     <string name="vault_confirmation_vault_upgraded">Cofre atualizado</string>
     <string name="vault_confirmation_well_done">Muito bem.</string>
     <string name="this_amount_would_leave_too_little_change">Este valor deixaria muito pouco troco. 💡 Experimente \"Enviar Máximo\" (%1$s ADA) para evitar este problema.</string>
@@ -957,7 +959,6 @@
     <string name="solana_raw_transaction">Transação bruta de Solana</string>
     <string name="solana_instructions_summary">Resumo das instruções da transação</string>
     <string name="solana_instruction_number">Instrução %1$d</string>
-    <string name="solana_program_name">Programa: %1$s</string>
     <string name="solana_program_id">ID do programa: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Conta: %1$d | Tamanho dos dados: %2$d bytes</item>

@@ -214,7 +214,6 @@
     <string name="share_qr_screen_permission_required">Per le operazioni di condivisione è richiesta l\'autorizzazione del file.</string>
     <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Sono d\'accordo con la fornitura di un\'indennità ERC20 illimitata</string>
-    <string name="deposit_screen_title">Firma della funzione</string>
     <string name="deposit_screen_amount_title">Quantità</string>
     <string name="verify_deposit_memo_title">Promemoria</string>
     <string name="verify_deposit_node_address_title">Indirizzo del nodo</string>
@@ -416,6 +415,7 @@
     <string name="deposit_option_withdraw_ruji">Ritira RUJI</string>
     <string name="withdraw_amount">Ritira %s</string>
     <string name="deposit_form_unstake_percentage_hint">Inserisci la percentuale da sbloccare</string>
+    <string name="verify_transaction_function_signature_title">Firma della funzione</string>
     <string name="verify_transaction_function_inputs_title">Argomenti della funzione</string>
     <string name="dapp_hero_unverified_function_title">Funzione non verificata</string>
     <string name="dapp_hero_unverified_function_subtitle">Controlla i dettagli prima di firmare</string>
@@ -680,6 +680,8 @@
     <string name="token_selection_screen_enable_at_least_one">Abilita almeno un token per visualizzare i saldi e gestire le posizioni.</string>
     <string name="transfer_ibc_destination_chain">Catena di destinazione</string>
     <string name="tx_done_transaction_details">Dettagli della transazione</string>
+    <string name="tx_done_transaction_details_expand">Espandi</string>
+    <string name="tx_done_transaction_details_collapse">Riduci</string>
     <string name="vault_confirmation_vault_upgraded">Vault aggiornato</string>
     <string name="vault_confirmation_well_done">Ben fatto.</string>
     <string name="this_amount_would_leave_too_little_change">Questo importo lascerebbe troppo poco resto. 💡 Prova \"Invia Massimo\" (%1$s ADA) per evitare questo problema.</string>
@@ -958,7 +960,6 @@
     <string name="solana_raw_transaction">Transazioni grezze Solana</string>
     <string name="solana_instructions_summary">Riepilogo istruzioni della transazione</string>
     <string name="solana_instruction_number">Istruzione %1$d</string>
-    <string name="solana_program_name">Programma: %1$s</string>
     <string name="solana_program_id">ID programma: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Account: %1$d | Dimensione dati: %2$d byte</item>

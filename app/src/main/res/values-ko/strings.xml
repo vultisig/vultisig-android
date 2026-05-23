@@ -289,7 +289,6 @@
     <string name="share_qr_screen_permission_required">공유 작업을 위해 파일 권한이 필요합니다.</string>
     <string name="token_selection_search_hint">검색…</string>
     <string name="verify_swap_agree_allowance">ERC20 허용량 제공에 동의합니다</string>
-    <string name="deposit_screen_title">함수 서명</string>
     <string name="deposit_screen_amount_title">금액</string>
     <string name="verify_deposit_memo_title">메모</string>
     <string name="verify_deposit_node_address_title">노드 주소</string>
@@ -613,6 +612,7 @@
     <string name="transfer_ibc_function_memo_title">메모</string>
     <string name="merge_account_doesnt_exist">이 주소에서 선택한 토큰을 찾을 수 없습니다</string>
     <string name="keygen_email_error">이메일이 올바르지 않습니다. 확인해 주세요</string>
+    <string name="verify_transaction_function_signature_title">함수 서명</string>
     <string name="verify_transaction_function_inputs_title">함수 인수</string>
     <string name="dapp_hero_unverified_function_title">확인되지 않은 함수</string>
     <string name="dapp_hero_unverified_function_subtitle">서명 전에 아래 세부정보를 확인하세요</string>
@@ -911,6 +911,8 @@
     <string name="token_selection_screen_enable_at_least_one">잔액을 확인하고 포지션을 관리하려면 최소 하나의 토큰을 활성화하세요.</string>
     <string name="transfer_ibc_destination_chain">수신 체인</string>
     <string name="tx_done_transaction_details">거래 상세</string>
+    <string name="tx_done_transaction_details_expand">펼치기</string>
+    <string name="tx_done_transaction_details_collapse">접기</string>
     <string name="vault_confirmation_vault_upgraded">"볼트가 업그레이드되었습니다 "</string>
     <string name="vault_confirmation_well_done">잘 하셨습니다.</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">새로운 지갑 표준을 사용할 준비가 되었습니다.</string>
@@ -988,7 +990,6 @@
     <string name="solana_raw_transaction">Solana 원시 거래</string>
     <string name="solana_instructions_summary">거래 명령어 요약</string>
     <string name="solana_instruction_number">명령어 %1$d</string>
-    <string name="solana_program_name">프로그램: %1$s</string>
     <string name="solana_program_id">프로그램 ID: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="other">계정: %1$d | 데이터 길이: %2$d 바이트</item>

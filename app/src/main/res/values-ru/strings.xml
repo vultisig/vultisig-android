@@ -214,7 +214,6 @@
     <string name="share_qr_screen_permission_required">Для операций обмена требуется разрешение на доступ к файлу.</string>
     <string name="token_selection_search_hint">Поиск…</string>
     <string name="verify_swap_agree_allowance">Я согласен с предоставлением неограниченного лимита ERC20</string>
-    <string name="deposit_screen_title">Подпись функции</string>
     <string name="deposit_screen_amount_title">Количество</string>
     <string name="verify_deposit_gas_title">Комиссия сети</string>
     <string name="custom_token_enter_contract_address">Введите адрес контракта</string>
@@ -417,6 +416,7 @@
     <string name="deposit_option_withdraw_ruji">Вывести RUJI</string>
     <string name="withdraw_amount">Вывести %s</string>
     <string name="deposit_form_unstake_percentage_hint">Введите процент для вывода из стейкинга</string>
+    <string name="verify_transaction_function_signature_title">Подпись функции</string>
     <string name="verify_transaction_function_inputs_title">Аргументы функции</string>
     <string name="dapp_hero_unverified_function_title">Непроверенная функция</string>
     <string name="dapp_hero_unverified_function_subtitle">Просмотрите детали ниже перед подписанием</string>
@@ -681,6 +681,8 @@
     <string name="token_selection_screen_enable_at_least_one">Включите хотя бы один токен для просмотра балансов и управления позициями.</string>
     <string name="transfer_ibc_destination_chain">Сеть назначения</string>
     <string name="tx_done_transaction_details">Детали транзакции</string>
+    <string name="tx_done_transaction_details_expand">Развернуть</string>
+    <string name="tx_done_transaction_details_collapse">Свернуть</string>
     <string name="vault_confirmation_vault_upgraded">Хранилище обновлено</string>
     <string name="vault_confirmation_well_done">Отлично!</string>
     <string name="this_amount_would_leave_too_little_change">С этой суммы сдачи будет слишком мало. 💡 Попробуйте «Отправить максимум» (%1$s ADA), чтобы избежать этой проблемы.</string>
@@ -961,7 +963,6 @@
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
     <string name="solana_instructions_summary">Сводка инструкций транзакции</string>
     <string name="solana_instruction_number">Инструкция %1$d</string>
-    <string name="solana_program_name">Программа: %1$s</string>
     <string name="solana_program_id">ID программы: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Аккаунты: %1$d | Размер данных: %2$d байт</item>
