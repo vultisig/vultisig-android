@@ -43,7 +43,10 @@ constructor(
                 SwapProvider.LIFI -> from.dstToken
 
                 SwapProvider.ONEINCH,
-                SwapProvider.KYBER -> tokenRepository.getNativeToken(from.srcToken.chain.id)
+                SwapProvider.KYBER,
+                // SwapKit (Phase 1 EVM/Solana) pays the inbound fee in the source chain's native
+                // gas token — same shape as 1inch/Kyber, not the LiFi destination-side model.
+                SwapProvider.SWAPKIT -> tokenRepository.getNativeToken(from.srcToken.chain.id)
 
                 SwapProvider.JUPITER -> from.srcToken
             }

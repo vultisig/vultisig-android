@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
@@ -145,6 +146,18 @@ constructor(
                         vultBPSDiscount,
                         srcNativeToken,
                     )
+
+                SwapProvider.SWAPKIT ->
+                    fetchSwapKitQuote(
+                        src,
+                        dst,
+                        srcToken,
+                        dstToken,
+                        srcTokenValue,
+                        tokenValue,
+                        vultBPSDiscount,
+                        srcNativeToken,
+                    )
             }
 
         val feeCoin =
@@ -152,6 +165,11 @@ constructor(
                 SwapProvider.MAYA,
                 SwapProvider.THORCHAIN,
                 SwapProvider.LIFI -> dstToken
+                // SwapKit's inbound (source-chain) fee is denominated in the source's native gas
+                // token — mirrors 1inch / Kyber / Jupiter rather than the LiFi destination-side
+                // integrator-fee model. SwapKitQuoteSource already pulls the inbound amount out of
+                // route.fees[] and stages it on tx.swapFee (raw units) for resolveSwapFee below.
+                SwapProvider.SWAPKIT -> srcNativeToken
                 else -> srcNativeToken
             }
 
@@ -553,6 +571,94 @@ constructor(
         return swapQuote to providerText
     }
 
+    private suspend fun fetchSwapKitQuote(
+        src: SendSrc,
+        dst: SendSrc,
+        srcToken: Coin,
+        dstToken: Coin,
+        srcTokenValue: BigInteger,
+        tokenValue: TokenValue,
+        vultBPSDiscount: Int?,
+        srcNativeToken: Coin,
+    ): Pair<SwapQuote, UiText> {
+        // iOS' SwapKit tier-discount formula at this milestone:
+        //   max(0, min(1000, 50 - vultTierDiscount))
+        // 50 bps base affiliate, clamped to 0..1000 (SwapKit's documented 0..10% range).
+        val affiliateBps = (SWAPKIT_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)).coerceIn(0, 1000)
+        var resolvedSubProvider: String? = null
+        val swapQuote =
+            getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.SWAPKIT) {
+                val result =
+                    swapQuoteRepository.getQuote(
+                        SwapProvider.SWAPKIT,
+                        SwapQuoteRequest(
+                            srcToken = srcToken,
+                            dstToken = dstToken,
+                            tokenValue = tokenValue,
+                            srcAddress = src.address.address,
+                            dstAddress = dst.address.address,
+                            affiliateBps = affiliateBps,
+                        ),
+                    )
+                val evmResult =
+                    (result as? SwapQuoteResult.Evm)
+                        ?: error("SwapKitQuoteSource must return SwapQuoteResult.Evm")
+                resolvedSubProvider = evmResult.subProvider
+                val apiQuote = evmResult.data
+                val expectedDstValue =
+                    TokenValue(
+                        value =
+                            apiQuote.dstAmount.toBigIntegerOrNull()
+                                ?: error(
+                                    "Malformed SwapKit dstAmount (raw units expected): ${apiQuote.dstAmount}"
+                                ),
+                        token = dstToken,
+                    )
+                // SwapKit's canonical source-chain fee is the `fees[]` entry with type=="inbound"
+                // for the source chain — the source layer already extracts that and stages it on
+                // `tx.swapFee` (raw units in source-native) with `swapFeeTokenContract = ""`. The
+                // empty-contract branch of resolveSwapFee returns the fallback in srcNativeToken,
+                // so pass the parsed swapFee as the fallback (mirrors Kyber's call at line 435
+                // which passes gasFees) — otherwise the source-extracted inbound fee is silently
+                // discarded and the verify screen renders $0 Network Fee.
+                val swapKitInboundFee = apiQuote.tx.swapFee.toBigIntegerOrNull() ?: BigInteger.ZERO
+                val (feeAmount, feeCoin) =
+                    resolveSwapFee(
+                        apiQuote.tx.swapFeeTokenContract,
+                        apiQuote.tx.swapFee,
+                        srcNativeToken,
+                        swapKitInboundFee,
+                    )
+                val tokenFees = TokenValue(value = feeAmount, token = feeCoin)
+                SwapQuote.OneInch(
+                    expectedDstValue = expectedDstValue,
+                    fees = tokenFees,
+                    data = apiQuote,
+                    expiredAt = Clock.System.now() + expiredAfter,
+                    // `provider` is the proto-serialized discriminator used by
+                    // SwapTransactionToUiModelMapper to map back onto SwapProvider.SWAPKIT —
+                    // keep it as the canonical id. The sub-provider drives the UI label below.
+                    provider = SwapProvider.SWAPKIT.getSwapProviderId(),
+                )
+            }
+        val providerLabel =
+            resolvedSubProvider
+                ?.takeIf { it.isNotBlank() }
+                ?.let { sub -> "SwapKit (${formatSubProvider(sub)})".asUiText() }
+                ?: R.string.swap_for_provider_swapkit.asUiText()
+        return swapQuote to providerLabel
+    }
+
+    /**
+     * Render a SwapKit sub-provider id (`CHAINFLIP`, `near_intents`, `flashnet`) into a display
+     * label. Replaces underscores with spaces and title-cases each token so `near_intents` → `Near
+     * Intents`; brand names already in mixed/upper case are left alone.
+     */
+    private fun formatSubProvider(raw: String): String =
+        raw.split('_', '-').joinToString(" ") { token ->
+            token.replaceFirstChar { ch -> if (ch.isLowerCase()) ch.titlecase() else ch.toString() }
+        }
+
     private suspend fun resolveSwapFee(
         swapFeeTokenContract: String,
         swapFeeRaw: String,
@@ -679,6 +785,9 @@ constructor(
 
     companion object {
         private const val KYBER_AFFILIATE_FEE_BPS = 50
+        // Mirrors iOS' SwapKit milestone: 50 bps base affiliate, discounted by the user's
+        // vultTierDiscount, clamped to SwapKit's documented 0..1000 bps (0..10%) range.
+        private const val SWAPKIT_AFFILIATE_FEE_BPS = 50
         private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val QUOTE_FETCH_TIMEOUT_MS = 15_000L
     }
