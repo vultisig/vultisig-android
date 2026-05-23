@@ -127,7 +127,14 @@ constructor(
                     destinationAddress = request.dstToken.address,
                 )
             )
+        // TODO(swapkit /track polling, later task): persist swapResponse.swapId on the resulting
+        //  SwapTransaction so /track lookups can correlate cross-chain settlement back to this
+        //  specific quote. The DTO already carries it; the persistence wiring lands with the
+        //  tx-history Phase D work.
 
+        // SwapQuoteResult.Evm is the envelope for both EVM and Solana SwapKit txTypes — Solana
+        // signers pull the base64 blob from `tx.data`, matching how JupiterQuoteSource already
+        // stages a Solana swap. The Evm-typed result is intentional, not a copy-paste.
         return SwapQuoteResult.Evm(buildEvmQuoteFromSwapKit(swapResponse, request.dstToken))
     }
 
@@ -140,7 +147,12 @@ constructor(
         val filtered =
             routes.filter { route ->
                 if (route.providers.size != 1) return@filter false
-                val primary = route.primaryProviderId
+                // SwapKitRoute.primaryProviderId already lower-cases the wire value, but
+                // .lowercase() again here is a deliberate belt-and-braces: if a future change
+                // to the DTO ever drops the normalization, the filter still excludes Thor/Maya
+                // sub-providers rather than silently letting them through (which would stack a
+                // second affiliate fee on top of Vultisig's native Thor/Maya integrations).
+                val primary = route.primaryProviderId.lowercase()
                 primary !in FILTERED_PROVIDERS
             }
         if (filtered.isEmpty()) return null
@@ -175,6 +187,10 @@ constructor(
         // so the contract stays uniform — otherwise "42.5" becomes ZERO and "2500" becomes 6
         // orders of magnitude smaller than the actual receive amount.
         val rawDstAmount = scaleDecimalToRawUnits(response.expectedBuyAmount, dstToken.decimal)
+        // `meta.type` is the lowercase canonical txType (computed by SwapKitTxMeta from `txType`),
+        // matched against TYPE_EVM / TYPE_SOLANA. `meta.txType` (raw upstream casing) is used only
+        // in the UnsupportedTxType message so diagnostics surface the wire value verbatim — e.g.
+        // "PSBT" not "psbt" — without affecting dispatch.
         val txType = response.meta.type
         return when (txType) {
             SwapKitTxMeta.TYPE_EVM -> {
@@ -251,7 +267,16 @@ constructor(
      * SwapKit asset identifier: `CHAIN.TICKER` or `CHAIN.TICKER-CONTRACT` for ERC-20-style tokens.
      */
     private fun assetIdentifier(coin: Coin): String {
-        val prefix = chainPrefix(coin.chain) ?: coin.ticker
+        // The provider-cache gate upstream of this call should already block any chain we don't
+        // have a SwapKit prefix mapping for. Throwing NoRoutes here (rather than falling back to
+        // `coin.ticker`) is defense-in-depth: a future cache change that enables a chain we
+        // haven't mapped would otherwise mint a garbage identifier (e.g. `ETH.ETH` for ZkSync.ETH)
+        // and surface as `helpers_invalid_asset_identifier` 500s from the proxy.
+        val prefix =
+            chainPrefix(coin.chain)
+                ?: throw SwapKitError.NoRoutes(
+                    "SwapKit asset identifier missing chain prefix for ${coin.chain.raw}"
+                )
         val ticker = coin.ticker
         return if (coin.isNativeToken || coin.contractAddress.isBlank()) {
             "$prefix.$ticker"

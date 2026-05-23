@@ -366,6 +366,20 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch throws NoRoutes when source chain has no SwapKit prefix mapping`() = runTest {
+        // Defense-in-depth: even if the provider cache somehow enables a chain we haven't mapped
+        // a SwapKit prefix for, assetIdentifier should surface NoRoutes rather than minting a
+        // garbage "TICKER.TICKER" identifier that the proxy rejects with
+        // helpers_invalid_asset_identifier. Drive the path by stubbing cache.isEnabled true while
+        // using a chain (Hyperliquid) that isn't in the Phase 1 prefix map.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { cache.isEnabled(any()) } returns true
+        val unmapped = ethCoin().copy(chain = Chain.Hyperliquid)
+
+        assertThrows<SwapKitError.NoRoutes> { source().fetch(request(srcToken = unmapped)) }
+    }
+
+    @Test
     fun `fetch wraps unexpected exceptions as SwapKitError Network preserving the cause`() =
         runTest {
             every { config.isFeatureEnabled } returns flowOf(true)

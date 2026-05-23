@@ -612,8 +612,12 @@ constructor(
                 // matching the 1inch/Kyber gas-only pattern.
                 val gasUnits =
                     apiQuote.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
+                // Parse gasPrice through BigDecimal so a decimal-string upstream (e.g. "20.5"
+                // — valid JSON, invalid BigInteger) truncates to integer wei rather than silently
+                // falling back to ZERO. A zero gas fee would make SwapKit look free in the ranking
+                // pass and could let the EVM signer broadcast an underpriced tx.
                 val gasFees =
-                    (apiQuote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO) *
+                    (apiQuote.tx.gasPrice.toBigDecimalOrNull()?.toBigInteger() ?: BigInteger.ZERO) *
                         gasUnits.toBigInteger()
                 val tokenFees = TokenValue(value = gasFees, token = srcNativeToken)
                 SwapQuote.OneInch(
