@@ -139,8 +139,8 @@ private fun InstructionsSummarySection(
 @Composable
 private fun InstructionRow(instruction: ParsedSolanaTransaction.ParsedInstruction, index: Int) {
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        // Header "Instruction N: <type>" mirrors the browser extension; programName is rendered
-        // separately below so a long name can't truncate the instruction type.
+        // Header "Instruction N: <type>" mirrors the browser extension and drops the
+        // `(programName)` suffix so the instruction type can't truncate at `maxLines = 1`.
         val headerSuffix = instruction.instructionType?.let { ": $it" }.orEmpty()
         Text(
             text = stringResource(R.string.solana_instruction_number, index + 1) + headerSuffix,
