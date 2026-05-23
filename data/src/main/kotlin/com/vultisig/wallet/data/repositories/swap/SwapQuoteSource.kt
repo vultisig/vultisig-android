@@ -31,7 +31,13 @@ data class SwapQuoteRequest(
 sealed class SwapQuoteResult {
     data class Native(val quote: SwapQuote) : SwapQuoteResult()
 
-    data class Evm(val data: EVMSwapQuoteJson) : SwapQuoteResult()
+    /**
+     * EVM-shaped quote envelope. [subProvider] is the route's sub-provider tag when an aggregator
+     * routes through a downstream protocol (e.g. SwapKit → Chainflip / NEAR Intents / Garden /
+     * Flashnet); `null` for direct aggregators (1inch, Kyber, LiFi, Jupiter). The UI label uses it
+     * to disambiguate the verify screen.
+     */
+    data class Evm(val data: EVMSwapQuoteJson, val subProvider: String? = null) : SwapQuoteResult()
 
     fun expectNative(provider: SwapProvider): SwapQuote =
         when (this) {

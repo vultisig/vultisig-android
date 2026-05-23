@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories.swap
 
 import com.vultisig.wallet.data.api.errors.SwapKitError
+import com.vultisig.wallet.data.api.models.quotes.SwapKitFee
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitRoute
@@ -8,7 +9,6 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitTxMeta
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
-import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
@@ -25,25 +25,26 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
 /**
- * Pins the SwapKit quote-source contract: feature-flag and provider-cache gates short-circuit
- * before network I/O, multi-hop / THORChain / Maya routes are filtered client-side, ranking picks
- * the highest [SwapKitRoute.expectedBuyAmount], and Phase 1 EVM/Solana `meta.txType` responses are
- * unwrapped into [com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson]. Anything else
- * surfaces as a typed [SwapKitError] so the swap picker can fall back to another aggregator.
+ * Pins the SwapKit quote-source contract: feature-flag gating, multi-hop / THORChain / Maya
+ * filtering with the wire-format provider ids, ranking by [SwapKitRoute.expectedBuyAmount], Solana
+ * base64-as-JsonPrimitive decoding (+ legacy object fallback), `SERIALIZED_BASE64` txType aliasing,
+ * refusal of EVM routes missing `tx.gas`, inbound-fee extraction from `route.fees[]`, sub-provider
+ * passthrough into [SwapQuoteResult.Evm.subProvider], and exception wrapping. No provider-cache
+ * gate — `/v3/quote` is the authority on unsupported chains (mirrors iOS' fail-open cache).
  */
 internal class SwapKitQuoteSourceTest {
 
     private val api: SwapKitApi = mockk()
-    private val cache: SwapKitProviderCache = mockk()
     private val config: SwapKitConfig = mockk()
     private val json = Json { ignoreUnknownKeys = true }
 
-    private fun source(): SwapKitQuoteSource = SwapKitQuoteSource(api, config, cache, json)
+    private fun source(): SwapKitQuoteSource = SwapKitQuoteSource(api, config, json)
 
     @Test
     fun `fetch throws NoRoutes when feature flag is disabled`() = runTest {
@@ -54,34 +55,12 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
-    fun `fetch throws NoRoutes when source chain is not enabled in cache`() = runTest {
-        every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(Chain.Ethereum) } returns false
-
-        val error = assertThrows<SwapKitError.NoRoutes> { source().fetch(request()) }
-        assertTrue(error.message?.contains("source") == true)
-    }
-
-    @Test
-    fun `fetch throws NoRoutes when destination chain is not enabled in cache`() = runTest {
-        every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(Chain.Ethereum) } returns true
-        coEvery { cache.isEnabled(Chain.Base) } returns false
-
-        val error =
-            assertThrows<SwapKitError.NoRoutes> { source().fetch(request(dstToken = baseCoin())) }
-        assertTrue(error.message?.contains("destination") == true)
-    }
-
-    @Test
     fun `fetch filters out multi-hop and Thor and Maya routes then picks highest expected amount`() =
         runTest {
             every { config.isFeatureEnabled } returns flowOf(true)
-            coEvery { cache.isEnabled(any()) } returns true
 
-            val quoteRequest = slot<SwapKitQuoteRequest>()
             val swapRequest = slot<SwapKitSwapRequest>()
-            coEvery { api.quote(capture(quoteRequest)) } returns
+            coEvery { api.quote(any()) } returns
                 SwapKitQuoteResponseJson(
                     routes =
                         listOf(
@@ -91,9 +70,19 @@ internal class SwapKitQuoteSourceTest {
                                 expectedBuy = "200",
                             ),
                             route(
+                                routeId = "skip-thor-streaming",
+                                providers = listOf("THORCHAIN_STREAMING"),
+                                expectedBuy = "250",
+                            ),
+                            route(
                                 routeId = "skip-maya",
                                 providers = listOf("MAYACHAIN"),
                                 expectedBuy = "300",
+                            ),
+                            route(
+                                routeId = "skip-maya-streaming",
+                                providers = listOf("MAYACHAIN_STREAMING"),
+                                expectedBuy = "400",
                             ),
                             route(
                                 routeId = "skip-multihop",
@@ -120,26 +109,33 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
-    fun `fetch throws NoRoutes when every route is filtered out`() = runTest {
-        every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
-        coEvery { api.quote(any()) } returns
-            SwapKitQuoteResponseJson(
-                routes =
-                    listOf(
-                        route(routeId = "thor", providers = listOf("THORCHAIN")),
-                        route(routeId = "maya", providers = listOf("MAYA")),
-                        route(routeId = "multi", providers = listOf("CHAINFLIP", "NEAR")),
-                    )
-            )
+    fun `fetch throws NoRoutes when every route is filtered out including streaming variants`() =
+        runTest {
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(routeId = "thor", providers = listOf("THORCHAIN")),
+                            route(
+                                routeId = "thor-streaming",
+                                providers = listOf("THORCHAIN_STREAMING"),
+                            ),
+                            route(routeId = "maya", providers = listOf("MAYACHAIN")),
+                            route(
+                                routeId = "maya-streaming",
+                                providers = listOf("MAYACHAIN_STREAMING"),
+                            ),
+                            route(routeId = "multi", providers = listOf("CHAINFLIP", "NEAR")),
+                        )
+                )
 
-        assertThrows<SwapKitError.NoRoutes> { source().fetch(request()) }
-    }
+            assertThrows<SwapKitError.NoRoutes> { source().fetch(request()) }
+        }
 
     @Test
-    fun `fetch maps EVM tx response into EVMSwapQuoteJson with gas defaults`() = runTest {
+    fun `fetch maps EVM tx response and surfaces sub-provider from swap response`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
                 routes =
@@ -151,37 +147,51 @@ internal class SwapKitQuoteSourceTest {
                         )
                     )
             )
-        // gas omitted in EVM tx — fetcher must fall back to the project's default swap gas unit so
-        // the downstream EVM signer never broadcasts a 0-gas transaction.
         coEvery { api.swap(any()) } returns
             evmSwapResponse(
-                gas = null,
+                gas = "200000",
                 gasPrice = "20",
                 from = "0xfrom",
                 to = "0xto",
                 data = "0xdeadbeef",
                 value = "1",
                 expectedBuy = "42",
+                providers = listOf("CHAINFLIP"),
             )
 
         val result = source().fetch(request()) as SwapQuoteResult.Evm
 
-        // dstToken is the default solanaCoin (9 decimals). SwapKit returns the decimal "42",
-        // and the source scales it to raw units so the downstream pipeline (which expects
-        // BigInteger-as-string) gets 42 * 10^9.
         assertEquals("42000000000", result.data.dstAmount)
         assertEquals("0xfrom", result.data.tx.from)
         assertEquals("0xto", result.data.tx.to)
         assertEquals("0xdeadbeef", result.data.tx.data)
         assertEquals("1", result.data.tx.value)
         assertEquals("20", result.data.tx.gasPrice)
-        assertEquals(EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT, result.data.tx.gas)
+        assertEquals(200000L, result.data.tx.gas)
+        assertEquals("CHAINFLIP", result.subProvider)
     }
 
     @Test
-    fun `fetch maps Solana tx response into EVMSwapQuoteJson with base64 in data`() = runTest {
+    fun `fetch refuses EVM route when tx_gas is missing`() = runTest {
+        // Hard-coding a 600k L1 default would over-estimate Network Fee on L2s by multiples.
+        // Refuse the route and let the picker rank another aggregator with a real gas estimate.
         every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns evmSwapResponse(gas = null)
+
+        assertThrows<SwapKitError.Decoding> { source().fetch(request()) }
+    }
+
+    @Test
+    fun `fetch decodes Solana base64 from JsonPrimitive at the tx root`() = runTest {
+        // SwapKit V3 returns the Solana tx as a bare base64 string on `tx`, not an object with
+        // swapTransaction/message. The legacy wrapper-object decoder masked this bug in earlier
+        // tests; this case pins the V3 wire shape explicitly.
+        every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
                 routes =
@@ -190,54 +200,137 @@ internal class SwapKitQuoteSourceTest {
         coEvery { api.swap(any()) } returns
             SwapKitSwapResponseJson(
                 swapId = "swap-1",
-                tx = buildJsonObject { put("swapTransaction", JsonPrimitive("BASE64SOLANA")) },
+                tx = JsonPrimitive("BASE64SOLANA"),
+                meta = SwapKitTxMeta(txType = "SOLANA"),
+                expectedBuyAmount = "9",
+                providers = listOf("NEAR"),
+            )
+
+        val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+        assertEquals("BASE64SOLANA", result.data.tx.data)
+        assertEquals("9000000000", result.data.dstAmount)
+        assertEquals("NEAR", result.subProvider)
+    }
+
+    @Test
+    fun `fetch decodes legacy Solana object shape with swapTransaction field`() = runTest {
+        // Transitional wire shape — SwapKit flipped this once before. Source stays permissive.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r-sol", providers = listOf("NEAR"), expectedBuy = "9"))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = buildJsonObject { put("swapTransaction", JsonPrimitive("BASE64LEGACY")) },
                 meta = SwapKitTxMeta(txType = "SOLANA"),
                 expectedBuyAmount = "9",
             )
 
         val result = source().fetch(request()) as SwapQuoteResult.Evm
 
-        assertEquals("BASE64SOLANA", result.data.tx.data)
-        // 9 SOL (9 decimals) scaled to raw lamports.
-        assertEquals("9000000000", result.data.dstAmount)
+        assertEquals("BASE64LEGACY", result.data.tx.data)
     }
 
     @Test
-    fun `fetch scales fractional expectedBuyAmount into raw destination units`() = runTest {
-        // Regression: SwapKit returns expectedBuyAmount as a human-readable decimal string
-        // ("42.5" USDC, "0.0086" ETH), but EVMSwapQuoteJson.dstAmount is consumed downstream as a
-        // BigInteger-as-string (raw units). Without scaling, "42.5".toBigIntegerOrNull() returns
-        // null and the consumer silently treats the receive amount as zero; "2500" would be
-        // interpreted as 0.0025 USDC instead of 2500 USDC. Both failure modes mislead the user.
+    fun `fetch accepts SERIALIZED_BASE64 txType as Solana`() = runTest {
+        // SwapKit upstream has flipped the Solana discriminator between SOLANA and
+        // SERIALIZED_BASE64 before (per iOS commit 382b28f5f). Both must dispatch to the Solana
+        // decoder; otherwise every real Solana route lands on UnsupportedTxType.
         every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r-sol", providers = listOf("NEAR"), expectedBuy = "9"))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive("BASE64SERIAL"),
+                meta = SwapKitTxMeta(txType = "SERIALIZED_BASE64"),
+                expectedBuyAmount = "9",
+            )
+
+        val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+        assertEquals("BASE64SERIAL", result.data.tx.data)
+    }
+
+    @Test
+    fun `fetch surfaces inbound fee from route fees list in raw source-chain units`() = runTest {
+        // Canonical SwapKit source-chain fee — iOS surfaces this via SwapKitService.inboundFee.
+        // Without parsing fees[], Solana routes display $0 Network Fee while real Chainflip /
+        // NEAR routes debit a real source-chain charge.
+        every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
                 routes =
                     listOf(
-                        route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "42.5")
+                        route(
+                            routeId = "r-sol",
+                            providers = listOf("NEAR"),
+                            expectedBuy = "9",
+                            fees =
+                                listOf(
+                                    SwapKitFee(
+                                        type = "inbound",
+                                        chain = "SOL",
+                                        amount = "0.000005",
+                                    ),
+                                    SwapKitFee(type = "outbound", chain = "ETH", amount = "0.0001"),
+                                ),
+                        )
                     )
             )
-        coEvery { api.swap(any()) } returns evmSwapResponse(expectedBuy = "42.5")
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive("BASE64"),
+                meta = SwapKitTxMeta(txType = "SOLANA"),
+                expectedBuyAmount = "9",
+            )
 
-        val usdc =
-            ethCoin()
-                .copy(
-                    ticker = "USDC",
-                    isNativeToken = false,
-                    contractAddress = "0xa0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-                    decimal = 6,
-                )
-        val result = source().fetch(request(dstToken = usdc)) as SwapQuoteResult.Evm
+        val result = source().fetch(request(srcToken = solanaCoin())) as SwapQuoteResult.Evm
 
-        // 42.5 USDC × 10^6 = 42_500_000 raw units.
-        assertEquals("42500000", result.data.dstAmount)
+        // 0.000005 SOL * 10^9 = 5000 raw lamports. Embedded in tx.swapFee with an empty
+        // tokenContract so resolveSwapFee falls back to srcNativeToken (SOL).
+        assertEquals("5000", result.data.tx.swapFee)
+        assertEquals("", result.data.tx.swapFeeTokenContract)
     }
+
+    @Test
+    fun `fetch zero inbound fee when fees list lacks an inbound entry for the source chain`() =
+        runTest {
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r",
+                                providers = listOf("CHAINFLIP"),
+                                expectedBuy = "42",
+                                fees =
+                                    listOf(
+                                        SwapKitFee(
+                                            type = "outbound",
+                                            chain = "ETH",
+                                            amount = "0.01",
+                                        )
+                                    ),
+                            )
+                        )
+                )
+            coEvery { api.swap(any()) } returns evmSwapResponse()
+
+            val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+            assertEquals("0", result.data.tx.swapFee)
+        }
 
     @Test
     fun `fetch throws Decoding when expectedBuyAmount is missing`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
                 routes =
@@ -251,7 +344,6 @@ internal class SwapKitQuoteSourceTest {
     @Test
     fun `fetch throws Decoding when expectedBuyAmount is not a decimal`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
                 routes =
@@ -265,7 +357,6 @@ internal class SwapKitQuoteSourceTest {
     @Test
     fun `fetch throws UnsupportedTxType for non-EVM, non-Solana txType`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
                 routes = listOf(route(routeId = "r-psbt", providers = listOf("CHAINFLIP")))
@@ -283,7 +374,6 @@ internal class SwapKitQuoteSourceTest {
     @Test
     fun `fetch sends decimal sellAmount and dotted CHAIN-TICKER asset identifiers`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
 
         val captured = slot<SwapKitQuoteRequest>()
         coEvery { api.quote(capture(captured)) } returns
@@ -293,7 +383,6 @@ internal class SwapKitQuoteSourceTest {
             )
         coEvery { api.swap(any()) } returns evmSwapResponse()
 
-        // 0.0086 ETH = 8_600_000_000_000_000 wei (18 decimals).
         val src = ethCoin().copy(isNativeToken = true)
         source()
             .fetch(
@@ -304,15 +393,12 @@ internal class SwapKitQuoteSourceTest {
             )
 
         assertEquals("ETH.ETH", captured.captured.sellAsset)
-        // Trailing-zero stripping verifies the formatter — bug-prone if the wei → decimal
-        // conversion accidentally keeps full precision and SwapKit reads it as a larger number.
         assertEquals("0.0086", captured.captured.sellAmount)
     }
 
     @Test
     fun `fetch encodes ERC-20 token asset as CHAIN-TICKER-CONTRACT`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
 
         val captured = slot<SwapKitQuoteRequest>()
         coEvery { api.quote(capture(captured)) } returns
@@ -348,7 +434,6 @@ internal class SwapKitQuoteSourceTest {
     @Test
     fun `fetch passes affiliateBps from the request through to the SwapKit quote call`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
 
         val captured = slot<SwapKitQuoteRequest>()
         coEvery { api.quote(capture(captured)) } returns
@@ -367,23 +452,51 @@ internal class SwapKitQuoteSourceTest {
 
     @Test
     fun `fetch throws NoRoutes when source chain has no SwapKit prefix mapping`() = runTest {
-        // Defense-in-depth: even if the provider cache somehow enables a chain we haven't mapped
-        // a SwapKit prefix for, assetIdentifier should surface NoRoutes rather than minting a
-        // garbage "TICKER.TICKER" identifier that the proxy rejects with
-        // helpers_invalid_asset_identifier. Drive the path by stubbing cache.isEnabled true while
-        // using a chain (Hyperliquid) that isn't in the Phase 1 prefix map.
         every { config.isFeatureEnabled } returns flowOf(true)
-        coEvery { cache.isEnabled(any()) } returns true
         val unmapped = ethCoin().copy(chain = Chain.Hyperliquid)
 
         assertThrows<SwapKitError.NoRoutes> { source().fetch(request(srcToken = unmapped)) }
     }
 
     @Test
+    fun `fetch falls back to meta_subProvider when providers list is empty`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            evmSwapResponse(providers = emptyList(), metaSubProvider = "GARDEN")
+
+        val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+        assertEquals("GARDEN", result.subProvider)
+    }
+
+    @Test
+    fun `fetch leaves subProvider null when neither providers list nor meta subProvider are present`() =
+        runTest {
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1")
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                evmSwapResponse(providers = emptyList(), metaSubProvider = null)
+
+            val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+            assertNull(result.subProvider)
+        }
+
+    @Test
     fun `fetch wraps unexpected exceptions as SwapKitError Network preserving the cause`() =
         runTest {
             every { config.isFeatureEnabled } returns flowOf(true)
-            coEvery { cache.isEnabled(any()) } returns true
             val boom = RuntimeException("DNS failure")
             coEvery { api.quote(any()) } throws boom
 
@@ -408,8 +521,18 @@ internal class SwapKitQuoteSourceTest {
             affiliateBps = affiliateBps,
         )
 
-    private fun route(routeId: String, providers: List<String>, expectedBuy: String? = "1") =
-        SwapKitRoute(routeId = routeId, providers = providers, expectedBuyAmount = expectedBuy)
+    private fun route(
+        routeId: String,
+        providers: List<String>,
+        expectedBuy: String? = "1",
+        fees: List<SwapKitFee> = emptyList(),
+    ) =
+        SwapKitRoute(
+            routeId = routeId,
+            providers = providers,
+            expectedBuyAmount = expectedBuy,
+            fees = fees,
+        )
 
     private fun evmSwapResponse(
         gas: String? = "200000",
@@ -419,6 +542,8 @@ internal class SwapKitQuoteSourceTest {
         data: String = "0xdata",
         value: String = "0",
         expectedBuy: String? = "1",
+        providers: List<String> = listOf("CHAINFLIP"),
+        metaSubProvider: String? = null,
     ) =
         SwapKitSwapResponseJson(
             swapId = "swap-id",
@@ -431,8 +556,9 @@ internal class SwapKitQuoteSourceTest {
                     gas?.let { put("gas", JsonPrimitive(it)) }
                     gasPrice?.let { put("gasPrice", JsonPrimitive(it)) }
                 },
-            meta = SwapKitTxMeta(txType = "EVM"),
+            meta = SwapKitTxMeta(txType = "EVM", subProvider = metaSubProvider),
             expectedBuyAmount = expectedBuy,
+            providers = providers,
         )
 
     private fun ethCoin() =
@@ -447,8 +573,6 @@ internal class SwapKitQuoteSourceTest {
             contractAddress = "",
             isNativeToken = true,
         )
-
-    private fun baseCoin() = ethCoin().copy(chain = Chain.Base)
 
     private fun solanaCoin() =
         Coin(

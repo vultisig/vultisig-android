@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
@@ -166,8 +167,8 @@ constructor(
                 SwapProvider.LIFI -> dstToken
                 // SwapKit's inbound (source-chain) fee is denominated in the source's native gas
                 // token — mirrors 1inch / Kyber / Jupiter rather than the LiFi destination-side
-                // integrator-fee model. Per-leg fee parsing from response.fees[] lands with the
-                // tier-discount affiliate work in a later task.
+                // integrator-fee model. SwapKitQuoteSource already pulls the inbound amount out of
+                // route.fees[] and stages it on tx.swapFee (raw units) for resolveSwapFee below.
                 SwapProvider.SWAPKIT -> srcNativeToken
                 else -> srcNativeToken
             }
@@ -580,56 +581,80 @@ constructor(
         vultBPSDiscount: Int?,
         srcNativeToken: Coin,
     ): Pair<SwapQuote, UiText> {
+        // iOS' SwapKit tier-discount formula at this milestone:
+        //   max(0, min(1000, 50 - vultTierDiscount))
+        // 50 bps base affiliate, clamped to 0..1000 (SwapKit's documented 0..10% range).
+        val affiliateBps = (SWAPKIT_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)).coerceIn(0, 1000)
+        var resolvedSubProvider: String? = null
         val swapQuote =
             getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.SWAPKIT) {
-                val apiQuote =
-                    swapQuoteRepository
-                        .getQuote(
-                            SwapProvider.SWAPKIT,
-                            SwapQuoteRequest(
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                tokenValue = tokenValue,
-                                srcAddress = src.address.address,
-                                dstAddress = dst.address.address,
-                                // Tier-discounted affiliate fee lands in its own follow-up task —
-                                // matches iOS's max(0, min(1000, 50 - vultTierDiscount)) formula.
-                                // For now pass zero so the proxy applies its dashboard-configured
-                                // default rather than a stale client override.
-                                affiliateBps = 0,
-                                bpsDiscount = vultBPSDiscount ?: 0,
-                            ),
-                        )
-                        .expectEvm(SwapProvider.SWAPKIT)
+                val result =
+                    swapQuoteRepository.getQuote(
+                        SwapProvider.SWAPKIT,
+                        SwapQuoteRequest(
+                            srcToken = srcToken,
+                            dstToken = dstToken,
+                            tokenValue = tokenValue,
+                            srcAddress = src.address.address,
+                            dstAddress = dst.address.address,
+                            affiliateBps = affiliateBps,
+                        ),
+                    )
+                val evmResult =
+                    (result as? SwapQuoteResult.Evm)
+                        ?: error("SwapKitQuoteSource must return SwapQuoteResult.Evm")
+                resolvedSubProvider = evmResult.subProvider
+                val apiQuote = evmResult.data
                 val expectedDstValue =
                     TokenValue(
-                        value = apiQuote.dstAmount.toBigIntegerOrNull() ?: BigInteger.ZERO,
+                        value =
+                            apiQuote.dstAmount.toBigIntegerOrNull()
+                                ?: error(
+                                    "Malformed SwapKit dstAmount (raw units expected): ${apiQuote.dstAmount}"
+                                ),
                         token = dstToken,
                     )
-                // SwapKit doesn't return a typed swapFee inside the EVM tx envelope (the
-                // response-level fees[] array carries the per-leg breakdown — surfaced as part of
-                // the affiliate-fee task). Use the gas envelope as the inbound-side fee estimate,
-                // matching the 1inch/Kyber gas-only pattern.
-                val gasUnits =
-                    apiQuote.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
-                // Parse gasPrice through BigDecimal so a decimal-string upstream (e.g. "20.5"
-                // — valid JSON, invalid BigInteger) truncates to integer wei rather than silently
-                // falling back to ZERO. A zero gas fee would make SwapKit look free in the ranking
-                // pass and could let the EVM signer broadcast an underpriced tx.
-                val gasFees =
-                    (apiQuote.tx.gasPrice.toBigDecimalOrNull()?.toBigInteger() ?: BigInteger.ZERO) *
-                        gasUnits.toBigInteger()
-                val tokenFees = TokenValue(value = gasFees, token = srcNativeToken)
+                // SwapKit's canonical source-chain fee is the `fees[]` entry with type=="inbound"
+                // for the source chain — the source layer already extracts that and stages it on
+                // `tx.swapFee` (raw units) with `swapFeeTokenContract = ""` (native sentinel). The
+                // resolveSwapFee helper falls back to srcNativeToken on the empty-contract case,
+                // matching how Kyber and Jupiter surface their per-leg fees.
+                val (feeAmount, feeCoin) =
+                    resolveSwapFee(
+                        apiQuote.tx.swapFeeTokenContract,
+                        apiQuote.tx.swapFee,
+                        srcNativeToken,
+                        BigInteger.ZERO,
+                    )
+                val tokenFees = TokenValue(value = feeAmount, token = feeCoin)
                 SwapQuote.OneInch(
                     expectedDstValue = expectedDstValue,
                     fees = tokenFees,
                     data = apiQuote,
                     expiredAt = Clock.System.now() + expiredAfter,
+                    // `provider` is the proto-serialized discriminator used by
+                    // SwapTransactionToUiModelMapper to map back onto SwapProvider.SWAPKIT —
+                    // keep it as the canonical id. The sub-provider drives the UI label below.
                     provider = SwapProvider.SWAPKIT.getSwapProviderId(),
                 )
             }
-        return swapQuote to R.string.swap_for_provider_swapkit.asUiText()
+        val providerLabel =
+            resolvedSubProvider
+                ?.takeIf { it.isNotBlank() }
+                ?.let { sub -> "SwapKit (${formatSubProvider(sub)})".asUiText() }
+                ?: R.string.swap_for_provider_swapkit.asUiText()
+        return swapQuote to providerLabel
     }
+
+    /**
+     * Render a SwapKit sub-provider id (`CHAINFLIP`, `near_intents`, `flashnet`) into a display
+     * label. Replaces underscores with spaces and title-cases each token so `near_intents` → `Near
+     * Intents`; brand names already in mixed/upper case are left alone.
+     */
+    private fun formatSubProvider(raw: String): String =
+        raw.split('_', '-').joinToString(" ") { token ->
+            token.replaceFirstChar { ch -> if (ch.isLowerCase()) ch.titlecase() else ch.toString() }
+        }
 
     private suspend fun resolveSwapFee(
         swapFeeTokenContract: String,
@@ -757,6 +782,9 @@ constructor(
 
     companion object {
         private const val KYBER_AFFILIATE_FEE_BPS = 50
+        // Mirrors iOS' SwapKit milestone: 50 bps base affiliate, discounted by the user's
+        // vultTierDiscount, clamped to SwapKit's documented 0..1000 bps (0..10%) range.
+        private const val SWAPKIT_AFFILIATE_FEE_BPS = 50
         private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val QUOTE_FETCH_TIMEOUT_MS = 15_000L
     }

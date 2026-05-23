@@ -9,46 +9,54 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitRoute
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSolanaTx
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
-import com.vultisig.wallet.data.api.models.quotes.SwapKitTxMeta
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
-import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import java.math.BigDecimal
+import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import timber.log.Timber
 
 /**
  * SwapKit V3 quote source. Mirrors iOS' `SwapKitService.fetchBestRoute` + `buildSwapTx`:
- * 1. Guard on the user's `SwapKitConfig` opt-in flag and the cached `/providers` enablement for
- *    both source and destination chains — fails closed so a flag-off / cold-cache call never
- *    reaches the proxy.
+ * 1. Short-circuit on the user's `SwapKitConfig` opt-in flag (default off) before any network I/O.
+ *    No cache gate beyond that — iOS' `SwapKitProviderCache` returns `true` on cache-miss and lets
+ *    `/v3/quote` surface unsupported chains via `noRoutesFound`; the Android source matches that
+ *    fail-open semantics so a single bad-network app launch doesn't hide SwapKit until refresh.
  * 2. Call `POST /v3/quote`, drop multi-hop routes and any route whose sub-provider is THORChain or
  *    Maya (Vultisig pays those affiliates directly via the existing integrations — routing through
- *    SwapKit would stack a second affiliate fee on top).
+ *    SwapKit would stack a second affiliate fee on top). Filter uses the wire-format provider ids
+ *    (`thorchain`, `thorchain_streaming`, `mayachain`, `mayachain_streaming`) so streaming variants
+ *    don't slip through.
  * 3. Rank the survivors by `expectedBuyAmount` (string-decimal, higher wins) and pick the best.
  * 4. Call `POST /v3/swap` with the chosen `routeId` to materialise the unsigned tx, then wrap the
  *    EVM-shaped or Solana-shaped payload into the existing [EVMSwapQuoteJson] envelope so the rest
  *    of the swap pipeline (signing, broadcast, proto round-trip via `oneinchSwapPayload`) needs no
- *    changes for Phase 1.
+ *    changes for Phase 1. The route's `fees[]` entry with `type=="inbound"` for the source chain
+ *    becomes `tx.swapFee` (raw native units) so the displayed Network Fee reconciles against the
+ *    actual on-chain debit — especially on Solana / Chainflip / NEAR where the EVM gas envelope
+ *    reads zero. EVM routes that omit `tx.gas` are refused (`SwapKitError.Decoding`) rather than
+ *    backstopped with the L1-sized default, which would over-estimate L2 fees by multiples.
  *
  * Non-EVM/non-Solana `txType`s (PSBT, TRON, TON, SUI, CARDANO, RIPPLE, …) are out of scope for
  * Phase 1 — they require per-chain signers and the dedicated `SwapKitSwapPayload` proto, which land
  * in subsequent task batches. Such responses surface as [SwapKitError.UnsupportedTxType] so the
- * picker falls back to another provider rather than signing garbage.
+ * picker falls back to another provider rather than signing garbage. `SOLANA` and the legacy
+ * `SERIALIZED_BASE64` discriminator are aliased; SwapKit flipped them once before.
  */
 internal class SwapKitQuoteSource
 @Inject
 constructor(
     private val api: SwapKitApi,
     private val config: SwapKitConfig,
-    private val providerCache: SwapKitProviderCache,
     private val json: Json,
 ) : SwapQuoteSource {
 
@@ -75,20 +83,12 @@ constructor(
             throw SwapKitError.NoRoutes("SwapKit feature flag disabled")
         }
 
-        // Provider-cache gate — both ends must be enabled in the cached /providers snapshot.
-        // Fails closed: when the cache can't be hydrated isEnabled returns false, so we skip
-        // SwapKit and let another provider take the route rather than firing a /quote that we
-        // already expect to fail.
-        if (!providerCache.isEnabled(request.srcToken.chain)) {
-            throw SwapKitError.NoRoutes(
-                "SwapKit not enabled for source chain ${request.srcToken.chain.raw}"
-            )
-        }
-        if (!providerCache.isEnabled(request.dstToken.chain)) {
-            throw SwapKitError.NoRoutes(
-                "SwapKit not enabled for destination chain ${request.dstToken.chain.raw}"
-            )
-        }
+        // No provider-cache gate here on purpose. iOS' SwapKitProviderCache returns `true` on a
+        // cache-miss and lets `/v3/quote` surface the real error so a single bad-network app
+        // launch doesn't silently hide SwapKit until the next refresh. Android's cache currently
+        // returns `false` on cache-miss (fail-closed), which would diverge. Letting `/v3/quote`
+        // be the authority — it returns a clear `noRoutesFound` for unsupported chains — keeps
+        // the user opt-in and the swap picker behaviour aligned with iOS.
 
         val quoteResponse =
             api.quote(
@@ -135,7 +135,16 @@ constructor(
         // SwapQuoteResult.Evm is the envelope for both EVM and Solana SwapKit txTypes — Solana
         // signers pull the base64 blob from `tx.data`, matching how JupiterQuoteSource already
         // stages a Solana swap. The Evm-typed result is intentional, not a copy-paste.
-        return SwapQuoteResult.Evm(buildEvmQuoteFromSwapKit(swapResponse, request.dstToken))
+        return SwapQuoteResult.Evm(
+            data = buildEvmQuoteFromSwapKit(swapResponse, request.srcToken, request.dstToken, best),
+            // Sub-provider tag (Chainflip / NEAR Intents / Garden / Flashnet) — surfaced on the
+            // verify screen so the user can reason about ETA and debug routing. Prefer
+            // `swapResponse.providers[0]` (the swap call's authoritative routing) and fall back
+            // to `meta.subProvider` for forward compat.
+            subProvider =
+                swapResponse.providers.firstOrNull()?.takeIf { it.isNotBlank() }
+                    ?: swapResponse.meta.subProvider?.takeIf { it.isNotBlank() },
+        )
     }
 
     /**
@@ -168,6 +177,26 @@ constructor(
     }
 
     /**
+     * Extract the source-chain inbound fee from `route.fees[]` — the canonical SwapKit-attributed
+     * cost of executing the deposit on the source chain. Mirrors iOS' `SwapKitService.inboundFee`
+     * so the displayed Network Fee reconciles against the actual on-chain debit (especially on
+     * Solana and cross-chain Chainflip / NEAR routes where the EVM gas envelope would otherwise
+     * read zero). Returns `0` when the entry is absent so the UI surfaces "—" rather than blocking
+     * the quote.
+     */
+    private fun inboundFeeRawUnits(srcToken: Coin, route: SwapKitRoute): BigInteger {
+        val prefix = chainPrefix(srcToken.chain) ?: return BigInteger.ZERO
+        val inbound =
+            route.fees.firstOrNull { fee ->
+                fee.type?.equals("inbound", ignoreCase = true) == true && fee.chain == prefix
+            } ?: return BigInteger.ZERO
+        val amount =
+            inbound.amount?.let { runCatching { BigDecimal(it) }.getOrNull() }
+                ?: return BigInteger.ZERO
+        return amount.movePointRight(srcToken.decimal).toBigInteger()
+    }
+
+    /**
      * Wrap the SwapKit `/v3/swap` response into the EVM-shaped [EVMSwapQuoteJson] envelope used by
      * the existing pipeline. The `tx` blob's wire shape varies by `meta.txType`:
      * - "evm" → decode as [SwapKitEvmTx], fields map 1:1 to [OneInchSwapTxJson]
@@ -178,7 +207,9 @@ constructor(
      */
     private fun buildEvmQuoteFromSwapKit(
         response: SwapKitSwapResponseJson,
+        srcToken: Coin,
         dstToken: Coin,
+        route: SwapKitRoute,
     ): EVMSwapQuoteJson {
         // SwapKit V3 reports `expectedBuyAmount` as a human-readable decimal string ("42.5"
         // USDC) per the docs. Every other Android quote source (1inch / Kyber / LiFi / Jupiter)
@@ -187,17 +218,24 @@ constructor(
         // so the contract stays uniform — otherwise "42.5" becomes ZERO and "2500" becomes 6
         // orders of magnitude smaller than the actual receive amount.
         val rawDstAmount = scaleDecimalToRawUnits(response.expectedBuyAmount, dstToken.decimal)
-        // `meta.type` is the lowercase canonical txType (computed by SwapKitTxMeta from `txType`),
-        // matched against TYPE_EVM / TYPE_SOLANA. `meta.txType` (raw upstream casing) is used only
-        // in the UnsupportedTxType message so diagnostics surface the wire value verbatim — e.g.
-        // "PSBT" not "psbt" — without affecting dispatch.
-        val txType = response.meta.type
-        return when (txType) {
-            SwapKitTxMeta.TYPE_EVM -> {
+        // Inbound fee in source-chain native units — canonical SwapKit fee surface (iOS' equivalent
+        // is SwapKitService.inboundFee). Embedded in `swapFee` with `swapFeeTokenContract = ""`
+        // (the native-coin sentinel resolveSwapFee recognises) so the consumer reads it the same
+        // way Kyber/Jupiter quote sources surface their per-leg fees.
+        val inboundFee = inboundFeeRawUnits(srcToken, route).toString()
+        return when (txTypeOf(response)) {
+            TxKind.EVM -> {
                 val evm = decode<SwapKitEvmTx>(response.tx, "evm")
+                // Refuse routes that omit `tx.gas`. Falling back to a hardcoded L1-sized constant
+                // (e.g. 600_000) over-estimates by multiples on Arbitrum / Optimism / Base / BSC /
+                // Polygon / Avalanche and produces a misleading Network Fee on the verify screen.
+                // Throwing Decoding here lets the picker drop SwapKit and rank another aggregator
+                // rather than ship a wrong number.
                 val gas =
                     evm.gas?.toLongOrNull()?.takeIf { it > 0 }
-                        ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
+                        ?: throw SwapKitError.Decoding(
+                            "SwapKit EVM tx missing gas estimate (got ${evm.gas}); refusing route"
+                        )
                 EVMSwapQuoteJson(
                     dstAmount = rawDstAmount,
                     tx =
@@ -208,24 +246,16 @@ constructor(
                             gas = gas,
                             value = evm.value,
                             gasPrice = evm.gasPrice.orEmpty(),
-                            // Per-leg swap fees on SwapKit are surfaced via the response-level
-                            // `fees[]` array (type=="inbound"|"outbound"|"affiliate"|…). Phase 1
-                            // does not parse those out here — gas math lands via the standard EVM
-                            // path and the inbound-fee surfacing belongs with the tier-discount
-                            // affiliate work in a later task.
-                            swapFee = "0",
+                            swapFee = inboundFee,
                             swapFeeTokenContract = "",
                         ),
                 )
             }
-            SwapKitTxMeta.TYPE_SOLANA -> {
-                val solana = decode<SwapKitSolanaTx>(response.tx, "solana")
-                val base64 =
-                    solana.swapTransaction
-                        ?: solana.message
-                        ?: throw SwapKitError.Decoding(
-                            "SwapKit Solana tx missing both swapTransaction and message"
-                        )
+            TxKind.SOLANA -> {
+                // SwapKit V3 returns the Solana `tx` as a bare base64 String (`JsonPrimitive`),
+                // not an object with `swapTransaction`/`message` — those nested fields are a
+                // transitional v2-era shape. Accept both with `JsonPrimitive` taking precedence.
+                val base64 = solanaBase64(response.tx)
                 EVMSwapQuoteJson(
                     dstAmount = rawDstAmount,
                     tx =
@@ -239,13 +269,58 @@ constructor(
                             gas = 0,
                             value = "0",
                             gasPrice = "0",
-                            swapFee = "0",
+                            swapFee = inboundFee,
                             swapFeeTokenContract = "",
                         ),
                 )
             }
-            else -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
+            TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
+    }
+
+    /**
+     * Map SwapKit's `meta.txType` (raw upstream casing) onto the internal dispatch kind. Accepts
+     * both `SOLANA` and `SERIALIZED_BASE64` for the Solana branch — SwapKit flipped that
+     * discriminator once before (per iOS commit `382b28f5f`), so the source is permissive.
+     */
+    private fun txTypeOf(response: SwapKitSwapResponseJson): TxKind =
+        when (response.meta.type) {
+            "evm" -> TxKind.EVM
+            "solana",
+            "serialized_base64" -> TxKind.SOLANA
+            else -> TxKind.UNSUPPORTED
+        }
+
+    /**
+     * Pull the Solana base64 swap blob out of `tx`. V3 ships it as a top-level [JsonPrimitive];
+     * fall back to the legacy [SwapKitSolanaTx] object shape so a transitional response (or a test
+     * fixture using either form) is decoded safely.
+     */
+    private fun solanaBase64(element: JsonElement): String {
+        (element as? JsonPrimitive)
+            ?.takeIf { it.isString }
+            ?.content
+            ?.let {
+                return it
+            }
+        if (element is JsonObject) {
+            val nested = decode<SwapKitSolanaTx>(element, "solana")
+            nested.swapTransaction?.let {
+                return it
+            }
+            nested.message?.let {
+                return it
+            }
+        }
+        throw SwapKitError.Decoding(
+            "SwapKit Solana tx is neither a base64 string nor a known object shape"
+        )
+    }
+
+    private enum class TxKind {
+        EVM,
+        SOLANA,
+        UNSUPPORTED,
     }
 
     /**
@@ -309,9 +384,15 @@ constructor(
         }
 
     private companion object {
-        /** Sub-provider ids (lower-cased) filtered out of `/v3/quote` results client-side. */
+        /**
+         * Sub-provider ids (lower-cased, underscored — matches the wire format of SwapKit's
+         * `/providers` and `route.providers[]` entries: `THORCHAIN`, `THORCHAIN_STREAMING`,
+         * `MAYACHAIN`, `MAYACHAIN_STREAMING`). Earlier dashed / 4-letter variants (`maya`,
+         * `thorchain-streaming`) silently let the streaming sub-providers through, which would
+         * stack a SwapKit affiliate fee on top of Vultisig's native Thor/Maya integrations.
+         */
         private val FILTERED_PROVIDERS: Set<String> =
-            setOf("thorchain", "thorchain-streaming", "mayachain", "maya")
+            setOf("thorchain", "thorchain_streaming", "mayachain", "mayachain_streaming")
 
         /**
          * Render [TokenValue] as a dot-separated decimal string suitable for
