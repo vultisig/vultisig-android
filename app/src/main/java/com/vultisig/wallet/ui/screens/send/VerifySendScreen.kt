@@ -322,15 +322,17 @@ internal fun VerifySendScreen(
 
                     if (tx.isUnlimitedApproval) {
                         VerifyCardDivider(0.dp)
+                        val approvalToken = tx.token.token
+                        val approvalTicker =
+                            tx.approvalTokenTicker ?: sanitizeDisplayString(approvalToken.ticker)
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                         ) {
-                            val approvalToken = tx.token.token
                             TokenAndChainLogo(
                                 tokenLogo = getCoinLogo(approvalToken.logo),
-                                tokenTicker = approvalToken.ticker,
+                                tokenTicker = approvalTicker,
                                 chainLogo =
                                     approvalToken.chain.monoToneLogo.takeIf {
                                         !approvalToken.isNativeToken || approvalToken.chain.isLayer2
@@ -355,8 +357,7 @@ internal fun VerifySendScreen(
                                         text =
                                             stringResource(
                                                 R.string.erc20_approval_unlimited_amount,
-                                                tx.approvalTokenTicker
-                                                    ?: sanitizeDisplayString(approvalToken.ticker),
+                                                approvalTicker,
                                             ),
                                         style = Theme.brockmann.body.s.medium,
                                         color = Theme.v2.colors.alerts.warning,
