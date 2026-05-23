@@ -128,7 +128,7 @@ constructor(
                 )
             )
 
-        return SwapQuoteResult.Evm(buildEvmQuoteFromSwapKit(swapResponse))
+        return SwapQuoteResult.Evm(buildEvmQuoteFromSwapKit(swapResponse, request.dstToken))
     }
 
     /**
@@ -164,7 +164,17 @@ constructor(
      *   Solana signer can pull it the same way it pulls a Jupiter tx today Anything else
      *   (PSBT/TRON/TON/…) is out of scope until the per-chain signers ship.
      */
-    private fun buildEvmQuoteFromSwapKit(response: SwapKitSwapResponseJson): EVMSwapQuoteJson {
+    private fun buildEvmQuoteFromSwapKit(
+        response: SwapKitSwapResponseJson,
+        dstToken: Coin,
+    ): EVMSwapQuoteJson {
+        // SwapKit V3 reports `expectedBuyAmount` as a human-readable decimal string ("42.5"
+        // USDC) per the docs. Every other Android quote source (1inch / Kyber / LiFi / Jupiter)
+        // stores `EVMSwapQuoteJson.dstAmount` as a raw-units integer string, and the consumer
+        // (`SwapQuoteManager`) parses it back with `toBigIntegerOrNull`. Scale at this boundary
+        // so the contract stays uniform — otherwise "42.5" becomes ZERO and "2500" becomes 6
+        // orders of magnitude smaller than the actual receive amount.
+        val rawDstAmount = scaleDecimalToRawUnits(response.expectedBuyAmount, dstToken.decimal)
         val txType = response.meta.type
         return when (txType) {
             SwapKitTxMeta.TYPE_EVM -> {
@@ -173,7 +183,7 @@ constructor(
                     evm.gas?.toLongOrNull()?.takeIf { it > 0 }
                         ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
                 EVMSwapQuoteJson(
-                    dstAmount = response.expectedBuyAmount.orEmpty(),
+                    dstAmount = rawDstAmount,
                     tx =
                         OneInchSwapTxJson(
                             from = evm.from.orEmpty(),
@@ -201,7 +211,7 @@ constructor(
                             "SwapKit Solana tx missing both swapTransaction and message"
                         )
                 EVMSwapQuoteJson(
-                    dstAmount = response.expectedBuyAmount.orEmpty(),
+                    dstAmount = rawDstAmount,
                     tx =
                         OneInchSwapTxJson(
                             // Solana signers don't read from/to/gas/value/gasPrice off the
@@ -220,6 +230,21 @@ constructor(
             }
             else -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
+    }
+
+    /**
+     * Convert SwapKit's human-readable `expectedBuyAmount` (decimal string, e.g. "42.5") into the
+     * raw-units integer string the rest of the swap pipeline expects. Throws
+     * [SwapKitError.Decoding] when the upstream value is missing or unparseable so a malformed
+     * payload surfaces explicitly rather than masking as a zero quote.
+     */
+    private fun scaleDecimalToRawUnits(decimalString: String?, decimals: Int): String {
+        val parsed =
+            decimalString?.let { runCatching { BigDecimal(it) }.getOrNull() }
+                ?: throw SwapKitError.Decoding(
+                    "SwapKit expectedBuyAmount missing or not a decimal: $decimalString"
+                )
+        return parsed.movePointRight(decimals).toBigInteger().toString()
     }
 
     /**

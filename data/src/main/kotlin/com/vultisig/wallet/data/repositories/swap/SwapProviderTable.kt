@@ -158,6 +158,12 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
     private fun ethereumProviders(ticker: String): Set<SwapProvider> {
         val isThor = ticker in thorEthTokens
         val isMaya = ticker in mayaEthTokens
+        // SwapKit is included in every Ethereum branch: the per-token-pair eligibility is
+        // negotiated downstream at `/v3/quote` time (and gated by the SwapKit feature flag +
+        // provider cache inside SwapKitQuoteSource), so the table only needs to surface SwapKit
+        // wherever the existing EVM aggregators show up. Without this, ETH/USDC/USDT and the
+        // other Thor/Maya-eligible Ethereum tokens silently lose SwapKit as a candidate even
+        // though the cache enables Ethereum.
         return when {
             isThor && isMaya ->
                 setOf(
@@ -165,6 +171,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                     SwapProvider.ONEINCH,
                     SwapProvider.LIFI,
                     SwapProvider.KYBER,
+                    SwapProvider.SWAPKIT,
                     SwapProvider.MAYA,
                 )
 
@@ -174,6 +181,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                     SwapProvider.ONEINCH,
                     SwapProvider.LIFI,
                     SwapProvider.KYBER,
+                    SwapProvider.SWAPKIT,
                 )
 
             isMaya ->
@@ -182,6 +190,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                     SwapProvider.LIFI,
                     SwapProvider.MAYA,
                     SwapProvider.KYBER,
+                    SwapProvider.SWAPKIT,
                 )
 
             else -> evmAggregators

@@ -50,7 +50,7 @@ internal class SwapKitQuoteSourceTest {
         every { config.isFeatureEnabled } returns flowOf(false)
 
         val error = assertThrows<SwapKitError.NoRoutes> { source().fetch(request()) }
-        assertTrue(error.message!!.contains("flag", ignoreCase = true))
+        assertTrue(error.message?.contains("flag", ignoreCase = true) == true)
     }
 
     @Test
@@ -59,7 +59,7 @@ internal class SwapKitQuoteSourceTest {
         coEvery { cache.isEnabled(Chain.Ethereum) } returns false
 
         val error = assertThrows<SwapKitError.NoRoutes> { source().fetch(request()) }
-        assertTrue(error.message!!.contains("source"))
+        assertTrue(error.message?.contains("source") == true)
     }
 
     @Test
@@ -70,7 +70,7 @@ internal class SwapKitQuoteSourceTest {
 
         val error =
             assertThrows<SwapKitError.NoRoutes> { source().fetch(request(dstToken = baseCoin())) }
-        assertTrue(error.message!!.contains("destination"))
+        assertTrue(error.message?.contains("destination") == true)
     }
 
     @Test
@@ -166,7 +166,10 @@ internal class SwapKitQuoteSourceTest {
 
         val result = source().fetch(request()) as SwapQuoteResult.Evm
 
-        assertEquals("42", result.data.dstAmount)
+        // dstToken is the default solanaCoin (9 decimals). SwapKit returns the decimal "42",
+        // and the source scales it to raw units so the downstream pipeline (which expects
+        // BigInteger-as-string) gets 42 * 10^9.
+        assertEquals("42000000000", result.data.dstAmount)
         assertEquals("0xfrom", result.data.tx.from)
         assertEquals("0xto", result.data.tx.to)
         assertEquals("0xdeadbeef", result.data.tx.data)
@@ -195,7 +198,68 @@ internal class SwapKitQuoteSourceTest {
         val result = source().fetch(request()) as SwapQuoteResult.Evm
 
         assertEquals("BASE64SOLANA", result.data.tx.data)
-        assertEquals("9", result.data.dstAmount)
+        // 9 SOL (9 decimals) scaled to raw lamports.
+        assertEquals("9000000000", result.data.dstAmount)
+    }
+
+    @Test
+    fun `fetch scales fractional expectedBuyAmount into raw destination units`() = runTest {
+        // Regression: SwapKit returns expectedBuyAmount as a human-readable decimal string
+        // ("42.5" USDC, "0.0086" ETH), but EVMSwapQuoteJson.dstAmount is consumed downstream as a
+        // BigInteger-as-string (raw units). Without scaling, "42.5".toBigIntegerOrNull() returns
+        // null and the consumer silently treats the receive amount as zero; "2500" would be
+        // interpreted as 0.0025 USDC instead of 2500 USDC. Both failure modes mislead the user.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { cache.isEnabled(any()) } returns true
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(
+                        route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "42.5")
+                    )
+            )
+        coEvery { api.swap(any()) } returns evmSwapResponse(expectedBuy = "42.5")
+
+        val usdc =
+            ethCoin()
+                .copy(
+                    ticker = "USDC",
+                    isNativeToken = false,
+                    contractAddress = "0xa0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                    decimal = 6,
+                )
+        val result = source().fetch(request(dstToken = usdc)) as SwapQuoteResult.Evm
+
+        // 42.5 USDC × 10^6 = 42_500_000 raw units.
+        assertEquals("42500000", result.data.dstAmount)
+    }
+
+    @Test
+    fun `fetch throws Decoding when expectedBuyAmount is missing`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { cache.isEnabled(any()) } returns true
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns evmSwapResponse(expectedBuy = null)
+
+        assertThrows<SwapKitError.Decoding> { source().fetch(request()) }
+    }
+
+    @Test
+    fun `fetch throws Decoding when expectedBuyAmount is not a decimal`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { cache.isEnabled(any()) } returns true
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns evmSwapResponse(expectedBuy = "not-a-number")
+
+        assertThrows<SwapKitError.Decoding> { source().fetch(request()) }
     }
 
     @Test
@@ -210,6 +274,7 @@ internal class SwapKitQuoteSourceTest {
             SwapKitSwapResponseJson(
                 tx = JsonObject(emptyMap()),
                 meta = SwapKitTxMeta(txType = "PSBT"),
+                expectedBuyAmount = "1",
             )
 
         assertThrows<SwapKitError.UnsupportedTxType> { source().fetch(request()) }
