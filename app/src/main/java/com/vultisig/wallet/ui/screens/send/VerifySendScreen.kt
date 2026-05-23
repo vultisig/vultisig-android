@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isLayer2
 import com.vultisig.wallet.data.models.logo
@@ -58,6 +59,7 @@ import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
 import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
+import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
 import com.vultisig.wallet.ui.theme.Theme
@@ -455,20 +457,23 @@ internal fun VerifySendScreen(
 @Preview
 @Composable
 private fun PreviewVerifySendScreenUnlimitedApproval() {
+    val uniswapV3Router = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
     VerifySendScreen(
         state =
             VerifyTransactionUiModel(
                 transaction =
                     TransactionDetailsUiModel(
+                        token = ValuedToken(Coins.Ethereum.USDC, value = "0", fiatValue = "0"),
                         srcAddress = "0x1111111111111111111111111111111111111111",
-                        dstAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                        // USDC token contract on Ethereum
+                        dstAddress = Coins.Ethereum.USDC.contractAddress,
                         functionName = "Approve",
                         functionSignature = "approve(address,uint256)",
                         functionInputs =
-                            "[\"0x1111111111111111111111111111111111111111\"," +
+                            "[\"$uniswapV3Router\"," +
                                 "\"115792089237316195423570985008687907853269984665640564039457584007913129639935\"]",
                         isUnlimitedApproval = true,
-                        approvalSpender = "0x1111111111111111111111111111111111111111",
+                        approvalSpender = uniswapV3Router,
                         approvalTokenTicker = "USDC",
                     )
             ),
