@@ -139,6 +139,12 @@ internal data class StakePositionUiModel(
     val rewards: String? = null,
     val nextReward: String? = null,
     val nextPayout: String? = null,
+    // Maya CACAO pool only: remaining time until the position becomes unstake-eligible.
+    // Drives the "Unlocks in N days, H hours" hint next to the disabled Unstake button.
+    val unstakeUnlocksInSeconds: Long? = null,
+    // Maya CACAO pool only: true when the maturity RPC returned UNKNOWN so the staking tab can
+    // surface "Couldn't verify position" instead of an unexplained disabled Unstake button.
+    val isUnstakeMaturityUnknown: Boolean = false,
 )
 
 internal data class BondedNodeUiModel(

@@ -513,6 +513,32 @@ internal class SwapFormViewModelTest {
             assertEquals("0", vm.srcAmountState.text.toString())
         }
 
+    @Test
+    fun `selectSrcPercentage does not subtract stale cross-chain fee`() =
+        runTest(mainDispatcher) {
+            // The default setUp mock returns chain=Ethereum for any calculateGasFee call.
+            // With BTC as src, gasFeeChain ends up as Ethereum while srcToken.chain is Bitcoin
+            // — identical to the real bug (switching from ETH→ZEC leaves a huge wei fee value
+            // that, if subtracted from satoshis, makes maxUsableTokenAmount negative).
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcAddressLargeBalance(), ethAddress()),
+                    srcTokenId = BTC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+            // estimatedNetworkFeeTokenValue = 1e15 (ETH wei from the Ethereum gas mock),
+            // gasFeeChain = Ethereum, srcToken.chain = Bitcoin.
+
+            vm.selectSrcPercentage(1.0f)
+
+            val amountText = vm.srcAmountState.text.toString()
+            assertTrue(
+                amountText.isNotEmpty() && amountText.toDoubleOrNull()?.let { it > 0 } == true,
+                "selectSrcPercentage subtracted a stale cross-chain fee: $amountText",
+            )
+        }
+
     // endregion
 
     // region flipSelectedTokens

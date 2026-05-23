@@ -213,7 +213,6 @@
     <string name="share_qr_screen_permission_required">Voor het delen van bewerkingen is bestandsmachtiging vereist.</string>
     <string name="token_selection_search_hint">Zoekopdracht…</string>
     <string name="verify_swap_agree_allowance">Ik ga akkoord met het verstrekken van een onbeperkte ERC20-toelage</string>
-    <string name="deposit_screen_title">Functiehandtekening</string>
     <string name="deposit_screen_amount_title">Bedrag</string>
     <string name="verify_deposit_memo_title">Notitie</string>
     <string name="verify_deposit_node_address_title">Knooppuntadres</string>
@@ -415,6 +414,7 @@
     <string name="deposit_option_withdraw_ruji">RUJI opnemen</string>
     <string name="withdraw_amount">%s opnemen</string>
     <string name="deposit_form_unstake_percentage_hint">Voer percentage in om te unstaken</string>
+    <string name="verify_transaction_function_signature_title">Functiehandtekening</string>
     <string name="verify_transaction_function_inputs_title">Functie-argumenten</string>
     <string name="dapp_hero_unverified_function_title">Niet-geverifieerde functie</string>
     <string name="dapp_hero_unverified_function_subtitle">Bekijk de details hieronder voordat je ondertekent</string>
@@ -516,6 +516,9 @@
     <string name="stake_cacao_title">CACAO staken</string>
     <string name="unstake_cacao_title">CACAO unstaken</string>
     <string name="unstake_cacao_available_format">Beschikbaar: %1$s</string>
+    <string name="unstake_cacao_unlocks_in_days_hours_format">Ontgrendelt over %1$dd %2$du</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Ontgrendelt over %1$du %2$dm</string>
+    <string name="unstake_cacao_maturity_check_failed">Kan positie niet verifiëren. Probeer opnieuw.</string>
     <string name="cacaopool_only_cacao_supported">Alleen CACAO-tokens worden ondersteund voor pooloperaties</string>
     <string name="referral_create_info_title">Verwijzingsprogramma</string>
     <string name="referral_create_info_content">Het verwijzingsprogramma is van toepassing op THORChain-swaps en is op basis van best effort. Je moet een THORName registreren om de Vultisig-verwijzing te gebruiken. De registratiekosten zijn 10 RUNE en 1 RUNE voor elk jaar, die worden betaald aan het THORChain-netwerk.</string>
@@ -675,6 +678,8 @@
     <string name="token_selection_screen_enable_at_least_one">Schakel minimaal één token in om saldo\'s te bekijken en posities te beheren.</string>
     <string name="transfer_ibc_destination_chain">Bestemmingsketen</string>
     <string name="tx_done_transaction_details">Transactiegegevens</string>
+    <string name="tx_done_transaction_details_expand">Uitvouwen</string>
+    <string name="tx_done_transaction_details_collapse">Samenvouwen</string>
     <string name="vault_confirmation_vault_upgraded">Vault geüpgraded</string>
     <string name="vault_confirmation_well_done">Goed gedaan.</string>
     <string name="this_amount_would_leave_too_little_change">Dit bedrag zou te weinig wisselgeld opleveren. 💡 Probeer \'Send Max\' (%1$s ADA) om dit probleem te voorkomen.</string>
@@ -951,7 +956,6 @@
     <string name="solana_raw_transaction">Solana Ruwe transactie</string>
     <string name="solana_instructions_summary">Overzicht transactie-instructies</string>
     <string name="solana_instruction_number">Instructie %1$d</string>
-    <string name="solana_program_name">Programma: %1$s</string>
     <string name="solana_program_id">Programma-ID: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Accounts: %1$d | Gegevenslengte: %2$d bytes</item>
@@ -990,9 +994,10 @@
     <string name="transaction_history_date_today">Vandaag</string>
     <string name="transaction_history_date_yesterday">Gisteren</string>
     <string name="transaction_history_elapsed_just_now">zojuist</string>
+    <string name="transaction_history_elapsed_seconds">%1$ds geleden</string>
     <string name="transaction_history_elapsed_days">%1$dd geleden</string>
     <string name="transaction_history_elapsed_hours">%1$du geleden</string>
-    <string name="transaction_history_elapsed_minutes">%1$dmin geleden</string>
+    <string name="transaction_history_elapsed_minutes_and_seconds">%1$dmin %2$ds geleden</string>
     <string name="transaction_history_detail_status">Status</string>
     <string name="transaction_history_detail_from">Van</string>
     <string name="transaction_history_detail_to">Naar</string>

@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.SignMessageCard
 import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.hero.TransactionHero
@@ -37,8 +39,6 @@ import com.vultisig.wallet.ui.models.deposit.DepositTransactionUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
-import com.vultisig.wallet.ui.screens.send.AddressField
-import com.vultisig.wallet.ui.screens.send.OtherField
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -255,17 +255,18 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
             )
         }
 
-        if (!transaction.memo.isNullOrEmpty())
+        if (!transaction.memo.isNullOrEmpty()) {
             OtherField(
                 title = stringResource(R.string.verify_transaction_memo_title),
                 value = transaction.memo,
             )
+        }
 
-        // OtherField has its own bottom divider; an explicit one stacks and orphans when memo is
-        // absent.
+        // OtherField draws its own bottom divider — don't add another or it doubles up (and
+        // orphans when memo is null).
         if (transaction.functionSignature != null) {
             OtherField(
-                title = stringResource(R.string.deposit_screen_title),
+                title = stringResource(R.string.verify_transaction_function_signature_title),
                 value = transaction.functionSignature,
             )
         }
@@ -332,6 +333,61 @@ private fun TransactionDetail(transaction: TransactionDetailsUiModel?) {
                     }
                 },
         )
+    }
+}
+
+@Composable
+private fun AddressField(title: String, address: String, divider: Boolean = true) {
+    Column {
+        Text(
+            text = title,
+            color = Theme.v2.colors.text.tertiary,
+            style = Theme.brockmann.headings.subtitle,
+        )
+
+        UiSpacer(size = 16.dp)
+
+        Text(
+            text = address,
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+        )
+
+        if (divider) {
+            UiSpacer(size = 12.dp)
+
+            UiHorizontalDivider()
+        }
+    }
+}
+
+@Composable
+private fun OtherField(title: String, value: String, divider: Boolean = true) {
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(vertical = 12.dp),
+        ) {
+            Text(
+                text = title,
+                color = Theme.v2.colors.text.tertiary,
+                style = Theme.brockmann.body.s.medium,
+            )
+
+            UiSpacer(weight = 1f)
+            UiSpacer(size = 8.dp)
+
+            Text(
+                text = value,
+                textAlign = TextAlign.End,
+                color = Theme.v2.colors.text.primary,
+                style = Theme.brockmann.body.s.medium,
+            )
+        }
+
+        if (divider) {
+            UiHorizontalDivider()
+        }
     }
 }
 

@@ -62,7 +62,7 @@ internal fun SendTransactionCard(
                         iconRes = R.drawable.send_2,
                         label = stringResource(R.string.transaction_history_tab_send),
                     )
-                    TransactionStatusWidget(status = item.status)
+                    TransactionStatusWidget(status = item.status, timestamp = item.timestamp)
                 }
 
                 UiSpacer(size = 12.dp)

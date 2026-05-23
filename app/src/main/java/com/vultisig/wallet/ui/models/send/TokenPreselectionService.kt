@@ -15,7 +15,7 @@ import timber.log.Timber
 
 internal class TokenPreselectionService(
     private val scope: CoroutineScope,
-    private val accounts: StateFlow<List<Account>>,
+    private val accountsState: StateFlow<AccountsLoadState>,
     private val defiTypeProvider: () -> DeFiNavActions?,
     private val selectedTokenProvider: () -> Coin?,
     private val onTokenSelected: (Coin) -> Unit,
@@ -38,11 +38,12 @@ internal class TokenPreselectionService(
         preSelectTokenJob =
             scope.launch {
                 var forced = forcePreselection
-                accounts.collect { accounts ->
-                    // Skip the initial empty StateFlow value so we don't lock in a static
-                    // default-coin template (which has no chain address bound) before
-                    // AccountsLoader publishes the real list.
-                    if (accounts.isEmpty()) return@collect
+                accountsState.collect { state ->
+                    // Wait until AccountsLoader publishes a Loaded state — Uninitialized is
+                    // the sentinel for "haven't loaded yet". An intentional Loaded(emptyList)
+                    // (e.g. DeFi prerequisites missing) still falls through to the default-
+                    // coin map in findDeFiPreselectedToken.
+                    val accounts = (state as? AccountsLoadState.Loaded)?.accounts ?: return@collect
 
                     val preSelectedToken =
                         if (defiTypeProvider() == null) {
@@ -57,9 +58,9 @@ internal class TokenPreselectionService(
 
                     Timber.d("Found a new token to pre select %s", preSelectedToken)
 
-                    // Force preselection fires once on the first non-empty emission, then
-                    // defers to the user — otherwise every later accounts hydration would
-                    // wipe their typed amount via selectToken → resetUserInputCache.
+                    // Force preselection fires once on the first Loaded emission, then defers
+                    // to the user — otherwise every later accounts hydration would wipe their
+                    // typed amount via selectToken → resetUserInputCache.
                     if ((forced || selectedTokenProvider() == null) && preSelectedToken != null) {
                         onTokenSelected(preSelectedToken)
                         forced = false
@@ -104,6 +105,20 @@ internal class TokenPreselectionService(
         preSelectedChainIds: List<ChainId?>,
         preSelectedTokenId: TokenId?,
     ): Coin? {
+        // For WITHDRAW types, empty accounts means prerequisites are missing (e.g. no
+        // RUNE/RUJI in vault for WITHDRAW_RUJI, no ETH for WITHDRAW_USDC_CIRCLE). Returning
+        // a static template coin here would cause collectSelectedAccount to synthesize an
+        // Account with tokenValue = null, making the form look submittable when it isn't.
+        // STAKE types keep their defaults even on empty accounts because the default coin
+        // guides the user toward what they would be staking.
+        if (accounts.isEmpty()) {
+            return when (defiTypeProvider()) {
+                DeFiNavActions.WITHDRAW_RUJI,
+                DeFiNavActions.WITHDRAW_USDC_CIRCLE -> null
+                else -> defaultDefiCoin(accounts, preSelectedChainIds, preSelectedTokenId)
+            }
+        }
+
         for (account in accounts) {
             val accountToken = account.token
             if (accountToken.id.equals(preSelectedTokenId, ignoreCase = true)) {
@@ -111,8 +126,16 @@ internal class TokenPreselectionService(
             }
         }
 
-        // default coins, in case the account does not exist
-        return when (defiTypeProvider()) {
+        return defaultDefiCoin(accounts, preSelectedChainIds, preSelectedTokenId)
+    }
+
+    // default coins, in case the account does not exist
+    private fun defaultDefiCoin(
+        accounts: List<Account>,
+        preSelectedChainIds: List<ChainId?>,
+        preSelectedTokenId: TokenId?,
+    ): Coin? =
+        when (defiTypeProvider()) {
             DeFiNavActions.STAKE_RUJI,
             DeFiNavActions.UNSTAKE_RUJI -> Coins.ThorChain.RUJI
 
@@ -138,5 +161,4 @@ internal class TokenPreselectionService(
             DeFiNavActions.UNFREEZE_TRX -> Coins.Tron.TRX
             null -> findPreselectedToken(accounts, preSelectedChainIds, preSelectedTokenId)
         }
-    }
 }

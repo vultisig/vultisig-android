@@ -214,7 +214,6 @@
     <string name="share_qr_screen_permission_required">Za sigurnosne kopije potrebno je dopuštenje datoteke.</string>
     <string name="token_selection_search_hint">Pretraživanje…</string>
     <string name="verify_swap_agree_allowance">Slažem se s pružanjem neograničenog ERC20 dodatka</string>
-    <string name="deposit_screen_title">Potpis funkcije</string>
     <string name="deposit_screen_amount_title">Iznos</string>
     <string name="verify_deposit_memo_title">dopis</string>
     <string name="verify_deposit_node_address_title">Adresa čvora</string>
@@ -417,6 +416,7 @@
     <string name="deposit_option_withdraw_ruji">Povuci RUJI</string>
     <string name="withdraw_amount">Povuci %s</string>
     <string name="deposit_form_unstake_percentage_hint">Unesite postotak za deblokiranje</string>
+    <string name="verify_transaction_function_signature_title">Potpis funkcije</string>
     <string name="verify_transaction_function_inputs_title">Argumenti funkcije</string>
     <string name="dapp_hero_unverified_function_title">Neprovjerena funkcija</string>
     <string name="dapp_hero_unverified_function_subtitle">Pregledajte detalje prije potpisivanja</string>
@@ -520,6 +520,9 @@
     <string name="stake_cacao_title">Uloži CACAO</string>
     <string name="unstake_cacao_title">Povuci CACAO</string>
     <string name="unstake_cacao_available_format">Dostupno: %1$s</string>
+    <string name="unstake_cacao_unlocks_in_days_hours_format">Otključava se za %1$dd %2$dh</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Otključava se za %1$dh %2$dm</string>
+    <string name="unstake_cacao_maturity_check_failed">Nije moguće provjeriti poziciju. Pokušajte ponovno.</string>
     <string name="cacaopool_only_cacao_supported">Za operacije s poolom podržan je samo CACAO token</string>
     <string name="referral_create_info_title">Program preporuka</string>
     <string name="referral_create_info_content">Program preporuka primjenjuje se na THORChain razmjene i provodi se po najboljoj mogućnosti. Morate registrirati THORName za korištenje Vultisig preporuke. Naknada za registraciju je 10 RUNE i 1 RUNE za svaku godinu, koja se plaća THORChain mreži.</string>
@@ -681,6 +684,8 @@
     <string name="token_selection_screen_enable_at_least_one">Omogućite barem jedan token za pregled stanja i upravljanje pozicijama.</string>
     <string name="transfer_ibc_destination_chain">Lanac odredišta</string>
     <string name="tx_done_transaction_details">Detalji transakcije</string>
+    <string name="tx_done_transaction_details_expand">Proširi</string>
+    <string name="tx_done_transaction_details_collapse">Sažmi</string>
     <string name="vault_confirmation_vault_upgraded">Trezor nadograđen</string>
     <string name="vault_confirmation_well_done">Odlično.</string>
     <string name="this_amount_would_leave_too_little_change">Ovaj iznos bi ostavio premalo kusura. 💡 Pokušajte s \'Pošalji maksimum\' (%1$s ADA) kako biste izbjegli ovaj problem.</string>
@@ -959,7 +964,6 @@
     <string name="solana_raw_transaction">Solana Sirova transakcija</string>
     <string name="solana_instructions_summary">Sažetak uputa transakcije</string>
     <string name="solana_instruction_number">Uputa %1$d</string>
-    <string name="solana_program_name">Program: %1$s</string>
     <string name="solana_program_id">ID programa: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Računi: %1$d | Duljina podataka: %2$d bajtova</item>
@@ -999,9 +1003,10 @@
     <string name="transaction_history_date_today">Danas</string>
     <string name="transaction_history_date_yesterday">Jučer</string>
     <string name="transaction_history_elapsed_just_now">upravo sada</string>
+    <string name="transaction_history_elapsed_seconds">prije %1$ds</string>
     <string name="transaction_history_elapsed_days">prije %1$dd</string>
     <string name="transaction_history_elapsed_hours">prije %1$dh</string>
-    <string name="transaction_history_elapsed_minutes">prije %1$dmin</string>
+    <string name="transaction_history_elapsed_minutes_and_seconds">prije %1$dmin %2$ds</string>
     <string name="transaction_history_detail_status">Status</string>
     <string name="transaction_history_detail_from">Od</string>
     <string name="transaction_history_detail_to">Do</string>

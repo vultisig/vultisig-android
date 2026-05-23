@@ -78,14 +78,13 @@ import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -256,7 +255,20 @@ constructor(
     private val selectedTokenValue: Coin?
         get() = selectedToken.value
 
-    private val accounts = MutableStateFlow(emptyList<Account>())
+    private val accountsState = MutableStateFlow<AccountsLoadState>(AccountsLoadState.Uninitialized)
+
+    // Filter out Uninitialized so reload transitions (vault switch, mscaChanged,
+    // autocompound toggle) don't flash `accounts` to emptyList() — that flash would
+    // transiently clear the gas fee, fail validation in accountValidator, and render a
+    // placeholder row in collectSelectedAccount. Downstream consumers here only care
+    // about the actual list and keep the prior Loaded(...) value until the new one
+    // arrives. TokenPreselectionService still consumes accountsState directly and
+    // correctly observes the Uninitialized reset.
+    private val accounts: StateFlow<List<Account>> =
+        accountsState
+            .filterIsInstance<AccountsLoadState.Loaded>()
+            .map { it.accounts }
+            .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val selectedAccount: Account?
         get() {
@@ -289,7 +301,7 @@ constructor(
     private val tokenPreselectionService =
         TokenPreselectionService(
             scope = viewModelScope,
-            accounts = accounts,
+            accountsState = accountsState,
             defiTypeProvider = { defiType },
             selectedTokenProvider = { selectedTokenValue },
             onTokenSelected = ::selectToken,
@@ -298,7 +310,7 @@ constructor(
     private val accountsLoader =
         AccountsLoader(
             scope = viewModelScope,
-            accounts = accounts,
+            accountsState = accountsState,
             accountsRepository = accountsRepository,
             stakingDetailsRepository = stakingDetailsRepository,
             defiTypeProvider = { defiType },
@@ -926,53 +938,43 @@ constructor(
     }
 
     fun onAutoCompound(checked: Boolean) {
-        viewModelScope.launch {
-            isSwitchingAccounts.value = true
+        uiState.update { it.copy(isAutocompound = checked) }
 
-            uiState.update { it.copy(isAutocompound = checked) }
+        val vaultId = vaultId
+        if (
+            (defiType != DeFiNavActions.UNSTAKE_TCY && defiType != DeFiNavActions.UNSTAKE_STCY) ||
+                vaultId == null
+        ) {
+            return
+        }
 
-            val vaultId = vaultId
-            if (
-                (defiType == DeFiNavActions.UNSTAKE_TCY ||
-                    defiType == DeFiNavActions.UNSTAKE_STCY) && vaultId != null
-            ) {
-                selectedToken.value = null
+        isSwitchingAccounts.value = true
+        selectedToken.value = null
 
-                if (checked) {
-                    val regularAccounts =
-                        accountsRepository
-                            .loadAddresses(vaultId)
-                            .map { addrs -> addrs.flatMap { it.accounts } }
-                            .first()
-
-                    accounts.value = regularAccounts
-
-                    delay(300)
-
-                    regularAccounts
-                        .find {
-                            it.token.ticker.equals("sTCY", true) &&
-                                it.token.chain == Chain.ThorChain
-                        }
-                        ?.let { selectToken(it.token) }
-                } else {
-                    val defiAccounts =
-                        accountsRepository
-                            .loadDeFiAddresses(vaultId, false)
-                            .map { addrs -> addrs.flatMap { it.accounts } }
-                            .first()
-
-                    accounts.value = defiAccounts
-
-                    delay(300)
-
-                    defiAccounts
-                        .find {
-                            it.token.ticker.equals("TCY", true) && it.token.chain == Chain.ThorChain
-                        }
-                        ?.let { selectToken(it.token) }
-                }
-                isSwitchingAccounts.value = false
+        // Route the data-source switch through AccountsLoader so accountsState has a single
+        // writer — the previous in-VM collect raced against the already-running loader,
+        // and for UNSTAKE_TCY the two collectors pulled from different APIs. The callback
+        // runs per emission so we can pin the token selection on the first emission
+        // containing the target ticker (the tokenSelected flag prevents a later hydration
+        // emission from re-calling selectToken, which would wipe the user's typed amount).
+        val targetTicker = if (checked) "sTCY" else "TCY"
+        var tokenSelected = false
+        accountsLoader.loadForAutoCompoundSwitch(vaultId = vaultId, useStableCompound = checked) {
+            loadedAccounts ->
+            // Release the gate on every emission — if the target ticker is never found the
+            // form must still become interactive rather than staying gated forever. Setting
+            // to false repeatedly is a no-op once already false.
+            isSwitchingAccounts.value = false
+            if (!tokenSelected) {
+                loadedAccounts
+                    .find {
+                        it.token.ticker.equals(targetTicker, true) &&
+                            it.token.chain == Chain.ThorChain
+                    }
+                    ?.let {
+                        tokenSelected = true
+                        selectToken(it.token)
+                    }
             }
         }
     }

@@ -25,7 +25,9 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.GetMayaCacaoMaturityStatusUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
+import com.vultisig.wallet.data.usecases.MayaCacaoMaturityStatus
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
@@ -81,6 +83,8 @@ internal class DepositFormViewModelTest {
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase = mockk(relaxed = true)
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase =
         mockk(relaxed = true)
+    private val getMayaCacaoMaturityStatus: GetMayaCacaoMaturityStatusUseCase =
+        mockk(relaxed = true)
     private val feeServiceComposite: FeeServiceComposite = mockk(relaxed = true)
     private val vaultRepository: VaultRepository = mockk(relaxed = true)
     private val tokenRepository: TokenRepository = mockk(relaxed = true)
@@ -119,6 +123,7 @@ internal class DepositFormViewModelTest {
             balanceRepository = balanceRepository,
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
             validateMayaTransactionHeight = validateMayaTransactionHeight,
+            getMayaCacaoMaturityStatus = getMayaCacaoMaturityStatus,
             feeServiceComposite = feeServiceComposite,
             vaultRepository = vaultRepository,
             tokenRepository = tokenRepository,
@@ -278,6 +283,158 @@ internal class DepositFormViewModelTest {
             (errorText as UiText.FormattedText).resId,
         )
     }
+
+    @Test
+    fun `RemoveCacaoPool with mature status enables CTA and clears unlocksIn text`() = runTest {
+        val vm = buildViewModel()
+        coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.MayaChain,
+                    address = "maya1someaddress",
+                    accounts =
+                        listOf(
+                            Account(
+                                token = Coins.MayaChain.CACAO,
+                                tokenValue = null,
+                                fiatValue = null,
+                                price = null,
+                            )
+                        ),
+                )
+            )
+        coEvery { mayaChainApi.getUnStakeCacaoBalance("maya1someaddress") } returns "0"
+        coEvery { getMayaCacaoMaturityStatus.invoke("maya1someaddress") } returns
+            MayaCacaoMaturityStatus(isMature = true, remainingBlocks = 0L, remainingSeconds = 0L)
+
+        vm.loadData("vault1", Chain.MayaChain.raw, "unstake_cacao", null)
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.isUnstakeMature)
+        assertEquals(null, vm.state.value.unstakeUnlocksInText)
+    }
+
+    @Test
+    fun `RemoveCacaoPool with under-one-hour remaining uses hours and minutes format`() = runTest {
+        val vm = buildViewModel()
+        coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.MayaChain,
+                    address = "maya1someaddress",
+                    accounts =
+                        listOf(
+                            Account(
+                                token = Coins.MayaChain.CACAO,
+                                tokenValue = null,
+                                fiatValue = null,
+                                price = null,
+                            )
+                        ),
+                )
+            )
+        coEvery { mayaChainApi.getUnStakeCacaoBalance("maya1someaddress") } returns "0"
+        coEvery { getMayaCacaoMaturityStatus.invoke("maya1someaddress") } returns
+            MayaCacaoMaturityStatus(
+                isMature = false,
+                remainingBlocks = 300L,
+                remainingSeconds = 1_800L, // 30 minutes
+            )
+
+        vm.loadData("vault1", Chain.MayaChain.raw, "unstake_cacao", null)
+        advanceUntilIdle()
+
+        assertTrue(!vm.state.value.isUnstakeMature)
+        val unlocksIn = vm.state.value.unstakeUnlocksInText
+        assertNotNull(unlocksIn)
+        assertTrue(unlocksIn is UiText.FormattedText)
+        assertEquals(
+            R.string.unstake_cacao_unlocks_in_hours_format,
+            (unlocksIn as UiText.FormattedText).resId,
+        )
+        // 30 minutes -> "0h 30m"; the precision is what the formatter change protects against
+        // the prior "Unlocks soon" collapse.
+        assertEquals(listOf<Any>(0, 30), unlocksIn.formatArgs)
+    }
+
+    @Test
+    fun `RemoveCacaoPool default state keeps CTA disabled before maturity resolves`() = runTest {
+        val vm = buildViewModel()
+
+        assertTrue(!vm.state.value.isUnstakeMature)
+    }
+
+    @Test
+    fun `RemoveCacaoPool with over-one-hour remaining uses days and hours format`() = runTest {
+        val vm = buildViewModel()
+        coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.MayaChain,
+                    address = "maya1someaddress",
+                    accounts =
+                        listOf(
+                            Account(
+                                token = Coins.MayaChain.CACAO,
+                                tokenValue = null,
+                                fiatValue = null,
+                                price = null,
+                            )
+                        ),
+                )
+            )
+        coEvery { mayaChainApi.getUnStakeCacaoBalance("maya1someaddress") } returns "0"
+        coEvery { getMayaCacaoMaturityStatus.invoke("maya1someaddress") } returns
+            MayaCacaoMaturityStatus(
+                isMature = false,
+                remainingBlocks = 15_000L,
+                remainingSeconds = 90_000L, // 25 hours
+            )
+
+        vm.loadData("vault1", Chain.MayaChain.raw, "unstake_cacao", null)
+        advanceUntilIdle()
+
+        assertTrue(!vm.state.value.isUnstakeMature)
+        val unlocksIn = vm.state.value.unstakeUnlocksInText
+        assertNotNull(unlocksIn)
+        assertTrue(unlocksIn is UiText.FormattedText)
+        assertEquals(
+            R.string.unstake_cacao_unlocks_in_days_hours_format,
+            (unlocksIn as UiText.FormattedText).resId,
+        )
+        assertEquals(listOf<Any>(1, 1), unlocksIn.formatArgs)
+    }
+
+    @Test
+    fun `RemoveCacaoPool when maturity check throws keeps CTA disabled and clears unlocksIn text`() =
+        runTest {
+            val vm = buildViewModel()
+            coEvery { accountsRepository.loadAddress("vault1", Chain.MayaChain) } returns
+                flowOf(
+                    Address(
+                        chain = Chain.MayaChain,
+                        address = "maya1someaddress",
+                        accounts =
+                            listOf(
+                                Account(
+                                    token = Coins.MayaChain.CACAO,
+                                    tokenValue = null,
+                                    fiatValue = null,
+                                    price = null,
+                                )
+                            ),
+                    )
+                )
+            coEvery { mayaChainApi.getUnStakeCacaoBalance("maya1someaddress") } returns "0"
+            coEvery { getMayaCacaoMaturityStatus.invoke("maya1someaddress") } throws
+                RuntimeException("Network error")
+
+            vm.loadData("vault1", Chain.MayaChain.raw, "unstake_cacao", null)
+            advanceUntilIdle()
+
+            assertTrue(!vm.state.value.isUnstakeMature)
+            assertEquals(null, vm.state.value.unstakeUnlocksInText)
+        }
 
     @Test
     fun `deposit for WithdrawSecuredAsset when chain not enabled surfaces deposit_error_chain_not_enabled`() =

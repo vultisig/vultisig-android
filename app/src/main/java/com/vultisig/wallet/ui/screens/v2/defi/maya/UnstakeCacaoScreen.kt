@@ -209,11 +209,22 @@ private fun UnstakeCacaoContent(
             state =
                 if (
                     (tokenAmountFieldState.text.toString().toIntOrNull() ?: 0) > 0 &&
-                        !state.isLoading
+                        !state.isLoading &&
+                        state.isUnstakeMature
                 )
                     VsButtonState.Enabled
                 else VsButtonState.Disabled,
         )
+
+        val unlocksInText = state.unstakeUnlocksInText?.asString()
+        if (unlocksInText != null) {
+            Text(
+                text = unlocksInText,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.alerts.warning,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+        }
     }
 }
 

@@ -1,17 +1,13 @@
 package com.vultisig.wallet.ui.screens.send
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -21,18 +17,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -45,9 +35,9 @@ import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.ui.components.SignSolanaDisplayView
 import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiAlertDialog
-import com.vultisig.wallet.ui.components.UiHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.VsOverviewToken
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -63,11 +53,9 @@ import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.VerifyTransactionViewModel
-import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
 import com.vultisig.wallet.ui.models.keysign.sanitizeDisplayString
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDetails
 import com.vultisig.wallet.ui.screens.swap.VerifyCardDivider
-import com.vultisig.wallet.ui.screens.swap.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
 import vultisig.keysign.v1.SignSolana
@@ -87,7 +75,7 @@ internal fun VerifySendScreen(viewModel: VerifyTransactionViewModel = hiltViewMo
         )
     }
     val authorize: () -> Unit =
-        remember(context) {
+        remember(context, promptTitle, viewModel) {
             {
                 context.launchBiometricPrompt(
                     promptTitle = promptTitle,
@@ -141,6 +129,14 @@ internal fun VerifySendScreen(
      */
     initiallyExpandedDetails: Boolean = false,
 ) {
+    if (state.showScanningWarning && state.txScanStatus is TransactionScanStatus.Scanned) {
+        SecurityScannerBottomSheet(
+            securityScannerModel = state.txScanStatus.result,
+            onContinueAnyway = onConfirmScanning,
+            onDismissRequest = onDismissScanning,
+        )
+    }
+
     V2Scaffold(
         title =
             stringResource(
@@ -153,20 +149,14 @@ internal fun VerifySendScreen(
                 .takeIf { hasToolbar },
         onBackClick = onBackClick.takeIf { hasToolbar },
         bottomBar = {
+            val buttonState =
+                if (isConsentsEnabled && !state.hasAllConsents) VsButtonState.Disabled
+                else VsButtonState.Enabled
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
             ) {
-                if (
-                    state.showScanningWarning && state.txScanStatus is TransactionScanStatus.Scanned
-                ) {
-                    SecurityScannerBottomSheet(
-                        securityScannerModel = state.txScanStatus.result,
-                        onContinueAnyway = onConfirmScanning,
-                        onDismissRequest = onDismissScanning,
-                    )
-                }
                 if (state.hasFastSign) {
                     Text(
                         text = stringResource(R.string.verify_deposit_hold_paired),
@@ -179,17 +169,9 @@ internal fun VerifySendScreen(
                         onLongClick = onConfirm,
                         onClick = onFastSignClick,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled =
-                            if (isConsentsEnabled && !state.hasAllConsents) {
-                                VsButtonState.Disabled
-                            } else {
-                                VsButtonState.Enabled
-                            },
+                        enabled = buttonState,
                     )
                 } else {
-                    val buttonState =
-                        if (isConsentsEnabled && !state.hasAllConsents) VsButtonState.Disabled
-                        else VsButtonState.Enabled
                     VsButton(
                         label = confirmTitle,
                         state = buttonState,
@@ -211,9 +193,8 @@ internal fun VerifySendScreen(
 
                 SecurityScannerBadget(state.txScanStatus)
 
-                // Visually anchor the verify card to the badge above when Blockaid
-                // confirms the transaction is benign — Figma uses a thin success
-                // border around the card to reinforce the scanned state.
+                // Success border ties the card to the scanner badge above when the scan came back
+                // benign.
                 val isScannedBenign =
                     (state.txScanStatus as? TransactionScanStatus.Scanned)?.result?.let { r ->
                         r.isSecure &&
@@ -243,11 +224,8 @@ internal fun VerifySendScreen(
                 Column(modifier = cardModifier) {
                     UiSpacer(12.dp)
 
-                    // Hero is the dApp signing source of truth — Blockaid simulation when
-                    // resolved, function-name title when only the 4byte decode loaded, native
-                    // VsOverviewToken otherwise. For a decoded Universal Router swap we override
-                    // the raw `execute` function name with a localised "Swap" title so the user
-                    // sees real intent instead of the router's plumbing.
+                    // Universal Router decodes to the raw `execute` selector; show "Swap" so users
+                    // see intent, not router plumbing.
                     val heroTitle =
                         if (tx.isUniversalRouterSwap) {
                             stringResource(R.string.decoded_function_swap_title)
@@ -306,7 +284,7 @@ internal fun VerifySendScreen(
 
                             VerifyCardJsonDetails(
                                 title = stringResource(R.string.amino_sign),
-                                subtitle = tx.signAmino,
+                                subtitle = it,
                             )
                         }
 
@@ -317,7 +295,7 @@ internal fun VerifySendScreen(
 
                             VerifyCardJsonDetails(
                                 title = stringResource(R.string.amino_direct),
-                                subtitle = tx.signDirect,
+                                subtitle = it,
                             )
                         }
                     tx.signSolana
@@ -446,141 +424,6 @@ internal fun VerifySendScreen(
             }
         },
     )
-}
-
-@Composable
-internal fun AddressField(title: String, address: String, divider: Boolean = true) {
-    Column {
-        Text(
-            text = title,
-            color = Theme.v2.colors.text.tertiary,
-            style = Theme.brockmann.headings.subtitle,
-        )
-
-        UiSpacer(size = 16.dp)
-
-        Text(
-            text = address,
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
-        )
-
-        if (divider) {
-            UiSpacer(size = 12.dp)
-
-            UiHorizontalDivider()
-        }
-    }
-}
-
-@Composable
-internal fun TransactionDetailsSection(
-    functionSignature: String?,
-    functionInputs: String?,
-    decodedFunctionParams: List<DecodedFunctionParam>?,
-    initiallyExpanded: Boolean = false,
-) {
-    var isExpanded by rememberSaveable { mutableStateOf(initiallyExpanded) }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Whole row is the tap target so the WCAG 2.5.5 minimum (48dp) is met without enlarging
-        // the visual chevron, and TalkBack announces "Transaction details, button, expanded /
-        // collapsed" instead of two separate nodes.
-        val expandLabel = stringResource(R.string.tx_done_transaction_details)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier =
-                Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    role = Role.Button,
-                    onClickLabel = expandLabel,
-                ) {
-                    isExpanded = !isExpanded
-                },
-        ) {
-            Text(
-                text = expandLabel,
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
-            )
-
-            UiIcon(
-                drawableResId = R.drawable.chevron,
-                tint = Theme.v2.colors.text.tertiary,
-                size = 8.dp,
-                modifier = Modifier.graphicsLayer(rotationZ = if (isExpanded) 180f else 0f),
-            )
-        }
-
-        AnimatedVisibility(visible = isExpanded) {
-            // Inner column intentionally lets content size naturally; the outer scaffold's
-            // verticalScroll handles long JSON. A nested verticalScroll here trapped the last
-            // lines of long signatures/inputs out of reach.
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(top = 12.dp)
-                        .border(1.dp, Theme.v2.colors.border.normal, RoundedCornerShape(12.dp))
-                        .padding(16.dp),
-            ) {
-                functionSignature?.let {
-                    VerifyCardJsonDetails(
-                        title = stringResource(R.string.deposit_screen_title),
-                        subtitle = it,
-                    )
-                }
-
-                // When the parser produces labelled rows we show them in place of the raw JSON —
-                // semantic labels read better than `["0xabc…", "115792…"]`. Fall back to the raw
-                // JSON when the function signature is something the parser doesn't recognise so
-                // the user still sees the underlying arguments rather than nothing.
-                if (!decodedFunctionParams.isNullOrEmpty()) {
-                    DecodedFunctionParamRows(params = decodedFunctionParams)
-                } else {
-                    functionInputs?.let {
-                        VerifyCardJsonDetails(
-                            title =
-                                stringResource(R.string.verify_transaction_function_inputs_title),
-                            subtitle = it,
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun OtherField(title: String, value: String, divider: Boolean = true) {
-    Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(vertical = 12.dp),
-        ) {
-            Text(
-                text = title,
-                color = Theme.v2.colors.text.tertiary,
-                style = Theme.brockmann.body.s.medium,
-            )
-
-            UiSpacer(weight = 1f)
-            UiSpacer(size = 8.dp)
-
-            Text(
-                text = value,
-                textAlign = TextAlign.End,
-                color = Theme.v2.colors.text.primary,
-                style = Theme.brockmann.body.s.medium,
-            )
-        }
-
-        if (divider) {
-            UiHorizontalDivider()
-        }
-    }
 }
 
 @Preview

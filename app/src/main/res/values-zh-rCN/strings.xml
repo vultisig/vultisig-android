@@ -384,7 +384,6 @@
     <string name="verify_swap_agree_allowance">我同意提供 ERC20 授权</string>
 
     <!-- Deposit Screen -->
-    <string name="deposit_screen_title">功能签名</string>
     <string name="deposit_screen_amount_title">金额</string>
     <string name="verify_deposit_memo_title">备注</string>
     <string name="verify_deposit_node_address_title">节点地址</string>
@@ -692,6 +691,7 @@
     <!-- Scan QR Screen -->
 
     <!-- Verify Transaction -->
+    <string name="verify_transaction_function_signature_title">函数签名</string>
     <string name="verify_transaction_function_inputs_title">函数参数</string>
     <string name="dapp_hero_unverified_function_title">未验证的功能</string>
     <string name="dapp_hero_unverified_function_subtitle">请在签名前查看下方详情</string>
@@ -763,6 +763,9 @@
     <string name="stake_cacao_title">质押 CACAO</string>
     <string name="unstake_cacao_title">解除质押 CACAO</string>
     <string name="unstake_cacao_available_format">可用: %1$s</string>
+    <string name="unstake_cacao_unlocks_in_days_hours_format">%1$d天%2$d小时后解锁</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">%1$d小时%2$d分钟后解锁</string>
+    <string name="unstake_cacao_maturity_check_failed">无法验证仓位。请重试。</string>
     <string name="cacaopool_only_cacao_supported">池操作仅支持 CACAO 代币</string>
     <string name="referral_create_info_content">推荐计划适用于 THORChain 交换，并尽力而为。您需要注册 THORName 才能使用 Vultisig 推荐。注册费为 10 RUNE，每年 1 RUNE，支付给 THORChain 网络。</string>
     <string name="referral_create_info_title">推荐计划</string>
@@ -912,6 +915,8 @@
 
     <!-- Transaction -->
     <string name="tx_done_transaction_details">交易详情</string>
+    <string name="tx_done_transaction_details_expand">展开</string>
+    <string name="tx_done_transaction_details_collapse">收起</string>
 
     <!-- Vault Confirmation -->
     <string name="vault_confirmation_vault_upgraded">保险库已升级</string>
@@ -1287,7 +1292,6 @@
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
     <string name="solana_instructions_summary">交易指令摘要</string>
     <string name="solana_instruction_number">指令 %1$d</string>
-    <string name="solana_program_name">程序：%1$s</string>
     <string name="solana_program_id">程序 ID：%1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="other">账户：%1$d | 数据长度：%2$d 字节</item>
@@ -1325,9 +1329,10 @@
     <string name="transaction_history_date_today">今天</string>
     <string name="transaction_history_date_yesterday">昨天</string>
     <string name="transaction_history_elapsed_just_now">刚刚</string>
+    <string name="transaction_history_elapsed_seconds">%1$d秒前</string>
     <string name="transaction_history_elapsed_days">%1$d天前</string>
     <string name="transaction_history_elapsed_hours">%1$d小时前</string>
-    <string name="transaction_history_elapsed_minutes">%1$d分钟前</string>
+    <string name="transaction_history_elapsed_minutes_and_seconds">%1$d分%2$d秒前</string>
     <string name="transaction_history_detail_status">状态</string>
     <string name="transaction_history_detail_from">发送方</string>
     <string name="transaction_history_detail_to">接收方</string>

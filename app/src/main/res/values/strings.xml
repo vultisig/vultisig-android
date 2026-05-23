@@ -296,7 +296,6 @@
     <string name="share_qr_screen_permission_required">File permission is required for share operations.</string>
     <string name="token_selection_search_hint">Search…</string>
     <string name="verify_swap_agree_allowance">I agree with providing ERC20 allowance</string>
-    <string name="deposit_screen_title">Function Signature</string>
     <string name="deposit_screen_amount_title">Amount</string>
     <string name="verify_deposit_memo_title">Memo</string>
     <string name="verify_deposit_node_address_title">Node Address</string>
@@ -621,6 +620,7 @@
     <string name="transfer_ibc_function_memo_title">Memo</string>
     <string name="merge_account_doesnt_exist">Selected token is not found for this address</string>
     <string name="keygen_email_error">Incorrect email, please check</string>
+    <string name="verify_transaction_function_signature_title">Function Signature</string>
     <string name="verify_transaction_function_inputs_title">Function Arguments</string>
     <string name="dapp_hero_unverified_function_title">Unverified function</string>
     <string name="dapp_hero_unverified_function_subtitle">Review the details below before signing</string>
@@ -709,6 +709,9 @@
     <string name="stake_cacao_title">Stake CACAO</string>
     <string name="unstake_cacao_title">Unstake CACAO</string>
     <string name="unstake_cacao_available_format">Available: %1$s</string>
+    <string name="unstake_cacao_unlocks_in_days_hours_format">Unlocks in %1$dd %2$dh</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Unlocks in %1$dh %2$dm</string>
+    <string name="unstake_cacao_maturity_check_failed">Couldn\'t verify position. Try again.</string>
     <string name="cacaopool_only_cacao_supported">Only CACAO token is supported for pool operations</string>
     <string name="referral_create_info_content">The referral program is applied for THORChain swaps and is on a best effort basis. You need to register a THORName to use the Vultisig referral. The registration fee is 10 RUNE and 1 RUNE for each year, which is paid to the THORChain network.</string>
     <string name="referral_create_info_title">Referral Program</string>
@@ -931,6 +934,8 @@
     <string name="token_selection_screen_enable_at_least_one">Enable at least one token to view balances and manage positions.</string>
     <string name="transfer_ibc_destination_chain">Destination Chain</string>
     <string name="tx_done_transaction_details">Transaction Details</string>
+    <string name="tx_done_transaction_details_expand">Expand</string>
+    <string name="tx_done_transaction_details_collapse">Collapse</string>
     <string name="vault_confirmation_vault_upgraded">"Vault upgraded"</string>
     <string name="vault_confirmation_well_done">Well done.</string>
     <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">You’re ready to use a new wallet standard.</string>
@@ -1011,7 +1016,6 @@
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="solana_instructions_summary">Transaction Instructions Summary</string>
     <string name="solana_instruction_number">Instruction %1$d</string>
-    <string name="solana_program_name">Program: %1$s</string>
     <string name="solana_program_id">Program ID: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Accounts: %1$d | Data length: %2$d bytes</item>
@@ -1072,9 +1076,10 @@
     <string name="transaction_history_date_today">Today</string>
     <string name="transaction_history_date_yesterday">Yesterday</string>
     <string name="transaction_history_elapsed_just_now">just now</string>
+    <string name="transaction_history_elapsed_seconds">%1$ds ago</string>
     <string name="transaction_history_elapsed_days">%1$dd ago</string>
     <string name="transaction_history_elapsed_hours">%1$dh ago</string>
-    <string name="transaction_history_elapsed_minutes">%1$dm ago</string>
+    <string name="transaction_history_elapsed_minutes_and_seconds">%1$dm %2$ds ago</string>
     <string name="transaction_history_detail_status">Status</string>
     <string name="transaction_history_detail_from">From</string>
     <string name="transaction_history_detail_to">To</string>

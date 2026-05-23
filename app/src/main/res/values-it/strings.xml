@@ -214,7 +214,6 @@
     <string name="share_qr_screen_permission_required">Per le operazioni di condivisione è richiesta l\'autorizzazione del file.</string>
     <string name="token_selection_search_hint">Ricerca…</string>
     <string name="verify_swap_agree_allowance">Sono d\'accordo con la fornitura di un\'indennità ERC20 illimitata</string>
-    <string name="deposit_screen_title">Firma della funzione</string>
     <string name="deposit_screen_amount_title">Quantità</string>
     <string name="verify_deposit_memo_title">Promemoria</string>
     <string name="verify_deposit_node_address_title">Indirizzo del nodo</string>
@@ -416,6 +415,7 @@
     <string name="deposit_option_withdraw_ruji">Ritira RUJI</string>
     <string name="withdraw_amount">Ritira %s</string>
     <string name="deposit_form_unstake_percentage_hint">Inserisci la percentuale da sbloccare</string>
+    <string name="verify_transaction_function_signature_title">Firma della funzione</string>
     <string name="verify_transaction_function_inputs_title">Argomenti della funzione</string>
     <string name="dapp_hero_unverified_function_title">Funzione non verificata</string>
     <string name="dapp_hero_unverified_function_subtitle">Controlla i dettagli prima di firmare</string>
@@ -519,6 +519,9 @@
     <string name="stake_cacao_title">Puntare CACAO</string>
     <string name="unstake_cacao_title">Rimuovi puntata CACAO</string>
     <string name="unstake_cacao_available_format">Disponibile: %1$s</string>
+    <string name="unstake_cacao_unlocks_in_days_hours_format">Si sblocca tra %1$dg %2$dh</string>
+    <string name="unstake_cacao_unlocks_in_hours_format">Si sblocca tra %1$dh %2$dm</string>
+    <string name="unstake_cacao_maturity_check_failed">Impossibile verificare la posizione. Riprovare.</string>
     <string name="cacaopool_only_cacao_supported">Per le operazioni del pool è supportato solo il token CACAO</string>
     <string name="referral_create_info_title">Programma referral</string>
     <string name="referral_create_info_content">Il programma referral si applica agli scambi THORChain ed è su base best effort. Devi registrare un THORName per utilizzare il referral Vultisig. La tassa di registrazione è di 10 RUNE e 1 RUNE per ogni anno, che viene pagata alla rete THORChain.</string>
@@ -678,6 +681,8 @@
     <string name="token_selection_screen_enable_at_least_one">Abilita almeno un token per visualizzare i saldi e gestire le posizioni.</string>
     <string name="transfer_ibc_destination_chain">Catena di destinazione</string>
     <string name="tx_done_transaction_details">Dettagli della transazione</string>
+    <string name="tx_done_transaction_details_expand">Espandi</string>
+    <string name="tx_done_transaction_details_collapse">Riduci</string>
     <string name="vault_confirmation_vault_upgraded">Vault aggiornato</string>
     <string name="vault_confirmation_well_done">Ben fatto.</string>
     <string name="this_amount_would_leave_too_little_change">Questo importo lascerebbe troppo poco resto. 💡 Prova \"Invia Massimo\" (%1$s ADA) per evitare questo problema.</string>
@@ -956,7 +961,6 @@
     <string name="solana_raw_transaction">Transazioni grezze Solana</string>
     <string name="solana_instructions_summary">Riepilogo istruzioni della transazione</string>
     <string name="solana_instruction_number">Istruzione %1$d</string>
-    <string name="solana_program_name">Programma: %1$s</string>
     <string name="solana_program_id">ID programma: %1$s</string>
     <plurals name="solana_accounts_data">
         <item quantity="one">Account: %1$d | Dimensione dati: %2$d byte</item>
@@ -995,9 +999,10 @@
     <string name="transaction_history_date_today">Oggi</string>
     <string name="transaction_history_date_yesterday">Ieri</string>
     <string name="transaction_history_elapsed_just_now">proprio adesso</string>
+    <string name="transaction_history_elapsed_seconds">%1$ds fa</string>
     <string name="transaction_history_elapsed_days">%1$dg fa</string>
     <string name="transaction_history_elapsed_hours">%1$dh fa</string>
-    <string name="transaction_history_elapsed_minutes">%1$dmin fa</string>
+    <string name="transaction_history_elapsed_minutes_and_seconds">%1$dmin %2$ds fa</string>
     <string name="transaction_history_detail_status">Stato</string>
     <string name="transaction_history_detail_from">Da</string>
     <string name="transaction_history_detail_to">A</string>

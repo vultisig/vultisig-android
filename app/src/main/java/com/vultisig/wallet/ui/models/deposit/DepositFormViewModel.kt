@@ -61,7 +61,9 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
+import com.vultisig.wallet.data.usecases.GetMayaCacaoMaturityStatusUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
+import com.vultisig.wallet.data.usecases.MayaCacaoMaturityStatus
 import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
@@ -84,6 +86,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
+import com.vultisig.wallet.ui.utils.cacaoUnlocksInUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
@@ -170,6 +173,8 @@ internal data class DepositFormUiModel(
     val selectedUnMergeCoin: TokenMergeInfo = tokensToMerge.first(),
     val coinList: List<TokenMergeInfo> = tokensToMerge,
     val unstakableAmount: String? = null,
+    val isUnstakeMature: Boolean = false,
+    val unstakeUnlocksInText: UiText? = null,
     val rewardsAmount: String? = null,
     val availableSecuredAssets: List<TokenWithdrawSecureAsset> = emptyList(),
     val selectedSecuredAsset: TokenWithdrawSecureAsset =
@@ -215,6 +220,7 @@ constructor(
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
+    private val getMayaCacaoMaturityStatus: GetMayaCacaoMaturityStatusUseCase,
     private val feeServiceComposite: FeeServiceComposite,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
@@ -280,6 +286,7 @@ constructor(
     private var whitelistJob: Job? = null
     private var loadLpJob: Job? = null
     private var switchInboundJob: Job? = null
+    private var cacaoMaturityJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
     private var lpPoolId: String? = null
@@ -1093,6 +1100,7 @@ constructor(
 
     private suspend fun handleRemoveCacaoOption() {
         val addressValue = address.value?.address ?: return
+        loadCacaoMaturityStatus(addressValue)
         try {
             val balance = mayaChainApi.getUnStakeCacaoBalance(addressValue)
             balance?.let {
@@ -1119,6 +1127,27 @@ constructor(
             }
         }
     }
+
+    private fun loadCacaoMaturityStatus(addressValue: String) {
+        cacaoMaturityJob?.cancel()
+        cacaoMaturityJob =
+            viewModelScope.safeLaunch {
+                val status = getMayaCacaoMaturityStatus(addressValue)
+                _state.update { state ->
+                    state.copy(
+                        isUnstakeMature = status.isMature,
+                        unstakeUnlocksInText = status.toUnlocksInText(),
+                    )
+                }
+            }
+    }
+
+    private fun MayaCacaoMaturityStatus.toUnlocksInText(): UiText? =
+        when {
+            isUnknown -> UiText.StringResource(R.string.unstake_cacao_maturity_check_failed)
+            isMature || remainingSeconds <= 0L -> null
+            else -> cacaoUnlocksInUiText(remainingSeconds)
+        }
 
     fun selectDstChain(chain: Chain) {
         nodeAddressFieldState.clearText()
