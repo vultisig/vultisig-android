@@ -1182,6 +1182,7 @@
     <string name="key_import_error_no_mnemonic_description">Keine Seed-Phrase gefunden. Bitte geben Sie Ihre Seed-Phrase erneut ein und versuchen Sie es noch einmal.</string>
     <string name="swap_error_approval_timeout">Die Token-Genehmigung dauert länger als erwartet. Überprüfen Sie den Explorer, bevor Sie es erneut versuchen</string>
     <string name="swap_error_approval_failed">Token-Genehmigungstransaktion fehlgeschlagen. Bitte versuchen Sie es erneut</string>
+    <string name="erc20_approval_title">Genehmigen</string>
     <string name="erc20_approval_unlimited_amount">Unbegrenzte %1$s-Freigabe</string>
     <string name="erc20_approval_spender">Begünstigter</string>
     <string name="decoded_function_owner">Inhaber</string>
