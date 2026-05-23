@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.protobuf.InvalidProtocolBufferException
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.chains.helpers.ParsedSolanaTransaction
 import com.vultisig.wallet.data.chains.helpers.SolanaTransactionParser
@@ -76,8 +77,16 @@ fun SignSolanaDisplayView(signSolana: SignSolana, modifier: Modifier = Modifier)
                         try {
                             SolanaTransactionParser.parse(tx).instructions
                         } catch (e: Exception) {
-                            Timber.w(e, "Failed to parse Solana transaction")
-                            emptyList()
+                            when (e) {
+                                is IllegalArgumentException,
+                                is IllegalStateException,
+                                is NumberFormatException,
+                                is InvalidProtocolBufferException -> {
+                                    Timber.w(e, "Failed to parse Solana transaction")
+                                    emptyList()
+                                }
+                                else -> throw e
+                            }
                         }
                     }
                 }
