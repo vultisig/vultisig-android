@@ -616,15 +616,18 @@ constructor(
                     )
                 // SwapKit's canonical source-chain fee is the `fees[]` entry with type=="inbound"
                 // for the source chain — the source layer already extracts that and stages it on
-                // `tx.swapFee` (raw units) with `swapFeeTokenContract = ""` (native sentinel). The
-                // resolveSwapFee helper falls back to srcNativeToken on the empty-contract case,
-                // matching how Kyber and Jupiter surface their per-leg fees.
+                // `tx.swapFee` (raw units in source-native) with `swapFeeTokenContract = ""`. The
+                // empty-contract branch of resolveSwapFee returns the fallback in srcNativeToken,
+                // so pass the parsed swapFee as the fallback (mirrors Kyber's call at line 435
+                // which passes gasFees) — otherwise the source-extracted inbound fee is silently
+                // discarded and the verify screen renders $0 Network Fee.
+                val swapKitInboundFee = apiQuote.tx.swapFee.toBigIntegerOrNull() ?: BigInteger.ZERO
                 val (feeAmount, feeCoin) =
                     resolveSwapFee(
                         apiQuote.tx.swapFeeTokenContract,
                         apiQuote.tx.swapFee,
                         srcNativeToken,
-                        BigInteger.ZERO,
+                        swapKitInboundFee,
                     )
                 val tokenFees = TokenValue(value = feeAmount, token = feeCoin)
                 SwapQuote.OneInch(
