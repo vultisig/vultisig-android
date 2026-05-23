@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
 import com.vultisig.wallet.data.repositories.swap.SwapKitConfigImpl
 import com.vultisig.wallet.data.repositories.swap.SwapKitProviderCache
 import com.vultisig.wallet.data.repositories.swap.SwapKitProviderCacheImpl
+import com.vultisig.wallet.data.repositories.swap.SwapKitQuoteSource
 import com.vultisig.wallet.data.repositories.swap.SwapProviderKey
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTable
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTableImpl
@@ -210,6 +211,12 @@ internal interface RepositoriesModule {
     @SwapProviderKey(SwapProvider.KYBER)
     @Reusable
     fun bindKyberQuoteSource(impl: KyberQuoteSource): SwapQuoteSource
+
+    @Binds
+    @IntoMap
+    @SwapProviderKey(SwapProvider.SWAPKIT)
+    @Reusable
+    fun bindSwapKitQuoteSource(impl: SwapKitQuoteSource): SwapQuoteSource
 
     @Binds
     @Singleton

@@ -55,9 +55,16 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             "DAI",
         )
 
-    private val evmAggregators = setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
+    private val evmAggregators =
+        setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER, SwapProvider.SWAPKIT)
     private val thorchainPlusEvmAggregators =
-        setOf(SwapProvider.THORCHAIN, SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
+        setOf(
+            SwapProvider.THORCHAIN,
+            SwapProvider.ONEINCH,
+            SwapProvider.LIFI,
+            SwapProvider.KYBER,
+            SwapProvider.SWAPKIT,
+        )
 
     /** Providers that only quote same-chain swaps; filtered out for cross-chain pairs. */
     private val sameChainOnly = setOf(SwapProvider.ONEINCH, SwapProvider.KYBER)
@@ -78,11 +85,13 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                 if (ticker in thorAvaxTokens) thorchainPlusEvmAggregators else evmAggregators
 
             Chain.Base ->
-                if (ticker in thorBaseTokens) setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN)
-                else setOf(SwapProvider.LIFI)
+                if (ticker in thorBaseTokens)
+                    setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
+                else setOf(SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
             Chain.Optimism,
-            Chain.Polygon,
+            Chain.Polygon -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.SWAPKIT)
+
             Chain.ZkSync -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
             Chain.Mantle -> setOf(SwapProvider.LIFI, SwapProvider.KYBER)
@@ -98,16 +107,22 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             Chain.Zcash -> setOf(SwapProvider.MAYA)
 
             Chain.Arbitrum ->
-                if (ticker in mayaArbTokens) setOf(SwapProvider.LIFI, SwapProvider.MAYA)
-                else setOf(SwapProvider.LIFI)
+                if (ticker in mayaArbTokens)
+                    setOf(SwapProvider.LIFI, SwapProvider.MAYA, SwapProvider.SWAPKIT)
+                else setOf(SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
             Chain.Blast,
             Chain.CronosChain -> setOf(SwapProvider.LIFI)
 
             Chain.Solana ->
                 if (coin.isNativeToken)
-                    setOf(SwapProvider.THORCHAIN, SwapProvider.JUPITER, SwapProvider.LIFI)
-                else setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
+                    setOf(
+                        SwapProvider.THORCHAIN,
+                        SwapProvider.JUPITER,
+                        SwapProvider.LIFI,
+                        SwapProvider.SWAPKIT,
+                    )
+                else setOf(SwapProvider.JUPITER, SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
             Chain.Ripple,
             Chain.Tron -> setOf(SwapProvider.THORCHAIN)

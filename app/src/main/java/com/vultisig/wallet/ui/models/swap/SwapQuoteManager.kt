@@ -145,6 +145,18 @@ constructor(
                         vultBPSDiscount,
                         srcNativeToken,
                     )
+
+                SwapProvider.SWAPKIT ->
+                    fetchSwapKitQuote(
+                        src,
+                        dst,
+                        srcToken,
+                        dstToken,
+                        srcTokenValue,
+                        tokenValue,
+                        vultBPSDiscount,
+                        srcNativeToken,
+                    )
             }
 
         val feeCoin =
@@ -152,6 +164,11 @@ constructor(
                 SwapProvider.MAYA,
                 SwapProvider.THORCHAIN,
                 SwapProvider.LIFI -> dstToken
+                // SwapKit's inbound (source-chain) fee is denominated in the source's native gas
+                // token — mirrors 1inch / Kyber / Jupiter rather than the LiFi destination-side
+                // integrator-fee model. Per-leg fee parsing from response.fees[] lands with the
+                // tier-discount affiliate work in a later task.
+                SwapProvider.SWAPKIT -> srcNativeToken
                 else -> srcNativeToken
             }
 
@@ -551,6 +568,63 @@ constructor(
                 R.string.swap_for_provider_jupiter.asUiText()
             }
         return swapQuote to providerText
+    }
+
+    private suspend fun fetchSwapKitQuote(
+        src: SendSrc,
+        dst: SendSrc,
+        srcToken: Coin,
+        dstToken: Coin,
+        srcTokenValue: BigInteger,
+        tokenValue: TokenValue,
+        vultBPSDiscount: Int?,
+        srcNativeToken: Coin,
+    ): Pair<SwapQuote, UiText> {
+        val swapQuote =
+            getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.SWAPKIT) {
+                val apiQuote =
+                    swapQuoteRepository
+                        .getQuote(
+                            SwapProvider.SWAPKIT,
+                            SwapQuoteRequest(
+                                srcToken = srcToken,
+                                dstToken = dstToken,
+                                tokenValue = tokenValue,
+                                srcAddress = src.address.address,
+                                dstAddress = dst.address.address,
+                                // Tier-discounted affiliate fee lands in its own follow-up task —
+                                // matches iOS's max(0, min(1000, 50 - vultTierDiscount)) formula.
+                                // For now pass zero so the proxy applies its dashboard-configured
+                                // default rather than a stale client override.
+                                affiliateBps = 0,
+                                bpsDiscount = vultBPSDiscount ?: 0,
+                            ),
+                        )
+                        .expectEvm(SwapProvider.SWAPKIT)
+                val expectedDstValue =
+                    TokenValue(
+                        value = apiQuote.dstAmount.toBigIntegerOrNull() ?: BigInteger.ZERO,
+                        token = dstToken,
+                    )
+                // SwapKit doesn't return a typed swapFee inside the EVM tx envelope (the
+                // response-level fees[] array carries the per-leg breakdown — surfaced as part of
+                // the affiliate-fee task). Use the gas envelope as the inbound-side fee estimate,
+                // matching the 1inch/Kyber gas-only pattern.
+                val gasUnits =
+                    apiQuote.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
+                val gasFees =
+                    (apiQuote.tx.gasPrice.toBigIntegerOrNull() ?: BigInteger.ZERO) *
+                        gasUnits.toBigInteger()
+                val tokenFees = TokenValue(value = gasFees, token = srcNativeToken)
+                SwapQuote.OneInch(
+                    expectedDstValue = expectedDstValue,
+                    fees = tokenFees,
+                    data = apiQuote,
+                    expiredAt = Clock.System.now() + expiredAfter,
+                    provider = SwapProvider.SWAPKIT.getSwapProviderId(),
+                )
+            }
+        return swapQuote to R.string.swap_for_provider_swapkit.asUiText()
     }
 
     private suspend fun resolveSwapFee(
