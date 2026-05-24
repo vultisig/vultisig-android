@@ -61,12 +61,17 @@ object MockHttpClient {
     /**
      * Builds a client that returns a server response with the given [status] and [body]. The
      * [HttpCallValidator] is still installed but won't fire (no transport error).
+     *
+     * Pass a custom [jsonFormat] when the response (or request) model contains `@Contextual` fields
+     * — e.g. `@Contextual BigInteger` — so [ContentNegotiation] can (de)serialize them. Build it
+     * with the matching contextual serializer, e.g. `Json { serializersModule = SerializersModule {
+     * contextual(BigIntegerSerializerImpl()) } }`.
      */
-    fun respondingWith(status: HttpStatusCode, body: String): HttpClient =
+    fun respondingWith(status: HttpStatusCode, body: String, jsonFormat: Json = json): HttpClient =
         HttpClient(
             MockEngine { respond(content = body, status = status, headers = JSON_HEADERS) }
         ) {
-            installDefaults()
+            installDefaults(jsonFormat)
         }
 
     /**
@@ -92,8 +97,8 @@ object MockHttpClient {
      * Installs the standard plugins matching production
      * [com.vultisig.wallet.data.networkutils.HttpClientConfigurator].
      */
-    private fun io.ktor.client.HttpClientConfig<*>.installDefaults() {
-        install(ContentNegotiation) { json(json, ContentType.Any) }
+    private fun io.ktor.client.HttpClientConfig<*>.installDefaults(jsonFormat: Json = json) {
+        install(ContentNegotiation) { json(jsonFormat, ContentType.Any) }
         install(DefaultRequest) {
             headers.appendIfNameAbsent(
                 HttpHeaders.ContentType,
