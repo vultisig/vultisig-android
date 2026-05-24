@@ -36,11 +36,9 @@ sealed class SwapQuote {
     ) : SwapQuote()
 
     /**
-     * SwapKit non-EVM-shaped quote — carries a fully-formed [SwapKitSwapPayloadJson] (the same
-     * shape that round-trips via proto field 26). Phase 2+ consumers (TON / BTC PSBT / ADA / TRON /
-     * SUI / ZEC signers) read the payload directly when building the KeysignPayload; no EVM-style
-     * `tx` envelope to interpret. [subProvider] surfaces the route's downstream protocol
-     * (Chainflip, NEAR Intents, Garden, …) for the verify-row label.
+     * SwapKit non-EVM quote (BTC / TON / ADA / TRON / SUI / ZEC). Carries a fully-formed
+     * [SwapKitSwapPayloadJson]; per-chain signers read it directly. [subProvider] drives the
+     * verify-row label.
      */
     data class SwapKit(
         override val expectedDstValue: TokenValue,

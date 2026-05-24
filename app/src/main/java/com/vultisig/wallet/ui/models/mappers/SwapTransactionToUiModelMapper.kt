@@ -34,9 +34,6 @@ constructor(
                 is SwapPayload.EVM ->
                     SwapProvider.entries.find { it.getSwapProviderId() == payload.data.provider }
                         ?: error("Unknown EVM provider: ${payload.data.provider}")
-                // Non-EVM SwapKit routes (TON / BTC PSBT / SUI / Cardano / TRON / ZEC) all carry
-                // SwapProvider.SWAPKIT — sub-provider disambiguation (Chainflip / NEAR / Garden)
-                // lives on the payload's data.subProvider but isn't a SwapProvider enum value.
                 is SwapPayload.SwapKit -> SwapProvider.SWAPKIT
             }
 
@@ -48,8 +45,6 @@ constructor(
 
                 SwapProvider.ONEINCH,
                 SwapProvider.KYBER,
-                // SwapKit (Phase 1 EVM/Solana) pays the inbound fee in the source chain's native
-                // gas token — same shape as 1inch/Kyber, not the LiFi destination-side model.
                 SwapProvider.SWAPKIT -> tokenRepository.getNativeToken(from.srcToken.chain.id)
 
                 SwapProvider.JUPITER -> from.srcToken

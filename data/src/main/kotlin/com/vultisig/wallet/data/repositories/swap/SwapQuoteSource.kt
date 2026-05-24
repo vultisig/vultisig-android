@@ -32,19 +32,12 @@ sealed class SwapQuoteResult {
     data class Native(val quote: SwapQuote) : SwapQuoteResult()
 
     /**
-     * EVM-shaped quote envelope. [subProvider] is the route's sub-provider tag when an aggregator
-     * routes through a downstream protocol (e.g. SwapKit → Chainflip / NEAR Intents / Garden /
-     * Flashnet); `null` for direct aggregators (1inch, Kyber, LiFi, Jupiter). The UI label uses it
-     * to disambiguate the verify screen.
+     * EVM-shaped envelope. [subProvider] disambiguates SwapKit's downstream protocol (Chainflip /
+     * NEAR / Garden); `null` for direct aggregators (1inch, Kyber, LiFi, Jupiter).
      */
     data class Evm(val data: EVMSwapQuoteJson, val subProvider: String? = null) : SwapQuoteResult()
 
-    /**
-     * SwapKit non-EVM-shaped quote envelope. EVM and Solana SwapKit routes stay on [Evm] (their
-     * /v3/swap shape matches OneInch's 1:1); BTC PSBT / TON / ADA / TRON / SUI / ZEC route shapes
-     * flow through here so the payload builder can stash the bytes on a [SwapPayload.SwapKit] for
-     * cross-device proto round-trip via `swapkitSwapPayload` field 26.
-     */
+    /** SwapKit non-EVM routes (BTC / TON / ADA / TRON / SUI / ZEC). EVM/Solana stay on [Evm]. */
     data class SwapKit(val quote: com.vultisig.wallet.data.models.SwapQuote.SwapKit) :
         SwapQuoteResult()
 

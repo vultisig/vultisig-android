@@ -231,10 +231,8 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         provider = from.provider,
                     )
                 } else null,
-            // SwapKit non-EVM-shaped routes (BTC PSBT, TON transfer array, ADA CBOR, TRON
-            // TronWeb object, SUI PTB, ZEC Sapling, etc.) — proto field 26 added via commondata
-            // PR #86. EVM and Solana SwapKit routes ride oneinchSwapPayload above with
-            // provider="swapkit", so this branch is non-empty only for non-EVM tx types.
+            // EVM/Solana SwapKit ride oneinchSwapPayload above with provider="swapkit"; this
+            // carries non-EVM shapes only.
             swapkitSwapPayload =
                 if (swapPayload is SwapPayload.SwapKit) {
                     val from = swapPayload.data

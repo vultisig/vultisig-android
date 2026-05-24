@@ -617,9 +617,6 @@ constructor(
                         is SwapPayload.EVM ->
                             swapProviderFromWireId(swapPayload.data.provider)?.getSwapProviderId()
                                 ?: swapPayload.data.provider
-                        // Verbatim sub-provider (CHAINFLIP / NEAR / GARDEN / …) — matches iOS'
-                        // SwapPayload.providerName so the joining peer sees the same routing
-                        // context the initiator saw at quote time.
                         is SwapPayload.SwapKit ->
                             formatSwapKitProviderLabel(swapPayload.data.subProvider)
                     }
@@ -865,12 +862,8 @@ constructor(
                     }
 
                     is SwapPayload.SwapKit -> {
-                        // Non-EVM SwapKit routes (TON / PSBT / SUI / Cardano / TRON). The
-                        // initiator's per-leg fee surface lived on route.fees[] and isn't
-                        // re-fetched at join time — display zero provider fee here and rely on
-                        // the network gas estimate for the verify row. The signing path itself
-                        // reads payload.swapPayload (cross-device wire shape, proto field 26)
-                        // plus chain-specific dispatch (e.g. payload.signTon for TON).
+                        // Zero provider fee — the initiator's per-leg `fees[]` isn't re-fetched
+                        // at join time; the network gas estimate carries the cost.
                         val swapTransactionUiModel =
                             buildSwapUiModel(
                                 srcToken = srcToken,

@@ -17,10 +17,9 @@ import vultisig.keysign.v1.THORChainSpecific
 import vultisig.keysign.v1.TransactionType
 
 /**
- * Pins the proto round-trip for [SwapPayload.SwapKit] via `swapkitSwapPayload` field 26
- * (commondata #86). Both directions must preserve every field — the cosigning peer reconstructs the
- * same payload bytes the initiator built. Bytes (`txPayload`) and decimal string round-trips are
- * the load-bearing checks; getting either wrong silently breaks cross-device cosigning.
+ * Pins the [SwapPayload.SwapKit] proto round-trip in both directions. Bytes (`txPayload`) and
+ * decimal-string round-trips are the load-bearing checks — getting either wrong silently breaks
+ * cross-device cosigning.
  */
 class KeysignPayloadProtoMapperSwapKitTest {
 
@@ -96,7 +95,7 @@ class KeysignPayloadProtoMapperSwapKitTest {
     }
 
     @Test
-    fun `outbound mapper writes swapkitSwapPayload onto field 26 with every field intact`() {
+    fun `outbound mapper writes swapkitSwapPayload with every field intact`() {
         val txPayloadBytes = byteArrayOf(0x70, 0x73, 0x62, 0x74) // "psbt" magic
         val domain =
             mapper

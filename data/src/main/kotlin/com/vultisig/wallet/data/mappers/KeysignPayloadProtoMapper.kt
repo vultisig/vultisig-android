@@ -95,9 +95,8 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                             SwapPayload.MayaChain(it.toThorChainSwapPayload())
                         }
 
-                    // SwapKit non-EVM-shaped routes (BTC PSBT / TON / ADA / TRON / SUI / ZEC /
-                    // …). Proto field 26 (commondata #86). EVM/Solana SwapKit routes round-trip
-                    // via `oneinchSwapPayload` above with `provider="swapkit"` discriminator.
+                    // EVM/Solana SwapKit round-trip via `oneinchSwapPayload` above with
+                    // `provider="swapkit"`; this branch is for non-EVM shapes only.
                     from.swapkitSwapPayload != null ->
                         from.swapkitSwapPayload.let { it ->
                             SwapPayload.SwapKit(

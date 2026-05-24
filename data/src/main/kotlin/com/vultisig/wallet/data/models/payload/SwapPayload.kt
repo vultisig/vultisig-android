@@ -72,12 +72,8 @@ sealed class SwapPayload {
     }
 
     /**
-     * SwapKit-routed swaps whose wire shape doesn't fit [EVM] / [EVMSwapPayloadJson]. EVM and
-     * Solana SwapKit routes continue to ride [EVM] (their /v3/swap shape matches OneInchQuote 1:1
-     * and stays typed at the proto layer with `provider = "swapkit"`). This variant carries the
-     * non-EVM shapes that round-trip via the `swapkit_swap_payload` proto field 26: BTC PSBT, TON
-     * transfer arrays, ADA CBOR, TRON TronWeb objects, SUI PTB, ZEC Sapling-v4 PSBT, etc. The
-     * per-chain dispatcher reads [SwapKitSwapPayloadJson.txType] to pick the right signer.
+     * SwapKit routes whose wire shape doesn't fit [EVM]. EVM and Solana SwapKit still ride [EVM]
+     * with `provider = "swapkit"`; this carries BTC PSBT / TON / ADA / TRON / SUI / ZEC.
      */
     data class SwapKit(val data: SwapKitSwapPayloadJson) : SwapPayload() {
 
