@@ -641,11 +641,12 @@ constructor(
                     provider = SwapProvider.SWAPKIT.getSwapProviderId(),
                 )
             }
+        // Verbatim sub-provider in the label — matches iOS' SwapPayload.providerName /
+        // SwapQuote.displayName so cross-platform users see the same `SwapKit (CHAINFLIP)` /
+        // `SwapKit (NEAR)` string.
         val providerLabel =
-            resolvedSubProvider
-                ?.takeIf { it.isNotBlank() }
-                ?.let { sub -> "SwapKit (${formatSwapKitSubProvider(sub)})".asUiText() }
-                ?: R.string.swap_for_provider_swapkit.asUiText()
+            if (resolvedSubProvider.isNullOrBlank()) R.string.swap_for_provider_swapkit.asUiText()
+            else formatSwapKitProviderLabel(resolvedSubProvider).asUiText()
         return swapQuote to providerLabel
     }
 
