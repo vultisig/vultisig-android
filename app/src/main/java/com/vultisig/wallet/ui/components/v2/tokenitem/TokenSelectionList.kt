@@ -158,7 +158,9 @@ internal fun <T> TokenSelectionList(
 
                             itemsIndexed(
                                 items,
-                                key = { itemIndex, _ -> "$groupIndex-$itemIndex" },
+                                key = { _, item ->
+                                    "${title ?: "group$groupIndex"}-${item.hashCode()}"
+                                },
                             ) { _, item ->
                                 GridItem(
                                     uiModel = mapper(item),
