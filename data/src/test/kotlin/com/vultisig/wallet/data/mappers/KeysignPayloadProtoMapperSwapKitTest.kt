@@ -9,7 +9,7 @@ import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import vultisig.keysign.v1.SwapKitSwapPayload as SwapKitSwapPayloadProto
@@ -232,8 +232,10 @@ class KeysignPayloadProtoMapperSwapKitTest {
 
         assertEquals(a, b)
         assertEquals(a.hashCode(), b.hashCode())
-        assertNotNull(c) // not equal — different bytes
-        assert(a != c)
+        // assertNotEquals (not Kotlin's `assert(...)`) — the language-level `assert` is a no-op
+        // when the JVM is run without `-ea`, which silently disarms the check on Gradle's default
+        // test classpath. JUnit's assertion always runs.
+        assertNotEquals(a, c)
     }
 
     // ---- helpers ----
