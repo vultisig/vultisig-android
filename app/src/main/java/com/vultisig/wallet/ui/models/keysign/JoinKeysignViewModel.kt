@@ -87,6 +87,7 @@ import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -616,6 +617,8 @@ constructor(
                         is SwapPayload.EVM ->
                             swapProviderFromWireId(swapPayload.data.provider)?.getSwapProviderId()
                                 ?: swapPayload.data.provider
+                        is SwapPayload.SwapKit ->
+                            formatSwapKitProviderLabel(swapPayload.data.subProvider)
                     }
 
                 when (swapPayload) {
@@ -844,6 +847,33 @@ constructor(
                                 provider = provider,
                                 providerFee = quote.fees,
                                 providerFeeToken = dstToken,
+                                currency = currency,
+                            )
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
+                        transactionHistoryData =
+                            mapSwapTransactionToHistoryData(swapTransactionUiModel)
+                        verifyUiModel.value =
+                            VerifyUiModel.Swap(
+                                VerifySwapUiModel(
+                                    tx = swapTransactionUiModel,
+                                    vaultName = vaultName,
+                                )
+                            )
+                    }
+
+                    is SwapPayload.SwapKit -> {
+                        // Zero provider fee — the initiator's per-leg `fees[]` isn't re-fetched
+                        // at join time; the network gas estimate carries the cost.
+                        val swapTransactionUiModel =
+                            buildSwapUiModel(
+                                srcToken = srcToken,
+                                srcTokenValue = srcTokenValue,
+                                dstToken = dstToken,
+                                dstTokenValue = dstTokenValue,
+                                estimatedNetworkGasFee = estimatedNetworkGasFee,
+                                provider = provider,
+                                providerFee = TokenValue(value = BigInteger.ZERO, token = srcToken),
+                                providerFeeToken = srcToken,
                                 currency = currency,
                             )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)

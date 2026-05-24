@@ -32,18 +32,24 @@ sealed class SwapQuoteResult {
     data class Native(val quote: SwapQuote) : SwapQuoteResult()
 
     /**
-     * EVM-shaped quote envelope. [subProvider] is the route's sub-provider tag when an aggregator
-     * routes through a downstream protocol (e.g. SwapKit → Chainflip / NEAR Intents / Garden /
-     * Flashnet); `null` for direct aggregators (1inch, Kyber, LiFi, Jupiter). The UI label uses it
-     * to disambiguate the verify screen.
+     * EVM-shaped envelope. [subProvider] disambiguates SwapKit's downstream protocol (Chainflip /
+     * NEAR / Garden); `null` for direct aggregators (1inch, Kyber, LiFi, Jupiter).
      */
     data class Evm(val data: EVMSwapQuoteJson, val subProvider: String? = null) : SwapQuoteResult()
+
+    /** SwapKit non-EVM routes (BTC / TON / ADA / TRON / SUI / ZEC). EVM/Solana stay on [Evm]. */
+    data class SwapKit(val quote: com.vultisig.wallet.data.models.SwapQuote.SwapKit) :
+        SwapQuoteResult()
 
     fun expectNative(provider: SwapProvider): SwapQuote =
         when (this) {
             is Native -> quote
             is Evm ->
                 throw SwapException.UnkownSwapError("Expected Native quote for $provider, got Evm")
+            is SwapKit ->
+                throw SwapException.UnkownSwapError(
+                    "Expected Native quote for $provider, got SwapKit"
+                )
         }
 
     fun expectEvm(provider: SwapProvider): EVMSwapQuoteJson =
@@ -51,6 +57,8 @@ sealed class SwapQuoteResult {
             is Evm -> data
             is Native ->
                 throw SwapException.UnkownSwapError("Expected Evm quote for $provider, got Native")
+            is SwapKit ->
+                throw SwapException.UnkownSwapError("Expected Evm quote for $provider, got SwapKit")
         }
 }
 

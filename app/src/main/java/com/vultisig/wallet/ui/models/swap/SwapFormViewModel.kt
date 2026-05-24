@@ -472,6 +472,11 @@ constructor(
                                 )
                             }
 
+                            // Per-chain signers wire this branch as they ship; no quote source
+                            // emits SwapQuote.SwapKit yet.
+                            is SwapQuote.SwapKit ->
+                                error("No SwapKit signer wired for txType=${quote.data.txType}")
+
                             is SwapQuote.OneInch -> {
                                 val dstAddress = quote.data.tx.to
                                 val specificAndUtxo =

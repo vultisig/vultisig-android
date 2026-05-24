@@ -165,10 +165,8 @@ constructor(
                 SwapProvider.MAYA,
                 SwapProvider.THORCHAIN,
                 SwapProvider.LIFI -> dstToken
-                // SwapKit's inbound (source-chain) fee is denominated in the source's native gas
-                // token — mirrors 1inch / Kyber / Jupiter rather than the LiFi destination-side
-                // integrator-fee model. SwapKitQuoteSource already pulls the inbound amount out of
-                // route.fees[] and stages it on tx.swapFee (raw units) for resolveSwapFee below.
+                // SwapKit inbound fee is source-native (like 1inch/Kyber/Jupiter, not LiFi's
+                // destination-side integrator model).
                 SwapProvider.SWAPKIT -> srcNativeToken
                 else -> srcNativeToken
             }
@@ -614,13 +612,10 @@ constructor(
                                 ),
                         token = dstToken,
                     )
-                // SwapKit's canonical source-chain fee is the `fees[]` entry with type=="inbound"
-                // for the source chain — the source layer already extracts that and stages it on
-                // `tx.swapFee` (raw units in source-native) with `swapFeeTokenContract = ""`. The
-                // empty-contract branch of resolveSwapFee returns the fallback in srcNativeToken,
-                // so pass the parsed swapFee as the fallback (mirrors Kyber's call at line 435
-                // which passes gasFees) — otherwise the source-extracted inbound fee is silently
-                // discarded and the verify screen renders $0 Network Fee.
+                // The source layer stages the inbound fee on tx.swapFee with an empty token
+                // contract; resolveSwapFee's empty-contract branch returns the fallback. Pass the
+                // parsed swapFee as fallback so an empty contract doesn't discard the fee and
+                // render $0 Network Fee.
                 val swapKitInboundFee = apiQuote.tx.swapFee.toBigIntegerOrNull() ?: BigInteger.ZERO
                 val (feeAmount, feeCoin) =
                     resolveSwapFee(
@@ -642,22 +637,10 @@ constructor(
                 )
             }
         val providerLabel =
-            resolvedSubProvider
-                ?.takeIf { it.isNotBlank() }
-                ?.let { sub -> "SwapKit (${formatSubProvider(sub)})".asUiText() }
-                ?: R.string.swap_for_provider_swapkit.asUiText()
+            if (resolvedSubProvider.isNullOrBlank()) R.string.swap_for_provider_swapkit.asUiText()
+            else formatSwapKitProviderLabel(resolvedSubProvider).asUiText()
         return swapQuote to providerLabel
     }
-
-    /**
-     * Render a SwapKit sub-provider id (`CHAINFLIP`, `near_intents`, `flashnet`) into a display
-     * label. Replaces underscores with spaces and title-cases each token so `near_intents` → `Near
-     * Intents`; brand names already in mixed/upper case are left alone.
-     */
-    private fun formatSubProvider(raw: String): String =
-        raw.split('_', '-').joinToString(" ") { token ->
-            token.replaceFirstChar { ch -> if (ch.isLowerCase()) ch.titlecase() else ch.toString() }
-        }
 
     private suspend fun resolveSwapFee(
         swapFeeTokenContract: String,
@@ -785,8 +768,7 @@ constructor(
 
     companion object {
         private const val KYBER_AFFILIATE_FEE_BPS = 50
-        // Mirrors iOS' SwapKit milestone: 50 bps base affiliate, discounted by the user's
-        // vultTierDiscount, clamped to SwapKit's documented 0..1000 bps (0..10%) range.
+        /** Base bps before tier discount; clamped to SwapKit's documented 0..1000 range. */
         private const val SWAPKIT_AFFILIATE_FEE_BPS = 50
         private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val QUOTE_FETCH_TIMEOUT_MS = 15_000L
