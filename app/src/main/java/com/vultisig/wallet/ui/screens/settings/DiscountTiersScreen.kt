@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,7 +45,6 @@ import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
 import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheet
-import com.vultisig.wallet.ui.screens.v2.components.VsButton
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import com.vultisig.wallet.ui.utils.VsUriHandler
@@ -305,15 +305,33 @@ private fun TierCard(
                     if (!isActive) {
                         UiSpacer(size = 16.dp)
 
-                        VsButton(
-                            label = stringResource(R.string.vault_tier_unlock),
-                            modifier = Modifier.fillMaxWidth(),
-                            onClick = onClickUnlock,
-                        )
+                        UnlockTierButton(onClickUnlock)
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun UnlockTierButton(onClickUnlock: () -> Unit) {
+    val shape = RoundedCornerShape(percent = 100)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(shape = shape)
+                .background(color = Theme.v2.colors.buttons.secondary, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.primaryAccent4, shape = shape)
+                .clickable(enabled = true, onClick = onClickUnlock)
+                .padding(paddingValues = PaddingValues(vertical = 14.dp, horizontal = 32.dp)),
+    ) {
+        Text(
+            text = stringResource(R.string.vault_tier_unlock),
+            style = Theme.brockmann.button.semibold.semibold,
+            color = Theme.v2.colors.text.primary,
+        )
     }
 }
 
