@@ -74,3 +74,10 @@ data class SwapKitSolanaTx(
     @SerialName("message") val message: String? = null,
     @SerialName("swapTransaction") val swapTransaction: String? = null,
 )
+
+/** Single TON transfer in a SwapKit `/v3/swap` response — `tx` is a one-or-more-element array. */
+@Serializable
+data class SwapKitTonTransfer(
+    @SerialName("address") val address: String,
+    @SerialName("amount") val amount: String,
+)

@@ -3,16 +3,20 @@
 package com.vultisig.wallet.data.crypto
 
 import com.google.protobuf.ByteString
+import com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer
 import com.vultisig.wallet.data.common.toHexByteArray
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.toHexString
 import com.vultisig.wallet.data.utils.toUnit
+import kotlinx.serialization.json.Json
 import tss.KeysignResponse
+import vultisig.keysign.v1.SignTon
 import vultisig.keysign.v1.TonMessage
 import wallet.core.java.AnySigner
 import wallet.core.jni.AnyAddress
@@ -53,7 +57,11 @@ object TonHelper {
         payload: KeysignPayload,
         tonSpecific: BlockChainSpecific.Ton,
     ) {
-        payload.signTon?.let { signTon ->
+        // signTon first (the canonical TonConnect-style multi-message path). For SwapKit-TON
+        // payloads where the initiator (e.g. iOS) didn't populate signTon, decode the canonical
+        // transfer bytes off the SwapKit payload — same wire shape, peer-side fallback only.
+        val resolvedSignTon = payload.signTon ?: signTonFromSwapKitTonPayload(payload.swapPayload)
+        resolvedSignTon?.let { signTon ->
             val messages = signTon.tonMessages.filterNotNull()
             require(messages.isNotEmpty()) { "SignTon must have at least one message" }
             require(messages.size <= MAX_TON_MESSAGES) {
@@ -75,6 +83,30 @@ object TonHelper {
                 builder.addMessages(transfer)
             }
     }
+
+    /**
+     * Cross-platform fallback: decode a SwapKit TON payload's canonical transfer bytes into
+     * [SignTon] when [KeysignPayload.signTon] is absent. Covers the iOS-initiator → Android-peer
+     * cosigning path where iOS sends only the SwapKit wire payload. Returns `null` for any other
+     * payload variant or non-TON SwapKit txType.
+     */
+    private fun signTonFromSwapKitTonPayload(swapPayload: SwapPayload?): SignTon? {
+        if (swapPayload !is SwapPayload.SwapKit) return null
+        if (!swapPayload.data.txType.equals("TON", ignoreCase = true)) return null
+        val transfers =
+            runCatching {
+                    swapKitJson.decodeFromString<List<SwapKitTonTransfer>>(
+                        swapPayload.data.txPayload.decodeToString()
+                    )
+                }
+                .getOrNull() ?: return null
+        if (transfers.isEmpty()) return null
+        return SignTon(
+            tonMessages = transfers.map { TonMessage(to = it.address, amount = it.amount) }
+        )
+    }
+
+    private val swapKitJson = Json { ignoreUnknownKeys = true }
 
     private fun buildTonConnectTransfer(
         msg: TonMessage,

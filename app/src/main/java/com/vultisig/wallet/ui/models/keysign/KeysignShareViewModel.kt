@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.OPERATION_CIRCLE_WITHDRAW
@@ -38,8 +39,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
+import vultisig.keysign.v1.SignTon
+import vultisig.keysign.v1.TonMessage
 
 @HiltViewModel
 internal class KeysignShareViewModel
@@ -68,6 +72,8 @@ constructor(
     private var qrBitmap: Bitmap? = null
     private val shareQrBitmap = MutableStateFlow<Bitmap?>(null)
     private var saveShareQrBitmapJob: Job? = null
+
+    private val swapKitJson = Json { ignoreUnknownKeys = true }
 
     suspend fun loadTransaction(transactionId: TransactionId) {
         val transaction =
@@ -149,6 +155,10 @@ constructor(
                             swapPayload.copy(data = swapPayload.data.copy(toCoin = dstToken))
                     }
 
+                    // For SwapKit TON, populate KeysignPayload.signTon from the canonical transfer
+                    // bytes so the existing TonHelper.addTransfersTo path picks them up unchanged.
+                    val signTon = signTonForSwapKitTon(swapPayload)
+
                     KeysignPayload(
                         coin = srcToken,
                         toAddress = transaction.dstAddress,
@@ -168,9 +178,34 @@ constructor(
                             else null,
                         libType = vault.libType,
                         wasmExecuteContractPayload = null,
+                        signTon = signTon,
                     )
                 }
             }
+    }
+
+    /**
+     * Decode a SwapKit TON payload's canonical transfer bytes into [SignTon] so [TonHelper] picks
+     * them up via its existing TonConnect-style multi-message path. Returns `null` for any other
+     * SwapPayload variant (or any other SwapKit txType) so non-TON callers fall through.
+     */
+    private fun signTonForSwapKitTon(swapPayload: SwapPayload): SignTon? {
+        if (swapPayload !is SwapPayload.SwapKit) return null
+        if (!swapPayload.data.txType.equals("TON", ignoreCase = true)) return null
+        val transfers =
+            runCatching {
+                    swapKitJson.decodeFromString<List<SwapKitTonTransfer>>(
+                        swapPayload.data.txPayload.decodeToString()
+                    )
+                }
+                .getOrElse {
+                    Timber.w(it, "Failed to decode SwapKit TON transfer bytes")
+                    return null
+                }
+        if (transfers.isEmpty()) return null
+        return SignTon(
+            tonMessages = transfers.map { TonMessage(to = it.address, amount = it.amount) }
+        )
     }
 
     private fun Coin.adjustBitcoinCashAddressFormat() =

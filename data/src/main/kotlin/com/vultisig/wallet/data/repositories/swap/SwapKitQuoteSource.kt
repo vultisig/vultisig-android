@@ -9,9 +9,11 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitRoute
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSolanaTx
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
+import com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.TokenValue
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -46,11 +48,11 @@ import timber.log.Timber
  *    reads zero. EVM routes that omit `tx.gas` are refused (`SwapKitError.Decoding`) rather than
  *    backstopped with the L1-sized default, which would over-estimate L2 fees by multiples.
  *
- * Non-EVM/non-Solana `txType`s (PSBT, TRON, TON, SUI, CARDANO, RIPPLE, …) are out of scope for
- * Phase 1 — they require per-chain signers and the dedicated `SwapKitSwapPayload` proto, which land
- * in subsequent task batches. Such responses surface as [SwapKitError.UnsupportedTxType] so the
- * picker falls back to another provider rather than signing garbage. `SOLANA` and the legacy
- * `SERIALIZED_BASE64` discriminator are aliased; SwapKit flipped them once before.
+ * TON routes flow through [SwapQuoteResult.SwapKit] carrying a [SwapKitSwapPayloadJson] with
+ * `txType="TON"` and the canonical transfer JSON bytes; the keysign-side dispatcher decodes those
+ * into `KeysignPayload.signTon` so the existing TonHelper signing path picks them up unchanged.
+ * Other non-EVM `txType`s (PSBT, TRON, SUI, CARDANO, RIPPLE) surface as
+ * [SwapKitError.UnsupportedTxType] until their per-chain signers ship.
  */
 internal class SwapKitQuoteSource
 @Inject
@@ -127,24 +129,36 @@ constructor(
                     destinationAddress = request.dstToken.address,
                 )
             )
-        // TODO(swapkit /track polling, later task): persist swapResponse.swapId on the resulting
-        //  SwapTransaction so /track lookups can correlate cross-chain settlement back to this
-        //  specific quote. The DTO already carries it; the persistence wiring lands with the
-        //  tx-history Phase D work.
-
-        // SwapQuoteResult.Evm is the envelope for both EVM and Solana SwapKit txTypes — Solana
-        // signers pull the base64 blob from `tx.data`, matching how JupiterQuoteSource already
-        // stages a Solana swap. The Evm-typed result is intentional, not a copy-paste.
-        return SwapQuoteResult.Evm(
-            data = buildEvmQuoteFromSwapKit(swapResponse, request.srcToken, request.dstToken, best),
-            // Sub-provider tag (Chainflip / NEAR Intents / Garden / Flashnet) — surfaced on the
-            // verify screen so the user can reason about ETA and debug routing. Prefer
-            // `swapResponse.providers[0]` (the swap call's authoritative routing) and fall back
-            // to `meta.subProvider` for forward compat.
-            subProvider =
-                swapResponse.providers.firstOrNull()?.takeIf { it.isNotBlank() }
-                    ?: swapResponse.meta.subProvider?.takeIf { it.isNotBlank() },
-        )
+        // TODO: persist swapResponse.swapId on the SwapTransaction so /track lookups can correlate
+        //  cross-chain settlement back to this quote once tx-history /track polling lands.
+        val resolvedSubProvider =
+            swapResponse.providers.firstOrNull()?.takeIf { it.isNotBlank() }
+                ?: swapResponse.meta.subProvider?.takeIf { it.isNotBlank() }
+        return when (txTypeOf(swapResponse)) {
+            TxKind.EVM,
+            TxKind.SOLANA ->
+                SwapQuoteResult.Evm(
+                    data =
+                        buildEvmQuoteFromSwapKit(
+                            swapResponse,
+                            request.srcToken,
+                            request.dstToken,
+                            best,
+                        ),
+                    subProvider = resolvedSubProvider,
+                )
+            TxKind.TON ->
+                SwapQuoteResult.SwapKit(
+                    buildSwapKitTonQuote(
+                        swapResponse,
+                        request.srcToken,
+                        request.dstToken,
+                        best,
+                        resolvedSubProvider,
+                    )
+                )
+            TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(swapResponse.meta.txType)
+        }
     }
 
     /**
@@ -197,13 +211,10 @@ constructor(
     }
 
     /**
-     * Wrap the SwapKit `/v3/swap` response into the EVM-shaped [EVMSwapQuoteJson] envelope used by
-     * the existing pipeline. The `tx` blob's wire shape varies by `meta.txType`:
-     * - "evm" → decode as [SwapKitEvmTx], fields map 1:1 to [OneInchSwapTxJson]
-     * - "solana" → decode as [SwapKitSolanaTx], stash the base64 swap blob in `data` like
-     *   [com.vultisig.wallet.data.repositories.swap.JupiterQuoteSource] does so the downstream
-     *   Solana signer can pull it the same way it pulls a Jupiter tx today Anything else
-     *   (PSBT/TRON/TON/…) is out of scope until the per-chain signers ship.
+     * EVM or Solana SwapKit response → [EVMSwapQuoteJson]. `dstAmount` is scaled to raw units and
+     * the inbound fee is embedded on `tx.swapFee` so consumers read it through the same
+     * resolveSwapFee path as Kyber/Jupiter. EVM routes that omit `tx.gas` are refused — the L1
+     * default over-estimates Arbitrum / Optimism / Base / Polygon by multiples.
      */
     private fun buildEvmQuoteFromSwapKit(
         response: SwapKitSwapResponseJson,
@@ -211,26 +222,11 @@ constructor(
         dstToken: Coin,
         route: SwapKitRoute,
     ): EVMSwapQuoteJson {
-        // SwapKit V3 reports `expectedBuyAmount` as a human-readable decimal string ("42.5"
-        // USDC) per the docs. Every other Android quote source (1inch / Kyber / LiFi / Jupiter)
-        // stores `EVMSwapQuoteJson.dstAmount` as a raw-units integer string, and the consumer
-        // (`SwapQuoteManager`) parses it back with `toBigIntegerOrNull`. Scale at this boundary
-        // so the contract stays uniform — otherwise "42.5" becomes ZERO and "2500" becomes 6
-        // orders of magnitude smaller than the actual receive amount.
         val rawDstAmount = scaleDecimalToRawUnits(response.expectedBuyAmount, dstToken.decimal)
-        // Inbound fee in source-chain native units — canonical SwapKit fee surface (iOS' equivalent
-        // is SwapKitService.inboundFee). Embedded in `swapFee` with `swapFeeTokenContract = ""`
-        // (the native-coin sentinel resolveSwapFee recognises) so the consumer reads it the same
-        // way Kyber/Jupiter quote sources surface their per-leg fees.
         val inboundFee = inboundFeeRawUnits(srcToken, route).toString()
         return when (txTypeOf(response)) {
             TxKind.EVM -> {
                 val evm = decode<SwapKitEvmTx>(response.tx, "evm")
-                // Refuse routes that omit `tx.gas`. Falling back to a hardcoded L1-sized constant
-                // (e.g. 600_000) over-estimates by multiples on Arbitrum / Optimism / Base / BSC /
-                // Polygon / Avalanche and produces a misleading Network Fee on the verify screen.
-                // Throwing Decoding here lets the picker drop SwapKit and rank another aggregator
-                // rather than ship a wrong number.
                 val gas =
                     evm.gas?.toLongOrNull()?.takeIf { it > 0 }
                         ?: throw SwapKitError.Decoding(
@@ -252,17 +248,13 @@ constructor(
                 )
             }
             TxKind.SOLANA -> {
-                // SwapKit V3 returns the Solana `tx` as a bare base64 String (`JsonPrimitive`),
-                // not an object with `swapTransaction`/`message` — those nested fields are a
-                // transitional v2-era shape. Accept both with `JsonPrimitive` taking precedence.
                 val base64 = solanaBase64(response.tx)
                 EVMSwapQuoteJson(
                     dstAmount = rawDstAmount,
+                    // Solana signers read the base64 blob from `data`; from/to/gas/value/gasPrice
+                    // on the EVM envelope are unused for Solana — matches JupiterQuoteSource.
                     tx =
                         OneInchSwapTxJson(
-                            // Solana signers don't read from/to/gas/value/gasPrice off the
-                            // OneInchSwapTxJson envelope — they consume the base64 blob in `data`,
-                            // matching how JupiterQuoteSource already stages the Jupiter swap.
                             from = "",
                             to = "",
                             data = base64,
@@ -274,20 +266,82 @@ constructor(
                         ),
                 )
             }
-            TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
+            TxKind.TON,
+            TxKind.UNSUPPORTED ->
+                throw IllegalStateException("Non-EVM/Solana txType reached EVM builder")
         }
     }
 
     /**
-     * Map SwapKit's `meta.txType` (raw upstream casing) onto the internal dispatch kind. Accepts
-     * both `SOLANA` and `SERIALIZED_BASE64` for the Solana branch — SwapKit flipped that
-     * discriminator once before (per iOS commit `382b28f5f`), so the source is permissive.
+     * TON SwapKit response → [SwapQuote.SwapKit]. SwapKit returns `tx` as a `[{address, amount}]`
+     * array; the canonical JSON bytes are stashed on [SwapKitSwapPayloadJson.txPayload] for
+     * cross-device transit. The keysign-side dispatcher decodes them back to populate
+     * `KeysignPayload.signTon` so the existing TonHelper signing path picks them up unchanged.
      */
+    private fun buildSwapKitTonQuote(
+        response: SwapKitSwapResponseJson,
+        srcToken: Coin,
+        dstToken: Coin,
+        route: SwapKitRoute,
+        subProvider: String?,
+    ): com.vultisig.wallet.data.models.SwapQuote.SwapKit {
+        val transfers = decodeTonTransfers(response.tx)
+        val first =
+            transfers.firstOrNull()
+                ?: throw SwapKitError.Decoding("SwapKit TON tx is an empty transfer array")
+        val fromAmount =
+            first.amount.toBigIntegerOrNull()
+                ?: throw SwapKitError.Decoding(
+                    "SwapKit TON transfer amount is not an integer: ${first.amount}"
+                )
+        val canonicalBytes = json.encodeToString(transfers).toByteArray(Charsets.UTF_8)
+        val toAmountDecimal =
+            response.expectedBuyAmount?.let { runCatching { BigDecimal(it) }.getOrNull() }
+                ?: throw SwapKitError.Decoding(
+                    "SwapKit expectedBuyAmount missing or unparseable: ${response.expectedBuyAmount}"
+                )
+        val payload =
+            SwapKitSwapPayloadJson(
+                fromCoin = srcToken,
+                toCoin = dstToken,
+                fromAmount = fromAmount,
+                toAmountDecimal = toAmountDecimal,
+                txType = TX_TYPE_TON,
+                txPayload = canonicalBytes,
+                targetAddress = response.targetAddress.orEmpty().ifBlank { first.address },
+                inboundAddress = null,
+                memo = null,
+                subProvider = subProvider.orEmpty(),
+                swapId = response.swapId.orEmpty(),
+            )
+        return com.vultisig.wallet.data.models.SwapQuote.SwapKit(
+            expectedDstValue =
+                TokenValue(
+                    value = toAmountDecimal.movePointRight(dstToken.decimal).toBigInteger(),
+                    token = dstToken,
+                ),
+            fees = TokenValue(value = inboundFeeRawUnits(srcToken, route), token = srcToken),
+            expiredAt =
+                kotlinx.datetime.Clock.System.now() +
+                    com.vultisig.wallet.data.models.SwapQuote.expiredAfter,
+            data = payload,
+            subProvider = subProvider,
+        )
+    }
+
+    private fun decodeTonTransfers(element: JsonElement): List<SwapKitTonTransfer> =
+        try {
+            json.decodeFromJsonElement<List<SwapKitTonTransfer>>(element)
+        } catch (e: Exception) {
+            throw SwapKitError.Decoding("Failed to decode SwapKit TON transfer array", cause = e)
+        }
+
     private fun txTypeOf(response: SwapKitSwapResponseJson): TxKind =
         when (response.meta.type) {
             "evm" -> TxKind.EVM
             "solana",
             "serialized_base64" -> TxKind.SOLANA
+            "ton" -> TxKind.TON
             else -> TxKind.UNSUPPORTED
         }
 
@@ -320,6 +374,7 @@ constructor(
     private enum class TxKind {
         EVM,
         SOLANA,
+        TON,
         UNSUPPORTED,
     }
 
@@ -370,6 +425,7 @@ constructor(
             Chain.Base -> "BASE"
             Chain.Polygon -> "POL"
             Chain.Solana -> "SOL"
+            Chain.Ton -> "TON"
             else -> null
         }
 
@@ -384,21 +440,16 @@ constructor(
         }
 
     private companion object {
+        /** [SwapKitSwapPayloadJson.txType] tag for SwapKit TON routes. */
+        const val TX_TYPE_TON = "TON"
+
         /**
-         * Sub-provider ids (lower-cased, underscored — matches the wire format of SwapKit's
-         * `/providers` and `route.providers[]` entries: `THORCHAIN`, `THORCHAIN_STREAMING`,
-         * `MAYACHAIN`, `MAYACHAIN_STREAMING`). Earlier dashed / 4-letter variants (`maya`,
-         * `thorchain-streaming`) silently let the streaming sub-providers through, which would
-         * stack a SwapKit affiliate fee on top of Vultisig's native Thor/Maya integrations.
+         * Wire-format sub-provider ids excluded client-side to avoid double affiliate-fee charges.
          */
         private val FILTERED_PROVIDERS: Set<String> =
             setOf("thorchain", "thorchain_streaming", "mayachain", "mayachain_streaming")
 
-        /**
-         * Render [TokenValue] as a dot-separated decimal string suitable for
-         * [SwapKitQuoteRequest.sellAmount]. Strips trailing zeros so "1.0000" → "1" — matches the
-         * iOS POSIX formatter behaviour and the wire samples in the SwapKit V3 spec.
-         */
+        /** Dot-separated decimal `sellAmount`. Trailing zeros stripped so "1.0000" → "1". */
         private fun formatSellAmount(tokenValue: TokenValue): String =
             tokenValue.decimal.stripTrailingZeros().toPlainString()
     }

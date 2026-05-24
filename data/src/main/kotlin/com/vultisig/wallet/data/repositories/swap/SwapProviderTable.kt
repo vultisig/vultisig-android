@@ -129,11 +129,12 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
 
             Chain.Hyperliquid -> setOf(SwapProvider.LIFI)
 
+            Chain.Ton -> setOf(SwapProvider.SWAPKIT)
+
             Chain.Polkadot,
             Chain.Bittensor,
             Chain.Dydx,
             Chain.Sui,
-            Chain.Ton,
             Chain.Osmosis,
             Chain.Terra,
             Chain.TerraClassic,

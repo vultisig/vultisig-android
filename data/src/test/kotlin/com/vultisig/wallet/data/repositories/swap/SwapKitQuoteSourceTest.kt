@@ -504,6 +504,120 @@ internal class SwapKitQuoteSourceTest {
             assertEquals(boom, error.cause)
         }
 
+    @Test
+    fun `fetch returns SwapQuoteResult SwapKit for TON txType with canonical bytes on payload`() =
+        runTest {
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r-ton",
+                                providers = listOf("CHAINFLIP"),
+                                expectedBuy = "0.0125",
+                                fees =
+                                    listOf(
+                                        SwapKitFee(
+                                            type = "inbound",
+                                            chain = "TON",
+                                            amount = "0.005",
+                                        )
+                                    ),
+                            )
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                tonSwapResponse(transfers = listOf("EQAvault" to "1000000000"))
+
+            val result =
+                source().fetch(request(srcToken = tonCoin(), dstToken = ethCoin()))
+                    as SwapQuoteResult.SwapKit
+
+            assertEquals("TON", result.quote.data.txType)
+            assertEquals("EQAvault", result.quote.data.targetAddress)
+            assertEquals(BigInteger("1000000000"), result.quote.data.fromAmount)
+            // Inbound fee 0.005 TON × 10^9 = 5_000_000 nano-TON.
+            assertEquals(BigInteger("5000000"), result.quote.fees.value)
+            // toAmountDecimal 0.0125 × 10^18 = 0.0125 ETH in wei.
+            assertEquals(BigInteger("12500000000000000"), result.quote.expectedDstValue.value)
+            assertEquals("CHAINFLIP", result.quote.subProvider)
+            // Canonical bytes round-trip: decode and confirm structural equivalence.
+            val decoded =
+                Json { ignoreUnknownKeys = true }
+                    .decodeFromString<
+                        List<com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer>
+                    >(
+                        result.quote.data.txPayload.decodeToString()
+                    )
+            assertEquals(1, decoded.size)
+            assertEquals("EQAvault", decoded[0].address)
+            assertEquals("1000000000", decoded[0].amount)
+        }
+
+    @Test
+    fun `fetch carries multiple TON transfers verbatim in canonical bytes`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            tonSwapResponse(
+                transfers = listOf("EQAvault1" to "500000000", "EQAvault2" to "500000000")
+            )
+
+        val result =
+            source().fetch(request(srcToken = tonCoin(), dstToken = ethCoin()))
+                as SwapQuoteResult.SwapKit
+
+        // First transfer drives targetAddress + fromAmount (matches iOS: the deposit address is
+        // the leading vault, the on-chain debit is the sum of transfer amounts handled by the
+        // signer via the full transfer list).
+        assertEquals("EQAvault1", result.quote.data.targetAddress)
+        assertEquals(BigInteger("500000000"), result.quote.data.fromAmount)
+        val decoded =
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString<
+                    List<com.vultisig.wallet.data.api.models.quotes.SwapKitTonTransfer>
+                >(
+                    result.quote.data.txPayload.decodeToString()
+                )
+        assertEquals(2, decoded.size)
+        assertEquals("EQAvault2", decoded[1].address)
+    }
+
+    @Test
+    fun `fetch throws Decoding when TON tx is an empty array`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns tonSwapResponse(transfers = emptyList())
+
+        assertThrows<SwapKitError.Decoding> {
+            source().fetch(request(srcToken = tonCoin(), dstToken = ethCoin()))
+        }
+    }
+
+    @Test
+    fun `fetch throws Decoding when TON transfer amount is not an integer`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns tonSwapResponse(transfers = listOf("EQAvault" to "1.5"))
+
+        assertThrows<SwapKitError.Decoding> {
+            source().fetch(request(srcToken = tonCoin(), dstToken = ethCoin()))
+        }
+    }
+
     // ---- helpers ----
 
     private fun request(
@@ -586,4 +700,43 @@ internal class SwapKitQuoteSourceTest {
             contractAddress = "",
             isNativeToken = true,
         )
+
+    private fun tonCoin() =
+        Coin(
+            chain = Chain.Ton,
+            ticker = "TON",
+            logo = "",
+            address = "EQAuser",
+            decimal = 9,
+            hexPublicKey = "pub",
+            priceProviderID = "the-open-network",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    private fun tonSwapResponse(
+        transfers: List<Pair<String, String>>,
+        expectedBuy: String? = "0.0125",
+        providers: List<String> = listOf("CHAINFLIP"),
+    ): SwapKitSwapResponseJson {
+        val txArray =
+            kotlinx.serialization.json.buildJsonArray {
+                transfers.forEach { (address, amount) ->
+                    add(
+                        buildJsonObject {
+                            put("address", JsonPrimitive(address))
+                            put("amount", JsonPrimitive(amount))
+                        }
+                    )
+                }
+            }
+        return SwapKitSwapResponseJson(
+            swapId = "ton-swap-1",
+            tx = txArray,
+            meta = SwapKitTxMeta(txType = "TON"),
+            expectedBuyAmount = expectedBuy,
+            providers = providers,
+            targetAddress = transfers.firstOrNull()?.first,
+        )
+    }
 }

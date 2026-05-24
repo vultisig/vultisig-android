@@ -598,48 +598,59 @@ constructor(
                             affiliateBps = affiliateBps,
                         ),
                     )
-                val evmResult =
-                    (result as? SwapQuoteResult.Evm)
-                        ?: error("SwapKitQuoteSource must return SwapQuoteResult.Evm")
-                resolvedSubProvider = evmResult.subProvider
-                val apiQuote = evmResult.data
-                val expectedDstValue =
-                    TokenValue(
-                        value =
-                            apiQuote.dstAmount.toBigIntegerOrNull()
-                                ?: error(
-                                    "Malformed SwapKit dstAmount (raw units expected): ${apiQuote.dstAmount}"
-                                ),
-                        token = dstToken,
-                    )
-                // The source layer stages the inbound fee on tx.swapFee with an empty token
-                // contract; resolveSwapFee's empty-contract branch returns the fallback. Pass the
-                // parsed swapFee as fallback so an empty contract doesn't discard the fee and
-                // render $0 Network Fee.
-                val swapKitInboundFee = apiQuote.tx.swapFee.toBigIntegerOrNull() ?: BigInteger.ZERO
-                val (feeAmount, feeCoin) =
-                    resolveSwapFee(
-                        apiQuote.tx.swapFeeTokenContract,
-                        apiQuote.tx.swapFee,
-                        srcNativeToken,
-                        swapKitInboundFee,
-                    )
-                val tokenFees = TokenValue(value = feeAmount, token = feeCoin)
-                SwapQuote.OneInch(
-                    expectedDstValue = expectedDstValue,
-                    fees = tokenFees,
-                    data = apiQuote,
-                    expiredAt = Clock.System.now() + expiredAfter,
-                    // `provider` is the proto-serialized discriminator used by
-                    // SwapTransactionToUiModelMapper to map back onto SwapProvider.SWAPKIT —
-                    // keep it as the canonical id. The sub-provider drives the UI label below.
-                    provider = SwapProvider.SWAPKIT.getSwapProviderId(),
-                )
+                when (result) {
+                    is SwapQuoteResult.Evm -> {
+                        resolvedSubProvider = result.subProvider
+                        buildSwapKitOneInchQuote(result.data, dstToken, srcNativeToken)
+                    }
+                    is SwapQuoteResult.SwapKit -> {
+                        resolvedSubProvider = result.quote.subProvider
+                        result.quote
+                    }
+                    is SwapQuoteResult.Native ->
+                        error("SwapKitQuoteSource returned Native — only Evm / SwapKit expected")
+                }
             }
         val providerLabel =
             if (resolvedSubProvider.isNullOrBlank()) R.string.swap_for_provider_swapkit.asUiText()
             else formatSwapKitProviderLabel(resolvedSubProvider).asUiText()
         return swapQuote to providerLabel
+    }
+
+    /** EVM/Solana SwapKit → SwapQuote.OneInch, riding the existing oneinchSwapPayload pipeline. */
+    private suspend fun buildSwapKitOneInchQuote(
+        apiQuote: com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson,
+        dstToken: Coin,
+        srcNativeToken: Coin,
+    ): SwapQuote.OneInch {
+        val expectedDstValue =
+            TokenValue(
+                value =
+                    apiQuote.dstAmount.toBigIntegerOrNull()
+                        ?: error(
+                            "Malformed SwapKit dstAmount (raw units expected): ${apiQuote.dstAmount}"
+                        ),
+                token = dstToken,
+            )
+        // resolveSwapFee's empty-contract branch returns the `fallback` arg, so pass the parsed
+        // swapFee — otherwise the source-extracted inbound fee is discarded and the verify screen
+        // renders $0.
+        val swapKitInboundFee = apiQuote.tx.swapFee.toBigIntegerOrNull() ?: BigInteger.ZERO
+        val (feeAmount, feeCoin) =
+            resolveSwapFee(
+                apiQuote.tx.swapFeeTokenContract,
+                apiQuote.tx.swapFee,
+                srcNativeToken,
+                swapKitInboundFee,
+            )
+        return SwapQuote.OneInch(
+            expectedDstValue = expectedDstValue,
+            fees = TokenValue(value = feeAmount, token = feeCoin),
+            data = apiQuote,
+            expiredAt = Clock.System.now() + expiredAfter,
+            // Canonical id; SwapTransactionToUiModelMapper resolves back via getSwapProviderId.
+            provider = SwapProvider.SWAPKIT.getSwapProviderId(),
+        )
     }
 
     private suspend fun resolveSwapFee(

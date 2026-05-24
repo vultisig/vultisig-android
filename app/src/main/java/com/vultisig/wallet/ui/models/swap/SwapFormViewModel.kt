@@ -472,10 +472,34 @@ constructor(
                                 )
                             }
 
-                            // Per-chain signers wire this branch as they ship; no quote source
-                            // emits SwapQuote.SwapKit yet.
-                            is SwapQuote.SwapKit ->
-                                error("No SwapKit signer wired for txType=${quote.data.txType}")
+                            is SwapQuote.SwapKit -> {
+                                // SwapKit.targetAddress is the source-chain deposit address —
+                                // for TON this is the SwapKit vault address from transfers[0].
+                                val dstAddress = quote.data.targetAddress
+                                val specificAndUtxo =
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken,
+                                        srcAddress,
+                                        gasFee,
+                                    )
+                                RegularSwapTransaction(
+                                    id = UUID.randomUUID().toString(),
+                                    vaultId = vaultId,
+                                    srcToken = srcToken,
+                                    srcTokenValue = srcTokenValue,
+                                    dstToken = dstToken,
+                                    dstAddress = dstAddress,
+                                    expectedDstTokenValue = dstTokenValue,
+                                    blockChainSpecific = specificAndUtxo,
+                                    estimatedFees = quote.fees,
+                                    gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
+                                    memo = null,
+                                    // Non-EVM SwapKit chains don't require ERC-20-style approvals.
+                                    isApprovalRequired = false,
+                                    gasFeeFiatValue = gasFeeFiatValue,
+                                    payload = SwapPayload.SwapKit(quote.data),
+                                )
+                            }
 
                             is SwapQuote.OneInch -> {
                                 val dstAddress = quote.data.tx.to
