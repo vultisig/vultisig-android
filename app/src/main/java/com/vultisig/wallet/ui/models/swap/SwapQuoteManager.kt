@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.swap
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -764,6 +765,47 @@ constructor(
                 UiText.StringResource(R.string.swap_error_rate_limit)
             is SwapException.AmountBelowDustThreshold ->
                 UiText.StringResource(R.string.swap_error_amount_below_dust_threshold)
+        }
+
+    /** Localized message for each [SwapKitError] variant — surfaced verbatim on the swap form. */
+    fun mapSwapKitErrorToFormError(e: SwapKitError): UiText =
+        when (e) {
+            is SwapKitError.ApiKeyMissing ->
+                UiText.StringResource(R.string.swapkit_error_api_key_missing)
+            is SwapKitError.ApiKeyInvalid ->
+                UiText.StringResource(R.string.swapkit_error_api_key_invalid)
+            is SwapKitError.InsufficientBalance ->
+                UiText.StringResource(R.string.swapkit_error_insufficient_balance)
+            is SwapKitError.InsufficientAllowance ->
+                UiText.StringResource(R.string.swapkit_error_insufficient_allowance)
+            is SwapKitError.UnableToBuildTransaction ->
+                UiText.StringResource(R.string.swapkit_error_unable_to_build_transaction)
+            is SwapKitError.SwapRouteNotFound ->
+                UiText.StringResource(R.string.swapkit_error_swap_route_not_found)
+            is SwapKitError.QuoteDeviation ->
+                UiText.StringResource(R.string.swapkit_error_output_amount_deviation_too_high)
+            is SwapKitError.NoRoutes ->
+                UiText.StringResource(R.string.swapkit_error_no_routes_found)
+            is SwapKitError.BlackListAsset ->
+                UiText.StringResource(R.string.swapkit_error_black_list_asset)
+            is SwapKitError.InvalidSourceAddress ->
+                UiText.StringResource(R.string.swapkit_error_invalid_source_address)
+            is SwapKitError.InvalidDestinationAddress ->
+                UiText.StringResource(R.string.swapkit_error_invalid_destination_address)
+            is SwapKitError.AddressScreening ->
+                UiText.StringResource(R.string.swapkit_error_address_screening)
+            is SwapKitError.UnsupportedTxType ->
+                UiText.FormattedText(R.string.swapkit_error_unsupported_tx_type, listOf(e.txType))
+            is SwapKitError.ProviderNotEnabled ->
+                UiText.StringResource(R.string.swapkit_error_provider_not_enabled)
+            is SwapKitError.RouteFiltered ->
+                UiText.StringResource(R.string.swapkit_error_route_filtered)
+            is SwapKitError.MalformedAmount ->
+                UiText.FormattedText(R.string.swapkit_error_malformed_amount, listOf(e.raw))
+            is SwapKitError.Network -> UiText.StringResource(R.string.swapkit_error_network)
+            is SwapKitError.Decoding -> UiText.StringResource(R.string.swapkit_error_decoding)
+            is SwapKitError.Server ->
+                UiText.FormattedText(R.string.swapkit_error_server, listOf(e.httpStatus ?: 0))
         }
 
     companion object {

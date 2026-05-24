@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -1132,6 +1133,12 @@ constructor(
                                 ),
                             cause = e,
                             tag = "swapError",
+                        )
+                    } catch (e: SwapKitError) {
+                        resetQuoteState(
+                            error = swapQuoteManager.mapSwapKitErrorToFormError(e),
+                            cause = e,
+                            tag = "swapKitError",
                         )
                     } catch (e: CancellationException) {
                         throw e
