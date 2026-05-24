@@ -329,7 +329,7 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
-    fun `fetch throws Decoding when expectedBuyAmount is missing`() = runTest {
+    fun `fetch throws MalformedAmount when expectedBuyAmount is missing`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
@@ -338,11 +338,12 @@ internal class SwapKitQuoteSourceTest {
             )
         coEvery { api.swap(any()) } returns evmSwapResponse(expectedBuy = null)
 
-        assertThrows<SwapKitError.Decoding> { source().fetch(request()) }
+        val error = assertThrows<SwapKitError.MalformedAmount> { source().fetch(request()) }
+        assertEquals("(missing)", error.raw)
     }
 
     @Test
-    fun `fetch throws Decoding when expectedBuyAmount is not a decimal`() = runTest {
+    fun `fetch throws MalformedAmount when expectedBuyAmount is not a decimal`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
@@ -351,7 +352,8 @@ internal class SwapKitQuoteSourceTest {
             )
         coEvery { api.swap(any()) } returns evmSwapResponse(expectedBuy = "not-a-number")
 
-        assertThrows<SwapKitError.Decoding> { source().fetch(request()) }
+        val error = assertThrows<SwapKitError.MalformedAmount> { source().fetch(request()) }
+        assertEquals("not-a-number", error.raw)
     }
 
     @Test

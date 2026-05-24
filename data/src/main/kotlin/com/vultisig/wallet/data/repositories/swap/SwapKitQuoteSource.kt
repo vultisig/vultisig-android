@@ -326,15 +326,13 @@ constructor(
     /**
      * Convert SwapKit's human-readable `expectedBuyAmount` (decimal string, e.g. "42.5") into the
      * raw-units integer string the rest of the swap pipeline expects. Throws
-     * [SwapKitError.Decoding] when the upstream value is missing or unparseable so a malformed
-     * payload surfaces explicitly rather than masking as a zero quote.
+     * [SwapKitError.MalformedAmount] when the upstream value is missing or unparseable so the user
+     * sees the typed "Invalid amount" message instead of a generic "Could not parse response".
      */
     private fun scaleDecimalToRawUnits(decimalString: String?, decimals: Int): String {
         val parsed =
             decimalString?.let { runCatching { BigDecimal(it) }.getOrNull() }
-                ?: throw SwapKitError.Decoding(
-                    "SwapKit expectedBuyAmount missing or not a decimal: $decimalString"
-                )
+                ?: throw SwapKitError.MalformedAmount(raw = decimalString ?: "(missing)")
         return parsed.movePointRight(decimals).toBigInteger().toString()
     }
 

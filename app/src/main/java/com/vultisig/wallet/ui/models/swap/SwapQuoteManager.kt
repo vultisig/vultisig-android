@@ -783,7 +783,15 @@ constructor(
             is SwapKitError.SwapRouteNotFound ->
                 UiText.StringResource(R.string.swapkit_error_swap_route_not_found)
             is SwapKitError.QuoteDeviation ->
-                UiText.StringResource(R.string.swapkit_error_output_amount_deviation_too_high)
+                // FormattedText (with no args) routes through String.format so the resource's
+                // `%%` escape collapses back to a literal `%` — `StringResource` doesn't run
+                // String.format and would render `5%%` verbatim. Cannot un-escape the resource
+                // because Android lint rejects an unescaped `%` adjacent to a letter (e.g. the
+                // Dutch translation reads `5% afgeweken` which lint flags as an incomplete `%a`).
+                UiText.FormattedText(
+                    R.string.swapkit_error_output_amount_deviation_too_high,
+                    emptyList(),
+                )
             is SwapKitError.NoRoutes ->
                 UiText.StringResource(R.string.swapkit_error_no_routes_found)
             is SwapKitError.BlackListAsset ->

@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.api.errors
 
+import java.util.Locale
+
 /**
  * Typed errors surfaced by the SwapKit aggregator integration. Each variant maps 1:1 to a known
  * failure mode documented at https://docs.swapkit.dev (or a client-side filter outcome). The swap
@@ -88,7 +90,9 @@ sealed class SwapKitError(message: String, cause: Throwable? = null) : Exception
         ): SwapKitError {
             val raw = code?.trim().orEmpty()
             val message = fallbackMessage ?: raw.ifEmpty { "SwapKit request failed" }
-            return when (raw.lowercase()) {
+            // Locale.ROOT to dodge Turkish-locale's `I` → `ı` (dotless i) mapping; the SwapKit
+            // wire codes are ASCII camelCase and must round-trip on any device locale.
+            return when (raw.lowercase(Locale.ROOT)) {
                 "apikeymissing" -> ApiKeyMissing()
                 "apikeyinvalid" -> ApiKeyInvalid()
                 "insufficientbalance" -> InsufficientBalance()
