@@ -1174,6 +1174,7 @@
     <string name="key_import_error_no_mnemonic_description">Geen zaadzin gevonden. Voer uw zaadzin opnieuw in en probeer het opnieuw.</string>
     <string name="swap_error_approval_timeout">Tokengoedkeuring duurt langer dan verwacht. Controleer de Explorer voordat u het opnieuw probeert.</string>
     <string name="swap_error_approval_failed">Tokengoedkeuringstransactie mislukt. Probeer het opnieuw.</string>
+    <string name="erc20_approval_title">Goedkeuren</string>
     <string name="erc20_approval_unlimited_amount">Onbeperkte goedkeuring van %1$s</string>
     <string name="erc20_approval_spender">Ontvanger</string>
     <string name="decoded_function_owner">Eigenaar</string>
