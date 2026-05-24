@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -324,7 +325,7 @@ private fun UnlockTierButton(onClickUnlock: () -> Unit) {
                 .clip(shape = shape)
                 .background(color = Theme.v2.colors.buttons.secondary, shape = shape)
                 .border(width = 1.dp, color = Theme.v2.colors.border.primaryAccent4, shape = shape)
-                .clickable(enabled = true, onClick = onClickUnlock)
+                .clickable(enabled = true, role = Role.Button, onClick = onClickUnlock)
                 .padding(paddingValues = PaddingValues(vertical = 14.dp, horizontal = 32.dp)),
     ) {
         Text(
