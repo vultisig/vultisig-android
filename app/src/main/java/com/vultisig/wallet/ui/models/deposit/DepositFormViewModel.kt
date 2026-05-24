@@ -344,26 +344,35 @@ constructor(
 
     private val depositStrategies: DepositSubmitStrategies =
         mapOf(
-            DepositOption.AddCacaoPool to DepositSubmitStrategy { createAddCacaoPoolTransaction() },
-            DepositOption.Bond to bondStrategy,
-            DepositOption.Unbond to unbondStrategy,
-            DepositOption.Leave to leaveStrategy,
-            DepositOption.Custom to DepositSubmitStrategy { createCustomTransaction() },
-            DepositOption.Stake to DepositSubmitStrategy { createStakeTransaction() },
-            DepositOption.Unstake to DepositSubmitStrategy { createUnstakeTransaction() },
-            DepositOption.TransferIbc to DepositSubmitStrategy { createTransferIbcTx() },
-            DepositOption.Switch to DepositSubmitStrategy { createSwitchTx() },
-            DepositOption.Merge to DepositSubmitStrategy { createMergeTx() },
-            DepositOption.UnMerge to DepositSubmitStrategy { createUnMergeTx() },
-            DepositOption.RemoveCacaoPool to
-                DepositSubmitStrategy { createRemoveCacaoPoolTransaction() },
-            DepositOption.AddLiquidity to DepositSubmitStrategy { createAddLiquidityTransaction() },
-            DepositOption.RemoveLiquidity to
-                DepositSubmitStrategy { createRemoveLiquidityTransaction() },
-            DepositOption.SecuredAsset to DepositSubmitStrategy { createSecuredAssetTransaction() },
-            DepositOption.WithdrawSecuredAsset to
-                DepositSubmitStrategy { createWithdrawSecuredAssetTransaction() },
-        )
+                DepositOption.AddCacaoPool to
+                    DepositSubmitStrategy { createAddCacaoPoolTransaction() },
+                DepositOption.Bond to bondStrategy,
+                DepositOption.Unbond to unbondStrategy,
+                DepositOption.Leave to leaveStrategy,
+                DepositOption.Custom to DepositSubmitStrategy { createCustomTransaction() },
+                DepositOption.Stake to DepositSubmitStrategy { createStakeTransaction() },
+                DepositOption.Unstake to DepositSubmitStrategy { createUnstakeTransaction() },
+                DepositOption.TransferIbc to DepositSubmitStrategy { createTransferIbcTx() },
+                DepositOption.Switch to DepositSubmitStrategy { createSwitchTx() },
+                DepositOption.Merge to DepositSubmitStrategy { createMergeTx() },
+                DepositOption.UnMerge to DepositSubmitStrategy { createUnMergeTx() },
+                DepositOption.RemoveCacaoPool to
+                    DepositSubmitStrategy { createRemoveCacaoPoolTransaction() },
+                DepositOption.AddLiquidity to
+                    DepositSubmitStrategy { createAddLiquidityTransaction() },
+                DepositOption.RemoveLiquidity to
+                    DepositSubmitStrategy { createRemoveLiquidityTransaction() },
+                DepositOption.SecuredAsset to
+                    DepositSubmitStrategy { createSecuredAssetTransaction() },
+                DepositOption.WithdrawSecuredAsset to
+                    DepositSubmitStrategy { createWithdrawSecuredAssetTransaction() },
+            )
+            .also { strategies ->
+                check(DepositOption.entries.all { it in strategies }) {
+                    "Missing deposit strategy for: " +
+                        DepositOption.entries.filterNot { it in strategies.keys }
+                }
+            }
 
     fun loadData(
         vaultId: String,
