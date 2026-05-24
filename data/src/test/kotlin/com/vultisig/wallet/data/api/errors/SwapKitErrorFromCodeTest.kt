@@ -113,4 +113,24 @@ class SwapKitErrorFromCodeTest {
             SwapKitError.fromCode("  noRoutesFound  "),
         )
     }
+
+    @Test
+    fun `fromCode accepts snake_case aliases for NoRoutes and QuoteDeviation`() {
+        assertInstanceOf(
+            SwapKitError.NoRoutes::class.java,
+            SwapKitError.fromCode("no_routes_found"),
+        )
+        assertInstanceOf(SwapKitError.NoRoutes::class.java, SwapKitError.fromCode("no_routes"))
+        assertInstanceOf(
+            SwapKitError.QuoteDeviation::class.java,
+            SwapKitError.fromCode("output_amount_deviation_too_high"),
+        )
+    }
+
+    @Test
+    fun `fromCode returns Network for a null code`() {
+        // Defensive — the http extractor returns null when the body is blank or has no `code`
+        // field; that path must not crash and must classify as transport-level.
+        assertInstanceOf(SwapKitError.Network::class.java, SwapKitError.fromCode(null))
+    }
 }

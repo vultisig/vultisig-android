@@ -82,6 +82,10 @@ sealed class SwapKitError(message: String, cause: Throwable? = null) : Exception
         /**
          * Map SwapKit's documented `/v3/swap` and `/v3/quote` error codes onto a typed error.
          * Unknown codes fall through to [Server] (with HTTP status) or [Network] (without one).
+         *
+         * [MalformedAmount] and [UnsupportedTxType] are intentionally NOT produced here — they
+         * carry caller-supplied payload values ([MalformedAmount.raw], [UnsupportedTxType.txType])
+         * and are thrown at the call sites that have the value in hand.
          */
         fun fromCode(
             code: String?,

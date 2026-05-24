@@ -813,7 +813,12 @@ constructor(
             is SwapKitError.Network -> UiText.StringResource(R.string.swapkit_error_network)
             is SwapKitError.Decoding -> UiText.StringResource(R.string.swapkit_error_decoding)
             is SwapKitError.Server ->
-                UiText.FormattedText(R.string.swapkit_error_server, listOf(e.httpStatus ?: 0))
+                // A null httpStatus rendered as `0` reads like a real status; fall back to the
+                // generic network copy. fromCode never emits null, but Server can be constructed
+                // directly elsewhere.
+                e.httpStatus?.let { status ->
+                    UiText.FormattedText(R.string.swapkit_error_server, listOf(status))
+                } ?: UiText.StringResource(R.string.swapkit_error_network)
         }
 
     companion object {
