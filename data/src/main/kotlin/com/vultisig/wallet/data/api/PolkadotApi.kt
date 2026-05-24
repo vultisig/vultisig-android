@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import java.math.BigInteger
@@ -94,7 +93,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                 id = 1,
             )
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-        return response.body<PolkadotGetNonceJson>().result
+        return response.bodyOrThrow<PolkadotGetNonceJson>().result
     }
 
     override suspend fun getBlockHash(isGenesis: Boolean): String {
@@ -106,7 +105,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                 id = 1,
             )
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-        return response.body<PolkadotGetBlockHashJson>().result
+        return response.bodyOrThrow<PolkadotGetBlockHashJson>().result
     }
 
     override suspend fun getGenesisBlockHash(): String {
@@ -122,7 +121,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                 id = 1,
             )
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-        val rpcResp = response.body<PolkadotGetRunTimeVersionJson>()
+        val rpcResp = response.bodyOrThrow<PolkadotGetRunTimeVersionJson>()
         val specVersion = rpcResp.result.specVersion
         val transactionVersion = rpcResp.result.transactionVersion
         return Pair(specVersion, transactionVersion)
@@ -138,7 +137,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
             )
 
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-        val responseContent = response.body<PolkadotGetBlockHeaderJson>()
+        val responseContent = response.bodyOrThrow<PolkadotGetBlockHeaderJson>()
         val number = responseContent.result.number
         return BigInteger(number.drop(2), 16)
     }
@@ -152,7 +151,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                 id = 1,
             )
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-        val responseContent = response.body<PolkadotBroadcastTransactionJson>()
+        val responseContent = response.bodyOrThrow<PolkadotBroadcastTransactionJson>()
         if (responseContent.error != null) {
             if (responseContent.error.code == 1012 || responseContent.error.code == 1013) {
                 return null

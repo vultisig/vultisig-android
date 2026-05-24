@@ -13,6 +13,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import java.math.BigInteger
 import javax.inject.Inject
@@ -86,7 +87,10 @@ constructor(
                 listOf(swapResponseAsync, quoteResponseAsync).awaitAll().also { responses ->
                     responses.forEach { response ->
                         if (!response.status.isSuccess()) {
-                            val resp = response.body<OneInchSwapQuoteErrorResponse>()
+                            val resp =
+                                json.decodeFromString<OneInchSwapQuoteErrorResponse>(
+                                    response.bodyAsText()
+                                )
                             return@coroutineScope EVMSwapQuoteDeserialized.Error(
                                 error = resp.description
                             )

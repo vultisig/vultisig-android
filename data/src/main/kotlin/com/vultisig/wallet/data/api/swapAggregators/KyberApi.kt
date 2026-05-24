@@ -10,7 +10,6 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.KyberSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
@@ -95,7 +94,7 @@ constructor(
             if (!response.status.isSuccess()) {
                 val errorResponse =
                     runCatching {
-                            json.decodeFromString<KyberSwapErrorResponse>(response.body<String>())
+                            json.decodeFromString<KyberSwapErrorResponse>(response.bodyAsText())
                         }
                         .getOrNull()
                 return KyberSwapQuoteDeserialized.Error(
@@ -108,7 +107,7 @@ constructor(
 
             return json.decodeFromString(
                 kyberSwapQuoteResponseJsonSerializer,
-                response.body<String>(),
+                response.bodyOrThrow<String>(),
             )
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
