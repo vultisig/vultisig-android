@@ -1233,6 +1233,7 @@
     <string name="unknown_error">Unknown error</string>
     <string name="swap_error_approval_timeout">Token approval is taking longer than expected. Check the explorer before retrying.</string>
     <string name="swap_error_approval_failed">Token approval transaction failed. Please try again</string>
+    <string name="erc20_approval_title">Approve</string>
     <string name="erc20_approval_unlimited_amount">Unlimited %1$s approval</string>
     <string name="erc20_approval_spender">Spender</string>
     <string name="decoded_function_owner">Owner</string>

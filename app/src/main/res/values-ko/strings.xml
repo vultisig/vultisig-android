@@ -1200,6 +1200,7 @@
     <string name="key_import_error_no_mnemonic_description">시드 문구를 찾을 수 없습니다. 시드 문구를 다시 입력하고 다시 시도하세요.</string>
     <string name="swap_error_approval_timeout">토큰 승인이 예상보다 오래 걸리고 있습니다. 다시 시도하기 전에 Explorer를 확인하세요</string>
     <string name="swap_error_approval_failed">토큰 승인 거래에 실패했습니다. 다시 시도해 주세요</string>
+    <string name="erc20_approval_title">승인</string>
     <string name="erc20_approval_unlimited_amount">무제한 %1$s 승인</string>
     <string name="erc20_approval_spender">수신자</string>
     <string name="decoded_function_owner">소유자</string>

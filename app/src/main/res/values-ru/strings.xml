@@ -1193,6 +1193,7 @@
     <string name="key_import_error_no_mnemonic_description">Seed-фраза не найдена. Пожалуйста, введите заново вашу seed-фразу и попробуйте снова.</string>
     <string name="swap_error_approval_timeout">Одобрение токена занимает больше времени, чем ожидалось. Проверьте обозреватель, прежде чем повторять попытку</string>
     <string name="swap_error_approval_failed">Транзакция одобрения токена не удалась. Пожалуйста, попробуйте снова</string>
+    <string name="erc20_approval_title">Одобрить</string>
     <string name="erc20_approval_unlimited_amount">Неограниченное одобрение %1$s</string>
     <string name="erc20_approval_spender">Получатель</string>
     <string name="decoded_function_owner">Владелец</string>

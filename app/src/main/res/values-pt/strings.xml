@@ -1179,6 +1179,7 @@
     <string name="key_import_error_no_mnemonic_description">Nenhuma frase-semente encontrada. Por favor, insira novamente sua frase-semente e tente novamente.</string>
     <string name="swap_error_approval_timeout">A aprovação do token está a demorar mais do que o esperado. Verifique o explorador antes de tentar novamente</string>
     <string name="swap_error_approval_failed">A transação de aprovação do token falhou. Por favor tente novamente</string>
+    <string name="erc20_approval_title">Aprovar</string>
     <string name="erc20_approval_unlimited_amount">Aprovação ilimitada de %1$s</string>
     <string name="erc20_approval_spender">Destinatário</string>
     <string name="decoded_function_owner">Proprietário</string>
