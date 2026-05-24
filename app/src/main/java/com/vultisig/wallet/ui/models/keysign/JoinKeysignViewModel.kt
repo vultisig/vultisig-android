@@ -87,6 +87,7 @@ import com.vultisig.wallet.ui.models.sign.VerifySignMessageUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
+import com.vultisig.wallet.ui.models.swap.formatSwapKitSubProvider
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -616,6 +617,16 @@ constructor(
                         is SwapPayload.EVM ->
                             swapProviderFromWireId(swapPayload.data.provider)?.getSwapProviderId()
                                 ?: swapPayload.data.provider
+                        // Surface the SwapKit sub-provider (Chainflip / NEAR / Garden / Flashnet)
+                        // in the join-flow verify row when present so the joining peer sees the
+                        // same routing context the initiator saw at quote time.
+                        is SwapPayload.SwapKit -> {
+                            val baseLabel = SwapProvider.SWAPKIT.getSwapProviderId()
+                            swapPayload.data.subProvider
+                                .takeIf { it.isNotBlank() }
+                                ?.let { "$baseLabel (${formatSwapKitSubProvider(it)})" }
+                                ?: baseLabel
+                        }
                     }
 
                 when (swapPayload) {
@@ -844,6 +855,37 @@ constructor(
                                 provider = provider,
                                 providerFee = quote.fees,
                                 providerFeeToken = dstToken,
+                                currency = currency,
+                            )
+                        transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
+                        transactionHistoryData =
+                            mapSwapTransactionToHistoryData(swapTransactionUiModel)
+                        verifyUiModel.value =
+                            VerifyUiModel.Swap(
+                                VerifySwapUiModel(
+                                    tx = swapTransactionUiModel,
+                                    vaultName = vaultName,
+                                )
+                            )
+                    }
+
+                    is SwapPayload.SwapKit -> {
+                        // Non-EVM SwapKit routes (TON / PSBT / SUI / Cardano / TRON). The
+                        // initiator's per-leg fee surface lived on route.fees[] and isn't
+                        // re-fetched at join time — display zero provider fee here and rely on
+                        // the network gas estimate for the verify row. The signing path itself
+                        // reads payload.swapPayload (cross-device wire shape, proto field 26)
+                        // plus chain-specific dispatch (e.g. payload.signTon for TON).
+                        val swapTransactionUiModel =
+                            buildSwapUiModel(
+                                srcToken = srcToken,
+                                srcTokenValue = srcTokenValue,
+                                dstToken = dstToken,
+                                dstTokenValue = dstTokenValue,
+                                estimatedNetworkGasFee = estimatedNetworkGasFee,
+                                provider = provider,
+                                providerFee = TokenValue(value = BigInteger.ZERO, token = srcToken),
+                                providerFeeToken = srcToken,
                                 currency = currency,
                             )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)

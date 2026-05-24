@@ -644,20 +644,10 @@ constructor(
         val providerLabel =
             resolvedSubProvider
                 ?.takeIf { it.isNotBlank() }
-                ?.let { sub -> "SwapKit (${formatSubProvider(sub)})".asUiText() }
+                ?.let { sub -> "SwapKit (${formatSwapKitSubProvider(sub)})".asUiText() }
                 ?: R.string.swap_for_provider_swapkit.asUiText()
         return swapQuote to providerLabel
     }
-
-    /**
-     * Render a SwapKit sub-provider id (`CHAINFLIP`, `near_intents`, `flashnet`) into a display
-     * label. Replaces underscores with spaces and title-cases each token so `near_intents` → `Near
-     * Intents`; brand names already in mixed/upper case are left alone.
-     */
-    private fun formatSubProvider(raw: String): String =
-        raw.split('_', '-').joinToString(" ") { token ->
-            token.replaceFirstChar { ch -> if (ch.isLowerCase()) ch.titlecase() else ch.toString() }
-        }
 
     private suspend fun resolveSwapFee(
         swapFeeTokenContract: String,

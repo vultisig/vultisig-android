@@ -231,6 +231,27 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         provider = from.provider,
                     )
                 } else null,
+            // SwapKit non-EVM-shaped routes (BTC PSBT, TON transfer array, ADA CBOR, TRON
+            // TronWeb object, SUI PTB, ZEC Sapling, etc.) — proto field 26 added via commondata
+            // PR #86. EVM and Solana SwapKit routes ride oneinchSwapPayload above with
+            // provider="swapkit", so this branch is non-empty only for non-EVM tx types.
+            swapkitSwapPayload =
+                if (swapPayload is SwapPayload.SwapKit) {
+                    val from = swapPayload.data
+                    vultisig.keysign.v1.SwapKitSwapPayload(
+                        fromCoin = from.fromCoin.toCoinProto(),
+                        toCoin = from.toCoin.toCoinProto(),
+                        fromAmount = from.fromAmount.toString(),
+                        toAmountDecimal = from.toAmountDecimal.toPlainString(),
+                        txType = from.txType,
+                        txPayload = from.txPayload,
+                        targetAddress = from.targetAddress,
+                        inboundAddress = from.inboundAddress,
+                        memo = from.memo,
+                        subProvider = from.subProvider,
+                        swapId = from.swapId,
+                    )
+                } else null,
             wasmExecuteContractPayload = keysignPayload.wasmExecuteContractPayload,
             erc20ApprovePayload =
                 if (approvePayload is ERC20ApprovePayload) {

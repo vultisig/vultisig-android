@@ -472,6 +472,19 @@ constructor(
                                 )
                             }
 
+                            // Non-EVM SwapKit quotes (TON / PSBT / SUI / Cardano / TRON / ZEC)
+                            // can't reach this branch yet — no SwapQuoteSource emits
+                            // SwapQuote.SwapKit in this PR, the wiring lands per-chain with each
+                            // signer's PR. The branch exists here purely to satisfy the
+                            // exhaustive when so the foundation can compile without forcing a
+                            // half-finished per-chain build path.
+                            is SwapQuote.SwapKit ->
+                                error(
+                                    "SwapQuote.SwapKit reached SwapFormViewModel build path " +
+                                        "before its chain-specific signer was wired " +
+                                        "(txType=${quote.data.txType})"
+                                )
+
                             is SwapQuote.OneInch -> {
                                 val dstAddress = quote.data.tx.to
                                 val specificAndUtxo =

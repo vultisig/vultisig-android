@@ -39,11 +39,24 @@ sealed class SwapQuoteResult {
      */
     data class Evm(val data: EVMSwapQuoteJson, val subProvider: String? = null) : SwapQuoteResult()
 
+    /**
+     * SwapKit non-EVM-shaped quote envelope. EVM and Solana SwapKit routes stay on [Evm] (their
+     * /v3/swap shape matches OneInch's 1:1); BTC PSBT / TON / ADA / TRON / SUI / ZEC route shapes
+     * flow through here so the payload builder can stash the bytes on a [SwapPayload.SwapKit] for
+     * cross-device proto round-trip via `swapkitSwapPayload` field 26.
+     */
+    data class SwapKit(val quote: com.vultisig.wallet.data.models.SwapQuote.SwapKit) :
+        SwapQuoteResult()
+
     fun expectNative(provider: SwapProvider): SwapQuote =
         when (this) {
             is Native -> quote
             is Evm ->
                 throw SwapException.UnkownSwapError("Expected Native quote for $provider, got Evm")
+            is SwapKit ->
+                throw SwapException.UnkownSwapError(
+                    "Expected Native quote for $provider, got SwapKit"
+                )
         }
 
     fun expectEvm(provider: SwapProvider): EVMSwapQuoteJson =
@@ -51,6 +64,8 @@ sealed class SwapQuoteResult {
             is Evm -> data
             is Native ->
                 throw SwapException.UnkownSwapError("Expected Evm quote for $provider, got Native")
+            is SwapKit ->
+                throw SwapException.UnkownSwapError("Expected Evm quote for $provider, got SwapKit")
         }
 }
 
