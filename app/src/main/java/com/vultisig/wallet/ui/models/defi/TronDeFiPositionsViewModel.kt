@@ -13,9 +13,12 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
+import com.vultisig.wallet.data.repositories.TronDeFiSnapshot
+import com.vultisig.wallet.data.repositories.TronDeFiSnapshotDataSource
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
@@ -113,6 +116,7 @@ constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val tronDeFiSnapshotDataSource: TronDeFiSnapshotDataSource,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
@@ -138,15 +142,16 @@ constructor(
             viewModelScope.safeLaunch(
                 onError = { e ->
                     Timber.e(e, "Failed to load Tron DeFi data")
-                    _state.value =
-                        TronDeFiUiState.Error(R.string.error_view_default_description.asUiText())
+                    // Don't blow away a screen that's already showing data on a background-refresh
+                    // failure; only surface the error state when there's nothing rendered yet.
+                    if (_state.value !is TronDeFiUiState.Success) {
+                        _state.value =
+                            TronDeFiUiState.Error(
+                                R.string.error_view_default_description.asUiText()
+                            )
+                    }
                 }
             ) {
-                val previousSuccess =
-                    (_state.value as? TronDeFiUiState.Success)
-                        ?: (_state.value as? TronDeFiUiState.Loading)?.previousSuccess
-                _state.value = TronDeFiUiState.Loading(previousSuccess = previousSuccess)
-
                 // Resolve the TRX coin for this vault
                 val trxCoin = findTrxCoin(vaultId)
                 cachedTrxCoin = trxCoin
@@ -157,8 +162,33 @@ constructor(
                 }
 
                 val isBalanceVisible = balanceVisibilityRepository.getVisibility(vaultId)
+                val currency = appCurrencyRepository.currency.first()
+                val currencyFormat = appCurrencyRepository.getCurrencyFormat()
 
-                // Fetch account state and resource usage in parallel
+                // Render the cached snapshot immediately so reopening doesn't flash skeletons;
+                // only show the loading skeleton when there's nothing cached to display.
+                val cached = tronDeFiSnapshotDataSource.read(trxCoin.address)
+                if (cached != null) {
+                    val cachedPrice = trxCachedPrice(trxCoin.id, currency)
+                    _state.value =
+                        TronDeFiUiState.Success(
+                            tronData =
+                                buildStakingUiModel(
+                                    cached.account,
+                                    cached.resource,
+                                    cachedPrice,
+                                    currencyFormat,
+                                ),
+                            isBalanceVisible = isBalanceVisible,
+                        )
+                } else {
+                    val previousSuccess =
+                        (_state.value as? TronDeFiUiState.Success)
+                            ?: (_state.value as? TronDeFiUiState.Loading)?.previousSuccess
+                    _state.value = TronDeFiUiState.Loading(previousSuccess = previousSuccess)
+                }
+
+                // Fetch fresh account state and resource usage in parallel
                 val (account, resource) =
                     coroutineScope {
                         val accountDeferred = async { tronApi.getAccount(trxCoin.address) }
@@ -166,20 +196,19 @@ constructor(
                         Pair(accountDeferred.await(), resourceDeferred.await())
                     }
 
-                // Resolve fiat price for display
-                val currency = appCurrencyRepository.currency.first()
-                val currencyFormat = appCurrencyRepository.getCurrencyFormat()
-                val trxPrice =
-                    tokenPriceRepository.getCachedPrice(
-                        tokenId = trxCoin.id,
-                        appCurrency = currency,
-                    ) ?: BigDecimal.ZERO
+                val trxPrice = trxCachedPrice(trxCoin.id, currency)
 
                 _state.value =
                     TronDeFiUiState.Success(
                         tronData = buildStakingUiModel(account, resource, trxPrice, currencyFormat),
                         isBalanceVisible = isBalanceVisible,
                     )
+
+                // Persist for the next open.
+                tronDeFiSnapshotDataSource.write(
+                    trxCoin.address,
+                    TronDeFiSnapshot(account = account, resource = resource),
+                )
             }
     }
 
@@ -234,6 +263,10 @@ constructor(
             "ENERGY" -> TronResourceType.ENERGY
             else -> null
         }
+
+    private suspend fun trxCachedPrice(tokenId: String, currency: AppCurrency): BigDecimal =
+        tokenPriceRepository.getCachedPrice(tokenId = tokenId, appCurrency = currency)
+            ?: BigDecimal.ZERO
 
     private suspend fun findTrxCoin(vaultId: VaultId) =
         vaultRepository.get(vaultId)?.coins?.find { it.chain == Chain.Tron && it.isNativeToken }

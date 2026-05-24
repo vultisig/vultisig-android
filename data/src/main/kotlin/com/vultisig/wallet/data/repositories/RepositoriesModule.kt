@@ -289,6 +289,12 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindTronDeFiSnapshotDataSource(
+        impl: TronDeFiSnapshotDataSourceImpl
+    ): TronDeFiSnapshotDataSource
+
+    @Binds
+    @Singleton
     fun bindKeyImportRepository(impl: KeyImportRepositoryImpl): KeyImportRepository
 
     @Binds
