@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -19,7 +19,7 @@ class FourByteApiBodyReadTest {
         FourByteApiImpl(httpClient = MockHttpClient.respondingWith(status, body))
 
     @Test
-    fun `decodeFunction returns textSignature of first result on success`() = runBlocking {
+    fun `decodeFunction returns textSignature of first result on success`() = runTest {
         val body =
             """
             {
@@ -42,7 +42,7 @@ class FourByteApiBodyReadTest {
     }
 
     @Test
-    fun `decodeFunction returns null when results list is empty`() = runBlocking {
+    fun `decodeFunction returns null when results list is empty`() = runTest {
         val body =
             """
             {
@@ -58,7 +58,7 @@ class FourByteApiBodyReadTest {
     }
 
     @Test
-    fun `decodeFunction returns first textSignature when multiple results exist`() = runBlocking {
+    fun `decodeFunction returns first textSignature when multiple results exist`() = runTest {
         val body =
             """
             {

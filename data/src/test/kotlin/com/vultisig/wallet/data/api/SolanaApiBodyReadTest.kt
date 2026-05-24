@@ -4,12 +4,11 @@ import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.BigIntegerSerializerImpl
 import com.vultisig.wallet.data.utils.SplTokenResponseJsonSerializerImpl
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 
 /**
@@ -35,7 +34,7 @@ class SolanaApiBodyReadTest {
     // ── getBalance ──────────────────────────────────────────────────────────────
 
     @Test
-    fun `getBalance returns value from SolanaBalanceJson result`() = runBlocking {
+    fun `getBalance returns value from SolanaBalanceJson result`() = runTest {
         val body =
             """
             {
@@ -54,52 +53,50 @@ class SolanaApiBodyReadTest {
     // ── getRecentBlockHash ───────────────────────────────────────────────────────
 
     @Test
-    fun `getRecentBlockHash returns blockhash string from RecentBlockHashResponseJson`() =
-        runBlocking {
-            val body =
-                """
-                {
-                  "result": {
-                    "value": {
-                      "blockhash": "AbCdEfGhIjKlMnOpQrStUvWxYz12345678901234567"
-                    }
-                  }
+    fun `getRecentBlockHash returns blockhash string from RecentBlockHashResponseJson`() = runTest {
+        val body =
+            """
+            {
+              "result": {
+                "value": {
+                  "blockhash": "AbCdEfGhIjKlMnOpQrStUvWxYz12345678901234567"
                 }
-                """
-                    .trimIndent()
-            val api = newApi(body)
+              }
+            }
+            """
+                .trimIndent()
+        val api = newApi(body)
 
-            val result = api.getRecentBlockHash()
+        val result = api.getRecentBlockHash()
 
-            assertEquals("AbCdEfGhIjKlMnOpQrStUvWxYz12345678901234567", result)
-        }
+        assertEquals("AbCdEfGhIjKlMnOpQrStUvWxYz12345678901234567", result)
+    }
 
     // ── broadcastTransaction ────────────────────────────────────────────────────
 
     @Test
-    fun `broadcastTransaction returns result string from BroadcastTransactionRespJson`() =
-        runBlocking {
-            val body =
-                """
-                {
-                  "result": "5xFakeTransactionHashABCDE1234",
-                  "error": null
-                }
-                """
-                    .trimIndent()
-            val api = newApi(body)
+    fun `broadcastTransaction returns result string from BroadcastTransactionRespJson`() = runTest {
+        val body =
+            """
+            {
+              "result": "5xFakeTransactionHashABCDE1234",
+              "error": null
+            }
+            """
+                .trimIndent()
+        val api = newApi(body)
 
-            val result = api.broadcastTransaction("fakeTxBase64Encoded")
+        val result = api.broadcastTransaction("fakeTxBase64Encoded")
 
-            assertEquals("5xFakeTransactionHashABCDE1234", result)
-        }
+        assertEquals("5xFakeTransactionHashABCDE1234", result)
+    }
 
     // ── getSPLTokensInfo2 ───────────────────────────────────────────────────────
     // Uses .body<List<SplTokenInfo>>() for each token in parallel; respondingWith returns the same
     // body for every request.
 
     @Test
-    fun `getSPLTokensInfo2 returns first SplTokenInfo element per token`() = runBlocking {
+    fun `getSPLTokensInfo2 returns first SplTokenInfo element per token`() = runTest {
         val body =
             """
             [
@@ -129,45 +126,44 @@ class SolanaApiBodyReadTest {
     // so the result is the combined list (two copies of the single account).
 
     @Test
-    fun `getSPLTokens flattens accounts from both parallel SplResponseJson responses`() =
-        runBlocking {
-            val body =
-                """
-                {
-                  "result": {
-                    "value": [
-                      {
-                        "account": {
-                          "data": {
-                            "parsed": {
-                              "info": {
-                                "mint": "MintAddressXYZ",
-                                "tokenAmount": { "amount": "1000" }
-                              }
-                            }
+    fun `getSPLTokens flattens accounts from both parallel SplResponseJson responses`() = runTest {
+        val body =
+            """
+            {
+              "result": {
+                "value": [
+                  {
+                    "account": {
+                      "data": {
+                        "parsed": {
+                          "info": {
+                            "mint": "MintAddressXYZ",
+                            "tokenAmount": { "amount": "1000" }
                           }
                         }
                       }
-                    ]
-                  },
-                  "error": null
-                }
-                """
-                    .trimIndent()
-            val api = newApi(body)
+                    }
+                  }
+                ]
+              },
+              "error": null
+            }
+            """
+                .trimIndent()
+        val api = newApi(body)
 
-            val result = api.getSPLTokens("WalletAddress111")
+        val result = api.getSPLTokens("WalletAddress111")
 
-            // Two requests each return one account → combined list has two elements
-            assertNotNull(result)
-            assertEquals(2, result!!.size)
-            assertEquals("MintAddressXYZ", result[0].account.data.parsed.info.mint)
-        }
+        // Two requests each return one account → combined list has two elements
+        val nonNullResult = requireNotNull(result)
+        assertEquals(2, nonNullResult.size)
+        assertEquals("MintAddressXYZ", nonNullResult[0].account.data.parsed.info.mint)
+    }
 
     // ── getSPLTokenBalance ───────────────────────────────────────────────────────
 
     @Test
-    fun `getSPLTokenBalance returns token amount from SplAmountRpcResponseJson`() = runBlocking {
+    fun `getSPLTokenBalance returns token amount from SplAmountRpcResponseJson`() = runTest {
         val body =
             """
             {

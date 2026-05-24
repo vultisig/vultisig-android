@@ -3,7 +3,7 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.CosmosThorChainResponseSerializerImpl
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -32,7 +32,7 @@ class CosmosApiBodyReadTest {
     // Uses response.body<CosmosBalanceResponse>(); returns resp.balances.
 
     @Test
-    fun `getBalance returns list of CosmosBalance from CosmosBalanceResponse`() = runBlocking {
+    fun `getBalance returns list of CosmosBalance from CosmosBalanceResponse`() = runTest {
         val body =
             """
             {
@@ -56,7 +56,7 @@ class CosmosApiBodyReadTest {
     // Returns a CosmosBalance with denom = contractAddress and amount from JSON.
 
     @Test
-    fun `getWasmTokenBalance extracts balance string from data JsonObject`() = runBlocking {
+    fun `getWasmTokenBalance extracts balance string from data JsonObject`() = runTest {
         val body =
             """
             {
@@ -79,7 +79,7 @@ class CosmosApiBodyReadTest {
     // Uses .body<CosmosIbcDenomTraceJson>().denomTrace!!
 
     @Test
-    fun `getIbcDenomTraces returns denom_trace path and base_denom`() = runBlocking {
+    fun `getIbcDenomTraces returns denom_trace path and base_denom`() = runTest {
         val body =
             """
             {
@@ -104,7 +104,7 @@ class CosmosApiBodyReadTest {
     //   ?.jsonObject?.get("height")?.jsonPrimitive?.content
 
     @Test
-    fun `getLatestBlock extracts height string from nested block header`() = runBlocking {
+    fun `getLatestBlock extracts height string from nested block header`() = runTest {
         val body =
             """
             {

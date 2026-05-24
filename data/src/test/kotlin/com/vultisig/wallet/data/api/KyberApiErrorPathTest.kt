@@ -8,7 +8,7 @@ import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.KyberSwapQuoteResponseJsonSerializer
 import io.ktor.http.HttpStatusCode
 import io.mockk.mockk
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -35,7 +35,7 @@ class KyberApiErrorPathTest {
         )
 
     @Test
-    fun `getSwapQuote returns Error with parsed message on non-2xx response`() = runBlocking {
+    fun `getSwapQuote returns Error with parsed message on non-2xx response`() = runTest {
         val body =
             """
             {

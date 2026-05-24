@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -25,7 +25,7 @@ class BittensorApiBodyReadTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `broadcastTransaction returns result hash on success when error is absent`() = runBlocking {
+    fun `broadcastTransaction returns result hash on success when error is absent`() = runTest {
         val body =
             """
             {
@@ -44,19 +44,19 @@ class BittensorApiBodyReadTest {
 
     @Test
     fun `broadcastTransaction returns null when error message contains Already Imported`() =
-        runBlocking {
+        runTest {
             val body =
                 """
-            {
-              "jsonrpc": "2.0",
-              "error": {
-                "code": 1013,
-                "message": "Already Imported",
-                "data": null
-              },
-              "id": 1
-            }
-            """
+                {
+                  "jsonrpc": "2.0",
+                  "error": {
+                    "code": 1013,
+                    "message": "Already Imported",
+                    "data": null
+                  },
+                  "id": 1
+                }
+                """
                     .trimIndent()
             val api = newApi(body)
 

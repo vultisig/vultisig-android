@@ -6,7 +6,7 @@ import com.vultisig.wallet.data.utils.BigIntegerSerializerImpl
 import com.vultisig.wallet.data.utils.UTXOStatusResponseSerializerImpl
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
@@ -53,7 +53,7 @@ class BlockChairApiBodyReadTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `getAddressInfo returns BlockChairInfo for the requested address`() = runBlocking {
+    fun `getAddressInfo returns BlockChairInfo for the requested address`() = runTest {
         val address = "LVntExdyM3yaVcFa4QHrkqmEKMBpR5bepZ"
         val body =
             """
@@ -88,23 +88,22 @@ class BlockChairApiBodyReadTest {
     }
 
     @Test
-    fun `getAddressInfo returns null when address key is absent from response data`() =
-        runBlocking {
-            // Server returns a data map that does not contain the requested address.
-            val body = """{ "data": {} }"""
-            val api = newApi(body)
+    fun `getAddressInfo returns null when address key is absent from response data`() = runTest {
+        // Server returns a data map that does not contain the requested address.
+        val body = """{ "data": {} }"""
+        val api = newApi(body)
 
-            val result = api.getAddressInfo(chain = Chain.Litecoin, address = "missingAddress")
+        val result = api.getAddressInfo(chain = Chain.Litecoin, address = "missingAddress")
 
-            assertNull(result)
-        }
+        assertNull(result)
+    }
 
     // -------------------------------------------------------------------------
     // getBlockChairStats — body<SuggestedTransactionFeeDataJson>().data.value  (BigInteger)
     // -------------------------------------------------------------------------
 
     @Test
-    fun `getBlockChairStats returns suggested fee as BigInteger`() = runBlocking {
+    fun `getBlockChairStats returns suggested fee as BigInteger`() = runTest {
         val body =
             """
             {
@@ -128,7 +127,7 @@ class BlockChairApiBodyReadTest {
     // -------------------------------------------------------------------------
 
     @Test
-    fun `broadcastTransaction returns transaction hash for non-Bitcoin chain`() = runBlocking {
+    fun `broadcastTransaction returns transaction hash for non-Bitcoin chain`() = runTest {
         val body =
             """
             {

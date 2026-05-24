@@ -2,7 +2,7 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -23,7 +23,7 @@ class CardanoApiBroadcastTest {
         CardanoApiImpl(httpClient = MockHttpClient.respondingWith(status, body))
 
     @Test
-    fun `broadcastTransaction returns transaction id on success`() = runBlocking {
+    fun `broadcastTransaction returns transaction id on success`() = runTest {
         val body =
             """
             {
@@ -39,25 +39,24 @@ class CardanoApiBroadcastTest {
     }
 
     @Test
-    fun `broadcastTransaction recovers id from unknownOutputReferences on BadRequest`() =
-        runBlocking {
-            val body =
-                """
-                {
-                  "error": {
-                    "data": {
-                      "unknownOutputReferences": [ { "transaction": { "id": "def456" } } ]
-                    }
-                  }
+    fun `broadcastTransaction recovers id from unknownOutputReferences on BadRequest`() = runTest {
+        val body =
+            """
+            {
+              "error": {
+                "data": {
+                  "unknownOutputReferences": [ { "transaction": { "id": "def456" } } ]
                 }
-                """
-                    .trimIndent()
-            val api = newApi(HttpStatusCode.BadRequest, body)
+              }
+            }
+            """
+                .trimIndent()
+        val api = newApi(HttpStatusCode.BadRequest, body)
 
-            val result = api.broadcastTransaction(chain = "cardano", signedTransaction = "00")
+        val result = api.broadcastTransaction(chain = "cardano", signedTransaction = "00")
 
-            assertEquals("def456", result)
-        }
+        assertEquals("def456", result)
+    }
 
     @Test
     fun `broadcastTransaction throws on BadRequest error without output references`() {
@@ -71,7 +70,7 @@ class CardanoApiBroadcastTest {
         val api = newApi(HttpStatusCode.BadRequest, body)
 
         assertThrows(IllegalStateException::class.java) {
-            runBlocking { api.broadcastTransaction(chain = "cardano", signedTransaction = "00") }
+            runTest { api.broadcastTransaction(chain = "cardano", signedTransaction = "00") }
         }
     }
 }

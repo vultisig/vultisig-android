@@ -4,7 +4,7 @@ import com.vultisig.wallet.data.api.models.quotes.LiFiSwapQuoteDeserialized
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import com.vultisig.wallet.data.utils.LiFiSwapQuoteResponseSerializerImpl
 import io.ktor.http.HttpStatusCode
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -45,7 +45,7 @@ class LiFiChainApiBodyReadTest {
         )
 
     @Test
-    fun `getSwapQuote surfaces the body error message on a non-2xx response`() = runBlocking {
+    fun `getSwapQuote surfaces the body error message on a non-2xx response`() = runTest {
         val body =
             """
             {
