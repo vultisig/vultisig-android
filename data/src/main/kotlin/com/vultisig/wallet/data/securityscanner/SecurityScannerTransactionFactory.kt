@@ -61,6 +61,11 @@ class SecurityScannerTransactionFactory(
                     // where they coincide (1inch/Kyber/LiFi).
                     approveSpender =
                         payload.data.quote.tx.allowanceTarget ?: payload.data.quote.tx.to,
+                    // The approval the user actually signs is for the swap input amount
+                    // (KeysignShareViewModel uses transaction.srcTokenValue.value), not tx.value —
+                    // which is 0 for an ERC20 swap. Scan the real approve amount so the preview
+                    // matches the signed approve(spender, amount).
+                    approveAmount = transaction.srcTokenValue.value,
                     amount = payload.data.quote.tx.value,
                     data = payload.data.quote.tx.data,
                     isApprovalRequired = transaction.isApprovalRequired,
@@ -75,6 +80,7 @@ class SecurityScannerTransactionFactory(
         from: String,
         to: String,
         approveSpender: String,
+        approveAmount: BigInteger,
         amount: String,
         data: String,
         isApprovalRequired: Boolean,
@@ -88,7 +94,7 @@ class SecurityScannerTransactionFactory(
                 from = from,
                 to = srcToken.contractAddress,
                 amount = BigInteger.ZERO,
-                data = EthereumFunction.approvalErc20Encoder(approveSpender, amount.toBigInteger()),
+                data = EthereumFunction.approvalErc20Encoder(approveSpender, approveAmount),
             )
         } else {
             SecurityScannerTransaction(
