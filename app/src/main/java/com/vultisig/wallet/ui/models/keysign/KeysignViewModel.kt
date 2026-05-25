@@ -718,8 +718,15 @@ constructor(
                     Timber.w("Approval tx %s reverted on chain %s", approveTxHash.value, chain)
                     approveTxLink.value =
                         explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
+                    // The approval was broadcast and then reverted on-chain — a terminal on-chain
+                    // failure, not a TSS/keysign failure. Land on the swap overview with a Failed
+                    // status (and the approval tx hash/link already set above) rather than the
+                    // generic "Signing Error / try again" screen, which wrongly implies a
+                    // pairing/network problem and drops the explorer link.
                     currentState.value =
-                        KeysignState.Error(R.string.swap_error_approval_failed.asUiText())
+                        KeysignState.KeysignFinished(
+                            TransactionStatus.Failed(R.string.swap_error_approval_failed.asUiText())
+                        )
                     return
                 }
             }
