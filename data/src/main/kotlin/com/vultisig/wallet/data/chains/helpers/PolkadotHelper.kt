@@ -30,9 +30,8 @@ class PolkadotHelper(private val vaultHexPublicKey: String) {
 
         // After Asset Hub update, even native DOT transfers use assetTransfer
         // with assetID 0 and feeAssetID 0 for native DOT
-        // When asset_id is 0, WalletCore encodes it as TransferAllowDeath (Balances.transfer)
-        // So we need Balances pallet call indices, not Assets pallet
-        // For Asset Hub, Balances pallet is typically module 10, method 0 (transfer_allow_death)
+        // WalletCore respects custom callIndices when provided, so we pin them explicitly.
+        // For Asset Hub, Balances pallet is module 10, method 3 (transfer_keep_alive)
         val assetTransfer =
             Polkadot.Balance.AssetTransfer.newBuilder()
                 .setAssetId(0)
@@ -43,7 +42,10 @@ class PolkadotHelper(private val vaultHexPublicKey: String) {
                     Polkadot.CallIndices.newBuilder()
                         .setCustom(
                             Polkadot.CustomCallIndices.newBuilder()
-                                .setMethodIndex(0)
+                                // Module 10 (Balances), Method 3 (transfer_keep_alive)
+                                // Aligns with SDK (sdk#548) - avoids account reaping on existential
+                                // deposit edge cases
+                                .setMethodIndex(3)
                                 .setModuleIndex(10)
                                 .build()
                         )
