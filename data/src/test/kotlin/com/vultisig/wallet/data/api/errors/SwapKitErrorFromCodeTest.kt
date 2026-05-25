@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api.errors
 
+import java.util.Locale
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
@@ -62,14 +63,18 @@ class SwapKitErrorFromCodeTest {
             SwapKitError.AddressScreening::class.java,
             SwapKitError.fromCode("addressScreeningFailed"),
         )
+    }
+
+    @Test
+    fun `fromCode does not map providerNotEnabled or routeFiltered from the wire`() {
+        // iOS produces these client-side (provider cache + route filter), not from the wire
+        // envelope. Mirror that on Android: unknown codes fall through to Network so the wire
+        // can never silently steal those variants from the client-side gates.
         assertInstanceOf(
-            SwapKitError.ProviderNotEnabled::class.java,
+            SwapKitError.Network::class.java,
             SwapKitError.fromCode("providerNotEnabled"),
         )
-        assertInstanceOf(
-            SwapKitError.RouteFiltered::class.java,
-            SwapKitError.fromCode("routeFiltered"),
-        )
+        assertInstanceOf(SwapKitError.Network::class.java, SwapKitError.fromCode("routeFiltered"))
     }
 
     @Test
@@ -89,6 +94,27 @@ class SwapKitErrorFromCodeTest {
             SwapKitError.AddressScreening::class.java,
             SwapKitError.fromCode("isSanctionedAddress".uppercase()),
         )
+    }
+
+    @Test
+    fun `fromCode normalizes case under Turkish locale`() {
+        // Pins the Locale.ROOT call in fromCode. Without it, the default Turkish locale's
+        // `I` → `ı` (dotless i) mapping would lowercase `ISSANCTIONEDADDRESS` to
+        // `ıssanctionedaddress`, miss the `issanctionedaddress` arm, and fall through to Network.
+        val previous = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr"))
+            assertInstanceOf(
+                SwapKitError.AddressScreening::class.java,
+                SwapKitError.fromCode("ISSANCTIONEDADDRESS"),
+            )
+            assertInstanceOf(
+                SwapKitError.NoRoutes::class.java,
+                SwapKitError.fromCode("NOROUTESFOUND"),
+            )
+        } finally {
+            Locale.setDefault(previous)
+        }
     }
 
     @Test
@@ -115,7 +141,22 @@ class SwapKitErrorFromCodeTest {
     }
 
     @Test
-    fun `fromCode accepts snake_case aliases for NoRoutes and QuoteDeviation`() {
+    fun `fromCode accepts snake_case spellings for every typed code`() {
+        // SwapKit fixtures in the repo disagree (camelCase vs snake_case), so fromCode strips
+        // underscores during normalization to keep both spellings on the typed path rather than
+        // dropping the snake_case variant to the generic Network/Server fallback.
+        assertInstanceOf(
+            SwapKitError.InsufficientBalance::class.java,
+            SwapKitError.fromCode("insufficient_balance"),
+        )
+        assertInstanceOf(
+            SwapKitError.InsufficientAllowance::class.java,
+            SwapKitError.fromCode("insufficient_allowance"),
+        )
+        assertInstanceOf(
+            SwapKitError.SwapRouteNotFound::class.java,
+            SwapKitError.fromCode("swap_route_not_found"),
+        )
         assertInstanceOf(
             SwapKitError.NoRoutes::class.java,
             SwapKitError.fromCode("no_routes_found"),
@@ -124,6 +165,10 @@ class SwapKitErrorFromCodeTest {
         assertInstanceOf(
             SwapKitError.QuoteDeviation::class.java,
             SwapKitError.fromCode("output_amount_deviation_too_high"),
+        )
+        assertInstanceOf(
+            SwapKitError.AddressScreening::class.java,
+            SwapKitError.fromCode("is_sanctioned_address"),
         )
     }
 

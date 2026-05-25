@@ -107,11 +107,14 @@ constructor(
                 )
             )
 
-        val best =
-            pickBestRoute(quoteResponse.routes)
-                ?: throw SwapKitError.NoRoutes(
-                    "No SwapKit route survived single-hop + Thor/Maya filter"
-                )
+        // Distinguish "upstream returned zero routes" (NoRoutes) from "client filtering dropped
+        // every candidate" (RouteFiltered). iOS produces RouteFiltered at SwapService.swift:386
+        // for the same client-side gate, and the two surface different localized copies.
+        if (quoteResponse.routes.isEmpty()) {
+            throw SwapKitError.NoRoutes("SwapKit returned no routes for this pair")
+        }
+
+        val best = pickBestRoute(quoteResponse.routes) ?: throw SwapKitError.RouteFiltered
 
         val routeId =
             best.routeId
@@ -332,7 +335,10 @@ constructor(
     private fun scaleDecimalToRawUnits(decimalString: String?, decimals: Int): String {
         val parsed =
             decimalString?.let { runCatching { BigDecimal(it) }.getOrNull() }
-                ?: throw SwapKitError.MalformedAmount(raw = decimalString ?: "(missing)")
+                // `raw` is surfaced to the user via `swapkit_error_malformed_amount`; pass empty
+                // for the null case so the developer-only `(missing)` sentinel never leaks into
+                // the form error. The UI maps blank raw onto the generic decoding copy.
+                ?: throw SwapKitError.MalformedAmount(raw = decimalString.orEmpty())
         return parsed.movePointRight(decimals).toBigInteger().toString()
     }
 

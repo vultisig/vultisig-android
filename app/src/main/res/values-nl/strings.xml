@@ -575,7 +575,7 @@
     <string name="swapkit_error_api_key_missing">SwapKit API-sleutel niet geconfigureerd</string>
     <string name="swapkit_error_api_key_invalid">SwapKit API-sleutel is ongeldig</string>
     <string name="swapkit_error_insufficient_balance">Onvoldoende saldo voor deze route</string>
-    <string name="swapkit_error_insufficient_allowance">Onvoldoende token-allowance — keur eerst goed</string>
+    <string name="swapkit_error_insufficient_allowance">Onvoldoende token-toelage — keur eerst goed</string>
     <string name="swapkit_error_unable_to_build_transaction">Deze route is momenteel niet beschikbaar, probeer een andere provider</string>
     <string name="swapkit_error_swap_route_not_found">Geselecteerde route is verlopen</string>
     <string name="swapkit_error_output_amount_deviation_too_high">Koers is meer dan 5%% afgeweken — ververs om door te gaan</string>

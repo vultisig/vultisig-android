@@ -579,7 +579,7 @@
     <string name="swapkit_error_api_key_missing">API-ключ SwapKit не настроен</string>
     <string name="swapkit_error_api_key_invalid">API-ключ SwapKit недействителен</string>
     <string name="swapkit_error_insufficient_balance">Недостаточно средств для этого маршрута</string>
-    <string name="swapkit_error_insufficient_allowance">Недостаточный allowance токена — сначала одобрите</string>
+    <string name="swapkit_error_insufficient_allowance">Недостаточный лимит токена — сначала одобрите</string>
     <string name="swapkit_error_unable_to_build_transaction">Этот маршрут сейчас недоступен, попробуйте другого провайдера</string>
     <string name="swapkit_error_swap_route_not_found">Выбранный маршрут истёк</string>
     <string name="swapkit_error_output_amount_deviation_too_high">Котировка отклонилась более чем на 5%% — обновите для продолжения</string>

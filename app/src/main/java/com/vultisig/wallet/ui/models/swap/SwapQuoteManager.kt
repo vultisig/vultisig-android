@@ -307,7 +307,11 @@ constructor(
         val successes = results.mapNotNull { it.getOrNull() }
         if (successes.isEmpty()) {
             val failures = results.mapNotNull { it.exceptionOrNull() }
-            throw failures.firstOrNull { it is SwapException } ?: failures.first()
+            // Throw the first failure (iOS SwapService.swift:77 parity). Previously preferred any
+            // SwapException over the first failure, which masked sibling SwapKitError variants
+            // whenever a LiFi/Thor candidate raced SwapKit and lost — the user kept seeing the
+            // generic swap_error_quote_failed copy instead of the localized SwapKit message.
+            throw failures.first()
         }
 
         // Rank on estimatedDstFiat alone — this represents the destination amount
@@ -783,15 +787,7 @@ constructor(
             is SwapKitError.SwapRouteNotFound ->
                 UiText.StringResource(R.string.swapkit_error_swap_route_not_found)
             is SwapKitError.QuoteDeviation ->
-                // FormattedText (with no args) routes through String.format so the resource's
-                // `%%` escape collapses back to a literal `%` — `StringResource` doesn't run
-                // String.format and would render `5%%` verbatim. Cannot un-escape the resource
-                // because Android lint rejects an unescaped `%` adjacent to a letter (e.g. the
-                // Dutch translation reads `5% afgeweken` which lint flags as an incomplete `%a`).
-                UiText.FormattedText(
-                    R.string.swapkit_error_output_amount_deviation_too_high,
-                    emptyList(),
-                )
+                unescapedPercentLiteral(R.string.swapkit_error_output_amount_deviation_too_high)
             is SwapKitError.NoRoutes ->
                 UiText.StringResource(R.string.swapkit_error_no_routes_found)
             is SwapKitError.BlackListAsset ->
@@ -809,7 +805,8 @@ constructor(
             is SwapKitError.RouteFiltered ->
                 UiText.StringResource(R.string.swapkit_error_route_filtered)
             is SwapKitError.MalformedAmount ->
-                UiText.FormattedText(R.string.swapkit_error_malformed_amount, listOf(e.raw))
+                if (e.raw.isBlank()) UiText.StringResource(R.string.swapkit_error_decoding)
+                else UiText.FormattedText(R.string.swapkit_error_malformed_amount, listOf(e.raw))
             is SwapKitError.Network -> UiText.StringResource(R.string.swapkit_error_network)
             is SwapKitError.Decoding -> UiText.StringResource(R.string.swapkit_error_decoding)
             is SwapKitError.Server ->
@@ -820,6 +817,17 @@ constructor(
                     UiText.FormattedText(R.string.swapkit_error_server, listOf(status))
                 } ?: UiText.StringResource(R.string.swapkit_error_network)
         }
+
+    /**
+     * Route a `%%`-escaped string resource through [UiText.FormattedText] so `String.format`
+     * collapses `5%%` back to a literal `5%`. A plain [UiText.StringResource] skips `String.format`
+     * and would render `5%%` verbatim; the resource cannot be un-escaped because Android lint
+     * rejects an unescaped `%` adjacent to a letter (e.g. Dutch `5% afgeweken` would be flagged as
+     * an incomplete `%a` specifier). Named so the unescape intent survives a switch to
+     * [UiText.StringResource] at the call site.
+     */
+    private fun unescapedPercentLiteral(resId: Int): UiText =
+        UiText.FormattedText(resId, emptyList())
 
     companion object {
         private const val KYBER_AFFILIATE_FEE_BPS = 50

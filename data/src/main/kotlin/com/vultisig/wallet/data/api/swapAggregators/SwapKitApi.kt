@@ -25,8 +25,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -137,32 +135,22 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
         }
 
     /**
-     * Pulls a SwapKit error `code` out of a JSON error body, if present. Searches recursively so
-     * envelopes like `{"error": {"code": ...}}` or `{"errors": [{"code": ...}]}` still resolve to a
-     * typed [SwapKitError]; falls back to a top-level `error` string when no `code` is found.
+     * Pulls a SwapKit error `code` out of a JSON error body, if present. Reads only the top-level
+     * `code` field and the top-level `error` field (string form or `{ "code": ... }` envelope) so a
+     * nested `code` elsewhere in the payload (e.g. `warnings[].code`) cannot hijack the typed
+     * variant. Matches iOS' SwapKitError envelope decoder, which reads the top-level `error` field
+     * directly.
      */
     private fun extractErrorCode(body: String): String? {
         if (body.isBlank()) return null
         return runCatching {
-                val element = json.parseToJsonElement(body)
-                findStringRecursively(element, "code")
-                    ?: (element as? JsonObject)?.get("error")?.let { it as? JsonPrimitive }?.content
+                val obj = json.parseToJsonElement(body) as? JsonObject ?: return@runCatching null
+                (obj["code"] as? JsonPrimitive)?.content
+                    ?: (obj["error"] as? JsonPrimitive)?.content
+                    ?: ((obj["error"] as? JsonObject)?.get("code") as? JsonPrimitive)?.content
             }
             .getOrNull()
     }
-
-    private fun findStringRecursively(element: JsonElement, key: String): String? =
-        when (element) {
-            is JsonObject ->
-                (element[key] as? JsonPrimitive)?.content
-                    ?: element.values
-                        .asSequence()
-                        .mapNotNull { findStringRecursively(it, key) }
-                        .firstOrNull()
-            is JsonArray ->
-                element.asSequence().mapNotNull { findStringRecursively(it, key) }.firstOrNull()
-            else -> null
-        }
 
     companion object {
         /** Vultisig SwapKit proxy base. */
