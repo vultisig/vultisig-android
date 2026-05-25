@@ -12,9 +12,10 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * Characterization tests for every `.body<...>()` call in [SolanaApiImp]. Each test uses a 200 OK
- * mock response and asserts the exact value extracted by the method, pinning the success-path
- * behavior so it survives the `body<T>()` → `bodyOrThrow<T>()` migration.
+ * Characterization tests for every `.body<...>()` call in [SolanaApiImp], including
+ * [SolanaApiImp.getJupiterTokens]. Each test uses a 200 OK mock response and asserts the exact
+ * value extracted by the method, pinning the success-path behavior so it survives the `body<T>()` →
+ * `bodyOrThrow<T>()` migration.
  */
 class SolanaApiBodyReadTest {
 
@@ -158,6 +159,33 @@ class SolanaApiBodyReadTest {
         val nonNullResult = requireNotNull(result)
         assertEquals(2, nonNullResult.size)
         assertEquals("MintAddressXYZ", nonNullResult[0].account.data.parsed.info.mint)
+    }
+
+    // ── getJupiterTokens ─────────────────────────────────────────────────────────
+
+    @Test
+    fun `getJupiterTokens returns list of JupiterTokenResponseJson`() = runTest {
+        val body =
+            """
+            [
+              {
+                "id": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                "symbol": "USDC",
+                "decimals": 6,
+                "icon": null,
+                "extensions": null
+              }
+            ]
+            """
+                .trimIndent()
+        val api = newApi(body)
+
+        val result = api.getJupiterTokens()
+
+        assertEquals(1, result.size)
+        assertEquals("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", result[0].contractAddress)
+        assertEquals("USDC", result[0].ticker)
+        assertEquals(6, result[0].decimals)
     }
 
     // ── getSPLTokenBalance ───────────────────────────────────────────────────────

@@ -125,7 +125,7 @@ class SessionApiBodyReadTest {
     }
 
     @Test
-    fun `getTssMessages returns multiple messages in order`() = runBlocking {
+    fun `getTssMessages returns all messages when response contains multiple`() = runBlocking {
         val body =
             """
             [

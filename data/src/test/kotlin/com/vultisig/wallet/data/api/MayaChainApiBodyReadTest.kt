@@ -1,13 +1,15 @@
 package com.vultisig.wallet.data.api
 
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuoteDeserialized
 import com.vultisig.wallet.data.testutils.MockHttpClient
-import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
+import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializerImpl
 import io.ktor.http.HttpStatusCode
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -15,8 +17,6 @@ import org.junit.jupiter.api.Test
  * [MayaChainApiImp] that uses `.body<T>()` to deserialize the response.
  *
  * Skipped methods:
- * - `getSwapQuotes` — uses `body<String>()` fed into a custom
- *   [ThorChainSwapQuoteResponseJsonSerializer]; excluded per task rules.
  * - `broadcastTransaction` — already covered by [MayaChainApiImplTest].
  */
 class MayaChainApiBodyReadTest {
@@ -26,12 +26,13 @@ class MayaChainApiBodyReadTest {
         explicitNulls = false
     }
 
-    private fun newApi(body: String): MayaChainApi =
+    private val realSerializer = ThorChainSwapQuoteResponseJsonSerializerImpl(json)
+
+    private fun newApi(body: String, status: HttpStatusCode = HttpStatusCode.OK): MayaChainApi =
         MayaChainApiImp(
-            httpClient = MockHttpClient.respondingWith(HttpStatusCode.OK, body),
+            httpClient = MockHttpClient.respondingWith(status, body),
             thorChainApi = mockk<ThorChainApi>(),
-            thorChainSwapQuoteResponseJsonSerializer =
-                mockk<ThorChainSwapQuoteResponseJsonSerializer>(),
+            thorChainSwapQuoteResponseJsonSerializer = realSerializer,
             json = json,
         )
 
@@ -214,4 +215,55 @@ class MayaChainApiBodyReadTest {
         assertEquals(2_000_000L, result["NATIVETRANSACTIONFEE"])
         assertEquals(1_000_000L, result["OUTBOUNDTRANSACTIONFEE"])
     }
+
+    // -------------------------------------------------------------------------
+    // getSwapQuotes — body<String>() fed into ThorChainSwapQuoteResponseJsonSerializer
+    // Pins: 200 body is read and delegated to the serializer; non-2xx returns early via the
+    // isSuccess guard without touching the body (same shape as the LiFi error-path tests).
+    // -------------------------------------------------------------------------
+
+    @Test
+    fun `getSwapQuotes on 200 with error body returns Error from serializer`() = runBlocking {
+        val body = """{"error": "no swap route found"}"""
+
+        val result =
+            newApi(body)
+                .getSwapQuotes(
+                    address = "maya1abc",
+                    fromAsset = "ETH.ETH",
+                    toAsset = "CACAO.CACAO",
+                    amount = "1000000",
+                    isAffiliate = false,
+                    bpsDiscount = 0,
+                    referralCode = "",
+                )
+
+        assertTrue(result is THORChainSwapQuoteDeserialized.Error)
+        assertEquals(
+            "no swap route found",
+            (result as THORChainSwapQuoteDeserialized.Error).error.message,
+        )
+    }
+
+    @Test
+    fun `getSwapQuotes on non-2xx returns Error with HTTP status description without reading body`() =
+        runBlocking {
+            val result =
+                newApi(body = "", status = HttpStatusCode.InternalServerError)
+                    .getSwapQuotes(
+                        address = "maya1abc",
+                        fromAsset = "ETH.ETH",
+                        toAsset = "CACAO.CACAO",
+                        amount = "1000000",
+                        isAffiliate = false,
+                        bpsDiscount = 0,
+                        referralCode = "",
+                    )
+
+            assertTrue(result is THORChainSwapQuoteDeserialized.Error)
+            assertEquals(
+                HttpStatusCode.InternalServerError.description,
+                (result as THORChainSwapQuoteDeserialized.Error).error.message,
+            )
+        }
 }
