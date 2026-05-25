@@ -109,8 +109,11 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
-    fun `fetch throws NoRoutes when every route is filtered out including streaming variants`() =
+    fun `fetch throws RouteFiltered when every route is filtered out including streaming variants`() =
         runTest {
+            // Upstream returned candidates but the client Thor/Maya/multi-hop filter emptied them.
+            // That client-side gate surfaces RouteFiltered (distinct localized copy), reserving
+            // NoRoutes for the "/v3/quote returned zero routes" case.
             every { config.isFeatureEnabled } returns flowOf(true)
             coEvery { api.quote(any()) } returns
                 SwapKitQuoteResponseJson(
@@ -130,7 +133,7 @@ internal class SwapKitQuoteSourceTest {
                         )
                 )
 
-            assertThrows<SwapKitError.NoRoutes> { source().fetch(request()) }
+            assertThrows<SwapKitError.RouteFiltered> { source().fetch(request()) }
         }
 
     @Test
@@ -406,8 +409,10 @@ internal class SwapKitQuoteSourceTest {
             )
         coEvery { api.swap(any()) } returns evmSwapResponse(expectedBuy = null)
 
+        // The developer-only "(missing)" sentinel was dropped: a null upstream amount yields an
+        // empty raw so the UI falls back to the generic decoding copy instead of leaking it.
         val error = assertThrows<SwapKitError.MalformedAmount> { source().fetch(request()) }
-        assertEquals("(missing)", error.raw)
+        assertEquals("", error.raw)
     }
 
     @Test
