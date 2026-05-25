@@ -126,8 +126,12 @@ constructor(
             api.swap(
                 SwapKitSwapRequest(
                     routeId = routeId,
-                    sourceAddress = request.srcToken.address,
-                    destinationAddress = request.dstToken.address,
+                    // Honor the request-scoped sender/receiver overrides (passed by
+                    // SwapQuoteManager). Fall back to the token's account address only when the
+                    // request did not supply one, so a Vault address override (e.g. a different
+                    // signer) is never silently replaced by the token default.
+                    sourceAddress = request.srcAddress.ifBlank { request.srcToken.address },
+                    destinationAddress = request.dstAddress.ifBlank { request.dstToken.address },
                 )
             )
         // TODO(swapkit /track polling, later task): persist swapResponse.swapId on the resulting

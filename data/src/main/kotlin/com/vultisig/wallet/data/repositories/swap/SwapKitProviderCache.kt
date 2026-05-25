@@ -1,9 +1,11 @@
 package com.vultisig.wallet.data.repositories.swap
 
 import androidx.annotation.VisibleForTesting
+import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.SwapKitProvidersResponseJson
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.models.Chain
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -86,7 +88,14 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
                 chains
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: SwapKitError) {
+                // Expected transport/decoding failure from the SwapKit proxy — already classified
+                // at the API layer. Fail-closed so SwapKit is skipped until the next refresh.
+                null
+            } catch (e: Exception) {
+                // Unexpected (mapping/parse regression, programmer error). Surface it in logs
+                // rather than silently treat SwapKit as "disabled" forever.
+                Timber.w(e, "SwapKit providers refresh failed unexpectedly")
                 null
             }
         }
@@ -112,7 +121,7 @@ internal class SwapKitProviderCacheImpl @Inject constructor(private val api: Swa
          * not yet supported in Phase 1.
          */
         internal fun swapKitChainToVultisig(swapKitChain: String): Chain? =
-            when (swapKitChain.lowercase()) {
+            when (swapKitChain.lowercase(Locale.ROOT)) {
                 "1",
                 "ethereum" -> Chain.Ethereum
                 "56",
