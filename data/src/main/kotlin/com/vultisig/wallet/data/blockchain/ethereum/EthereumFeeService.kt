@@ -179,7 +179,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
             // ascending, so lastOrNull() picks the max. The sample is clamped at
             // ETHEREUM_SWAP_PRIORITY_FEE_CAP so a single MEV-burst block doesn't
             // balloon the user-displayed bond (priorityFee × DEFAULT_SWAP_LIMIT), and
-            // the 2 GWEI floor keeps inclusion fast on a quiet window.
+            // ETHEREUM_SWAP_PRIORITY_FEE_FLOOR keeps inclusion fast on a quiet window.
             if (rewardsFeeHistory.isEmpty()) {
                 Timber.w("Fee history is empty for %s, using fallback", chain)
             }
@@ -255,7 +255,15 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_BLAST = BigInteger.TEN.pow(7) // 0.01 GWEI
-        private val ETHEREUM_SWAP_PRIORITY_FEE_FLOOR = GWEI * BigInteger.valueOf(2)
+        // Minimum tip for Ethereum swaps so a quiet window still lands the tx before the embedded
+        // DEX deadline. Recalibrated from 2 GWEI: post-blob mainnet base fees and tips now sit
+        // around 0.1 GWEI, where a 2 GWEI floor was ~20x the market and dominated the
+        // user-displayed fee bond (gasLimit x maxFeePerGas) on small swaps — e.g. ~$2.8 of "network
+        // fee" on a ~$7 swap. 0.5 GWEI keeps a comfortable inclusion margin (several times the
+        // typical ~0.1 GWEI tip) without inflating the bond; busy windows are unaffected because
+        // the
+        // recent-window max reward is used whenever it exceeds this floor.
+        private val ETHEREUM_SWAP_PRIORITY_FEE_FLOOR = GWEI.divide(BigInteger.valueOf(2))
         // Upper bound on the per-block reward sample so a single MEV-burst block doesn't
         // propagate as the authorized tip. EIP-1559 means the actual paid amount stays
         // near baseFee + priorityFee, but the user-displayed bond is sized off
