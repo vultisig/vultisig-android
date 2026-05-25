@@ -15,7 +15,6 @@ import com.vultisig.wallet.data.keygen.DKLSKeygen
 import com.vultisig.wallet.data.keygen.KeygenExecutor
 import com.vultisig.wallet.data.keygen.KeygenRouting
 import com.vultisig.wallet.data.keygen.MldsaKeygen
-import com.vultisig.wallet.data.keygen.ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.ROOT_ECDSA_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.ROOT_EDDSA_MESSAGE_ID
@@ -194,24 +193,27 @@ constructor(
     /**
      * Decides whether THIS peer takes the parallel / batch path for the current ceremony.
      *
-     * For reshare we trust the initiator's QR opt-in EXCLUSIVELY (matches iOS behavior in
-     * `KeygenViewModel.swift` — iOS sets `useParallelPath = self.isTssBatch` from the deserialised
-     * QR field, never OR'd with a local toggle). This avoids a cross-version deadlock where an iOS
-     * initiator with the toggle off (default) sends `is_tss_batch=false`, but an Android joiner
-     * with the local override forced on would otherwise read `localFlag || false = true` and poll
-     * the batched relay namespaces while iOS polled the legacy ones.
+     * For reshare, keygen, and key-import we trust the initiator's QR opt-in EXCLUSIVELY (matches
+     * iOS `KeygenViewModel.swift`, which sets `useParallelPath = self.isTssBatch` from the
+     * deserialised QR field, never OR'd with a local toggle). A joiner MUST follow the initiator's
+     * namespace choice: OR-ing in a local feature flag desyncs the relay namespaces whenever the
+     * two disagree. That is exactly why an extension or iOS initiator that batches key-import (its
+     * default) failed to keygen with an Android joiner — the joiner's local flag was off, so it
+     * polled the legacy namespaces while the initiator drove the `p-ecdsa` / `p-eddsa` batched
+     * namespaces. `is_tss_batch` now round-trips through both `ReshareMessage` and `KeygenMessage`,
+     * so `args.isTssBatch` carries the QR signal for them.
      *
-     * For keygen / migrate / key-import we keep the OR fallback because Android does not yet carry
-     * `is_tss_batch` on the `KeygenMessage` proto on the read side, so a joiner has no QR signal to
-     * trust — its local feature flag is the only available decision input. (Reading the
-     * `is_tss_batch` field on `KeygenMessage` is a separate follow-up that will let us collapse to
-     * a single QR-driven rule.)
+     * Migrate and SingleKeygen keep the OR fallback: migrate is excluded from batch mode by
+     * convention (its joiner branch pins the flag off) and SingleKeygen's proto does not carry the
+     * batch flag, so the local feature flag stays their only decision input.
      */
     private fun isParallelKeygenEnabledForThisCeremony(): Boolean =
-        if (action == TssAction.ReShare) {
-            args.isTssBatch
-        } else {
-            featureFlags.isTssBatchEnabled || args.isTssBatch
+        when (action) {
+            TssAction.ReShare,
+            TssAction.KEYGEN,
+            TssAction.KeyImport -> args.isTssBatch
+            TssAction.Migrate,
+            TssAction.SingleKeygen -> featureFlags.isTssBatchEnabled || args.isTssBatch
         }
 
     private fun createDklsKeygen(localUi: String, action: TssAction = this.action): DKLSKeygen =
@@ -256,6 +258,7 @@ constructor(
     private suspend fun runKeyImportChainKeygen(
         keyImportData: KeyImportData,
         chainSetting: ChainImportSetting,
+        useParallelPath: Boolean,
     ): ChainKeygenResult {
         val chainName = chainSetting.chain.raw
         val chainKey =
@@ -266,20 +269,35 @@ constructor(
         val isEddsa = chainSetting.chain.TssKeysignType == TssKeyType.EDDSA
         val localUi = chainKey?.privateKeyHex.orEmpty()
 
+        // Per-chain key-import routing — must match the initiator (iOS / Windows extension).
+        //
+        // The setup payload is always namespaced per chain. The EXCHANGE channel differs by path:
+        // batched runs every chain concurrently so each needs its own "p-{chain}" channel;
+        // sequential runs chains one at a time and shares the DEFAULT channel (no message_id).
+        //
+        // The explicit empty exchangeMessageId for the sequential path is load-bearing:
+        // `KeygenRouting.from` defaults the exchange id to the setup id (chain name), whereas the
+        // initiator leaves it unset (default channel). Without this, the joiner polls a per-chain
+        // "Ethereum" channel the initiator never posts to and the ceremony hangs after the root
+        // keygens complete.
+        val chainRouting =
+            if (useParallelPath) {
+                KeygenRouting.from(setupMessageId = chainName, exchangeMessageId = "p-$chainName")
+            } else {
+                KeygenRouting.from(setupMessageId = chainName, exchangeMessageId = "")
+            }
+
         val chainKeyshare =
             if (isEddsa) {
                 val chainSchnorr =
                     createSchnorrKeygen(localUi = localUi, action = TssAction.KeyImport)
-                chainSchnorr.schnorrKeygenWithRetry(
-                    0,
-                    KeygenRouting.from(setupMessageId = chainName),
-                )
+                chainSchnorr.schnorrKeygenWithRetry(0, chainRouting)
                 requireNotNull(chainSchnorr.keyshare) {
                     "Chain $chainName keygen produced no keyshare"
                 }
             } else {
                 val chainDkls = createDklsKeygen(localUi = localUi, action = TssAction.KeyImport)
-                chainDkls.dklsKeygenWithRetry(0, KeygenRouting.from(setupMessageId = chainName))
+                chainDkls.dklsKeygenWithRetry(0, chainRouting)
                 requireNotNull(chainDkls.keyshare) {
                     "Chain $chainName keygen produced no keyshare"
                 }
@@ -593,20 +611,28 @@ constructor(
                             coroutineScope {
                                 listOf(
                                         async {
+                                            // Root ECDSA: setup on the DEFAULT relay namespace,
+                                            // exchange on "p-ecdsa". This must match the batched
+                                            // key-import routing on iOS/Windows (the initiator),
+                                            // otherwise the joiner polls a different relay channel
+                                            // and the ceremony deadlocks.
                                             dklsKeygen.dklsKeygenWithRetry(
                                                 0,
                                                 KeygenRouting.from(
-                                                    setupMessageId =
-                                                        ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID
+                                                    exchangeMessageId = ROOT_ECDSA_MESSAGE_ID
                                                 ),
                                             )
                                         },
                                         async {
+                                            // Root EdDSA: setup on "eddsa_key_import" (kept on its
+                                            // own namespace to avoid colliding with the default
+                                            // ECDSA setup), exchange on "p-eddsa".
                                             rootSchnorr.schnorrKeygenWithRetry(
                                                 0,
                                                 KeygenRouting.from(
                                                     setupMessageId =
-                                                        ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID
+                                                        ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID,
+                                                    exchangeMessageId = ROOT_EDDSA_MESSAGE_ID,
                                                 ),
                                             )
                                         },
@@ -647,14 +673,26 @@ constructor(
                     coroutineScope {
                         keyImportData.chainSettings
                             .map { chainSetting ->
-                                async { runKeyImportChainKeygen(keyImportData, chainSetting) }
+                                async {
+                                    runKeyImportChainKeygen(
+                                        keyImportData,
+                                        chainSetting,
+                                        useParallelPath = true,
+                                    )
+                                }
                             }
                             .awaitAll()
                     }
                 } else {
                     buildList {
                         for (chainSetting in keyImportData.chainSettings) {
-                            add(runKeyImportChainKeygen(keyImportData, chainSetting))
+                            add(
+                                runKeyImportChainKeygen(
+                                    keyImportData,
+                                    chainSetting,
+                                    useParallelPath = false,
+                                )
+                            )
                         }
                     }
                 }

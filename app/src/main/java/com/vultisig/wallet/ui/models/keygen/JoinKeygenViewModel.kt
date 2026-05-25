@@ -175,6 +175,15 @@ constructor(
                                 oldCommittee = emptyList(),
                                 oldResharePrefix = "",
                                 chains = message.chains,
+                                // Follow the initiator's batched opt-in from the QR. iOS/Windows
+                                // run
+                                // key-import (and DKLS keygen) through the batched protocol, which
+                                // uses dedicated relay namespaces; a joiner that ignores this flag
+                                // polls the legacy namespaces and the ceremony deadlocks. The
+                                // executor (selectKeygenExecutor / shouldUseNewKeygenExecution)
+                                // still
+                                // gates GG20 keygen out of the batched path defensively.
+                                isTssBatch = message.isTssBatch,
                             )
                         }
 
