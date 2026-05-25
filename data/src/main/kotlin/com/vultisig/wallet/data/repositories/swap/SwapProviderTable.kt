@@ -57,14 +57,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
 
     private val evmAggregators =
         setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER, SwapProvider.SWAPKIT)
-    private val thorchainPlusEvmAggregators =
-        setOf(
-            SwapProvider.THORCHAIN,
-            SwapProvider.ONEINCH,
-            SwapProvider.LIFI,
-            SwapProvider.KYBER,
-            SwapProvider.SWAPKIT,
-        )
+    private val thorchainPlusEvmAggregators = setOf(SwapProvider.SWAPKIT)
 
     /** Providers that only quote same-chain swaps; filtered out for cross-chain pairs. */
     private val sameChainOnly = setOf(SwapProvider.ONEINCH, SwapProvider.KYBER)
@@ -85,9 +78,8 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                 if (ticker in thorAvaxTokens) thorchainPlusEvmAggregators else evmAggregators
 
             Chain.Base ->
-                if (ticker in thorBaseTokens)
-                    setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
-                else setOf(SwapProvider.LIFI, SwapProvider.SWAPKIT)
+                if (ticker in thorBaseTokens) setOf(SwapProvider.SWAPKIT)
+                else setOf(SwapProvider.SWAPKIT)
 
             Chain.Optimism,
             Chain.Polygon -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.SWAPKIT)
@@ -165,33 +157,11 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
         // other Thor/Maya-eligible Ethereum tokens silently lose SwapKit as a candidate even
         // though the cache enables Ethereum.
         return when {
-            isThor && isMaya ->
-                setOf(
-                    SwapProvider.THORCHAIN,
-                    SwapProvider.ONEINCH,
-                    SwapProvider.LIFI,
-                    SwapProvider.KYBER,
-                    SwapProvider.SWAPKIT,
-                    SwapProvider.MAYA,
-                )
+            isThor && isMaya -> setOf(SwapProvider.SWAPKIT)
 
-            isThor ->
-                setOf(
-                    SwapProvider.THORCHAIN,
-                    SwapProvider.ONEINCH,
-                    SwapProvider.LIFI,
-                    SwapProvider.KYBER,
-                    SwapProvider.SWAPKIT,
-                )
+            isThor -> setOf(SwapProvider.SWAPKIT)
 
-            isMaya ->
-                setOf(
-                    SwapProvider.ONEINCH,
-                    SwapProvider.LIFI,
-                    SwapProvider.MAYA,
-                    SwapProvider.KYBER,
-                    SwapProvider.SWAPKIT,
-                )
+            isMaya -> setOf(SwapProvider.KYBER)
 
             else -> evmAggregators
         }
