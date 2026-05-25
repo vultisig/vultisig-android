@@ -172,7 +172,7 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
 
     override suspend fun getTxStatus(txHash: String): TaostatsExtrinsicData? {
         val hash = if (txHash.startsWith("0x")) txHash else "0x$txHash"
-        val response = httpClient.get("${TAOSTATS_PROXY_URL}/extrinsic/v1?hash=$hash")
+        val response = httpClient.get("${TAOSTATS_PROXY_URL}/v1?hash=$hash")
         if (response.status == HttpStatusCode.NotFound) return null
         return response.body<TaostatsExtrinsicResponse>().data?.firstOrNull()
     }

@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -233,31 +231,6 @@ private fun TronDeFiPositionsScreenContent(
                                     onClickUnfreeze = {},
                                 )
                             }
-                            val prevWithdrawals =
-                                state.previousSuccess?.tronData?.pendingWithdrawals
-                            if (!prevWithdrawals.isNullOrEmpty()) {
-                                item(key = "tron-pending-withdrawals-header") {
-                                    Box(
-                                        modifier =
-                                            Modifier.width(160.dp)
-                                                .height(18.dp)
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(Theme.v2.colors.backgrounds.tertiary_2)
-                                    )
-                                }
-                                items(
-                                    count = prevWithdrawals.size,
-                                    key = { "tron-pw-skeleton-$it" },
-                                ) {
-                                    Box(
-                                        modifier =
-                                            Modifier.fillMaxWidth()
-                                                .height(72.dp)
-                                                .clip(RoundedCornerShape(16.dp))
-                                                .background(Theme.v2.colors.backgrounds.secondary)
-                                    )
-                                }
-                            }
                         }
                         is TronDeFiUiState.Error -> {
                             item {
@@ -463,7 +436,7 @@ private fun TronResourceTypeBadge(resourceType: TronResourceType) {
 @Preview(showBackground = true)
 @Composable
 private fun TronDeFiPositionsScreenLoadingPreview() {
-    TronDeFiPositionsScreenContent(state = TronDeFiUiState.Loading())
+    TronDeFiPositionsScreenContent(state = TronDeFiUiState.Loading)
 }
 
 /** Preview for [TronDeFiPositionsScreenContent] in error state. */
