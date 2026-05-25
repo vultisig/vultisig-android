@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -479,6 +480,11 @@ constructor(
 
                             is SwapQuote.OneInch -> {
                                 val dstAddress = quote.data.tx.to
+                                // The ERC20 allowance must be granted to the provider's token-
+                                // transfer proxy, which for SwapKit differs from the swap `to`.
+                                // 1inch/Kyber/LiFi leave allowanceTarget null and fall back to
+                                // `to`.
+                                val approveSpender = quote.data.tx.allowanceTarget ?: dstAddress
                                 val specificAndUtxo =
                                     swapGasCalculator.getSpecificAndUtxo(
                                         srcToken,
@@ -491,7 +497,7 @@ constructor(
                                         chain = srcToken.chain,
                                         contractAddress = srcToken.contractAddress,
                                         srcAddress = srcAddress,
-                                        dstAddress = dstAddress,
+                                        dstAddress = approveSpender,
                                     )
                                 val isApprovalRequired =
                                     allowance != null && allowance < srcTokenValue.value
@@ -523,6 +529,7 @@ constructor(
                                     srcTokenValue = srcTokenValue,
                                     dstToken = dstToken,
                                     dstAddress = dstAddress,
+                                    approveSpender = approveSpender,
                                     expectedDstTokenValue = dstTokenValue,
                                     blockChainSpecific = specificAndUtxo,
                                     estimatedFees = quote.fees,
@@ -1132,6 +1139,12 @@ constructor(
                                 ),
                             cause = e,
                             tag = "swapError",
+                        )
+                    } catch (e: SwapKitError) {
+                        resetQuoteState(
+                            error = swapQuoteManager.mapSwapKitErrorToFormError(e),
+                            cause = e,
+                            tag = "swapKitError",
                         )
                     } catch (e: CancellationException) {
                         throw e

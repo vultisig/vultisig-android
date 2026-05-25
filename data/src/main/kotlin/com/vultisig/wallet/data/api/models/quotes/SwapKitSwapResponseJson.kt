@@ -41,6 +41,13 @@ data class SwapKitTxMeta(
     @SerialName("tags") val tags: List<String> = emptyList(),
     @SerialName("chain") val chain: String? = null,
     @SerialName("subProvider") val subProvider: String? = null,
+    // EVM ERC20 allowance target (the `approve` spender). SwapKit's swap entry contract
+    // (`tx.to`, which also equals the top-level [SwapKitSwapResponseJson.targetAddress]) is NOT
+    // the spender — it pulls the sell token through a dedicated token-transfer proxy reported
+    // here. Approve THIS address; approving `tx.to` reverts with ERC20InsufficientAllowance.
+    // Null for native-source / non-EVM routes that need no approval. Mirrors iOS, which derives
+    // the spender as `meta.approvalAddress`.
+    @SerialName("approvalAddress") val approvalAddress: String? = null,
 ) {
     /**
      * Lower-cased txType used to dispatch onto an EVM or Solana signer. Computed once at

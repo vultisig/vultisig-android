@@ -107,11 +107,14 @@ constructor(
                 )
             )
 
-        val best =
-            pickBestRoute(quoteResponse.routes)
-                ?: throw SwapKitError.NoRoutes(
-                    "No SwapKit route survived single-hop + Thor/Maya filter"
-                )
+        // Distinguish "upstream returned zero routes" (NoRoutes) from "client filtering dropped
+        // every candidate" (RouteFiltered). iOS produces RouteFiltered at SwapService.swift:386
+        // for the same client-side gate, and the two surface different localized copies.
+        if (quoteResponse.routes.isEmpty()) {
+            throw SwapKitError.NoRoutes("SwapKit returned no routes for this pair")
+        }
+
+        val best = pickBestRoute(quoteResponse.routes) ?: throw SwapKitError.RouteFiltered
 
         val routeId =
             best.routeId
@@ -226,13 +229,21 @@ constructor(
         return when (txTypeOf(response)) {
             TxKind.EVM -> {
                 val evm = decode<SwapKitEvmTx>(response.tx, "evm")
+                // SwapKit V3 hex-encodes the EVM tx envelope's numeric fields with a `0x` prefix
+                // (wire sample: `"gas":"0x55730"` = 350_000, `"gasPrice":"0x57d86d7"`). The
+                // downstream pipeline expects base-10: gas is a `Long`, and SwapQuoteManager /
+                // OneInchSwap parse gasPrice + value with `toBigInteger()` — which *throws* on a
+                // hex string. Decode hex → decimal here (parseEvmNumber also accepts plain decimal,
+                // e.g. the `"value":"0"` this same response carries) so a valid gas estimate isn't
+                // read as null and the gasPrice/value parse downstream doesn't crash.
+                //
                 // Refuse routes that omit `tx.gas`. Falling back to a hardcoded L1-sized constant
                 // (e.g. 600_000) over-estimates by multiples on Arbitrum / Optimism / Base / BSC /
                 // Polygon / Avalanche and produces a misleading Network Fee on the verify screen.
                 // Throwing Decoding here lets the picker drop SwapKit and rank another aggregator
                 // rather than ship a wrong number.
                 val gas =
-                    evm.gas?.toLongOrNull()?.takeIf { it > 0 }
+                    parseEvmNumber(evm.gas)?.takeIf { it > BigInteger.ZERO }?.toLong()
                         ?: throw SwapKitError.Decoding(
                             "SwapKit EVM tx missing gas estimate (got ${evm.gas}); refusing route"
                         )
@@ -242,10 +253,21 @@ constructor(
                         OneInchSwapTxJson(
                             from = evm.from.orEmpty(),
                             to = evm.to,
+                            // SwapKit's EVM swap entry contract (`to`, which also equals the
+                            // top-level `targetAddress`) is NOT the allowance target: it pulls the
+                            // sell token through a dedicated token-transfer proxy reported as
+                            // `meta.approvalAddress`. The ERC20 approve must go to that proxy, else
+                            // the swap reverts with ERC20InsufficientAllowance(spender=
+                            // approvalAddress, allowance=0). Carry it through so the approval
+                            // spender
+                            // is derived from it downstream instead of from `to`. Matches iOS,
+                            // which
+                            // derives the spender as `meta.approvalAddress`.
+                            allowanceTarget = response.meta.approvalAddress,
                             data = evm.data,
                             gas = gas,
-                            value = evm.value,
-                            gasPrice = evm.gasPrice.orEmpty(),
+                            value = (parseEvmNumber(evm.value) ?: BigInteger.ZERO).toString(),
+                            gasPrice = (parseEvmNumber(evm.gasPrice) ?: BigInteger.ZERO).toString(),
                             swapFee = inboundFee,
                             swapFeeTokenContract = "",
                         ),
@@ -326,15 +348,16 @@ constructor(
     /**
      * Convert SwapKit's human-readable `expectedBuyAmount` (decimal string, e.g. "42.5") into the
      * raw-units integer string the rest of the swap pipeline expects. Throws
-     * [SwapKitError.Decoding] when the upstream value is missing or unparseable so a malformed
-     * payload surfaces explicitly rather than masking as a zero quote.
+     * [SwapKitError.MalformedAmount] when the upstream value is missing or unparseable so the user
+     * sees the typed "Invalid amount" message instead of a generic "Could not parse response".
      */
     private fun scaleDecimalToRawUnits(decimalString: String?, decimals: Int): String {
         val parsed =
             decimalString?.let { runCatching { BigDecimal(it) }.getOrNull() }
-                ?: throw SwapKitError.Decoding(
-                    "SwapKit expectedBuyAmount missing or not a decimal: $decimalString"
-                )
+                // `raw` is surfaced to the user via `swapkit_error_malformed_amount`; pass empty
+                // for the null case so the developer-only `(missing)` sentinel never leaks into
+                // the form error. The UI maps blank raw onto the generic decoding copy.
+                ?: throw SwapKitError.MalformedAmount(raw = decimalString.orEmpty())
         return parsed.movePointRight(decimals).toBigInteger().toString()
     }
 
@@ -372,6 +395,24 @@ constructor(
             Chain.Solana -> "SOL"
             else -> null
         }
+
+    /**
+     * Parse a SwapKit EVM tx numeric field (gas / gasPrice / value). SwapKit V3 hex-encodes these
+     * with a `0x` prefix (e.g. `0x55730`), but a few arrive as a plain base-10 string (`value` is
+     * often `"0"`). Decode either form to a [BigInteger]; returns null on a missing/garbage value
+     * so the caller can apply its own fallback (refuse the route for gas, zero for gasPrice/value).
+     */
+    private fun parseEvmNumber(raw: String?): BigInteger? {
+        val trimmed = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        return runCatching {
+                if (trimmed.startsWith("0x", ignoreCase = true)) {
+                    BigInteger(trimmed.substring(2), 16)
+                } else {
+                    BigInteger(trimmed)
+                }
+            }
+            .getOrNull()
+    }
 
     private inline fun <reified T> decode(element: JsonElement, label: String): T =
         try {

@@ -172,6 +172,74 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch carries SwapKit meta approvalAddress through as the tx allowanceTarget`() = runTest {
+        // Regression: SwapKit's EVM swap entry contract (`tx.to`, which also equals the top-level
+        // `targetAddress`) is NOT the ERC20 allowance target — it pulls the sell token through a
+        // separate token-transfer proxy reported as `meta.approvalAddress`. Approving `tx.to` made
+        // real swaps revert with ERC20InsufficientAllowance(spender=approvalAddress, allowance=0).
+        // The proxy must survive into tx.allowanceTarget so the spender is derived from it (matches
+        // iOS' `spender = meta.approvalAddress`).
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            evmSwapResponse(
+                to = "0x9025b8ff35ca44f7018c3a37fe0f69e63dbb0743", // SKWrapGeneric (swap entry)
+                approvalAddress =
+                    "0x6c0ad82f9721a6dc986381d19338601a2e6370e5", // SKTokenTransferProxy (spender)
+            )
+
+        val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+        assertEquals("0x9025b8ff35ca44f7018c3a37fe0f69e63dbb0743", result.data.tx.to)
+        assertEquals("0x6c0ad82f9721a6dc986381d19338601a2e6370e5", result.data.tx.allowanceTarget)
+    }
+
+    @Test
+    fun `fetch leaves allowanceTarget null when meta approvalAddress is absent so callers fall back to tx_to`() =
+        runTest {
+            // Native-source / non-approval routes: SwapKit omits `meta.approvalAddress`, and the
+            // downstream `allowanceTarget ?: to` fallback keeps the legacy behaviour of using `to`.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1")
+                        )
+                )
+            coEvery { api.swap(any()) } returns evmSwapResponse(approvalAddress = null)
+
+            val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+            assertNull(result.data.tx.allowanceTarget)
+        }
+
+    @Test
+    fun `fetch decodes hex-encoded EVM gas, gasPrice, and value into decimal`() = runTest {
+        // SwapKit V3 hex-encodes the EVM tx numeric fields (`"gas":"0x55730"`). The downstream
+        // pipeline parses gas as a base-10 Long and gasPrice/value with `toBigInteger()` (which
+        // throws on hex), so a real hex route must be decoded to decimal at this boundary.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            evmSwapResponse(gas = "0x55730", gasPrice = "0x57d86d7", value = "0x2710")
+
+        val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+        assertEquals(350000L, result.data.tx.gas)
+        assertEquals("92112599", result.data.tx.gasPrice)
+        assertEquals("10000", result.data.tx.value)
+    }
+
+    @Test
     fun `fetch refuses EVM route when tx_gas is missing`() = runTest {
         // Hard-coding a 600k L1 default would over-estimate Network Fee on L2s by multiples.
         // Refuse the route and let the picker rank another aggregator with a real gas estimate.
@@ -329,7 +397,7 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
-    fun `fetch throws Decoding when expectedBuyAmount is missing`() = runTest {
+    fun `fetch throws MalformedAmount when expectedBuyAmount is missing`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
@@ -338,11 +406,12 @@ internal class SwapKitQuoteSourceTest {
             )
         coEvery { api.swap(any()) } returns evmSwapResponse(expectedBuy = null)
 
-        assertThrows<SwapKitError.Decoding> { source().fetch(request()) }
+        val error = assertThrows<SwapKitError.MalformedAmount> { source().fetch(request()) }
+        assertEquals("(missing)", error.raw)
     }
 
     @Test
-    fun `fetch throws Decoding when expectedBuyAmount is not a decimal`() = runTest {
+    fun `fetch throws MalformedAmount when expectedBuyAmount is not a decimal`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
@@ -351,7 +420,8 @@ internal class SwapKitQuoteSourceTest {
             )
         coEvery { api.swap(any()) } returns evmSwapResponse(expectedBuy = "not-a-number")
 
-        assertThrows<SwapKitError.Decoding> { source().fetch(request()) }
+        val error = assertThrows<SwapKitError.MalformedAmount> { source().fetch(request()) }
+        assertEquals("not-a-number", error.raw)
     }
 
     @Test
@@ -544,6 +614,7 @@ internal class SwapKitQuoteSourceTest {
         expectedBuy: String? = "1",
         providers: List<String> = listOf("CHAINFLIP"),
         metaSubProvider: String? = null,
+        approvalAddress: String? = null,
     ) =
         SwapKitSwapResponseJson(
             swapId = "swap-id",
@@ -556,7 +627,12 @@ internal class SwapKitQuoteSourceTest {
                     gas?.let { put("gas", JsonPrimitive(it)) }
                     gasPrice?.let { put("gasPrice", JsonPrimitive(it)) }
                 },
-            meta = SwapKitTxMeta(txType = "EVM", subProvider = metaSubProvider),
+            meta =
+                SwapKitTxMeta(
+                    txType = "EVM",
+                    subProvider = metaSubProvider,
+                    approvalAddress = approvalAddress,
+                ),
             expectedBuyAmount = expectedBuy,
             providers = providers,
         )

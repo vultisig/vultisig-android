@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.swap
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -306,7 +307,11 @@ constructor(
         val successes = results.mapNotNull { it.getOrNull() }
         if (successes.isEmpty()) {
             val failures = results.mapNotNull { it.exceptionOrNull() }
-            throw failures.firstOrNull { it is SwapException } ?: failures.first()
+            // Throw the first failure (iOS SwapService.swift:77 parity). Previously preferred any
+            // SwapException over the first failure, which masked sibling SwapKitError variants
+            // whenever a LiFi/Thor candidate raced SwapKit and lost — the user kept seeing the
+            // generic swap_error_quote_failed copy instead of the localized SwapKit message.
+            throw failures.first()
         }
 
         // Rank on estimatedDstFiat alone — this represents the destination amount
@@ -765,6 +770,64 @@ constructor(
             is SwapException.AmountBelowDustThreshold ->
                 UiText.StringResource(R.string.swap_error_amount_below_dust_threshold)
         }
+
+    /** Localized message for each [SwapKitError] variant — surfaced verbatim on the swap form. */
+    fun mapSwapKitErrorToFormError(e: SwapKitError): UiText =
+        when (e) {
+            is SwapKitError.ApiKeyMissing ->
+                UiText.StringResource(R.string.swapkit_error_api_key_missing)
+            is SwapKitError.ApiKeyInvalid ->
+                UiText.StringResource(R.string.swapkit_error_api_key_invalid)
+            is SwapKitError.InsufficientBalance ->
+                UiText.StringResource(R.string.swapkit_error_insufficient_balance)
+            is SwapKitError.InsufficientAllowance ->
+                UiText.StringResource(R.string.swapkit_error_insufficient_allowance)
+            is SwapKitError.UnableToBuildTransaction ->
+                UiText.StringResource(R.string.swapkit_error_unable_to_build_transaction)
+            is SwapKitError.SwapRouteNotFound ->
+                UiText.StringResource(R.string.swapkit_error_swap_route_not_found)
+            is SwapKitError.QuoteDeviation ->
+                unescapedPercentLiteral(R.string.swapkit_error_output_amount_deviation_too_high)
+            is SwapKitError.NoRoutes ->
+                UiText.StringResource(R.string.swapkit_error_no_routes_found)
+            is SwapKitError.BlackListAsset ->
+                UiText.StringResource(R.string.swapkit_error_black_list_asset)
+            is SwapKitError.InvalidSourceAddress ->
+                UiText.StringResource(R.string.swapkit_error_invalid_source_address)
+            is SwapKitError.InvalidDestinationAddress ->
+                UiText.StringResource(R.string.swapkit_error_invalid_destination_address)
+            is SwapKitError.AddressScreening ->
+                UiText.StringResource(R.string.swapkit_error_address_screening)
+            is SwapKitError.UnsupportedTxType ->
+                UiText.FormattedText(R.string.swapkit_error_unsupported_tx_type, listOf(e.txType))
+            is SwapKitError.ProviderNotEnabled ->
+                UiText.StringResource(R.string.swapkit_error_provider_not_enabled)
+            is SwapKitError.RouteFiltered ->
+                UiText.StringResource(R.string.swapkit_error_route_filtered)
+            is SwapKitError.MalformedAmount ->
+                if (e.raw.isBlank()) UiText.StringResource(R.string.swapkit_error_decoding)
+                else UiText.FormattedText(R.string.swapkit_error_malformed_amount, listOf(e.raw))
+            is SwapKitError.Network -> UiText.StringResource(R.string.swapkit_error_network)
+            is SwapKitError.Decoding -> UiText.StringResource(R.string.swapkit_error_decoding)
+            is SwapKitError.Server ->
+                // A null httpStatus rendered as `0` reads like a real status; fall back to the
+                // generic network copy. fromCode never emits null, but Server can be constructed
+                // directly elsewhere.
+                e.httpStatus?.let { status ->
+                    UiText.FormattedText(R.string.swapkit_error_server, listOf(status))
+                } ?: UiText.StringResource(R.string.swapkit_error_network)
+        }
+
+    /**
+     * Route a `%%`-escaped string resource through [UiText.FormattedText] so `String.format`
+     * collapses `5%%` back to a literal `5%`. A plain [UiText.StringResource] skips `String.format`
+     * and would render `5%%` verbatim; the resource cannot be un-escaped because Android lint
+     * rejects an unescaped `%` adjacent to a letter (e.g. Dutch `5% afgeweken` would be flagged as
+     * an incomplete `%a` specifier). Named so the unescape intent survives a switch to
+     * [UiText.StringResource] at the call site.
+     */
+    private fun unescapedPercentLiteral(resId: Int): UiText =
+        UiText.FormattedText(resId, emptyList())
 
     companion object {
         private const val KYBER_AFFILIATE_FEE_BPS = 50
