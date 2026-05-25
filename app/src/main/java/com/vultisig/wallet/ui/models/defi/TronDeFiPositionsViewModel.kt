@@ -18,7 +18,7 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TronDeFiSnapshot
-import com.vultisig.wallet.data.repositories.TronDeFiSnapshotDataSource
+import com.vultisig.wallet.data.repositories.TronDeFiSnapshotCache
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
@@ -75,11 +75,8 @@ internal data class TronStakingUiModel(
 /** UI state for the Tron DeFi positions screen. */
 @Immutable
 internal sealed interface TronDeFiUiState {
-    /**
-     * Loading state; carries [previousSuccess] so the UI can show skeleton placeholders sized to
-     * real data.
-     */
-    data class Loading(val previousSuccess: Success? = null) : TronDeFiUiState
+    /** Loading state, shown only on the first open when there is no cached snapshot to render. */
+    data object Loading : TronDeFiUiState
 
     @Immutable data class Error(val error: UiText) : TronDeFiUiState
 
@@ -116,11 +113,11 @@ constructor(
     private val balanceVisibilityRepository: BalanceVisibilityRepository,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
-    private val tronDeFiSnapshotDataSource: TronDeFiSnapshotDataSource,
+    private val tronDeFiSnapshotCache: TronDeFiSnapshotCache,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
 
-    private val _state = MutableStateFlow<TronDeFiUiState>(TronDeFiUiState.Loading())
+    private val _state = MutableStateFlow<TronDeFiUiState>(TronDeFiUiState.Loading)
     val state: StateFlow<TronDeFiUiState> = _state.asStateFlow()
 
     private var vaultId: VaultId = ""
@@ -167,7 +164,7 @@ constructor(
 
                 // Render the cached snapshot immediately so reopening doesn't flash skeletons;
                 // only show the loading skeleton when there's nothing cached to display.
-                val cached = tronDeFiSnapshotDataSource.read(trxCoin.address)
+                val cached = tronDeFiSnapshotCache.read(trxCoin.address)
                 if (cached != null) {
                     val cachedPrice = trxCachedPrice(trxCoin.id, currency)
                     _state.value =
@@ -182,10 +179,7 @@ constructor(
                             isBalanceVisible = isBalanceVisible,
                         )
                 } else {
-                    val previousSuccess =
-                        (_state.value as? TronDeFiUiState.Success)
-                            ?: (_state.value as? TronDeFiUiState.Loading)?.previousSuccess
-                    _state.value = TronDeFiUiState.Loading(previousSuccess = previousSuccess)
+                    _state.value = TronDeFiUiState.Loading
                 }
 
                 // Fetch fresh account state and resource usage in parallel
@@ -204,8 +198,8 @@ constructor(
                         isBalanceVisible = isBalanceVisible,
                     )
 
-                // Persist for the next open.
-                tronDeFiSnapshotDataSource.write(
+                // Cache for the next open within this session.
+                tronDeFiSnapshotCache.write(
                     trxCoin.address,
                     TronDeFiSnapshot(account = account, resource = resource),
                 )

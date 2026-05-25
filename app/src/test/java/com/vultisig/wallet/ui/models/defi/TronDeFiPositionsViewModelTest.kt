@@ -12,15 +12,16 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TronDeFiSnapshot
-import com.vultisig.wallet.data.repositories.TronDeFiSnapshotDataSource
+import com.vultisig.wallet.data.repositories.TronDeFiSnapshotCache
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import io.mockk.Runs
 import io.mockk.coEvery
-import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.verify
 import java.math.BigDecimal
 import java.text.NumberFormat
 import java.util.Locale
@@ -47,7 +48,7 @@ internal class TronDeFiPositionsViewModelTest {
     private lateinit var balanceVisibilityRepository: BalanceVisibilityRepository
     private lateinit var tokenPriceRepository: TokenPriceRepository
     private lateinit var appCurrencyRepository: AppCurrencyRepository
-    private lateinit var snapshotDataSource: TronDeFiSnapshotDataSource
+    private lateinit var snapshotCache: TronDeFiSnapshotCache
     private lateinit var navigator: Navigator<Destination>
 
     @BeforeEach
@@ -58,7 +59,7 @@ internal class TronDeFiPositionsViewModelTest {
         balanceVisibilityRepository = mockk(relaxed = true)
         tokenPriceRepository = mockk(relaxed = true)
         appCurrencyRepository = mockk(relaxed = true)
-        snapshotDataSource = mockk(relaxed = true)
+        snapshotCache = mockk(relaxed = true)
         navigator = mockk(relaxed = true)
 
         coEvery { vaultRepository.get(VAULT_ID) } returns VAULT
@@ -76,7 +77,7 @@ internal class TronDeFiPositionsViewModelTest {
 
     @Test
     fun `renders cached snapshot as Success before the network responds, no skeleton`() = runTest {
-        coEvery { snapshotDataSource.read(TRX_ADDRESS) } returns CACHED_SNAPSHOT
+        every { snapshotCache.read(TRX_ADDRESS) } returns CACHED_SNAPSHOT
         // Suspend the network so the only state set so far is the cached emission.
         coEvery { tronApi.getAccount(TRX_ADDRESS) } coAnswers
             {
@@ -92,7 +93,7 @@ internal class TronDeFiPositionsViewModelTest {
 
     @Test
     fun `shows Loading skeleton when there is no cached snapshot`() = runTest {
-        coEvery { snapshotDataSource.read(TRX_ADDRESS) } returns null
+        every { snapshotCache.read(TRX_ADDRESS) } returns null
         coEvery { tronApi.getAccount(TRX_ADDRESS) } coAnswers
             {
                 CompletableDeferred<TronAccountJson>().await()
@@ -104,17 +105,17 @@ internal class TronDeFiPositionsViewModelTest {
     }
 
     @Test
-    fun `persists the fresh snapshot after a successful network load`() = runTest {
-        coEvery { snapshotDataSource.read(TRX_ADDRESS) } returns null
+    fun `caches the fresh snapshot after a successful network load`() = runTest {
+        every { snapshotCache.read(TRX_ADDRESS) } returns null
         coEvery { tronApi.getAccount(TRX_ADDRESS) } returns FRESH_ACCOUNT
         coEvery { tronApi.getAccountResource(TRX_ADDRESS) } returns FRESH_RESOURCE
-        coEvery { snapshotDataSource.write(any(), any()) } just Runs
+        every { snapshotCache.write(any(), any()) } just Runs
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         assertTrue(vm.state.value is TronDeFiUiState.Success)
-        coVerify(exactly = 1) {
-            snapshotDataSource.write(
+        verify(exactly = 1) {
+            snapshotCache.write(
                 TRX_ADDRESS,
                 TronDeFiSnapshot(account = FRESH_ACCOUNT, resource = FRESH_RESOURCE),
             )
@@ -123,7 +124,7 @@ internal class TronDeFiPositionsViewModelTest {
 
     @Test
     fun `keeps cached Success when a background refresh fails`() = runTest {
-        coEvery { snapshotDataSource.read(TRX_ADDRESS) } returns CACHED_SNAPSHOT
+        every { snapshotCache.read(TRX_ADDRESS) } returns CACHED_SNAPSHOT
         coEvery { tronApi.getAccount(TRX_ADDRESS) } throws RuntimeException("network down")
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
@@ -132,16 +133,19 @@ internal class TronDeFiPositionsViewModelTest {
             vm.state.value is TronDeFiUiState.Success,
             "refresh failure must not replace shown data with an error screen",
         )
+        // A failed refresh must never overwrite the cached snapshot with stale or partial data.
+        verify(exactly = 0) { snapshotCache.write(any(), any()) }
     }
 
     @Test
     fun `reports Error when the network fails and nothing is cached`() = runTest {
-        coEvery { snapshotDataSource.read(TRX_ADDRESS) } returns null
+        every { snapshotCache.read(TRX_ADDRESS) } returns null
         coEvery { tronApi.getAccount(TRX_ADDRESS) } throws RuntimeException("network down")
 
         val vm = createViewModel().also { it.setData(VAULT_ID) }
 
         assertTrue(vm.state.value is TronDeFiUiState.Error)
+        verify(exactly = 0) { snapshotCache.write(any(), any()) }
     }
 
     private fun createViewModel(): TronDeFiPositionsViewModel =
@@ -151,7 +155,7 @@ internal class TronDeFiPositionsViewModelTest {
             balanceVisibilityRepository = balanceVisibilityRepository,
             tokenPriceRepository = tokenPriceRepository,
             appCurrencyRepository = appCurrencyRepository,
-            tronDeFiSnapshotDataSource = snapshotDataSource,
+            tronDeFiSnapshotCache = snapshotCache,
             navigator = navigator,
         )
 
