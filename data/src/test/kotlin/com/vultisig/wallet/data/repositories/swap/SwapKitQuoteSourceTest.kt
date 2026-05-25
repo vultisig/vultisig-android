@@ -172,6 +172,27 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch decodes hex-encoded EVM gas, gasPrice, and value into decimal`() = runTest {
+        // SwapKit V3 hex-encodes the EVM tx numeric fields (`"gas":"0x55730"`). The downstream
+        // pipeline parses gas as a base-10 Long and gasPrice/value with `toBigInteger()` (which
+        // throws on hex), so a real hex route must be decoded to decimal at this boundary.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            evmSwapResponse(gas = "0x55730", gasPrice = "0x57d86d7", value = "0x2710")
+
+        val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+        assertEquals(350000L, result.data.tx.gas)
+        assertEquals("92112599", result.data.tx.gasPrice)
+        assertEquals("10000", result.data.tx.value)
+    }
+
+    @Test
     fun `fetch refuses EVM route when tx_gas is missing`() = runTest {
         // Hard-coding a 600k L1 default would over-estimate Network Fee on L2s by multiples.
         // Refuse the route and let the picker rank another aggregator with a real gas estimate.

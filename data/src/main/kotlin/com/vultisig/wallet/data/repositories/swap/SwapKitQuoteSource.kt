@@ -229,13 +229,21 @@ constructor(
         return when (txTypeOf(response)) {
             TxKind.EVM -> {
                 val evm = decode<SwapKitEvmTx>(response.tx, "evm")
+                // SwapKit V3 hex-encodes the EVM tx envelope's numeric fields with a `0x` prefix
+                // (wire sample: `"gas":"0x55730"` = 350_000, `"gasPrice":"0x57d86d7"`). The
+                // downstream pipeline expects base-10: gas is a `Long`, and SwapQuoteManager /
+                // OneInchSwap parse gasPrice + value with `toBigInteger()` — which *throws* on a
+                // hex string. Decode hex → decimal here (parseEvmNumber also accepts plain decimal,
+                // e.g. the `"value":"0"` this same response carries) so a valid gas estimate isn't
+                // read as null and the gasPrice/value parse downstream doesn't crash.
+                //
                 // Refuse routes that omit `tx.gas`. Falling back to a hardcoded L1-sized constant
                 // (e.g. 600_000) over-estimates by multiples on Arbitrum / Optimism / Base / BSC /
                 // Polygon / Avalanche and produces a misleading Network Fee on the verify screen.
                 // Throwing Decoding here lets the picker drop SwapKit and rank another aggregator
                 // rather than ship a wrong number.
                 val gas =
-                    evm.gas?.toLongOrNull()?.takeIf { it > 0 }
+                    parseEvmNumber(evm.gas)?.takeIf { it > BigInteger.ZERO }?.toLong()
                         ?: throw SwapKitError.Decoding(
                             "SwapKit EVM tx missing gas estimate (got ${evm.gas}); refusing route"
                         )
@@ -247,8 +255,8 @@ constructor(
                             to = evm.to,
                             data = evm.data,
                             gas = gas,
-                            value = evm.value,
-                            gasPrice = evm.gasPrice.orEmpty(),
+                            value = (parseEvmNumber(evm.value) ?: BigInteger.ZERO).toString(),
+                            gasPrice = (parseEvmNumber(evm.gasPrice) ?: BigInteger.ZERO).toString(),
                             swapFee = inboundFee,
                             swapFeeTokenContract = "",
                         ),
@@ -376,6 +384,24 @@ constructor(
             Chain.Solana -> "SOL"
             else -> null
         }
+
+    /**
+     * Parse a SwapKit EVM tx numeric field (gas / gasPrice / value). SwapKit V3 hex-encodes these
+     * with a `0x` prefix (e.g. `0x55730`), but a few arrive as a plain base-10 string (`value` is
+     * often `"0"`). Decode either form to a [BigInteger]; returns null on a missing/garbage value
+     * so the caller can apply its own fallback (refuse the route for gas, zero for gasPrice/value).
+     */
+    private fun parseEvmNumber(raw: String?): BigInteger? {
+        val trimmed = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+        return runCatching {
+                if (trimmed.startsWith("0x", ignoreCase = true)) {
+                    BigInteger(trimmed.substring(2), 16)
+                } else {
+                    BigInteger(trimmed)
+                }
+            }
+            .getOrNull()
+    }
 
     private inline fun <reified T> decode(element: JsonElement, label: String): T =
         try {
