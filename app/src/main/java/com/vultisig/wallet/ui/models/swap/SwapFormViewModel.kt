@@ -480,6 +480,11 @@ constructor(
 
                             is SwapQuote.OneInch -> {
                                 val dstAddress = quote.data.tx.to
+                                // The ERC20 allowance must be granted to the provider's token-
+                                // transfer proxy, which for SwapKit differs from the swap `to`.
+                                // 1inch/Kyber/LiFi leave allowanceTarget null and fall back to
+                                // `to`.
+                                val approveSpender = quote.data.tx.allowanceTarget ?: dstAddress
                                 val specificAndUtxo =
                                     swapGasCalculator.getSpecificAndUtxo(
                                         srcToken,
@@ -492,7 +497,7 @@ constructor(
                                         chain = srcToken.chain,
                                         contractAddress = srcToken.contractAddress,
                                         srcAddress = srcAddress,
-                                        dstAddress = dstAddress,
+                                        dstAddress = approveSpender,
                                     )
                                 val isApprovalRequired =
                                     allowance != null && allowance < srcTokenValue.value
@@ -524,6 +529,7 @@ constructor(
                                     srcTokenValue = srcTokenValue,
                                     dstToken = dstToken,
                                     dstAddress = dstAddress,
+                                    approveSpender = approveSpender,
                                     expectedDstTokenValue = dstTokenValue,
                                     blockChainSpecific = specificAndUtxo,
                                     estimatedFees = quote.fees,

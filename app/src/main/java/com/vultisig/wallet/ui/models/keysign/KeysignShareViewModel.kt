@@ -163,7 +163,7 @@ constructor(
                             if (transaction.isApprovalRequired)
                                 ERC20ApprovePayload(
                                     amount = transaction.srcTokenValue.value,
-                                    spender = transaction.dstAddress,
+                                    spender = transaction.approveSpender,
                                 )
                             else null,
                         libType = vault.libType,

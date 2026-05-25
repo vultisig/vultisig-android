@@ -253,6 +253,17 @@ constructor(
                         OneInchSwapTxJson(
                             from = evm.from.orEmpty(),
                             to = evm.to,
+                            // SwapKit's EVM swap entry contract (`to`, which also equals the
+                            // top-level `targetAddress`) is NOT the allowance target: it pulls the
+                            // sell token through a dedicated token-transfer proxy reported as
+                            // `meta.approvalAddress`. The ERC20 approve must go to that proxy, else
+                            // the swap reverts with ERC20InsufficientAllowance(spender=
+                            // approvalAddress, allowance=0). Carry it through so the approval
+                            // spender
+                            // is derived from it downstream instead of from `to`. Matches iOS,
+                            // which
+                            // derives the spender as `meta.approvalAddress`.
+                            allowanceTarget = response.meta.approvalAddress,
                             data = evm.data,
                             gas = gas,
                             value = (parseEvmNumber(evm.value) ?: BigInteger.ZERO).toString(),

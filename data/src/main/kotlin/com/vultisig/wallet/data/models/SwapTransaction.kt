@@ -11,6 +11,13 @@ sealed interface SwapTransaction {
     val srcTokenValue: TokenValue
     val dstToken: Coin
     val dstAddress: String
+    /**
+     * ERC20 `approve` spender used when [isApprovalRequired]. Usually equals [dstAddress] — the
+     * router we send the swap to is also the allowance target — but providers that route through a
+     * separate token-transfer proxy (e.g. SwapKit) must approve that proxy instead. Approving the
+     * wrong contract makes the swap revert with ERC20InsufficientAllowance.
+     */
+    val approveSpender: String
     val expectedDstTokenValue: TokenValue
     val blockChainSpecific: BlockChainSpecificAndUtxo
     val estimatedFees: TokenValue
@@ -27,6 +34,7 @@ sealed interface SwapTransaction {
         override val srcTokenValue: TokenValue,
         override val dstToken: Coin,
         override val dstAddress: String,
+        override val approveSpender: String = dstAddress,
         override val expectedDstTokenValue: TokenValue,
         override val blockChainSpecific: BlockChainSpecificAndUtxo,
         override val estimatedFees: TokenValue,

@@ -56,6 +56,11 @@ class SecurityScannerTransactionFactory(
                     srcToken = transaction.srcToken,
                     from = payload.data.quote.tx.from,
                     to = payload.data.quote.tx.to,
+                    // Scan the approval against the real allowance target (SwapKit's token-transfer
+                    // proxy), which can differ from the swap `to`; fall back to `to` for providers
+                    // where they coincide (1inch/Kyber/LiFi).
+                    approveSpender =
+                        payload.data.quote.tx.allowanceTarget ?: payload.data.quote.tx.to,
                     amount = payload.data.quote.tx.value,
                     data = payload.data.quote.tx.data,
                     isApprovalRequired = transaction.isApprovalRequired,
@@ -69,6 +74,7 @@ class SecurityScannerTransactionFactory(
         srcToken: Coin,
         from: String,
         to: String,
+        approveSpender: String,
         amount: String,
         data: String,
         isApprovalRequired: Boolean,
@@ -82,7 +88,7 @@ class SecurityScannerTransactionFactory(
                 from = from,
                 to = srcToken.contractAddress,
                 amount = BigInteger.ZERO,
-                data = EthereumFunction.approvalErc20Encoder(to, amount.toBigInteger()),
+                data = EthereumFunction.approvalErc20Encoder(approveSpender, amount.toBigInteger()),
             )
         } else {
             SecurityScannerTransaction(

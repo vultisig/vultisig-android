@@ -172,6 +172,53 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch carries SwapKit meta approvalAddress through as the tx allowanceTarget`() = runTest {
+        // Regression: SwapKit's EVM swap entry contract (`tx.to`, which also equals the top-level
+        // `targetAddress`) is NOT the ERC20 allowance target — it pulls the sell token through a
+        // separate token-transfer proxy reported as `meta.approvalAddress`. Approving `tx.to` made
+        // real swaps revert with ERC20InsufficientAllowance(spender=approvalAddress, allowance=0).
+        // The proxy must survive into tx.allowanceTarget so the spender is derived from it (matches
+        // iOS' `spender = meta.approvalAddress`).
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            evmSwapResponse(
+                to = "0x9025b8ff35ca44f7018c3a37fe0f69e63dbb0743", // SKWrapGeneric (swap entry)
+                approvalAddress =
+                    "0x6c0ad82f9721a6dc986381d19338601a2e6370e5", // SKTokenTransferProxy (spender)
+            )
+
+        val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+        assertEquals("0x9025b8ff35ca44f7018c3a37fe0f69e63dbb0743", result.data.tx.to)
+        assertEquals("0x6c0ad82f9721a6dc986381d19338601a2e6370e5", result.data.tx.allowanceTarget)
+    }
+
+    @Test
+    fun `fetch leaves allowanceTarget null when meta approvalAddress is absent so callers fall back to tx_to`() =
+        runTest {
+            // Native-source / non-approval routes: SwapKit omits `meta.approvalAddress`, and the
+            // downstream `allowanceTarget ?: to` fallback keeps the legacy behaviour of using `to`.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1")
+                        )
+                )
+            coEvery { api.swap(any()) } returns evmSwapResponse(approvalAddress = null)
+
+            val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+            assertNull(result.data.tx.allowanceTarget)
+        }
+
+    @Test
     fun `fetch decodes hex-encoded EVM gas, gasPrice, and value into decimal`() = runTest {
         // SwapKit V3 hex-encodes the EVM tx numeric fields (`"gas":"0x55730"`). The downstream
         // pipeline parses gas as a base-10 Long and gasPrice/value with `toBigInteger()` (which
@@ -567,6 +614,7 @@ internal class SwapKitQuoteSourceTest {
         expectedBuy: String? = "1",
         providers: List<String> = listOf("CHAINFLIP"),
         metaSubProvider: String? = null,
+        approvalAddress: String? = null,
     ) =
         SwapKitSwapResponseJson(
             swapId = "swap-id",
@@ -579,7 +627,12 @@ internal class SwapKitQuoteSourceTest {
                     gas?.let { put("gas", JsonPrimitive(it)) }
                     gasPrice?.let { put("gasPrice", JsonPrimitive(it)) }
                 },
-            meta = SwapKitTxMeta(txType = "EVM", subProvider = metaSubProvider),
+            meta =
+                SwapKitTxMeta(
+                    txType = "EVM",
+                    subProvider = metaSubProvider,
+                    approvalAddress = approvalAddress,
+                ),
             expectedBuyAmount = expectedBuy,
             providers = providers,
         )
