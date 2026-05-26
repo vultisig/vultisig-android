@@ -233,12 +233,12 @@ class SchnorrKeygen(
      * run in parallel, DKLS uploads the shared setup to the relay first and Schnorr downloads it on
      * demand instead of waiting for local in-memory setup state.
      */
-    private suspend fun getSharedSetupMessage(setupMessageId: String? = null): ByteArray =
+    private suspend fun getSharedSetupMessage(): ByteArray =
         if (setupMessage.isNotEmpty()) {
             setupMessage
         } else {
             sessionApi
-                .getSetupMessage(mediatorURL, sessionID, setupMessageId)
+                .getSetupMessage(mediatorURL, sessionID, null)
                 .let {
                     encryption.decrypt(
                         Base64.decode(it),
@@ -304,7 +304,7 @@ class SchnorrKeygen(
 
             when (action) {
                 TssAction.KEYGEN -> {
-                    val decodedSetupMsg = getSharedSetupMessage(routing.setupMessageId).toGoSlice()
+                    val decodedSetupMsg = getSharedSetupMessage().toGoSlice()
                     val result =
                         schnorr_keygen_session_from_setup(decodedSetupMsg, localPartySlice, handler)
                     if (result != LIB_OK) {
@@ -313,7 +313,7 @@ class SchnorrKeygen(
                 }
 
                 TssAction.Migrate -> {
-                    val decodedSetupMsg = getSharedSetupMessage(routing.setupMessageId).toGoSlice()
+                    val decodedSetupMsg = getSharedSetupMessage().toGoSlice()
                     if (this.localUi.isEmpty()) {
                         throw RuntimeException("can't migrate, local UI is empty")
                     }
