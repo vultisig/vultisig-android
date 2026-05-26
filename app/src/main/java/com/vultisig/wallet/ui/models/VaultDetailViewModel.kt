@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.getVaultPart
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -54,7 +55,11 @@ constructor(
                     it.copy(
                         name = vault.name,
                         vaultPart = vault.getVaultPart().toString(),
-                        libType = vault.libType.toString(),
+                        libType =
+                            when (vault.libType) {
+                                SigningLibType.KeyImport -> "DKLS-Imported"
+                                else -> vault.libType.toString()
+                            },
                         vaultSize = vault.signers.size.toString(),
                         pubKeyECDSA = vault.pubKeyECDSA,
                         pubKeyEDDSA = vault.pubKeyEDDSA,
