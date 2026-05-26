@@ -678,13 +678,14 @@ constructor(
                     allKeyshares.add(KeyShare(pubKey = result.pubKey, keyShare = result.keyShare))
                 }
             }
-            val chainPublicKeysFromResults = chainResults.map { result ->
-                ChainPublicKey(
-                    chain = result.chainName,
-                    publicKey = result.pubKey,
-                    isEddsa = result.isEddsa,
-                )
-            }
+            val chainPublicKeysFromResults =
+                chainResults.map { result ->
+                    ChainPublicKey(
+                        chain = result.chainName,
+                        publicKey = result.pubKey,
+                        isEddsa = result.isEddsa,
+                    )
+                }
             chainPublicKeys.addAll(chainPublicKeysFromResults)
 
             vault.keyshares = allKeyshares
