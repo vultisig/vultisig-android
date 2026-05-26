@@ -22,6 +22,7 @@ import com.vultisig.wallet.data.api.models.TransactionInfo
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.Test
@@ -163,6 +164,9 @@ class BroadcastTxUseCaseTest {
                 createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
             }
         assertEquals(broadcastError, thrown)
+        coVerify(exactly = 3) {
+            blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH)
+        }
     }
 
     @Test

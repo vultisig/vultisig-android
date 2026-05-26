@@ -230,7 +230,13 @@ constructor(
     ): Boolean {
         repeat(VERIFY_ATTEMPTS) { attempt ->
             if (attempt > 0) delay(VERIFY_BACKOFF_MS)
-            if (runCatching { verify(hash) }.getOrDefault(false)) return true
+            try {
+                if (verify(hash)) return true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                // treat verify failure as "not on chain yet"; continue to next retry
+            }
         }
         return false
     }
