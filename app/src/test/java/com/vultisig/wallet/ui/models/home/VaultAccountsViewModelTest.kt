@@ -227,7 +227,7 @@ internal class VaultAccountsViewModelTest {
             vm.refreshData()
             advanceUntilIdle()
 
-            verify(exactly = 1) { accountsRepository.loadAddresses("vault-1", true) }
+            verify(exactly = 1) { accountsRepository.loadAddresses("vault-1") }
         }
 
     /**
@@ -240,7 +240,7 @@ internal class VaultAccountsViewModelTest {
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
-            every { accountsRepository.loadAddresses("vault-1", true) } returns
+            every { accountsRepository.loadAddresses("vault-1") } returns
                 flow { throw RuntimeException("Balance load failed") }
 
             val vm = createViewModel()
@@ -252,7 +252,7 @@ internal class VaultAccountsViewModelTest {
             advanceUntilIdle()
 
             vm.uiState.value.isRefreshing.shouldBeFalse()
-            verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1", true) }
+            verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1") }
         }
 
     /**
@@ -278,7 +278,7 @@ internal class VaultAccountsViewModelTest {
 
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
-            every { accountsRepository.loadAddresses("vault-1", any()) } returns
+            every { accountsRepository.loadAddresses("vault-1") } returns
                 flowOf(listOf(testAddress))
             coEvery { addressToUiModelMapper(any()) } returns mappedUiModel
             coEvery { fiatValueToStringMapper(any(), any()) } returns "$10.00"
@@ -308,7 +308,7 @@ internal class VaultAccountsViewModelTest {
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
-            every { accountsRepository.loadAddresses("vault-1", any()) } returns
+            every { accountsRepository.loadAddresses("vault-1") } returns
                 flow { throw RuntimeException("Per-chain balance load failed") }
 
             val vm = createViewModel()
@@ -318,7 +318,7 @@ internal class VaultAccountsViewModelTest {
             // populated with stale or partial data.
             vm.uiState.value.isRefreshing.shouldBeFalse()
             vm.uiState.value.accounts.isEmpty().shouldBeTrue()
-            verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1", any()) }
+            verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1") }
         }
 
     /** Verifies dismissBuyVultBanner persists the dismissed flag. */

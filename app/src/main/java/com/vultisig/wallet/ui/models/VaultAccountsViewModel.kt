@@ -282,7 +282,7 @@ constructor(
     fun refreshData() {
         val vaultId = vaultId ?: return
         updateRefreshing(true)
-        loadAccounts(vaultId, true)
+        loadAccounts(vaultId)
     }
 
     fun send() {
@@ -399,13 +399,13 @@ constructor(
             }
     }
 
-    private fun loadAccounts(vaultId: String, isRefresh: Boolean = false) {
+    private fun loadAccounts(vaultId: String) {
         loadAccountsJob?.cancel()
         loadAccountsJob =
             viewModelScope.safeLaunch {
                 combine(
                         accountsRepository
-                            .loadAddresses(vaultId, isRefresh)
+                            .loadAddresses(vaultId)
                             .map { it.sortByAccountsTotalFiatValue() }
                             .catch {
                                 updateRefreshing(false)

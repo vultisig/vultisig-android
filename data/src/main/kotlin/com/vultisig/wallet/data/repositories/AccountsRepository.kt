@@ -38,7 +38,7 @@ import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 
 interface AccountsRepository {
-    fun loadAddresses(vaultId: String, isRefresh: Boolean = false): Flow<List<Address>>
+    fun loadAddresses(vaultId: String): Flow<List<Address>>
 
     fun loadCachedAddresses(vaultId: String): Flow<List<Address>>
 
@@ -69,16 +69,17 @@ constructor(
     private fun getVaultAsFlow(vaultId: String): Flow<Vault> =
         vaultRepository.getAsFlow(vaultId).filterNotNull()
 
-    override fun loadAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>> =
+    override fun loadAddresses(vaultId: String): Flow<List<Address>> =
         buildCacheAddresses(vaultId).flatMapLatest { (vaultCoins, addresses) ->
             channelFlow {
                 supervisorScope {
                     val loadPrices = async { tokenPriceRepository.refresh(vaultCoins) }
 
-                    if (!isRefresh) {
-                        addresses.fetchAccountFromDb()
-                        send(addresses)
-                    }
+                    // Always emit the last-known DB snapshot first so the UI shows cached
+                    // balances immediately instead of empty rows — including on refresh
+                    // (e.g. right after adding a chain).
+                    addresses.fetchAccountFromDb()
+                    send(addresses.toList())
 
                     addresses
                         .mapIndexed { index, account ->
@@ -109,6 +110,11 @@ constructor(
                                     }
 
                                     addresses[index] = account.copy(accounts = newAccounts)
+                                    // Stream each chain's balance as soon as it resolves rather
+                                    // than waiting for every chain to finish, matching iOS/Windows.
+                                    // Emit a snapshot copy because other chains may still be
+                                    // mutating the backing list in parallel.
+                                    send(addresses.toList())
                                 } catch (e: Exception) {
                                     if (e is kotlinx.coroutines.CancellationException) throw e
                                     Timber.e(e)
@@ -117,7 +123,7 @@ constructor(
                             }
                         }
                         .awaitAll()
-                    send(addresses)
+                    send(addresses.toList())
                 }
                 awaitClose()
             }
