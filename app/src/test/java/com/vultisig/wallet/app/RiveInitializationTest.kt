@@ -59,4 +59,59 @@ internal class RiveInitializationTest {
 
         assertFalse(isRiveInitialized)
     }
+
+    @Test
+    fun `isRiveUnsupportedDevice matches Tecno CAMON 30 by manufacturer and model`() {
+        assertTrue(
+            isRiveUnsupportedDevice(
+                manufacturer = "TECNO",
+                model = "TECNO CAMON 30",
+                socModel = null,
+            )
+        )
+    }
+
+    @Test
+    fun `isRiveUnsupportedDevice matches Tecno CAMON 30 case-insensitively`() {
+        assertTrue(
+            isRiveUnsupportedDevice(
+                manufacturer = "tecno",
+                model = "Tecno Camon 30 Pro 5G",
+                socModel = null,
+            )
+        )
+    }
+
+    @Test
+    fun `isRiveUnsupportedDevice matches by MT6789 SoC model`() {
+        assertTrue(
+            isRiveUnsupportedDevice(
+                manufacturer = "Other",
+                model = "Other Phone",
+                socModel = "MT6789",
+            )
+        )
+    }
+
+    @Test
+    fun `isRiveUnsupportedDevice returns false for unaffected devices`() {
+        assertFalse(
+            isRiveUnsupportedDevice(
+                manufacturer = "Google",
+                model = "Pixel 8 Pro",
+                socModel = "Tensor G3",
+            )
+        )
+    }
+
+    @Test
+    fun `isRiveUnsupportedDevice returns false for non-CAMON Tecno models`() {
+        assertFalse(
+            isRiveUnsupportedDevice(
+                manufacturer = "TECNO",
+                model = "TECNO SPARK 20",
+                socModel = "MT6765",
+            )
+        )
+    }
 }
