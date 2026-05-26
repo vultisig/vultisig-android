@@ -2,6 +2,8 @@ package com.vultisig.wallet.app
 
 import android.content.Context
 import app.rive.runtime.kotlin.core.Rive
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -62,56 +64,43 @@ internal class RiveInitializationTest {
 
     @Test
     fun `isRiveUnsupportedDevice matches Tecno CAMON 30 by manufacturer and model`() {
-        assertTrue(
-            isRiveUnsupportedDevice(
-                manufacturer = "TECNO",
-                model = "TECNO CAMON 30",
-                socModel = null,
-            )
-        )
+        isRiveUnsupportedDevice(manufacturer = "TECNO", model = "TECNO CAMON 30", socModel = null)
+            .shouldBeTrue()
     }
 
     @Test
     fun `isRiveUnsupportedDevice matches Tecno CAMON 30 case-insensitively`() {
-        assertTrue(
-            isRiveUnsupportedDevice(
+        isRiveUnsupportedDevice(
                 manufacturer = "tecno",
                 model = "Tecno Camon 30 Pro 5G",
                 socModel = null,
             )
-        )
+            .shouldBeTrue()
     }
 
     @Test
     fun `isRiveUnsupportedDevice matches by MT6789 SoC model`() {
-        assertTrue(
-            isRiveUnsupportedDevice(
-                manufacturer = "Other",
-                model = "Other Phone",
-                socModel = "MT6789",
-            )
-        )
+        isRiveUnsupportedDevice(manufacturer = "Other", model = "Other Phone", socModel = "MT6789")
+            .shouldBeTrue()
     }
 
     @Test
     fun `isRiveUnsupportedDevice returns false for unaffected devices`() {
-        assertFalse(
-            isRiveUnsupportedDevice(
+        isRiveUnsupportedDevice(
                 manufacturer = "Google",
                 model = "Pixel 8 Pro",
                 socModel = "Tensor G3",
             )
-        )
+            .shouldBeFalse()
     }
 
     @Test
     fun `isRiveUnsupportedDevice returns false for non-CAMON Tecno models`() {
-        assertFalse(
-            isRiveUnsupportedDevice(
+        isRiveUnsupportedDevice(
                 manufacturer = "TECNO",
                 model = "TECNO SPARK 20",
                 socModel = "MT6765",
             )
-        )
+            .shouldBeFalse()
     }
 }
