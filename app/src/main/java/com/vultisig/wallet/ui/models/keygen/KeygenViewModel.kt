@@ -402,15 +402,19 @@ constructor(
                                     dklsKeygen.dklsKeygenWithRetry(
                                         0,
                                         KeygenRouting.from(
-                                            exchangeMessageId = ROOT_ECDSA_MESSAGE_ID
+                                            setupMessageId = ROOT_ECDSA_MESSAGE_ID,
+                                            exchangeMessageId = ROOT_ECDSA_MESSAGE_ID,
                                         ),
                                     )
                                 },
                                 async {
+                                    // Schnorr reuses the DKLS setup uploaded at p-ecdsa; it
+                                    // exchanges on its own p-eddsa namespace.
                                     schnorr.schnorrKeygenWithRetry(
                                         0,
                                         KeygenRouting.from(
-                                            exchangeMessageId = ROOT_EDDSA_MESSAGE_ID
+                                            setupMessageId = ROOT_ECDSA_MESSAGE_ID,
+                                            exchangeMessageId = ROOT_EDDSA_MESSAGE_ID,
                                         ),
                                     )
                                 },

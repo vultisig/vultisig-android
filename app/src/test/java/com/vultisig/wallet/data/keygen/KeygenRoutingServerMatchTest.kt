@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.keygen
 
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import org.junit.jupiter.api.Test
 
@@ -25,32 +26,50 @@ class KeygenRoutingServerMatchTest {
 
     @Test
     fun `ECDSA routing uses p-ecdsa as exchange message ID`() {
-        val routing = KeygenRouting.from(exchangeMessageId = ECDSA_MESSAGE_ID)
+        val routing =
+            KeygenRouting.from(
+                setupMessageId = ECDSA_MESSAGE_ID,
+                exchangeMessageId = ECDSA_MESSAGE_ID,
+            )
 
         assertEquals("p-ecdsa", routing.exchangeMessageId)
     }
 
     @Test
-    fun `ECDSA routing has no setup message ID because it shares DKLS setup`() {
-        val routing = KeygenRouting.from(exchangeMessageId = ECDSA_MESSAGE_ID)
+    fun `ECDSA routing uses p-ecdsa as setup message ID`() {
+        val routing =
+            KeygenRouting.from(
+                setupMessageId = ECDSA_MESSAGE_ID,
+                exchangeMessageId = ECDSA_MESSAGE_ID,
+            )
 
-        assertNull(routing.setupMessageId)
+        assertEquals("p-ecdsa", routing.setupMessageId)
     }
 
     // -- EdDSA routing --
 
     @Test
     fun `EdDSA routing uses p-eddsa as exchange message ID`() {
-        val routing = KeygenRouting.from(exchangeMessageId = EDDSA_MESSAGE_ID)
+        val routing =
+            KeygenRouting.from(
+                setupMessageId = ECDSA_MESSAGE_ID,
+                exchangeMessageId = EDDSA_MESSAGE_ID,
+            )
 
         assertEquals("p-eddsa", routing.exchangeMessageId)
     }
 
     @Test
-    fun `EdDSA routing has no setup message ID because it shares DKLS setup`() {
-        val routing = KeygenRouting.from(exchangeMessageId = EDDSA_MESSAGE_ID)
+    fun `EdDSA routing reads shared DKLS setup from p-ecdsa`() {
+        // Schnorr reuses the DKLS setup message uploaded at p-ecdsa; only the exchange
+        // namespace differs.
+        val routing =
+            KeygenRouting.from(
+                setupMessageId = ECDSA_MESSAGE_ID,
+                exchangeMessageId = EDDSA_MESSAGE_ID,
+            )
 
-        assertNull(routing.setupMessageId)
+        assertEquals("p-ecdsa", routing.setupMessageId)
     }
 
     // -- MLDSA routing --
@@ -95,17 +114,25 @@ class KeygenRoutingServerMatchTest {
 
     @Test
     fun `all parallel keygen protocols produce non-null exchange message IDs`() {
-        val ecdsaRouting = KeygenRouting.from(exchangeMessageId = ECDSA_MESSAGE_ID)
-        val eddsaRouting = KeygenRouting.from(exchangeMessageId = EDDSA_MESSAGE_ID)
+        val ecdsaRouting =
+            KeygenRouting.from(
+                setupMessageId = ECDSA_MESSAGE_ID,
+                exchangeMessageId = ECDSA_MESSAGE_ID,
+            )
+        val eddsaRouting =
+            KeygenRouting.from(
+                setupMessageId = ECDSA_MESSAGE_ID,
+                exchangeMessageId = EDDSA_MESSAGE_ID,
+            )
         val mldsaRouting =
             KeygenRouting.from(
                 setupMessageId = MLDSA_SETUP_MESSAGE_ID,
                 exchangeMessageId = MLDSA_EXCHANGE_MESSAGE_ID,
             )
 
-        assert(ecdsaRouting.exchangeMessageId != null) { "ECDSA exchange ID must not be null" }
-        assert(eddsaRouting.exchangeMessageId != null) { "EdDSA exchange ID must not be null" }
-        assert(mldsaRouting.exchangeMessageId != null) { "MLDSA exchange ID must not be null" }
+        assertNotEquals(null, ecdsaRouting.exchangeMessageId, "ECDSA exchange ID must not be null")
+        assertNotEquals(null, eddsaRouting.exchangeMessageId, "EdDSA exchange ID must not be null")
+        assertNotEquals(null, mldsaRouting.exchangeMessageId, "MLDSA exchange ID must not be null")
     }
 
     // -- all protocols use unique exchange namespaces --
