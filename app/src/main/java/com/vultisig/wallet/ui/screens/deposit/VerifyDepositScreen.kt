@@ -125,7 +125,7 @@ internal fun VerifyDepositScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier =
                     Modifier.padding(contentPadding)
-                        .padding(all = 16.dp)
+                        .padding(horizontal = if (hasToolbar) 16.dp else 0.dp, vertical = 16.dp)
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState()),
             ) {
@@ -309,7 +309,9 @@ internal fun VerifyDepositScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = if (hasToolbar) 24.dp else 8.dp, vertical = 12.dp),
             ) {
                 if (state.hasFastSign) {
                     Text(
