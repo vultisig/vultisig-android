@@ -135,19 +135,18 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
         }
 
     /**
-     * Pulls a SwapKit error `code` out of a JSON error body, if present. Reads only the top-level
-     * `code` field and the top-level `error` field (string form or `{ "code": ... }` envelope) so a
-     * nested `code` elsewhere in the payload (e.g. `warnings[].code`) cannot hijack the typed
-     * variant. Matches iOS' SwapKitError envelope decoder, which reads the top-level `error` field
-     * directly.
+     * Pulls a SwapKit error code out of a JSON error body, if present. The V3 wire envelope is flat
+     * — `{"error":"<errorCode>","message":"<human>","data":{}}` (verified against docs.swapkit.dev
+     * and a live proxy probe) — so only the top-level `error` string is read. Reading just that one
+     * field (rather than also walking a top-level `code` or a nested `error.code`, neither of which
+     * the proxy emits) keeps a `code` elsewhere in the payload (e.g. `warnings[].code`) from
+     * hijacking the typed variant. Matches iOS' envelope decoder, which reads `error` directly.
      */
     private fun extractErrorCode(body: String): String? {
         if (body.isBlank()) return null
         return runCatching {
                 val obj = json.parseToJsonElement(body) as? JsonObject ?: return@runCatching null
-                (obj["code"] as? JsonPrimitive)?.content
-                    ?: (obj["error"] as? JsonPrimitive)?.content
-                    ?: ((obj["error"] as? JsonObject)?.get("code") as? JsonPrimitive)?.content
+                (obj["error"] as? JsonPrimitive)?.content
             }
             .getOrNull()
     }

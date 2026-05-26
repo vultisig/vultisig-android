@@ -17,6 +17,10 @@ sealed class SwapQuote {
         override val expiredAt: Instant,
         val data: EVMSwapQuoteJson,
         val provider: String,
+        // SwapKit routes through a sub-provider (Chainflip / NEAR / Garden). Carried on the quote —
+        // not a transient local var — so the "via <sub-provider>" label survives a quote cache hit
+        // instead of collapsing back to the generic "SwapKit". Null for 1inch / Kyber / LiFi.
+        val subProvider: String? = null,
     ) : SwapQuote()
 
     data class ThorChain(

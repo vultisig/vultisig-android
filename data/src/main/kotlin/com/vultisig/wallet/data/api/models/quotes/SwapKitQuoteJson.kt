@@ -1,5 +1,8 @@
 package com.vultisig.wallet.data.api.models.quotes
 
+import java.util.Locale
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -10,6 +13,7 @@ import kotlinx.serialization.Serializable
  * configured server-side via the partner dashboard, so no affiliate id is sent on the wire — only
  * the optional [affiliateFee] basis-points override is.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class SwapKitQuoteRequest(
     @SerialName("sellAsset") val sellAsset: String,
@@ -21,15 +25,17 @@ data class SwapKitQuoteRequest(
     @SerialName("destinationAddress") val destinationAddress: String? = null,
     /** Limits the liquidity providers considered. Omit to let SwapKit pick from all available. */
     @SerialName("providers") val providers: List<String>? = null,
-    /** Max slippage as percentage. `1` means 1% (NOT basis points). */
-    @SerialName("slippage") val slippage: Double = DEFAULT_SLIPPAGE,
+    /**
+     * Max slippage as a percentage (`1` == 1%, NOT bps). Nullable with [EncodeDefault.Mode.NEVER]
+     * so the key is OMITTED from the wire when unset — the shared Json has `encodeDefaults = true`,
+     * which would otherwise emit `"slippage": null`. iOS sends no slippage, and the Phase 0 spike
+     * found an explicit slippage makes NEAR Intents / Chainflip return `noRoutesFound` on some
+     * pairs, so the default is to send nothing and let SwapKit choose.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("slippage") val slippage: Double? = null,
     /** Affiliate fee override in basis points (range 0..1000, max 10%). */
     @SerialName("affiliateFee") val affiliateFee: Int = 0,
-) {
-    companion object {
-        const val DEFAULT_SLIPPAGE: Double = 1.0
-    }
-}
+)
 
 /**
  * Response envelope returned by `POST /v3/quote`. Each [SwapKitRoute] is a candidate path; the
@@ -83,9 +89,13 @@ data class SwapKitRoute(
     @SerialName("warnings") val warnings: List<SwapKitWarning> = emptyList(),
     @SerialName("meta") val meta: SwapKitRouteMeta? = null,
 ) {
-    /** Lower-cased provider id used by the THORChain/Maya filter and the sub-provider tag. */
+    /**
+     * Lower-cased provider id used by the THORChain/Maya filter and the sub-provider tag.
+     * Locale.ROOT: the no-arg lowercase() maps `I` → dotless `ı` on a Turkish device, so
+     * `CHAINFLIP` / `THORCHAIN_STREAMING` would mis-normalize and slip the affiliate filter.
+     */
     val primaryProviderId: String
-        get() = providers.firstOrNull().orEmpty().lowercase()
+        get() = providers.firstOrNull().orEmpty().lowercase(Locale.ROOT)
 }
 
 /** Single hop inside a [SwapKitRoute]. Phase 1 only honours routes with exactly one leg. */

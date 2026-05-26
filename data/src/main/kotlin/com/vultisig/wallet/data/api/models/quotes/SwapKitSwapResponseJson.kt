@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api.models.quotes
 
+import java.util.Locale
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -52,9 +53,11 @@ data class SwapKitTxMeta(
     /**
      * Lower-cased txType used to dispatch onto an EVM or Solana signer. Computed once at
      * construction so the swap-path filter + signer-pick reads don't reallocate the string. Lives
-     * in the class body (not the constructor) so kotlinx.serialization ignores it.
+     * in the class body (not the constructor) so kotlinx.serialization ignores it. Locale.ROOT: on
+     * a Turkish device the no-arg lowercase() maps `SERIALIZED_BASE64`'s `I` to dotless `ı`, which
+     * would miss the Solana dispatch arm and land every Solana route on UnsupportedTxType.
      */
-    val type: String = txType.lowercase()
+    val type: String = txType.lowercase(Locale.ROOT)
 
     companion object {
         const val TYPE_EVM = "evm"

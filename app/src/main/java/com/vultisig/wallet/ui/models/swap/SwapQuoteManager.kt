@@ -341,6 +341,8 @@ constructor(
                     getCachedQuoteOrFetch(
                         srcToken.id,
                         dstToken.id,
+                        srcToken.address,
+                        dstToken.address,
                         srcTokenValue,
                         SwapProvider.MAYA,
                     ) {
@@ -366,6 +368,8 @@ constructor(
                     getCachedQuoteOrFetch(
                         srcToken.id,
                         dstToken.id,
+                        srcToken.address,
+                        dstToken.address,
                         srcTokenValue,
                         SwapProvider.THORCHAIN,
                     ) {
@@ -410,7 +414,14 @@ constructor(
         srcNativeToken: Coin,
     ): Pair<SwapQuote, UiText> {
         val swapQuote =
-            getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.KYBER) {
+            getCachedQuoteOrFetch(
+                srcToken.id,
+                dstToken.id,
+                srcToken.address,
+                dstToken.address,
+                srcTokenValue,
+                SwapProvider.KYBER,
+            ) {
                 val apiQuote =
                     swapQuoteRepository
                         .getQuote(
@@ -461,7 +472,14 @@ constructor(
     ): Pair<SwapQuote, UiText> {
         val isAffiliate = true
         val swapQuote =
-            getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.ONEINCH) {
+            getCachedQuoteOrFetch(
+                srcToken.id,
+                dstToken.id,
+                srcToken.address,
+                dstToken.address,
+                srcTokenValue,
+                SwapProvider.ONEINCH,
+            ) {
                 val apiQuote =
                     swapQuoteRepository
                         .getQuote(
@@ -509,7 +527,14 @@ constructor(
         srcNativeToken: Coin,
     ): Pair<SwapQuote, UiText> {
         val swapQuote =
-            getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, provider) {
+            getCachedQuoteOrFetch(
+                srcToken.id,
+                dstToken.id,
+                srcToken.address,
+                dstToken.address,
+                srcTokenValue,
+                provider,
+            ) {
                 val apiQuote =
                     if (provider == SwapProvider.LIFI)
                         swapQuoteRepository
@@ -588,9 +613,15 @@ constructor(
         //   max(0, min(1000, 50 - vultTierDiscount))
         // 50 bps base affiliate, clamped to 0..1000 (SwapKit's documented 0..10% range).
         val affiliateBps = (SWAPKIT_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)).coerceIn(0, 1000)
-        var resolvedSubProvider: String? = null
         val swapQuote =
-            getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.SWAPKIT) {
+            getCachedQuoteOrFetch(
+                srcToken.id,
+                dstToken.id,
+                srcToken.address,
+                dstToken.address,
+                srcTokenValue,
+                SwapProvider.SWAPKIT,
+            ) {
                 val result =
                     swapQuoteRepository.getQuote(
                         SwapProvider.SWAPKIT,
@@ -606,7 +637,6 @@ constructor(
                 val evmResult =
                     (result as? SwapQuoteResult.Evm)
                         ?: error("SwapKitQuoteSource must return SwapQuoteResult.Evm")
-                resolvedSubProvider = evmResult.subProvider
                 val apiQuote = evmResult.data
                 val expectedDstValue =
                     TokenValue(
@@ -645,8 +675,13 @@ constructor(
                     // SwapTransactionToUiModelMapper to map back onto SwapProvider.SWAPKIT —
                     // keep it as the canonical id. The sub-provider drives the UI label below.
                     provider = SwapProvider.SWAPKIT.getSwapProviderId(),
+                    subProvider = evmResult.subProvider,
                 )
             }
+        // Read the sub-provider off the returned quote (not a hoisted var): a cache HIT skips the
+        // fetch lambda, so a transient var would be null and the label would silently collapse from
+        // "via CHAINFLIP" back to the generic "SwapKit" when the form re-opens within the TTL.
+        val resolvedSubProvider = (swapQuote as? SwapQuote.OneInch)?.subProvider
         val providerLabel =
             if (resolvedSubProvider.isNullOrBlank()) R.string.swap_for_provider_swapkit.asUiText()
             else formatSwapKitProviderLabel(resolvedSubProvider).asUiText()
@@ -692,23 +727,35 @@ constructor(
         provider: SwapProvider,
         srcTokenId: String,
         dstTokenId: String,
+        srcAddress: String,
+        dstAddress: String,
         srcAmount: BigInteger,
     ) {
-        quoteCache.put(srcTokenId, dstTokenId, srcAmount, provider, quote)
+        quoteCache.put(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider, quote)
     }
 
     private suspend fun getCachedQuoteOrFetch(
         srcTokenId: String,
         dstTokenId: String,
+        srcAddress: String,
+        dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
         fetch: suspend () -> SwapQuote,
     ): SwapQuote {
-        quoteCache.get(srcTokenId, dstTokenId, srcAmount, provider)?.let {
+        quoteCache.get(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)?.let {
             return it
         }
         return fetch().also { fresh ->
-            quoteCache.put(srcTokenId, dstTokenId, srcAmount, provider, fresh)
+            quoteCache.put(
+                srcTokenId,
+                dstTokenId,
+                srcAddress,
+                dstAddress,
+                srcAmount,
+                provider,
+                fresh,
+            )
         }
     }
 
@@ -849,6 +896,11 @@ private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
     private data class Key(
         val srcTokenId: String,
         val dstTokenId: String,
+        // The cached tx is address-bound (ERC-20 `tx.data`, SwapKit routing, destination). Two
+        // vaults sharing a pair/amount have the same token ids but different account addresses, so
+        // without these a quote built for vault A could route vault B's proceeds back to A.
+        val srcAddress: String,
+        val dstAddress: String,
         val srcAmount: BigInteger,
         val provider: SwapProvider,
     )
@@ -859,11 +911,13 @@ private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
     fun get(
         srcTokenId: String,
         dstTokenId: String,
+        srcAddress: String,
+        dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
     ): SwapQuote? =
         synchronized(lock) {
-            val key = Key(srcTokenId, dstTokenId, srcAmount, provider)
+            val key = Key(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)
             val quote = entries[key] ?: return null
             if (Clock.System.now() < quote.expiredAt) {
                 quote
@@ -876,12 +930,15 @@ private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
     fun put(
         srcTokenId: String,
         dstTokenId: String,
+        srcAddress: String,
+        dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
         quote: SwapQuote,
     ) =
         synchronized(lock) {
-            entries[Key(srcTokenId, dstTokenId, srcAmount, provider)] = quote
+            entries[Key(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)] =
+                quote
             evict()
         }
 

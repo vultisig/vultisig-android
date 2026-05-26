@@ -18,6 +18,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import java.math.BigInteger
+import java.util.Locale
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -626,6 +627,89 @@ internal class SwapKitQuoteSourceTest {
             val error = assertThrows<SwapKitError.Network> { source().fetch(request()) }
             assertEquals(boom, error.cause)
         }
+
+    @Test
+    fun `fetch scales inbound fee by source-chain native decimals not the ERC-20 sell token decimals`() =
+        runTest {
+            // Regression: the inbound fee asset is the source chain's NATIVE coin (ETH.ETH, 18 dp),
+            // even when selling an ERC-20 (USDC, 6 dp). Scaling by srcToken.decimal (6) truncates
+            // the fee by 10^12 — 0.00001165876952721 ETH would read "11" wei instead of ~1.16e13.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            val usdc =
+                ethCoin()
+                    .copy(
+                        ticker = "USDC",
+                        isNativeToken = false,
+                        contractAddress = "0xa0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+                        decimal = 6,
+                    )
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r",
+                                providers = listOf("ONEINCH"),
+                                expectedBuy = "1",
+                                fees =
+                                    listOf(
+                                        SwapKitFee(
+                                            type = "inbound",
+                                            chain = "ETH",
+                                            amount = "0.00001165876952721",
+                                        )
+                                    ),
+                            )
+                        )
+                )
+            coEvery { api.swap(any()) } returns evmSwapResponse()
+
+            val result = source().fetch(request(srcToken = usdc)) as SwapQuoteResult.Evm
+
+            assertEquals("11658769527210", result.data.tx.swapFee)
+        }
+
+    @Test
+    fun `fetch throws MalformedAmount when EVM tx value is not parseable`() = runTest {
+        // A silent value=0 coercion would underpay a value-bearing native swap; refuse instead.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("CHAINFLIP"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns evmSwapResponse(value = "not-a-number")
+
+        val error = assertThrows<SwapKitError.MalformedAmount> { source().fetch(request()) }
+        assertEquals("not-a-number", error.raw)
+    }
+
+    @Test
+    fun `fetch still filters THORChain streaming under a Turkish locale`() = runTest {
+        // Locale.ROOT guard: a Turkish-locale lowercase() maps THORCHAIN_STREAMING's `I` to dotless
+        // `ı`, so the route would miss the filter set and slip through — stacking a second
+        // affiliate
+        // fee on Vultisig's native Thor integration. Pin that it is still dropped (RouteFiltered).
+        val original = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr"))
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "thor-streaming",
+                                providers = listOf("THORCHAIN_STREAMING"),
+                            )
+                        )
+                )
+
+            assertThrows<SwapKitError.RouteFiltered> { source().fetch(request()) }
+        } finally {
+            Locale.setDefault(original)
+        }
+    }
 
     // ---- helpers ----
 

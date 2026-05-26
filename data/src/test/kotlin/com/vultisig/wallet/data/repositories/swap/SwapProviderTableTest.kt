@@ -25,7 +25,9 @@ internal class SwapProviderTableTest {
         val swapKitCoins =
             listOf(
                 coin(Chain.Ethereum, "ZZZ", isNative = false), // generic EVM token → evmAggregators
-                coin(Chain.Ethereum, "USDC", isNative = false), // Thor + Maya eligible branch
+                coin(Chain.Ethereum, "USDC", isNative = false), // isThor && isMaya branch
+                coin(Chain.Ethereum, "WBTC", isNative = false), // isThor-only branch
+                coin(Chain.Ethereum, "LLD", isNative = false), // isMaya-only branch
                 coin(Chain.BscChain, "BNB", isNative = true),
                 coin(Chain.BscChain, "ZZZ", isNative = false), // non-thor BSC → evmAggregators
                 coin(Chain.Avalanche, "AVAX", isNative = true),
@@ -54,9 +56,23 @@ internal class SwapProviderTableTest {
             listOf(
                 coin(Chain.ZkSync, "ETH", isNative = true),
                 coin(Chain.Mantle, "MNT", isNative = true),
+                coin(Chain.Blast, "ETH", isNative = true),
+                coin(Chain.CronosChain, "CRO", isNative = true),
                 coin(Chain.Bitcoin, "BTC", isNative = true),
+                coin(Chain.BitcoinCash, "BCH", isNative = true),
+                coin(Chain.Litecoin, "LTC", isNative = true),
+                coin(Chain.Dogecoin, "DOGE", isNative = true),
+                coin(Chain.GaiaChain, "ATOM", isNative = true),
                 coin(Chain.ThorChain, "RUNE", isNative = true),
+                coin(Chain.MayaChain, "CACAO", isNative = true),
+                coin(Chain.Zcash, "ZEC", isNative = true),
+                coin(Chain.Ripple, "XRP", isNative = true),
+                coin(Chain.Tron, "TRX", isNative = true),
                 coin(Chain.Hyperliquid, "HYPE", isNative = true),
+                coin(Chain.Ton, "TON", isNative = true),
+                coin(Chain.Sui, "SUI", isNative = true),
+                coin(Chain.Cardano, "ADA", isNative = true),
+                coin(Chain.Polkadot, "DOT", isNative = true),
             )
 
         nonSwapKitCoins.forEach { c ->

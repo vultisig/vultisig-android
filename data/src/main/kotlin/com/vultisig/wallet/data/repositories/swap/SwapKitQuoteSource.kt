@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenValue
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.first
@@ -168,7 +169,10 @@ constructor(
                 // to the DTO ever drops the normalization, the filter still excludes Thor/Maya
                 // sub-providers rather than silently letting them through (which would stack a
                 // second affiliate fee on top of Vultisig's native Thor/Maya integrations).
-                val primary = route.primaryProviderId.lowercase()
+                // Locale.ROOT: on a Turkish device the no-arg lowercase() maps `I` → dotless `ı`,
+                // so `THORCHAIN_STREAMING` would not match `thorchain_streaming` and a Thor/Maya
+                // streaming route would slip the filter — stacking a second affiliate fee.
+                val primary = route.primaryProviderId.lowercase(Locale.ROOT)
                 primary !in FILTERED_PROVIDERS
             }
         if (filtered.isEmpty()) return null
@@ -200,8 +204,23 @@ constructor(
         val amount =
             inbound.amount?.let { runCatching { BigDecimal(it) }.getOrNull() }
                 ?: return BigInteger.ZERO
-        return amount.movePointRight(srcToken.decimal).toBigInteger()
+        // The inbound fee is denominated in the source chain's NATIVE gas coin (e.g. `ETH.ETH`),
+        // never the sell token. Scaling by `srcToken.decimal` under-counts the fee by 10^12 on an
+        // ERC-20 source (USDC decimal 6 vs ETH 18), so the verify-screen Network Fee reads dust.
+        // Scale by the chain's native decimals — equal to srcToken.decimal on a native-source
+        // route.
+        return amount.movePointRight(nativeDecimals(srcToken.chain)).toBigInteger()
     }
+
+    /**
+     * Native-coin decimals for a SwapKit Phase-1 chain. EVM chains use 18; Solana uses 9. Only
+     * reached for chains [chainPrefix] already maps (the caller returns early otherwise).
+     */
+    private fun nativeDecimals(chain: Chain): Int =
+        when (chain) {
+            Chain.Solana -> 9
+            else -> 18
+        }
 
     /**
      * Wrap the SwapKit `/v3/swap` response into the EVM-shaped [EVMSwapQuoteJson] envelope used by
@@ -270,7 +289,14 @@ constructor(
                             allowanceTarget = response.meta.approvalAddress,
                             data = evm.data,
                             gas = gas,
-                            value = (parseEvmNumber(evm.value) ?: BigInteger.ZERO).toString(),
+                            // Refuse a malformed native amount rather than coercing to 0: on a
+                            // value-bearing native-source swap a silent 0 would underpay the
+                            // destination contract (or send nothing). gasPrice is left as a 0
+                            // fallback — it is re-estimated downstream, so 0 only under-prices.
+                            value =
+                                (parseEvmNumber(evm.value)
+                                        ?: throw SwapKitError.MalformedAmount(evm.value))
+                                    .toString(),
                             gasPrice = (parseEvmNumber(evm.gasPrice) ?: BigInteger.ZERO).toString(),
                             swapFee = inboundFee,
                             swapFeeTokenContract = "",

@@ -246,7 +246,9 @@ class SwapKitQuoteDecodingTest {
         // wire. Only `affiliateFee` (basis points) is part of the documented V3 quote request.
         assertFalse(body.containsKey("affiliate"))
         assertEquals("0", body["affiliateFee"]?.jsonPrimitive?.content)
-        assertEquals("1", body["slippage"]?.jsonPrimitive?.content?.substringBefore('.'))
+        // `slippage` is omitted unless explicitly set (an explicit value trips NEAR/Chainflip
+        // noRoutesFound on some pairs); see `quote request omits slippage on the wire when unset`.
+        assertFalse(body.containsKey("slippage"))
     }
 
     @Test
@@ -356,5 +358,41 @@ class SwapKitQuoteDecodingTest {
         // tx stays raw — caller picks the matching DTO based on meta.type
         val obj = response.tx as JsonObject
         assertEquals("0xRouter", obj["to"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun `quote request omits slippage on the wire when unset`() {
+        // Regression: the shared Json provider has encodeDefaults=true, so a non-null default would
+        // ship "slippage":1.0 (or "slippage":null) on every /v3/quote. The Phase 0 spike found an
+        // explicit slippage makes NEAR Intents / Chainflip return noRoutesFound on some pairs (and
+        // iOS sends nothing), so the key must be ABSENT — guarded by @EncodeDefault(NEVER).
+        val encodeDefaultsJson = Json { encodeDefaults = true }
+        val request =
+            SwapKitQuoteRequest(sellAsset = "ETH.ETH", buyAsset = "SOL.SOL", sellAmount = "1")
+
+        val encoded = encodeDefaultsJson.encodeToString(request).let(Json::parseToJsonElement)
+
+        assertFalse(
+            (encoded as JsonObject).containsKey("slippage"),
+            "slippage must be omitted from the wire, got: $encoded",
+        )
+    }
+
+    @Test
+    fun `quote request encodes slippage when explicitly set`() {
+        // The field is retained (nullable) for forward use — when a caller does set it, it ships.
+        val encodeDefaultsJson = Json { encodeDefaults = true }
+        val request =
+            SwapKitQuoteRequest(
+                sellAsset = "ETH.ETH",
+                buyAsset = "SOL.SOL",
+                sellAmount = "1",
+                slippage = 3.0,
+            )
+
+        val encoded =
+            encodeDefaultsJson.encodeToString(request).let(Json::parseToJsonElement) as JsonObject
+
+        assertEquals(3.0, encoded["slippage"]?.jsonPrimitive?.content?.toDouble())
     }
 }

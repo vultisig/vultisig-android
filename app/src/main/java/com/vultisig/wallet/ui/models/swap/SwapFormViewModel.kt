@@ -719,6 +719,8 @@ constructor(
             currentProvider,
             srcToken.id,
             dstToken.id,
+            srcToken.address,
+            dstToken.address,
             currentAmount,
         )
     }
