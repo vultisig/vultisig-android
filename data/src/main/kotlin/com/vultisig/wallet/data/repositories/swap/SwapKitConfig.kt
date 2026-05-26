@@ -6,12 +6,14 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
 /**
- * DataStore-backed feature flag for the SwapKit aggregator. Default is `false` — when the toggle is
- * off the [SwapKitQuoteSource] short-circuits without network I/O, so behaviour is identical to
- * before the SwapKit integration shipped.
+ * DataStore-backed feature flag for the SwapKit aggregator. Default is `true`, matching iOS
+ * (`SwapKitConfig.isFeatureEnabled` returns true when the key is absent). SwapKit is an additional
+ * competing quote source that the picker still ranks by net output, so it only wins when it beats
+ * the existing providers; users can opt out via Settings → Advanced → SwapKit. When off,
+ * [SwapKitQuoteSource] short-circuits without any network I/O.
  */
 interface SwapKitConfig {
-    /** Live flow of the user's Advanced Settings → SwapKit toggle. Defaults to `false`. */
+    /** Live flow of the user's Advanced Settings → SwapKit toggle. Defaults to `true`. */
     val isFeatureEnabled: Flow<Boolean>
 
     /** Persists the user's new toggle value. */
@@ -23,7 +25,7 @@ internal class SwapKitConfigImpl @Inject constructor(private val dataStore: AppD
     SwapKitConfig {
 
     override val isFeatureEnabled: Flow<Boolean>
-        get() = dataStore.readData(SWAPKIT_ENABLED_KEY, false)
+        get() = dataStore.readData(SWAPKIT_ENABLED_KEY, true)
 
     override suspend fun setFeatureEnabled(enabled: Boolean) {
         dataStore.set(SWAPKIT_ENABLED_KEY, enabled)

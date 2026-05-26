@@ -28,7 +28,7 @@ import timber.log.Timber
 
 /**
  * SwapKit V3 quote source. Mirrors iOS' `SwapKitService.fetchBestRoute` + `buildSwapTx`:
- * 1. Short-circuit on the user's `SwapKitConfig` opt-in flag (default off) before any network I/O.
+ * 1. Short-circuit on the user's `SwapKitConfig` opt-out flag (default on) before any network I/O.
  *    No cache gate beyond that — iOS' `SwapKitProviderCache` returns `true` on cache-miss and lets
  *    `/v3/quote` surface unsupported chains via `noRoutesFound`; the Android source matches that
  *    fail-open semantics so a single bad-network app launch doesn't hide SwapKit until refresh.
@@ -78,8 +78,8 @@ constructor(
     }
 
     private suspend fun fetchInternal(request: SwapQuoteRequest): SwapQuoteResult {
-        // Feature-flag kill switch (Advanced Settings → SwapKit). Defaults to off — short-circuits
-        // before any /quote network I/O so the proxy stays cold until the user opts in.
+        // Feature-flag kill switch (Advanced Settings → SwapKit). Defaults to on (iOS parity) —
+        // short-circuits before any /quote network I/O when the user has opted out.
         if (!config.isFeatureEnabled.first()) {
             throw SwapKitError.NoRoutes("SwapKit feature flag disabled")
         }
