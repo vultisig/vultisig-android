@@ -133,6 +133,39 @@ class BroadcastTxUseCaseTest {
     }
 
     @Test
+    fun `bitcoin cash broadcast recovers on second verify attempt after indexer lag`() = runTest {
+        val blockChairApi = mockk<BlockChairApi>()
+        coEvery { blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION) } throws
+            RuntimeException("fail to broadcast transaction: transaction already known")
+        coEvery { blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH) } returnsMany
+            listOf(
+                BlockChainStatusDeserialized.Error("not yet indexed"),
+                blockchairResult(blockId = -1),
+            )
+
+        val txHash =
+            createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
+
+        assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+    }
+
+    @Test
+    fun `bitcoin cash broadcast gives up and rethrows after all verify attempts fail`() = runTest {
+        val blockChairApi = mockk<BlockChairApi>()
+        val broadcastError = RuntimeException("fail to broadcast transaction: insufficient fee")
+        coEvery { blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION) } throws
+            broadcastError
+        coEvery { blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH) } returns
+            BlockChainStatusDeserialized.Error("not indexed")
+
+        val thrown =
+            assertFailsWith<RuntimeException> {
+                createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
+            }
+        assertEquals(broadcastError, thrown)
+    }
+
+    @Test
     fun `zcash broadcast recovers when peer already broadcast`() = runTest {
         val blockChairApi = mockk<BlockChairApi>()
         coEvery { blockChairApi.broadcastTransaction(Chain.Zcash, RAW_TRANSACTION) } throws

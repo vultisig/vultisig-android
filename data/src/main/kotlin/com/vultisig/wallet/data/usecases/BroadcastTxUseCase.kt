@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.models.Chain.ZkSync
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.delay
 import timber.log.Timber
 
 fun interface BroadcastTxUseCase {
@@ -212,9 +213,7 @@ constructor(
             throw e
         } catch (e: Exception) {
             val hash = tx.transactionHash
-            val alreadyOnChain =
-                hash.isNotBlank() && runCatching { verify(hash) }.getOrDefault(false)
-            if (alreadyOnChain) {
+            if (hash.isNotBlank() && isAlreadyOnChain(hash, verify)) {
                 Timber.d(
                     "broadcast failed but tx %s is already on-chain; treating as success",
                     hash,
@@ -225,6 +224,22 @@ constructor(
             }
         }
 
+    private suspend fun isAlreadyOnChain(
+        hash: String,
+        verify: suspend (String) -> Boolean,
+    ): Boolean {
+        repeat(VERIFY_ATTEMPTS) { attempt ->
+            if (attempt > 0) delay(VERIFY_BACKOFF_MS)
+            if (runCatching { verify(hash) }.getOrDefault(false)) return true
+        }
+        return false
+    }
+
     private fun String?.orKnownHash(tx: SignedTransactionResult): String? =
         this ?: tx.transactionHash.takeIf { it.isNotBlank() }
+
+    private companion object {
+        const val VERIFY_ATTEMPTS = 3
+        const val VERIFY_BACKOFF_MS = 2_000L
+    }
 }
