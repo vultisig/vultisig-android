@@ -65,23 +65,23 @@ internal class RiveInitializationTest {
     }
 
     @Test
-    fun `init that throws UnsatisfiedLinkError leaves in-flight flag set`() {
+    fun `catchable UnsatisfiedLinkError clears in-flight flag so Rive is retried next launch`() {
         every { Rive.init(any(), any()) } throws UnsatisfiedLinkError("missing native lib")
 
         initializeRive(context)
 
         isRiveInitialized.shouldBeFalse()
-        inFlightValue.shouldBeTrue()
+        inFlightValue.shouldBeFalse()
     }
 
     @Test
-    fun `init that throws RuntimeException leaves in-flight flag set`() {
+    fun `catchable RuntimeException clears in-flight flag so Rive is retried next launch`() {
         every { Rive.init(any(), any()) } throws RuntimeException("init failed")
 
         initializeRive(context)
 
         isRiveInitialized.shouldBeFalse()
-        inFlightValue.shouldBeTrue()
+        inFlightValue.shouldBeFalse()
     }
 
     @Test

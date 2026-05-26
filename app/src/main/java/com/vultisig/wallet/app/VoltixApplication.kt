@@ -36,9 +36,10 @@ internal fun riveGuardPrefs(context: Context): SharedPreferences =
  * Initializes the Rive SDK behind a device-agnostic crash-loop guard.
  *
  * Mitigates the native `SIGABRT` in `librive-android.so` (see issue #4656) without keying on
- * manufacturer/model strings. A persistent flag is set before [Rive.init] and cleared only after it
- * returns; if the previous launch died inside the native call, the flag survives and the next
- * launch short-circuits — leaving [isRiveInitialized] `false` so composables fall back to a
+ * manufacturer/model strings. A persistent flag is set before [Rive.init]; the `finally` block
+ * clears it on any normal return (success or catchable throw). Only an uncatchable process death
+ * inside the native call leaves the flag set, causing the next launch to short-circuit and leave
+ * [isRiveInitialized] `false` so composables fall back to a
  * [androidx.compose.foundation.layout.Spacer].
  */
 internal fun initializeRive(context: Context) {
@@ -55,9 +56,13 @@ internal fun initializeRive(context: Context) {
     try {
         Rive.init(context)
         isRiveInitialized = true
-        prefs.edit().putBoolean(KEY_RIVE_INIT_IN_FLIGHT, false).commit()
     } catch (e: Throwable) {
         Timber.e(e, "Failed to initialize Rive SDK, animations will be disabled")
+    } finally {
+        // apply() is fine on the clear path — we only need durability for the *set* (which races
+        // SIGABRT). On normal return the next read happens after this process writes, so async is
+        // safe and keeps the cold-start path off a second blocking disk write.
+        prefs.edit().putBoolean(KEY_RIVE_INIT_IN_FLIGHT, false).apply()
     }
 }
 
