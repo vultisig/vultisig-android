@@ -482,9 +482,9 @@ constructor(
                                 val dstAddress = quote.data.tx.to
                                 // The ERC20 allowance must be granted to the provider's token-
                                 // transfer proxy, which for SwapKit differs from the swap `to`.
-                                // 1inch/Kyber/LiFi leave allowanceTarget null and fall back to
-                                // `to`.
-                                val approveSpender = quote.data.tx.allowanceTarget ?: dstAddress
+                                // Derivation is factored into approveSpenderFor (pinned by test) so
+                                // a regression collapsing it to `to` can't pass CI silently.
+                                val approveSpender = approveSpenderFor(quote.data.tx)
                                 val specificAndUtxo =
                                     swapGasCalculator.getSpecificAndUtxo(
                                         srcToken,

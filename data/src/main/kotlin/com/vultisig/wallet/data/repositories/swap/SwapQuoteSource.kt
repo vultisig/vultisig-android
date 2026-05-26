@@ -37,19 +37,14 @@ sealed class SwapQuoteResult {
      */
     data class Evm(val data: EVMSwapQuoteJson, val subProvider: String? = null) : SwapQuoteResult()
 
-    /** SwapKit non-EVM routes (BTC / TON / ADA / TRON / SUI / ZEC). EVM/Solana stay on [Evm]. */
-    data class SwapKit(val quote: com.vultisig.wallet.data.models.SwapQuote.SwapKit) :
-        SwapQuoteResult()
+    // A future SwapKit non-EVM route (BTC / TON / ADA / TRON / SUI / ZEC) rides Native, since
+    // SwapQuote.SwapKit is itself a SwapQuote — no dedicated result variant is needed.
 
     fun expectNative(provider: SwapProvider): SwapQuote =
         when (this) {
             is Native -> quote
             is Evm ->
                 throw SwapException.UnkownSwapError("Expected Native quote for $provider, got Evm")
-            is SwapKit ->
-                throw SwapException.UnkownSwapError(
-                    "Expected Native quote for $provider, got SwapKit"
-                )
         }
 
     fun expectEvm(provider: SwapProvider): EVMSwapQuoteJson =
@@ -57,8 +52,6 @@ sealed class SwapQuoteResult {
             is Evm -> data
             is Native ->
                 throw SwapException.UnkownSwapError("Expected Evm quote for $provider, got Native")
-            is SwapKit ->
-                throw SwapException.UnkownSwapError("Expected Evm quote for $provider, got SwapKit")
         }
 }
 

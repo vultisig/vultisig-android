@@ -891,7 +891,7 @@ constructor(
     }
 }
 
-private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
+internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
 
     private data class Key(
         val srcTokenId: String,

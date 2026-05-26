@@ -239,7 +239,14 @@ class SwapKitQuoteDecodingTest {
                 destinationAddress = "0xRecipient",
             )
 
-        val encoded = Json { encodeDefaults = true }.encodeToString(request)
+        // Mirror the production Json provider (encodeDefaults + explicitNulls=false) so the test
+        // exercises the real wire shape — explicitNulls=false is what drops the null slippage.
+        val encoded =
+            Json {
+                    encodeDefaults = true
+                    explicitNulls = false
+                }
+                .encodeToString(request)
         val body = Json.parseToJsonElement(encoded).jsonObject
 
         // Affiliate identifier is server-side via the partner dashboard — no `affiliate` key on the
@@ -360,17 +367,22 @@ class SwapKitQuoteDecodingTest {
         assertEquals("0xRouter", obj["to"]?.jsonPrimitive?.content)
     }
 
+    // Mirrors the production Json provider (DataModule.provideJson): encodeDefaults + explicitNulls
+    // = false. explicitNulls=false is what drops a null slippage from the wire.
+    private val wireJson = Json {
+        encodeDefaults = true
+        explicitNulls = false
+    }
+
     @Test
     fun `quote request omits slippage on the wire when unset`() {
-        // Regression: the shared Json provider has encodeDefaults=true, so a non-null default would
-        // ship "slippage":1.0 (or "slippage":null) on every /v3/quote. The Phase 0 spike found an
-        // explicit slippage makes NEAR Intents / Chainflip return noRoutesFound on some pairs (and
-        // iOS sends nothing), so the key must be ABSENT — guarded by @EncodeDefault(NEVER).
-        val encodeDefaultsJson = Json { encodeDefaults = true }
+        // The Phase 0 spike found an explicit slippage makes NEAR Intents / Chainflip return
+        // noRoutesFound on some pairs (and iOS sends nothing), so the key must be ABSENT. With the
+        // production Json's explicitNulls=false, a null slippage is dropped.
         val request =
             SwapKitQuoteRequest(sellAsset = "ETH.ETH", buyAsset = "SOL.SOL", sellAmount = "1")
 
-        val encoded = encodeDefaultsJson.encodeToString(request).let(Json::parseToJsonElement)
+        val encoded = wireJson.encodeToString(request).let(Json::parseToJsonElement)
 
         assertFalse(
             (encoded as JsonObject).containsKey("slippage"),
@@ -381,7 +393,6 @@ class SwapKitQuoteDecodingTest {
     @Test
     fun `quote request encodes slippage when explicitly set`() {
         // The field is retained (nullable) for forward use — when a caller does set it, it ships.
-        val encodeDefaultsJson = Json { encodeDefaults = true }
         val request =
             SwapKitQuoteRequest(
                 sellAsset = "ETH.ETH",
@@ -390,8 +401,7 @@ class SwapKitQuoteDecodingTest {
                 slippage = 3.0,
             )
 
-        val encoded =
-            encodeDefaultsJson.encodeToString(request).let(Json::parseToJsonElement) as JsonObject
+        val encoded = wireJson.encodeToString(request).let(Json::parseToJsonElement) as JsonObject
 
         assertEquals(3.0, encoded["slippage"]?.jsonPrimitive?.content?.toDouble())
     }
