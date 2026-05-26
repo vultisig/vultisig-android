@@ -2,7 +2,7 @@ package com.vultisig.wallet.app
 
 import android.app.Application
 import android.content.Context
-import android.os.Build
+import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import app.rive.runtime.kotlin.core.Rive
 import com.vultisig.wallet.BuildConfig
@@ -18,42 +18,44 @@ internal fun resetRiveInitialized() {
     isRiveInitialized = false
 }
 
+private const val RIVE_GUARD_PREFS = "rive_init_guard"
+private const val KEY_RIVE_INIT_IN_FLIGHT = "rive_init_in_flight"
+
 /**
- * Returns true when the current device is a known-bad target for Rive's GL renderer.
+ * Returns the [SharedPreferences] backing the Rive crash-loop guard.
  *
- * The Rive native library aborts during GL shader compile on Tecno CAMON 30 (MediaTek MT6789, Mali
- * GPU on Android 15) — see issue #4656. Skipping `Rive.init` on matched devices leaves
- * [isRiveInitialized] `false` so composables fall back to a
- * [androidx.compose.foundation.layout.Spacer].
+ * Kept as a plain (unencrypted) prefs file — the only stored value is a boolean "init attempted"
+ * marker — and resolved synchronously so [initializeRive] can read/write before invoking the native
+ * Rive entry point.
  */
 @VisibleForTesting
-internal fun isRiveUnsupportedDevice(
-    manufacturer: String = Build.MANUFACTURER.orEmpty(),
-    model: String = Build.MODEL.orEmpty(),
-    socModel: String? = readSocModel(),
-): Boolean {
-    val matchesTecnoCamon30 =
-        manufacturer.equals("TECNO", ignoreCase = true) &&
-            model.contains("CAMON 30", ignoreCase = true)
-    val matchesKnownBadSoc = socModel.equals("MT6789", ignoreCase = true)
-    return matchesTecnoCamon30 || matchesKnownBadSoc
-}
+internal fun riveGuardPrefs(context: Context): SharedPreferences =
+    context.getSharedPreferences(RIVE_GUARD_PREFS, Context.MODE_PRIVATE)
 
-private fun readSocModel(): String? =
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Build.SOC_MODEL else null
-
+/**
+ * Initializes the Rive SDK behind a device-agnostic crash-loop guard.
+ *
+ * Mitigates the native `SIGABRT` in `librive-android.so` (see issue #4656) without keying on
+ * manufacturer/model strings. A persistent flag is set before [Rive.init] and cleared only after it
+ * returns; if the previous launch died inside the native call, the flag survives and the next
+ * launch short-circuits — leaving [isRiveInitialized] `false` so composables fall back to a
+ * [androidx.compose.foundation.layout.Spacer].
+ */
 internal fun initializeRive(context: Context) {
-    if (isRiveUnsupportedDevice()) {
+    val prefs = riveGuardPrefs(context)
+    if (prefs.getBoolean(KEY_RIVE_INIT_IN_FLIGHT, false)) {
         Timber.w(
-            "Skipping Rive init on known-bad GPU family (%s %s)",
-            Build.MANUFACTURER,
-            Build.MODEL,
+            "Skipping Rive init: previous launch did not complete Rive.init (likely native crash)"
         )
         return
     }
+    // commit() (not apply()) so the marker is durable on disk before we cross the JNI boundary —
+    // an async write would race a SIGABRT and lose the signal we rely on next launch.
+    prefs.edit().putBoolean(KEY_RIVE_INIT_IN_FLIGHT, true).commit()
     try {
         Rive.init(context)
         isRiveInitialized = true
+        prefs.edit().putBoolean(KEY_RIVE_INIT_IN_FLIGHT, false).commit()
     } catch (e: Throwable) {
         Timber.e(e, "Failed to initialize Rive SDK, animations will be disabled")
     }

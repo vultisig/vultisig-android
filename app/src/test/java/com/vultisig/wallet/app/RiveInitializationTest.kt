@@ -1,15 +1,17 @@
 package com.vultisig.wallet.app
 
 import android.content.Context
+import android.content.SharedPreferences
 import app.rive.runtime.kotlin.core.Rive
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
-import io.mockk.unmockkObject
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkAll
+import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,90 +19,78 @@ import org.junit.jupiter.api.Test
 internal class RiveInitializationTest {
 
     private val context: Context = mockk(relaxed = true)
+    private val prefs: SharedPreferences = mockk(relaxed = true)
+    private val editor: SharedPreferences.Editor = mockk(relaxed = true)
+    private var inFlightValue: Boolean = false
 
     @BeforeEach
     fun setUp() {
         resetRiveInitialized()
         mockkObject(Rive)
+        mockkStatic("com.vultisig.wallet.app.VoltixApplicationKt")
+        every { riveGuardPrefs(context) } returns prefs
+        // Read from / write to a single in-memory backing variable so the test can observe what
+        // the production code commits.
+        every { prefs.getBoolean("rive_init_in_flight", false) } answers { inFlightValue }
+        every { prefs.edit() } returns editor
+        val captured = slot<Boolean>()
+        every { editor.putBoolean("rive_init_in_flight", capture(captured)) } answers
+            {
+                inFlightValue = captured.captured
+                editor
+            }
+        every { editor.commit() } returns true
     }
 
     @AfterEach
     fun tearDown() {
-        unmockkObject(Rive)
+        unmockkAll()
         resetRiveInitialized()
+        inFlightValue = false
     }
 
     @Test
     fun `isRiveInitialized is false by default`() {
-        assertFalse(isRiveInitialized)
+        isRiveInitialized.shouldBeFalse()
     }
 
     @Test
-    fun `isRiveInitialized is true after successful Rive init`() {
+    fun `successful init sets initialized true and clears in-flight flag`() {
         every { Rive.init(any(), any()) } returns Unit
 
         initializeRive(context)
 
-        assertTrue(isRiveInitialized)
+        isRiveInitialized.shouldBeTrue()
+        inFlightValue.shouldBeFalse()
     }
 
     @Test
-    fun `isRiveInitialized stays false when Rive init throws UnsatisfiedLinkError`() {
+    fun `init that throws UnsatisfiedLinkError leaves in-flight flag set`() {
         every { Rive.init(any(), any()) } throws UnsatisfiedLinkError("missing native lib")
 
         initializeRive(context)
 
-        assertFalse(isRiveInitialized)
+        isRiveInitialized.shouldBeFalse()
+        inFlightValue.shouldBeTrue()
     }
 
     @Test
-    fun `isRiveInitialized stays false when Rive init throws RuntimeException`() {
+    fun `init that throws RuntimeException leaves in-flight flag set`() {
         every { Rive.init(any(), any()) } throws RuntimeException("init failed")
 
         initializeRive(context)
 
-        assertFalse(isRiveInitialized)
+        isRiveInitialized.shouldBeFalse()
+        inFlightValue.shouldBeTrue()
     }
 
     @Test
-    fun `isRiveUnsupportedDevice matches Tecno CAMON 30 by manufacturer and model`() {
-        isRiveUnsupportedDevice(manufacturer = "TECNO", model = "TECNO CAMON 30", socModel = null)
-            .shouldBeTrue()
-    }
+    fun `init is skipped when in-flight flag was already set from a previous launch`() {
+        inFlightValue = true
 
-    @Test
-    fun `isRiveUnsupportedDevice matches Tecno CAMON 30 case-insensitively`() {
-        isRiveUnsupportedDevice(
-                manufacturer = "tecno",
-                model = "Tecno Camon 30 Pro 5G",
-                socModel = null,
-            )
-            .shouldBeTrue()
-    }
+        initializeRive(context)
 
-    @Test
-    fun `isRiveUnsupportedDevice matches by MT6789 SoC model`() {
-        isRiveUnsupportedDevice(manufacturer = "Other", model = "Other Phone", socModel = "MT6789")
-            .shouldBeTrue()
-    }
-
-    @Test
-    fun `isRiveUnsupportedDevice returns false for unaffected devices`() {
-        isRiveUnsupportedDevice(
-                manufacturer = "Google",
-                model = "Pixel 8 Pro",
-                socModel = "Tensor G3",
-            )
-            .shouldBeFalse()
-    }
-
-    @Test
-    fun `isRiveUnsupportedDevice returns false for non-CAMON Tecno models`() {
-        isRiveUnsupportedDevice(
-                manufacturer = "TECNO",
-                model = "TECNO SPARK 20",
-                socModel = "MT6765",
-            )
-            .shouldBeFalse()
+        isRiveInitialized.shouldBeFalse()
+        verify(exactly = 0) { Rive.init(any(), any()) }
     }
 }
