@@ -306,6 +306,54 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch decodes legacy Solana object shape with message field when swapTransaction is absent`() =
+        runTest {
+            // Forward-compat: the legacy object can carry the blob under `message` instead of
+            // `swapTransaction`. solanaBase64 falls back to `message` so neither spelling is lost.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(routeId = "r-sol", providers = listOf("NEAR"), expectedBuy = "9")
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                SwapKitSwapResponseJson(
+                    tx = buildJsonObject { put("message", JsonPrimitive("BASE64MESSAGE")) },
+                    meta = SwapKitTxMeta(txType = "SOLANA"),
+                    expectedBuyAmount = "9",
+                )
+
+            val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+            assertEquals("BASE64MESSAGE", result.data.tx.data)
+        }
+
+    @Test
+    fun `fetch throws Decoding when Solana tx is neither a base64 string nor a known object shape`() =
+        runTest {
+            // An empty object carries neither swapTransaction nor message, so the Solana blob can't
+            // be extracted — refuse with Decoding rather than signing an empty payload.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(routeId = "r-sol", providers = listOf("NEAR"), expectedBuy = "9")
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                SwapKitSwapResponseJson(
+                    tx = JsonObject(emptyMap()),
+                    meta = SwapKitTxMeta(txType = "SOLANA"),
+                    expectedBuyAmount = "9",
+                )
+
+            assertThrows<SwapKitError.Decoding> { source().fetch(request()) }
+        }
+
+    @Test
     fun `fetch accepts SERIALIZED_BASE64 txType as Solana`() = runTest {
         // SwapKit upstream has flipped the Solana discriminator between SOLANA and
         // SERIALIZED_BASE64 before (per iOS commit 382b28f5f). Both must dispatch to the Solana

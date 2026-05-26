@@ -316,6 +316,12 @@ internal interface RepositoriesModule {
 
     @Binds @Singleton fun bindSwapKitConfig(impl: SwapKitConfigImpl): SwapKitConfig
 
+    // Phase 2 scaffolding. The cache is fully implemented and bound, but is intentionally NOT yet
+    // injected into SwapKitQuoteSource: Phase 1 deliberately drops the client-side provider gate
+    // and
+    // lets `/v3/quote` be the authority on unsupported chains (fail-open, matching iOS'
+    // SwapKitProviderCache cache-miss=true). The binding stays here so the client-side enablement
+    // gate can be wired in without a DI change when Phase 2 lands. See SwapKitQuoteSource's KDoc.
     @Binds
     @Singleton
     fun bindSwapKitProviderCache(impl: SwapKitProviderCacheImpl): SwapKitProviderCache

@@ -611,8 +611,14 @@ constructor(
                 val expectedDstValue =
                     TokenValue(
                         value =
+                            // SwapKitQuoteSource already scaled dstAmount to a raw-units integer
+                            // string, so this parses cleanly today. Stay inside the typed error
+                            // hierarchy on the off chance it ever doesn't: a raw `error()` throws
+                            // IllegalStateException, which the form catches as the generic "quote
+                            // failed" copy and leaks the raw string. Decoding lets the picker fall
+                            // back to another provider and shows the localized decoding message.
                             apiQuote.dstAmount.toBigIntegerOrNull()
-                                ?: error(
+                                ?: throw SwapKitError.Decoding(
                                     "Malformed SwapKit dstAmount (raw units expected): ${apiQuote.dstAmount}"
                                 ),
                         token = dstToken,
