@@ -2,7 +2,6 @@ package com.vultisig.wallet.data.keygen
 
 import com.vultisig.wallet.data.models.Chain
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import org.junit.jupiter.api.Test
 
@@ -101,10 +100,8 @@ class KeyImportRoutingServerMatchTest {
             )
 
         // ECDSA setup is the default (null) namespace; EdDSA setup is "eddsa_key_import".
-        assertNotEquals(
-            ecdsa.setupMessageId,
-            eddsa.setupMessageId,
-            "Root ECDSA and EdDSA setup must use different relay namespaces",
-        )
+        assert(ecdsa.setupMessageId != eddsa.setupMessageId) {
+            "Root ECDSA and EdDSA setup must use different relay namespaces"
+        }
     }
 }
