@@ -6,7 +6,7 @@ import app.rive.runtime.kotlin.core.Rive
 import com.vultisig.wallet.BuildConfig
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
-import io.kotest.matchers.ints.shouldBe
+import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
