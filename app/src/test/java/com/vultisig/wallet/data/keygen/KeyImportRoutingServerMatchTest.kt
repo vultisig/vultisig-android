@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.keygen
 
+import com.vultisig.wallet.data.models.Chain
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import org.junit.jupiter.api.Test
@@ -22,9 +23,11 @@ import org.junit.jupiter.api.Test
  * deadlocked on mismatched relay channels. These assertions guard against that regression
  * returning.
  *
- * The ViewModel builds these routings inline via [KeygenRouting.from]; we rebuild them here with
- * the same factory and constants so the contract is verified without booting the JNI-heavy
- * ceremony.
+ * The root routings are built via [KeygenRouting.from] with the same constants the ViewModel uses;
+ * the per-chain routings call [keyImportChainRouting] — the exact helper the ViewModel runs — keyed
+ * off `chain.raw`, so dropping the load-bearing empty sequential exchange id (or lowercasing the
+ * namespace) breaks this file instead of slipping through. All verified without booting the
+ * JNI-heavy ceremony.
  */
 class KeyImportRoutingServerMatchTest {
 
@@ -65,24 +68,23 @@ class KeyImportRoutingServerMatchTest {
     }
 
     @Test
-    fun `batched per-chain key-import exchanges on p-{chain} and sets up on the chain id`() {
-        val chain = "bitcoin"
+    fun `batched per-chain key-import exchanges on p-{chain raw} and sets up on the chain id`() {
+        // Built through the SAME helper the ViewModel uses, keyed off chain.raw — so the test pins
+        // the channel production actually emits ("Bitcoin", not a lowercased literal).
+        val routing = keyImportChainRouting(Chain.Bitcoin.raw, useParallelPath = true)
 
-        val routing = KeygenRouting.from(setupMessageId = chain, exchangeMessageId = "p-$chain")
-
-        assertEquals("p-bitcoin", routing.exchangeMessageId)
-        assertEquals("bitcoin", routing.setupMessageId)
+        assertEquals("p-Bitcoin", routing.exchangeMessageId)
+        assertEquals("Bitcoin", routing.setupMessageId)
     }
 
     @Test
     fun `sequential per-chain key-import exchanges on the default channel, sets up on the chain id`() {
-        // Sequential chains share the default exchange channel (null). The explicit empty
-        // exchangeMessageId is required because `from` would otherwise copy the setup id (chain
-        // name) into the exchange id — which made the joiner poll an "Ethereum" channel the
+        // Sequential chains share the default exchange channel (null). The explicit empty exchange
+        // id
+        // inside keyImportChainRouting is required because `from` would otherwise copy the setup id
+        // (chain name) into the exchange id — which made the joiner poll an "Ethereum" channel the
         // initiator never posts to (observed as an endless empty message-pull loop).
-        val chain = "Ethereum"
-
-        val routing = KeygenRouting.from(setupMessageId = chain, exchangeMessageId = "")
+        val routing = keyImportChainRouting(Chain.Ethereum.raw, useParallelPath = false)
 
         assertNull(routing.exchangeMessageId)
         assertEquals("Ethereum", routing.setupMessageId)

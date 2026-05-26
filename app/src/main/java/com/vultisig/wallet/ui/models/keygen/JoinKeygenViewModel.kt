@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.keygen.isBatchEligibleCeremony
 import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
@@ -69,8 +70,7 @@ internal sealed class JoinKeygenError(val message: UiText) {
 
     data object UnknownTss : JoinKeygenError(R.string.join_key_gen_unknown_tssaction.asUiText())
 
-    data object WrongResharePrefix :
-        JoinKeygenError(R.string.join_keysign_wrong_reshare.asUiText())
+    data object WrongResharePrefix : JoinKeygenError(R.string.join_keysign_wrong_reshare.asUiText())
 
     data object DiscoveryTimeout :
         JoinKeygenError(R.string.join_key_gen_mediator_discovery_timeout.asUiText())
@@ -135,11 +135,10 @@ constructor(
                             // If a vault with the same chain code is already on this device,
                             // skip the join and surface a clear "already on device" message
                             // instead of running keygen + failing on duplicate save.
-                            val alreadyJoinedVault =
-                                existingVaults.find {
-                                    it.hexChainCode == message.hexChainCode &&
-                                        it.hexChainCode.isNotBlank()
-                                }
+                            val alreadyJoinedVault = existingVaults.find {
+                                it.hexChainCode == message.hexChainCode &&
+                                    it.hexChainCode.isNotBlank()
+                            }
                             if (alreadyJoinedVault != null) {
                                 state.update {
                                     it.copy(
@@ -175,15 +174,19 @@ constructor(
                                 oldCommittee = emptyList(),
                                 oldResharePrefix = "",
                                 chains = message.chains,
-                                // Follow the initiator's batched opt-in from the QR. iOS/Windows
+                                // Follow the initiator's batched opt-in from the QR: iOS/Windows
                                 // run
                                 // key-import (and DKLS keygen) through the batched protocol, which
                                 // uses dedicated relay namespaces; a joiner that ignores this flag
-                                // polls the legacy namespaces and the ceremony deadlocks. The
-                                // executor (selectKeygenExecutor / shouldUseNewKeygenExecution)
-                                // still
-                                // gates GG20 keygen out of the batched path defensively.
-                                isTssBatch = message.isTssBatch,
+                                // polls the legacy namespaces and the ceremony deadlocks. AND it
+                                // with
+                                // isBatchEligibleCeremony so a forged QR can't route a GG20 keygen
+                                // through the batched namespaces — this branch defends itself
+                                // instead
+                                // of relying on the executor gate alone.
+                                isTssBatch =
+                                    message.isTssBatch &&
+                                        isBatchEligibleCeremony(action, message.libType),
                             )
                         }
 
@@ -194,8 +197,9 @@ constructor(
                                     protoBuf.decodeFromByteArray<ReshareMessageProto>(bytes)
                                 )
 
-                            val existingVault =
-                                existingVaults.find { it.pubKeyECDSA == message.pubKeyECDSA }
+                            val existingVault = existingVaults.find {
+                                it.pubKeyECDSA == message.pubKeyECDSA
+                            }
 
                             if (
                                 existingVault != null &&

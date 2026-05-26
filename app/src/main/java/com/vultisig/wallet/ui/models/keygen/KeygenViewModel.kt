@@ -21,7 +21,9 @@ import com.vultisig.wallet.data.keygen.ROOT_EDDSA_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.ROOT_MLDSA_EXCHANGE_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.ROOT_MLDSA_SETUP_MESSAGE_ID
 import com.vultisig.wallet.data.keygen.SchnorrKeygen
+import com.vultisig.wallet.data.keygen.keyImportChainRouting
 import com.vultisig.wallet.data.keygen.mergeReshareKeyshares
+import com.vultisig.wallet.data.keygen.resolveParallelKeygenOptIn
 import com.vultisig.wallet.data.keygen.selectKeygenExecutor
 import com.vultisig.wallet.data.keygen.shouldKeepExistingChaincode
 import com.vultisig.wallet.data.keygen.shouldUseNewKeygenExecution
@@ -191,30 +193,17 @@ constructor(
         )
 
     /**
-     * Decides whether THIS peer takes the parallel / batch path for the current ceremony.
-     *
-     * For reshare, keygen, and key-import we trust the initiator's QR opt-in EXCLUSIVELY (matches
-     * iOS `KeygenViewModel.swift`, which sets `useParallelPath = self.isTssBatch` from the
-     * deserialised QR field, never OR'd with a local toggle). A joiner MUST follow the initiator's
-     * namespace choice: OR-ing in a local feature flag desyncs the relay namespaces whenever the
-     * two disagree. That is exactly why an extension or iOS initiator that batches key-import (its
-     * default) failed to keygen with an Android joiner — the joiner's local flag was off, so it
-     * polled the legacy namespaces while the initiator drove the `p-ecdsa` / `p-eddsa` batched
-     * namespaces. `is_tss_batch` now round-trips through both `ReshareMessage` and `KeygenMessage`,
-     * so `args.isTssBatch` carries the QR signal for them.
-     *
-     * Migrate and SingleKeygen keep the OR fallback: migrate is excluded from batch mode by
-     * convention (its joiner branch pins the flag off) and SingleKeygen's proto does not carry the
-     * batch flag, so the local feature flag stays their only decision input.
+     * Decides whether THIS peer takes the parallel / batch path for the current ceremony. The
+     * matrix lives in the pure [resolveParallelKeygenOptIn] so it can be unit-tested per action;
+     * see its docs for why reshare / key-import trust the QR exclusively while keygen keeps the OR
+     * fallback (the FastVault server's `joinBatchKeygen` is gated on the same local flag).
      */
     private fun isParallelKeygenEnabledForThisCeremony(): Boolean =
-        when (action) {
-            TssAction.ReShare,
-            TssAction.KEYGEN,
-            TssAction.KeyImport -> args.isTssBatch
-            TssAction.Migrate,
-            TssAction.SingleKeygen -> featureFlags.isTssBatchEnabled || args.isTssBatch
-        }
+        resolveParallelKeygenOptIn(
+            action = action,
+            qrIsTssBatch = args.isTssBatch,
+            isTssBatchFeatureEnabled = featureFlags.isTssBatchEnabled,
+        )
 
     private fun createDklsKeygen(localUi: String, action: TssAction = this.action): DKLSKeygen =
         DKLSKeygen(
@@ -270,22 +259,9 @@ constructor(
         val localUi = chainKey?.privateKeyHex.orEmpty()
 
         // Per-chain key-import routing — must match the initiator (iOS / Windows extension).
-        //
-        // The setup payload is always namespaced per chain. The EXCHANGE channel differs by path:
-        // batched runs every chain concurrently so each needs its own "p-{chain}" channel;
-        // sequential runs chains one at a time and shares the DEFAULT channel (no message_id).
-        //
-        // The explicit empty exchangeMessageId for the sequential path is load-bearing:
-        // `KeygenRouting.from` defaults the exchange id to the setup id (chain name), whereas the
-        // initiator leaves it unset (default channel). Without this, the joiner polls a per-chain
-        // "Ethereum" channel the initiator never posts to and the ceremony hangs after the root
-        // keygens complete.
-        val chainRouting =
-            if (useParallelPath) {
-                KeygenRouting.from(setupMessageId = chainName, exchangeMessageId = "p-$chainName")
-            } else {
-                KeygenRouting.from(setupMessageId = chainName, exchangeMessageId = "")
-            }
+        // Keyed off chain.raw; see keyImportChainRouting for the batched vs sequential namespace
+        // rule.
+        val chainRouting = keyImportChainRouting(chainName, useParallelPath)
 
         val chainKeyshare =
             if (isEddsa) {
@@ -702,14 +678,13 @@ constructor(
                     allKeyshares.add(KeyShare(pubKey = result.pubKey, keyShare = result.keyShare))
                 }
             }
-            val chainPublicKeysFromResults =
-                chainResults.map { result ->
-                    ChainPublicKey(
-                        chain = result.chainName,
-                        publicKey = result.pubKey,
-                        isEddsa = result.isEddsa,
-                    )
-                }
+            val chainPublicKeysFromResults = chainResults.map { result ->
+                ChainPublicKey(
+                    chain = result.chainName,
+                    publicKey = result.pubKey,
+                    isEddsa = result.isEddsa,
+                )
+            }
             chainPublicKeys.addAll(chainPublicKeysFromResults)
 
             vault.keyshares = allKeyshares

@@ -14,7 +14,9 @@ import kotlin.coroutines.cancellation.CancellationException
  */
 internal const val ROOT_ECDSA_MESSAGE_ID = "p-ecdsa"
 internal const val ROOT_EDDSA_MESSAGE_ID = "p-eddsa"
-internal const val ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID = "ecdsa_key_import"
+// Root ECDSA key-import setup runs on the DEFAULT relay namespace, so there is no ECDSA key-import
+// setup constant; only EdDSA needs its own namespace to avoid colliding with the default ECDSA
+// setup.
 internal const val ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID = "eddsa_key_import"
 internal const val ROOT_MLDSA_EXCHANGE_MESSAGE_ID = "p-mldsa"
 internal const val ROOT_MLDSA_SETUP_MESSAGE_ID = "p-mldsa-setup"
@@ -45,6 +47,24 @@ internal data class KeygenRouting(val exchangeMessageId: String?, val setupMessa
 }
 
 /**
+ * Per-chain relay routing for key import. Setup is always namespaced per chain; the EXCHANGE
+ * channel depends on the path. Batched runs every chain concurrently, so each needs its own
+ * `p-{chain}` exchange channel; sequential runs chains one at a time and shares the DEFAULT
+ * exchange channel.
+ *
+ * The explicit empty exchange id for the sequential path is load-bearing: [KeygenRouting.from]
+ * otherwise copies the setup id (the chain name) into the exchange id, making the joiner poll a
+ * per-chain channel the initiator never posts to and hang. [chainRaw] MUST be `chain.raw` so the
+ * namespace matches what the ceremony emits exactly (e.g. "Bitcoin", not "bitcoin").
+ */
+internal fun keyImportChainRouting(chainRaw: String, useParallelPath: Boolean): KeygenRouting =
+    if (useParallelPath) {
+        KeygenRouting.from(setupMessageId = chainRaw, exchangeMessageId = "p-$chainRaw")
+    } else {
+        KeygenRouting.from(setupMessageId = chainRaw, exchangeMessageId = "")
+    }
+
+/**
  * Returns `true` when this flow should use the new feature-flagged keygen path.
  *
  * The decision is intentionally all-or-nothing for the currently supported flows:
@@ -57,15 +77,50 @@ internal fun shouldUseNewKeygenExecution(
     action: TssAction,
     libType: SigningLibType,
     isParallelKeygenFeatureEnabled: Boolean,
-): Boolean {
-    if (!isParallelKeygenFeatureEnabled) {
-        return false
-    }
-    return isMldsaSingleKeygen(action) ||
+): Boolean = isParallelKeygenFeatureEnabled && isBatchEligibleCeremony(action, libType)
+
+/**
+ * True when the ceremony's protocol actually runs the batched / parallel path: DKLS root keygen,
+ * key import, MLDSA single keygen, or a reshare on a DKLS / KeyImport vault. GG20 ceremonies are
+ * never eligible, so a joiner can pin the batch opt-in off for them regardless of what a (possibly
+ * forged) QR claims. This is the eligibility half of [shouldUseNewKeygenExecution], factored out so
+ * the relay-routing decision can be reused as a defensive guard at the join boundary.
+ */
+internal fun isBatchEligibleCeremony(action: TssAction, libType: SigningLibType): Boolean =
+    isMldsaSingleKeygen(action) ||
         isKeyImportFlow(action, libType) ||
         isDklsRootKeygen(action, libType) ||
         isBatchEligibleReshare(action, libType)
-}
+
+/**
+ * Resolves whether THIS peer takes the parallel / batch path for the current ceremony.
+ *
+ * Reshare and key-import trust the initiator's QR opt-in EXCLUSIVELY (matches iOS
+ * `KeygenViewModel.swift`): the joiner must follow the initiator's relay-namespace choice, and
+ * OR-ing in a local feature flag would desync the namespaces whenever the two disagree.
+ * `is_tss_batch` round-trips through `ReshareMessage` / `KeygenMessage`, so the QR carries the
+ * signal for them.
+ *
+ * Keygen, migrate, and single-keygen keep the OR fallback: their QR does not carry the batch flag
+ * (the initiator never writes it), and the FastVault server join is gated on the local
+ * `isTssBatchEnabled` flag, so the initiator must use that same flag to stay in step with the
+ * server's `ProcessBatchKeygen` relay namespaces. Dropping the OR here makes the app run the legacy
+ * path while the server batches — the ceremony then deadlocks on mismatched channels.
+ *
+ * Pure function so the matrix can be unit-tested in isolation.
+ */
+internal fun resolveParallelKeygenOptIn(
+    action: TssAction,
+    qrIsTssBatch: Boolean,
+    isTssBatchFeatureEnabled: Boolean,
+): Boolean =
+    when (action) {
+        TssAction.ReShare,
+        TssAction.KeyImport -> qrIsTssBatch
+        TssAction.KEYGEN,
+        TssAction.Migrate,
+        TssAction.SingleKeygen -> isTssBatchFeatureEnabled || qrIsTssBatch
+    }
 
 private fun isMldsaSingleKeygen(action: TssAction): Boolean = action == TssAction.SingleKeygen
 
