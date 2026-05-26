@@ -19,14 +19,15 @@ internal fun resetRiveInitialized() {
 }
 
 private const val RIVE_GUARD_PREFS = "rive_init_guard"
-private const val KEY_RIVE_INIT_IN_FLIGHT = "rive_init_in_flight"
+private const val KEY_RIVE_INIT_IN_FLIGHT_VERSION = "rive_init_in_flight_version"
+internal const val NO_IN_FLIGHT_VERSION = -1
 
 /**
  * Returns the [SharedPreferences] backing the Rive crash-loop guard.
  *
- * Kept as a plain (unencrypted) prefs file — the only stored value is a boolean "init attempted"
- * marker — and resolved synchronously so [initializeRive] can read/write before invoking the native
- * Rive entry point.
+ * Kept as a plain (unencrypted) prefs file — the only stored value is an int "init attempted"
+ * marker keyed by app version — and resolved synchronously so [initializeRive] can read/write
+ * before invoking the native Rive entry point.
  */
 @VisibleForTesting
 internal fun riveGuardPrefs(context: Context): SharedPreferences =
@@ -36,23 +37,27 @@ internal fun riveGuardPrefs(context: Context): SharedPreferences =
  * Initializes the Rive SDK behind a device-agnostic crash-loop guard.
  *
  * Mitigates the native `SIGABRT` in `librive-android.so` (see issue #4656) without keying on
- * manufacturer/model strings. A persistent flag is set before [Rive.init]; the `finally` block
- * clears it on any normal return (success or catchable throw). Only an uncatchable process death
- * inside the native call leaves the flag set, causing the next launch to short-circuit and leave
- * [isRiveInitialized] `false` so composables fall back to a
- * [androidx.compose.foundation.layout.Spacer].
+ * manufacturer/model strings. Before [Rive.init] we store the current [BuildConfig.VERSION_CODE];
+ * the `finally` block clears it on any normal return (success or catchable throw). Only an
+ * uncatchable process death inside the native call leaves the stored version set, causing the next
+ * launch at the *same* version to short-circuit and leave [isRiveInitialized] `false` so
+ * composables fall back to a [androidx.compose.foundation.layout.Spacer]. A later install that
+ * bumps `versionCode` (e.g. ships a fixed Rive lib) will not match the stored version, so Rive is
+ * re-attempted automatically without a manual reset.
  */
 internal fun initializeRive(context: Context) {
     val prefs = riveGuardPrefs(context)
-    if (prefs.getBoolean(KEY_RIVE_INIT_IN_FLIGHT, false)) {
+    val storedVersion = prefs.getInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, NO_IN_FLIGHT_VERSION)
+    if (storedVersion == BuildConfig.VERSION_CODE) {
         Timber.w(
-            "Skipping Rive init: previous launch did not complete Rive.init (likely native crash)"
+            "Skipping Rive init: previous launch at version ${BuildConfig.VERSION_CODE} did not " +
+                "complete Rive.init (likely native crash)"
         )
         return
     }
     // commit() (not apply()) so the marker is durable on disk before we cross the JNI boundary —
     // an async write would race a SIGABRT and lose the signal we rely on next launch.
-    prefs.edit().putBoolean(KEY_RIVE_INIT_IN_FLIGHT, true).commit()
+    prefs.edit().putInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, BuildConfig.VERSION_CODE).commit()
     try {
         Rive.init(context)
         isRiveInitialized = true
@@ -62,7 +67,7 @@ internal fun initializeRive(context: Context) {
         // apply() is fine on the clear path — we only need durability for the *set* (which races
         // SIGABRT). On normal return the next read happens after this process writes, so async is
         // safe and keeps the cold-start path off a second blocking disk write.
-        prefs.edit().putBoolean(KEY_RIVE_INIT_IN_FLIGHT, false).apply()
+        prefs.edit().putInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, NO_IN_FLIGHT_VERSION).apply()
     }
 }
 
