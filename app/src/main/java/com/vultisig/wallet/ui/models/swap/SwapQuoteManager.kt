@@ -290,7 +290,11 @@ constructor(
         val successes = results.mapNotNull { it.getOrNull() }
         if (successes.isEmpty()) {
             val failures = results.mapNotNull { it.exceptionOrNull() }
-            throw failures.firstOrNull { it is SwapException } ?: failures.first()
+            failures.firstOrNull { it is SwapException }?.let { throw it }
+            failures
+                .firstOrNull { it is TimeoutCancellationException }
+                ?.let { throw SwapException.TimeOut(it.message.orEmpty()) }
+            throw failures.first()
         }
 
         // Rank on estimatedDstFiat alone — this represents the destination amount
