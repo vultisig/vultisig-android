@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitEvmTx
+import com.vultisig.wallet.data.api.models.quotes.SwapKitFee
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitRoute
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSolanaTx
@@ -163,18 +164,11 @@ constructor(
             TxKind.SOLANA ->
                 SwapQuoteResult.Evm(
                     data =
-                        buildEvmQuoteFromSwapKit(
-                            swapResponse,
-                            request.srcToken,
-                            request.dstToken,
-                            best,
-                        ),
+                        buildEvmQuoteFromSwapKit(swapResponse, request.srcToken, request.dstToken),
                     subProvider = subProvider,
                 )
             TxKind.PSBT ->
-                SwapQuoteResult.Native(
-                    buildSwapKitNativeQuote(swapResponse, request, best, subProvider)
-                )
+                SwapQuoteResult.Native(buildSwapKitNativeQuote(swapResponse, request, subProvider))
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(swapResponse.meta.txType)
         }
     }
@@ -212,17 +206,19 @@ constructor(
     }
 
     /**
-     * Extract the source-chain inbound fee from `route.fees[]` — the canonical SwapKit-attributed
-     * cost of executing the deposit on the source chain. Mirrors iOS' `SwapKitService.inboundFee`
-     * so the displayed Network Fee reconciles against the actual on-chain debit (especially on
-     * Solana and cross-chain Chainflip / NEAR routes where the EVM gas envelope would otherwise
-     * read zero). Returns `0` when the entry is absent so the UI surfaces "—" rather than blocking
-     * the quote.
+     * Extract the source-chain inbound fee from the `/v3/swap` response's `fees[]` — the canonical
+     * SwapKit-attributed cost of executing the deposit on the source chain. Read from the swap
+     * response (not the `/v3/quote` route) so a fee SwapKit reprices on the refreshed `/v3/swap`
+     * reply stays fresh, matching iOS' `SwapKitService.inboundFee(from response)`. Mirrors iOS so
+     * the displayed Network Fee reconciles against the actual on-chain debit (especially on Solana
+     * and cross-chain Chainflip / NEAR routes where the EVM gas envelope would otherwise read
+     * zero). Returns `0` when the entry is absent so the UI surfaces "—" rather than blocking the
+     * quote.
      */
-    private fun inboundFeeRawUnits(srcToken: Coin, route: SwapKitRoute): BigInteger {
+    private fun inboundFeeRawUnits(srcToken: Coin, fees: List<SwapKitFee>): BigInteger {
         val prefix = chainPrefix(srcToken.chain) ?: return BigInteger.ZERO
         val inbound =
-            route.fees.firstOrNull { fee ->
+            fees.firstOrNull { fee ->
                 fee.type?.equals("inbound", ignoreCase = true) == true && fee.chain == prefix
             } ?: return BigInteger.ZERO
         val amount =
@@ -261,7 +257,6 @@ constructor(
         response: SwapKitSwapResponseJson,
         srcToken: Coin,
         dstToken: Coin,
-        route: SwapKitRoute,
     ): EVMSwapQuoteJson {
         // SwapKit V3 reports `expectedBuyAmount` as a human-readable decimal string ("42.5"
         // USDC) per the docs. Every other Android quote source (1inch / Kyber / LiFi / Jupiter)
@@ -274,7 +269,7 @@ constructor(
         // is SwapKitService.inboundFee). Embedded in `swapFee` with `swapFeeTokenContract = ""`
         // (the native-coin sentinel resolveSwapFee recognises) so the consumer reads it the same
         // way Kyber/Jupiter quote sources surface their per-leg fees.
-        val inboundFee = inboundFeeRawUnits(srcToken, route).toString()
+        val inboundFee = inboundFeeRawUnits(srcToken, response.fees).toString()
         return when (txTypeOf(response)) {
             TxKind.EVM -> {
                 val evm = decode<SwapKitEvmTx>(response.tx, "evm")
@@ -370,14 +365,16 @@ constructor(
     private fun buildSwapKitNativeQuote(
         response: SwapKitSwapResponseJson,
         request: SwapQuoteRequest,
-        route: SwapKitRoute,
         subProvider: String?,
     ): SwapQuote.SwapKit {
         val srcToken = request.srcToken
         val dstToken = request.dstToken
-        val toAmountDecimal =
-            response.expectedBuyAmount?.let { runCatching { BigDecimal(it) }.getOrNull() }
-                ?: throw SwapKitError.MalformedAmount(raw = response.expectedBuyAmount.orEmpty())
+        val toAmountDecimal = parseExpectedBuyAmount(response.expectedBuyAmount)
+        // Deposit-only chains (Cardano / XRP) route entirely on `targetAddress`, so a blank value
+        // would stage an unspendable quote — refuse it rather than emit a quote that can't settle.
+        val targetAddress =
+            response.targetAddress?.takeIf { it.isNotBlank() }
+                ?: throw SwapKitError.Decoding("SwapKit non-EVM response missing targetAddress")
         val payload =
             SwapKitSwapPayloadJson(
                 fromCoin = srcToken,
@@ -386,7 +383,7 @@ constructor(
                 toAmountDecimal = toAmountDecimal,
                 txType = response.meta.txType,
                 txPayload = decodeBinaryTx(response.tx),
-                targetAddress = response.targetAddress.orEmpty(),
+                targetAddress = targetAddress,
                 memo = null,
                 subProvider = subProvider.orEmpty(),
                 swapId = response.swapId.orEmpty(),
@@ -399,7 +396,7 @@ constructor(
                 ),
             // Source-chain native deposit fee (BTC 8dp), same surface as the EVM/Solana inbound
             // fee.
-            fees = TokenValue(inboundFeeRawUnits(srcToken, route), srcToken),
+            fees = TokenValue(inboundFeeRawUnits(srcToken, response.fees), srcToken),
             expiredAt = Clock.System.now() + expiredAfter,
             data = payload,
             subProvider = subProvider,
@@ -481,15 +478,22 @@ constructor(
      * [SwapKitError.MalformedAmount] when the upstream value is missing or unparseable so the user
      * sees the typed "Invalid amount" message instead of a generic "Could not parse response".
      */
-    private fun scaleDecimalToRawUnits(decimalString: String?, decimals: Int): String {
-        val parsed =
-            decimalString?.let { runCatching { BigDecimal(it) }.getOrNull() }
-                // `raw` is surfaced to the user via `swapkit_error_malformed_amount`; pass empty
-                // for the null case so the developer-only `(missing)` sentinel never leaks into
-                // the form error. The UI maps blank raw onto the generic decoding copy.
-                ?: throw SwapKitError.MalformedAmount(raw = decimalString.orEmpty())
-        return parsed.movePointRight(decimals).toBigInteger().toString()
-    }
+    private fun scaleDecimalToRawUnits(decimalString: String?, decimals: Int): String =
+        parseExpectedBuyAmount(decimalString).movePointRight(decimals).toBigInteger().toString()
+
+    /**
+     * Parse SwapKit's human-readable `expectedBuyAmount` (decimal string, e.g. "42.5") into a
+     * [BigDecimal], or throw [SwapKitError.MalformedAmount] when it's missing/unparseable so the
+     * user sees the typed "Invalid amount" message. Shared by the EVM/Solana raw-units scaling
+     * ([scaleDecimalToRawUnits]) and the native-quote builder so the parse lives in one place.
+     */
+    private fun parseExpectedBuyAmount(decimalString: String?): BigDecimal =
+        decimalString?.let { runCatching { BigDecimal(it) }.getOrNull() }
+            // `raw` is surfaced to the user via `swapkit_error_malformed_amount`; pass empty for
+            // the
+            // null case so the developer-only `(missing)` sentinel never leaks into the form error.
+            // The UI maps blank raw onto the generic decoding copy.
+            ?: throw SwapKitError.MalformedAmount(raw = decimalString.orEmpty())
 
     /**
      * SwapKit asset identifier: `CHAIN.TICKER` or `CHAIN.TICKER-CONTRACT` for ERC-20-style tokens.

@@ -18,6 +18,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.Base64
 import java.util.Locale
@@ -388,28 +389,19 @@ internal class SwapKitQuoteSourceTest {
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
                 routes =
-                    listOf(
-                        route(
-                            routeId = "r-sol",
-                            providers = listOf("NEAR"),
-                            expectedBuy = "9",
-                            fees =
-                                listOf(
-                                    SwapKitFee(
-                                        type = "inbound",
-                                        chain = "SOL",
-                                        amount = "0.000005",
-                                    ),
-                                    SwapKitFee(type = "outbound", chain = "ETH", amount = "0.0001"),
-                                ),
-                        )
-                    )
+                    listOf(route(routeId = "r-sol", providers = listOf("NEAR"), expectedBuy = "9"))
             )
         coEvery { api.swap(any()) } returns
             SwapKitSwapResponseJson(
                 tx = JsonPrimitive("BASE64"),
                 meta = SwapKitTxMeta(txType = "SOLANA"),
                 expectedBuyAmount = "9",
+                // Inbound fee comes from the /v3/swap response (fresh), not the /v3/quote route.
+                fees =
+                    listOf(
+                        SwapKitFee(type = "inbound", chain = "SOL", amount = "0.000005"),
+                        SwapKitFee(type = "outbound", chain = "ETH", amount = "0.0001"),
+                    ),
             )
 
         val result = source().fetch(request(srcToken = solanaCoin())) as SwapQuoteResult.Evm
@@ -432,18 +424,13 @@ internal class SwapKitQuoteSourceTest {
                                 routeId = "r",
                                 providers = listOf("CHAINFLIP"),
                                 expectedBuy = "42",
-                                fees =
-                                    listOf(
-                                        SwapKitFee(
-                                            type = "outbound",
-                                            chain = "ETH",
-                                            amount = "0.01",
-                                        )
-                                    ),
                             )
                         )
                 )
-            coEvery { api.swap(any()) } returns evmSwapResponse()
+            coEvery { api.swap(any()) } returns
+                evmSwapResponse(
+                    fees = listOf(SwapKitFee(type = "outbound", chain = "ETH", amount = "0.01"))
+                )
 
             val result = source().fetch(request()) as SwapQuoteResult.Evm
 
@@ -651,22 +638,20 @@ internal class SwapKitQuoteSourceTest {
                 SwapKitQuoteResponseJson(
                     routes =
                         listOf(
-                            route(
-                                routeId = "r",
-                                providers = listOf("ONEINCH"),
-                                expectedBuy = "1",
-                                fees =
-                                    listOf(
-                                        SwapKitFee(
-                                            type = "inbound",
-                                            chain = "ETH",
-                                            amount = "0.00001165876952721",
-                                        )
-                                    ),
+                            route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1")
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                evmSwapResponse(
+                    fees =
+                        listOf(
+                            SwapKitFee(
+                                type = "inbound",
+                                chain = "ETH",
+                                amount = "0.00001165876952721",
                             )
                         )
                 )
-            coEvery { api.swap(any()) } returns evmSwapResponse()
 
             val result = source().fetch(request(srcToken = usdc)) as SwapQuoteResult.Evm
 
@@ -728,15 +713,7 @@ internal class SwapKitQuoteSourceTest {
             SwapKitQuoteResponseJson(
                 routes =
                     listOf(
-                        route(
-                            routeId = "r-btc",
-                            providers = listOf("NEAR"),
-                            expectedBuy = "385.24",
-                            fees =
-                                listOf(
-                                    SwapKitFee(type = "inbound", chain = "BTC", amount = "0.000004")
-                                ),
-                        )
+                        route(routeId = "r-btc", providers = listOf("NEAR"), expectedBuy = "385.24")
                     )
             )
         coEvery { api.swap(any()) } returns
@@ -746,6 +723,8 @@ internal class SwapKitQuoteSourceTest {
                 meta = SwapKitTxMeta(txType = "PSBT"),
                 targetAddress = "bc1ptarget",
                 expectedBuyAmount = "385.24",
+                // Inbound fee comes from the /v3/swap response, not the /v3/quote route.
+                fees = listOf(SwapKitFee(type = "inbound", chain = "BTC", amount = "0.000004")),
                 providers = listOf("NEAR"),
             )
 
@@ -760,6 +739,12 @@ internal class SwapKitQuoteSourceTest {
         assertEquals("btc-swap-1", quote.data.swapId)
         assertEquals("NEAR", quote.data.subProvider)
         assertEquals(btc, quote.data.fromCoin)
+        // The fragile scaling line: expectedDstValue + payload amounts must use the right decimals.
+        assertEquals(ethCoin(), quote.data.toCoin)
+        assertEquals(BigInteger.ONE, quote.data.fromAmount)
+        assertEquals(0, BigDecimal("385.24").compareTo(quote.data.toAmountDecimal))
+        // 385.24 ETH (dst, 18 dp) = 385.24 × 10^18.
+        assertEquals(BigInteger("385240000000000000000"), quote.expectedDstValue.value)
         // 0.000004 BTC inbound fee scaled by 8 native decimals = 400 sats (not 0.000004 × 10^18).
         assertEquals(BigInteger("400"), quote.fees.value)
         assertEquals("BTC", quote.fees.unit)
@@ -823,18 +808,8 @@ internal class SwapKitQuoteSourceTest {
             affiliateBps = affiliateBps,
         )
 
-    private fun route(
-        routeId: String,
-        providers: List<String>,
-        expectedBuy: String? = "1",
-        fees: List<SwapKitFee> = emptyList(),
-    ) =
-        SwapKitRoute(
-            routeId = routeId,
-            providers = providers,
-            expectedBuyAmount = expectedBuy,
-            fees = fees,
-        )
+    private fun route(routeId: String, providers: List<String>, expectedBuy: String? = "1") =
+        SwapKitRoute(routeId = routeId, providers = providers, expectedBuyAmount = expectedBuy)
 
     private fun evmSwapResponse(
         gas: String? = "200000",
@@ -847,6 +822,7 @@ internal class SwapKitQuoteSourceTest {
         providers: List<String> = listOf("CHAINFLIP"),
         metaSubProvider: String? = null,
         approvalAddress: String? = null,
+        fees: List<SwapKitFee> = emptyList(),
     ) =
         SwapKitSwapResponseJson(
             swapId = "swap-id",
@@ -866,6 +842,7 @@ internal class SwapKitQuoteSourceTest {
                     approvalAddress = approvalAddress,
                 ),
             expectedBuyAmount = expectedBuy,
+            fees = fees,
             providers = providers,
         )
 
