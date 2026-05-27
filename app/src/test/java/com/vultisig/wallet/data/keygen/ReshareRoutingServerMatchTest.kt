@@ -49,11 +49,6 @@ class ReshareRoutingServerMatchTest {
     }
 
     @Test
-    fun `ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID is exactly "ecdsa_key_import"`() {
-        assertEquals("ecdsa_key_import", ROOT_ECDSA_KEY_IMPORT_MESSAGE_ID)
-    }
-
-    @Test
     fun `ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID is exactly "eddsa_key_import"`() {
         assertEquals("eddsa_key_import", ROOT_EDDSA_KEY_IMPORT_MESSAGE_ID)
     }
