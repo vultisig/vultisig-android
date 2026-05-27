@@ -45,6 +45,7 @@ import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
+import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.usecases.ApprovalConfirmationResult
 import com.vultisig.wallet.data.usecases.AwaitApprovalConfirmationUseCase
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
@@ -677,7 +678,15 @@ constructor(
     @OptIn(ExperimentalStdlibApi::class)
     private fun calculateCustomMessageSignature(keysignResp: KeysignResponse) {
         if (customMessagePayload == null) return
-        txHash.value = keysignResp.getSignature().toHexString()
+        txHash.value =
+            when (keyType) {
+                // EdDSA chains (Solana, TON, etc.) use little-endian reversed r+s
+                TssKeyType.EDDSA -> keysignResp.getSignature().toHexString()
+                // ECDSA chains use standard r+s+recoveryId (matches iOS/Extension)
+                TssKeyType.ECDSA -> keysignResp.getSignatureWithRecoveryID().toHexString()
+                // MLDSA keysign populates derSignature rather than r/s/recoveryID
+                TssKeyType.MLDSA -> keysignResp.derSignature
+            }
     }
 
     private suspend fun broadcastTransaction() {
