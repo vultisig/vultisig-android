@@ -360,15 +360,23 @@ constructor(
     private suspend fun calculateStakingFiatPrice(amount: BigDecimal, coin: Coin): String {
         return try {
             val currency = appCurrencyRepository.currency.first()
-            val fiatValue = createFiatValue(amount, coin, currency)
             val currencyFormat =
                 withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
-            currencyFormat.format(fiatValue.value)
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
+            formatFiatString(amount, coin, currency, currencyFormat)
+        } catch (e: java.io.IOException) {
             Timber.e(e, "Failed to calculate THORChain staking fiat price")
             ""
         }
+    }
+
+    private suspend fun formatFiatString(
+        amount: BigDecimal,
+        coin: Coin,
+        currency: AppCurrency,
+        currencyFormat: java.text.NumberFormat,
+    ): String {
+        val fiatValue = createFiatValue(amount, coin, currency)
+        return currencyFormat.format(fiatValue.value)
     }
 
     private fun loadSavedPositions() {
@@ -707,14 +715,16 @@ constructor(
                 .collect { defaultPositions ->
                     val loadedPositions = defaultPositions.filter { it.coin.id in coinsToLoad }
 
-                    // Price lookups are suspend, so resolve fiat strings up front in this suspend
-                    // collect body — the non-suspend .map below can't call
-                    // calculateStakingFiatPrice.
+                    // Resolve currency and format once; the non-suspend .map below can't call
+                    // suspend functions, so fiat strings are pre-computed here.
+                    val currency = appCurrencyRepository.currency.first()
+                    val currencyFormat =
+                        withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
                     val stakedFiatByCoinId = mutableMapOf<String, String>()
                     for (defaultPosition in loadedPositions) {
                         val amount = Chain.ThorChain.coinType.toValue(defaultPosition.stakeAmount)
                         stakedFiatByCoinId[defaultPosition.coin.id] =
-                            calculateStakingFiatPrice(amount, defaultPosition.coin)
+                            formatFiatString(amount, defaultPosition.coin, currency, currencyFormat)
                     }
 
                     val positions =
