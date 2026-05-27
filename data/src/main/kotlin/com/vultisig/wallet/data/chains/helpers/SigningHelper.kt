@@ -28,9 +28,16 @@ object SigningHelper {
     private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
 
     @OptIn(ExperimentalStdlibApi::class)
-    fun getKeysignMessages(messagePayload: CustomMessagePayload): List<String> {
+    fun getKeysignMessages(messagePayload: CustomMessagePayload): List<String> =
+        getKeysignMessages(messagePayload, typedDataHasher = EthereumAbi::encodeTyped)
+
+    @OptIn(ExperimentalStdlibApi::class)
+    internal fun getKeysignMessages(
+        messagePayload: CustomMessagePayload,
+        typedDataHasher: (String) -> ByteArray?,
+    ): List<String> {
         if (messagePayload.method.equals(ETH_SIGN_TYPED_DATA_V4, ignoreCase = true)) {
-            return getKeysignMessagesForTypedData(messagePayload.message)
+            return getKeysignMessagesForTypedData(messagePayload.message, typedDataHasher)
         }
 
         val processedBytes =
@@ -51,8 +58,11 @@ object SigningHelper {
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    private fun getKeysignMessagesForTypedData(message: String): List<String> {
-        val hash = EthereumAbi.encodeTyped(message)
+    private fun getKeysignMessagesForTypedData(
+        message: String,
+        hashFn: (String) -> ByteArray?,
+    ): List<String> {
+        val hash = hashFn(message)
         if (hash == null || hash.isEmpty()) {
             error("Invalid eth_signTypedData_v4 message")
         }
