@@ -86,9 +86,7 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         sessionId: String,
         localPartyId: List<String>,
     ) {
-        withRelayRetry {
-            httpClient.post("$serverUrl/$sessionId") { setBody(localPartyId) }.throwIfUnsuccessful()
-        }
+        httpClient.post("$serverUrl/$sessionId") { setBody(localPartyId) }.throwIfUnsuccessful()
     }
 
     override suspend fun startWithCommittee(

@@ -1444,7 +1444,7 @@ constructor(
             withContext(Dispatchers.IO) {
                 try {
                     Timber.tag("JoinKeysignViewModel").d("Joining keysign")
-                    sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
+                    joinOrConfirmRegistered()
                     waitForKeysignToStart()
                     currentState.value = JoinKeysignState.WaitingForKeysignStart
                 } catch (e: CancellationException) {
@@ -1473,6 +1473,31 @@ constructor(
                     isJoiningKeysign.set(false)
                 }
             }
+        }
+    }
+
+    private suspend fun joinOrConfirmRegistered() {
+        try {
+            sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
+        } catch (e: HttpException) {
+            if (e.statusCode < 500) throw e
+            // A 5xx from the registration endpoint may mean the session is already locked by the
+            // initiator (e.g. a second ViewModel raced with the first). Check whether the local
+            // party is already in the participants list before surfacing an error — if it is, the
+            // registration succeeded via a previous call and we can proceed normally.
+            val alreadyRegistered =
+                runCatching {
+                        sessionApi
+                            .getParticipants(_serverAddress, _sessionID)
+                            .contains(_localPartyID)
+                    }
+                    .getOrDefault(false)
+            if (!alreadyRegistered) throw e
+            Timber.tag("JoinKeysignViewModel")
+                .d(
+                    "startSession returned %d but local party already registered; proceeding",
+                    e.statusCode,
+                )
         }
     }
 
