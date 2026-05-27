@@ -626,11 +626,16 @@ constructor(
                         val oneInchSwapTxJson = swapPayload.data.quote.tx
                         val hasJupiterSwapProvider =
                             srcToken.chain == Chain.Solana && dstToken.chain == Chain.Solana
-                        // LI.FI is the only aggregator that produces cross-chain EVM swaps, so
-                        // treat src.chain != dst.chain as LI.FI.
+                        // LI.FI and SwapKit both produce cross-chain EVM swaps. Detect LI.FI by
+                        // wire id first; fall back to the cross-chain heuristic only for
+                        // non-SwapKit
+                        // providers so a SwapKit Ethereum→Solana swap reads `swapFee` instead of
+                        // the
+                        // LI.FI integrator-fee formula.
                         val isLiFi =
                             provider == SwapProvider.LIFI.getSwapProviderId() ||
-                                srcToken.chain != dstToken.chain
+                                (srcToken.chain != dstToken.chain &&
+                                    provider != SwapProvider.SWAPKIT.getSwapProviderId())
 
                         val feeToken =
                             when {

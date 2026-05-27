@@ -126,6 +126,7 @@ constructor(
                 SwapProvider.ONEINCH,
                 SwapProvider.LIFI,
                 SwapProvider.KYBER,
+                SwapProvider.SWAPKIT,
             )
     }
 }
