@@ -13,13 +13,14 @@ import org.junit.jupiter.api.Test
  * encoding (r + s + recoveryId, big-endian), so the displayed signatures mismatched.
  *
  * The fix dispatches on keyType in KeysignViewModel.calculateCustomMessageSignature:
- * - ECDSA/MLDSA → getSignatureWithRecoveryID() = r + s + recoveryId (65 bytes)
+ * - ECDSA → getSignatureWithRecoveryID() = r + s + recoveryId (65 bytes)
  * - EdDSA → getSignature() = reversed(r) + reversed(s) (64 bytes)
+ * - MLDSA → derSignature (DER-encoded, variable length)
  *
- * These tests verify the byte invariants for each format so a future change to TssExtensions.kt
- * that breaks cross-platform parity will be caught immediately. Note: tss.KeysignResponse requires
- * JNI and cannot be instantiated in JVM unit tests, so the format logic is exercised here with the
- * same Numeric utility used by the production code.
+ * These tests verify the byte invariants for the ECDSA and EdDSA encoding formats. Note:
+ * tss.KeysignResponse is a JNI class and cannot be instantiated in JVM unit tests, so the format
+ * logic is exercised here with the same Numeric utility used by the production code rather than
+ * calling the TssExtensions functions directly.
  */
 class CustomMessageSignatureFormatTest {
 
