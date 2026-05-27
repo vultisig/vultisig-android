@@ -290,17 +290,11 @@ constructor(
         val successes = results.mapNotNull { it.getOrNull() }
         if (successes.isEmpty()) {
             val failures = results.mapNotNull { it.exceptionOrNull() }
-            val firstSwapException = failures.firstOrNull { it is SwapException }
-            if (firstSwapException != null) throw firstSwapException
-            val firstFailure = failures.first()
-            // TimeoutCancellationException is a CancellationException — re-throwing it would
-            // propagate coroutine cancellation and leave the UI stuck in a loading state.
-            // Convert it to a SwapException so the error handler in calculateFees() can
-            // clear the loading state and show a user-facing message.
-            if (firstFailure is TimeoutCancellationException) {
-                throw SwapException.TimeOut(firstFailure.message ?: "Quote fetch timed out")
-            }
-            throw firstFailure
+            failures.firstOrNull { it is SwapException }?.let { throw it }
+            failures
+                .firstOrNull { it is TimeoutCancellationException }
+                ?.let { throw SwapException.TimeOut(it.message.orEmpty()) }
+            throw failures.first()
         }
 
         // Rank on estimatedDstFiat alone — this represents the destination amount
