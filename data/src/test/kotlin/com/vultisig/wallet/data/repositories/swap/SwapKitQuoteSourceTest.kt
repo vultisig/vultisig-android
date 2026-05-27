@@ -766,6 +766,46 @@ internal class SwapKitQuoteSourceTest {
         assertEquals(8, quote.fees.decimals)
     }
 
+    @Test
+    fun `fetch throws Decoding when the PSBT tx is not valid base64`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-btc", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive("!!!not-base64!!!"),
+                meta = SwapKitTxMeta(txType = "PSBT"),
+                targetAddress = "bc1ptarget",
+                expectedBuyAmount = "1",
+            )
+
+        assertThrows<SwapKitError.Decoding> {
+            source().fetch(request(srcToken = btcCoin(), dstToken = ethCoin()))
+        }
+    }
+
+    @Test
+    fun `fetch throws Decoding when the PSBT tx decodes to an empty payload`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-btc", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive(""),
+                meta = SwapKitTxMeta(txType = "PSBT"),
+                targetAddress = "bc1ptarget",
+                expectedBuyAmount = "1",
+            )
+
+        assertThrows<SwapKitError.Decoding> {
+            source().fetch(request(srcToken = btcCoin(), dstToken = ethCoin()))
+        }
+    }
+
     // ---- helpers ----
 
     private fun request(

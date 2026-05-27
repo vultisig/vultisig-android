@@ -415,8 +415,17 @@ constructor(
         val base64 =
             (element as? JsonPrimitive)?.takeIf { it.isString }?.content
                 ?: throw SwapKitError.Decoding("SwapKit non-EVM tx is not a base64 string")
-        return runCatching { Base64.getDecoder().decode(base64) }
-            .getOrElse { throw SwapKitError.Decoding("SwapKit non-EVM tx is not valid base64", it) }
+        val decoded =
+            runCatching { Base64.getDecoder().decode(base64) }
+                .getOrElse {
+                    throw SwapKitError.Decoding("SwapKit non-EVM tx is not valid base64", it)
+                }
+        // An empty (or whitespace-only) base64 decodes to zero bytes — refuse it rather than stage
+        // an unsignable empty payload that would only surface as a failure at sign time.
+        if (decoded.isEmpty()) {
+            throw SwapKitError.Decoding("SwapKit non-EVM tx payload is empty")
+        }
+        return decoded
     }
 
     /**
