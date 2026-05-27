@@ -15,6 +15,11 @@ import com.vultisig.wallet.data.repositories.swap.KyberQuoteSource
 import com.vultisig.wallet.data.repositories.swap.LiFiQuoteSource
 import com.vultisig.wallet.data.repositories.swap.MayaQuoteSource
 import com.vultisig.wallet.data.repositories.swap.OneInchQuoteSource
+import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
+import com.vultisig.wallet.data.repositories.swap.SwapKitConfigImpl
+import com.vultisig.wallet.data.repositories.swap.SwapKitProviderCache
+import com.vultisig.wallet.data.repositories.swap.SwapKitProviderCacheImpl
+import com.vultisig.wallet.data.repositories.swap.SwapKitQuoteSource
 import com.vultisig.wallet.data.repositories.swap.SwapProviderKey
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTable
 import com.vultisig.wallet.data.repositories.swap.SwapProviderTableImpl
@@ -208,6 +213,12 @@ internal interface RepositoriesModule {
     fun bindKyberQuoteSource(impl: KyberQuoteSource): SwapQuoteSource
 
     @Binds
+    @IntoMap
+    @SwapProviderKey(SwapProvider.SWAPKIT)
+    @Reusable
+    fun bindSwapKitQuoteSource(impl: SwapKitQuoteSource): SwapQuoteSource
+
+    @Binds
     @Singleton
     fun bindChainAccountsRepository(impl: AccountsRepositoryImpl): AccountsRepository
 
@@ -302,6 +313,18 @@ internal interface RepositoriesModule {
     fun bindPreventScreenshotsRepository(
         impl: PreventScreenshotsRepositoryImpl
     ): PreventScreenshotsRepository
+
+    @Binds @Singleton fun bindSwapKitConfig(impl: SwapKitConfigImpl): SwapKitConfig
+
+    // Phase 2 scaffolding. The cache is fully implemented and bound, but is intentionally NOT yet
+    // injected into SwapKitQuoteSource: Phase 1 deliberately drops the client-side provider gate
+    // and
+    // lets `/v3/quote` be the authority on unsupported chains (fail-open, matching iOS'
+    // SwapKitProviderCache cache-miss=true). The binding stays here so the client-side enablement
+    // gate can be wired in without a DI change when Phase 2 lands. See SwapKitQuoteSource's KDoc.
+    @Binds
+    @Singleton
+    fun bindSwapKitProviderCache(impl: SwapKitProviderCacheImpl): SwapKitProviderCache
 }
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class PrettyJson

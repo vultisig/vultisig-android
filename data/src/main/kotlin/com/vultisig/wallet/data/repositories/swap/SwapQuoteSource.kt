@@ -31,7 +31,14 @@ data class SwapQuoteRequest(
 sealed class SwapQuoteResult {
     data class Native(val quote: SwapQuote) : SwapQuoteResult()
 
-    data class Evm(val data: EVMSwapQuoteJson) : SwapQuoteResult()
+    /**
+     * EVM-shaped envelope. [subProvider] disambiguates SwapKit's downstream protocol (Chainflip /
+     * NEAR / Garden); `null` for direct aggregators (1inch, Kyber, LiFi, Jupiter).
+     */
+    data class Evm(val data: EVMSwapQuoteJson, val subProvider: String? = null) : SwapQuoteResult()
+
+    // A future SwapKit non-EVM route (BTC / TON / ADA / TRON / SUI / ZEC) rides Native, since
+    // SwapQuote.SwapKit is itself a SwapQuote — no dedicated result variant is needed.
 
     fun expectNative(provider: SwapProvider): SwapQuote =
         when (this) {

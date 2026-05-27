@@ -55,9 +55,16 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             "DAI",
         )
 
-    private val evmAggregators = setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
+    private val evmAggregators =
+        setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER, SwapProvider.SWAPKIT)
     private val thorchainPlusEvmAggregators =
-        setOf(SwapProvider.THORCHAIN, SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER)
+        setOf(
+            SwapProvider.THORCHAIN,
+            SwapProvider.ONEINCH,
+            SwapProvider.LIFI,
+            SwapProvider.KYBER,
+            SwapProvider.SWAPKIT,
+        )
 
     /** Providers that only quote same-chain swaps; filtered out for cross-chain pairs. */
     private val sameChainOnly = setOf(SwapProvider.ONEINCH, SwapProvider.KYBER)
@@ -78,11 +85,13 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                 if (ticker in thorAvaxTokens) thorchainPlusEvmAggregators else evmAggregators
 
             Chain.Base ->
-                if (ticker in thorBaseTokens) setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN)
-                else setOf(SwapProvider.LIFI)
+                if (ticker in thorBaseTokens)
+                    setOf(SwapProvider.LIFI, SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
+                else setOf(SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
             Chain.Optimism,
-            Chain.Polygon,
+            Chain.Polygon -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.SWAPKIT)
+
             Chain.ZkSync -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
             Chain.Mantle -> setOf(SwapProvider.LIFI, SwapProvider.KYBER)
@@ -98,16 +107,22 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             Chain.Zcash -> setOf(SwapProvider.MAYA)
 
             Chain.Arbitrum ->
-                if (ticker in mayaArbTokens) setOf(SwapProvider.LIFI, SwapProvider.MAYA)
-                else setOf(SwapProvider.LIFI)
+                if (ticker in mayaArbTokens)
+                    setOf(SwapProvider.LIFI, SwapProvider.MAYA, SwapProvider.SWAPKIT)
+                else setOf(SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
             Chain.Blast,
             Chain.CronosChain -> setOf(SwapProvider.LIFI)
 
             Chain.Solana ->
                 if (coin.isNativeToken)
-                    setOf(SwapProvider.THORCHAIN, SwapProvider.JUPITER, SwapProvider.LIFI)
-                else setOf(SwapProvider.JUPITER, SwapProvider.LIFI)
+                    setOf(
+                        SwapProvider.THORCHAIN,
+                        SwapProvider.JUPITER,
+                        SwapProvider.LIFI,
+                        SwapProvider.SWAPKIT,
+                    )
+                else setOf(SwapProvider.JUPITER, SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
             Chain.Ripple,
             Chain.Tron -> setOf(SwapProvider.THORCHAIN)
@@ -143,6 +158,12 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
     private fun ethereumProviders(ticker: String): Set<SwapProvider> {
         val isThor = ticker in thorEthTokens
         val isMaya = ticker in mayaEthTokens
+        // SwapKit is included in every Ethereum branch: the per-token-pair eligibility is
+        // negotiated downstream at `/v3/quote` time (and gated by the SwapKit feature flag +
+        // provider cache inside SwapKitQuoteSource), so the table only needs to surface SwapKit
+        // wherever the existing EVM aggregators show up. Without this, ETH/USDC/USDT and the
+        // other Thor/Maya-eligible Ethereum tokens silently lose SwapKit as a candidate even
+        // though the cache enables Ethereum.
         return when {
             isThor && isMaya ->
                 setOf(
@@ -150,6 +171,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                     SwapProvider.ONEINCH,
                     SwapProvider.LIFI,
                     SwapProvider.KYBER,
+                    SwapProvider.SWAPKIT,
                     SwapProvider.MAYA,
                 )
 
@@ -159,6 +181,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                     SwapProvider.ONEINCH,
                     SwapProvider.LIFI,
                     SwapProvider.KYBER,
+                    SwapProvider.SWAPKIT,
                 )
 
             isMaya ->
@@ -167,6 +190,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                     SwapProvider.LIFI,
                     SwapProvider.MAYA,
                     SwapProvider.KYBER,
+                    SwapProvider.SWAPKIT,
                 )
 
             else -> evmAggregators

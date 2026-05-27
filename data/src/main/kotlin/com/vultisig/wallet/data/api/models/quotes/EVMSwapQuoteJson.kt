@@ -26,6 +26,12 @@ data class OneInchQuoteJson(
 data class OneInchSwapTxJson(
     @SerialName("from") val from: String,
     @SerialName("to") val to: String,
+    // ERC20 approval spender (allowance target). For 1inch/Kyber/LiFi the swap `to` is itself the
+    // allowance target, so this stays null and callers fall back to `to`. SwapKit instead routes
+    // through a dedicated token-transfer proxy that pulls the tokens — that proxy must be approved,
+    // not the swap entry contract in `to`. Approving the wrong one reverts with
+    // ERC20InsufficientAllowance. See SwapKitQuoteSource.buildEvmQuoteFromSwapKit.
+    @SerialName("allowanceTarget") val allowanceTarget: String? = null,
     @SerialName("gas") val gas: Long,
     @SerialName("data") val data: String,
     @SerialName("value") val value: String,

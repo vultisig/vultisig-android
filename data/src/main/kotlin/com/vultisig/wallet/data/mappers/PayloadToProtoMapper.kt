@@ -231,6 +231,25 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                         provider = from.provider,
                     )
                 } else null,
+            // EVM/Solana SwapKit ride oneinchSwapPayload above with provider="swapkit"; this
+            // carries non-EVM shapes only.
+            swapkitSwapPayload =
+                if (swapPayload is SwapPayload.SwapKit) {
+                    val from = swapPayload.data
+                    vultisig.keysign.v1.SwapKitSwapPayload(
+                        fromCoin = from.fromCoin.toCoinProto(),
+                        toCoin = from.toCoin.toCoinProto(),
+                        fromAmount = from.fromAmount.toString(),
+                        toAmountDecimal = from.toAmountDecimal.toPlainString(),
+                        txType = from.txType,
+                        txPayload = from.txPayload,
+                        targetAddress = from.targetAddress,
+                        inboundAddress = from.inboundAddress,
+                        memo = from.memo,
+                        subProvider = from.subProvider,
+                        swapId = from.swapId,
+                    )
+                } else null,
             wasmExecuteContractPayload = keysignPayload.wasmExecuteContractPayload,
             erc20ApprovePayload =
                 if (approvePayload is ERC20ApprovePayload) {

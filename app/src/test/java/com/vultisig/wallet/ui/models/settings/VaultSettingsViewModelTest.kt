@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -29,6 +30,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -51,6 +53,7 @@ internal class VaultSettingsViewModelTest {
     private lateinit var vaultDataStoreRepository: VaultDataStoreRepository
     private lateinit var vultiSignerRepository: VultiSignerRepository
     private lateinit var snackbarFlow: SnackbarFlow
+    private lateinit var swapKitConfig: SwapKitConfig
 
     /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
@@ -67,6 +70,7 @@ internal class VaultSettingsViewModelTest {
         vaultDataStoreRepository = mockk(relaxed = true)
         vultiSignerRepository = mockk(relaxed = true)
         snackbarFlow = mockk(relaxed = true)
+        swapKitConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
         // Function-type-interface mocks need an explicit Boolean stub; otherwise relaxed mode
         // returns a generic Object that fails the implicit cast inside the VM.
         coEvery { isVaultHasFastSignById(any()) } returns false
@@ -90,6 +94,7 @@ internal class VaultSettingsViewModelTest {
             vaultDataStoreRepository = vaultDataStoreRepository,
             vultiSignerRepository = vultiSignerRepository,
             snackbarFlow = snackbarFlow,
+            swapKitConfig = swapKitConfig,
         )
 
     /** Verifies clicking Advanced sets isAdvanceSetting to true. */
@@ -214,6 +219,36 @@ internal class VaultSettingsViewModelTest {
             val vm = createViewModel()
             vm.onSettingsItemClick(VaultSettingsItem.Sign)
             coVerify { navigator.route(Route.SignMessage(VAULT_ID)) }
+        }
+
+    /** Clicking the SwapKit toggle flips the persisted feature flag. */
+    @Test
+    fun `clicking SwapKitToggle flips the persisted flag`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+
+            // Currently off → click → expect setFeatureEnabled(true)
+            vm.onSettingsItemClick(VaultSettingsItem.SwapKitToggle(isEnabled = false))
+            coVerify { swapKitConfig.setFeatureEnabled(true) }
+
+            // Currently on → click → expect setFeatureEnabled(false)
+            vm.onSettingsItemClick(VaultSettingsItem.SwapKitToggle(isEnabled = true))
+            coVerify { swapKitConfig.setFeatureEnabled(false) }
+        }
+
+    /** A `true` emission from isFeatureEnabled reflects into the SwapKitToggle row in uiModel. */
+    @Test
+    fun `isFeatureEnabled emissions reflect into the SwapKitToggle row`() =
+        runTest(testDispatcher) {
+            every { swapKitConfig.isFeatureEnabled } returns flowOf(true)
+            val vm = createViewModel()
+
+            val toggleRow =
+                vm.uiModel.value.settingGroups
+                    .flatMap { it.items }
+                    .filterIsInstance<VaultSettingsItem.SwapKitToggle>()
+                    .single()
+            toggleRow.isEnabled.shouldBeTrue()
         }
 
     private companion object {

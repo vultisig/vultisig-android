@@ -824,6 +824,26 @@
 
     <!-- Vault Settings Advanced -->
     <string name="vault_settings_advanced_title">高级</string>
+    <string name="settings_advanced_swapkit_toggle">SwapKit 聚合器</string>
+    <string name="swapkit_error_api_key_missing">SwapKit API 密钥未配置</string>
+    <string name="swapkit_error_api_key_invalid">SwapKit API 密钥无效</string>
+    <string name="swapkit_error_insufficient_balance">余额不足,无法完成此路径</string>
+    <string name="swapkit_error_insufficient_allowance">代币授权额度不足 — 请先授权</string>
+    <string name="swapkit_error_unable_to_build_transaction">此路径暂不可用,请尝试其他提供商</string>
+    <string name="swapkit_error_swap_route_not_found">所选路径已过期</string>
+    <string name="swapkit_error_output_amount_deviation_too_high">报价波动超过 5%% — 请刷新后继续</string>
+    <string name="swapkit_error_no_routes_found">此交易对没有可用路径</string>
+    <string name="swapkit_error_black_list_asset">此资产已被聚合器屏蔽</string>
+    <string name="swapkit_error_invalid_source_address">源地址无效</string>
+    <string name="swapkit_error_invalid_destination_address">目标地址无效</string>
+    <string name="swapkit_error_address_screening">地址筛查失败 — 请联系支持</string>
+    <string name="swapkit_error_unsupported_tx_type">暂不支持 SwapKit 交易类型 %1$s</string>
+    <string name="swapkit_error_provider_not_enabled">SwapKit 在此链上未启用</string>
+    <string name="swapkit_error_route_filtered">此交易对的所有路径已被过滤</string>
+    <string name="swapkit_error_malformed_amount">SwapKit 返回了无效金额: %1$s</string>
+    <string name="swapkit_error_network">联系 SwapKit 时网络错误</string>
+    <string name="swapkit_error_decoding">无法解析 SwapKit 响应</string>
+    <string name="swapkit_error_server">SwapKit 服务器错误 (HTTP %1$d)</string>
 
     <!-- Sign Message -->
     <string name="sign_message_continue">继续</string>

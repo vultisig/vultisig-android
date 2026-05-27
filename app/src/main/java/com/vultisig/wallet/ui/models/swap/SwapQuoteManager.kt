@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.swap
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -15,6 +16,7 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
+import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import com.vultisig.wallet.data.repositories.swap.convertToTokenValue
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
@@ -145,6 +147,18 @@ constructor(
                         vultBPSDiscount,
                         srcNativeToken,
                     )
+
+                SwapProvider.SWAPKIT ->
+                    fetchSwapKitQuote(
+                        src,
+                        dst,
+                        srcToken,
+                        dstToken,
+                        srcTokenValue,
+                        tokenValue,
+                        vultBPSDiscount,
+                        srcNativeToken,
+                    )
             }
 
         val feeCoin =
@@ -152,6 +166,9 @@ constructor(
                 SwapProvider.MAYA,
                 SwapProvider.THORCHAIN,
                 SwapProvider.LIFI -> dstToken
+                // SwapKit inbound fee is source-native (like 1inch/Kyber/Jupiter, not LiFi's
+                // destination-side integrator model).
+                SwapProvider.SWAPKIT -> srcNativeToken
                 else -> srcNativeToken
             }
 
@@ -290,11 +307,17 @@ constructor(
         val successes = results.mapNotNull { it.getOrNull() }
         if (successes.isEmpty()) {
             val failures = results.mapNotNull { it.exceptionOrNull() }
-            failures.firstOrNull { it is SwapException }?.let { throw it }
-            failures
-                .firstOrNull { it is TimeoutCancellationException }
-                ?.let { throw SwapException.TimeOut(it.message.orEmpty()) }
-            throw failures.first()
+            // Throw the first failure (iOS SwapService.swift:77 parity). Previously preferred any
+            // SwapException over the first failure, which masked sibling SwapKitError variants
+            // whenever a LiFi/Thor candidate raced SwapKit and lost — the user kept seeing the
+            // generic swap_error_quote_failed copy instead of the localized SwapKit message.
+            val first = failures.first()
+            // withTimeout surfaces a raw TimeoutCancellationException; map it into the typed
+            // SwapException hierarchy so the form renders the localized timeout copy instead of
+            // leaking a coroutine cancellation as the generic "quote failed" error.
+            throw if (first is TimeoutCancellationException)
+                SwapException.TimeOut(first.message ?: "Quote request timed out")
+            else first
         }
 
         // Rank on estimatedDstFiat alone — this represents the destination amount
@@ -324,6 +347,8 @@ constructor(
                     getCachedQuoteOrFetch(
                         srcToken.id,
                         dstToken.id,
+                        srcToken.address,
+                        dstToken.address,
                         srcTokenValue,
                         SwapProvider.MAYA,
                     ) {
@@ -349,6 +374,8 @@ constructor(
                     getCachedQuoteOrFetch(
                         srcToken.id,
                         dstToken.id,
+                        srcToken.address,
+                        dstToken.address,
                         srcTokenValue,
                         SwapProvider.THORCHAIN,
                     ) {
@@ -393,7 +420,14 @@ constructor(
         srcNativeToken: Coin,
     ): Pair<SwapQuote, UiText> {
         val swapQuote =
-            getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.KYBER) {
+            getCachedQuoteOrFetch(
+                srcToken.id,
+                dstToken.id,
+                srcToken.address,
+                dstToken.address,
+                srcTokenValue,
+                SwapProvider.KYBER,
+            ) {
                 val apiQuote =
                     swapQuoteRepository
                         .getQuote(
@@ -444,7 +478,14 @@ constructor(
     ): Pair<SwapQuote, UiText> {
         val isAffiliate = true
         val swapQuote =
-            getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, SwapProvider.ONEINCH) {
+            getCachedQuoteOrFetch(
+                srcToken.id,
+                dstToken.id,
+                srcToken.address,
+                dstToken.address,
+                srcTokenValue,
+                SwapProvider.ONEINCH,
+            ) {
                 val apiQuote =
                     swapQuoteRepository
                         .getQuote(
@@ -492,7 +533,14 @@ constructor(
         srcNativeToken: Coin,
     ): Pair<SwapQuote, UiText> {
         val swapQuote =
-            getCachedQuoteOrFetch(srcToken.id, dstToken.id, srcTokenValue, provider) {
+            getCachedQuoteOrFetch(
+                srcToken.id,
+                dstToken.id,
+                srcToken.address,
+                dstToken.address,
+                srcTokenValue,
+                provider,
+            ) {
                 val apiQuote =
                     if (provider == SwapProvider.LIFI)
                         swapQuoteRepository
@@ -557,6 +605,95 @@ constructor(
         return swapQuote to providerText
     }
 
+    private suspend fun fetchSwapKitQuote(
+        src: SendSrc,
+        dst: SendSrc,
+        srcToken: Coin,
+        dstToken: Coin,
+        srcTokenValue: BigInteger,
+        tokenValue: TokenValue,
+        vultBPSDiscount: Int?,
+        srcNativeToken: Coin,
+    ): Pair<SwapQuote, UiText> {
+        // iOS' SwapKit tier-discount formula at this milestone:
+        //   max(0, min(1000, 50 - vultTierDiscount))
+        // 50 bps base affiliate, clamped to 0..1000 (SwapKit's documented 0..10% range).
+        val affiliateBps = (SWAPKIT_AFFILIATE_FEE_BPS - (vultBPSDiscount ?: 0)).coerceIn(0, 1000)
+        val swapQuote =
+            getCachedQuoteOrFetch(
+                srcToken.id,
+                dstToken.id,
+                srcToken.address,
+                dstToken.address,
+                srcTokenValue,
+                SwapProvider.SWAPKIT,
+            ) {
+                val result =
+                    swapQuoteRepository.getQuote(
+                        SwapProvider.SWAPKIT,
+                        SwapQuoteRequest(
+                            srcToken = srcToken,
+                            dstToken = dstToken,
+                            tokenValue = tokenValue,
+                            srcAddress = src.address.address,
+                            dstAddress = dst.address.address,
+                            affiliateBps = affiliateBps,
+                        ),
+                    )
+                val evmResult =
+                    (result as? SwapQuoteResult.Evm)
+                        ?: error("SwapKitQuoteSource must return SwapQuoteResult.Evm")
+                val apiQuote = evmResult.data
+                val expectedDstValue =
+                    TokenValue(
+                        value =
+                            // SwapKitQuoteSource already scaled dstAmount to a raw-units integer
+                            // string, so this parses cleanly today. Stay inside the typed error
+                            // hierarchy on the off chance it ever doesn't: a raw `error()` throws
+                            // IllegalStateException, which the form catches as the generic "quote
+                            // failed" copy and leaks the raw string. Decoding lets the picker fall
+                            // back to another provider and shows the localized decoding message.
+                            apiQuote.dstAmount.toBigIntegerOrNull()
+                                ?: throw SwapKitError.Decoding(
+                                    "Malformed SwapKit dstAmount (raw units expected): ${apiQuote.dstAmount}"
+                                ),
+                        token = dstToken,
+                    )
+                // The source layer stages the inbound fee on tx.swapFee with an empty token
+                // contract; resolveSwapFee's empty-contract branch returns the fallback. Pass the
+                // parsed swapFee as fallback so an empty contract doesn't discard the fee and
+                // render $0 Network Fee.
+                val swapKitInboundFee = apiQuote.tx.swapFee.toBigIntegerOrNull() ?: BigInteger.ZERO
+                val (feeAmount, feeCoin) =
+                    resolveSwapFee(
+                        apiQuote.tx.swapFeeTokenContract,
+                        apiQuote.tx.swapFee,
+                        srcNativeToken,
+                        swapKitInboundFee,
+                    )
+                val tokenFees = TokenValue(value = feeAmount, token = feeCoin)
+                SwapQuote.OneInch(
+                    expectedDstValue = expectedDstValue,
+                    fees = tokenFees,
+                    data = apiQuote,
+                    expiredAt = Clock.System.now() + expiredAfter,
+                    // `provider` is the proto-serialized discriminator used by
+                    // SwapTransactionToUiModelMapper to map back onto SwapProvider.SWAPKIT —
+                    // keep it as the canonical id. The sub-provider drives the UI label below.
+                    provider = SwapProvider.SWAPKIT.getSwapProviderId(),
+                    subProvider = evmResult.subProvider,
+                )
+            }
+        // Read the sub-provider off the returned quote (not a hoisted var): a cache HIT skips the
+        // fetch lambda, so a transient var would be null and the label would silently collapse from
+        // "via CHAINFLIP" back to the generic "SwapKit" when the form re-opens within the TTL.
+        val resolvedSubProvider = (swapQuote as? SwapQuote.OneInch)?.subProvider
+        val providerLabel =
+            if (resolvedSubProvider.isNullOrBlank()) R.string.swap_for_provider_swapkit.asUiText()
+            else formatSwapKitProviderLabel(resolvedSubProvider).asUiText()
+        return swapQuote to providerLabel
+    }
+
     private suspend fun resolveSwapFee(
         swapFeeTokenContract: String,
         swapFeeRaw: String,
@@ -596,23 +733,35 @@ constructor(
         provider: SwapProvider,
         srcTokenId: String,
         dstTokenId: String,
+        srcAddress: String,
+        dstAddress: String,
         srcAmount: BigInteger,
     ) {
-        quoteCache.put(srcTokenId, dstTokenId, srcAmount, provider, quote)
+        quoteCache.put(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider, quote)
     }
 
     private suspend fun getCachedQuoteOrFetch(
         srcTokenId: String,
         dstTokenId: String,
+        srcAddress: String,
+        dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
         fetch: suspend () -> SwapQuote,
     ): SwapQuote {
-        quoteCache.get(srcTokenId, dstTokenId, srcAmount, provider)?.let {
+        quoteCache.get(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)?.let {
             return it
         }
         return fetch().also { fresh ->
-            quoteCache.put(srcTokenId, dstTokenId, srcAmount, provider, fresh)
+            quoteCache.put(
+                srcTokenId,
+                dstTokenId,
+                srcAddress,
+                dstAddress,
+                srcAmount,
+                provider,
+                fresh,
+            )
         }
     }
 
@@ -681,18 +830,83 @@ constructor(
                 UiText.StringResource(R.string.swap_error_amount_below_dust_threshold)
         }
 
+    /** Localized message for each [SwapKitError] variant — surfaced verbatim on the swap form. */
+    fun mapSwapKitErrorToFormError(e: SwapKitError): UiText =
+        when (e) {
+            is SwapKitError.ApiKeyMissing ->
+                UiText.StringResource(R.string.swapkit_error_api_key_missing)
+            is SwapKitError.ApiKeyInvalid ->
+                UiText.StringResource(R.string.swapkit_error_api_key_invalid)
+            is SwapKitError.InsufficientBalance ->
+                UiText.StringResource(R.string.swapkit_error_insufficient_balance)
+            is SwapKitError.InsufficientAllowance ->
+                UiText.StringResource(R.string.swapkit_error_insufficient_allowance)
+            is SwapKitError.UnableToBuildTransaction ->
+                UiText.StringResource(R.string.swapkit_error_unable_to_build_transaction)
+            is SwapKitError.SwapRouteNotFound ->
+                UiText.StringResource(R.string.swapkit_error_swap_route_not_found)
+            is SwapKitError.QuoteDeviation ->
+                unescapedPercentLiteral(R.string.swapkit_error_output_amount_deviation_too_high)
+            is SwapKitError.NoRoutes ->
+                UiText.StringResource(R.string.swapkit_error_no_routes_found)
+            is SwapKitError.BlackListAsset ->
+                UiText.StringResource(R.string.swapkit_error_black_list_asset)
+            is SwapKitError.InvalidSourceAddress ->
+                UiText.StringResource(R.string.swapkit_error_invalid_source_address)
+            is SwapKitError.InvalidDestinationAddress ->
+                UiText.StringResource(R.string.swapkit_error_invalid_destination_address)
+            is SwapKitError.AddressScreening ->
+                UiText.StringResource(R.string.swapkit_error_address_screening)
+            is SwapKitError.UnsupportedTxType ->
+                UiText.FormattedText(R.string.swapkit_error_unsupported_tx_type, listOf(e.txType))
+            is SwapKitError.ProviderNotEnabled ->
+                UiText.StringResource(R.string.swapkit_error_provider_not_enabled)
+            is SwapKitError.RouteFiltered ->
+                UiText.StringResource(R.string.swapkit_error_route_filtered)
+            is SwapKitError.MalformedAmount ->
+                if (e.raw.isBlank()) UiText.StringResource(R.string.swapkit_error_decoding)
+                else UiText.FormattedText(R.string.swapkit_error_malformed_amount, listOf(e.raw))
+            is SwapKitError.Network -> UiText.StringResource(R.string.swapkit_error_network)
+            is SwapKitError.Decoding -> UiText.StringResource(R.string.swapkit_error_decoding)
+            is SwapKitError.Server ->
+                // A null httpStatus rendered as `0` reads like a real status; fall back to the
+                // generic network copy. fromCode never emits null, but Server can be constructed
+                // directly elsewhere.
+                e.httpStatus?.let { status ->
+                    UiText.FormattedText(R.string.swapkit_error_server, listOf(status))
+                } ?: UiText.StringResource(R.string.swapkit_error_network)
+        }
+
+    /**
+     * Route a `%%`-escaped string resource through [UiText.FormattedText] so `String.format`
+     * collapses `5%%` back to a literal `5%`. A plain [UiText.StringResource] skips `String.format`
+     * and would render `5%%` verbatim; the resource cannot be un-escaped because Android lint
+     * rejects an unescaped `%` adjacent to a letter (e.g. Dutch `5% afgeweken` would be flagged as
+     * an incomplete `%a` specifier). Named so the unescape intent survives a switch to
+     * [UiText.StringResource] at the call site.
+     */
+    private fun unescapedPercentLiteral(resId: Int): UiText =
+        UiText.FormattedText(resId, emptyList())
+
     companion object {
         private const val KYBER_AFFILIATE_FEE_BPS = 50
+        /** Base bps before tier discount; clamped to SwapKit's documented 0..1000 range. */
+        private const val SWAPKIT_AFFILIATE_FEE_BPS = 50
         private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val QUOTE_FETCH_TIMEOUT_MS = 15_000L
     }
 }
 
-private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
+internal class QuoteCache(private val maxSize: Int = MAX_SIZE) {
 
     private data class Key(
         val srcTokenId: String,
         val dstTokenId: String,
+        // The cached tx is address-bound (ERC-20 `tx.data`, SwapKit routing, destination). Two
+        // vaults sharing a pair/amount have the same token ids but different account addresses, so
+        // without these a quote built for vault A could route vault B's proceeds back to A.
+        val srcAddress: String,
+        val dstAddress: String,
         val srcAmount: BigInteger,
         val provider: SwapProvider,
     )
@@ -703,11 +917,13 @@ private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
     fun get(
         srcTokenId: String,
         dstTokenId: String,
+        srcAddress: String,
+        dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
     ): SwapQuote? =
         synchronized(lock) {
-            val key = Key(srcTokenId, dstTokenId, srcAmount, provider)
+            val key = Key(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)
             val quote = entries[key] ?: return null
             if (Clock.System.now() < quote.expiredAt) {
                 quote
@@ -720,12 +936,15 @@ private class QuoteCache(private val maxSize: Int = MAX_SIZE) {
     fun put(
         srcTokenId: String,
         dstTokenId: String,
+        srcAddress: String,
+        dstAddress: String,
         srcAmount: BigInteger,
         provider: SwapProvider,
         quote: SwapQuote,
     ) =
         synchronized(lock) {
-            entries[Key(srcTokenId, dstTokenId, srcAmount, provider)] = quote
+            entries[Key(srcTokenId, dstTokenId, srcAddress, dstAddress, srcAmount, provider)] =
+                quote
             evict()
         }
 

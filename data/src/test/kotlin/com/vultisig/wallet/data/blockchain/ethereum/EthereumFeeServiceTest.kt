@@ -343,7 +343,7 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
-    fun `Ethereum swap priority fee uses last reward when above the 2 GWEI floor`() = runTest {
+    fun `Ethereum swap priority fee uses last reward when above the floor`() = runTest {
         // getFeeHistory() returns ascending order, so lastOrNull() is the max.
         stubFeeHistory(listOf(gwei(3), gwei(5), gwei(8)))
 
@@ -353,14 +353,22 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
-    fun `Ethereum swap priority fee uses the 2 GWEI floor when last reward is below it`() =
-        runTest {
-            stubFeeHistory(listOf(BigInteger.ONE, BigInteger.TEN, gwei(1)))
+    fun `Ethereum swap priority fee uses the 0_5 GWEI floor on a low-gas window`() = runTest {
+        // Realistic post-blob window: tips ~0.1 GWEI (window max ~0.16 GWEI), below the 0.5 GWEI
+        // floor. Regression for the floor recalibration — the old 2 GWEI floor inflated the
+        // displayed fee bond ~20x above the market tip on small swaps.
+        stubFeeHistory(
+            listOf(
+                BigInteger("85000000"), // 0.085 GWEI
+                BigInteger("100000000"), // 0.10 GWEI
+                BigInteger("160000000"), // 0.16 GWEI (window max)
+            )
+        )
 
-            val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
+        val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
 
-            assertEquals(gwei(2), fee.maxPriorityFeePerGas)
-        }
+        assertEquals(ETH_SWAP_TIP_FLOOR, fee.maxPriorityFeePerGas)
+    }
 
     @Test
     fun `Ethereum swap priority fee is capped to ETHEREUM_SWAP_PRIORITY_FEE_CAP`() = runTest {
@@ -373,10 +381,10 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
-    fun `Ethereum swap priority fee falls back to the 2 GWEI floor on empty history`() = runTest {
+    fun `Ethereum swap priority fee falls back to the 0_5 GWEI floor on empty history`() = runTest {
         val fee = service.calculateDefaultFees(swap(Chain.Ethereum)) as Eip1559
 
-        assertEquals(gwei(2), fee.maxPriorityFeePerGas)
+        assertEquals(ETH_SWAP_TIP_FLOOR, fee.maxPriorityFeePerGas)
     }
 
     @Test
@@ -434,6 +442,7 @@ internal class EthereumFeeServiceTest {
         private val GWEI = BigInteger.TEN.pow(9)
         private val HUNDRED = BigInteger("100")
         private val POLYGON_MIN_TIP = GWEI.multiply(BigInteger("30"))
+        private val ETH_SWAP_TIP_FLOOR = GWEI.divide(BigInteger.valueOf(2)) // 0.5 GWEI
         private val L2_DEFAULT_TIP = BigInteger("20")
         private val BLAST_MIN_TIP = BigInteger.TEN.pow(7) // 0.01 GWEI
     }
