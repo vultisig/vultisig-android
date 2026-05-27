@@ -50,8 +50,9 @@ internal fun initializeRive(context: Context) {
     val storedVersion = prefs.getInt(KEY_RIVE_INIT_IN_FLIGHT_VERSION, NO_IN_FLIGHT_VERSION)
     if (storedVersion == BuildConfig.VERSION_CODE) {
         Timber.w(
-            "Skipping Rive init: previous launch at version ${BuildConfig.VERSION_CODE} did not " +
-                "complete Rive.init (likely native crash)"
+            "Skipping Rive init: previous launch at version %d did not complete Rive.init " +
+                "(likely native crash)",
+            BuildConfig.VERSION_CODE,
         )
         return
     }
