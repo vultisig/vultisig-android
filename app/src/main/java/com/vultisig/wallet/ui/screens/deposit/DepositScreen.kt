@@ -84,7 +84,7 @@ internal fun DepositScreen(
             title = defaultTitle
         }
         SendDst.VerifyTransaction.staticRoute -> {
-            title = stringResource(R.string.verify_transaction_screen_title)
+            title = stringResource(R.string.verify_deposit_function_overview)
         }
         else -> {
             title = defaultTitle

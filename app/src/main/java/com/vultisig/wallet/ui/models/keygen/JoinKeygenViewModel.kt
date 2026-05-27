@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.common.DeepLinkHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.keygen.isBatchEligibleCeremony
 import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
 import com.vultisig.wallet.data.mappers.KeygenMessageFromProtoMapper
 import com.vultisig.wallet.data.mappers.ReshareMessageFromProtoMapper
@@ -175,6 +176,19 @@ constructor(
                                 oldCommittee = emptyList(),
                                 oldResharePrefix = "",
                                 chains = message.chains,
+                                // Follow the initiator's batched opt-in from the QR: iOS/Windows
+                                // run
+                                // key-import (and DKLS keygen) through the batched protocol, which
+                                // uses dedicated relay namespaces; a joiner that ignores this flag
+                                // polls the legacy namespaces and the ceremony deadlocks. AND it
+                                // with
+                                // isBatchEligibleCeremony so a forged QR can't route a GG20 keygen
+                                // through the batched namespaces — this branch defends itself
+                                // instead
+                                // of relying on the executor gate alone.
+                                isTssBatch =
+                                    message.isTssBatch &&
+                                        isBatchEligibleCeremony(action, message.libType),
                             )
                         }
 
