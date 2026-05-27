@@ -219,10 +219,7 @@ constructor(
             }
         }
 
-    // Note: if the underlying HTTP client has its own retry-on-exception policy, each outer
-    // attempt here may itself fire multiple HTTP requests (network errors), while our loop
-    // handles logical "not yet indexed" responses (which return a valid non-error HTTP status).
-    // These are distinct failure modes, so the two retry layers do not simply multiply.
+    // HTTP-client retry and this loop handle distinct failure modes, so they don't multiply.
     private suspend fun isAlreadyOnChain(
         hash: String,
         verify: suspend (String) -> Boolean,

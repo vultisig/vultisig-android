@@ -25,6 +25,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -155,6 +156,9 @@ class BroadcastTxUseCaseTest {
         coVerify(exactly = 1) {
             blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION)
         }
+        coVerify(exactly = 2) {
+            blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH)
+        }
     }
 
     @Test
@@ -175,6 +179,22 @@ class BroadcastTxUseCaseTest {
             blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION)
         }
         coVerify(exactly = 3) {
+            blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH)
+        }
+    }
+
+    @Test
+    fun `verify cancellation propagates immediately without further retries`() = runTest {
+        val blockChairApi = mockk<BlockChairApi>()
+        coEvery { blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION) } throws
+            RuntimeException("transaction already known")
+        coEvery { blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH) } throws
+            CancellationException("cancelled")
+
+        assertFailsWith<CancellationException> {
+            createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
+        }
+        coVerify(exactly = 1) {
             blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH)
         }
     }
