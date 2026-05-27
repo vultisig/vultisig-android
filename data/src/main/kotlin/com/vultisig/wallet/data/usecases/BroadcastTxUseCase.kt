@@ -50,6 +50,7 @@ import com.vultisig.wallet.data.models.Chain.ZkSync
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.delay
 import timber.log.Timber
 
 fun interface BroadcastTxUseCase {
@@ -156,14 +157,9 @@ constructor(
                 bittensorApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
             }
 
-            Sui ->
-                recoverIfAlreadyBroadcast(
-                    tx = tx,
-                    broadcast = {
-                        suiApi.executeTransactionBlock(tx.rawTransaction, tx.signature ?: "")
-                    },
-                    verify = { hash -> suiApi.checkStatus(hash)?.digest?.isNotBlank() == true },
-                )
+            // Sui digest is not pre-computable from the raw transaction, so transactionHash
+            // is always blank and recovery cannot work; broadcast directly.
+            Sui -> suiApi.executeTransactionBlock(tx.rawTransaction, tx.signature ?: "")
 
             Ton ->
                 recoverIfAlreadyBroadcast(
@@ -212,9 +208,7 @@ constructor(
             throw e
         } catch (e: Exception) {
             val hash = tx.transactionHash
-            val alreadyOnChain =
-                hash.isNotBlank() && runCatching { verify(hash) }.getOrDefault(false)
-            if (alreadyOnChain) {
+            if (hash.isNotBlank() && isAlreadyOnChain(hash, verify)) {
                 Timber.d(
                     "broadcast failed but tx %s is already on-chain; treating as success",
                     hash,
@@ -225,6 +219,35 @@ constructor(
             }
         }
 
+    // HTTP-client retry and this loop handle distinct failure modes, so they don't multiply.
+    private suspend fun isAlreadyOnChain(
+        hash: String,
+        verify: suspend (String) -> Boolean,
+    ): Boolean {
+        repeat(VERIFY_ATTEMPTS) { attempt ->
+            if (attempt > 0) delay(VERIFY_BACKOFF_MS)
+            try {
+                if (verify(hash)) return true
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.w(
+                    e,
+                    "tx %s verify attempt %d/%d failed; retrying",
+                    hash,
+                    attempt + 1,
+                    VERIFY_ATTEMPTS,
+                )
+            }
+        }
+        return false
+    }
+
     private fun String?.orKnownHash(tx: SignedTransactionResult): String? =
         this ?: tx.transactionHash.takeIf { it.isNotBlank() }
+
+    private companion object {
+        const val VERIFY_ATTEMPTS = 3
+        const val VERIFY_BACKOFF_MS = 2_000L
+    }
 }

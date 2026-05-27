@@ -6,6 +6,7 @@ enum class SwapProvider {
     LIFI,
     MAYA,
     ONEINCH,
+    SWAPKIT,
     THORCHAIN,
 }
 
@@ -16,6 +17,7 @@ fun SwapProvider.getSwapProviderId(): String {
         SwapProvider.LIFI -> "LI.FI"
         SwapProvider.MAYA -> "MayaChain"
         SwapProvider.ONEINCH -> "1Inch"
+        SwapProvider.SWAPKIT -> "SwapKit"
         SwapProvider.THORCHAIN -> "THORChain"
     }
 }
@@ -30,5 +32,6 @@ fun swapProviderFromWireId(wireId: String): SwapProvider? =
         "kyber",
         "kyberswap" -> SwapProvider.KYBER
         "jupiter" -> SwapProvider.JUPITER
+        "swapkit" -> SwapProvider.SWAPKIT
         else -> null
     }

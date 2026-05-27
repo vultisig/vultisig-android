@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.THORChainSwapPayload
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
@@ -92,6 +93,27 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     from.mayachainSwapPayload != null ->
                         from.mayachainSwapPayload.let {
                             SwapPayload.MayaChain(it.toThorChainSwapPayload())
+                        }
+
+                    // EVM/Solana SwapKit round-trip via `oneinchSwapPayload` above with
+                    // `provider="swapkit"`; this branch is for non-EVM shapes only.
+                    from.swapkitSwapPayload != null ->
+                        from.swapkitSwapPayload.let { it ->
+                            SwapPayload.SwapKit(
+                                SwapKitSwapPayloadJson(
+                                    fromCoin = requireNotNull(it.fromCoin).toCoin(),
+                                    toCoin = requireNotNull(it.toCoin).toCoin(),
+                                    fromAmount = BigInteger(it.fromAmount),
+                                    toAmountDecimal = BigDecimal(it.toAmountDecimal),
+                                    txType = it.txType,
+                                    txPayload = it.txPayload,
+                                    targetAddress = it.targetAddress,
+                                    inboundAddress = it.inboundAddress,
+                                    memo = it.memo,
+                                    subProvider = it.subProvider,
+                                    swapId = it.swapId,
+                                )
+                            )
                         }
 
                     else -> null

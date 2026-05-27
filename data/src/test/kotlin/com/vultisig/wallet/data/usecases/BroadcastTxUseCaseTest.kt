@@ -22,8 +22,10 @@ import com.vultisig.wallet.data.api.models.TransactionInfo
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -103,6 +105,9 @@ class BroadcastTxUseCaseTest {
             createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
 
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        coVerify(exactly = 1) {
+            blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION)
+        }
     }
 
     @Test
@@ -130,6 +135,68 @@ class BroadcastTxUseCaseTest {
             createUseCase(blockChairApi = blockChairApi)(Chain.Bitcoin, signedTransaction())
 
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        coVerify(exactly = 1) { blockChairApi.broadcastTransaction(Chain.Bitcoin, RAW_TRANSACTION) }
+    }
+
+    @Test
+    fun `bitcoin cash broadcast recovers on second verify attempt after indexer lag`() = runTest {
+        val blockChairApi = mockk<BlockChairApi>()
+        coEvery { blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION) } throws
+            RuntimeException("fail to broadcast transaction: transaction already known")
+        coEvery { blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH) } returnsMany
+            listOf(
+                BlockChainStatusDeserialized.Error("not yet indexed"),
+                blockchairResult(blockId = -1),
+            )
+
+        val txHash =
+            createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
+
+        assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        coVerify(exactly = 1) {
+            blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION)
+        }
+        coVerify(exactly = 2) {
+            blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH)
+        }
+    }
+
+    @Test
+    fun `bitcoin cash broadcast gives up and rethrows after all verify attempts fail`() = runTest {
+        val blockChairApi = mockk<BlockChairApi>()
+        val broadcastError = RuntimeException("fail to broadcast transaction: insufficient fee")
+        coEvery { blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION) } throws
+            broadcastError
+        coEvery { blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH) } returns
+            BlockChainStatusDeserialized.Error("not indexed")
+
+        val thrown =
+            assertFailsWith<RuntimeException> {
+                createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
+            }
+        assertEquals(broadcastError, thrown)
+        coVerify(exactly = 1) {
+            blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION)
+        }
+        coVerify(exactly = 3) {
+            blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH)
+        }
+    }
+
+    @Test
+    fun `verify cancellation propagates immediately without further retries`() = runTest {
+        val blockChairApi = mockk<BlockChairApi>()
+        coEvery { blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION) } throws
+            RuntimeException("transaction already known")
+        coEvery { blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH) } throws
+            CancellationException("cancelled")
+
+        assertFailsWith<CancellationException> {
+            createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
+        }
+        coVerify(exactly = 1) {
+            blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH)
+        }
     }
 
     @Test

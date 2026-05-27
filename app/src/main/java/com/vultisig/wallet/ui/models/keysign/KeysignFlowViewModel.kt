@@ -29,6 +29,7 @@ import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.mappers.PayloadToProtoMapper
 import com.vultisig.wallet.data.mediator.MediatorService
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
@@ -203,7 +204,12 @@ constructor(
     private var transactionHistoryData = MutableStateFlow<TransactionHistoryData?>(null)
 
     private val tssKeysignType: TssKeyType
-        get() = _keysignPayload?.coin?.chain?.TssKeysignType ?: TssKeyType.ECDSA
+        get() =
+            _keysignPayload?.coin?.chain?.TssKeysignType
+                ?: customMessagePayload?.chain?.let { raw ->
+                    runCatching { Chain.fromRaw(raw).TssKeysignType }.getOrNull()
+                }
+                ?: TssKeyType.ECDSA
 
     private var discoverParticipantsJob: Job? = null
     private var resendCooldownJob: Job? = null

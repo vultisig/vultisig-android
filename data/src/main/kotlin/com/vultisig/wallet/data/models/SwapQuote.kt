@@ -17,6 +17,10 @@ sealed class SwapQuote {
         override val expiredAt: Instant,
         val data: EVMSwapQuoteJson,
         val provider: String,
+        // SwapKit routes through a sub-provider (Chainflip / NEAR / Garden). Carried on the quote —
+        // not a transient local var — so the "via <sub-provider>" label survives a quote cache hit
+        // instead of collapsing back to the generic "SwapKit". Null for 1inch / Kyber / LiFi.
+        val subProvider: String? = null,
     ) : SwapQuote()
 
     data class ThorChain(
@@ -33,6 +37,19 @@ sealed class SwapQuote {
         override val expiredAt: Instant,
         val recommendedMinTokenValue: TokenValue,
         val data: THORChainSwapQuote,
+    ) : SwapQuote()
+
+    /**
+     * SwapKit non-EVM quote (BTC / TON / ADA / TRON / SUI / ZEC). Carries a fully-formed
+     * [SwapKitSwapPayloadJson]; per-chain signers read it directly. [subProvider] drives the
+     * verify-row label.
+     */
+    data class SwapKit(
+        override val expectedDstValue: TokenValue,
+        override val fees: TokenValue,
+        override val expiredAt: Instant,
+        val data: SwapKitSwapPayloadJson,
+        val subProvider: String?,
     ) : SwapQuote()
 
     companion object {

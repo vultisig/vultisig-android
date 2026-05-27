@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultPasswordRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.VultiSignerRepository
+import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.settings.SettingsItemUiModel
@@ -162,6 +163,20 @@ internal sealed class VaultSettingsItem(
                 )
         )
 
+    /**
+     * Advanced Settings row that toggles the SwapKit aggregator feature flag. Reflects the live
+     * value from [SwapKitConfig.isFeatureEnabled]; clicking the row flips and persists the flag.
+     */
+    data class SwapKitToggle(val isEnabled: Boolean) :
+        VaultSettingsItem(
+            value =
+                SettingsItemUiModel(
+                    title = UiText.StringResource(R.string.settings_advanced_swapkit_toggle),
+                    leadingIcon = R.drawable.swap_v2,
+                    trailingSwitch = isEnabled,
+                )
+        )
+
     data class DilithiumKeygen(val isEnabled: Boolean) :
         VaultSettingsItem(
             value =
@@ -200,6 +215,7 @@ constructor(
     private val vaultDataStoreRepository: VaultDataStoreRepository,
     private val vultiSignerRepository: VultiSignerRepository,
     private val snackbarFlow: SnackbarFlow,
+    private val swapKitConfig: SwapKitConfig,
 ) : ViewModel() {
 
     val settingGroups =
@@ -234,6 +250,7 @@ constructor(
                         VaultSettingsItem.DilithiumKeygen(false),
                         VaultSettingsItem.Sign,
                         VaultSettingsItem.OnChainSecurity,
+                        VaultSettingsItem.SwapKitToggle(false),
                     ),
                 isVisible = false,
             ),
@@ -300,6 +317,28 @@ constructor(
                 }
 
             uiModel.update { it.copy(settingGroups = newItems) }
+        }
+
+        viewModelScope.launch {
+            swapKitConfig.isFeatureEnabled.collect { isEnabled ->
+                uiModel.update {
+                    it.copy(
+                        settingGroups =
+                            it.settingGroups.map { group ->
+                                group.copy(
+                                    items =
+                                        group.items.map { item ->
+                                            when (item) {
+                                                is VaultSettingsItem.SwapKitToggle ->
+                                                    item.copy(isEnabled = isEnabled)
+                                                else -> item
+                                            }
+                                        }
+                                )
+                            }
+                    )
+                }
+            }
         }
 
         viewModelScope.launch {
@@ -376,7 +415,12 @@ constructor(
             is VaultSettingsItem.Reshare -> navigateToReshareStartScreen()
             is VaultSettingsItem.DilithiumKeygen -> navigateToDilithiumKeygen()
             VaultSettingsItem.Sign -> signMessage()
+            is VaultSettingsItem.SwapKitToggle -> toggleSwapKit(item.isEnabled)
         }
+    }
+
+    private fun toggleSwapKit(currentValue: Boolean) {
+        viewModelScope.safeLaunch { swapKitConfig.setFeatureEnabled(!currentValue) }
     }
 
     private fun updateBiometricFastSignUiModel(

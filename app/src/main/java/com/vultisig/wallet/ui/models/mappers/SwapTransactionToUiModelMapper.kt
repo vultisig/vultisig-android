@@ -34,6 +34,7 @@ constructor(
                 is SwapPayload.EVM ->
                     SwapProvider.entries.find { it.getSwapProviderId() == payload.data.provider }
                         ?: error("Unknown EVM provider: ${payload.data.provider}")
+                is SwapPayload.SwapKit -> SwapProvider.SWAPKIT
             }
 
         val tokenValue =
@@ -43,7 +44,8 @@ constructor(
                 SwapProvider.LIFI -> from.dstToken
 
                 SwapProvider.ONEINCH,
-                SwapProvider.KYBER -> tokenRepository.getNativeToken(from.srcToken.chain.id)
+                SwapProvider.KYBER,
+                SwapProvider.SWAPKIT -> tokenRepository.getNativeToken(from.srcToken.chain.id)
 
                 SwapProvider.JUPITER -> from.srcToken
             }

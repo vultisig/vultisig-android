@@ -189,7 +189,21 @@ fun SecurityScannerResult.getSecurityScannerBottomSheetStyle(): SecurityScannerB
             SecurityRiskLevel.LOW -> stringResource(R.string.security_scanner_low_risk_title)
         }
 
-    val description = description ?: stringResource(R.string.security_scanner_default_description)
+    // Surface the most specific reason the scanner gave, so the sheet explains *why* it flagged
+    // the tx instead of showing a bare risk level. Order: the provider's own description, then the
+    // individual feature warnings, then the classification recommendation, falling back to the
+    // generic copy only when nothing usable is present. Guard on blank, not just null — Blockaid
+    // sometimes returns an empty (non-null) description, which `?:` would let render as an empty
+    // line (the symptom that prompted this).
+    val description =
+        description?.takeIf { it.isNotBlank() }
+            ?: warnings
+                .mapNotNull { warning -> warning.message.takeIf { it.isNotBlank() } }
+                .distinct()
+                .joinToString(separator = "\n")
+                .takeIf { it.isNotBlank() }
+            ?: recommendations.takeIf { it.isNotBlank() }
+            ?: stringResource(R.string.security_scanner_default_description)
     val (color, icon) =
         if (riskLevel == SecurityRiskLevel.CRITICAL || riskLevel == SecurityRiskLevel.HIGH) {
             Pair(Theme.v2.colors.alerts.error, R.drawable.ic_triangle_alert)

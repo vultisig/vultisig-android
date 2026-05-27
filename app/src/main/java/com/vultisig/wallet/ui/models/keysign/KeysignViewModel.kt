@@ -45,6 +45,7 @@ import com.vultisig.wallet.data.services.TransactionStatusServiceManager
 import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
+import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
 import com.vultisig.wallet.data.usecases.ApprovalConfirmationResult
 import com.vultisig.wallet.data.usecases.AwaitApprovalConfirmationUseCase
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
@@ -677,7 +678,15 @@ constructor(
     @OptIn(ExperimentalStdlibApi::class)
     private fun calculateCustomMessageSignature(keysignResp: KeysignResponse) {
         if (customMessagePayload == null) return
-        txHash.value = keysignResp.getSignature().toHexString()
+        txHash.value =
+            when (keyType) {
+                // EdDSA chains (Solana, TON, etc.) use little-endian reversed r+s
+                TssKeyType.EDDSA -> keysignResp.getSignature().toHexString()
+                // ECDSA chains use standard r+s+recoveryId (matches iOS/Extension)
+                TssKeyType.ECDSA -> keysignResp.getSignatureWithRecoveryID().toHexString()
+                // MLDSA keysign populates derSignature rather than r/s/recoveryID
+                TssKeyType.MLDSA -> keysignResp.derSignature
+            }
     }
 
     private suspend fun broadcastTransaction() {
@@ -718,8 +727,15 @@ constructor(
                     Timber.w("Approval tx %s reverted on chain %s", approveTxHash.value, chain)
                     approveTxLink.value =
                         explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
+                    // The approval was broadcast and then reverted on-chain — a terminal on-chain
+                    // failure, not a TSS/keysign failure. Land on the swap overview with a Failed
+                    // status (and the approval tx hash/link already set above) rather than the
+                    // generic "Signing Error / try again" screen, which wrongly implies a
+                    // pairing/network problem and drops the explorer link.
                     currentState.value =
-                        KeysignState.Error(R.string.swap_error_approval_failed.asUiText())
+                        KeysignState.KeysignFinished(
+                            TransactionStatus.Failed(R.string.swap_error_approval_failed.asUiText())
+                        )
                     return
                 }
             }

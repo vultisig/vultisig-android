@@ -20,6 +20,7 @@ internal class KeygenMessageFromProtoMapperImpl @Inject constructor() :
             useVultisigRelay = from.useVultisigRelay,
             libType = from.libType.toSigningLibType(),
             chains = from.chains,
+            isTssBatch = from.isTssBatch,
         )
 }
 
@@ -36,5 +37,6 @@ internal class KeygenMessageToProtoMapperImpl @Inject constructor() : KeygenMess
             useVultisigRelay = from.useVultisigRelay,
             libType = from.libType.toProto(),
             chains = from.chains,
+            isTssBatch = from.isTssBatch,
         )
 }
