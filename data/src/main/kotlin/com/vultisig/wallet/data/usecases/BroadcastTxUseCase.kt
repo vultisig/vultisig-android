@@ -157,14 +157,9 @@ constructor(
                 bittensorApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
             }
 
-            Sui ->
-                recoverIfAlreadyBroadcast(
-                    tx = tx,
-                    broadcast = {
-                        suiApi.executeTransactionBlock(tx.rawTransaction, tx.signature ?: "")
-                    },
-                    verify = { hash -> suiApi.checkStatus(hash)?.digest?.isNotBlank() == true },
-                )
+            // Sui digest is not pre-computable from the raw transaction, so transactionHash
+            // is always blank and recovery cannot work; broadcast directly.
+            Sui -> suiApi.executeTransactionBlock(tx.rawTransaction, tx.signature ?: "")
 
             Ton ->
                 recoverIfAlreadyBroadcast(
@@ -224,6 +219,10 @@ constructor(
             }
         }
 
+    // Note: if the underlying HTTP client has its own retry-on-exception policy, each outer
+    // attempt here may itself fire multiple HTTP requests (network errors), while our loop
+    // handles logical "not yet indexed" responses (which return a valid non-error HTTP status).
+    // These are distinct failure modes, so the two retry layers do not simply multiply.
     private suspend fun isAlreadyOnChain(
         hash: String,
         verify: suspend (String) -> Boolean,
@@ -234,8 +233,14 @@ constructor(
                 if (verify(hash)) return true
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
-                // treat verify failure as "not on chain yet"; continue to next retry
+            } catch (e: Exception) {
+                Timber.w(
+                    e,
+                    "tx %s verify attempt %d/%d failed; retrying",
+                    hash,
+                    attempt + 1,
+                    VERIFY_ATTEMPTS,
+                )
             }
         }
         return false

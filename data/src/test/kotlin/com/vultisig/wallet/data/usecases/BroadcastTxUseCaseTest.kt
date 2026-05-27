@@ -104,6 +104,9 @@ class BroadcastTxUseCaseTest {
             createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
 
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        coVerify(exactly = 1) {
+            blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION)
+        }
     }
 
     @Test
@@ -131,6 +134,7 @@ class BroadcastTxUseCaseTest {
             createUseCase(blockChairApi = blockChairApi)(Chain.Bitcoin, signedTransaction())
 
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        coVerify(exactly = 1) { blockChairApi.broadcastTransaction(Chain.Bitcoin, RAW_TRANSACTION) }
     }
 
     @Test
@@ -148,6 +152,9 @@ class BroadcastTxUseCaseTest {
             createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
 
         assertEquals(KNOWN_TRANSACTION_HASH, txHash)
+        coVerify(exactly = 1) {
+            blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION)
+        }
     }
 
     @Test
@@ -164,6 +171,9 @@ class BroadcastTxUseCaseTest {
                 createUseCase(blockChairApi = blockChairApi)(Chain.BitcoinCash, signedTransaction())
             }
         assertEquals(broadcastError, thrown)
+        coVerify(exactly = 1) {
+            blockChairApi.broadcastTransaction(Chain.BitcoinCash, RAW_TRANSACTION)
+        }
         coVerify(exactly = 3) {
             blockChairApi.getTsStatus(Chain.BitcoinCash, KNOWN_TRANSACTION_HASH)
         }
