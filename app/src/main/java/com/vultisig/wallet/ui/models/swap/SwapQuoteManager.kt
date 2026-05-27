@@ -311,7 +311,13 @@ constructor(
             // SwapException over the first failure, which masked sibling SwapKitError variants
             // whenever a LiFi/Thor candidate raced SwapKit and lost — the user kept seeing the
             // generic swap_error_quote_failed copy instead of the localized SwapKit message.
-            throw failures.first()
+            val first = failures.first()
+            // withTimeout surfaces a raw TimeoutCancellationException; map it into the typed
+            // SwapException hierarchy so the form renders the localized timeout copy instead of
+            // leaking a coroutine cancellation as the generic "quote failed" error.
+            throw if (first is TimeoutCancellationException)
+                SwapException.TimeOut(first.message ?: "Quote request timed out")
+            else first
         }
 
         // Rank on estimatedDstFiat alone — this represents the destination amount
