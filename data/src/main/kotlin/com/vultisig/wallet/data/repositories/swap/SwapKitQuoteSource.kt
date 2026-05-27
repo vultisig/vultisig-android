@@ -12,13 +12,18 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapQuote
+import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.TokenValue
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.Base64
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.first
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -140,19 +145,38 @@ constructor(
         //  specific quote. The DTO already carries it; the persistence wiring lands with the
         //  tx-history Phase D work.
 
-        // SwapQuoteResult.Evm is the envelope for both EVM and Solana SwapKit txTypes — Solana
-        // signers pull the base64 blob from `tx.data`, matching how JupiterQuoteSource already
-        // stages a Solana swap. The Evm-typed result is intentional, not a copy-paste.
-        return SwapQuoteResult.Evm(
-            data = buildEvmQuoteFromSwapKit(swapResponse, request.srcToken, request.dstToken, best),
-            // Sub-provider tag (Chainflip / NEAR Intents / Garden / Flashnet) — surfaced on the
-            // verify screen so the user can reason about ETA and debug routing. Prefer
-            // `swapResponse.providers[0]` (the swap call's authoritative routing) and fall back
-            // to `meta.subProvider` for forward compat.
-            subProvider =
-                swapResponse.providers.firstOrNull()?.takeIf { it.isNotBlank() }
-                    ?: swapResponse.meta.subProvider?.takeIf { it.isNotBlank() },
-        )
+        // Sub-provider tag (Chainflip / NEAR Intents / Garden / Flashnet) — surfaced on the verify
+        // screen so the user can reason about ETA and debug routing. Prefer
+        // `swapResponse.providers[0]`
+        // (the swap call's authoritative routing) and fall back to `meta.subProvider` for forward
+        // compat.
+        val subProvider =
+            swapResponse.providers.firstOrNull()?.takeIf { it.isNotBlank() }
+                ?: swapResponse.meta.subProvider?.takeIf { it.isNotBlank() }
+
+        // EVM + Solana ride the EVMSwapQuoteJson envelope (Solana signers pull the base64 blob from
+        // `tx.data`, matching how JupiterQuoteSource stages a Solana swap). PSBT (Bitcoin) and the
+        // other non-EVM txTypes can't fit that shape, so they surface as a fully-formed
+        // SwapQuote.SwapKit on the Native result for a per-chain signer to consume.
+        return when (txTypeOf(swapResponse)) {
+            TxKind.EVM,
+            TxKind.SOLANA ->
+                SwapQuoteResult.Evm(
+                    data =
+                        buildEvmQuoteFromSwapKit(
+                            swapResponse,
+                            request.srcToken,
+                            request.dstToken,
+                            best,
+                        ),
+                    subProvider = subProvider,
+                )
+            TxKind.PSBT ->
+                SwapQuoteResult.Native(
+                    buildSwapKitNativeQuote(swapResponse, request, best, subProvider)
+                )
+            TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(swapResponse.meta.txType)
+        }
     }
 
     /**
@@ -213,12 +237,14 @@ constructor(
     }
 
     /**
-     * Native-coin decimals for a SwapKit Phase-1 chain. EVM chains use 18; Solana uses 9. Only
-     * reached for chains [chainPrefix] already maps (the caller returns early otherwise).
+     * Native gas-coin decimals for a SwapKit source chain. EVM chains use 18, Solana 9, Bitcoin 8.
+     * The inbound fee is always denominated in the source chain's native coin, so it is scaled by
+     * these — not the sell token's decimals. Only reached for chains [chainPrefix] already maps.
      */
     private fun nativeDecimals(chain: Chain): Int =
         when (chain) {
             Chain.Solana -> 9
+            Chain.Bitcoin -> 8
             else -> 18
         }
 
@@ -326,8 +352,71 @@ constructor(
                         ),
                 )
             }
+            // PSBT is dispatched to buildSwapKitNativeQuote before reaching here; the arm keeps the
+            // `when` exhaustive and refuses anything that slips through.
+            TxKind.PSBT,
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
+    }
+
+    /**
+     * Wrap a non-EVM SwapKit route (Phase 2: Bitcoin / PSBT) into a fully-formed
+     * [SwapQuote.SwapKit] for a per-chain signer to consume. The unsigned-tx bytes (base64 PSBT)
+     * land in [SwapKitSwapPayloadJson.txPayload]; the inbound fee is the source chain's native-unit
+     * deposit cost (same surface as the EVM/Solana path). The signing side is wired separately —
+     * until it (and the provider table) enable SwapKit on these chains, this path isn't reached in
+     * production; it's exercised by unit tests so the data contract is pinned ahead of the signer.
+     */
+    private fun buildSwapKitNativeQuote(
+        response: SwapKitSwapResponseJson,
+        request: SwapQuoteRequest,
+        route: SwapKitRoute,
+        subProvider: String?,
+    ): SwapQuote.SwapKit {
+        val srcToken = request.srcToken
+        val dstToken = request.dstToken
+        val toAmountDecimal =
+            response.expectedBuyAmount?.let { runCatching { BigDecimal(it) }.getOrNull() }
+                ?: throw SwapKitError.MalformedAmount(raw = response.expectedBuyAmount.orEmpty())
+        val payload =
+            SwapKitSwapPayloadJson(
+                fromCoin = srcToken,
+                toCoin = dstToken,
+                fromAmount = request.tokenValue.value,
+                toAmountDecimal = toAmountDecimal,
+                txType = response.meta.txType,
+                txPayload = decodeBinaryTx(response.tx),
+                targetAddress = response.targetAddress.orEmpty(),
+                memo = null,
+                subProvider = subProvider.orEmpty(),
+                swapId = response.swapId.orEmpty(),
+            )
+        return SwapQuote.SwapKit(
+            expectedDstValue =
+                TokenValue(
+                    toAmountDecimal.movePointRight(dstToken.decimal).toBigInteger(),
+                    dstToken,
+                ),
+            // Source-chain native deposit fee (BTC 8dp), same surface as the EVM/Solana inbound
+            // fee.
+            fees = TokenValue(inboundFeeRawUnits(srcToken, route), srcToken),
+            expiredAt = Clock.System.now() + expiredAfter,
+            data = payload,
+            subProvider = subProvider,
+        )
+    }
+
+    /**
+     * Decode a base64 unsigned-tx blob (PSBT today; PTB / CBOR as more chains land) from `tx` into
+     * raw bytes for [SwapKitSwapPayloadJson.txPayload]. V3 ships these as a top-level base64
+     * [JsonPrimitive].
+     */
+    private fun decodeBinaryTx(element: JsonElement): ByteArray {
+        val base64 =
+            (element as? JsonPrimitive)?.takeIf { it.isString }?.content
+                ?: throw SwapKitError.Decoding("SwapKit non-EVM tx is not a base64 string")
+        return runCatching { Base64.getDecoder().decode(base64) }
+            .getOrElse { throw SwapKitError.Decoding("SwapKit non-EVM tx is not valid base64", it) }
     }
 
     /**
@@ -340,6 +429,7 @@ constructor(
             "evm" -> TxKind.EVM
             "solana",
             "serialized_base64" -> TxKind.SOLANA
+            "psbt" -> TxKind.PSBT
             else -> TxKind.UNSUPPORTED
         }
 
@@ -372,6 +462,7 @@ constructor(
     private enum class TxKind {
         EVM,
         SOLANA,
+        PSBT,
         UNSUPPORTED,
     }
 
@@ -423,6 +514,7 @@ constructor(
             Chain.Base -> "BASE"
             Chain.Polygon -> "POL"
             Chain.Solana -> "SOL"
+            Chain.Bitcoin -> "BTC"
             else -> null
         }
 
