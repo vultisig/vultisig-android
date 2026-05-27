@@ -683,8 +683,9 @@ constructor(
                 // EdDSA chains (Solana, TON, etc.) use little-endian reversed r+s
                 TssKeyType.EDDSA -> keysignResp.getSignature().toHexString()
                 // ECDSA chains use standard r+s+recoveryId (matches iOS/Extension)
-                TssKeyType.ECDSA,
-                TssKeyType.MLDSA -> keysignResp.getSignatureWithRecoveryID().toHexString()
+                TssKeyType.ECDSA -> keysignResp.getSignatureWithRecoveryID().toHexString()
+                // MLDSA keysign populates derSignature rather than r/s/recoveryID
+                TssKeyType.MLDSA -> keysignResp.derSignature
             }
     }
 

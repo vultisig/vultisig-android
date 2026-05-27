@@ -24,8 +24,8 @@ import org.junit.jupiter.api.Test
 class CustomMessageSignatureFormatTest {
 
     // Realistic 32-byte r / s / recoveryId hex strings (secp256k1 / ed25519 shape)
-    private val R_HEX = "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9"
-    private val S_HEX = "b1c2d3e4f5061718192a3b4c5d6e7f80b1c2d3e4f5061718192a3b4c5d6e7f8"
+    private val R_HEX = "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"
+    private val S_HEX = "b1c2d3e4f5061718192a3b4c5d6e7f80b1c2d3e4f5061718192a3b4c5d6e7f80"
     private val RECOVERY_ID_HEX = "00"
 
     // Same byte logic as TssExtensions.getSignatureWithRecoveryID()
