@@ -438,6 +438,40 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
+    fun `fetch falls back to route fees when the swap response omits the inbound entry`() =
+        runTest {
+            // A real /v3/swap reply that carries no fees[] for an EVM route must not silently read
+            // zero on the verify screen — fall back to the inbound fee from the /v3/quote route.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r",
+                                providers = listOf("CHAINFLIP"),
+                                expectedBuy = "42",
+                                fees =
+                                    listOf(
+                                        SwapKitFee(
+                                            type = "inbound",
+                                            chain = "ETH",
+                                            amount = "0.0002",
+                                        )
+                                    ),
+                            )
+                        )
+                )
+            coEvery { api.swap(any()) } returns evmSwapResponse(fees = emptyList())
+
+            val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+            // 0.0002 ETH * 10^18 = 200000000000000 raw wei, sourced from the route fee since the
+            // swap response carried none.
+            assertEquals("200000000000000", result.data.tx.swapFee)
+        }
+
+    @Test
     fun `fetch throws MalformedAmount when expectedBuyAmount is missing`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
@@ -832,8 +866,18 @@ internal class SwapKitQuoteSourceTest {
             affiliateBps = affiliateBps,
         )
 
-    private fun route(routeId: String, providers: List<String>, expectedBuy: String? = "1") =
-        SwapKitRoute(routeId = routeId, providers = providers, expectedBuyAmount = expectedBuy)
+    private fun route(
+        routeId: String,
+        providers: List<String>,
+        expectedBuy: String? = "1",
+        fees: List<SwapKitFee> = emptyList(),
+    ) =
+        SwapKitRoute(
+            routeId = routeId,
+            providers = providers,
+            expectedBuyAmount = expectedBuy,
+            fees = fees,
+        )
 
     private fun evmSwapResponse(
         gas: String? = "200000",

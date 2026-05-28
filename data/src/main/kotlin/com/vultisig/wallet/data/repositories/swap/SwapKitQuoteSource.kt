@@ -164,11 +164,18 @@ constructor(
             TxKind.SOLANA ->
                 SwapQuoteResult.Evm(
                     data =
-                        buildEvmQuoteFromSwapKit(swapResponse, request.srcToken, request.dstToken),
+                        buildEvmQuoteFromSwapKit(
+                            swapResponse,
+                            request.srcToken,
+                            request.dstToken,
+                            best.fees,
+                        ),
                     subProvider = subProvider,
                 )
             TxKind.PSBT ->
-                SwapQuoteResult.Native(buildSwapKitNativeQuote(swapResponse, request, subProvider))
+                SwapQuoteResult.Native(
+                    buildSwapKitNativeQuote(swapResponse, request, subProvider, best.fees)
+                )
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(swapResponse.meta.txType)
         }
     }
@@ -206,21 +213,26 @@ constructor(
     }
 
     /**
-     * Extract the source-chain inbound fee from the `/v3/swap` response's `fees[]` — the canonical
-     * SwapKit-attributed cost of executing the deposit on the source chain. Read from the swap
-     * response (not the `/v3/quote` route) so a fee SwapKit reprices on the refreshed `/v3/swap`
-     * reply stays fresh, matching iOS' `SwapKitService.inboundFee(from response)`. Mirrors iOS so
-     * the displayed Network Fee reconciles against the actual on-chain debit (especially on Solana
-     * and cross-chain Chainflip / NEAR routes where the EVM gas envelope would otherwise read
-     * zero). Returns `0` when the entry is absent so the UI surfaces "—" rather than blocking the
-     * quote.
+     * Extract the source-chain inbound fee — the canonical SwapKit-attributed cost of executing the
+     * deposit on the source chain. Prefer the `/v3/swap` response's `fees[]` (iOS parity:
+     * `SwapKitService.inboundFee(from response)`, so a fee SwapKit reprices on the refreshed
+     * `/v3/swap` reply stays fresh), then fall back to the `/v3/quote` route's `fees[]` when the
+     * swap reply omits the inbound entry — without the fallback an EVM/Solana route whose response
+     * carries no `fees[]` would silently read zero on the verify screen. Used on Solana and
+     * cross-chain Chainflip / NEAR routes where the EVM gas envelope would otherwise read zero.
+     * Returns `0` only when neither source has the entry, so the UI surfaces "—" rather than
+     * blocking the quote.
      */
-    private fun inboundFeeRawUnits(srcToken: Coin, fees: List<SwapKitFee>): BigInteger {
+    private fun inboundFeeRawUnits(
+        srcToken: Coin,
+        fees: List<SwapKitFee>,
+        fallbackFees: List<SwapKitFee> = emptyList(),
+    ): BigInteger {
         val prefix = chainPrefix(srcToken.chain) ?: return BigInteger.ZERO
         val inbound =
-            fees.firstOrNull { fee ->
-                fee.type?.equals("inbound", ignoreCase = true) == true && fee.chain == prefix
-            } ?: return BigInteger.ZERO
+            findInboundFee(fees, prefix)
+                ?: findInboundFee(fallbackFees, prefix)
+                ?: return BigInteger.ZERO
         val amount =
             inbound.amount?.let { runCatching { BigDecimal(it) }.getOrNull() }
                 ?: return BigInteger.ZERO
@@ -231,6 +243,11 @@ constructor(
         // route.
         return amount.movePointRight(nativeDecimals(srcToken.chain)).toBigInteger()
     }
+
+    private fun findInboundFee(fees: List<SwapKitFee>, prefix: String): SwapKitFee? =
+        fees.firstOrNull { fee ->
+            fee.type?.equals("inbound", ignoreCase = true) == true && fee.chain == prefix
+        }
 
     /**
      * Native gas-coin decimals for a SwapKit source chain. EVM chains use 18, Solana 9, Bitcoin 8.
@@ -257,6 +274,7 @@ constructor(
         response: SwapKitSwapResponseJson,
         srcToken: Coin,
         dstToken: Coin,
+        routeFees: List<SwapKitFee>,
     ): EVMSwapQuoteJson {
         // SwapKit V3 reports `expectedBuyAmount` as a human-readable decimal string ("42.5"
         // USDC) per the docs. Every other Android quote source (1inch / Kyber / LiFi / Jupiter)
@@ -269,7 +287,7 @@ constructor(
         // is SwapKitService.inboundFee). Embedded in `swapFee` with `swapFeeTokenContract = ""`
         // (the native-coin sentinel resolveSwapFee recognises) so the consumer reads it the same
         // way Kyber/Jupiter quote sources surface their per-leg fees.
-        val inboundFee = inboundFeeRawUnits(srcToken, response.fees).toString()
+        val inboundFee = inboundFeeRawUnits(srcToken, response.fees, routeFees).toString()
         return when (txTypeOf(response)) {
             TxKind.EVM -> {
                 val evm = decode<SwapKitEvmTx>(response.tx, "evm")
@@ -366,6 +384,7 @@ constructor(
         response: SwapKitSwapResponseJson,
         request: SwapQuoteRequest,
         subProvider: String?,
+        routeFees: List<SwapKitFee>,
     ): SwapQuote.SwapKit {
         val srcToken = request.srcToken
         val dstToken = request.dstToken
@@ -396,7 +415,7 @@ constructor(
                 ),
             // Source-chain native deposit fee (BTC 8dp), same surface as the EVM/Solana inbound
             // fee.
-            fees = TokenValue(inboundFeeRawUnits(srcToken, response.fees), srcToken),
+            fees = TokenValue(inboundFeeRawUnits(srcToken, response.fees, routeFees), srcToken),
             expiredAt = Clock.System.now() + expiredAfter,
             data = payload,
             subProvider = subProvider,
