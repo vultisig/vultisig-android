@@ -60,4 +60,9 @@ data class SwapKitSwapPayloadJson(
         result = 31 * result + swapId.hashCode()
         return result
     }
+
+    companion object {
+        /** `meta.txType` discriminator for the Bitcoin PSBT signing path. */
+        const val TX_TYPE_PSBT = "PSBT"
+    }
 }
