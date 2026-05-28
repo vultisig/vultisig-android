@@ -473,10 +473,41 @@ constructor(
                                 )
                             }
 
-                            // Per-chain signers wire this branch as they ship; no quote source
-                            // emits SwapQuote.SwapKit yet.
-                            is SwapQuote.SwapKit ->
-                                error("No SwapKit signer wired for txType=${quote.data.txType}")
+                            is SwapQuote.SwapKit -> {
+                                // Only BTC PSBT is wired today; other SwapKit txTypes (TON / ADA /
+                                // SUI / TRON) land with their per-chain signers. SwapProviderTable
+                                // does not yet offer SwapKit on Bitcoin, so this branch is reached
+                                // only once enablement ships — guarded loudly until then.
+                                require(quote.data.txType == SWAPKIT_PSBT_TX_TYPE) {
+                                    "Unsupported SwapKit txType for swap: ${quote.data.txType}"
+                                }
+                                val specificAndUtxo =
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken = srcToken,
+                                        srcAddress = srcAddress,
+                                        gasFee = gasFee,
+                                    )
+                                RegularSwapTransaction(
+                                    id = UUID.randomUUID().toString(),
+                                    vaultId = vaultId,
+                                    srcToken = srcToken,
+                                    srcTokenValue = srcTokenValue,
+                                    dstToken = dstToken,
+                                    // SwapKit's source-chain deposit address — where the BTC the
+                                    // PSBT spends is sent. Signing is driven entirely by the PSBT
+                                    // bytes carried on the payload, not by this blockChainSpecific.
+                                    dstAddress = quote.data.targetAddress,
+                                    expectedDstTokenValue = dstTokenValue,
+                                    blockChainSpecific = specificAndUtxo,
+                                    estimatedFees = quote.fees,
+                                    gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
+                                    memo = quote.data.memo,
+                                    isApprovalRequired = false,
+                                    gasFeeFiatValue =
+                                        estimatedNetworkFeeFiatValue.value ?: gasFeeFiatValue,
+                                    payload = SwapPayload.SwapKit(quote.data),
+                                )
+                            }
 
                             is SwapQuote.OneInch -> {
                                 val dstAddress = quote.data.tx.to
@@ -1229,6 +1260,9 @@ constructor(
 }
 
 private const val MAX_DISPLAY_DECIMALS = 8
+
+// SwapKit `meta.txType` for the only non-EVM SwapKit swap wired today (Bitcoin PSBT).
+private const val SWAPKIT_PSBT_TX_TYPE = "PSBT"
 
 internal fun BigDecimal.formatFlippedAmount(tokenDecimals: Int? = null): String =
     setScale(

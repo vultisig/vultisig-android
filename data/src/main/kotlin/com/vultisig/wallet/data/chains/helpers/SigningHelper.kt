@@ -26,6 +26,8 @@ import wallet.core.jni.EthereumAbi
 
 object SigningHelper {
     private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
+    // SwapKit `meta.txType` for the Bitcoin PSBT signer dispatch.
+    private const val PSBT_TX_TYPE = "PSBT"
 
     @OptIn(ExperimentalStdlibApi::class)
     fun getKeysignMessages(messagePayload: CustomMessagePayload): List<String> {
@@ -92,6 +94,18 @@ object SigningHelper {
                                 .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
 
                     messages += message
+                }
+                is SwapPayload.SwapKit -> {
+                    require(swapPayload.data.txType == PSBT_TX_TYPE) {
+                        "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
+                    }
+                    messages +=
+                        SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
+                            .getPreSignedImageHash(
+                                psbtBytes = swapPayload.data.txPayload,
+                                targetAddress = swapPayload.data.targetAddress,
+                                fromAmount = swapPayload.data.fromAmount,
+                            )
                 }
                 else -> Unit
             }
@@ -273,6 +287,13 @@ object SigningHelper {
                             )
                 }
 
+                is SwapPayload.SwapKit -> {
+                    require(swapPayload.data.txType == PSBT_TX_TYPE) {
+                        "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
+                    }
+                    return SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
+                        .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                }
                 else -> {}
             }
         } else if (swapPayload is SwapPayload.MayaChain && !swapPayload.srcToken.isNativeToken) {
