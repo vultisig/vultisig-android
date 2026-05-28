@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.AccountsRepository
+import com.vultisig.wallet.data.repositories.AddressBalancesUpdate
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
 import com.vultisig.wallet.data.repositories.CryptoConnectionTypeRepository
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
@@ -50,6 +51,7 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import java.math.BigDecimal
 import java.math.BigInteger
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -212,26 +214,28 @@ internal class VaultAccountsViewModelTest {
             vm.uiState.value.cryptoConnectionType shouldBe CryptoConnectionType.Wallet
         }
 
-    /** Verifies refreshData re-invokes accountsRepository with isRefresh=true. */
+    /**
+     * Verifies refreshData re-triggers a balance reload via accountsRepository.loadAddressBalances.
+     */
     @Test
-    fun `refreshData re-invokes accountsRepository with isRefresh true`() =
+    fun `refreshData re-invokes loadAddressBalances`() =
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
 
             val vm = createViewModel()
             advanceUntilIdle()
-            // Drop any loadAddresses calls made during init; only count the refresh call.
+            // Drop any loadAddressBalances calls made during init; only count the refresh call.
             clearMocks(accountsRepository, answers = false)
 
             vm.refreshData()
             advanceUntilIdle()
 
-            verify(exactly = 1) { accountsRepository.loadAddresses("vault-1", true) }
+            verify(exactly = 1) { accountsRepository.loadAddressBalances("vault-1") }
         }
 
     /**
-     * Verifies refreshData drives `loadAddresses` to completion via the .catch block when the
+     * Verifies refreshData drives the balance load to completion via the .catch block when the
      * underlying flow throws, leaving `isRefreshing` cleared. The verify guards against a no-op
      * implementation passing the assertion vacuously (default `isRefreshing` is already false).
      */
@@ -240,28 +244,81 @@ internal class VaultAccountsViewModelTest {
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
-            every { accountsRepository.loadAddresses("vault-1", true) } returns
+            every { accountsRepository.loadAddressBalances("vault-1") } returns
                 flow { throw RuntimeException("Balance load failed") }
 
             val vm = createViewModel()
             advanceUntilIdle()
             // Sanity: init must not leave the spinner running.
             vm.uiState.value.isRefreshing.shouldBeFalse()
+            // Drop any loadAddressBalances calls made during init; only count the refresh call.
+            clearMocks(accountsRepository, answers = false)
 
             vm.refreshData()
             advanceUntilIdle()
 
             vm.uiState.value.isRefreshing.shouldBeFalse()
-            verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1", true) }
+            verify(exactly = 1) { accountsRepository.loadAddressBalances("vault-1") }
         }
 
     /**
-     * Verifies that when `accountsRepository.loadAddresses` emits a non-empty list of `Address`
-     * during init, the mapped `AccountUiModel`s appear in `uiState.accounts` and preserve the
-     * underlying address/chain identity from the source `Address`.
+     * Verifies the pull-to-refresh spinner stays up until the whole refresh completes (matching
+     * iOS/Windows) rather than clearing on the cached snapshot that loadAddressBalances emits
+     * first. The spinner must remain while only the cached (isComplete = false) emission has been
+     * seen, and clear only once the terminal (isComplete = true) emission arrives.
      */
     @Test
-    fun `accounts from loadAddresses are surfaced in uiState`() =
+    fun `refresh spinner stays up until load completes`() =
+        runTest(testDispatcher) {
+            val address = buildTestAddress(chain = Chain.Ethereum, address = "0xabc")
+            val completeGate = CompletableDeferred<Unit>()
+            every { accountsRepository.loadAddressBalances("vault-1") } returns
+                flow {
+                    emit(AddressBalancesUpdate(listOf(address), isComplete = false))
+                    completeGate.await()
+                    emit(AddressBalancesUpdate(listOf(address), isComplete = true))
+                }
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            // Stub the mappers so rendering the cached snapshot succeeds; an unstubbed mapper would
+            // throw and trip the .catch in loadAccounts, clearing the spinner for the wrong reason.
+            coEvery { addressToUiModelMapper(any()) } returns
+                AccountUiModel(
+                    model = address,
+                    chainName = Chain.Ethereum.raw,
+                    logo = 0,
+                    address = address.address,
+                    nativeTokenAmount = "1.0",
+                    fiatAmount = "$10.00",
+                    assetsSize = address.accounts.size,
+                    nativeTokenTicker = "ETH",
+                )
+            coEvery { fiatValueToStringMapper(any(), any()) } returns "$10.00"
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.refreshData()
+            advanceUntilIdle()
+
+            // Only the cached snapshot has been emitted; the network balances are still loading,
+            // so the spinner must still be up.
+            vm.uiState.value.isRefreshing.shouldBeTrue()
+
+            completeGate.complete(Unit)
+            advanceUntilIdle()
+
+            // Terminal emission arrived — the refresh is done and the spinner clears.
+            vm.uiState.value.isRefreshing.shouldBeFalse()
+        }
+
+    /**
+     * Verifies that when `accountsRepository.loadAddressBalances` emits a non-empty list of
+     * `Address` during init, the mapped `AccountUiModel`s appear in `uiState.accounts` and preserve
+     * the underlying address/chain identity from the source `Address`.
+     */
+    @Test
+    fun `accounts from loadAddressBalances are surfaced in uiState`() =
         runTest(testDispatcher) {
             val testAddress = buildTestAddress(chain = Chain.Ethereum, address = "0xabc")
             val mappedUiModel =
@@ -278,8 +335,8 @@ internal class VaultAccountsViewModelTest {
 
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
-            every { accountsRepository.loadAddresses("vault-1", any()) } returns
-                flowOf(listOf(testAddress))
+            every { accountsRepository.loadAddressBalances("vault-1") } returns
+                flowOf(AddressBalancesUpdate(listOf(testAddress), isComplete = true))
             coEvery { addressToUiModelMapper(any()) } returns mappedUiModel
             coEvery { fiatValueToStringMapper(any(), any()) } returns "$10.00"
 
@@ -296,19 +353,19 @@ internal class VaultAccountsViewModelTest {
         }
 
     /**
-     * Verifies that an exception thrown by `accountsRepository.loadAddresses` during the init load
-     * path is caught (via the `.catch` block in `loadAccounts`) so the ViewModel does not crash,
-     * `accounts` stays empty, and `isRefreshing` remains cleared. Per-chain failures are already
-     * swallowed inside `AccountsRepositoryImpl`, so the only externally observable error channel
-     * from a flow consumer's perspective is a whole-flow throwable; this test exercises that
-     * pathway from the init side (mirrors the refresh-side test above).
+     * Verifies that an exception thrown by `accountsRepository.loadAddressBalances` during the init
+     * load path is caught (via the `.catch` block in `loadAccounts`) so the ViewModel does not
+     * crash, `accounts` stays empty, and `isRefreshing` remains cleared. Per-chain failures are
+     * already swallowed inside `AccountsRepositoryImpl`, so the only externally observable error
+     * channel from a flow consumer's perspective is a whole-flow throwable; this test exercises
+     * that pathway from the init side (mirrors the refresh-side test above).
      */
     @Test
-    fun `init load swallows loadAddresses failure without crashing`() =
+    fun `init load swallows loadAddressBalances failure without crashing`() =
         runTest(testDispatcher) {
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
             coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
-            every { accountsRepository.loadAddresses("vault-1", any()) } returns
+            every { accountsRepository.loadAddressBalances("vault-1") } returns
                 flow { throw RuntimeException("Per-chain balance load failed") }
 
             val vm = createViewModel()
@@ -318,7 +375,7 @@ internal class VaultAccountsViewModelTest {
             // populated with stale or partial data.
             vm.uiState.value.isRefreshing.shouldBeFalse()
             vm.uiState.value.accounts.isEmpty().shouldBeTrue()
-            verify(atLeast = 1) { accountsRepository.loadAddresses("vault-1", any()) }
+            verify(atLeast = 1) { accountsRepository.loadAddressBalances("vault-1") }
         }
 
     /** Verifies dismissBuyVultBanner persists the dismissed flag. */
