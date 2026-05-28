@@ -944,6 +944,7 @@
     <string name="address_auto_filled">Endereço %1$s (preenchido automaticamente)</string>
     <string name="generated_memo">Memorando gerado:</string>
     <string name="amount_to_withdraw">Valor a levantar (Saldo: %1$s)</string>
+    <string name="deposit_no_secured_assets">Não tens ativos garantidos para levantar neste cofre</string>
     <string name="mint_secured_asset_secure">Ativo garantido Mint (SECURE+)</string>
     <string name="target_asset">Ativo alvo: %1$s-%2$s</string>
     <string name="thor_address">Endereço THORChain</string>

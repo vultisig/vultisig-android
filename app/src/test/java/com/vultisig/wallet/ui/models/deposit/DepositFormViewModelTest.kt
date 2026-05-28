@@ -467,4 +467,33 @@ internal class DepositFormViewModelTest {
                 (errorText as UiText.FormattedText).resId,
             )
         }
+
+    @Test
+    fun `WithdrawSecuredAsset with no secured assets marks loaded with empty list`() = runTest {
+        val vm = buildViewModel()
+        coEvery { accountsRepository.loadAddress("vault1", Chain.ThorChain) } returns
+            flowOf(
+                Address(
+                    chain = Chain.ThorChain,
+                    address = "thor1somevalidaddress",
+                    accounts =
+                        listOf(
+                            Account(
+                                token = Coins.ThorChain.RUNE,
+                                tokenValue = null,
+                                fiatValue = null,
+                                price = null,
+                            )
+                        ),
+                )
+            )
+
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+        advanceUntilIdle()
+        vm.selectDepositOption(DepositOption.WithdrawSecuredAsset)
+        advanceUntilIdle()
+
+        assertTrue(vm.state.value.securedAssetsLoaded)
+        assertTrue(vm.state.value.availableSecuredAssets.isEmpty())
+    }
 }

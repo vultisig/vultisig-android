@@ -177,6 +177,7 @@ internal data class DepositFormUiModel(
     val unstakeUnlocksInText: UiText? = null,
     val rewardsAmount: String? = null,
     val availableSecuredAssets: List<TokenWithdrawSecureAsset> = emptyList(),
+    val securedAssetsLoaded: Boolean = false,
     val selectedSecuredAsset: TokenWithdrawSecureAsset =
         availableSecuredAssets.firstOrNull() ?: TokenWithdrawSecureAsset.EMPTY,
     val bondableAssets: List<String> = emptyList(),
@@ -1107,16 +1108,15 @@ constructor(
                         tokenValue = it.tokenValue,
                     )
                 }
-        if (availableSecuredAssets.isNotEmpty()) {
-            val selectedSecuredAsset = availableSecuredAssets.first()
-            val balance = selectedSecuredAsset.tokenValue?.let(mapTokenValueToStringWithUnit)
-            _state.update {
-                it.copy(
-                    availableSecuredAssets = availableSecuredAssets,
-                    selectedSecuredAsset = selectedSecuredAsset,
-                    balance = balance?.asUiText() ?: UiText.Empty,
-                )
-            }
+        val selectedSecuredAsset = availableSecuredAssets.firstOrNull()
+        val balance = selectedSecuredAsset?.tokenValue?.let(mapTokenValueToStringWithUnit)
+        _state.update {
+            it.copy(
+                availableSecuredAssets = availableSecuredAssets,
+                securedAssetsLoaded = true,
+                selectedSecuredAsset = selectedSecuredAsset ?: TokenWithdrawSecureAsset.EMPTY,
+                balance = balance?.asUiText() ?: UiText.Empty,
+            )
         }
     }
 
