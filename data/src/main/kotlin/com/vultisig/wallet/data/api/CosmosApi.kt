@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.utils.CosmosThorChainResponseSerializer
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -94,7 +93,7 @@ internal class CosmosApiImp(
 ) : CosmosApi {
     override suspend fun getBalance(address: String): List<CosmosBalance> {
         val response = httpClient.get("$rpcEndpoint/cosmos/bank/v1beta1/balances/$address")
-        val resp = response.body<CosmosBalanceResponse>()
+        val resp = response.bodyOrThrow<CosmosBalanceResponse>()
         return resp.balances ?: emptyList()
     }
 
@@ -145,7 +144,7 @@ internal class CosmosApiImp(
             amount =
                 httpClient
                     .get("$rpcEndpoint/cosmwasm/wasm/v1/contract/$contractAddress/smart/$payload")
-                    .body<JsonObject>()["data"]
+                    .bodyOrThrow<JsonObject>()["data"]
                     ?.jsonObject
                     ?.get("balance")
                     ?.jsonPrimitive
@@ -159,7 +158,7 @@ internal class CosmosApiImp(
         val hash = contractAddress.removePrefix("ibc/")
         return httpClient
             .get("$rpcEndpoint/ibc/apps/transfer/v1/denom_traces/$hash")
-            .body<CosmosIbcDenomTraceJson>()
+            .bodyOrThrow<CosmosIbcDenomTraceJson>()
             .denomTrace!!
     }
 
@@ -188,7 +187,7 @@ internal class CosmosApiImp(
     override suspend fun getLatestBlock(): String {
         return httpClient
             .get("$rpcEndpoint/cosmos/base/tendermint/v1beta1/blocks/latest")
-            .body<JsonObject>()
+            .bodyOrThrow<JsonObject>()
             .jsonObject["block"]
             ?.jsonObject
             ?.get("header")

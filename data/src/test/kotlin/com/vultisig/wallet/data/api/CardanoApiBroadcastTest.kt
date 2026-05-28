@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.testutils.MockHttpClient
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
@@ -19,8 +20,13 @@ import org.junit.jupiter.api.Test
  */
 class CardanoApiBroadcastTest {
 
+    private val json = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = false
+    }
+
     private fun newApi(status: HttpStatusCode, body: String): CardanoApi =
-        CardanoApiImpl(httpClient = MockHttpClient.respondingWith(status, body))
+        CardanoApiImpl(httpClient = MockHttpClient.respondingWith(status, body), json = json)
 
     @Test
     fun `broadcastTransaction returns transaction id on success`() = runTest {

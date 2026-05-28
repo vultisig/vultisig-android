@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.post
@@ -71,7 +70,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                     contentType(ContentType.Application.Json)
                     setBody(tx)
                 }
-            val response = httpResponse.body<TronBroadcastTxResponseJson>()
+            val response = httpResponse.bodyOrThrow<TronBroadcastTxResponseJson>()
             if (response.code == NOT_ENOUGH_EFFECTIVE_CONNECTION_ERROR_CODE) {
                 Timber.d("Tron broadcast NOT_ENOUGH_EFFECTIVE_CONNECTION, attempt %d", attempt + 1)
                 if (attempt < MAX_BROADCAST_RETRIES - 1) {
@@ -89,7 +88,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
     override suspend fun getSpecific() =
         httpClient
             .post(tronGrid) { url { path("tron", "wallet", "getnowblock") } }
-            .body<TronSpecificBlockJson>()
+            .bodyOrThrow<TronSpecificBlockJson>()
 
     override suspend fun getTriggerConstantContractFee(
         ownerAddressBase58: String,
@@ -126,7 +125,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
     override suspend fun getBalance(coin: Coin): BigInteger {
         try {
             val response = httpClient.get("$tronGrid/v1/accounts/${coin.address}")
-            val content = response.body<TronBalanceResponseJson>()
+            val content = response.bodyOrThrow<TronBalanceResponseJson>()
             val account = content.tronBalanceResponseData.firstOrNull() ?: return BigInteger.ZERO
 
             return if (coin.isNativeToken) {
@@ -182,7 +181,7 @@ internal class TronApiImpl @Inject constructor(private val httpClient: HttpClien
                     url { path("tron", "walletsolidity", "gettransactionbyid") }
                     setBody(mapOf("value" to txHash))
                 }
-                .body<TronTransactionStatusResponse?>()
+                .bodyOrThrow<TronTransactionStatusResponse?>()
                 ?.takeIf { it.txId != null }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
