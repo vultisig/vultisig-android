@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitEvmTx
+import com.vultisig.wallet.data.api.models.quotes.SwapKitFee
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitRoute
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSolanaTx
@@ -12,13 +13,18 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapQuote
+import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
 import com.vultisig.wallet.data.models.TokenValue
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.Base64
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.first
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -140,19 +146,31 @@ constructor(
         //  specific quote. The DTO already carries it; the persistence wiring lands with the
         //  tx-history Phase D work.
 
-        // SwapQuoteResult.Evm is the envelope for both EVM and Solana SwapKit txTypes — Solana
-        // signers pull the base64 blob from `tx.data`, matching how JupiterQuoteSource already
-        // stages a Solana swap. The Evm-typed result is intentional, not a copy-paste.
-        return SwapQuoteResult.Evm(
-            data = buildEvmQuoteFromSwapKit(swapResponse, request.srcToken, request.dstToken, best),
-            // Sub-provider tag (Chainflip / NEAR Intents / Garden / Flashnet) — surfaced on the
-            // verify screen so the user can reason about ETA and debug routing. Prefer
-            // `swapResponse.providers[0]` (the swap call's authoritative routing) and fall back
-            // to `meta.subProvider` for forward compat.
-            subProvider =
-                swapResponse.providers.firstOrNull()?.takeIf { it.isNotBlank() }
-                    ?: swapResponse.meta.subProvider?.takeIf { it.isNotBlank() },
-        )
+        // Sub-provider tag (Chainflip / NEAR Intents / Garden / Flashnet) — surfaced on the verify
+        // screen so the user can reason about ETA and debug routing. Prefer
+        // `swapResponse.providers[0]`
+        // (the swap call's authoritative routing) and fall back to `meta.subProvider` for forward
+        // compat.
+        val subProvider =
+            swapResponse.providers.firstOrNull()?.takeIf { it.isNotBlank() }
+                ?: swapResponse.meta.subProvider?.takeIf { it.isNotBlank() }
+
+        // EVM + Solana ride the EVMSwapQuoteJson envelope (Solana signers pull the base64 blob from
+        // `tx.data`, matching how JupiterQuoteSource stages a Solana swap). PSBT (Bitcoin) and the
+        // other non-EVM txTypes can't fit that shape, so they surface as a fully-formed
+        // SwapQuote.SwapKit on the Native result for a per-chain signer to consume.
+        return when (txTypeOf(swapResponse)) {
+            TxKind.EVM,
+            TxKind.SOLANA ->
+                SwapQuoteResult.Evm(
+                    data =
+                        buildEvmQuoteFromSwapKit(swapResponse, request.srcToken, request.dstToken),
+                    subProvider = subProvider,
+                )
+            TxKind.PSBT ->
+                SwapQuoteResult.Native(buildSwapKitNativeQuote(swapResponse, request, subProvider))
+            TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(swapResponse.meta.txType)
+        }
     }
 
     /**
@@ -188,17 +206,19 @@ constructor(
     }
 
     /**
-     * Extract the source-chain inbound fee from `route.fees[]` — the canonical SwapKit-attributed
-     * cost of executing the deposit on the source chain. Mirrors iOS' `SwapKitService.inboundFee`
-     * so the displayed Network Fee reconciles against the actual on-chain debit (especially on
-     * Solana and cross-chain Chainflip / NEAR routes where the EVM gas envelope would otherwise
-     * read zero). Returns `0` when the entry is absent so the UI surfaces "—" rather than blocking
-     * the quote.
+     * Extract the source-chain inbound fee from the `/v3/swap` response's `fees[]` — the canonical
+     * SwapKit-attributed cost of executing the deposit on the source chain. Read from the swap
+     * response (not the `/v3/quote` route) so a fee SwapKit reprices on the refreshed `/v3/swap`
+     * reply stays fresh, matching iOS' `SwapKitService.inboundFee(from response)`. Mirrors iOS so
+     * the displayed Network Fee reconciles against the actual on-chain debit (especially on Solana
+     * and cross-chain Chainflip / NEAR routes where the EVM gas envelope would otherwise read
+     * zero). Returns `0` when the entry is absent so the UI surfaces "—" rather than blocking the
+     * quote.
      */
-    private fun inboundFeeRawUnits(srcToken: Coin, route: SwapKitRoute): BigInteger {
+    private fun inboundFeeRawUnits(srcToken: Coin, fees: List<SwapKitFee>): BigInteger {
         val prefix = chainPrefix(srcToken.chain) ?: return BigInteger.ZERO
         val inbound =
-            route.fees.firstOrNull { fee ->
+            fees.firstOrNull { fee ->
                 fee.type?.equals("inbound", ignoreCase = true) == true && fee.chain == prefix
             } ?: return BigInteger.ZERO
         val amount =
@@ -213,12 +233,14 @@ constructor(
     }
 
     /**
-     * Native-coin decimals for a SwapKit Phase-1 chain. EVM chains use 18; Solana uses 9. Only
-     * reached for chains [chainPrefix] already maps (the caller returns early otherwise).
+     * Native gas-coin decimals for a SwapKit source chain. EVM chains use 18, Solana 9, Bitcoin 8.
+     * The inbound fee is always denominated in the source chain's native coin, so it is scaled by
+     * these — not the sell token's decimals. Only reached for chains [chainPrefix] already maps.
      */
     private fun nativeDecimals(chain: Chain): Int =
         when (chain) {
             Chain.Solana -> 9
+            Chain.Bitcoin -> 8
             else -> 18
         }
 
@@ -235,7 +257,6 @@ constructor(
         response: SwapKitSwapResponseJson,
         srcToken: Coin,
         dstToken: Coin,
-        route: SwapKitRoute,
     ): EVMSwapQuoteJson {
         // SwapKit V3 reports `expectedBuyAmount` as a human-readable decimal string ("42.5"
         // USDC) per the docs. Every other Android quote source (1inch / Kyber / LiFi / Jupiter)
@@ -248,7 +269,7 @@ constructor(
         // is SwapKitService.inboundFee). Embedded in `swapFee` with `swapFeeTokenContract = ""`
         // (the native-coin sentinel resolveSwapFee recognises) so the consumer reads it the same
         // way Kyber/Jupiter quote sources surface their per-leg fees.
-        val inboundFee = inboundFeeRawUnits(srcToken, route).toString()
+        val inboundFee = inboundFeeRawUnits(srcToken, response.fees).toString()
         return when (txTypeOf(response)) {
             TxKind.EVM -> {
                 val evm = decode<SwapKitEvmTx>(response.tx, "evm")
@@ -326,8 +347,82 @@ constructor(
                         ),
                 )
             }
+            // PSBT is dispatched to buildSwapKitNativeQuote before reaching here; the arm keeps the
+            // `when` exhaustive and refuses anything that slips through.
+            TxKind.PSBT,
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
+    }
+
+    /**
+     * Wrap a non-EVM SwapKit route (Phase 2: Bitcoin / PSBT) into a fully-formed
+     * [SwapQuote.SwapKit] for a per-chain signer to consume. The unsigned-tx bytes (base64 PSBT)
+     * land in [SwapKitSwapPayloadJson.txPayload]; the inbound fee is the source chain's native-unit
+     * deposit cost (same surface as the EVM/Solana path). The signing side is wired separately —
+     * until it (and the provider table) enable SwapKit on these chains, this path isn't reached in
+     * production; it's exercised by unit tests so the data contract is pinned ahead of the signer.
+     */
+    private fun buildSwapKitNativeQuote(
+        response: SwapKitSwapResponseJson,
+        request: SwapQuoteRequest,
+        subProvider: String?,
+    ): SwapQuote.SwapKit {
+        val srcToken = request.srcToken
+        val dstToken = request.dstToken
+        val toAmountDecimal = parseExpectedBuyAmount(response.expectedBuyAmount)
+        // Deposit-only chains (Cardano / XRP) route entirely on `targetAddress`, so a blank value
+        // would stage an unspendable quote — refuse it rather than emit a quote that can't settle.
+        val targetAddress =
+            response.targetAddress?.takeIf { it.isNotBlank() }
+                ?: throw SwapKitError.Decoding("SwapKit non-EVM response missing targetAddress")
+        val payload =
+            SwapKitSwapPayloadJson(
+                fromCoin = srcToken,
+                toCoin = dstToken,
+                fromAmount = request.tokenValue.value,
+                toAmountDecimal = toAmountDecimal,
+                txType = response.meta.txType,
+                txPayload = decodeBinaryTx(response.tx),
+                targetAddress = targetAddress,
+                memo = null,
+                subProvider = subProvider.orEmpty(),
+                swapId = response.swapId.orEmpty(),
+            )
+        return SwapQuote.SwapKit(
+            expectedDstValue =
+                TokenValue(
+                    toAmountDecimal.movePointRight(dstToken.decimal).toBigInteger(),
+                    dstToken,
+                ),
+            // Source-chain native deposit fee (BTC 8dp), same surface as the EVM/Solana inbound
+            // fee.
+            fees = TokenValue(inboundFeeRawUnits(srcToken, response.fees), srcToken),
+            expiredAt = Clock.System.now() + expiredAfter,
+            data = payload,
+            subProvider = subProvider,
+        )
+    }
+
+    /**
+     * Decode a base64 unsigned-tx blob (PSBT today; PTB / CBOR as more chains land) from `tx` into
+     * raw bytes for [SwapKitSwapPayloadJson.txPayload]. V3 ships these as a top-level base64
+     * [JsonPrimitive].
+     */
+    private fun decodeBinaryTx(element: JsonElement): ByteArray {
+        val base64 =
+            (element as? JsonPrimitive)?.takeIf { it.isString }?.content
+                ?: throw SwapKitError.Decoding("SwapKit non-EVM tx is not a base64 string")
+        val decoded =
+            runCatching { Base64.getDecoder().decode(base64) }
+                .getOrElse {
+                    throw SwapKitError.Decoding("SwapKit non-EVM tx is not valid base64", it)
+                }
+        // An empty (or whitespace-only) base64 decodes to zero bytes — refuse it rather than stage
+        // an unsignable empty payload that would only surface as a failure at sign time.
+        if (decoded.isEmpty()) {
+            throw SwapKitError.Decoding("SwapKit non-EVM tx payload is empty")
+        }
+        return decoded
     }
 
     /**
@@ -340,6 +435,7 @@ constructor(
             "evm" -> TxKind.EVM
             "solana",
             "serialized_base64" -> TxKind.SOLANA
+            "psbt" -> TxKind.PSBT
             else -> TxKind.UNSUPPORTED
         }
 
@@ -372,6 +468,7 @@ constructor(
     private enum class TxKind {
         EVM,
         SOLANA,
+        PSBT,
         UNSUPPORTED,
     }
 
@@ -381,15 +478,22 @@ constructor(
      * [SwapKitError.MalformedAmount] when the upstream value is missing or unparseable so the user
      * sees the typed "Invalid amount" message instead of a generic "Could not parse response".
      */
-    private fun scaleDecimalToRawUnits(decimalString: String?, decimals: Int): String {
-        val parsed =
-            decimalString?.let { runCatching { BigDecimal(it) }.getOrNull() }
-                // `raw` is surfaced to the user via `swapkit_error_malformed_amount`; pass empty
-                // for the null case so the developer-only `(missing)` sentinel never leaks into
-                // the form error. The UI maps blank raw onto the generic decoding copy.
-                ?: throw SwapKitError.MalformedAmount(raw = decimalString.orEmpty())
-        return parsed.movePointRight(decimals).toBigInteger().toString()
-    }
+    private fun scaleDecimalToRawUnits(decimalString: String?, decimals: Int): String =
+        parseExpectedBuyAmount(decimalString).movePointRight(decimals).toBigInteger().toString()
+
+    /**
+     * Parse SwapKit's human-readable `expectedBuyAmount` (decimal string, e.g. "42.5") into a
+     * [BigDecimal], or throw [SwapKitError.MalformedAmount] when it's missing/unparseable so the
+     * user sees the typed "Invalid amount" message. Shared by the EVM/Solana raw-units scaling
+     * ([scaleDecimalToRawUnits]) and the native-quote builder so the parse lives in one place.
+     */
+    private fun parseExpectedBuyAmount(decimalString: String?): BigDecimal =
+        decimalString?.let { runCatching { BigDecimal(it) }.getOrNull() }
+            // `raw` is surfaced to the user via `swapkit_error_malformed_amount`; pass empty for
+            // the
+            // null case so the developer-only `(missing)` sentinel never leaks into the form error.
+            // The UI maps blank raw onto the generic decoding copy.
+            ?: throw SwapKitError.MalformedAmount(raw = decimalString.orEmpty())
 
     /**
      * SwapKit asset identifier: `CHAIN.TICKER` or `CHAIN.TICKER-CONTRACT` for ERC-20-style tokens.
@@ -423,6 +527,7 @@ constructor(
             Chain.Base -> "BASE"
             Chain.Polygon -> "POL"
             Chain.Solana -> "SOL"
+            Chain.Bitcoin -> "BTC"
             else -> null
         }
 

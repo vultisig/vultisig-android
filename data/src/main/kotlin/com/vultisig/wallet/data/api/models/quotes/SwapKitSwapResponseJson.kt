@@ -30,6 +30,10 @@ data class SwapKitSwapResponseJson(
     @SerialName("meta") val meta: SwapKitTxMeta,
     @SerialName("targetAddress") val targetAddress: String? = null,
     @SerialName("expectedBuyAmount") val expectedBuyAmount: String? = null,
+    // Source-chain fee breakdown on the executed route. The `type == "inbound"` entry is the
+    // canonical deposit cost; read it from here (not the /v3/quote route) so a repriced fee on the
+    // refreshed /v3/swap reply stays fresh. Mirrors iOS' SwapKitSwapResponse.fees.
+    @SerialName("fees") val fees: List<SwapKitFee> = emptyList(),
     @SerialName("providers") val providers: List<String> = emptyList(),
     @SerialName("error") val error: String? = null,
     @SerialName("message") val message: String? = null,

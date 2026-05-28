@@ -11,13 +11,16 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitTxMeta
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.util.Base64
 import java.util.Locale
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -386,28 +389,19 @@ internal class SwapKitQuoteSourceTest {
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
                 routes =
-                    listOf(
-                        route(
-                            routeId = "r-sol",
-                            providers = listOf("NEAR"),
-                            expectedBuy = "9",
-                            fees =
-                                listOf(
-                                    SwapKitFee(
-                                        type = "inbound",
-                                        chain = "SOL",
-                                        amount = "0.000005",
-                                    ),
-                                    SwapKitFee(type = "outbound", chain = "ETH", amount = "0.0001"),
-                                ),
-                        )
-                    )
+                    listOf(route(routeId = "r-sol", providers = listOf("NEAR"), expectedBuy = "9"))
             )
         coEvery { api.swap(any()) } returns
             SwapKitSwapResponseJson(
                 tx = JsonPrimitive("BASE64"),
                 meta = SwapKitTxMeta(txType = "SOLANA"),
                 expectedBuyAmount = "9",
+                // Inbound fee comes from the /v3/swap response (fresh), not the /v3/quote route.
+                fees =
+                    listOf(
+                        SwapKitFee(type = "inbound", chain = "SOL", amount = "0.000005"),
+                        SwapKitFee(type = "outbound", chain = "ETH", amount = "0.0001"),
+                    ),
             )
 
         val result = source().fetch(request(srcToken = solanaCoin())) as SwapQuoteResult.Evm
@@ -430,18 +424,13 @@ internal class SwapKitQuoteSourceTest {
                                 routeId = "r",
                                 providers = listOf("CHAINFLIP"),
                                 expectedBuy = "42",
-                                fees =
-                                    listOf(
-                                        SwapKitFee(
-                                            type = "outbound",
-                                            chain = "ETH",
-                                            amount = "0.01",
-                                        )
-                                    ),
                             )
                         )
                 )
-            coEvery { api.swap(any()) } returns evmSwapResponse()
+            coEvery { api.swap(any()) } returns
+                evmSwapResponse(
+                    fees = listOf(SwapKitFee(type = "outbound", chain = "ETH", amount = "0.01"))
+                )
 
             val result = source().fetch(request()) as SwapQuoteResult.Evm
 
@@ -479,16 +468,18 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
-    fun `fetch throws UnsupportedTxType for non-EVM, non-Solana txType`() = runTest {
+    fun `fetch throws UnsupportedTxType for a still-unwired non-EVM txType`() = runTest {
+        // PSBT (Bitcoin) is now wired to a Native SwapQuote.SwapKit; the remaining non-EVM txTypes
+        // (TRON/TON/SUI/CARDANO/RIPPLE) still have no signer, so they surface as UnsupportedTxType.
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
-                routes = listOf(route(routeId = "r-psbt", providers = listOf("CHAINFLIP")))
+                routes = listOf(route(routeId = "r-tron", providers = listOf("CHAINFLIP")))
             )
         coEvery { api.swap(any()) } returns
             SwapKitSwapResponseJson(
                 tx = JsonObject(emptyMap()),
-                meta = SwapKitTxMeta(txType = "PSBT"),
+                meta = SwapKitTxMeta(txType = "TRON"),
                 expectedBuyAmount = "1",
             )
 
@@ -647,22 +638,20 @@ internal class SwapKitQuoteSourceTest {
                 SwapKitQuoteResponseJson(
                     routes =
                         listOf(
-                            route(
-                                routeId = "r",
-                                providers = listOf("ONEINCH"),
-                                expectedBuy = "1",
-                                fees =
-                                    listOf(
-                                        SwapKitFee(
-                                            type = "inbound",
-                                            chain = "ETH",
-                                            amount = "0.00001165876952721",
-                                        )
-                                    ),
+                            route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1")
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                evmSwapResponse(
+                    fees =
+                        listOf(
+                            SwapKitFee(
+                                type = "inbound",
+                                chain = "ETH",
+                                amount = "0.00001165876952721",
                             )
                         )
                 )
-            coEvery { api.swap(any()) } returns evmSwapResponse()
 
             val result = source().fetch(request(srcToken = usdc)) as SwapQuoteResult.Evm
 
@@ -711,6 +700,97 @@ internal class SwapKitQuoteSourceTest {
         }
     }
 
+    @Test
+    fun `fetch decodes a Bitcoin PSBT route into a Native SwapQuote SwapKit payload`() = runTest {
+        // Phase 2 foundation: a non-EVM (PSBT) route surfaces as SwapQuoteResult.Native wrapping a
+        // fully-formed SwapQuote.SwapKit — the base64 PSBT is decoded into txPayload bytes, and the
+        // inbound BTC fee scales by 8 native decimals. (Signer is wired separately.)
+        every { config.isFeatureEnabled } returns flowOf(true)
+        val psbtBytes = byteArrayOf(0x70, 0x73, 0x62, 0x74, 0x01, 0x02) // "psbt" magic + bytes
+        val base64 = Base64.getEncoder().encodeToString(psbtBytes)
+        val btc = btcCoin()
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(
+                        route(routeId = "r-btc", providers = listOf("NEAR"), expectedBuy = "385.24")
+                    )
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                swapId = "btc-swap-1",
+                tx = JsonPrimitive(base64),
+                meta = SwapKitTxMeta(txType = "PSBT"),
+                targetAddress = "bc1ptarget",
+                expectedBuyAmount = "385.24",
+                // Inbound fee comes from the /v3/swap response, not the /v3/quote route.
+                fees = listOf(SwapKitFee(type = "inbound", chain = "BTC", amount = "0.000004")),
+                providers = listOf("NEAR"),
+            )
+
+        val result =
+            source().fetch(request(srcToken = btc, dstToken = ethCoin())) as SwapQuoteResult.Native
+        val quote = result.quote as SwapQuote.SwapKit
+
+        assertEquals("NEAR", quote.subProvider)
+        assertEquals("PSBT", quote.data.txType)
+        assertTrue(psbtBytes.contentEquals(quote.data.txPayload))
+        assertEquals("bc1ptarget", quote.data.targetAddress)
+        assertEquals("btc-swap-1", quote.data.swapId)
+        assertEquals("NEAR", quote.data.subProvider)
+        assertEquals(btc, quote.data.fromCoin)
+        // The fragile scaling line: expectedDstValue + payload amounts must use the right decimals.
+        assertEquals(ethCoin(), quote.data.toCoin)
+        assertEquals(BigInteger.ONE, quote.data.fromAmount)
+        assertEquals(0, BigDecimal("385.24").compareTo(quote.data.toAmountDecimal))
+        // 385.24 ETH (dst, 18 dp) = 385.24 × 10^18.
+        assertEquals(BigInteger("385240000000000000000"), quote.expectedDstValue.value)
+        // 0.000004 BTC inbound fee scaled by 8 native decimals = 400 sats (not 0.000004 × 10^18).
+        assertEquals(BigInteger("400"), quote.fees.value)
+        assertEquals("BTC", quote.fees.unit)
+        assertEquals(8, quote.fees.decimals)
+    }
+
+    @Test
+    fun `fetch throws Decoding when the PSBT tx is not valid base64`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-btc", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive("!!!not-base64!!!"),
+                meta = SwapKitTxMeta(txType = "PSBT"),
+                targetAddress = "bc1ptarget",
+                expectedBuyAmount = "1",
+            )
+
+        assertThrows<SwapKitError.Decoding> {
+            source().fetch(request(srcToken = btcCoin(), dstToken = ethCoin()))
+        }
+    }
+
+    @Test
+    fun `fetch throws Decoding when the PSBT tx decodes to an empty payload`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-btc", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive(""),
+                meta = SwapKitTxMeta(txType = "PSBT"),
+                targetAddress = "bc1ptarget",
+                expectedBuyAmount = "1",
+            )
+
+        assertThrows<SwapKitError.Decoding> {
+            source().fetch(request(srcToken = btcCoin(), dstToken = ethCoin()))
+        }
+    }
+
     // ---- helpers ----
 
     private fun request(
@@ -728,18 +808,8 @@ internal class SwapKitQuoteSourceTest {
             affiliateBps = affiliateBps,
         )
 
-    private fun route(
-        routeId: String,
-        providers: List<String>,
-        expectedBuy: String? = "1",
-        fees: List<SwapKitFee> = emptyList(),
-    ) =
-        SwapKitRoute(
-            routeId = routeId,
-            providers = providers,
-            expectedBuyAmount = expectedBuy,
-            fees = fees,
-        )
+    private fun route(routeId: String, providers: List<String>, expectedBuy: String? = "1") =
+        SwapKitRoute(routeId = routeId, providers = providers, expectedBuyAmount = expectedBuy)
 
     private fun evmSwapResponse(
         gas: String? = "200000",
@@ -752,6 +822,7 @@ internal class SwapKitQuoteSourceTest {
         providers: List<String> = listOf("CHAINFLIP"),
         metaSubProvider: String? = null,
         approvalAddress: String? = null,
+        fees: List<SwapKitFee> = emptyList(),
     ) =
         SwapKitSwapResponseJson(
             swapId = "swap-id",
@@ -771,6 +842,7 @@ internal class SwapKitQuoteSourceTest {
                     approvalAddress = approvalAddress,
                 ),
             expectedBuyAmount = expectedBuy,
+            fees = fees,
             providers = providers,
         )
 
@@ -796,6 +868,19 @@ internal class SwapKitQuoteSourceTest {
             decimal = 9,
             hexPublicKey = "pub",
             priceProviderID = "solana",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    private fun btcCoin() =
+        Coin(
+            chain = Chain.Bitcoin,
+            ticker = "BTC",
+            logo = "",
+            address = "bc1qsender",
+            decimal = 8,
+            hexPublicKey = "pub",
+            priceProviderID = "bitcoin",
             contractAddress = "",
             isNativeToken = true,
         )
