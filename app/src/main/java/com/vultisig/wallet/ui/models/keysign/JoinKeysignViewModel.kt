@@ -1491,6 +1491,7 @@ constructor(
                             .getParticipants(_serverAddress, _sessionID)
                             .contains(_localPartyID)
                     }
+                    .onFailure { if (it is CancellationException) throw it }
                     .getOrDefault(false)
             if (!alreadyRegistered) throw e
             Timber.tag("JoinKeysignViewModel")
