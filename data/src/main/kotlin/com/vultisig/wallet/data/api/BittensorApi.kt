@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -125,7 +126,10 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
                 id = 1,
             )
         val response = httpClient.post(BITTENSOR_RPC_URL) { setBody(payload) }
-        val responseContent = response.bodyOrThrow<PolkadotBroadcastTransactionJson>()
+        // Read the RPC body regardless of HTTP status: the relay may surface "Already Imported"
+        // with a non-2xx status, and the duplicate rebroadcast from a second signing device must
+        // still resolve to null rather than throw.
+        val responseContent = response.body<PolkadotBroadcastTransactionJson>()
         if (responseContent.error != null) {
             if (responseContent.error.message?.contains("Already Imported") == true) {
                 return null

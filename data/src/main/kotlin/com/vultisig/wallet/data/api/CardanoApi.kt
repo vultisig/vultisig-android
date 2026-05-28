@@ -10,7 +10,6 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -37,11 +36,9 @@ interface CardanoApi {
     suspend fun broadcastTransaction(chain: String, signedTransaction: String): String?
 }
 
-internal class CardanoApiImpl @Inject constructor(private val httpClient: HttpClient) : CardanoApi {
-    private val json = Json {
-        ignoreUnknownKeys = true
-        explicitNulls = false
-    }
+internal class CardanoApiImpl
+@Inject
+constructor(private val httpClient: HttpClient, private val json: Json) : CardanoApi {
     private val url: String = "https://api.koios.rest"
     private val apiV1Path: String = "api/v1"
     private val ogmiosUrl = "https://api.vultisig.com/ada/"
@@ -55,7 +52,7 @@ internal class CardanoApiImpl @Inject constructor(private val httpClient: HttpCl
                 setBody(requestBody)
             }
         return try {
-            val balances: List<CardanoBalanceResponseJson> = response.body()
+            val balances = response.bodyOrThrow<List<CardanoBalanceResponseJson>>()
             val balanceString = balances.firstOrNull()?.balance ?: "0"
             BigInteger(balanceString)
         } catch (e: Exception) {
@@ -149,7 +146,7 @@ internal class CardanoApiImpl @Inject constructor(private val httpClient: HttpCl
             Timber.d("Failed to parse slot from response: $responseString")
             error("Failed to parse slot from response: $responseString")
         }
-        val cardanoSlotResponse: List<CardanoSlotResponseJson> = response.body()
+        val cardanoSlotResponse = response.bodyOrThrow<List<CardanoSlotResponseJson>>()
         return cardanoSlotResponse.firstOrNull()?.absSlot?.toULong() ?: 0UL
     }
 

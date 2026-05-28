@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import java.math.BigInteger
@@ -151,7 +152,10 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                 id = 1,
             )
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-        val responseContent = response.bodyOrThrow<PolkadotBroadcastTransactionJson>()
+        // Read the RPC body regardless of HTTP status: nodes may surface the idempotent
+        // "already in pool" errors (1012/1013) with a non-2xx status, and the duplicate
+        // rebroadcast from a second signing device must still resolve to null rather than throw.
+        val responseContent = response.body<PolkadotBroadcastTransactionJson>()
         if (responseContent.error != null) {
             if (responseContent.error.code == 1012 || responseContent.error.code == 1013) {
                 return null
