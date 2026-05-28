@@ -226,7 +226,7 @@ class SwapKitBtcSignerTest {
         inputs.forEach { input ->
             unsigned.write(Numeric.hexStringToByteArray(input.prevTxIdDisplay).reversedArray())
             unsigned.write(le32(input.vout))
-            unsigned.write(0x00) // empty scriptSig
+            unsigned.write(varInt(0)) // empty scriptSig
             unsigned.write(le32(input.sequence))
         }
         unsigned.write(varInt(outputs.size.toLong()))

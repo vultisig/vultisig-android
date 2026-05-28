@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
@@ -478,7 +479,7 @@ constructor(
                                 // SUI / TRON) land with their per-chain signers. SwapProviderTable
                                 // does not yet offer SwapKit on Bitcoin, so this branch is reached
                                 // only once enablement ships — guarded loudly until then.
-                                require(quote.data.txType == SWAPKIT_PSBT_TX_TYPE) {
+                                require(quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
                                     "Unsupported SwapKit txType for swap: ${quote.data.txType}"
                                 }
                                 val specificAndUtxo =
@@ -1260,9 +1261,6 @@ constructor(
 }
 
 private const val MAX_DISPLAY_DECIMALS = 8
-
-// SwapKit `meta.txType` for the only non-EVM SwapKit swap wired today (Bitcoin PSBT).
-private const val SWAPKIT_PSBT_TX_TYPE = "PSBT"
 
 internal fun BigDecimal.formatFlippedAmount(tokenDecimals: Int? = null): String =
     setScale(

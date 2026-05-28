@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
@@ -26,8 +27,6 @@ import wallet.core.jni.EthereumAbi
 
 object SigningHelper {
     private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
-    // SwapKit `meta.txType` for the Bitcoin PSBT signer dispatch.
-    private const val PSBT_TX_TYPE = "PSBT"
 
     @OptIn(ExperimentalStdlibApi::class)
     fun getKeysignMessages(messagePayload: CustomMessagePayload): List<String> {
@@ -96,7 +95,7 @@ object SigningHelper {
                     messages += message
                 }
                 is SwapPayload.SwapKit -> {
-                    require(swapPayload.data.txType == PSBT_TX_TYPE) {
+                    require(swapPayload.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
                         "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
                     }
                     messages +=
@@ -288,7 +287,7 @@ object SigningHelper {
                 }
 
                 is SwapPayload.SwapKit -> {
-                    require(swapPayload.data.txType == PSBT_TX_TYPE) {
+                    require(swapPayload.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
                         "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
                     }
                     return SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
