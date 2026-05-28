@@ -11,6 +11,7 @@ import vultisig.keysign.v1.BitcoinOutput
 import vultisig.keysign.v1.SignBitcoin
 import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
+import wallet.core.jni.Hash
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 
@@ -217,6 +218,16 @@ internal class SwapKitBtcSigner(
                     "SwapKit BTC PSBT P2SH redeem script on input #$index is not P2SH-P2WPKH"
                 )
             }
+            // The redeem script must hash to the 20-byte HASH160 the scriptPubKey commits to
+            // (0xa9 0x14 <hash> 0x87); without this, a mismatched pair passes decode and only fails
+            // after signing/broadcast.
+            val expectedHash = scriptPubKey.copyOfRange(2, 22)
+            if (!Hash.sha256RIPEMD(redeem).contentEquals(expectedHash)) {
+                throw SwapKitBtcSignerException(
+                    "SwapKit BTC PSBT P2SH redeem script on input #$index does not bind to its " +
+                        "scriptPubKey via HASH160"
+                )
+            }
             return "p2sh-p2wpkh" to Numeric.toHexStringNoPrefix(redeem)
         }
         throw SwapKitBtcSignerException(
@@ -255,9 +266,15 @@ internal class SwapKitBtcSigner(
                 val prevTxIdDisplay = Numeric.toHexStringNoPrefix(prevBytes.reversedArray())
                 val prevIndex = cursor.readUInt32LE()
                 val scriptSigLen = cursor.readCompactSize()
-                cursor.readBytes(
-                    scriptSigLen.toInt()
-                ) // empty for unsigned txs; consume for correctness
+                // A PSBT's unsigned tx must carry empty scriptSigs. Reject a non-empty one rather
+                // than narrow an untrusted compactSize with toInt() (which could wrap past
+                // Int.MAX_VALUE and desync the parser); asLength consumes it safely.
+                if (scriptSigLen != 0L) {
+                    throw SwapKitBtcSignerException(
+                        "SwapKit BTC PSBT unsigned-tx input #$it scriptSig must be empty"
+                    )
+                }
+                cursor.readBytes(cursor.asLength(scriptSigLen))
                 val sequence = cursor.readUInt32LE()
                 ParsedTxInput(prevTxIdDisplay, prevIndex, sequence)
             }

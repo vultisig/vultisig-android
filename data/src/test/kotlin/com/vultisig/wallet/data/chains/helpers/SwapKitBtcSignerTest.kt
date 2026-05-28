@@ -309,7 +309,77 @@ class SwapKitBtcSignerTest {
 
     @Test
     fun `decode - classifies a P2SH-P2WPKH input and keeps its redeem script`() {
-        val redeem = "0014" + "22".repeat(20)
+        try {
+            // The scriptPubKey must commit to HASH160(redeem) or decode now rejects the pair, so
+            // derive it from the redeem rather than using an arbitrary hash.
+            val redeem = "0014" + "22".repeat(20)
+            val redeemHash160 = Hash.sha256RIPEMD(Numeric.hexStringToByteArray(redeem))
+            val scriptPubKey = "a914" + Numeric.toHexStringNoPrefix(redeemHash160) + "87"
+            val signer = SwapKitBtcSigner("", "")
+            val psbt =
+                encodePsbt(
+                    inputs =
+                        listOf(
+                            TestIn(
+                                prevTxIdDisplay =
+                                    "0000000000000000000000000000000000000000000000000000000000000001",
+                                vout = 0,
+                                sequence = 0xFFFFFFFFL,
+                                amount = 100_000,
+                                scriptHex = scriptPubKey,
+                                redeemScriptHex = redeem,
+                            )
+                        ),
+                    outputs = listOf(TestOut(amount = 99_000, scriptHex = "0014" + "33".repeat(20))),
+                )
+
+            val input = signer.decode(psbt, null, null).inputs.filterNotNull().single()
+            assertEquals("p2sh-p2wpkh", input.scriptType)
+            assertEquals(redeem, input.redeemScript)
+            assertEquals(100_000L, input.amount)
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `decode - rejects a P2SH input whose redeem does not bind to its scriptPubKey`() {
+        try {
+            // Probe WalletCore JNI up front so an unavailable native lib skips (not fails) this
+            // test; decode() recomputes HASH160(redeem) internally to validate the commitment.
+            val redeem = "0014" + "22".repeat(20)
+            Hash.sha256RIPEMD(Numeric.hexStringToByteArray(redeem))
+            // scriptPubKey commits to a hash that is NOT HASH160(redeem) — must be refused.
+            val mismatchedScriptPubKey = "a914" + "11".repeat(20) + "87"
+            val signer = SwapKitBtcSigner("", "")
+            val psbt =
+                encodePsbt(
+                    inputs =
+                        listOf(
+                            TestIn(
+                                prevTxIdDisplay =
+                                    "0000000000000000000000000000000000000000000000000000000000000001",
+                                vout = 0,
+                                sequence = 0xFFFFFFFFL,
+                                amount = 100_000,
+                                scriptHex = mismatchedScriptPubKey,
+                                redeemScriptHex = redeem,
+                            )
+                        ),
+                    outputs = listOf(TestOut(amount = 99_000, scriptHex = "0014" + "33".repeat(20))),
+                )
+
+            assertThrows(SwapKitBtcSignerException::class.java) { signer.decode(psbt, null, null) }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `decode - rejects an unsigned-tx input carrying a non-empty scriptSig`() {
+        // A PSBT's unsigned tx must have empty scriptSigs; a non-empty one is rejected (and the
+        // length is never narrowed via toInt()). parseUnsignedTx runs before any JNI classify, so
+        // this is headless.
         val signer = SwapKitBtcSigner("", "")
         val psbt =
             encodePsbt(
@@ -321,17 +391,13 @@ class SwapKitBtcSignerTest {
                             vout = 0,
                             sequence = 0xFFFFFFFFL,
                             amount = 100_000,
-                            scriptHex = "a914" + "11".repeat(20) + "87", // P2SH
-                            redeemScriptHex = redeem,
+                            scriptHex = "0014" + "11".repeat(20),
+                            unsignedScriptSigHex = "ab",
                         )
                     ),
                 outputs = listOf(TestOut(amount = 99_000, scriptHex = "0014" + "33".repeat(20))),
             )
-
-        val input = signer.decode(psbt, null, null).inputs.filterNotNull().single()
-        assertEquals("p2sh-p2wpkh", input.scriptType)
-        assertEquals(redeem, input.redeemScript)
-        assertEquals(100_000L, input.amount)
+        assertThrows(SwapKitBtcSignerException::class.java) { signer.decode(psbt, null, null) }
     }
 
     private data class TestIn(
@@ -341,6 +407,7 @@ class SwapKitBtcSignerTest {
         val amount: Long,
         val scriptHex: String,
         val redeemScriptHex: String? = null,
+        val unsignedScriptSigHex: String? = null,
     )
 
     private data class TestOut(val amount: Long, val scriptHex: String)
@@ -353,7 +420,10 @@ class SwapKitBtcSignerTest {
         inputs.forEach { input ->
             unsigned.write(Numeric.hexStringToByteArray(input.prevTxIdDisplay).reversedArray())
             unsigned.write(le32(input.vout))
-            unsigned.write(varInt(0)) // empty scriptSig
+            val scriptSig =
+                input.unsignedScriptSigHex?.let { Numeric.hexStringToByteArray(it) } ?: ByteArray(0)
+            unsigned.write(varInt(scriptSig.size.toLong())) // empty for unsigned txs
+            unsigned.write(scriptSig)
             unsigned.write(le32(input.sequence))
         }
         unsigned.write(varInt(outputs.size.toLong()))

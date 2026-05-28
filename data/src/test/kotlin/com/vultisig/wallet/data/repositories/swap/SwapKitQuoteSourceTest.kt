@@ -791,6 +791,30 @@ internal class SwapKitQuoteSourceTest {
         }
     }
 
+    @Test
+    fun `fetch throws Decoding when a non-EVM response has no targetAddress`() = runTest {
+        // Deposit-only chains (Cardano / XRP) route entirely on `targetAddress`, so a null value
+        // would stage an unspendable quote. The tx itself is valid base64 here, so this pins the
+        // targetAddress guard specifically rather than the decode path.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        val base64 = Base64.getEncoder().encodeToString(byteArrayOf(0x70, 0x73, 0x62, 0x74, 0x01))
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-btc", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive(base64),
+                meta = SwapKitTxMeta(txType = "PSBT"),
+                targetAddress = null,
+                expectedBuyAmount = "1",
+            )
+
+        assertThrows<SwapKitError.Decoding> {
+            source().fetch(request(srcToken = btcCoin(), dstToken = ethCoin()))
+        }
+    }
+
     // ---- helpers ----
 
     private fun request(
