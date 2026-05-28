@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
+import wallet.core.jni.Hash
 import wallet.core.jni.PublicKey
 import wallet.core.jni.PublicKeyType
 
@@ -130,6 +131,104 @@ class SwapKitBtcSignerTest {
             ),
             hashes,
         )
+    }
+
+    @Test
+    fun `compileSignedTransaction - P2WPKH segwit framing is pinned byte-for-byte`() {
+        // Headless: serialization + witness assembly are pure (computeOurSighashes is pure for
+        // P2WPKH), so we feed a fixed PSBT + a fixed pubkey + a fake DER keyed by the sighash and
+        // assert the exact broadcast bytes — version, marker/flag, reversed outpoint, empty
+        // scriptSig, witness stack [der||sighashFlag, pubkey], and locktime.
+        val signer = SwapKitBtcSigner("", "")
+        val outScript = "0014" + "33".repeat(20)
+        val psbt =
+            encodePsbt(
+                inputs =
+                    listOf(
+                        TestIn(
+                            prevTxIdDisplay =
+                                "0000000000000000000000000000000000000000000000000000000000000001",
+                            vout = 0,
+                            sequence = 0xFFFFFFFFL,
+                            amount = 100_000,
+                            scriptHex = "0014" + "11".repeat(20),
+                        )
+                    ),
+                outputs = listOf(TestOut(amount = 99_000, scriptHex = outScript)),
+            )
+        val signBitcoin = signer.decode(psbt, vaultAddress = null, vaultLockScriptHex = null)
+        val sighash = UtxoHelper(CoinType.BITCOIN, "", "").computeOurSighashes(signBitcoin)[0]
+        val derHex = "abcdef"
+        val pubKeyHex = "02" + "bb".repeat(32)
+
+        val result =
+            signer.compileSignedTransaction(
+                signBitcoin = signBitcoin,
+                pubKeyBytes = Numeric.hexStringToByteArray(pubKeyHex),
+                derSignatureBySighash = mapOf(Numeric.toHexStringNoPrefix(sighash) to derHex),
+            )
+
+        val expected =
+            "02000000" + // version
+                "0001" + // segwit marker + flag
+                "01" + // input count
+                ("01" + "00".repeat(31)) + // outpoint txid (display order reversed)
+                "00000000" + // vout
+                "00" + // empty scriptSig
+                "ffffffff" + // sequence
+                "01" + // output count
+                "b882010000000000" + // 99_000 sats, 8-byte LE
+                "16" + // output script length (22)
+                outScript +
+                "02" + // witness stack item count
+                "04" +
+                (derHex + "01") + // der || SIGHASH_ALL flag
+                "21" +
+                pubKeyHex + // 33-byte pubkey
+                "00000000" // locktime
+        assertEquals(expected, result.rawTransaction)
+        assertEquals(64, result.transactionHash.length)
+    }
+
+    @Test
+    fun `compileSignedTransaction - P2SH-P2WPKH pushes the redeem script into scriptSig`() {
+        try {
+            val redeemHex = "0014" + "22".repeat(20)
+            val redeemHash160 = Hash.sha256RIPEMD(Numeric.hexStringToByteArray(redeemHex))
+            val scriptPubKey = "a914" + Numeric.toHexStringNoPrefix(redeemHash160) + "87"
+            val signer = SwapKitBtcSigner("", "")
+            val psbt =
+                encodePsbt(
+                    inputs =
+                        listOf(
+                            TestIn(
+                                prevTxIdDisplay =
+                                    "0000000000000000000000000000000000000000000000000000000000000001",
+                                vout = 0,
+                                sequence = 0xFFFFFFFFL,
+                                amount = 100_000,
+                                scriptHex = scriptPubKey,
+                                redeemScriptHex = redeemHex,
+                            )
+                        ),
+                    outputs = listOf(TestOut(amount = 99_000, scriptHex = "0014" + "33".repeat(20))),
+                )
+            val signBitcoin = signer.decode(psbt, null, null)
+            val sighash = UtxoHelper(CoinType.BITCOIN, "", "").computeOurSighashes(signBitcoin)[0]
+
+            val result =
+                signer.compileSignedTransaction(
+                    signBitcoin = signBitcoin,
+                    pubKeyBytes = Numeric.hexStringToByteArray("02" + "bb".repeat(32)),
+                    derSignatureBySighash = mapOf(Numeric.toHexStringNoPrefix(sighash) to "abcdef"),
+                )
+
+            // scriptSig is a single push of the 22-byte redeem script (0x16 length prefix).
+            assertTrue(result.rawTransaction.contains("16$redeemHex"))
+            assertTrue(result.rawTransaction.startsWith("020000000001"))
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
     }
 
     @Test

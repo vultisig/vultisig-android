@@ -60,7 +60,11 @@ internal class SwapKitBtcSigner(
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
         val signBitcoin = decodeToSignBitcoin(psbtBytes)
-        return compileSignedTransaction(signBitcoin, signatures)
+        return compileSignedTransaction(
+            signBitcoin = signBitcoin,
+            pubKeyBytes = derivedPublicKeyBytes(),
+            derSignatureBySighash = signatures.mapValues { it.value.derSignature },
+        )
     }
 
     /**
@@ -136,19 +140,24 @@ internal class SwapKitBtcSigner(
         val (amount, scriptPubKey) = parseWitnessUtxo(witnessUtxo, index)
         val (scriptType, redeemScript) = classifyScript(scriptPubKey, inputMap, index)
         val sighashType =
-            inputMap[KEY_SIGHASH_TYPE]?.let { bytes ->
-                if (bytes.size != 4) {
-                    throw SwapKitBtcSignerException(
-                        "SwapKit BTC PSBT input #$index sighash-type record has ${bytes.size} " +
-                            "bytes, expected 4"
-                    )
+            inputMap[KEY_SIGHASH_TYPE]
+                ?.let { bytes ->
+                    if (bytes.size != 4) {
+                        throw SwapKitBtcSignerException(
+                            "SwapKit BTC PSBT input #$index sighash-type record has ${bytes.size} " +
+                                "bytes, expected 4"
+                        )
+                    }
+                    ((bytes[0].toLong() and 0xFF) or
+                            ((bytes[1].toLong() and 0xFF) shl 8) or
+                            ((bytes[2].toLong() and 0xFF) shl 16) or
+                            ((bytes[3].toLong() and 0xFF) shl 24))
+                        .toUInt()
                 }
-                ((bytes[0].toLong() and 0xFF) or
-                        ((bytes[1].toLong() and 0xFF) shl 8) or
-                        ((bytes[2].toLong() and 0xFF) shl 16) or
-                        ((bytes[3].toLong() and 0xFF) shl 24))
-                    .toUInt()
-            }
+                // An explicit sighash of 0 is the default (SIGHASH_ALL); drop to null so the
+                // downstream `?: SIGHASH_ALL` applies — matches iOS rather than rejecting the
+                // input.
+                ?.takeIf { it != 0u }
         return BitcoinInput(
             hash = txIn.prevTxIdDisplay,
             index = txIn.prevIndex.toUInt(),
@@ -271,11 +280,17 @@ internal class SwapKitBtcSigner(
         return ParsedTx(version, locktime, inputs, outputs)
     }
 
-    private fun compileSignedTransaction(
+    /**
+     * Assemble the signed segwit tx. [derSignatureBySighash] maps each sighash hex (the message the
+     * MPC engine signed) to its DER signature hex; [pubKeyBytes] is the derived vault pubkey placed
+     * in every witness. Takes plain bytes/strings (not the `compileOnly` TSS type) so the broadcast
+     * serialization can be pinned by a headless unit test.
+     */
+    internal fun compileSignedTransaction(
         signBitcoin: SignBitcoin,
-        signatures: Map<String, KeysignResponse>,
+        pubKeyBytes: ByteArray,
+        derSignatureBySighash: Map<String, String>,
     ): SignedTransactionResult {
-        val pubKeyBytes = derivedPublicKeyBytes()
         val inputs = signBitcoin.inputs.filterNotNull()
         // SwapKit puts only the user's UTXOs in the PSBT, so `decode` marks every input is_ours and
         // this holds by construction. Guard it anyway: a non-ours input would get an empty witness
@@ -293,7 +308,7 @@ internal class SwapKitBtcSigner(
             val sighash = sighashes[sighashIndex++]
             val key = Numeric.toHexStringNoPrefix(sighash)
             val derSignature =
-                signatures[key]?.derSignature
+                derSignatureBySighash[key]
                     ?: throw SwapKitBtcSignerException(
                         "Missing signature for sighash ${key.take(16)}…"
                     )
