@@ -70,7 +70,7 @@ internal class SwapKitBtcSigner(
      * [UtxoHelper.getPreSignedImageHashFromSignBitcoin] treats the deposit as the payment and the
      * vault output as change.
      */
-    fun decodeToSignBitcoin(psbtBytes: ByteArray): SignBitcoin {
+    internal fun decodeToSignBitcoin(psbtBytes: ByteArray): SignBitcoin {
         val vaultAddr = vaultAddress()
         return decode(psbtBytes, vaultAddr, vaultLockScriptHex(vaultAddr))
     }
@@ -167,7 +167,7 @@ internal class SwapKitBtcSigner(
         val cursor = PsbtCursor(bytes)
         val amount = cursor.readUInt64LE()
         val scriptLen = cursor.readCompactSize()
-        val script = cursor.readBytes(scriptLen.toInt())
+        val script = cursor.readBytes(cursor.asLength(scriptLen))
         if (!cursor.isAtEnd) {
             throw SwapKitBtcSignerException(
                 "SwapKit BTC PSBT input #$index WITNESS_UTXO has trailing bytes"
@@ -257,9 +257,17 @@ internal class SwapKitBtcSigner(
             (0L until outputCount).map {
                 val amount = cursor.readUInt64LE()
                 val scriptLen = cursor.readCompactSize()
-                ParsedTxOutput(amount, cursor.readBytes(scriptLen.toInt()))
+                ParsedTxOutput(amount, cursor.readBytes(cursor.asLength(scriptLen)))
             }
         val locktime = cursor.readUInt32LE()
+        // The unsigned-tx body must consume exactly; trailing bytes mean a malformed serialization
+        // (e.g. a stray BIP-144 witness flag) whose dropped data would silently change what's
+        // signed.
+        if (!cursor.isAtEnd) {
+            throw SwapKitBtcSignerException(
+                "SwapKit BTC PSBT unsigned-tx body has ${data.size - cursor.offset} trailing bytes"
+            )
+        }
         return ParsedTx(version, locktime, inputs, outputs)
     }
 
@@ -269,6 +277,12 @@ internal class SwapKitBtcSigner(
     ): SignedTransactionResult {
         val pubKeyBytes = derivedPublicKeyBytes()
         val inputs = signBitcoin.inputs.filterNotNull()
+        // SwapKit puts only the user's UTXOs in the PSBT, so `decode` marks every input is_ours and
+        // this holds by construction. Guard it anyway: a non-ours input would get an empty witness
+        // (a non-final tx), so reject mixed-ownership PSBTs loudly rather than broadcast garbage.
+        require(inputs.all { it.isOurs }) {
+            "SwapKitBtcSigner expects every input to be is_ours; mixed-ownership PSBTs are unsupported"
+        }
         // Recompute per-input sighashes in input order (is_ours only) so each maps to the MPC
         // signature keyed by its sighash hex — the same matching UtxoHelper uses.
         val sighashes = utxo.computeOurSighashes(signBitcoin)

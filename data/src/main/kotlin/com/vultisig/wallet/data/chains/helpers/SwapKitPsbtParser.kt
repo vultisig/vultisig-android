@@ -85,9 +85,9 @@ internal class PsbtCursor(private val data: ByteArray) {
         while (true) {
             val keyLen = readCompactSize()
             if (keyLen == 0L) return map // 0x00 terminator
-            val key = readBytes(keyLen.toInt())
+            val key = readBytes(asLength(keyLen))
             val valLen = readCompactSize()
-            val value = readBytes(valLen.toInt())
+            val value = readBytes(asLength(valLen))
             val keyHex = Numeric.toHexStringNoPrefix(key)
             if (map.containsKey(keyHex)) {
                 throw SwapKitPsbtException("SwapKit PSBT is malformed: duplicate key 0x$keyHex")
@@ -116,6 +116,20 @@ internal class PsbtCursor(private val data: ByteArray) {
         val slice = data.copyOfRange(offset, offset + count)
         offset += count
         return slice
+    }
+
+    /**
+     * Narrow a compactSize/length to an [Int] for [readBytes], with a clear error instead of the
+     * silent wrap-to-negative `toInt()` would produce on a value ≥ 2^31 (which would then surface
+     * as a misleading "truncated").
+     */
+    fun asLength(value: Long): Int {
+        if (value > Int.MAX_VALUE) {
+            throw SwapKitPsbtException(
+                "SwapKit PSBT field length $value exceeds the supported limit"
+            )
+        }
+        return value.toInt()
     }
 
     // Little-endian readers assembled byte-by-byte (no alignment assumptions).

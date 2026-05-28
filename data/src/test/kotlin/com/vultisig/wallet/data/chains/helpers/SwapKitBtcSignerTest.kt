@@ -208,12 +208,40 @@ class SwapKitBtcSignerTest {
         }
     }
 
+    @Test
+    fun `decode - classifies a P2SH-P2WPKH input and keeps its redeem script`() {
+        val redeem = "0014" + "22".repeat(20)
+        val signer = SwapKitBtcSigner("", "")
+        val psbt =
+            encodePsbt(
+                inputs =
+                    listOf(
+                        TestIn(
+                            prevTxIdDisplay =
+                                "0000000000000000000000000000000000000000000000000000000000000001",
+                            vout = 0,
+                            sequence = 0xFFFFFFFFL,
+                            amount = 100_000,
+                            scriptHex = "a914" + "11".repeat(20) + "87", // P2SH
+                            redeemScriptHex = redeem,
+                        )
+                    ),
+                outputs = listOf(TestOut(amount = 99_000, scriptHex = "0014" + "33".repeat(20))),
+            )
+
+        val input = signer.decode(psbt, null, null).inputs.filterNotNull().single()
+        assertEquals("p2sh-p2wpkh", input.scriptType)
+        assertEquals(redeem, input.redeemScript)
+        assertEquals(100_000L, input.amount)
+    }
+
     private data class TestIn(
         val prevTxIdDisplay: String,
         val vout: Long,
         val sequence: Long,
         val amount: Long,
         val scriptHex: String,
+        val redeemScriptHex: String? = null,
     )
 
     private data class TestOut(val amount: Long, val scriptHex: String)
@@ -257,6 +285,13 @@ class SwapKitBtcSignerTest {
             psbt.write(byteArrayOf(0x01, 0x01)) // keyLen=1, key=0x01
             psbt.write(varInt(wu.size.toLong()))
             psbt.write(wu)
+            input.redeemScriptHex?.let { redeemHex ->
+                // PSBT_IN_REDEEM_SCRIPT (key 0x04) for P2SH-P2WPKH inputs.
+                val redeem = Numeric.hexStringToByteArray(redeemHex)
+                psbt.write(byteArrayOf(0x01, 0x04)) // keyLen=1, key=0x04
+                psbt.write(varInt(redeem.size.toLong()))
+                psbt.write(redeem)
+            }
             psbt.write(0x00) // input map terminator
         }
         // per-output maps: empty
