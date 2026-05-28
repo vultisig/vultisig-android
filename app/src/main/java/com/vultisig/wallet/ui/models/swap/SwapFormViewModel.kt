@@ -1043,6 +1043,13 @@ constructor(
                                         ?: src.address.address) to q.data.memo
                                 is SwapQuote.MayaChain ->
                                     (q.data.inboundAddress ?: src.address.address) to q.data.memo
+                                // SwapKit BTC is a PSBT deposit to targetAddress; route it through
+                                // the same UTXO plan-fee path so the network fee is computed and
+                                // swap() doesn't abort with invalid_gas_fee_calculation.
+                                is SwapQuote.SwapKit ->
+                                    if (srcToken.chain.standard == TokenStandard.UTXO) {
+                                        q.data.targetAddress to q.data.memo
+                                    } else null
                                 else -> null
                             }
                         val isUtxoSwap =
