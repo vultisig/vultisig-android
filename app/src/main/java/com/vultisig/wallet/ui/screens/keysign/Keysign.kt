@@ -1,8 +1,9 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import androidx.annotation.DrawableRes
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.graphics.drawable.toBitmap
 import app.rive.Fit
 import app.rive.ImageAsset
 import app.rive.Result
@@ -44,6 +46,9 @@ import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 private const val RIVE_PROGRESS_PROPERTY = "progessPercentage" // typo in riv_keysign.riv
 private const val RIVE_TO_TOKEN_IMAGE_PROPERTY = "toToken"
@@ -182,15 +187,20 @@ private fun KeysignRiveProgress(
 
     LaunchedEffect(dstTokenLogoRes, riveWorker, vmi) {
         if (dstTokenLogoRes == null || riveWorker == null) return@LaunchedEffect
-        val bytes = encodeDrawableAsPng(context, dstTokenLogoRes) ?: return@LaunchedEffect
+        val bytes =
+            withContext(Dispatchers.Default) { encodeDrawableAsPng(context, dstTokenLogoRes) }
+                ?: return@LaunchedEffect
         val result = ImageAsset.fromBytes(riveWorker, bytes)
         if (result is Result.Success) {
             toTokenAsset = result.value
             vmi.setImage(RIVE_TO_TOKEN_IMAGE_PROPERTY, result.value)
+        } else {
+            Timber.w("Failed to load toToken image asset for res %d", dstTokenLogoRes)
         }
     }
     DisposableEffect(toTokenAsset) {
-        onDispose { toTokenAsset?.close() }
+        val assetToDispose = toTokenAsset
+        onDispose { assetToDispose?.close() }
     }
 
     RiveAnimation(
@@ -201,11 +211,13 @@ private fun KeysignRiveProgress(
     )
 }
 
+/** Rasterizes a (vector or raster) drawable resource to PNG bytes for Rive ImageAsset binding. */
 private fun encodeDrawableAsPng(
-    context: android.content.Context,
+    context: Context,
     @DrawableRes resId: Int,
 ): ByteArray? {
-    val bitmap: Bitmap = BitmapFactory.decodeResource(context.resources, resId) ?: return null
+    val drawable = AppCompatResources.getDrawable(context, resId) ?: return null
+    val bitmap = drawable.toBitmap()
     return try {
         ByteArrayOutputStream().use { stream ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
