@@ -94,7 +94,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                 id = 1,
             )
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-        return response.body<PolkadotGetNonceJson>().result
+        return response.bodyOrThrow<PolkadotGetNonceJson>().result
     }
 
     override suspend fun getBlockHash(isGenesis: Boolean): String {
@@ -106,7 +106,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                 id = 1,
             )
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-        return response.body<PolkadotGetBlockHashJson>().result
+        return response.bodyOrThrow<PolkadotGetBlockHashJson>().result
     }
 
     override suspend fun getGenesisBlockHash(): String {
@@ -122,7 +122,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                 id = 1,
             )
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-        val rpcResp = response.body<PolkadotGetRunTimeVersionJson>()
+        val rpcResp = response.bodyOrThrow<PolkadotGetRunTimeVersionJson>()
         val specVersion = rpcResp.result.specVersion
         val transactionVersion = rpcResp.result.transactionVersion
         return Pair(specVersion, transactionVersion)
@@ -138,7 +138,7 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
             )
 
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
-        val responseContent = response.body<PolkadotGetBlockHeaderJson>()
+        val responseContent = response.bodyOrThrow<PolkadotGetBlockHeaderJson>()
         val number = responseContent.result.number
         return BigInteger(number.drop(2), 16)
     }
@@ -152,6 +152,9 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
                 id = 1,
             )
         val response = httpClient.post(POLKADOT_API_URL) { setBody(payload) }
+        // Read the RPC body regardless of HTTP status: nodes may surface the idempotent
+        // "already in pool" errors (1012/1013) with a non-2xx status, and the duplicate
+        // rebroadcast from a second signing device must still resolve to null rather than throw.
         val responseContent = response.body<PolkadotBroadcastTransactionJson>()
         if (responseContent.error != null) {
             if (responseContent.error.code == 1012 || responseContent.error.code == 1013) {

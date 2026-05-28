@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.chains.helpers.THORChainSwaps.Companion.MAYA_STR
 import com.vultisig.wallet.data.utils.ThorChainSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
@@ -162,7 +161,7 @@ constructor(
             ) {
                 header(xClientID, xClientIDValue)
             }
-        val resp = response.body<CosmosBalanceResponse>()
+        val resp = response.bodyOrThrow<CosmosBalanceResponse>()
         return resp.balances ?: emptyList()
     }
 
@@ -173,7 +172,7 @@ constructor(
                     .get("https://midgard.mayachain.info") {
                         url { path("v2", "cacaopool", address) }
                     }
-                    .body<List<MayaChainDepositCacaoResponse>>()
+                    .bodyOrThrow<List<MayaChainDepositCacaoResponse>>()
             request.firstOrNull()?.cacaoDeposit
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
@@ -213,7 +212,7 @@ constructor(
                     )
                 )
             }
-            val responseRawString = response.body<String>()
+            val responseRawString = response.bodyOrThrow<String>()
             return json.decodeFromString(
                 thorChainSwapQuoteResponseJsonSerializer,
                 responseRawString,
@@ -231,7 +230,7 @@ constructor(
             httpClient.get("https://mayanode.mayachain.info/auth/accounts/$address") {
                 header(xClientID, xClientIDValue)
             }
-        val responseBody = response.body<THORChainAccountResultJson>()
+        val responseBody = response.bodyOrThrow<THORChainAccountResultJson>()
         Timber.d("getAccountNumber: $responseBody")
         return responseBody.result?.value ?: error("Field value is not found in the response")
     }
@@ -261,7 +260,7 @@ constructor(
     override suspend fun getLatestBlock(): MayaLatestBlockInfoResponse {
         try {
             val response = httpClient.get("https://mayanode.mayachain.info/blocks/latest")
-            val responseBody = response.body<MayaLatestBlockInfoResponse>()
+            val responseBody = response.bodyOrThrow<MayaLatestBlockInfoResponse>()
             Timber.d("getLatestBlock: $responseBody")
             return responseBody
         } catch (e: Exception) {
@@ -276,7 +275,7 @@ constructor(
             val response =
                 httpClient.get("https://mayanode.mayachain.info/mayachain/cacao_provider/$address")
 
-            val body = response.body<CacaoProviderResponse>()
+            val body = response.bodyOrThrow<CacaoProviderResponse>()
             Timber.d("getCacaoProvider: $body")
             return body
         } catch (e: Exception) {
@@ -289,7 +288,7 @@ constructor(
     override suspend fun getMayaConstants(): Map<String, Long> {
         try {
             val response = httpClient.get("https://mayanode.mayachain.info/mayachain/mimir")
-            val body = response.body<Map<String, Long>>()
+            val body = response.bodyOrThrow<Map<String, Long>>()
             Timber.d("getMayaConstants: $body")
             return body
         } catch (e: Exception) {
