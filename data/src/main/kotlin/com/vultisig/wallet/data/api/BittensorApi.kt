@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetRunTimeVersionJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
@@ -125,6 +126,9 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
                 id = 1,
             )
         val response = httpClient.post(BITTENSOR_RPC_URL) { setBody(payload) }
+        // Read the RPC body regardless of HTTP status: the relay may surface "Already Imported"
+        // with a non-2xx status, and the duplicate rebroadcast from a second signing device must
+        // still resolve to null rather than throw.
         val responseContent = response.body<PolkadotBroadcastTransactionJson>()
         if (responseContent.error != null) {
             if (responseContent.error.message?.contains("Already Imported") == true) {
@@ -174,7 +178,7 @@ internal class BittensorApiImp @Inject constructor(private val httpClient: HttpC
         val hash = if (txHash.startsWith("0x")) txHash else "0x$txHash"
         val response = httpClient.get("${TAOSTATS_PROXY_URL}/v1?hash=$hash")
         if (response.status == HttpStatusCode.NotFound) return null
-        return response.body<TaostatsExtrinsicResponse>().data?.firstOrNull()
+        return response.bodyOrThrow<TaostatsExtrinsicResponse>().data?.firstOrNull()
     }
 
     private companion object {

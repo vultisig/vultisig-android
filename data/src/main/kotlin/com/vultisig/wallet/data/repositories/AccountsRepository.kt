@@ -29,6 +29,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -37,8 +38,23 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 
+/**
+ * Progressive result of a balance load: [addresses] is the latest snapshot and [isComplete] is true
+ * only on the terminal emission, once every chain has resolved (or failed). Lets callers that care
+ * about the load lifecycle — e.g. the pull-to-refresh spinner — know when the refresh is done,
+ * which a plain `Flow<List<Address>>` cannot express because the stream stays open.
+ */
+data class AddressBalancesUpdate(val addresses: List<Address>, val isComplete: Boolean)
+
 interface AccountsRepository {
-    fun loadAddresses(vaultId: String, isRefresh: Boolean = false): Flow<List<Address>>
+    fun loadAddresses(vaultId: String): Flow<List<Address>>
+
+    /**
+     * Same per-chain streaming load as [loadAddresses] but each emission also carries whether the
+     * whole load has finished. [loadAddresses] is implemented on top of this, dropping the terminal
+     * completion emission since it only repeats the last snapshot.
+     */
+    fun loadAddressBalances(vaultId: String): Flow<AddressBalancesUpdate>
 
     fun loadCachedAddresses(vaultId: String): Flow<List<Address>>
 
@@ -69,16 +85,23 @@ constructor(
     private fun getVaultAsFlow(vaultId: String): Flow<Vault> =
         vaultRepository.getAsFlow(vaultId).filterNotNull()
 
-    override fun loadAddresses(vaultId: String, isRefresh: Boolean): Flow<List<Address>> =
+    // Drop the terminal completion emission for plain List consumers: it only repeats the last
+    // per-chain snapshot, so re-rendering it would be redundant. Lifecycle-aware callers use
+    // loadAddressBalances instead.
+    override fun loadAddresses(vaultId: String): Flow<List<Address>> =
+        loadAddressBalances(vaultId).filter { !it.isComplete }.map { it.addresses }
+
+    override fun loadAddressBalances(vaultId: String): Flow<AddressBalancesUpdate> =
         buildCacheAddresses(vaultId).flatMapLatest { (vaultCoins, addresses) ->
             channelFlow {
                 supervisorScope {
                     val loadPrices = async { tokenPriceRepository.refresh(vaultCoins) }
 
-                    if (!isRefresh) {
-                        addresses.fetchAccountFromDb()
-                        send(addresses)
-                    }
+                    // Always emit the last-known DB snapshot first so the UI shows cached
+                    // balances immediately instead of empty rows — including on refresh
+                    // (e.g. right after adding a chain).
+                    addresses.fetchAccountFromDb()
+                    send(AddressBalancesUpdate(addresses.toList(), isComplete = false))
 
                     addresses
                         .mapIndexed { index, account ->
@@ -109,6 +132,17 @@ constructor(
                                     }
 
                                     addresses[index] = account.copy(accounts = newAccounts)
+                                    // Stream each chain's balance as soon as it resolves rather
+                                    // than waiting for every chain to finish (Windows streams the
+                                    // same way; iOS instead batches all balances and applies them
+                                    // at once). Emit a snapshot copy because other chains may still
+                                    // be mutating the backing list in parallel.
+                                    send(
+                                        AddressBalancesUpdate(
+                                            addresses.toList(),
+                                            isComplete = false,
+                                        )
+                                    )
                                 } catch (e: Exception) {
                                     if (e is kotlinx.coroutines.CancellationException) throw e
                                     Timber.e(e)
@@ -117,7 +151,10 @@ constructor(
                             }
                         }
                         .awaitAll()
-                    send(addresses)
+
+                    // Terminal emission: every chain has resolved (or failed). Carries the final
+                    // snapshot and flags completion so the UI can stop the refresh spinner.
+                    send(AddressBalancesUpdate(addresses.toList(), isComplete = true))
                 }
                 awaitClose()
             }
