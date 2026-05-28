@@ -288,8 +288,7 @@ constructor(
      * chain logo. Sourced from [keysignPayload] (synchronous at construction) rather than the
      * async-loaded [transactionTypeUiModel], which may still be null while signing is in progress.
      */
-    @DrawableRes
-    val coinLogoRes: Int? = keysignPayload?.coin?.tokenLogoRes()
+    @DrawableRes val coinLogoRes: Int? = keysignPayload?.coin?.tokenLogoRes()
 
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null

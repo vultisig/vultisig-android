@@ -139,20 +139,14 @@ internal fun KeysignView(
             }
 
             else -> {
-                KeysignRiveProgress(
-                    progress = state.progress,
-                    coinLogoRes = coinLogoRes,
-                )
+                KeysignRiveProgress(progress = state.progress, coinLogoRes = coinLogoRes)
             }
         }
     }
 }
 
 @Composable
-private fun KeysignRiveProgress(
-    progress: Float,
-    @DrawableRes coinLogoRes: Int?,
-) {
+private fun KeysignRiveProgress(progress: Float, @DrawableRes coinLogoRes: Int?) {
     val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keysign).value
     if (riveFile == null) {
         VsSigningProgressIndicator(text = stringResource(R.string.keysign_screen_preparing_vault))
@@ -210,10 +204,7 @@ private fun KeysignRiveProgress(
 }
 
 /** Rasterizes a (vector or raster) drawable resource to PNG bytes for Rive ImageAsset binding. */
-private fun encodeDrawableAsPng(
-    context: Context,
-    @DrawableRes resId: Int,
-): ByteArray? {
+private fun encodeDrawableAsPng(context: Context, @DrawableRes resId: Int): ByteArray? {
     val drawable = AppCompatResources.getDrawable(context, resId) ?: return null
     val bitmap = drawable.toBitmap()
     return try {
