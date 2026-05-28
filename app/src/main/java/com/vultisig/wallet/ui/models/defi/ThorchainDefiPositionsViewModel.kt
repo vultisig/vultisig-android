@@ -357,6 +357,28 @@ constructor(
         }
     }
 
+    private suspend fun calculateStakingFiatPrice(amount: BigDecimal, coin: Coin): String {
+        return try {
+            val currency = appCurrencyRepository.currency.first()
+            val currencyFormat =
+                withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+            formatFiatString(amount, coin, currency, currencyFormat)
+        } catch (e: java.io.IOException) {
+            Timber.e(e, "Failed to calculate THORChain staking fiat price")
+            ""
+        }
+    }
+
+    private suspend fun formatFiatString(
+        amount: BigDecimal,
+        coin: Coin,
+        currency: AppCurrency,
+        currencyFormat: java.text.NumberFormat,
+    ): String {
+        val fiatValue = createFiatValue(amount, coin, currency)
+        return currencyFormat.format(fiatValue.value)
+    }
+
     private fun loadSavedPositions() {
         viewModelScope.launch {
             val savedPositions = defiPositionsRepository.getSelectedPositions(vaultId).first()
@@ -574,6 +596,7 @@ constructor(
                 .collect { details ->
                     val stakedAmount = Chain.ThorChain.coinType.toValue(details.stakeAmount)
                     val formattedAmount = "${stakedAmount.toPlainString()} $RUJI_SYMBOL"
+                    val stakedFiat = calculateStakingFiatPrice(stakedAmount, details.coin)
 
                     val rewards =
                         details.rewards?.let { rewardAmount ->
@@ -589,6 +612,7 @@ constructor(
                             stakeAssetHeader = UiText.StringResource(R.string.staked_ruji_header),
                             stakeAmount = stakedAmount,
                             stakedAmountDisplay = formattedAmount,
+                            stakedFiatDisplay = stakedFiat,
                             apy = details.apr?.formatPercentage(),
                             canWithdraw = details.rewards?.let { it > BigDecimal.ZERO } == true,
                             canStake = true,
@@ -631,6 +655,7 @@ constructor(
                 .collect { position ->
                     val stakedAmount = Chain.ThorChain.coinType.toValue(position.stakeAmount)
                     val formattedAmount = "${stakedAmount.toPlainString()} TCY"
+                    val stakedFiat = calculateStakingFiatPrice(stakedAmount, position.coin)
 
                     // Create and return the UI model
                     val stakePosition =
@@ -638,6 +663,7 @@ constructor(
                             coin = position.coin,
                             stakeAssetHeader = UiText.StringResource(R.string.staked_tcy_header),
                             stakedAmountDisplay = formattedAmount,
+                            stakedFiatDisplay = stakedFiat,
                             stakeAmount = stakedAmount,
                             apy = position.apr?.formatPercentage(),
                             canWithdraw = false, // TCY auto-distributes rewards
@@ -687,55 +713,65 @@ constructor(
                     }
                 }
                 .collect { defaultPositions ->
+                    val loadedPositions = defaultPositions.filter { it.coin.id in coinsToLoad }
+
+                    // Resolve currency and format once; the non-suspend .map below can't call
+                    // suspend functions, so fiat strings are pre-computed here.
+                    val currency = appCurrencyRepository.currency.first()
+                    val currencyFormat =
+                        withContext(Dispatchers.IO) { appCurrencyRepository.getCurrencyFormat() }
+                    val stakedFiatByCoinId = mutableMapOf<String, String>()
+                    for (defaultPosition in loadedPositions) {
+                        val amount = Chain.ThorChain.coinType.toValue(defaultPosition.stakeAmount)
+                        stakedFiatByCoinId[defaultPosition.coin.id] =
+                            formatFiatString(amount, defaultPosition.coin, currency, currencyFormat)
+                    }
+
                     val positions =
-                        defaultPositions
-                            .filter { it.coin.id in coinsToLoad }
-                            .map { defaultPosition ->
-                                val stakeAmount =
-                                    Chain.ThorChain.coinType.toValue(defaultPosition.stakeAmount)
-                                val coin = defaultPosition.coin
-                                val supportsMint =
-                                    coin.ticker.contains("yrune", ignoreCase = true) ||
-                                        coin.ticker.contains("ytcy", ignoreCase = true)
+                        loadedPositions.map { defaultPosition ->
+                            val stakeAmount =
+                                Chain.ThorChain.coinType.toValue(defaultPosition.stakeAmount)
+                            val coin = defaultPosition.coin
+                            val supportsMint =
+                                coin.ticker.contains("yrune", ignoreCase = true) ||
+                                    coin.ticker.contains("ytcy", ignoreCase = true)
 
-                                val canTransfer = coin.ticker.contains("stcy", ignoreCase = true)
+                            val canTransfer = coin.ticker.contains("stcy", ignoreCase = true)
 
-                                val headerResId =
-                                    if (supportsMint) {
-                                        R.string.defi_header_minted
-                                    } else if (
-                                        defaultPosition.coin.id.equals(
-                                            Coins.ThorChain.sTCY.id,
-                                            true,
-                                        )
-                                    ) {
-                                        R.string.defi_header_compounded
-                                    } else {
-                                        R.string.defi_header_staked
-                                    }
-                                val position =
-                                    StakePositionUiModel(
-                                        coin = defaultPosition.coin,
-                                        stakeAssetHeader =
-                                            UiText.FormattedText(headerResId, listOf(coin.ticker)),
-                                        stakedAmountDisplay =
-                                            "${stakeAmount.toPlainString()} ${coin.ticker}",
-                                        stakeAmount = stakeAmount,
-                                        apy = null,
-                                        supportsMint = supportsMint,
-                                        canWithdraw = false, // TCY auto-distributes rewards
-                                        canStake = true,
-                                        canTransfer = canTransfer,
-                                        canUnstake = stakeAmount > BigDecimal.ZERO,
-                                        rewards = null,
-                                        nextReward = null,
-                                        nextPayout = null,
-                                    )
+                            val headerResId =
+                                if (supportsMint) {
+                                    R.string.defi_header_minted
+                                } else if (
+                                    defaultPosition.coin.id.equals(Coins.ThorChain.sTCY.id, true)
+                                ) {
+                                    R.string.defi_header_compounded
+                                } else {
+                                    R.string.defi_header_staked
+                                }
+                            val position =
+                                StakePositionUiModel(
+                                    coin = defaultPosition.coin,
+                                    stakeAssetHeader =
+                                        UiText.FormattedText(headerResId, listOf(coin.ticker)),
+                                    stakedAmountDisplay =
+                                        "${stakeAmount.toPlainString()} ${coin.ticker}",
+                                    stakedFiatDisplay = stakedFiatByCoinId[coin.id].orEmpty(),
+                                    stakeAmount = stakeAmount,
+                                    apy = null,
+                                    supportsMint = supportsMint,
+                                    canWithdraw = false, // TCY auto-distributes rewards
+                                    canStake = true,
+                                    canTransfer = canTransfer,
+                                    canUnstake = stakeAmount > BigDecimal.ZERO,
+                                    rewards = null,
+                                    nextReward = null,
+                                    nextPayout = null,
+                                )
 
-                                updateExistingPosition(position)
+                            updateExistingPosition(position)
 
-                                position to defaultPosition.stakeAmount
-                            }
+                            position to defaultPosition.stakeAmount
+                        }
 
                     _totalValueDefaultStake.update {
                         StakeDefaultValues(
