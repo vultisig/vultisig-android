@@ -12,7 +12,6 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
-import com.vultisig.wallet.ui.models.send.submit.SendStrategyFactory
 import com.vultisig.wallet.ui.navigation.Route
 import io.mockk.coEvery
 import io.mockk.every
@@ -173,20 +172,6 @@ internal class SendFormViewModelTronStakingTest {
             sendStrategyFactory = fakeSendStrategyFactory(),
         )
     }
-
-    private fun fakeSendStrategyFactory(): SendStrategyFactory =
-        SendStrategyFactory(
-            transactionRepository = mockk(relaxed = true),
-            blockChainSpecificRepository = mockk(relaxed = true),
-            getAvailableTokenBalance = mockk(relaxed = true),
-            gasFeeToEstimatedFee = mockk(relaxed = true),
-            depositTransactionRepository = mockk(relaxed = true),
-            accountsRepository = mockk(relaxed = true),
-            chainAccountAddressRepository = mockk(relaxed = true),
-            addressParserRepository = mockk(relaxed = true),
-            chainValidationService = mockk(relaxed = true),
-            navigator = mockk(relaxed = true),
-        )
 
     private fun vaultWithTrxCoin(): Vault =
         mockk<Vault>(relaxed = true).also {

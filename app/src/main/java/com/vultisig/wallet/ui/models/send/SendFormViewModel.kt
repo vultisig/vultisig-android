@@ -46,6 +46,7 @@ import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.submit.AccountValidator
 import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
+import com.vultisig.wallet.ui.models.send.submit.SendStrategyContext
 import com.vultisig.wallet.ui.models.send.submit.SendStrategyFactory
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -301,34 +302,36 @@ constructor(
 
     private val strategies =
         sendStrategyFactory.create(
-            scope = viewModelScope,
-            addressFieldState = addressFieldState,
-            tokenAmountFieldState = tokenAmountFieldState,
-            fiatAmountFieldState = fiatAmountFieldState,
-            memoFieldState = memoFieldState,
-            slippageFieldState = slippageFieldState,
-            operatorFeesBondFieldState = operatorFeesBondFieldState,
-            providerBondFieldState = providerBondFieldState,
-            accountValidator = accountValidator,
-            bitcoinPlanService = bitcoinPlanService,
-            addressManager = addressManager,
-            amountManager = amountManager,
-            gasSettings = gasSettings,
-            planBtc = planBtc,
-            planFee = planFee,
-            accounts = accounts,
-            appCurrency = appCurrency,
-            vaultIdProvider = { vaultId },
-            selectedAccountProvider = { selectedAccount },
-            defiTypeProvider = { defiType },
-            isAutocompoundProvider = { uiState.value.isAutocompound },
-            mscaAddressProvider = { mscaAddress },
-            currentTronFrozenBalanceProvider = tronStakingService::currentFrozenBalance,
-            expandSection = ::expandSection,
-            emitFocusField = { field -> _focusFieldChannel.trySend(field) },
-            showLoading = ::showLoading,
-            hideLoading = ::hideLoading,
-            showError = ::showError,
+            SendStrategyContext(
+                scope = viewModelScope,
+                addressFieldState = addressFieldState,
+                tokenAmountFieldState = tokenAmountFieldState,
+                fiatAmountFieldState = fiatAmountFieldState,
+                memoFieldState = memoFieldState,
+                slippageFieldState = slippageFieldState,
+                operatorFeesBondFieldState = operatorFeesBondFieldState,
+                providerBondFieldState = providerBondFieldState,
+                accountValidator = accountValidator,
+                bitcoinPlanService = bitcoinPlanService,
+                addressManager = addressManager,
+                amountManager = amountManager,
+                gasSettings = gasSettings,
+                planBtc = planBtc,
+                planFee = planFee,
+                accounts = accounts,
+                appCurrency = appCurrency,
+                vaultIdProvider = { vaultId },
+                selectedAccountProvider = { selectedAccount },
+                defiTypeProvider = { defiType },
+                isAutocompoundProvider = { uiState.value.isAutocompound },
+                mscaAddressProvider = { mscaAddress },
+                currentTronFrozenBalanceProvider = tronStakingService::currentFrozenBalance,
+                expandSection = ::expandSection,
+                emitFocusField = { field -> _focusFieldChannel.trySend(field) },
+                showLoading = ::showLoading,
+                hideLoading = ::hideLoading,
+                showError = ::showError,
+            )
         )
 
     init {

@@ -8,7 +8,6 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
-import com.vultisig.wallet.ui.models.send.submit.SendStrategyFactory
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -252,20 +251,6 @@ internal class SendFormViewModelAmountTest {
             sendStrategyFactory = fakeSendStrategyFactory(),
         )
     }
-
-    private fun fakeSendStrategyFactory(): SendStrategyFactory =
-        SendStrategyFactory(
-            transactionRepository = mockk(relaxed = true),
-            blockChainSpecificRepository = mockk(relaxed = true),
-            getAvailableTokenBalance = mockk(relaxed = true),
-            gasFeeToEstimatedFee = mockk(relaxed = true),
-            depositTransactionRepository = mockk(relaxed = true),
-            accountsRepository = mockk(relaxed = true),
-            chainAccountAddressRepository = mockk(relaxed = true),
-            addressParserRepository = mockk(relaxed = true),
-            chainValidationService = mockk(relaxed = true),
-            navigator = mockk(relaxed = true),
-        )
 
     private companion object {
         const val VAULT_ID = "vault-1"
