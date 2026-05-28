@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.models.keysign
 
+import androidx.annotation.DrawableRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -36,6 +37,7 @@ import com.vultisig.wallet.data.models.getEddsaSigningKey
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.tokenLogoRes
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
@@ -278,6 +280,16 @@ constructor(
      */
     val dappMetadata: DAppMetadata?
         get() = keysignPayload?.dappMetadata
+
+    /**
+     * Logo shown inside the keysign Rive animation ("toToken" image input). Mirrors iOS
+     * (`keysignPayload.coin.logo`) and Windows (`getKeysignPayloadLogoSrc`): the signing coin's
+     * logo for every keysign — Send, Swap, Deposit — with `tokenLogoRes()` falling back to the
+     * chain logo. Sourced from [keysignPayload] (synchronous at construction) rather than the
+     * async-loaded [transactionTypeUiModel], which may still be null while signing is in progress.
+     */
+    @DrawableRes
+    val coinLogoRes: Int? = keysignPayload?.coin?.tokenLogoRes()
 
     private var tssInstance: ServiceImpl? = null
     private var tssMessenger: TssMessenger? = null

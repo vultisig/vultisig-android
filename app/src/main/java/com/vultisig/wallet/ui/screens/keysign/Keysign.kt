@@ -29,7 +29,6 @@ import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.payload.DAppMetadata
-import com.vultisig.wallet.data.models.tokenLogoRes
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
@@ -68,6 +67,7 @@ internal fun KeysignView(
     hasBackClick: Boolean,
     showSaveToAddressBook: Boolean,
     dappMetadata: DAppMetadata? = null,
+    @DrawableRes coinLogoRes: Int? = null,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         if (state.isInProgress) {
@@ -139,16 +139,9 @@ internal fun KeysignView(
             }
 
             else -> {
-                val dstTokenLogoRes =
-                    (transactionTypeUiModel as? TransactionTypeUiModel.Swap)
-                        ?.swapTransactionUiModel
-                        ?.dst
-                        ?.token
-                        ?.tokenLogoRes()
-
                 KeysignRiveProgress(
                     progress = state.progress,
-                    dstTokenLogoRes = dstTokenLogoRes,
+                    coinLogoRes = coinLogoRes,
                 )
             }
         }
@@ -158,7 +151,7 @@ internal fun KeysignView(
 @Composable
 private fun KeysignRiveProgress(
     progress: Float,
-    @DrawableRes dstTokenLogoRes: Int?,
+    @DrawableRes coinLogoRes: Int?,
 ) {
     val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keysign).value
     if (riveFile == null) {
@@ -183,11 +176,14 @@ private fun KeysignRiveProgress(
     val context = LocalContext.current
     var toTokenAsset by remember { mutableStateOf<ImageAsset?>(null) }
 
-    LaunchedEffect(dstTokenLogoRes, riveFile, vmi) {
-        if (dstTokenLogoRes == null) return@LaunchedEffect
+    LaunchedEffect(coinLogoRes, riveFile, vmi) {
+        if (coinLogoRes == null) return@LaunchedEffect
         val bytes =
-            withContext(Dispatchers.Default) { encodeDrawableAsPng(context, dstTokenLogoRes) }
-                ?: return@LaunchedEffect
+            withContext(Dispatchers.Default) { encodeDrawableAsPng(context, coinLogoRes) }
+                ?: run {
+                    Timber.w("Could not encode coin logo res %d for keysign animation", coinLogoRes)
+                    return@LaunchedEffect
+                }
         // ImageAsset handles are worker-scoped, and vmi.setImage runs on the file's
         // worker — decode on riveFile.riveWorker (the worker that owns the vmi), not a
         // separate rememberRiveWorkerOrNull() instance, or the handle is foreign and the
@@ -197,7 +193,7 @@ private fun KeysignRiveProgress(
             toTokenAsset = result.value
             vmi.setImage(RIVE_TO_TOKEN_IMAGE_PROPERTY, result.value)
         } else {
-            Timber.w("Failed to load toToken image asset for res %d", dstTokenLogoRes)
+            Timber.w("Failed to load toToken image asset for res %d", coinLogoRes)
         }
     }
     DisposableEffect(toTokenAsset) {
