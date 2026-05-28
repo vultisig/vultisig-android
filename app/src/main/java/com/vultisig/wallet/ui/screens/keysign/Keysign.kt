@@ -26,7 +26,6 @@ import app.rive.Fit
 import app.rive.ImageAsset
 import app.rive.Result
 import app.rive.ViewModelSource
-import app.rive.rememberRiveWorkerOrNull
 import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.payload.DAppMetadata
@@ -182,15 +181,18 @@ private fun KeysignRiveProgress(
     SideEffect { vmi.setNumber(RIVE_PROGRESS_PROPERTY, animatedValue) }
 
     val context = LocalContext.current
-    val riveWorker = rememberRiveWorkerOrNull()
     var toTokenAsset by remember { mutableStateOf<ImageAsset?>(null) }
 
-    LaunchedEffect(dstTokenLogoRes, riveWorker, vmi) {
-        if (dstTokenLogoRes == null || riveWorker == null) return@LaunchedEffect
+    LaunchedEffect(dstTokenLogoRes, riveFile, vmi) {
+        if (dstTokenLogoRes == null) return@LaunchedEffect
         val bytes =
             withContext(Dispatchers.Default) { encodeDrawableAsPng(context, dstTokenLogoRes) }
                 ?: return@LaunchedEffect
-        val result = ImageAsset.fromBytes(riveWorker, bytes)
+        // ImageAsset handles are worker-scoped, and vmi.setImage runs on the file's
+        // worker — decode on riveFile.riveWorker (the worker that owns the vmi), not a
+        // separate rememberRiveWorkerOrNull() instance, or the handle is foreign and the
+        // assignment silently no-ops.
+        val result = ImageAsset.fromBytes(riveFile.riveWorker, bytes)
         if (result is Result.Success) {
             toTokenAsset = result.value
             vmi.setImage(RIVE_TO_TOKEN_IMAGE_PROPERTY, result.value)
