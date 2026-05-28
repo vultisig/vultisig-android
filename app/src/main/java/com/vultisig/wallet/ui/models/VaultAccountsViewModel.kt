@@ -48,8 +48,10 @@ import com.vultisig.wallet.ui.screens.settings.bottomsheets.notifications.VaultI
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import com.vultisig.wallet.ui.utils.pushNotificationErrorUiText
 import com.vultisig.wallet.ui.utils.textAsFlow
+import com.vultisig.wallet.ui.utils.throttleLatest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -405,8 +407,15 @@ constructor(
             viewModelScope.safeLaunch {
                 combine(
                         accountsRepository
-                            .loadAddresses(vaultId)
-                            .map { it.sortByAccountsTotalFiatValue() }
+                            .loadAddressBalances(vaultId)
+                            // Leading debounce: coalesce the burst of per-chain updates so the rows
+                            // settle once per window instead of reordering on every chain arrival
+                            // (matches the leading debounce iOS added in #4337).
+                            .throttleLatest(BALANCE_RENDER_WINDOW) { it.isComplete }
+                            // Keep the pull-to-refresh spinner up until every chain has resolved,
+                            // matching iOS/Windows, instead of clearing it on the cached snapshot.
+                            .onEach { if (it.isComplete) updateRefreshing(false) }
+                            .map { it.addresses.sortByAccountsTotalFiatValue() }
                             .catch {
                                 updateRefreshing(false)
                                 Timber.e(it)
@@ -498,7 +507,6 @@ constructor(
                 )
             }
         }
-        updateRefreshing(false)
 
         Timber.d("Update updateUiStateFromList: %s", "$this")
     }
@@ -704,5 +712,9 @@ constructor(
 
     companion object {
         internal const val REFRESH_CHAIN_DATA = "refresh_chain_data"
+
+        // Window for coalescing per-chain balance updates so rows settle once per window instead
+        // of reordering on every chain arrival; matches the leading debounce iOS uses (#4337).
+        private val BALANCE_RENDER_WINDOW = 250.milliseconds
     }
 }

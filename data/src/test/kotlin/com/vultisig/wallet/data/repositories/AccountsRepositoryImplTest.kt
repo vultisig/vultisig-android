@@ -120,6 +120,14 @@ internal class AccountsRepositoryImplTest {
             streamedEth.value(Chain.Solana),
             "SOL should still show its cached value while its network call is in flight",
         )
+        // Exactly two emissions while SOL is gated — the cached snapshot and ETH's streamed update.
+        // A batched implementation would only have emitted the cached snapshot at this point, so
+        // the count, not just the presence of ETH_NETWORK, pins down the streaming behaviour.
+        assertEquals(
+            2,
+            emissions.size,
+            "expected cached + ETH-streamed emissions before SOL resolves",
+        )
 
         solanaGate.complete(Unit)
         advanceUntilIdle()
@@ -128,6 +136,72 @@ internal class AccountsRepositoryImplTest {
         assertEquals(ETH_NETWORK, finalEmission.value(Chain.Ethereum))
         assertEquals(SOL_NETWORK, finalEmission.value(Chain.Solana))
         job.cancel()
+    }
+
+    @Test
+    fun `loadAddressBalances marks completion only after every chain resolves`() = runTest {
+        val eth = Coins.Ethereum.ETH.copy(address = ETH_ADDRESS)
+        val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+        stubVault(eth, sol)
+        coJustRun { tokenPriceRepository.refresh(any()) }
+        coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
+            listOf(wrapped(amount = CACHED, coin = eth), wrapped(amount = CACHED, coin = sol))
+
+        every { balanceRepository.getTokenBalanceAndPrice(ETH_ADDRESS, eth) } returns
+            flowOf(balance(amount = ETH_NETWORK, coin = eth))
+        val solanaGate = CompletableDeferred<Unit>()
+        every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, sol) } returns
+            gatedBalance(solanaGate, amount = SOL_NETWORK, coin = sol)
+
+        val emissions = mutableListOf<AddressBalancesUpdate>()
+        val job = launch { repository.loadAddressBalances(VAULT_ID).collect(emissions::add) }
+
+        advanceUntilIdle()
+        // While SOL is still in flight the load is not done, so nothing is marked complete.
+        assertTrue(
+            emissions.none { it.isComplete },
+            "load must not report completion while a chain is still pending",
+        )
+
+        solanaGate.complete(Unit)
+        advanceUntilIdle()
+
+        // Exactly one terminal emission, it is the last, and it carries every network balance.
+        assertEquals(1, emissions.count { it.isComplete })
+        val terminal = emissions.last()
+        assertTrue(terminal.isComplete)
+        assertEquals(ETH_NETWORK, terminal.addresses.value(Chain.Ethereum))
+        assertEquals(SOL_NETWORK, terminal.addresses.value(Chain.Solana))
+        job.cancel()
+    }
+
+    @Test
+    fun `loadAddresses drops the redundant terminal completion emission`() = runTest {
+        val sol = Coins.Solana.SOL.copy(address = SOL_ADDRESS)
+        stubVault(sol)
+        coJustRun { tokenPriceRepository.refresh(any()) }
+        coEvery { balanceRepository.getCachedTokenBalances(any(), any()) } returns
+            listOf(wrapped(amount = CACHED, coin = sol))
+        every { balanceRepository.getTokenBalanceAndPrice(SOL_ADDRESS, sol) } returns
+            flowOf(balance(amount = NETWORK, coin = sol))
+
+        val listEmissions = mutableListOf<List<Address>>()
+        val balanceEmissions = mutableListOf<AddressBalancesUpdate>()
+        val listJob = launch { repository.loadAddresses(VAULT_ID).collect(listEmissions::add) }
+        val balanceJob = launch {
+            repository.loadAddressBalances(VAULT_ID).collect(balanceEmissions::add)
+        }
+
+        advanceUntilIdle()
+
+        // loadAddressBalances ends with a terminal completion emission that just repeats the last
+        // snapshot; loadAddresses filters it out, so it emits exactly one fewer time while still
+        // surfacing the final network balance.
+        assertTrue(balanceEmissions.any { it.isComplete })
+        assertEquals(balanceEmissions.size - 1, listEmissions.size)
+        assertEquals(NETWORK, listEmissions.last().solValue())
+        listJob.cancel()
+        balanceJob.cancel()
     }
 
     private fun stubVault(vararg coins: Coin) {
