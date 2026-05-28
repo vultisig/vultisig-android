@@ -1,10 +1,15 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,13 +17,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import app.rive.Fit
+import app.rive.ImageAsset
+import app.rive.Result
 import app.rive.ViewModelSource
+import app.rive.rememberRiveWorkerOrNull
 import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.payload.DAppMetadata
+import com.vultisig.wallet.data.models.tokenLogoRes
 import com.vultisig.wallet.ui.components.KeepScreenOn
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
@@ -33,8 +43,10 @@ import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import java.io.ByteArrayOutputStream
 
 private const val RIVE_PROGRESS_PROPERTY = "progessPercentage" // typo in riv_keysign.riv
+private const val RIVE_TO_TOKEN_IMAGE_PROPERTY = "toToken"
 
 @Composable
 internal fun KeysignView(
@@ -123,14 +135,27 @@ internal fun KeysignView(
             }
 
             else -> {
-                KeysignRiveProgress(progress = state.progress)
+                val dstTokenLogoRes =
+                    (transactionTypeUiModel as? TransactionTypeUiModel.Swap)
+                        ?.swapTransactionUiModel
+                        ?.dst
+                        ?.token
+                        ?.tokenLogoRes()
+
+                KeysignRiveProgress(
+                    progress = state.progress,
+                    dstTokenLogoRes = dstTokenLogoRes,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun KeysignRiveProgress(progress: Float) {
+private fun KeysignRiveProgress(
+    progress: Float,
+    @DrawableRes dstTokenLogoRes: Int?,
+) {
     val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keysign).value
     if (riveFile == null) {
         VsSigningProgressIndicator(text = stringResource(R.string.keysign_screen_preparing_vault))
@@ -151,12 +176,44 @@ private fun KeysignRiveProgress(progress: Float) {
 
     SideEffect { vmi.setNumber(RIVE_PROGRESS_PROPERTY, animatedValue) }
 
+    val context = LocalContext.current
+    val riveWorker = rememberRiveWorkerOrNull()
+    var toTokenAsset by remember { mutableStateOf<ImageAsset?>(null) }
+
+    LaunchedEffect(dstTokenLogoRes, riveWorker, vmi) {
+        if (dstTokenLogoRes == null || riveWorker == null) return@LaunchedEffect
+        val bytes = encodeDrawableAsPng(context, dstTokenLogoRes) ?: return@LaunchedEffect
+        val result = ImageAsset.fromBytes(riveWorker, bytes)
+        if (result is Result.Success) {
+            toTokenAsset = result.value
+            vmi.setImage(RIVE_TO_TOKEN_IMAGE_PROPERTY, result.value)
+        }
+    }
+    DisposableEffect(toTokenAsset) {
+        onDispose { toTokenAsset?.close() }
+    }
+
     RiveAnimation(
         file = riveFile,
         viewModelInstance = vmi,
         modifier = Modifier.fillMaxSize(),
         fit = Fit.Cover(),
     )
+}
+
+private fun encodeDrawableAsPng(
+    context: android.content.Context,
+    @DrawableRes resId: Int,
+): ByteArray? {
+    val bitmap: Bitmap = BitmapFactory.decodeResource(context.resources, resId) ?: return null
+    return try {
+        ByteArrayOutputStream().use { stream ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            stream.toByteArray()
+        }
+    } finally {
+        bitmap.recycle()
+    }
 }
 
 @Preview
