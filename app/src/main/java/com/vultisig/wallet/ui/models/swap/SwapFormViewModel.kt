@@ -759,9 +759,9 @@ constructor(
         val amount =
             TokenValue.createDecimal(maxUsableTokenAmount, srcTokenValue.decimals)
                 .multiply(percentage.toBigDecimal())
-                .setScale(6, RoundingMode.DOWN)
+                .formatFlippedAmount(srcTokenValue.decimals)
 
-        srcAmountState.setTextAndPlaceCursorAtEnd(amount.toString())
+        srcAmountState.setTextAndPlaceCursorAtEnd(amount)
     }
 
     fun loadData(vaultId: String, chainId: String?, srcTokenId: String?, dstTokenId: String?) {
