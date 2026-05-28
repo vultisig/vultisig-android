@@ -251,12 +251,14 @@ internal class VaultAccountsViewModelTest {
             advanceUntilIdle()
             // Sanity: init must not leave the spinner running.
             vm.uiState.value.isRefreshing.shouldBeFalse()
+            // Drop any loadAddressBalances calls made during init; only count the refresh call.
+            clearMocks(accountsRepository, answers = false)
 
             vm.refreshData()
             advanceUntilIdle()
 
             vm.uiState.value.isRefreshing.shouldBeFalse()
-            verify(atLeast = 1) { accountsRepository.loadAddressBalances("vault-1") }
+            verify(exactly = 1) { accountsRepository.loadAddressBalances("vault-1") }
         }
 
     /**
