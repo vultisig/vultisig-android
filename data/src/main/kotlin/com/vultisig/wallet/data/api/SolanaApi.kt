@@ -100,7 +100,7 @@ constructor(
                     id = 1,
                 )
             val response = httpClient.post(rpcEndpoint) { setBody(payload) }
-            val rpcResp = response.body<SolanaBalanceJson>()
+            val rpcResp = response.bodyOrThrow<SolanaBalanceJson>()
             Timber.tag("solanaApiImp").d(response.toString())
 
             if (rpcResp.error != null) {
@@ -141,7 +141,7 @@ constructor(
         val response = httpClient.post(rpcEndpoint) { setBody(payload) }
         val responseContent = response.bodyAsText()
         Timber.tag("solanaApiImp").d(responseContent)
-        val rpcResp = response.body<RecentBlockHashResponseJson>()
+        val rpcResp = response.bodyOrThrow<RecentBlockHashResponseJson>()
         if (rpcResp.error != null) {
             Timber.tag("solanaApiImp").d("get recent blockhash  error: ${rpcResp.error}")
             return ""
@@ -188,7 +188,7 @@ constructor(
                 )
             val response = httpClient.post(rpcEndpoint) { setBody(requestBody) }
             val responseRawString = response.bodyAsText()
-            val result = response.body<BroadcastTransactionRespJson>()
+            val result = response.bodyOrThrow<BroadcastTransactionRespJson>()
             result.error?.let { error ->
                 Timber.tag("SolanaApiImp").d("Error broadcasting transaction: $responseRawString")
                 error(error["message"].toString())
@@ -229,7 +229,7 @@ constructor(
                     try {
                         httpClient
                             .get(splTokensInfoEndpoint2) { parameter("query", token) }
-                            .body<List<SplTokenInfo>>()
+                            .bodyOrThrow<List<SplTokenInfo>>()
                             .firstOrNull()
                     } catch (e: Exception) {
                         if (e is kotlinx.coroutines.CancellationException) throw e
@@ -260,7 +260,7 @@ constructor(
 
                 listOf(response, responseToken2022)
                     .awaitAll()
-                    .mapNotNull { it.body<SplResponseJson>().result?.accounts }
+                    .mapNotNull { it.bodyOrThrow<SplResponseJson>().result?.accounts }
                     .flatten()
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
@@ -299,7 +299,7 @@ constructor(
             val response = httpClient.post(rpcEndpoint) { setBody(payload) }
             val responseContent = response.bodyAsText()
             Timber.d(responseContent)
-            val rpcResp = response.body<SplAmountRpcResponseJson>()
+            val rpcResp = response.bodyOrThrow<SplAmountRpcResponseJson>()
 
             if (rpcResp.error != null) {
                 Timber.d("get spl token amount error: ${rpcResp.error}")

@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.api.models.RpcPayload
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import java.math.BigInteger
@@ -43,7 +42,7 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
                 )
             val response = http.post(BASE_XRP_CLUSTER) { setBody(payload) }
 
-            val rpcResp = response.body<RippleBroadcastResponseResponseJson>()
+            val rpcResp = response.bodyOrThrow<RippleBroadcastResponseResponseJson>()
 
             val resultMessage = rpcResp.result.engineResultMessage
 
@@ -132,7 +131,7 @@ internal class RippleApiImp @Inject constructor(private val http: HttpClient) : 
                         },
                 )
             val response = http.post(BASE_XRP_CLUSTER) { setBody(payload) }
-            response.body<RippleAccountInfoResponseJson>()
+            response.bodyOrThrow<RippleAccountInfoResponseJson>()
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("Error in fetchTokenAccountsByOwner: ${e.message}")

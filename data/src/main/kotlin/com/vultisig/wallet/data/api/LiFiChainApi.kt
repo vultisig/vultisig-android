@@ -6,9 +6,9 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.utils.LiFiSwapQuoteResponseSerializer
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import javax.inject.Inject
@@ -93,7 +93,7 @@ constructor(
                 }
             }
         return try {
-            json.decodeFromString(liFiSwapQuoteResponseSerializer, response.body<String>())
+            json.decodeFromString(liFiSwapQuoteResponseSerializer, response.bodyAsText())
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             LiFiSwapQuoteDeserialized.Error(
