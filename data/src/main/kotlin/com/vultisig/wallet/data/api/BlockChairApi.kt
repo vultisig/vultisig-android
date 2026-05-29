@@ -8,8 +8,8 @@ import com.vultisig.wallet.data.api.models.TransactionHashDataJson
 import com.vultisig.wallet.data.api.models.TransactionHashRequestBodyJson
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.utils.UTXOStatusResponseSerializer
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -63,7 +63,7 @@ constructor(
                 ) {
                     header("Content-Type", "application/json")
                 }
-            val responseData = response.body<BlockChairInfoJson>()
+            val responseData = response.bodyOrThrow<BlockChairInfoJson>()
             Timber.d("response data: $responseData")
             return responseData.data[address]
         } catch (e: Exception) {
@@ -78,7 +78,7 @@ constructor(
             httpClient.get("$BASE_URL/${getChainName(chain)}/stats") {
                 header("Content-Type", "application/json")
             }
-        return response.body<SuggestedTransactionFeeDataJson>().data.value
+        return response.bodyOrThrow<SuggestedTransactionFeeDataJson>().data.value
     }
 
     suspend fun broadcastTransactionMempool(signedTransaction: String): String {
@@ -120,7 +120,7 @@ constructor(
                     error("fail to broadcast transaction: $errorBody")
                 }
 
-                return response.body<TransactionHashDataJson>().data.value
+                return response.bodyOrThrow<TransactionHashDataJson>().data.value
             }
         }
     }

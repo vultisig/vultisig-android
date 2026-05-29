@@ -142,7 +142,7 @@ internal class AccountsLoader(
                 )
             }
         accountsRepository
-            .loadAddresses(vaultId, isRefresh = false)
+            .loadAddresses(vaultId)
             .map { addrs -> addrs.flatMap { it.accounts } }
             .collect { accountsLoaded ->
                 publishCircleUsdc(
@@ -211,7 +211,7 @@ internal class AccountsLoader(
         val cachedDetails =
             stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, Coins.ThorChain.RUJI.id)
         accountsRepository
-            .loadAddresses(vaultId, isRefresh = false)
+            .loadAddresses(vaultId)
             .map { addrs -> addrs.flatMap { it.accounts } }
             .collect { accountsLoaded ->
                 publishRewards(accountsLoaded, cachedDetails?.rewards, generation)

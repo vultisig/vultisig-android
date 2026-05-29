@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.api
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.api.utils.throwIfUnsuccessful
 import com.vultisig.wallet.data.mediator.Message
+import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
@@ -77,7 +78,10 @@ internal class SessionApiImpl
 constructor(private val json: Json, private val httpClient: HttpClient) : SessionApi {
     override suspend fun checkCommittee(serverUrl: String, sessionId: String): List<String> {
         return withRelayRetry {
-            httpClient.get("$serverUrl/start/$sessionId").throwIfUnsuccessful().body<List<String>>()
+            httpClient
+                .get("$serverUrl/start/$sessionId")
+                .throwIfUnsuccessful()
+                .bodyOrThrow<List<String>>()
         }
     }
 
@@ -128,11 +132,14 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         return httpClient
             .get("$serverUrl/complete/$sessionId")
             .throwIfUnsuccessful()
-            .body<List<String>>()
+            .bodyOrThrow<List<String>>()
     }
 
     override suspend fun getParticipants(serverUrl: String, sessionId: String): List<String> {
-        return httpClient.get("$serverUrl/$sessionId").throwIfUnsuccessful().body<List<String>>()
+        return httpClient
+            .get("$serverUrl/$sessionId")
+            .throwIfUnsuccessful()
+            .bodyOrThrow<List<String>>()
     }
 
     override suspend fun sendTssMessage(serverUrl: String, messageId: String?, message: Message) {
@@ -158,7 +165,7 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
                     messageId?.let { header(MESSAGE_ID_HEADER_TITLE, it) }
                 }
                 .throwIfUnsuccessful()
-                .body<List<Message>>()
+                .bodyOrThrow<List<Message>>()
         }
 
     override suspend fun deleteTssMessage(
@@ -195,7 +202,7 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         return httpClient
             .get(serverUrl) { header(MESSAGE_ID_HEADER_TITLE, messageId) }
             .throwIfUnsuccessful()
-            .body<tss.KeysignResponse>()
+            .bodyOrThrow<tss.KeysignResponse>()
     }
 
     override suspend fun getSetupMessage(

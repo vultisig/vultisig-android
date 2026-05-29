@@ -9,10 +9,10 @@ import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.utils.OneInchSwapQuoteResponseJsonSerializer
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import java.math.BigInteger
 import javax.inject.Inject
@@ -21,6 +21,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.buildJsonObject
 
 interface OneInchApi {
@@ -86,7 +87,10 @@ constructor(
                 listOf(swapResponseAsync, quoteResponseAsync).awaitAll().also { responses ->
                     responses.forEach { response ->
                         if (!response.status.isSuccess()) {
-                            val resp = response.body<OneInchSwapQuoteErrorResponse>()
+                            val resp =
+                                json.decodeFromString<OneInchSwapQuoteErrorResponse>(
+                                    response.bodyAsText()
+                                )
                             return@coroutineScope EVMSwapQuoteDeserialized.Error(
                                 error = resp.description
                             )
@@ -97,8 +101,8 @@ constructor(
             json.decodeFromJsonElement(
                 oneInchSwapQuoteResponseJsonSerializer,
                 buildJsonObject {
-                    put("swap", swapResponse.body())
-                    put("quote", quoteResponse.body())
+                    put("swap", swapResponse.bodyOrThrow<JsonElement>())
+                    put("quote", quoteResponse.bodyOrThrow<JsonElement>())
                 },
             )
         } catch (e: Exception) {
@@ -133,7 +137,7 @@ constructor(
     override suspend fun getTokens(chain: Chain): OneInchTokensJson =
         httpClient
             .get("https://api.vultisig.com/1inch/swap/v6.1/${chain.oneInchChainId()}/tokens")
-            .body()
+            .bodyOrThrow<OneInchTokensJson>()
 
     override suspend fun getContractsWithBalance(chain: Chain, address: String): List<String> {
         val response =

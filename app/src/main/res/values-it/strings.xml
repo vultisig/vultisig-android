@@ -945,6 +945,7 @@
     <string name="address_auto_filled">Indirizzo %1$s (compilato automaticamente)</string>
     <string name="generated_memo">Memo generata:</string>
     <string name="amount_to_withdraw">Importo da prelevare (Saldo: %1$s)</string>
+    <string name="deposit_no_secured_assets">Non hai asset garantiti da prelevare in questo vault</string>
     <string name="mint_secured_asset_secure">Asset garantito Mint (SECURE+)</string>
     <string name="target_asset">Risorsa di destinazione: %1$s-%2$s</string>
     <string name="thor_address">Indirizzo THORChain</string>

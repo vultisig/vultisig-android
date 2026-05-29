@@ -1,10 +1,16 @@
 package com.vultisig.wallet.ui.screens.keysign
 
+import android.content.Context
+import android.graphics.Bitmap
+import androidx.annotation.DrawableRes
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -12,9 +18,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.graphics.drawable.toBitmap
 import app.rive.Fit
+import app.rive.ImageAsset
+import app.rive.Result
 import app.rive.ViewModelSource
 import app.rive.rememberViewModelInstance
 import com.vultisig.wallet.R
@@ -33,8 +43,13 @@ import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.SwapTransactionOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.toUiTransactionInfo
 import com.vultisig.wallet.ui.utils.VsUriHandler
+import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 private const val RIVE_PROGRESS_PROPERTY = "progessPercentage" // typo in riv_keysign.riv
+private const val RIVE_TO_TOKEN_IMAGE_PROPERTY = "toToken"
 
 @Composable
 internal fun KeysignView(
@@ -52,6 +67,7 @@ internal fun KeysignView(
     hasBackClick: Boolean,
     showSaveToAddressBook: Boolean,
     dappMetadata: DAppMetadata? = null,
+    @DrawableRes coinLogoRes: Int? = null,
 ) {
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         if (state.isInProgress) {
@@ -123,14 +139,14 @@ internal fun KeysignView(
             }
 
             else -> {
-                KeysignRiveProgress(progress = state.progress)
+                KeysignRiveProgress(progress = state.progress, coinLogoRes = coinLogoRes)
             }
         }
     }
 }
 
 @Composable
-private fun KeysignRiveProgress(progress: Float) {
+private fun KeysignRiveProgress(progress: Float, @DrawableRes coinLogoRes: Int?) {
     val riveFile = rememberRiveResourceFile(resId = R.raw.riv_keysign).value
     if (riveFile == null) {
         VsSigningProgressIndicator(text = stringResource(R.string.keysign_screen_preparing_vault))
@@ -151,12 +167,54 @@ private fun KeysignRiveProgress(progress: Float) {
 
     SideEffect { vmi.setNumber(RIVE_PROGRESS_PROPERTY, animatedValue) }
 
+    val context = LocalContext.current
+    var toTokenAsset by remember { mutableStateOf<ImageAsset?>(null) }
+
+    LaunchedEffect(coinLogoRes, riveFile, vmi) {
+        if (coinLogoRes == null) return@LaunchedEffect
+        val bytes =
+            withContext(Dispatchers.Default) { encodeDrawableAsPng(context, coinLogoRes) }
+                ?: run {
+                    Timber.w("Could not encode coin logo res %d for keysign animation", coinLogoRes)
+                    return@LaunchedEffect
+                }
+        // ImageAsset handles are worker-scoped, and vmi.setImage runs on the file's
+        // worker — decode on riveFile.riveWorker (the worker that owns the vmi), not a
+        // separate rememberRiveWorkerOrNull() instance, or the handle is foreign and the
+        // assignment silently no-ops.
+        val result = ImageAsset.fromBytes(riveFile.riveWorker, bytes)
+        if (result is Result.Success) {
+            toTokenAsset = result.value
+            vmi.setImage(RIVE_TO_TOKEN_IMAGE_PROPERTY, result.value)
+        } else {
+            Timber.w("Failed to load toToken image asset for res %d", coinLogoRes)
+        }
+    }
+    DisposableEffect(toTokenAsset) {
+        val assetToDispose = toTokenAsset
+        onDispose { assetToDispose?.close() }
+    }
+
     RiveAnimation(
         file = riveFile,
         viewModelInstance = vmi,
         modifier = Modifier.fillMaxSize(),
         fit = Fit.Cover(),
     )
+}
+
+/** Rasterizes a (vector or raster) drawable resource to PNG bytes for Rive ImageAsset binding. */
+private fun encodeDrawableAsPng(context: Context, @DrawableRes resId: Int): ByteArray? {
+    val drawable = AppCompatResources.getDrawable(context, resId) ?: return null
+    val bitmap = drawable.toBitmap()
+    return try {
+        ByteArrayOutputStream().use { stream ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            stream.toByteArray()
+        }
+    } finally {
+        bitmap.recycle()
+    }
 }
 
 @Preview

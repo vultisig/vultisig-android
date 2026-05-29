@@ -2,17 +2,14 @@
 
 package com.vultisig.wallet.ui.models.send
 
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
-import com.vultisig.wallet.R.string
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.tron.GetTronFrozenBalancesUseCase
 import com.vultisig.wallet.data.blockchain.tron.TronFrozenBalanceState
@@ -23,7 +20,6 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.ImageModel
 import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -37,12 +33,10 @@ import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
-import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
-import com.vultisig.wallet.data.repositories.TransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
@@ -50,20 +44,10 @@ import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
-import com.vultisig.wallet.ui.models.send.AmountFraction.F100
-import com.vultisig.wallet.ui.models.send.AmountFraction.F25
-import com.vultisig.wallet.ui.models.send.AmountFraction.F50
-import com.vultisig.wallet.ui.models.send.AmountFraction.F75
 import com.vultisig.wallet.ui.models.send.submit.AccountValidator
 import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
-import com.vultisig.wallet.ui.models.send.submit.BondStrategy
-import com.vultisig.wallet.ui.models.send.submit.DefaultSendStrategy
-import com.vultisig.wallet.ui.models.send.submit.MintStrategy
-import com.vultisig.wallet.ui.models.send.submit.RedeemStrategy
-import com.vultisig.wallet.ui.models.send.submit.StakeStrategy
-import com.vultisig.wallet.ui.models.send.submit.UnbondStrategy
-import com.vultisig.wallet.ui.models.send.submit.UnstakeStrategy
-import com.vultisig.wallet.ui.models.send.submit.WithdrawUsdcCircleStrategy
+import com.vultisig.wallet.ui.models.send.submit.SendStrategyContext
+import com.vultisig.wallet.ui.models.send.submit.SendStrategyFactory
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -72,9 +56,7 @@ import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
-import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.math.BigInteger
 import javax.inject.Inject
 import kotlin.uuid.Uuid
 import kotlinx.coroutines.channels.Channel
@@ -95,104 +77,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 
-@Immutable
-internal data class TokenBalanceUiModel(
-    val model: SendSrc,
-    val title: String,
-    val balance: String?,
-    val fiatValue: String?,
-    val isNativeToken: Boolean,
-    val isLayer2: Boolean,
-    val tokenStandard: String?,
-    val tokenLogo: ImageModel,
-    @param:DrawableRes val chainLogo: Int,
-)
-
-sealed class AmountFraction(val title: UiText, val value: Float) {
-    data object F25 : AmountFraction(title = "25%".asUiText(), value = 0.25f)
-
-    data object F50 : AmountFraction(title = "50%".asUiText(), value = 0.5f)
-
-    data object F75 : AmountFraction(title = "75%".asUiText(), value = 0.75f)
-
-    data object F100 : AmountFraction(title = string.send_screen_max.asUiText(), value = 1f)
-}
-
-@Immutable
-internal data class SendFormUiModel(
-    val selectedCoin: TokenBalanceUiModel? = null,
-    val fiatCurrency: String = "",
-
-    // src data
-    val srcAddress: String = "",
-    val srcVaultName: String = "",
-
-    // dst data
-    val isDstAddressComplete: Boolean = false,
-
-    // fees
-    val totalGas: UiText = UiText.Empty,
-    val gasTokenBalance: UiText? = null,
-    val estimatedFee: UiText = UiText.Empty,
-
-    // type
-    val defiType: DeFiNavActions? = null,
-    val slippage: String = "1.0",
-    val isAutocompound: Boolean = false,
-
-    // errors
-    val errorText: UiText? = null,
-    val dstAddressError: UiText? = null,
-    val tokenAmountError: UiText? = null,
-    val reapingError: UiText? = null,
-    val bondProviderError: UiText? = null,
-    val hasMemo: Boolean = false,
-    val showGasFee: Boolean = true,
-    val hasGasSettings: Boolean = false,
-    val showGasSettings: Boolean = false,
-    val specific: BlockChainSpecificAndUtxo? = null,
-    val expandedSection: SendSections = SendSections.Asset,
-    val usingTokenAmountInput: Boolean = true,
-    val isLoading: Boolean = false,
-    val isRefreshing: Boolean = false,
-    val isAmountSelectionLoading: Boolean = false,
-    val selectedAmountFraction: AmountFraction? = null,
-    val amountFractionEntries: List<AmountFraction> = listOf(F25, F50, F75, F100),
-
-    // Tron freeze/unfreeze
-    val tronResourceType: TronResourceType? = null,
-    val tronBalanceAvailableOverride: String? = null,
-    val isTronFrozenBalancesLoading: Boolean = false,
-    val hasTronFrozenBalancesError: Boolean = false,
-)
-
-internal data class SendSrc(val address: Address, val account: Account)
-
-internal enum class SendSections {
-    Asset,
-    Address,
-    Amount,
-}
-
-internal enum class SendFocusField {
-    ADDRESS,
-    AMOUNT,
-}
-
-enum class AddressBookType {
-    OUTPUT,
-    PROVIDER,
-}
-
-internal sealed class GasSettings {
-    data class Eth(val baseFee: BigInteger, val priorityFee: BigInteger, val gasLimit: BigInteger) :
-        GasSettings()
-
-    data class UTXO(val byteFee: BigInteger) : GasSettings()
-}
-
-internal data class InvalidTransactionDataException(val text: UiText) : Exception()
-
 @ExperimentalStdlibApi
 @HiltViewModel
 internal class SendFormViewModel
@@ -207,7 +91,6 @@ constructor(
     appCurrencyRepository: AppCurrencyRepository,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val tokenPriceRepository: TokenPriceRepository,
-    private val transactionRepository: TransactionRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val requestResultRepository: RequestResultRepository,
     private val addressParserRepository: AddressParserRepository,
@@ -216,12 +99,12 @@ constructor(
     private val advanceGasUiRepository: AdvanceGasUiRepository,
     private val vaultRepository: VaultRepository,
     private val tokenRepository: TokenRepository,
-    private val depositTransactionRepository: DepositTransactionRepository,
     private val stakingDetailsRepository: StakingDetailsRepository,
     private val feeServiceComposite: FeeServiceComposite,
     private val chainValidationService: ChainValidationService,
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
     private val getTronFrozenBalances: GetTronFrozenBalancesUseCase,
+    private val sendStrategyFactory: SendStrategyFactory,
 ) : ViewModel() {
 
     private var vault: Vault? = null
@@ -417,169 +300,38 @@ constructor(
             amountManager = amountManager,
         )
 
-    private val sendStrategy =
-        DefaultSendStrategy(
-            scope = viewModelScope,
-            addressFieldState = addressFieldState,
-            tokenAmountFieldState = tokenAmountFieldState,
-            fiatAmountFieldState = fiatAmountFieldState,
-            memoFieldState = memoFieldState,
-            accountValidator = accountValidator,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            transactionRepository = transactionRepository,
-            bitcoinPlanService = bitcoinPlanService,
-            getAvailableTokenBalance = getAvailableTokenBalance,
-            gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            chainValidationService = chainValidationService,
-            addressManager = addressManager,
-            amountManager = amountManager,
-            gasSettings = gasSettings,
-            planBtc = planBtc,
-            planFee = planFee,
-            accounts = accounts,
-            appCurrency = appCurrency,
-            vaultIdProvider = { vaultId },
-            selectedAccountProvider = { selectedAccount },
-            defiTypeProvider = { defiType },
-            currentTronFrozenBalanceProvider = tronStakingService::currentFrozenBalance,
-            navigator = navigator,
-            expandSection = ::expandSection,
-            emitFocusField = { field -> _focusFieldChannel.trySend(field) },
-            showLoading = ::showLoading,
-            hideLoading = ::hideLoading,
-            showError = ::showError,
-        )
-
-    private val bondStrategy =
-        BondStrategy(
-            scope = viewModelScope,
-            tokenAmountFieldState = tokenAmountFieldState,
-            providerBondFieldState = providerBondFieldState,
-            operatorFeesBondFieldState = operatorFeesBondFieldState,
-            accountValidator = accountValidator,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            addressParserRepository = addressParserRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            getAvailableTokenBalance = getAvailableTokenBalance,
-            gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            depositTransactionRepository = depositTransactionRepository,
-            navigator = navigator,
-            showLoading = ::showLoading,
-            hideLoading = ::hideLoading,
-            showError = ::showError,
-        )
-
-    private val unbondStrategy =
-        UnbondStrategy(
-            scope = viewModelScope,
-            tokenAmountFieldState = tokenAmountFieldState,
-            providerBondFieldState = providerBondFieldState,
-            accountValidator = accountValidator,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            addressParserRepository = addressParserRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            getAvailableTokenBalance = getAvailableTokenBalance,
-            gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            depositTransactionRepository = depositTransactionRepository,
-            navigator = navigator,
-            showLoading = ::showLoading,
-            hideLoading = ::hideLoading,
-            showError = ::showError,
-        )
-
-    private val stakeStrategy =
-        StakeStrategy(
-            scope = viewModelScope,
-            tokenAmountFieldState = tokenAmountFieldState,
-            accountValidator = accountValidator,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            accountsRepository = accountsRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            getAvailableTokenBalance = getAvailableTokenBalance,
-            gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            depositTransactionRepository = depositTransactionRepository,
-            navigator = navigator,
-            defiTypeProvider = { defiType },
-            isAutocompoundProvider = { uiState.value.isAutocompound },
-            showLoading = ::showLoading,
-            hideLoading = ::hideLoading,
-            showError = ::showError,
-        )
-
-    private val unstakeStrategy =
-        UnstakeStrategy(
-            scope = viewModelScope,
-            tokenAmountFieldState = tokenAmountFieldState,
-            accountValidator = accountValidator,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            accountsRepository = accountsRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            getAvailableTokenBalance = getAvailableTokenBalance,
-            gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            depositTransactionRepository = depositTransactionRepository,
-            navigator = navigator,
-            defiTypeProvider = { defiType },
-            isAutocompoundProvider = { uiState.value.isAutocompound },
-            showLoading = ::showLoading,
-            hideLoading = ::hideLoading,
-            showError = ::showError,
-        )
-
-    private val mintStrategy =
-        MintStrategy(
-            scope = viewModelScope,
-            tokenAmountFieldState = tokenAmountFieldState,
-            accountValidator = accountValidator,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            accountsRepository = accountsRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            getAvailableTokenBalance = getAvailableTokenBalance,
-            gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            depositTransactionRepository = depositTransactionRepository,
-            navigator = navigator,
-            defiTypeProvider = { defiType },
-            showLoading = ::showLoading,
-            hideLoading = ::hideLoading,
-            showError = ::showError,
-        )
-
-    private val redeemStrategy =
-        RedeemStrategy(
-            scope = viewModelScope,
-            tokenAmountFieldState = tokenAmountFieldState,
-            slippageFieldState = slippageFieldState,
-            accountValidator = accountValidator,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            accountsRepository = accountsRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            getAvailableTokenBalance = getAvailableTokenBalance,
-            gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            chainValidationService = chainValidationService,
-            depositTransactionRepository = depositTransactionRepository,
-            navigator = navigator,
-            defiTypeProvider = { defiType },
-            showLoading = ::showLoading,
-            hideLoading = ::hideLoading,
-            showError = ::showError,
-        )
-
-    private val withdrawUsdcCircleStrategy =
-        WithdrawUsdcCircleStrategy(
-            scope = viewModelScope,
-            tokenAmountFieldState = tokenAmountFieldState,
-            accountValidator = accountValidator,
-            chainAccountAddressRepository = chainAccountAddressRepository,
-            accountsRepository = accountsRepository,
-            blockChainSpecificRepository = blockChainSpecificRepository,
-            getAvailableTokenBalance = getAvailableTokenBalance,
-            gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            depositTransactionRepository = depositTransactionRepository,
-            navigator = navigator,
-            mscaAddressProvider = { mscaAddress },
-            showLoading = ::showLoading,
-            hideLoading = ::hideLoading,
-            showError = ::showError,
+    private val strategies =
+        sendStrategyFactory.create(
+            SendStrategyContext(
+                scope = viewModelScope,
+                addressFieldState = addressFieldState,
+                tokenAmountFieldState = tokenAmountFieldState,
+                fiatAmountFieldState = fiatAmountFieldState,
+                memoFieldState = memoFieldState,
+                slippageFieldState = slippageFieldState,
+                operatorFeesBondFieldState = operatorFeesBondFieldState,
+                providerBondFieldState = providerBondFieldState,
+                accountValidator = accountValidator,
+                bitcoinPlanService = bitcoinPlanService,
+                addressManager = addressManager,
+                amountManager = amountManager,
+                gasSettings = gasSettings,
+                planBtc = planBtc,
+                planFee = planFee,
+                accounts = accounts,
+                appCurrency = appCurrency,
+                vaultIdProvider = { vaultId },
+                selectedAccountProvider = { selectedAccount },
+                defiTypeProvider = { defiType },
+                isAutocompoundProvider = { uiState.value.isAutocompound },
+                mscaAddressProvider = { mscaAddress },
+                currentTronFrozenBalanceProvider = tronStakingService::currentFrozenBalance,
+                expandSection = ::expandSection,
+                emitFocusField = { field -> _focusFieldChannel.trySend(field) },
+                showLoading = ::showLoading,
+                hideLoading = ::hideLoading,
+                showError = ::showError,
+            )
         )
 
     init {
@@ -1042,24 +794,24 @@ constructor(
 
     fun onClickContinue() {
         when (uiState.value.defiType) {
-            DeFiNavActions.BOND -> bondStrategy.submit()
-            DeFiNavActions.UNBOND -> unbondStrategy.submit()
+            DeFiNavActions.BOND -> strategies.bond.submit()
+            DeFiNavActions.UNBOND -> strategies.unbond.submit()
             DeFiNavActions.STAKE_RUJI,
             DeFiNavActions.STAKE_TCY,
-            DeFiNavActions.STAKE_STCY -> stakeStrategy.submit()
+            DeFiNavActions.STAKE_STCY -> strategies.stake.submit()
 
             DeFiNavActions.UNSTAKE_RUJI,
             DeFiNavActions.UNSTAKE_TCY,
             DeFiNavActions.UNSTAKE_STCY,
-            DeFiNavActions.WITHDRAW_RUJI -> unstakeStrategy.submit()
+            DeFiNavActions.WITHDRAW_RUJI -> strategies.unstake.submit()
 
             DeFiNavActions.MINT_YRUNE,
-            DeFiNavActions.MINT_YTCY -> mintStrategy.submit()
+            DeFiNavActions.MINT_YTCY -> strategies.mint.submit()
 
             DeFiNavActions.REDEEM_YRUNE,
-            DeFiNavActions.REDEEM_YTCY -> redeemStrategy.submit()
+            DeFiNavActions.REDEEM_YTCY -> strategies.redeem.submit()
 
-            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withdrawUsdcCircleStrategy.submit()
+            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> strategies.withdrawUsdcCircle.submit()
 
             null,
             DeFiNavActions.DEPOSIT_USDC_CIRCLE,
@@ -1068,7 +820,7 @@ constructor(
             DeFiNavActions.ADD_LP,
             DeFiNavActions.REMOVE_LP,
             DeFiNavActions.FREEZE_TRX,
-            DeFiNavActions.UNFREEZE_TRX -> sendStrategy.submit()
+            DeFiNavActions.UNFREEZE_TRX -> strategies.default.submit()
         }
     }
 
