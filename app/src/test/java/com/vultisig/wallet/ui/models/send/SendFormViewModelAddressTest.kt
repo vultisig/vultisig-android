@@ -238,7 +238,6 @@ internal class SendFormViewModelAddressTest {
             appCurrencyRepository = appCurrencyRepository,
             chainAccountAddressRepository = chainAccountAddressRepository,
             tokenPriceRepository = mockk(relaxed = true),
-            transactionRepository = mockk(relaxed = true),
             blockChainSpecificRepository = mockk(relaxed = true),
             requestResultRepository = requestResultRepository,
             addressParserRepository = addressParserRepository,
@@ -247,12 +246,12 @@ internal class SendFormViewModelAddressTest {
             advanceGasUiRepository = mockk(relaxed = true),
             vaultRepository = mockk(relaxed = true),
             tokenRepository = mockk(relaxed = true),
-            depositTransactionRepository = mockk(relaxed = true),
             stakingDetailsRepository = mockk(relaxed = true),
             feeServiceComposite = mockk(relaxed = true),
             chainValidationService = mockk(relaxed = true),
             requestAddressBookEntry = requestAddressBookEntry,
             getTronFrozenBalances = mockk(relaxed = true),
+            sendStrategyFactory = fakeSendStrategyFactory(),
         )
     }
 

@@ -978,6 +978,7 @@
     <string name="address_auto_filled">%1$s 주소 (자동 입력)</string>
     <string name="generated_memo">생성된 메모:</string>
     <string name="amount_to_withdraw">출금 금액 (잔액: %1$s)</string>
+    <string name="deposit_no_secured_assets">이 볼트에는 출금할 보안 자산이 없습니다</string>
     <string name="mint_secured_asset_secure">보안 자산 민트 (SECURE+)</string>
     <string name="target_asset">대상 자산: %1$s-%2$s</string>
     <string name="thor_address">Thor 주소</string>

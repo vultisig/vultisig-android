@@ -135,7 +135,6 @@ internal class SendFormViewModelSubmitEvmTest {
             appCurrencyRepository = appCurrencyRepository,
             chainAccountAddressRepository = mockk(relaxed = true),
             tokenPriceRepository = mockk(relaxed = true),
-            transactionRepository = transactionRepository,
             blockChainSpecificRepository = mockk(relaxed = true),
             requestResultRepository = mockk(relaxed = true),
             addressParserRepository = mockk(relaxed = true),
@@ -144,12 +143,16 @@ internal class SendFormViewModelSubmitEvmTest {
             advanceGasUiRepository = mockk(relaxed = true),
             vaultRepository = mockk(relaxed = true),
             tokenRepository = mockk(relaxed = true),
-            depositTransactionRepository = mockk(relaxed = true),
             stakingDetailsRepository = mockk(relaxed = true),
             feeServiceComposite = mockk(relaxed = true),
             chainValidationService = mockk(relaxed = true),
             requestAddressBookEntry = mockk(relaxed = true),
             getTronFrozenBalances = mockk(relaxed = true),
+            sendStrategyFactory =
+                fakeSendStrategyFactory(
+                    transactionRepository = transactionRepository,
+                    navigator = navigator,
+                ),
         )
     }
 

@@ -950,6 +950,7 @@
     <string name="address_auto_filled">Адрес %1$s (заполняется автоматически)</string>
     <string name="generated_memo">Сгенерированное примечание:</string>
     <string name="amount_to_withdraw">Сумма для снятия (Баланс: %1$s)</string>
+    <string name="deposit_no_secured_assets">В этом хранилище нет обеспеченных активов для вывода</string>
     <string name="mint_secured_asset_secure">Чеканка обеспеченного актива (SECURE+)</string>
     <string name="target_asset">Целевой актив: %1$s-%2$s</string>
     <string name="thor_address">Адрес THORChain</string>

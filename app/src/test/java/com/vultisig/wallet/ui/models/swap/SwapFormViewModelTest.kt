@@ -539,6 +539,31 @@ internal class SwapFormViewModelTest {
             )
         }
 
+    @Test
+    fun `selectSrcPercentage preserves full token precision beyond 6 decimals`() =
+        runTest(mainDispatcher) {
+            // 0.00553297 BTC — more than 6 significant decimals. BTC src avoids the Ethereum
+            // gas-fee mock subtraction (chain mismatch), so at 100% the inserted amount equals
+            // the balance and must keep all 8 decimals rather than truncating to 6.
+            val btcPreciseBalance =
+                Address(
+                    chain = Chain.Bitcoin,
+                    address = "bc1qbtcaddress",
+                    accounts = listOf(createAccount(BTC_COIN, BigInteger("553297"))),
+                )
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(btcPreciseBalance, ethAddress()),
+                    srcTokenId = BTC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            vm.selectSrcPercentage(1.0f)
+
+            assertEquals("0.00553297", vm.srcAmountState.text.toString())
+        }
+
     // endregion
 
     // region flipSelectedTokens

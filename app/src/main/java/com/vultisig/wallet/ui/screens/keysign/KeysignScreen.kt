@@ -111,5 +111,6 @@ private fun Keysign(
         showSaveToAddressBook = keysignViewModel.showSaveToAddressBook.collectAsState().value,
         hasBackClick = true,
         dappMetadata = keysignViewModel.dappMetadata,
+        coinLogoRes = keysignViewModel.coinLogoRes,
     )
 }
