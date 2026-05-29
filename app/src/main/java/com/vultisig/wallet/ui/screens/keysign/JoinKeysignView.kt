@@ -171,6 +171,7 @@ internal fun JoinKeysignView() {
                         keysignViewModel.showSaveToAddressBook.collectAsState().value,
                     hasBackClick = false,
                     dappMetadata = dappMetadata,
+                    coinLogoRes = keysignViewModel.coinLogoRes,
                 )
             }
 

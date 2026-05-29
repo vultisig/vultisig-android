@@ -553,6 +553,12 @@ internal fun DepositFormScreen(
                                 onLostFocus = onTokenAmountLostFocus,
                                 error = state.tokenAmountError,
                             )
+                        } else if (state.securedAssetsLoaded) {
+                            Text(
+                                text = stringResource(R.string.deposit_no_secured_assets),
+                                style = Theme.brockmann.body.s.regular,
+                                color = Theme.v2.colors.text.tertiary,
+                            )
                         }
                     }
                 }
@@ -573,7 +579,9 @@ internal fun DepositFormScreen(
                         state.isWhitelistFailed ||
                         state.nodeAddressError != null ||
                         state.dstAddressError != null ||
-                        state.thorAddressError != null
+                        state.thorAddressError != null ||
+                        (state.depositOption == DepositOption.WithdrawSecuredAsset &&
+                            state.availableSecuredAssets.isEmpty())
                 )
                     VsButtonState.Disabled
                 else VsButtonState.Enabled,
