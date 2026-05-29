@@ -221,14 +221,22 @@ private fun KeysignRiveProgress(progress: Float, @DrawableRes coinLogoRes: Int?)
 private fun encodeDrawableAsPng(context: Context, @DrawableRes resId: Int): ByteArray? {
     val drawable = AppCompatResources.getDrawable(context, resId) ?: return null
     val (width, height) = boundedLogoSize(drawable.intrinsicWidth, drawable.intrinsicHeight)
-    val bitmap = drawable.toBitmap(width = width, height = height, config = Bitmap.Config.ARGB_8888)
     return try {
-        ByteArrayOutputStream().use { stream ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-            stream.toByteArray()
+        val bitmap =
+            drawable.toBitmap(width = width, height = height, config = Bitmap.Config.ARGB_8888)
+        try {
+            ByteArrayOutputStream().use { stream ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                stream.toByteArray()
+            }
+        } finally {
+            bitmap.recycle()
         }
-    } finally {
-        bitmap.recycle()
+    } catch (e: Exception) {
+        // toBitmap()/compress()/toByteArray() can throw; the caller treats null as "no logo" and
+        // logs it. Never let this escape into the LaunchedEffect coroutine and crash the screen.
+        Timber.e(e, "Failed to encode coin logo res %d as PNG", resId)
+        null
     }
 }
 
