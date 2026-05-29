@@ -179,7 +179,7 @@ constructor(
     private val tronFrozenBalances =
         MutableStateFlow<TronFrozenBalanceState>(TronFrozenBalanceState.Loading)
 
-    private val tokenPreselectionService =
+    private val tokenPreselectionService: TokenPreselectionService =
         TokenPreselectionService(
             scope = viewModelScope,
             accountsState = accountsState,
