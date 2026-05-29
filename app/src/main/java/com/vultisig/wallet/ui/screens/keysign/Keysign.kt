@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.keysign
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.annotation.DrawableRes
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -57,7 +58,7 @@ private const val RIVE_TO_TOKEN_IMAGE_PROPERTY = "toToken"
 // bounds would balloon that allocation past the heap limit and throw an OutOfMemoryError — which
 // Rive's native decode path does not catch (it only catches Exception), so it aborts the whole
 // process. Bounding the size keeps that allocation tiny and well within the heap.
-private const val RIVE_TO_TOKEN_IMAGE_MAX_PX = 256
+internal const val RIVE_TO_TOKEN_IMAGE_MAX_PX = 256
 
 @Composable
 internal fun KeysignView(
@@ -245,7 +246,8 @@ private fun encodeDrawableAsPng(context: Context, @DrawableRes resId: Int): Byte
  * back to a square of the max size when intrinsic bounds are missing (vector drawables can report
  * -1) or already within the bound only the down-scale path applies.
  */
-private fun boundedLogoSize(intrinsicWidth: Int, intrinsicHeight: Int): Pair<Int, Int> {
+@VisibleForTesting
+internal fun boundedLogoSize(intrinsicWidth: Int, intrinsicHeight: Int): Pair<Int, Int> {
     if (intrinsicWidth <= 0 || intrinsicHeight <= 0) {
         return RIVE_TO_TOKEN_IMAGE_MAX_PX to RIVE_TO_TOKEN_IMAGE_MAX_PX
     }
