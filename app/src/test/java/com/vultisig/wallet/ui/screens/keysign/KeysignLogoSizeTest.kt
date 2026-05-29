@@ -26,6 +26,12 @@ class KeysignLogoSizeTest {
     }
 
     @Test
+    fun `oversized logo is clamped while preserving aspect ratio when height exceeds width`() {
+        // 512x1024 -> scale 256/1024 = 0.25 -> 128x256
+        boundedLogoSize(512, 1024) shouldBe (128 to 256)
+    }
+
+    @Test
     fun `logo within the bound is passed through unchanged`() {
         boundedLogoSize(96, 96) shouldBe (96 to 96)
         boundedLogoSize(100, 40) shouldBe (100 to 40)
