@@ -82,4 +82,43 @@ internal class SwapQuoteManagerTest {
 
         assertIs<SwapException.TimeOut>(deferred.await().exceptionOrNull())
     }
+
+    @Test
+    fun `fetchBestQuote surfaces dust error over generic no-route error`() = runTest {
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.MAYA, any()) } throws
+            SwapException.AmountBelowDustThreshold("amount below dust threshold")
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } throws
+            SwapException.SwapRouteNotAvailable("no route available")
+
+        val manager = createManager()
+        // THORCHAIN is listed first so that reverting to first-by-provider-order would surface
+        // the generic SwapRouteNotAvailable instead of MAYA's actionable dust error.
+        val result = runCatching {
+            manager.fetchBestQuote(
+                candidates =
+                    listOf(
+                        QuoteCandidate(
+                            provider = SwapProvider.THORCHAIN,
+                            vultBPSDiscount = null,
+                            referral = null,
+                        ),
+                        QuoteCandidate(
+                            provider = SwapProvider.MAYA,
+                            vultBPSDiscount = null,
+                            referral = null,
+                        ),
+                    ),
+                src = mockk(relaxed = true),
+                dst = mockk(relaxed = true),
+                srcToken = mockk(relaxed = true),
+                dstToken = mockk(relaxed = true),
+                srcTokenValue = BigInteger.ONE,
+                tokenValue = mockk(relaxed = true),
+                currency = AppCurrency.USD,
+                amount = BigDecimal.ONE,
+            )
+        }
+
+        assertIs<SwapException.AmountBelowDustThreshold>(result.exceptionOrNull())
+    }
 }

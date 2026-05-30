@@ -345,10 +345,16 @@ constructor(
             is SwapException.RateLimitExceeded,
             is SwapException.TimeOut,
             is TimeoutCancellationException,
-            is SwapException.NetworkConnection -> 2
+            is SwapException.NetworkConnection,
+            is SwapKitError.InsufficientBalance,
+            is SwapKitError.InsufficientAllowance -> 2
             is SwapException.SwapRouteNotAvailable,
             is SwapException.SwapIsNotSupported,
-            is SwapException.UnkownSwapError -> 3
+            is SwapException.UnkownSwapError,
+            is SwapKitError.NoRoutes,
+            is SwapKitError.SwapRouteNotFound,
+            is SwapKitError.RouteFiltered,
+            is SwapKitError.ProviderNotEnabled -> 3
             else -> 4
         }
 
