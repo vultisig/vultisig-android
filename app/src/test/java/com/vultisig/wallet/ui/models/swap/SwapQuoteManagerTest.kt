@@ -3,6 +3,7 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -85,6 +86,12 @@ internal class SwapQuoteManagerTest {
 
     @Test
     fun `fetchBestQuote surfaces dust error over generic no-route error`() = runTest {
+        // convertTokenValueToFiat is a relaxed suspend function-type mock; relaxed answers for
+        // such interfaces return a bare Object that can't be cast to FiatValue, throwing a
+        // ClassCastException before getQuote runs. Stub it so both providers reach getQuote and
+        // surface their typed dust/no-route errors.
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
         coEvery { swapQuoteRepository.getQuote(SwapProvider.MAYA, any()) } throws
             SwapException.AmountBelowDustThreshold("amount below dust threshold")
         coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } throws
