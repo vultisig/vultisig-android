@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.crypto.ThorChainHelper
 import com.vultisig.wallet.data.crypto.TonHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
@@ -102,6 +103,18 @@ object SigningHelper {
                                 .getPreSignedImageHash(swapPayload.data, payload, nonceAcc)
 
                     messages += message
+                }
+                is SwapPayload.SwapKit -> {
+                    require(swapPayload.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
+                        "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
+                    }
+                    messages +=
+                        SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
+                            .getPreSignedImageHash(
+                                psbtBytes = swapPayload.data.txPayload,
+                                targetAddress = swapPayload.data.targetAddress,
+                                fromAmount = swapPayload.data.fromAmount,
+                            )
                 }
                 else -> Unit
             }
@@ -283,6 +296,13 @@ object SigningHelper {
                             )
                 }
 
+                is SwapPayload.SwapKit -> {
+                    require(swapPayload.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
+                        "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
+                    }
+                    return SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
+                        .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                }
                 else -> {}
             }
         } else if (swapPayload is SwapPayload.MayaChain && !swapPayload.srcToken.isNativeToken) {

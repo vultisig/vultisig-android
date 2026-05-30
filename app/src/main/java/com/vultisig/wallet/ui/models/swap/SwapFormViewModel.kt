@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.SwapTransaction.RegularSwapTransaction
@@ -473,10 +474,41 @@ constructor(
                                 )
                             }
 
-                            // Per-chain signers wire this branch as they ship; no quote source
-                            // emits SwapQuote.SwapKit yet.
-                            is SwapQuote.SwapKit ->
-                                error("No SwapKit signer wired for txType=${quote.data.txType}")
+                            is SwapQuote.SwapKit -> {
+                                // Only BTC PSBT is wired today; other SwapKit txTypes (TON / ADA /
+                                // SUI / TRON) land with their per-chain signers. SwapProviderTable
+                                // does not yet offer SwapKit on Bitcoin, so this branch is reached
+                                // only once enablement ships — guarded loudly until then.
+                                require(quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
+                                    "Unsupported SwapKit txType for swap: ${quote.data.txType}"
+                                }
+                                val specificAndUtxo =
+                                    swapGasCalculator.getSpecificAndUtxo(
+                                        srcToken = srcToken,
+                                        srcAddress = srcAddress,
+                                        gasFee = gasFee,
+                                    )
+                                RegularSwapTransaction(
+                                    id = UUID.randomUUID().toString(),
+                                    vaultId = vaultId,
+                                    srcToken = srcToken,
+                                    srcTokenValue = srcTokenValue,
+                                    dstToken = dstToken,
+                                    // SwapKit's source-chain deposit address — where the BTC the
+                                    // PSBT spends is sent. Signing is driven entirely by the PSBT
+                                    // bytes carried on the payload, not by this blockChainSpecific.
+                                    dstAddress = quote.data.targetAddress,
+                                    expectedDstTokenValue = dstTokenValue,
+                                    blockChainSpecific = specificAndUtxo,
+                                    estimatedFees = quote.fees,
+                                    gasFees = estimatedNetworkFeeTokenValue.value ?: gasFee,
+                                    memo = quote.data.memo,
+                                    isApprovalRequired = false,
+                                    gasFeeFiatValue =
+                                        estimatedNetworkFeeFiatValue.value ?: gasFeeFiatValue,
+                                    payload = SwapPayload.SwapKit(quote.data),
+                                )
+                            }
 
                             is SwapQuote.OneInch -> {
                                 val dstAddress = quote.data.tx.to
@@ -998,7 +1030,26 @@ constructor(
                         }
 
                         this@SwapFormViewModel.quote = quoteResult.quote
-                        swapFeeFiat.value = quoteResult.swapFeeFiat
+                        // SwapKit BTC settles by broadcasting the provider's PSBT, whose miner fee
+                        // is the only network cost — and it is already surfaced as the UTXO plan
+                        // network fee below. SwapKit reports that same deposit cost as its inbound
+                        // fee, so counting it again as a swap fee would double-count the BTC
+                        // network
+                        // cost in the headline total (iOS shows it once). Zero the swap-fee
+                        // contribution and the breakdown row so Total reconciles to Network Fee
+                        // alone; the affiliate fee is already baked into expectedDstValue.
+                        val isSwapKitUtxoSwap =
+                            quoteResult.quote is SwapQuote.SwapKit &&
+                                srcToken.chain.standard == TokenStandard.UTXO
+                        val effectiveSwapFeeFiat =
+                            if (isSwapKitUtxoSwap)
+                                FiatValue(BigDecimal.ZERO, quoteResult.swapFeeFiat.currency)
+                            else quoteResult.swapFeeFiat
+                        val feeText =
+                            if (isSwapKitUtxoSwap)
+                                fiatValueToString(effectiveSwapFeeFiat, asFee = true)
+                            else quoteResult.feeText
+                        swapFeeFiat.value = effectiveSwapFeeFiat
 
                         // Determine destination address and memo for UTXO plan fee computation.
                         // Must be computed before the uiState.update so the button stays
@@ -1011,6 +1062,13 @@ constructor(
                                         ?: src.address.address) to q.data.memo
                                 is SwapQuote.MayaChain ->
                                     (q.data.inboundAddress ?: src.address.address) to q.data.memo
+                                // SwapKit BTC is a PSBT deposit to targetAddress; route it through
+                                // the same UTXO plan-fee path so the network fee is computed and
+                                // swap() doesn't abort with invalid_gas_fee_calculation.
+                                is SwapQuote.SwapKit ->
+                                    if (srcToken.chain.standard == TokenStandard.UTXO) {
+                                        q.data.targetAddress to q.data.memo
+                                    } else null
                                 else -> null
                             }
                         val isUtxoSwap =
@@ -1027,7 +1085,7 @@ constructor(
                                 srcFiatValue = quoteResult.srcFiatValueText,
                                 estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
                                 estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
-                                fee = quoteResult.feeText,
+                                fee = feeText,
                                 outboundFee = quoteResult.outboundFeeText,
                                 swapFeePercent = quoteResult.swapFeePercent,
                                 formError = null,
