@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.data.usecases.SearchTokenUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigDecimal
@@ -126,6 +127,6 @@ internal class SwapQuoteManagerTest {
             )
         }
 
-        assertIs<SwapException.AmountBelowDustThreshold>(result.exceptionOrNull())
+        result.exceptionOrNull().shouldBeInstanceOf<SwapException.AmountBelowDustThreshold>()
     }
 }
