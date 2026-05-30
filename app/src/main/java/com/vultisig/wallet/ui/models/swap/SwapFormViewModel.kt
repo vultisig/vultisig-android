@@ -1030,7 +1030,26 @@ constructor(
                         }
 
                         this@SwapFormViewModel.quote = quoteResult.quote
-                        swapFeeFiat.value = quoteResult.swapFeeFiat
+                        // SwapKit BTC settles by broadcasting the provider's PSBT, whose miner fee
+                        // is the only network cost — and it is already surfaced as the UTXO plan
+                        // network fee below. SwapKit reports that same deposit cost as its inbound
+                        // fee, so counting it again as a swap fee would double-count the BTC
+                        // network
+                        // cost in the headline total (iOS shows it once). Zero the swap-fee
+                        // contribution and the breakdown row so Total reconciles to Network Fee
+                        // alone; the affiliate fee is already baked into expectedDstValue.
+                        val isSwapKitUtxoSwap =
+                            quoteResult.quote is SwapQuote.SwapKit &&
+                                srcToken.chain.standard == TokenStandard.UTXO
+                        val effectiveSwapFeeFiat =
+                            if (isSwapKitUtxoSwap)
+                                FiatValue(BigDecimal.ZERO, quoteResult.swapFeeFiat.currency)
+                            else quoteResult.swapFeeFiat
+                        val feeText =
+                            if (isSwapKitUtxoSwap)
+                                fiatValueToString(effectiveSwapFeeFiat, asFee = true)
+                            else quoteResult.feeText
+                        swapFeeFiat.value = effectiveSwapFeeFiat
 
                         // Determine destination address and memo for UTXO plan fee computation.
                         // Must be computed before the uiState.update so the button stays
@@ -1066,7 +1085,7 @@ constructor(
                                 srcFiatValue = quoteResult.srcFiatValueText,
                                 estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
                                 estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
-                                fee = quoteResult.feeText,
+                                fee = feeText,
                                 outboundFee = quoteResult.outboundFeeText,
                                 swapFeePercent = quoteResult.swapFeePercent,
                                 formError = null,

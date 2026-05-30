@@ -3,6 +3,8 @@
 package com.vultisig.wallet.ui.models.swap
 
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.models.quotes.Fees
+import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -155,6 +157,92 @@ internal class SwapQuoteManagerTest {
             // Second call is a cache hit (same pair/amount/addresses) — the lambda is skipped.
             coVerify(exactly = 1) { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, any()) }
         }
+
+    @Test
+    fun `fetchBestQuote picks the highest estimatedDstFiat, not the candidate order`() = runTest {
+        // The provider table hands candidates back in a fixed set order (THORCHAIN before SWAPKIT
+        // on Bitcoin), but selection is `successes.maxBy { estimatedDstFiat }` — the route the user
+        // receives the most on. Pin that: SWAPKIT is listed second yet prices the dst higher, so it
+        // must win. This is what makes SwapKit reachable on any BTC pair it out-prices, regardless
+        // of where it sits in the eligibility set.
+        val btc = coin(Chain.Bitcoin, "BTC", address = "bc1qsrc", decimals = 8)
+        val eth = coin(Chain.Ethereum, "ETH", address = "0xdst", decimals = 18)
+
+        val thorDst = TokenValue(BigInteger.valueOf(100), eth)
+        val swapKitDst = TokenValue(BigInteger.valueOf(200), eth)
+
+        val thorQuote =
+            SwapQuote.ThorChain(
+                expectedDstValue = thorDst,
+                fees = TokenValue(BigInteger.ZERO, eth),
+                expiredAt = Clock.System.now().plus(5.minutes),
+                recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
+                data =
+                    THORChainSwapQuote(
+                        dustThreshold = null,
+                        expectedAmountOut = "100",
+                        expiry = BigInteger.ZERO,
+                        fees = Fees(affiliate = "0", asset = "0", outbound = "0", total = "0"),
+                        inboundAddress = "thorinbound",
+                        inboundConfirmationBlocks = null,
+                        inboundConfirmationSeconds = null,
+                        maxStreamingQuantity = 0,
+                        memo = "memo",
+                        notes = "",
+                        outboundDelayBlocks = BigInteger.ZERO,
+                        outboundDelaySeconds = BigInteger.ZERO,
+                        recommendedMinAmountIn = "0",
+                        streamingSwapBlocks = BigInteger.ZERO,
+                        totalSwapSeconds = 0L,
+                        warning = "",
+                        router = null,
+                        error = null,
+                    ),
+            )
+        val swapKitQuote =
+            SwapQuote.SwapKit(
+                expectedDstValue = swapKitDst,
+                fees = TokenValue(BigInteger.valueOf(400), btc),
+                expiredAt = Clock.System.now().plus(5.minutes),
+                data = mockk(relaxed = true),
+                subProvider = null,
+            )
+
+        coEvery { tokenRepository.getNativeToken(any()) } returns btc
+        // Catch-all first so the dst-specific ranking stubs (defined after) take precedence.
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        coEvery { convertTokenValueToFiat(any(), thorDst, any()) } returns
+            FiatValue(BigDecimal("100"), "USD")
+        coEvery { convertTokenValueToFiat(any(), swapKitDst, any()) } returns
+            FiatValue(BigDecimal("200"), "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } returns
+            SwapQuoteResult.Native(thorQuote)
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, any()) } returns
+            SwapQuoteResult.Native(swapKitQuote)
+
+        val best =
+            createManager()
+                .fetchBestQuote(
+                    candidates =
+                        listOf(
+                            QuoteCandidate(SwapProvider.THORCHAIN, null, null),
+                            QuoteCandidate(SwapProvider.SWAPKIT, null, null),
+                        ),
+                    src = mockk(relaxed = true),
+                    dst = mockk(relaxed = true),
+                    srcToken = btc,
+                    dstToken = eth,
+                    srcTokenValue = BigInteger.ONE,
+                    tokenValue = TokenValue(BigInteger.ONE, btc),
+                    currency = AppCurrency.USD,
+                    amount = BigDecimal.ONE,
+                )
+
+        assertEquals(SwapProvider.SWAPKIT, best.candidate.provider)
+        assertEquals(BigDecimal("200"), best.result.estimatedDstFiat.value)
+    }
 
     private fun coin(chain: Chain, ticker: String, address: String, decimals: Int) =
         Coin(
