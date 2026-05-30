@@ -307,17 +307,18 @@ constructor(
         val successes = results.mapNotNull { it.getOrNull() }
         if (successes.isEmpty()) {
             val failures = results.mapNotNull { it.exceptionOrNull() }
-            // Throw the first failure (iOS SwapService.swift:77 parity). Previously preferred any
-            // SwapException over the first failure, which masked sibling SwapKitError variants
-            // whenever a LiFi/Thor candidate raced SwapKit and lost — the user kept seeing the
-            // generic swap_error_quote_failed copy instead of the localized SwapKit message.
-            val first = failures.first()
+            // Surface the most actionable failure instead of the first by provider order
+            // (iOS SwapService parity). When THORChain returns a generic "no route" error
+            // while MAYA reports a recoverable amount/dust error for the same pair, the user
+            // should see the amount error so they can adjust and retry. Ties keep provider
+            // order (minBy returns the first match), so all-generic failures are unchanged.
+            val selected = failures.minBy { swapFailurePriority(it) }
             // withTimeout surfaces a raw TimeoutCancellationException; map it into the typed
             // SwapException hierarchy so the form renders the localized timeout copy instead of
             // leaking a coroutine cancellation as the generic "quote failed" error.
-            throw if (first is TimeoutCancellationException)
-                SwapException.TimeOut(first.message ?: "Quote request timed out")
-            else first
+            throw if (selected is TimeoutCancellationException)
+                SwapException.TimeOut(selected.message ?: "Quote request timed out")
+            else selected
         }
 
         // Rank on estimatedDstFiat alone — this represents the destination amount
@@ -327,6 +328,29 @@ constructor(
         // an integrator fee for LI.FI.
         return successes.maxBy { it.result.estimatedDstFiat.value }
     }
+
+    /**
+     * Ranks a failed-quote [error] so the most actionable failure is surfaced when every provider
+     * fails. Lower values win. Amount-related errors mean the pair is routable and the user can
+     * recover by adjusting the amount, so they rank above recoverable/transient errors, which in
+     * turn rank above generic "no route" fallbacks.
+     */
+    private fun swapFailurePriority(error: Throwable): Int =
+        when (error) {
+            is SwapException.AmountBelowDustThreshold,
+            is SwapException.SmallSwapAmount,
+            is SwapException.InsufficentSwapAmount -> 1
+            is SwapException.InsufficientFunds,
+            is SwapException.HighPriceImpact,
+            is SwapException.RateLimitExceeded,
+            is SwapException.TimeOut,
+            is TimeoutCancellationException,
+            is SwapException.NetworkConnection -> 2
+            is SwapException.SwapRouteNotAvailable,
+            is SwapException.SwapIsNotSupported,
+            is SwapException.UnkownSwapError -> 3
+            else -> 4
+        }
 
     private suspend fun fetchThorMayaQuote(
         provider: SwapProvider,
