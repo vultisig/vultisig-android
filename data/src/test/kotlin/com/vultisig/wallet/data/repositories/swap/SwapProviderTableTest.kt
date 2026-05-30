@@ -38,6 +38,7 @@ internal class SwapProviderTableTest {
                 coin(Chain.Arbitrum, "ARB", isNative = false), // maya-eligible Arbitrum token
                 coin(Chain.Solana, "SOL", isNative = true),
                 coin(Chain.Solana, "USDC", isNative = false),
+                coin(Chain.Bitcoin, "BTC", isNative = true), // BTC PSBT route
             )
 
         swapKitCoins.forEach { c ->
@@ -58,7 +59,6 @@ internal class SwapProviderTableTest {
                 coin(Chain.Mantle, "MNT", isNative = true),
                 coin(Chain.Blast, "ETH", isNative = true),
                 coin(Chain.CronosChain, "CRO", isNative = true),
-                coin(Chain.Bitcoin, "BTC", isNative = true),
                 coin(Chain.BitcoinCash, "BCH", isNative = true),
                 coin(Chain.Litecoin, "LTC", isNative = true),
                 coin(Chain.Dogecoin, "DOGE", isNative = true),

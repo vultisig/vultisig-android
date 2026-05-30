@@ -462,20 +462,53 @@ class UtxoHelper(
                 }
             }
         }
-        verifyDestinationBinding(outputs, expectedToAddress, expectedToAmount)
+        val actualFee = verifyFeeCeiling(inputs, outputs)
+        verifyDestinationBinding(outputs, expectedToAddress, expectedToAmount, actualFee)
+    }
+
+    /**
+     * Bounds the miner fee the co-signed PSBT pays. The fee is `sum(inputs) - sum(outputs)`; the
+     * dApp picks it and the Verify screen never shows it, so a payload with large inputs and a tiny
+     * change output could otherwise be signed at an arbitrary fee. Reject anything above
+     * [MAX_FEE_SAT_PER_VBYTE] using a coarse segwit vsize estimate. Returns the fee so the
+     * destination binding can treat a fee netted out of the deposit as bounded.
+     */
+    private fun verifyFeeCeiling(
+        inputs: List<BitcoinInput>,
+        outputs: List<BitcoinOutput>,
+    ): BigInteger {
+        val available =
+            inputs.fold(BigInteger.ZERO) { acc, i -> acc + BigInteger.valueOf(i.amount) }
+        val spent = outputs.fold(BigInteger.ZERO) { acc, o -> acc + BigInteger.valueOf(o.amount) }
+        val fee = available - spent
+        require(fee >= BigInteger.ZERO) {
+            "PSBT outputs ($spent satoshis) exceed inputs ($available); fee would be negative"
+        }
+        val estimatedVBytes =
+            SEGWIT_TX_OVERHEAD_VBYTES +
+                SEGWIT_INPUT_VBYTES * inputs.size +
+                SEGWIT_OUTPUT_VBYTES * outputs.size
+        val ceiling = BigInteger.valueOf(MAX_FEE_SAT_PER_VBYTE * estimatedVBytes)
+        require(fee <= ceiling) {
+            "PSBT miner fee $fee satoshis over ~$estimatedVBytes vBytes exceeds the " +
+                "$MAX_FEE_SAT_PER_VBYTE sat/vByte ceiling ($ceiling satoshis); refusing to sign"
+        }
+        return fee
     }
 
     /**
      * Asserts that the structural PSBT outputs reproduce the Verify screen's displayed destination.
-     * The non-change outputs must sum to [expectedToAmount], and exactly one of them must carry a
-     * scriptPubKey equal to the lock script of [expectedToAddress] — comparing the actual script
-     * bytes rather than the dApp-supplied `address` string, since the scriptPubKey is what the
-     * sighash commits to.
+     * The non-change outputs must sum to at most [expectedToAmount] (a shortfall no larger than the
+     * [actualFee] is allowed for providers that net the fee out of the deposit), and exactly one of
+     * them must carry a scriptPubKey equal to the lock script of [expectedToAddress] — comparing
+     * the actual script bytes rather than the dApp-supplied `address` string, since the
+     * scriptPubKey is what the sighash commits to.
      */
     private fun verifyDestinationBinding(
         outputs: List<BitcoinOutput>,
         expectedToAddress: String,
         expectedToAmount: BigInteger,
+        actualFee: BigInteger,
     ) {
         require(expectedToAddress.isNotEmpty()) {
             "PSBT co-signing requires a non-empty payload.toAddress to bind against"
@@ -483,9 +516,21 @@ class UtxoHelper(
         val nonChange = outputs.filterNot { it.isChange }
         val sumNonChange =
             nonChange.fold(BigInteger.ZERO) { acc, o -> acc + BigInteger.valueOf(o.amount) }
-        require(sumNonChange == expectedToAmount) {
-            "PSBT non-change outputs sum to $sumNonChange satoshis but payload.toAmount is " +
+        // Two valid provider shapes deposit different amounts: the fee can be funded by a change
+        // output (deposit == toAmount) or netted out of the deposit itself (deposit == toAmount -
+        // fee, e.g. a send-max PSBT with no change — the real /v3/swap fixtures look like this).
+        // Accept both: the deposit may never exceed the displayed amount, and any shortfall is
+        // capped at the actual miner fee. Combined with the single-output-to-destination and
+        // change-script checks below and the fee ceiling in [verifyFeeCeiling], value can only
+        // reach the pinned destination, the vault's own change, or the (bounded) miner — never a
+        // hidden recipient.
+        require(sumNonChange <= expectedToAmount) {
+            "PSBT non-change outputs sum to $sumNonChange satoshis, exceeding payload.toAmount " +
                 "$expectedToAmount; Verify screen would diverge from the signed outputs"
+        }
+        require(expectedToAmount - sumNonChange <= actualFee) {
+            "PSBT deposits $sumNonChange satoshis vs the displayed $expectedToAmount; the " +
+                "${expectedToAmount - sumNonChange} sat shortfall exceeds the miner fee $actualFee"
         }
         val expectedScript = BitcoinScript.lockScriptForAddress(expectedToAddress, coinType).data()
         // `lockScriptForAddress` returns an empty `Data` for addresses Trust Wallet Core can't
@@ -731,5 +776,18 @@ private const val SIGHASH_ALL: Int = 0x01
 // Length of a v0 witness program serialized as `0x00 0x14 <20-byte hash>` (the program, not the
 // hash itself).
 private const val WITNESS_V0_PROGRAM_LEN: Int = 22
+// Upper bound on the miner fee a co-signed PSBT may carry, in satoshis per virtual byte. The
+// dApp-supplied PSBT picks the fee (inputs - outputs) and the Verify screen never surfaces it, so
+// without a ceiling a payload with large inputs and tiny change is signed at an arbitrary fee.
+// Legitimate Bitcoin fees stay well under this even in extreme congestion (~hundreds of sat/vB),
+// so the bound only catches egregious over-payment, never a normal swap deposit.
+private const val MAX_FEE_SAT_PER_VBYTE: Long = 1_000L
+// Coarse virtual-size estimate for a segwit (P2WPKH / P2SH-P2WPKH) transaction, used only to turn
+// the absolute fee into a sat/vByte rate for [MAX_FEE_SAT_PER_VBYTE]. Tx overhead plus per-input
+// and per-output vbytes; deliberately on the low side so the derived rate errs high (stricter),
+// while the generous ceiling keeps it from rejecting valid PSBTs.
+private const val SEGWIT_TX_OVERHEAD_VBYTES: Long = 11L
+private const val SEGWIT_INPUT_VBYTES: Long = 68L
+private const val SEGWIT_OUTPUT_VBYTES: Long = 31L
 // Length of a P2SH scriptPubKey: OP_HASH160 (1) + push20 (1) + 20-byte hash + OP_EQUAL (1).
 private const val P2SH_SCRIPT_LEN: Int = 23

@@ -1005,6 +1005,78 @@ class UtxoHelperTest {
         }
     }
 
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - accepts a deposit that nets the miner fee out of the displayed amount`() {
+        try {
+            val helper = ownedHelper()
+            val recipient = addressFor(attackerPubKeyHex)
+            // Real /v3/swap PSBTs net the fee out of the deposit: a single send-max output with no
+            // change, so the deposit is fromAmount - fee. Verify shows toAmount=100_000 while the
+            // signed deposit is 99_500 (fee 500). The binding must accept this — the shortfall is
+            // exactly the miner fee, not a hidden recipient.
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000L)),
+                    outputs =
+                        listOf(
+                            BitcoinOutput(
+                                amount = 99_500L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            )
+                        ),
+                )
+            val hashes =
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(100_000L),
+                )
+            assertEquals(1, hashes.size)
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getPreSignedImageHashFromSignBitcoin - rejects a PSBT whose miner fee blows past the sat per vByte ceiling`() {
+        try {
+            val helper = ownedHelper()
+            val recipient = addressFor(attackerPubKeyHex)
+            // 1 BTC of inputs, a 60_000 sat deposit and no change ⇒ ~99.94M sat fee over a ~110
+            // vByte tx (~900k sat/vByte). The Verify screen never shows the fee, so without a
+            // ceiling this signs away the balance to the miner. toAmount == the deposit so the
+            // amount binding passes; the rejection must come from the fee ceiling.
+            val signBitcoin =
+                SignBitcoin(
+                    version = 2u,
+                    locktime = 0u,
+                    inputs = listOf(ownedInput(amount = 100_000_000L)),
+                    outputs =
+                        listOf(
+                            BitcoinOutput(
+                                amount = 60_000L,
+                                address = recipient,
+                                scriptPubKey = scriptHexFor(recipient),
+                                isChange = false,
+                            )
+                        ),
+                )
+            assertThrows(IllegalArgumentException::class.java) {
+                helper.getPreSignedImageHashFromSignBitcoin(
+                    signBitcoin,
+                    expectedToAddress = recipient,
+                    expectedToAmount = BigInteger.valueOf(60_000L),
+                )
+            }
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
     private fun newHelper(): UtxoHelper = UtxoHelper(CoinType.BITCOIN, "", "")
 
     private fun skipIfJniUnavailable(e: Throwable) {
