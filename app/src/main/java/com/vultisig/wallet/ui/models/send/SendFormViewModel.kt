@@ -1,4 +1,4 @@
-@file:OptIn(kotlin.uuid.ExperimentalUuidApi::class, ExperimentalStdlibApi::class)
+@file:OptIn(ExperimentalStdlibApi::class)
 
 package com.vultisig.wallet.ui.models.send
 
@@ -52,13 +52,11 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
-import com.vultisig.wallet.ui.screens.select.AssetSelected
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
 import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -181,13 +179,13 @@ constructor(
     private val tronFrozenBalances =
         MutableStateFlow<TronFrozenBalanceState>(TronFrozenBalanceState.Loading)
 
-    private val tokenPreselectionService =
+    private val tokenPreselectionService: TokenPreselectionService =
         TokenPreselectionService(
             scope = viewModelScope,
             accountsState = accountsState,
             defiTypeProvider = { defiType },
             selectedTokenProvider = { selectedTokenValue },
-            onTokenSelected = ::selectToken,
+            onTokenSelected = { tokenNetworkSelectionDelegate.selectToken(it) },
         )
 
     private val accountsLoader =
@@ -298,6 +296,24 @@ constructor(
             tokenRepository = tokenRepository,
             adjustGasFee = ::adjustGasFee,
             amountManager = amountManager,
+        )
+
+    private val tokenNetworkSelectionDelegate =
+        TokenNetworkSelectionDelegate(
+            scope = viewModelScope,
+            navigator = navigator,
+            requestResultRepository = requestResultRepository,
+            tokenRepository = tokenRepository,
+            vaultRepository = vaultRepository,
+            chainAccountAddressRepository = chainAccountAddressRepository,
+            tokenPreselectionService = tokenPreselectionService,
+            accountsLoader = accountsLoader,
+            amountFractionManager = amountFractionManager,
+            amountManager = amountManager,
+            vaultIdProvider = { vaultId },
+            accounts = accounts,
+            selectedToken = selectedToken,
+            expandSection = ::expandSection,
         )
 
     private val strategies =
@@ -482,112 +498,15 @@ constructor(
         uiState.update { it.copy(tokenAmountError = errorText) }
     }
 
-    fun selectNetwork() {
-        viewModelScope.launch {
-            val vaultId = vaultId ?: return@launch
-            val selectedChain = selectedTokenValue?.chain ?: return@launch
+    fun selectNetwork() = tokenNetworkSelectionDelegate.selectNetwork()
 
-            val requestId = Uuid.random().toString()
+    fun onNetworkLongPressStarted(position: Offset) =
+        tokenNetworkSelectionDelegate.onNetworkLongPressStarted(position)
 
-            navigator.route(
-                Route.SelectNetwork(
-                    vaultId = vaultId,
-                    selectedNetworkId = selectedChain.id,
-                    requestId = requestId,
-                    filters = Route.SelectNetwork.Filters.None,
-                )
-            )
+    fun openTokenSelection() = tokenNetworkSelectionDelegate.openTokenSelection()
 
-            updateChain(requestId = requestId, selectedChain = selectedChain)
-        }
-    }
-
-    fun onNetworkLongPressStarted(position: Offset) {
-        viewModelScope.launch {
-            val vaultId = vaultId ?: return@launch
-            val selectedChain = selectedTokenValue?.chain ?: return@launch
-
-            val requestId = Uuid.random().toString()
-
-            navigator.route(
-                Route.SelectNetworkPopup(
-                    requestId = requestId,
-                    pressX = position.x,
-                    pressY = position.y,
-                    vaultId = vaultId,
-                    selectedNetworkId = selectedChain.id,
-                    filters = Route.SelectNetwork.Filters.None,
-                )
-            )
-
-            updateChain(requestId, selectedChain)
-        }
-    }
-
-    private suspend fun updateChain(requestId: String, selectedChain: Chain) {
-        val chain: Chain? = requestResultRepository.request(requestId)
-
-        if (chain == null || chain == selectedChain) {
-            return
-        }
-
-        val account =
-            accounts.value.find { it.token.isNativeToken && it.token.chain == chain } ?: return
-
-        selectToken(account.token)
-    }
-
-    fun openTokenSelection() {
-        val vaultId = vaultId ?: return
-        viewModelScope.launch {
-            val requestId = Uuid.random().toString()
-
-            val selectedChain = selectedToken.value?.chain ?: Chain.ThorChain
-            navigator.route(
-                Route.SelectAsset(
-                    vaultId = vaultId,
-                    preselectedNetworkId = selectedChain.id,
-                    networkFilters = Route.SelectNetwork.Filters.None,
-                    requestId = requestId,
-                )
-            )
-
-            val newAssetSelected = requestResultRepository.request<AssetSelected?>(requestId)
-            val newToken = newAssetSelected?.token
-
-            if (newToken != null) {
-                selectToken(newToken)
-                expandSection(SendSections.Address)
-            }
-        }
-    }
-
-    fun openTokenSelectionPopup(position: Offset) {
-        val vaultId = vaultId ?: return
-        viewModelScope.launch {
-            val requestId = Uuid.random().toString()
-
-            val selectedChain = selectedToken.value?.chain ?: Chain.ThorChain
-            navigator.route(
-                Route.SelectAssetPopup(
-                    vaultId = vaultId,
-                    preselectedNetworkId = selectedChain.id,
-                    requestId = requestId,
-                    pressX = position.x,
-                    pressY = position.y,
-                    selectedAssetId = selectedToken.value?.id.orEmpty(),
-                )
-            )
-
-            val newAssetSelected = requestResultRepository.request<AssetSelected?>(requestId)
-            val newToken = newAssetSelected?.token
-
-            if (newToken != null) {
-                selectToken(newToken)
-                expandSection(SendSections.Address)
-            }
-        }
-    }
+    fun openTokenSelectionPopup(position: Offset) =
+        tokenNetworkSelectionDelegate.openTokenSelectionPopup(position)
 
     fun openGasSettings() {
         viewModelScope.launch { advanceGasUiRepository.showSettings() }
@@ -624,7 +543,7 @@ constructor(
                     )
                     val preSelectedChainIds = chainValidForAddress.map { it.id }
 
-                    checkChainIdExistInAccounts(
+                    tokenNetworkSelectionDelegate.checkChainIdExistInAccounts(
                         preSelectedChainIds = preSelectedChainIds,
                         vaultId = vaultId,
                     )
@@ -637,30 +556,6 @@ constructor(
                 }
             }
         }
-    }
-
-    private fun checkChainIdExistInAccounts(preSelectedChainIds: List<String>, vaultId: String) {
-        // if chain Id is missing in accounts, add the first chain found by address manually.
-        val chainIdForAddition = preSelectedChainIds.firstOrNull()
-        val chainIdNotInAccounts =
-            accounts.value.none { it.token.chain.id.equals(chainIdForAddition, ignoreCase = true) }
-        if (!chainIdForAddition.isNullOrBlank() && chainIdNotInAccounts) {
-            viewModelScope.launch {
-                addNativeTokenToVault(chainIdForAddition)
-                accountsLoader.load(vaultId)
-            }
-        }
-    }
-
-    private suspend fun addNativeTokenToVault(chainIdForAddition: ChainId) {
-        val nativeToken = tokenRepository.getNativeToken(chainIdForAddition)
-        val vaultId = requireNotNull(vaultId)
-        val vault = requireNotNull(vaultRepository.get(vaultId))
-        val (address, derivedPublicKey) =
-            chainAccountAddressRepository.getAddress(coin = nativeToken, vault = vault)
-        val updatedCoin = nativeToken.copy(address = address, hexPublicKey = derivedPublicKey)
-
-        vaultRepository.addTokenToVault(vaultId, updatedCoin)
     }
 
     fun setOutputAddress(address: String) {
@@ -725,7 +620,7 @@ constructor(
                     }
                     ?.let {
                         tokenSelected = true
-                        selectToken(it.token)
+                        tokenNetworkSelectionDelegate.selectToken(it.token)
                     }
             }
         }
@@ -743,7 +638,7 @@ constructor(
             when (addressType) {
                 AddressBookType.OUTPUT -> {
                     val selectedNewChain = address.chain
-                    checkIfTokenSelectionRequired(
+                    tokenNetworkSelectionDelegate.checkIfTokenSelectionRequired(
                         currentChain = selectedChain,
                         newChain = selectedNewChain,
                     )
@@ -754,18 +649,6 @@ constructor(
                     setProviderAddress(address.address)
                 }
             }
-        }
-    }
-
-    private fun checkIfTokenSelectionRequired(currentChain: Chain, newChain: Chain) {
-        val newChainSelected = currentChain != newChain
-        val isNotEvm = newChain.standard != TokenStandard.EVM
-        if (newChainSelected && isNotEvm) {
-            tokenPreselectionService.preSelect(
-                preSelectedChainIds = listOf(newChain.id),
-                preSelectedTokenId = null,
-                forcePreselection = true,
-            )
         }
     }
 
@@ -830,17 +713,6 @@ constructor(
 
     private fun showLoading() {
         uiState.update { it.copy(isLoading = true) }
-    }
-
-    private fun selectToken(token: Coin) {
-        Timber.d("selectToken(token = $token)")
-
-        // Preempt any in-flight percentage calc — otherwise it can resume after the token
-        // switch and write the old token's amount into tokenAmountFieldState (e.g. the
-        // autocompound toggle hits this same race that setTronResourceType already preempts).
-        amountFractionManager.cancel()
-        amountManager.resetUserInputCache()
-        selectedToken.value = token
     }
 
     private fun showError(text: UiText) {

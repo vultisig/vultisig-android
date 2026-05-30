@@ -91,7 +91,15 @@ constructor(private val json: Json, private val httpClient: HttpClient) : Sessio
         localPartyId: List<String>,
     ) {
         withRelayRetry {
-            httpClient.post("$serverUrl/$sessionId") { setBody(localPartyId) }.throwIfUnsuccessful()
+            val response = httpClient.post("$serverUrl/$sessionId") { setBody(localPartyId) }
+            if (response.status.value >= 500) {
+                val alreadyRegistered =
+                    runCatching { getParticipants(serverUrl, sessionId).containsAll(localPartyId) }
+                        .onFailure { if (it is CancellationException) throw it }
+                        .getOrDefault(false)
+                if (alreadyRegistered) return@withRelayRetry
+            }
+            response.throwIfUnsuccessful()
         }
     }
 

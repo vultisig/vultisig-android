@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.keysign
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.annotation.DrawableRes
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -50,6 +51,14 @@ import timber.log.Timber
 
 private const val RIVE_PROGRESS_PROPERTY = "progessPercentage" // typo in riv_keysign.riv
 private const val RIVE_TO_TOKEN_IMAGE_PROPERTY = "toToken"
+
+// The toToken logo only occupies a small slot in the animation, so cap the rasterized size.
+// Rive decodes the bytes we hand it via ImageDecoder.decodeToBitmap, which copies the image into
+// an IntArray (width * height ints) on the Java heap. A drawable with large/abnormal intrinsic
+// bounds would balloon that allocation past the heap limit and throw an OutOfMemoryError — which
+// Rive's native decode path does not catch (it only catches Exception), so it aborts the whole
+// process. Bounding the size keeps that allocation tiny and well within the heap.
+internal const val RIVE_TO_TOKEN_IMAGE_MAX_PX = 256
 
 @Composable
 internal fun KeysignView(
@@ -203,18 +212,53 @@ private fun KeysignRiveProgress(progress: Float, @DrawableRes coinLogoRes: Int?)
     )
 }
 
-/** Rasterizes a (vector or raster) drawable resource to PNG bytes for Rive ImageAsset binding. */
+/**
+ * Rasterizes a (vector or raster) drawable resource to PNG bytes for Rive ImageAsset binding.
+ *
+ * The rasterized size is bounded by [RIVE_TO_TOKEN_IMAGE_MAX_PX] (aspect ratio preserved) so the
+ * image we hand to Rive can never produce an oversized decode allocation — see the constant for why
+ * an unbounded size crashes the process.
+ */
 private fun encodeDrawableAsPng(context: Context, @DrawableRes resId: Int): ByteArray? {
     val drawable = AppCompatResources.getDrawable(context, resId) ?: return null
-    val bitmap = drawable.toBitmap()
+    val (width, height) = boundedLogoSize(drawable.intrinsicWidth, drawable.intrinsicHeight)
     return try {
-        ByteArrayOutputStream().use { stream ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-            stream.toByteArray()
+        val bitmap =
+            drawable.toBitmap(width = width, height = height, config = Bitmap.Config.ARGB_8888)
+        try {
+            ByteArrayOutputStream().use { stream ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                stream.toByteArray()
+            }
+        } finally {
+            bitmap.recycle()
         }
-    } finally {
-        bitmap.recycle()
+    } catch (e: Exception) {
+        // toBitmap()/compress()/toByteArray() can throw; the caller treats null as "no logo" and
+        // logs it. Never let this escape into the LaunchedEffect coroutine and crash the screen.
+        Timber.e(e, "Failed to encode coin logo res %d as PNG", resId)
+        null
     }
+}
+
+/**
+ * Returns a (width, height) bounded by [RIVE_TO_TOKEN_IMAGE_MAX_PX], preserving aspect ratio. Falls
+ * back to a square of the max size when intrinsic bounds are missing (vector drawables can report
+ * -1) or already within the bound only the down-scale path applies.
+ */
+@VisibleForTesting
+internal fun boundedLogoSize(intrinsicWidth: Int, intrinsicHeight: Int): Pair<Int, Int> {
+    if (intrinsicWidth <= 0 || intrinsicHeight <= 0) {
+        return RIVE_TO_TOKEN_IMAGE_MAX_PX to RIVE_TO_TOKEN_IMAGE_MAX_PX
+    }
+    val largest = maxOf(intrinsicWidth, intrinsicHeight)
+    if (largest <= RIVE_TO_TOKEN_IMAGE_MAX_PX) {
+        return intrinsicWidth to intrinsicHeight
+    }
+    val scale = RIVE_TO_TOKEN_IMAGE_MAX_PX.toFloat() / largest
+    val width = (intrinsicWidth * scale).toInt().coerceAtLeast(1)
+    val height = (intrinsicHeight * scale).toInt().coerceAtLeast(1)
+    return width to height
 }
 
 @Preview
