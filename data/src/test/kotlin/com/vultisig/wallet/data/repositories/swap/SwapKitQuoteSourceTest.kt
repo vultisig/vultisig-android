@@ -800,7 +800,9 @@ internal class SwapKitQuoteSourceTest {
                 put("txID", JsonPrimitive("90788bbae2f83d278b5f13a9b39e26a294d9319bf"))
                 put("raw_data_hex", JsonPrimitive("0a0289752208deadbeef"))
             }
-            val tron = tronCoin()
+            // decimal = 18 (not the chain's native 6) so a regression that scaled the inbound fee
+            // by srcToken.decimal instead of TRON's native 6 decimals would fail this assertion.
+            val tron = tronCoin().copy(decimal = 18)
             coEvery { api.quote(any()) } returns
                 SwapKitQuoteResponseJson(
                     routes =
@@ -834,7 +836,8 @@ internal class SwapKitQuoteSourceTest {
             // txPayload is the UTF-8 JSON object — round-trips back to the same raw_data_hex.
             val decoded =
                 Json.parseToJsonElement(quote.data.txPayload.decodeToString()) as JsonObject
-            assertEquals("0a0289752208deadbeef", decoded["raw_data_hex"]!!.jsonPrimitive.content)
+            val rawDataHex = decoded["raw_data_hex"]?.jsonPrimitive?.content
+            assertEquals("0a0289752208deadbeef", rawDataHex)
             // 13.3735 TRX inbound fee scaled by 6 native decimals = 13_373_500 sun.
             assertEquals(BigInteger("13373500"), quote.fees.value)
             assertEquals("USDT", quote.fees.unit)
@@ -850,6 +853,26 @@ internal class SwapKitQuoteSourceTest {
         coEvery { api.swap(any()) } returns
             SwapKitSwapResponseJson(
                 tx = JsonPrimitive("not-an-object"),
+                meta = SwapKitTxMeta(txType = "TRON"),
+                targetAddress = "Ttarget",
+                expectedBuyAmount = "1",
+            )
+
+        assertThrows<SwapKitError.Decoding> { source().fetch(request(srcToken = tronCoin())) }
+    }
+
+    @Test
+    fun `fetch throws Decoding when the TRON tx has a blank raw_data_hex`() = runTest {
+        // A present-but-empty raw_data_hex must be rejected at quote time (not deferred to keysign)
+        // so route selection can fall back cleanly.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-tron", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = buildJsonObject { put("raw_data_hex", JsonPrimitive("")) },
                 meta = SwapKitTxMeta(txType = "TRON"),
                 targetAddress = "Ttarget",
                 expectedBuyAmount = "1",

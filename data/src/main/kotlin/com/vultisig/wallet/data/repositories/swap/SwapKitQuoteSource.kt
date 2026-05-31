@@ -441,9 +441,15 @@ constructor(
                 val obj =
                     response.tx as? JsonObject
                         ?: throw SwapKitError.Decoding("SwapKit TRON tx is not a JSON object")
-                if ("raw_data_hex" !in obj) {
-                    throw SwapKitError.Decoding("SwapKit TRON tx is missing raw_data_hex")
-                }
+                // Validate raw_data_hex is a non-blank string here (not just present) so a null /
+                // non-string / empty value is rejected in the decoding path — letting quote
+                // selection fall back to another provider — instead of surfacing only at keysign in
+                // SwapKitTronSigner.
+                (obj["raw_data_hex"] as? JsonPrimitive)
+                    ?.takeIf { it.isString }
+                    ?.content
+                    ?.takeIf { it.isNotBlank() }
+                    ?: throw SwapKitError.Decoding("SwapKit TRON tx is missing raw_data_hex")
                 json.encodeToString(JsonObject.serializer(), obj).encodeToByteArray()
             }
             else -> decodeBinaryTx(response.tx)

@@ -70,13 +70,26 @@ class SwapKitTronSignerTest {
         val obj = Json.parseToJsonElement(envelope) as JsonObject
 
         // signature appended as a single-element hex array (TronWeb broadcast shape).
-        val sig = obj["signature"]!!.jsonArray
+        val sig = requireNotNull(obj["signature"]) { "signature field is missing" }.jsonArray
         assertEquals(1, sig.size)
         assertEquals(signatureHex, sig[0].jsonPrimitive.content)
         // Original canonical fields survive verbatim so the cosigning peer broadcasts the same tx.
-        assertEquals(TX_ID, obj["txID"]!!.jsonPrimitive.content)
-        assertEquals(RAW_DATA_HEX, obj["raw_data_hex"]!!.jsonPrimitive.content)
-        assertTrue(obj["visible"]!!.jsonPrimitive.content.toBoolean())
+        assertEquals(
+            TX_ID,
+            requireNotNull(obj["txID"]) { "txID field is missing" }.jsonPrimitive.content,
+        )
+        assertEquals(
+            RAW_DATA_HEX,
+            requireNotNull(obj["raw_data_hex"]) { "raw_data_hex field is missing" }
+                .jsonPrimitive
+                .content,
+        )
+        assertTrue(
+            requireNotNull(obj["visible"]) { "visible field is missing" }
+                .jsonPrimitive
+                .content
+                .toBoolean()
+        )
     }
 
     private companion object {
