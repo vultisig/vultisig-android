@@ -66,7 +66,10 @@ jobs:
         env:
           TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
           TRUSTWALLET_USER: ${{ secrets.TRUSTWALLET_USER }}
-        run: ./gradlew lintDebug --parallel --build-cache
+        # Cap the daemon heap so the lintAnalyzeDebug worker JVM (which inherits
+        # these args) plus the daemon both fit in the runner's memory. The 4 GB
+        # default doubles up across daemon + worker and OOMs.
+        run: ./gradlew lintDebug --build-cache -Dorg.gradle.jvmargs="-Xmx2g -Dfile.encoding=UTF-8"
 
       - name: Archive code analysis reports
         if: always()
