@@ -54,12 +54,13 @@ import timber.log.Timber
  *    backstopped with the L1-sized default, which would over-estimate L2 fees by multiples.
  *
  * Non-EVM/non-Solana `txType`s surface as a fully-formed [SwapQuote.SwapKit] for a per-chain signer
- * to consume: PSBT (Bitcoin, via [com.vultisig.wallet.data.chains.helpers.SwapKitBtcSigner]) and
- * TRON (TronWeb object, via [com.vultisig.wallet.data.chains.helpers.SwapKitTronSigner]) are wired
- * today. The remaining types (TON, SUI, CARDANO, RIPPLE, …) still surface as
- * [SwapKitError.UnsupportedTxType] so the picker falls back to another provider rather than signing
- * garbage, until their signers land. `SOLANA` and the legacy `SERIALIZED_BASE64` discriminator are
- * aliased; SwapKit flipped them once before.
+ * to consume: PSBT (Bitcoin, via [com.vultisig.wallet.data.chains.helpers.SwapKitBtcSigner]), TRON
+ * (TronWeb object, via [com.vultisig.wallet.data.chains.helpers.SwapKitTronSigner]), and SUI
+ * (base64 PTB, via [com.vultisig.wallet.data.chains.helpers.SwapKitSuiSigner]) are wired today. The
+ * remaining types (TON, CARDANO, RIPPLE, …) still surface as [SwapKitError.UnsupportedTxType] so
+ * the picker falls back to another provider rather than signing garbage, until their signers land.
+ * `SOLANA` and the legacy `SERIALIZED_BASE64` discriminator are aliased; SwapKit flipped them once
+ * before.
  */
 internal class SwapKitQuoteSource
 @Inject
@@ -175,7 +176,8 @@ constructor(
                     subProvider = subProvider,
                 )
             TxKind.PSBT,
-            TxKind.TRON ->
+            TxKind.TRON,
+            TxKind.SUI ->
                 SwapQuoteResult.Native(
                     buildSwapKitNativeQuote(swapResponse, request, subProvider, best.fees)
                 )
@@ -260,6 +262,7 @@ constructor(
     private fun nativeDecimals(chain: Chain): Int =
         when (chain) {
             Chain.Solana -> 9
+            Chain.Sui -> 9
             Chain.Bitcoin -> 8
             Chain.Tron -> 6
             else -> 18
@@ -369,10 +372,11 @@ constructor(
                         ),
                 )
             }
-            // PSBT/TRON are dispatched to buildSwapKitNativeQuote before reaching here; the arm
+            // PSBT/TRON/SUI are dispatched to buildSwapKitNativeQuote before reaching here; the arm
             // keeps the `when` exhaustive and refuses anything that slips through.
             TxKind.PSBT,
             TxKind.TRON,
+            TxKind.SUI,
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
     }
@@ -489,6 +493,7 @@ constructor(
             "serialized_base64" -> TxKind.SOLANA
             "psbt" -> TxKind.PSBT
             "tron" -> TxKind.TRON
+            "sui" -> TxKind.SUI
             else -> TxKind.UNSUPPORTED
         }
 
@@ -523,6 +528,7 @@ constructor(
         SOLANA,
         PSBT,
         TRON,
+        SUI,
         UNSUPPORTED,
     }
 
@@ -583,6 +589,7 @@ constructor(
             Chain.Solana -> "SOL"
             Chain.Bitcoin -> "BTC"
             Chain.Tron -> "TRON"
+            Chain.Sui -> "SUI"
             else -> null
         }
 
