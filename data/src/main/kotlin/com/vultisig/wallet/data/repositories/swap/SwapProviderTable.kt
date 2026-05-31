@@ -130,13 +130,17 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             // raw_data_hex). Mirrors iOS' `.tron → [.thorchain, .swapkit]`.
             Chain.Tron -> setOf(SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
 
+            // SwapKit TON routes are a plain native deposit transfer signed via TonHelper. TON has
+            // no native Thor/Maya route on Android, so it is SwapKit-only. Mirrors iOS'
+            // `.ton → [.swapkit]`.
+            Chain.Ton -> setOf(SwapProvider.SWAPKIT)
+
             Chain.Hyperliquid -> setOf(SwapProvider.LIFI)
 
             Chain.Polkadot,
             Chain.Bittensor,
             Chain.Dydx,
             Chain.Sui,
-            Chain.Ton,
             Chain.Osmosis,
             Chain.Terra,
             Chain.TerraClassic,

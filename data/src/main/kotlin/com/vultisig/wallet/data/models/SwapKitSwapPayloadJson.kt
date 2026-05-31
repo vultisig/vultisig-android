@@ -71,5 +71,15 @@ data class SwapKitSwapPayloadJson(
          * hashes `raw_data_hex` and re-assembles the broadcast envelope. Mirrors iOS' `"TRON"`.
          */
         const val TX_TYPE_TRON = "TRON"
+
+        /**
+         * `meta.txType` discriminator for the TON signing path. SwapKit returns `tx` as a
+         * `[{address, amount}]` array (raw nano-TON amounts) JSON-encoded into [txPayload]. A TON
+         * SwapKit swap is a plain native transfer to the deposit [targetAddress] — routing is by
+         * the deposit address itself (Chainflip / NEAR), no memo — so signing reuses the existing
+         * [com.vultisig.wallet.data.crypto.TonHelper] native path off `toAddress` / `toAmount`
+         * rather than a dedicated signer. Mirrors iOS' `"TON"`.
+         */
+        const val TX_TYPE_TON = "TON"
     }
 }

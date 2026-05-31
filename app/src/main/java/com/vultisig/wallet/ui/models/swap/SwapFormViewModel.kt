@@ -475,13 +475,13 @@ constructor(
                             }
 
                             is SwapQuote.SwapKit -> {
-                                // BTC PSBT and TRON (TronWeb object) are wired; the remaining
-                                // SwapKit txTypes (TON / ADA / SUI) land with their per-chain
-                                // signers. Guarded loudly so an un-wired txType can't reach
-                                // signing.
+                                // BTC PSBT, TRON (TronWeb object) and TON (native transfer) are
+                                // wired; remaining SwapKit txTypes (ADA / SUI) land with their
+                                // per-chain signers. Guarded so an un-wired txType can't sign.
                                 require(
                                     quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT ||
-                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TRON
+                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TRON ||
+                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TON
                                 ) {
                                     "Unsupported SwapKit txType for swap: ${quote.data.txType}"
                                 }

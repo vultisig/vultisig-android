@@ -198,6 +198,7 @@ val Chain.isSwapSupported: Boolean
                 Chain.ZkSync,
                 Chain.Zcash,
                 Chain.Tron,
+                Chain.Ton,
                 Chain.Hyperliquid,
             )
 
