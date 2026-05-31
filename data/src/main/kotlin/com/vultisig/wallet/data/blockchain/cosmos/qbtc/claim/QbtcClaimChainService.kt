@@ -10,6 +10,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import timber.log.Timber
@@ -60,8 +62,13 @@ internal class QbtcClaimChainServiceImpl @Inject constructor(private val httpCli
 
     override suspend fun filterClaimable(utxos: List<ClaimableUtxo>): List<ClaimableUtxo> =
         coroutineScope {
+            // Cap in-flight requests so a heavy wallet doesn't burst the chain endpoint
+            // (which would throttle and then cascade into fail-open). Input order is preserved.
+            val gate = Semaphore(MAX_CONCURRENT_STATUS_REQUESTS)
             utxos
-                .map { utxo -> async { utxo to fetchStatus(utxo.txid, utxo.vout) } }
+                .map { utxo ->
+                    async { utxo to gate.withPermit { fetchStatus(utxo.txid, utxo.vout) } }
+                }
                 .awaitAll()
                 .mapNotNull { (utxo, status) ->
                     when (status) {
@@ -82,11 +89,11 @@ internal class QbtcClaimChainServiceImpl @Inject constructor(private val httpCli
                 QbtcUtxoStatus.NotIndexed
             } else {
                 val entitled = response.bodyOrThrow<QbtcUtxoResponseJson>().utxo?.entitledAmount
-                when (val amount = entitled?.toLongOrNull()) {
-                    null,
-                    0L -> QbtcUtxoStatus.Claimed
-                    else -> QbtcUtxoStatus.Claimable(amount)
-                }
+                val amount = entitled?.toLongOrNull()
+                // Only a strictly-positive remaining amount is claimable; 0 means fully paid
+                // out and a negative value is invalid — treat both as non-claimable.
+                if (amount == null || amount <= 0L) QbtcUtxoStatus.Claimed
+                else QbtcUtxoStatus.Claimable(amount)
             }
         } catch (e: CancellationException) {
             throw e
@@ -94,6 +101,10 @@ internal class QbtcClaimChainServiceImpl @Inject constructor(private val httpCli
             Timber.w(e, "QBTC UTXO status check failed for %s:%d — keeping it", txid, vout)
             null
         }
+
+    private companion object {
+        const val MAX_CONCURRENT_STATUS_REQUESTS = 8
+    }
 }
 
 @Serializable private class QbtcParamResponseJson(val param: QbtcParam)

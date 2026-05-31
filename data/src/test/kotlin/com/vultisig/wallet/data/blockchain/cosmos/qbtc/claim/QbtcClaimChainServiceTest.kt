@@ -68,6 +68,12 @@ class QbtcClaimChainServiceTest {
                 ClaimableUtxo(txid = "cc".repeat(32), vout = 2, amount = 200_000) // 404
             val transient =
                 ClaimableUtxo(txid = "dd".repeat(32), vout = 3, amount = 100_000) // 500 → keep
+            val negative =
+                ClaimableUtxo(
+                    txid = "ee".repeat(32),
+                    vout = 4,
+                    amount = 50_000,
+                ) // entitled -1 → drop
 
             val service =
                 QbtcClaimChainServiceImpl(
@@ -78,15 +84,18 @@ class QbtcClaimChainServiceTest {
                             path.contains("bb".repeat(32)) ->
                                 HttpStatusCode.OK to utxoBody("bb".repeat(32), "0")
                             path.contains("cc".repeat(32)) -> HttpStatusCode.NotFound to ""
+                            path.contains("ee".repeat(32)) ->
+                                HttpStatusCode.OK to utxoBody("ee".repeat(32), "-1")
                             else -> HttpStatusCode.InternalServerError to "boom"
                         }
                     }
                 )
 
-            val result = service.filterClaimable(listOf(claimable, claimed, notIndexed, transient))
+            val result =
+                service.filterClaimable(listOf(claimable, claimed, notIndexed, transient, negative))
 
-            // Input order preserved; claimed + not-indexed dropped; claimable amount rewritten;
-            // transient failure keeps the UTXO at its original amount.
+            // Input order preserved; claimed + not-indexed + non-positive dropped; claimable amount
+            // rewritten; transient failure keeps the UTXO at its original amount.
             assertEquals(listOf(claimable.copy(amount = 400_000), transient), result)
         }
 }

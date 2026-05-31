@@ -30,6 +30,7 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -86,6 +87,7 @@ constructor(
     private var qbtcCoin: Coin? = null
     private var claimable: List<ClaimableUtxo> = emptyList()
     private val selectedKeys = linkedSetOf<String>()
+    private var claimJob: Job? = null
 
     init {
         load()
@@ -132,6 +134,9 @@ constructor(
     }
 
     fun confirm(fastVaultPassword: String) {
+        // Ignore repeated taps while a claim is already running — a second run would
+        // start a duplicate keysign + proof request and risk a double broadcast.
+        if (claimJob?.isActive == true) return
         val vault = vault ?: return
         val btcCoin = btcCoin ?: return
         val qbtcCoin = qbtcCoin ?: return
@@ -143,18 +148,26 @@ constructor(
                 proofService = proofService,
                 btcRoundRunner = fastVaultRoundRunner,
             )
-        viewModelScope.launch { orchestrator.phase.collect { onPhase(it) } }
-        viewModelScope.safeLaunch {
-            orchestrator.run(
-                QbtcClaimRunInput(
-                    vault = vault,
-                    btcCoin = btcCoin,
-                    qbtcCoin = qbtcCoin,
-                    utxos = selected,
-                    fastVaultPassword = fastVaultPassword,
-                )
-            )
-        }
+        claimJob =
+            viewModelScope.safeLaunch {
+                // Phase collector lives only for this run, so it can't outlive the job and
+                // update the UI out of band after completion.
+                val collector = launch { orchestrator.phase.collect { onPhase(it) } }
+                try {
+                    orchestrator.run(
+                        QbtcClaimRunInput(
+                            vault = vault,
+                            btcCoin = btcCoin,
+                            qbtcCoin = qbtcCoin,
+                            utxos = selected,
+                            fastVaultPassword = fastVaultPassword,
+                        )
+                    )
+                } finally {
+                    collector.cancel()
+                }
+                onPhase(orchestrator.phase.value)
+            }
     }
 
     fun retry() = load()

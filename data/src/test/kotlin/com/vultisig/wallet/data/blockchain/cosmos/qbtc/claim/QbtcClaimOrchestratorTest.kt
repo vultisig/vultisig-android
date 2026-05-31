@@ -60,7 +60,7 @@ class QbtcClaimOrchestratorTest {
         assertTrue(phase is QbtcClaimPhase.Done, "expected Done but was $phase")
         phase as QbtcClaimPhase.Done
         assertEquals(("ab".repeat(32)).uppercase(), phase.result.txHashHex)
-        assertEquals(100_000, phase.result.totalSatsClaimed)
+        assertEquals(100_000L, phase.result.totalSatsClaimed)
 
         // BTC round signed the locally-computed message hash.
         assertEquals(expectedHashes.messageHash.toHexString(), runner.lastInput?.messageHashHex)
@@ -70,7 +70,7 @@ class QbtcClaimOrchestratorTest {
         assertEquals(64, proof.lastRequest?.signatureS?.length)
         // Peer notified with the uppercased hash + total.
         assertEquals(("ab".repeat(32)).uppercase(), pusher.lastTxHash)
-        assertEquals(100_000, pusher.lastTotal)
+        assertEquals(100_000L, pusher.lastTotal)
     }
 
     @Test
