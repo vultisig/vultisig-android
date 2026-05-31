@@ -1545,4 +1545,31 @@
     <string name="decoded_function_min_amount_out">最小转出金额</string>
     <string name="decoded_function_amount_out">转出金额</string>
     <string name="decoded_function_swap_title">交换</string>
+    <!-- QBTC Claim -->
+    <string name="qbtc_claim_title">提取 QBTC</string>
+    <string name="qbtc_claim_loading">正在检查资格…</string>
+    <string name="qbtc_claim_hero_title">可提取总额</string>
+    <string name="qbtc_claim_description">将您的 Bitcoin UTXO 提取为抗量子的 QBTC。您的 Bitcoin 保持不变。</string>
+    <string name="qbtc_claim_eligible_header">符合条件的 UTXO</string>
+    <string name="qbtc_claim_utxo_block_format">已在区块 %1$d 确认</string>
+    <string name="qbtc_claim_utxo_pending">待处理</string>
+    <string name="qbtc_claim_cta_all">全部提取</string>
+    <string name="qbtc_claim_cta_partial">提取 %2$d 个中的 %1$d 个</string>
+    <string name="qbtc_claim_proving">正在生成证明并广播…</string>
+    <string name="qbtc_claim_success_title">QBTC 已提取</string>
+    <string name="qbtc_claim_password_title">输入保险库密码</string>
+    <string name="qbtc_claim_cancel">取消</string>
+    <string name="qbtc_claim_failed">提取失败</string>
+    <string name="qbtc_claim_unavailable_title">提取已禁用</string>
+    <string name="qbtc_claim_unavailable_detail">QBTC 提取已在网络上暂时禁用。请稍后重试。</string>
+    <string name="qbtc_claim_unsupported_address_title">不支持的地址</string>
+    <string name="qbtc_claim_failed_to_load_title">无法加载可提取的 UTXO</string>
+    <string name="qbtc_claim_no_utxos_title">无可提取项</string>
+    <string name="qbtc_claim_no_utxos_detail">您没有符合条件可提取为 QBTC 的 Bitcoin UTXO。</string>
+    <string name="qbtc_claim_error_invalid_btc_key">无效的 Bitcoin 公钥。</string>
+    <string name="qbtc_claim_error_proof_mismatch">证明服务返回了不匹配的数据。提取未提交。</string>
+    <string name="qbtc_claim_error_broadcast_unavailable">无法广播提取。请稍后重试。</string>
+    <string name="qbtc_claim_banner_subtitle">同样的 Bitcoin。抗量子。</string>
+    <string name="qbtc_claim_banner_title">提取您的 QBTC</string>
+    <string name="qbtc_claim_banner_cta">立即提取</string>
 </resources>

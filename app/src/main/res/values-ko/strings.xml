@@ -1239,4 +1239,31 @@
     <string name="decoded_function_min_amount_out">최소 받는 금액</string>
     <string name="decoded_function_amount_out">받는 금액</string>
     <string name="decoded_function_swap_title">스왑</string>
+    <!-- QBTC Claim -->
+    <string name="qbtc_claim_title">QBTC 청구</string>
+    <string name="qbtc_claim_loading">자격 확인 중…</string>
+    <string name="qbtc_claim_hero_title">청구 가능 총액</string>
+    <string name="qbtc_claim_description">Bitcoin UTXO를 양자 내성 QBTC로 청구하세요. Bitcoin은 그대로 유지됩니다.</string>
+    <string name="qbtc_claim_eligible_header">청구 가능한 UTXO</string>
+    <string name="qbtc_claim_utxo_block_format">블록 %1$d에서 확인됨</string>
+    <string name="qbtc_claim_utxo_pending">대기 중</string>
+    <string name="qbtc_claim_cta_all">모두 청구</string>
+    <string name="qbtc_claim_cta_partial">%2$d개 중 %1$d개 청구</string>
+    <string name="qbtc_claim_proving">증명 생성 및 브로드캐스트 중…</string>
+    <string name="qbtc_claim_success_title">QBTC 청구 완료</string>
+    <string name="qbtc_claim_password_title">볼트 비밀번호 입력</string>
+    <string name="qbtc_claim_cancel">취소</string>
+    <string name="qbtc_claim_failed">청구 실패</string>
+    <string name="qbtc_claim_unavailable_title">청구가 비활성화됨</string>
+    <string name="qbtc_claim_unavailable_detail">QBTC 청구가 네트워크에서 일시적으로 비활성화되었습니다. 나중에 다시 시도해 주세요.</string>
+    <string name="qbtc_claim_unsupported_address_title">지원되지 않는 주소</string>
+    <string name="qbtc_claim_failed_to_load_title">청구 가능한 UTXO를 불러올 수 없습니다</string>
+    <string name="qbtc_claim_no_utxos_title">청구할 항목 없음</string>
+    <string name="qbtc_claim_no_utxos_detail">QBTC로 청구할 수 있는 Bitcoin UTXO가 없습니다.</string>
+    <string name="qbtc_claim_error_invalid_btc_key">잘못된 Bitcoin 공개 키입니다.</string>
+    <string name="qbtc_claim_error_proof_mismatch">증명 서비스가 일치하지 않는 데이터를 반환했습니다. 청구가 제출되지 않았습니다.</string>
+    <string name="qbtc_claim_error_broadcast_unavailable">청구를 브로드캐스트할 수 없습니다. 나중에 다시 시도해 주세요.</string>
+    <string name="qbtc_claim_banner_subtitle">같은 Bitcoin. 양자 내성.</string>
+    <string name="qbtc_claim_banner_title">QBTC를 청구하세요</string>
+    <string name="qbtc_claim_banner_cta">지금 청구</string>
 </resources>

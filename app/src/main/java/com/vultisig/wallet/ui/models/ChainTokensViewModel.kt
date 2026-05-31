@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.LoadClaimableQbtcUtxosUseCase
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimLoadResult
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -71,6 +73,7 @@ internal data class ChainTokensUiModel(
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
     val tronResourceStats: ResourceUsage? = null,
+    val showQbtcClaimBanner: Boolean = false,
 )
 
 @Immutable
@@ -102,6 +105,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val requestResultRepository: RequestResultRepository,
     private val balanceRepository: BalanceRepository,
+    private val loadClaimableQbtcUtxos: LoadClaimableQbtcUtxosUseCase,
 ) : ViewModel() {
     private val tokens = MutableStateFlow(emptyList<Coin>())
 
@@ -154,6 +158,35 @@ constructor(
             val vaultId = vaultId ?: return@launch
             val chainRaw = chainRaw ?: return@launch
             navigator.route(Route.Deposit(vaultId = vaultId, chainId = chainRaw))
+        }
+    }
+
+    fun onClaimQbtc() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            navigator.route(Route.QbtcClaim(vaultId = vaultId))
+        }
+    }
+
+    /**
+     * Surfaces the "Claim your QBTC" banner on the Bitcoin chain-detail screen when the vault has a
+     * QBTC (MLDSA) key and at least one claimable UTXO. Runs off the main load so the token list
+     * never waits on it; a failure just leaves the banner hidden.
+     */
+    private fun checkQbtcClaimEligibility(chain: Chain) {
+        if (chain != Chain.Bitcoin) {
+            uiState.update { it.copy(showQbtcClaimBanner = false) }
+            return
+        }
+        val vault = currentVault
+        val btcAddress = vault?.coins?.firstOrNull { it.chain == Chain.Bitcoin }?.address
+        if (vault == null || vault.pubKeyMLDSA.isEmpty() || btcAddress.isNullOrEmpty()) {
+            uiState.update { it.copy(showQbtcClaimBanner = false) }
+            return
+        }
+        viewModelScope.safeLaunch {
+            val eligible = loadClaimableQbtcUtxos(btcAddress) is QbtcClaimLoadResult.Available
+            uiState.update { it.copy(showQbtcClaimBanner = eligible) }
         }
     }
 
@@ -226,6 +259,7 @@ constructor(
 
                 currentVault = vaultRepository.get(vaultId) ?: error("No vault with $vaultId")
                 collectTronResourceStats(chain)
+                checkQbtcClaimEligibility(chain)
                 addressDataSource
                     .onEach {
                         if (isRefresh) {

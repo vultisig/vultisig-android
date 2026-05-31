@@ -1232,4 +1232,31 @@
     <string name="decoded_function_min_amount_out">Мин. сумма получения</string>
     <string name="decoded_function_amount_out">Сумма получения</string>
     <string name="decoded_function_swap_title">Обмен</string>
+    <!-- QBTC Claim -->
+    <string name="qbtc_claim_title">Получить QBTC</string>
+    <string name="qbtc_claim_loading">Проверка права на получение…</string>
+    <string name="qbtc_claim_hero_title">Всего доступно к получению</string>
+    <string name="qbtc_claim_description">Получите свои Bitcoin UTXO в виде квантово-устойчивого QBTC. Ваш Bitcoin остаётся нетронутым.</string>
+    <string name="qbtc_claim_eligible_header">Подходящие UTXO</string>
+    <string name="qbtc_claim_utxo_block_format">Подтверждено в блоке %1$d</string>
+    <string name="qbtc_claim_utxo_pending">Ожидание</string>
+    <string name="qbtc_claim_cta_all">Получить всё</string>
+    <string name="qbtc_claim_cta_partial">Получить %1$d из %2$d</string>
+    <string name="qbtc_claim_proving">Генерация доказательства и отправка…</string>
+    <string name="qbtc_claim_success_title">QBTC получен</string>
+    <string name="qbtc_claim_password_title">Введите пароль хранилища</string>
+    <string name="qbtc_claim_cancel">Отмена</string>
+    <string name="qbtc_claim_failed">Получение не удалось</string>
+    <string name="qbtc_claim_unavailable_title">Получение отключено</string>
+    <string name="qbtc_claim_unavailable_detail">Получение QBTC временно отключено в сети. Пожалуйста, попробуйте позже.</string>
+    <string name="qbtc_claim_unsupported_address_title">Адрес не поддерживается</string>
+    <string name="qbtc_claim_failed_to_load_title">Не удалось загрузить UTXO для получения</string>
+    <string name="qbtc_claim_no_utxos_title">Нечего получать</string>
+    <string name="qbtc_claim_no_utxos_detail">У вас нет Bitcoin UTXO, подходящих для получения в виде QBTC.</string>
+    <string name="qbtc_claim_error_invalid_btc_key">Недействительный публичный ключ Bitcoin.</string>
+    <string name="qbtc_claim_error_proof_mismatch">Сервис доказательств вернул несовпадающие данные. Запрос на получение не был отправлен.</string>
+    <string name="qbtc_claim_error_broadcast_unavailable">Не удалось отправить запрос на получение. Пожалуйста, попробуйте позже.</string>
+    <string name="qbtc_claim_banner_subtitle">Тот же Bitcoin. Квантово-устойчивый.</string>
+    <string name="qbtc_claim_banner_title">Получите свой QBTC</string>
+    <string name="qbtc_claim_banner_cta">Получить сейчас</string>
 </resources>

@@ -1272,4 +1272,32 @@
     <string name="decoded_function_min_amount_out">Min amount out</string>
     <string name="decoded_function_amount_out">Amount out</string>
     <string name="decoded_function_swap_title">Swap</string>
+
+    <!-- QBTC Claim -->
+    <string name="qbtc_claim_title">Claim QBTC</string>
+    <string name="qbtc_claim_loading">Checking eligibility…</string>
+    <string name="qbtc_claim_hero_title">Total claimable</string>
+    <string name="qbtc_claim_description">Claim your Bitcoin UTXOs as quantum-safe QBTC. Your Bitcoin stays untouched.</string>
+    <string name="qbtc_claim_eligible_header">Eligible UTXOs</string>
+    <string name="qbtc_claim_utxo_block_format">Confirmed at block %1$d</string>
+    <string name="qbtc_claim_utxo_pending">Pending</string>
+    <string name="qbtc_claim_cta_all">Claim All</string>
+    <string name="qbtc_claim_cta_partial">Claim %1$d of %2$d</string>
+    <string name="qbtc_claim_proving">Generating proof and broadcasting…</string>
+    <string name="qbtc_claim_success_title">QBTC claimed</string>
+    <string name="qbtc_claim_password_title">Enter vault password</string>
+    <string name="qbtc_claim_cancel">Cancel</string>
+    <string name="qbtc_claim_failed">Claim failed</string>
+    <string name="qbtc_claim_unavailable_title">Claiming is disabled</string>
+    <string name="qbtc_claim_unavailable_detail">QBTC claiming is temporarily disabled on the network. Please try again later.</string>
+    <string name="qbtc_claim_unsupported_address_title">Address not supported</string>
+    <string name="qbtc_claim_failed_to_load_title">Couldn\'t load claimable UTXOs</string>
+    <string name="qbtc_claim_no_utxos_title">Nothing to claim</string>
+    <string name="qbtc_claim_no_utxos_detail">You have no Bitcoin UTXOs eligible to claim as QBTC.</string>
+    <string name="qbtc_claim_error_invalid_btc_key">Invalid Bitcoin public key.</string>
+    <string name="qbtc_claim_error_proof_mismatch">The proof service returned mismatched data. The claim was not submitted.</string>
+    <string name="qbtc_claim_error_broadcast_unavailable">The claim could not be broadcast. Please try again later.</string>
+    <string name="qbtc_claim_banner_subtitle">Same Bitcoin. Quantum-safe.</string>
+    <string name="qbtc_claim_banner_title">Claim your QBTC</string>
+    <string name="qbtc_claim_banner_cta">Claim Now</string>
 </resources>

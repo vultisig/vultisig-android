@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
+import com.vultisig.wallet.ui.screens.qbtc.ClaimQbtcPromoBanner
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainTokensTabMenuAndSearchBar
@@ -91,6 +92,7 @@ internal fun ChainTokensScreen(
         onHideSearchBar = viewModel::hideSearchBar,
         onShowSearchBar = viewModel::showSearchBar,
         onShowReviewPopUp = { reviewManager.showReviewPopUp(context) },
+        onClaimQbtc = viewModel::onClaimQbtc,
     )
 }
 
@@ -111,6 +113,7 @@ internal fun ChainTokensScreen(
     onSelectTokens: () -> Unit,
     onTokenClick: (ChainTokenUiModel) -> Unit,
     onShowReviewPopUp: () -> Unit,
+    onClaimQbtc: () -> Unit = {},
 ) {
     val snackbarState = rememberVsSnackbarState()
     val uriHandler = VsUriHandler()
@@ -282,6 +285,13 @@ internal fun ChainTokensScreen(
                         onCancelSearchClick = onHideSearchBar,
                         searchTextFieldState = uiModel.searchTextFieldState,
                     )
+
+                    if (uiModel.showQbtcClaimBanner) {
+                        ClaimQbtcPromoBanner(
+                            onClaim = onClaimQbtc,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
+                    }
 
                     TopShineContainer(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         LazyColumn {

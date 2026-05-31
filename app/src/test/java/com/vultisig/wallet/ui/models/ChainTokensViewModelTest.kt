@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.LoadClaimableQbtcUtxosUseCase
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
@@ -41,6 +42,7 @@ internal class ChainTokensViewModelTest {
     private lateinit var vaultRepository: VaultRepository
     private lateinit var requestResultRepository: RequestResultRepository
     private lateinit var balanceRepository: BalanceRepository
+    private lateinit var loadClaimableQbtcUtxos: LoadClaimableQbtcUtxosUseCase
 
     @BeforeEach
     fun setUp() {
@@ -56,6 +58,7 @@ internal class ChainTokensViewModelTest {
         vaultRepository = mockk(relaxed = true)
         requestResultRepository = mockk(relaxed = true)
         balanceRepository = mockk(relaxed = true)
+        loadClaimableQbtcUtxos = mockk(relaxed = true)
     }
 
     @AfterEach
@@ -76,6 +79,7 @@ internal class ChainTokensViewModelTest {
             vaultRepository = vaultRepository,
             requestResultRepository = requestResultRepository,
             balanceRepository = balanceRepository,
+            loadClaimableQbtcUtxos = loadClaimableQbtcUtxos,
         )
 
     @Test

@@ -1218,4 +1218,31 @@
     <string name="decoded_function_min_amount_out">Valor mínimo de saída</string>
     <string name="decoded_function_amount_out">Valor de saída</string>
     <string name="decoded_function_swap_title">Troca</string>
+    <!-- QBTC Claim -->
+    <string name="qbtc_claim_title">Resgatar QBTC</string>
+    <string name="qbtc_claim_loading">A verificar elegibilidade…</string>
+    <string name="qbtc_claim_hero_title">Total resgatável</string>
+    <string name="qbtc_claim_description">Resgate os seus UTXOs de Bitcoin como QBTC resistente à computação quântica. O seu Bitcoin permanece intacto.</string>
+    <string name="qbtc_claim_eligible_header">UTXOs elegíveis</string>
+    <string name="qbtc_claim_utxo_block_format">Confirmado no bloco %1$d</string>
+    <string name="qbtc_claim_utxo_pending">Pendente</string>
+    <string name="qbtc_claim_cta_all">Resgatar tudo</string>
+    <string name="qbtc_claim_cta_partial">Resgatar %1$d de %2$d</string>
+    <string name="qbtc_claim_proving">A gerar prova e a transmitir…</string>
+    <string name="qbtc_claim_success_title">QBTC resgatado</string>
+    <string name="qbtc_claim_password_title">Introduza a palavra-passe do cofre</string>
+    <string name="qbtc_claim_cancel">Cancelar</string>
+    <string name="qbtc_claim_failed">Resgate falhou</string>
+    <string name="qbtc_claim_unavailable_title">O resgate está desativado</string>
+    <string name="qbtc_claim_unavailable_detail">O resgate de QBTC está temporariamente desativado na rede. Por favor, tente novamente mais tarde.</string>
+    <string name="qbtc_claim_unsupported_address_title">Endereço não suportado</string>
+    <string name="qbtc_claim_failed_to_load_title">Não foi possível carregar os UTXOs resgatáveis</string>
+    <string name="qbtc_claim_no_utxos_title">Nada para resgatar</string>
+    <string name="qbtc_claim_no_utxos_detail">Não tem UTXOs de Bitcoin elegíveis para resgatar como QBTC.</string>
+    <string name="qbtc_claim_error_invalid_btc_key">Chave pública de Bitcoin inválida.</string>
+    <string name="qbtc_claim_error_proof_mismatch">O serviço de prova devolveu dados não correspondentes. O resgate não foi submetido.</string>
+    <string name="qbtc_claim_error_broadcast_unavailable">Não foi possível transmitir o resgate. Por favor, tente novamente mais tarde.</string>
+    <string name="qbtc_claim_banner_subtitle">O mesmo Bitcoin. Resistente à computação quântica.</string>
+    <string name="qbtc_claim_banner_title">Resgate o seu QBTC</string>
+    <string name="qbtc_claim_banner_cta">Resgatar agora</string>
 </resources>

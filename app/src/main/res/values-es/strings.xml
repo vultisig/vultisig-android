@@ -1220,4 +1220,31 @@
     <string name="decoded_function_min_amount_out">Cantidad mínima de salida</string>
     <string name="decoded_function_amount_out">Cantidad de salida</string>
     <string name="decoded_function_swap_title">Intercambio</string>
+    <!-- QBTC Claim -->
+    <string name="qbtc_claim_title">Reclamar QBTC</string>
+    <string name="qbtc_claim_loading">Comprobando elegibilidad…</string>
+    <string name="qbtc_claim_hero_title">Total reclamable</string>
+    <string name="qbtc_claim_description">Reclama tus UTXOs de Bitcoin como QBTC a prueba de cuántica. Tu Bitcoin permanece intacto.</string>
+    <string name="qbtc_claim_eligible_header">UTXOs elegibles</string>
+    <string name="qbtc_claim_utxo_block_format">Confirmado en el bloque %1$d</string>
+    <string name="qbtc_claim_utxo_pending">Pendiente</string>
+    <string name="qbtc_claim_cta_all">Reclamar todo</string>
+    <string name="qbtc_claim_cta_partial">Reclamar %1$d de %2$d</string>
+    <string name="qbtc_claim_proving">Generando prueba y transmitiendo…</string>
+    <string name="qbtc_claim_success_title">QBTC reclamado</string>
+    <string name="qbtc_claim_password_title">Introduce la contraseña de la bóveda</string>
+    <string name="qbtc_claim_cancel">Cancelar</string>
+    <string name="qbtc_claim_failed">Reclamación fallida</string>
+    <string name="qbtc_claim_unavailable_title">La reclamación está deshabilitada</string>
+    <string name="qbtc_claim_unavailable_detail">La reclamación de QBTC está temporalmente deshabilitada en la red. Por favor, inténtalo de nuevo más tarde.</string>
+    <string name="qbtc_claim_unsupported_address_title">Dirección no compatible</string>
+    <string name="qbtc_claim_failed_to_load_title">No se pudieron cargar los UTXOs reclamables</string>
+    <string name="qbtc_claim_no_utxos_title">Nada que reclamar</string>
+    <string name="qbtc_claim_no_utxos_detail">No tienes UTXOs de Bitcoin elegibles para reclamar como QBTC.</string>
+    <string name="qbtc_claim_error_invalid_btc_key">Clave pública de Bitcoin no válida.</string>
+    <string name="qbtc_claim_error_proof_mismatch">El servicio de prueba devolvió datos no coincidentes. La reclamación no se envió.</string>
+    <string name="qbtc_claim_error_broadcast_unavailable">No se pudo transmitir la reclamación. Por favor, inténtalo de nuevo más tarde.</string>
+    <string name="qbtc_claim_banner_subtitle">El mismo Bitcoin. A prueba de cuántica.</string>
+    <string name="qbtc_claim_banner_title">Reclama tu QBTC</string>
+    <string name="qbtc_claim_banner_cta">Reclamar ahora</string>
 </resources>
