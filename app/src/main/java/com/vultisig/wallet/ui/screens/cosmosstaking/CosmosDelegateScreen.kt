@@ -120,9 +120,10 @@ private fun DelegateContent(
             SectionLabel(label = "Validator")
             ValidatorRow(selected = state.selectedValidator, onClick = onPickValidator)
 
-            if (state.errorMessage != null) {
+            val errorMessage = state.errorMessage
+            if (errorMessage != null) {
                 Text(
-                    text = state.errorMessage,
+                    text = errorMessage,
                     color = Theme.v2.colors.alerts.error,
                     style = Theme.brockmann.supplementary.caption,
                 )

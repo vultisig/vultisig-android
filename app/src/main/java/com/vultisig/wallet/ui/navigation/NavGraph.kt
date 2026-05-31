@@ -201,6 +201,18 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             com.vultisig.wallet.ui.screens.cosmosstaking.CosmosDelegateScreen()
         }
 
+        composable<Route.CosmosStakingUndelegate> {
+            com.vultisig.wallet.ui.screens.cosmosstaking.CosmosUndelegateScreen()
+        }
+
+        composable<Route.CosmosStakingRedelegate> {
+            com.vultisig.wallet.ui.screens.cosmosstaking.CosmosRedelegateScreen()
+        }
+
+        composable<Route.CosmosStakingWithdrawRewards> {
+            com.vultisig.wallet.ui.screens.cosmosstaking.CosmosWithdrawRewardsScreen()
+        }
+
         composable<Route.BondForm> { entry ->
             val args = entry.toRoute<Route.BondForm>()
 

@@ -459,6 +459,31 @@ internal sealed class Route {
      */
     @Serializable data class CosmosStakingDelegate(val vaultId: String, val chainId: String)
 
+    /** Undelegate flow — validator address comes from the active-delegation card. */
+    @Serializable
+    data class CosmosStakingUndelegate(
+        val vaultId: String,
+        val chainId: String,
+        val validatorAddress: String,
+    )
+
+    /**
+     * Redelegate flow — src is fixed (the current delegation), dst is picked. The 21-day cooldown
+     * gate runs at submit-time inside the VM.
+     */
+    @Serializable
+    data class CosmosStakingRedelegate(
+        val vaultId: String,
+        val chainId: String,
+        val validatorSrcAddress: String,
+    )
+
+    /**
+     * Withdraw rewards flow — single or batched (up to 8 validators per LUNC gas math). The payload
+     * accepts a list; UI multi-select enforces the cap.
+     */
+    @Serializable data class CosmosStakingWithdrawRewards(val vaultId: String, val chainId: String)
+
     @Serializable data class BondForm(val vaultId: String, val chainId: String)
 
     @Serializable data class Settings(val vaultId: String)
