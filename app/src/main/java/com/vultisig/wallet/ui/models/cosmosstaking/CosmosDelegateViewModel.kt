@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.blockchain.cosmos.staking.BuildCosmosStakingKeysignPayloadUseCase
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingAmountFormatter
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingConfig
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingPayload
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
@@ -163,8 +164,13 @@ constructor(
             _state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
             val entry = CosmosStakingConfig.entryFor(coin.chain)
+            // Use the shared formatter — guarantees the same RoundingMode.DOWN truncation across
+            // all four staking flows so the user can never silently over-stake.
             val amountBaseUnits =
-                amountDecimal.movePointRight(coin.decimal).toBigInteger().toString()
+                CosmosStakingAmountFormatter.baseUnitsString(
+                    amountDecimal.toPlainString(),
+                    coin.decimal,
+                )
 
             val gasFee = TokenValue(value = BigInteger.valueOf(entry.feeAmount), token = coin)
 

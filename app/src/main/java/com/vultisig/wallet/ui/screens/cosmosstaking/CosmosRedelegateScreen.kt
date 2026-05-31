@@ -26,10 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosRedelegationCooldownState
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -39,6 +39,13 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosRedelegateViewModel
 import com.vultisig.wallet.ui.theme.Theme
 
+/**
+ * Redelegate input form for LUNA / LUNC. Amount first, then destination picker via a modal-bottom-
+ * sheet (source excluded). If the source is under a 21-day redelegation cooldown, the cooldown
+ * notice replaces the form and Continue is disabled.
+ *
+ * Mirrors iOS `CosmosRedelegateTransactionScreen.swift` (vultisig-ios PR #4432).
+ */
 @Composable
 internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
@@ -48,87 +55,42 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Text(
-                    text = "From validator",
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                )
-                Text(
-                    text = state.srcValidatorAddress,
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.secondary,
-                )
-
-                Text(
-                    text = "To validator",
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                )
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .border(
-                                width = 1.dp,
-                                color = Theme.v2.colors.border.normal,
-                                shape = RoundedCornerShape(12.dp),
-                            )
-                            .clickable(onClick = viewModel::openValidatorPicker)
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val selected = state.selectedDstValidator
-                    Text(
-                        text =
-                            selected?.moniker?.ifEmpty { selected.operatorAddress }
-                                ?: "Pick a destination validator",
-                        style = Theme.brockmann.body.s.medium,
-                        color =
-                            if (selected != null) Theme.v2.colors.text.primary
-                            else Theme.v2.colors.text.secondary,
+                if (state.cooldownState is CosmosRedelegationCooldownState.Blocked) {
+                    UnbondingLockNotice(
+                        message =
+                            state.cooldownBlockedMessage
+                                ?: "Source validator is under a 21-day redelegation cooldown"
                     )
-                    Text(
-                        text = "›",
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.secondary,
+                } else {
+                    ValidatorReadonlyBlock(
+                        moniker = state.srcValidatorMoniker,
+                        address = state.srcValidatorAddress,
                     )
-                }
 
-                Text(
-                    text = "Amount (${state.ticker.ifEmpty { "Token" }})",
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                )
-                BasicTextField(
-                    value = viewModel.amountFieldState.text.toString(),
-                    onValueChange = { newText ->
-                        viewModel.amountFieldState.edit { replace(0, length, newText) }
-                    },
-                    singleLine = true,
-                    textStyle =
-                        TextStyle(
-                            color = Theme.v2.colors.text.primary,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.SemiBold,
-                        ),
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .border(
-                                width = 1.dp,
-                                color = Theme.v2.colors.border.normal,
-                                shape = RoundedCornerShape(12.dp),
-                            )
-                            .padding(horizontal = 16.dp, vertical = 14.dp),
-                )
+                    AmountBlock(
+                        ticker = state.ticker,
+                        amountText = viewModel.amountFieldState.text.toString(),
+                        onAmountChange = { v ->
+                            viewModel.amountFieldState.edit { replace(0, length, v) }
+                        },
+                    )
+                    PercentagePicker(
+                        selected = state.percentageSelected,
+                        onSelect = viewModel::onPercentageChange,
+                    )
+                    StakedBalanceRow(
+                        staked = state.stakedBalance.toPlainString(),
+                        ticker = state.ticker,
+                    )
 
-                if (state.cooldownDaysLeft != null && (state.cooldownDaysLeft ?: 0) > 0) {
                     Text(
-                        text =
-                            "21-day cooldown active — ${state.cooldownDaysLeft} day${if (state.cooldownDaysLeft == 1L) "" else "s"} remaining",
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.alerts.warning,
+                        text = "Destination validator",
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                    DstValidatorPickerRow(
+                        selected = state.selectedDstValidator,
+                        onClick = viewModel::openValidatorPicker,
                     )
                 }
 
@@ -145,14 +107,20 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
             VsButton(
                 label = "Continue",
                 variant = VsButtonVariant.CTA,
-                state = if (state.isSubmitting) VsButtonState.Disabled else VsButtonState.Enabled,
+                state =
+                    if (
+                        state.isSubmitting ||
+                            state.cooldownState is CosmosRedelegationCooldownState.Blocked
+                    )
+                        VsButtonState.Disabled
+                    else VsButtonState.Enabled,
                 onClick = viewModel::submit,
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
             )
         }
 
         if (state.isShowingPicker) {
-            RedelegateDstPickerSheet(
+            DstValidatorPickerSheet(
                 searchQuery = state.validatorSearchQuery,
                 onSearchQueryChange = viewModel::onSearchQueryChange,
                 isLoading = state.isLoadingValidators,
@@ -165,9 +133,42 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
     }
 }
 
+@Composable
+private fun DstValidatorPickerRow(selected: CosmosValidator?, onClick: () -> Unit) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text =
+                selected?.moniker?.ifEmpty { selected.operatorAddress }
+                    ?: "Pick a destination validator",
+            style = Theme.brockmann.body.s.medium,
+            color =
+                if (selected != null) Theme.v2.colors.text.primary
+                else Theme.v2.colors.text.secondary,
+        )
+        Text(
+            text = "›",
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.secondary,
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RedelegateDstPickerSheet(
+private fun DstValidatorPickerSheet(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     isLoading: Boolean,
@@ -201,7 +202,6 @@ private fun RedelegateDstPickerSheet(
                         .padding(horizontal = 16.dp, vertical = 12.dp),
             )
             UiSpacer(size = 12.dp)
-
             when {
                 isLoading ->
                     Text(
@@ -223,6 +223,7 @@ private fun RedelegateDstPickerSheet(
                             Row(
                                 modifier =
                                     Modifier.fillMaxWidth()
+                                        .padding(vertical = 4.dp)
                                         .clip(RoundedCornerShape(12.dp))
                                         .border(
                                             width =
