@@ -64,5 +64,12 @@ data class SwapKitSwapPayloadJson(
     companion object {
         /** `meta.txType` discriminator for the Bitcoin PSBT signing path. */
         const val TX_TYPE_PSBT = "PSBT"
+
+        /**
+         * `meta.txType` discriminator for the TRON signing path. SwapKit returns a TronWeb-shaped
+         * object (`txID` / `raw_data` / `raw_data_hex`) JSON-encoded into [txPayload]; the signer
+         * hashes `raw_data_hex` and re-assembles the broadcast envelope. Mirrors iOS' `"TRON"`.
+         */
+        const val TX_TYPE_TRON = "TRON"
     }
 }

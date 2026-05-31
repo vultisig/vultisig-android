@@ -28,6 +28,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -503,17 +504,19 @@ internal class SwapKitQuoteSourceTest {
 
     @Test
     fun `fetch throws UnsupportedTxType for a still-unwired non-EVM txType`() = runTest {
-        // PSBT (Bitcoin) is now wired to a Native SwapQuote.SwapKit; the remaining non-EVM txTypes
-        // (TRON/TON/SUI/CARDANO/RIPPLE) still have no signer, so they surface as UnsupportedTxType.
+        // PSBT (Bitcoin) and TRON are now wired to a Native SwapQuote.SwapKit; the remaining
+        // non-EVM
+        // txTypes (TON/SUI/CARDANO/RIPPLE) still have no signer, so they surface as
+        // UnsupportedTxType.
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
-                routes = listOf(route(routeId = "r-tron", providers = listOf("CHAINFLIP")))
+                routes = listOf(route(routeId = "r-sui", providers = listOf("CHAINFLIP")))
             )
         coEvery { api.swap(any()) } returns
             SwapKitSwapResponseJson(
                 tx = JsonObject(emptyMap()),
-                meta = SwapKitTxMeta(txType = "TRON"),
+                meta = SwapKitTxMeta(txType = "SUI"),
                 expectedBuyAmount = "1",
             )
 
@@ -786,6 +789,76 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch decodes a TRON route into a Native SwapQuote SwapKit with the TronWeb object as txPayload`() =
+        runTest {
+            // TRON's tx is a TronWeb-shaped JSON object (not base64) — the source UTF-8 encodes it
+            // verbatim into txPayload so SwapKitTronSigner can pull raw_data_hex. The inbound TRX
+            // fee scales by 6 native decimals.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            val tronTx = buildJsonObject {
+                put("visible", JsonPrimitive(true))
+                put("txID", JsonPrimitive("90788bbae2f83d278b5f13a9b39e26a294d9319bf"))
+                put("raw_data_hex", JsonPrimitive("0a0289752208deadbeef"))
+            }
+            val tron = tronCoin()
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r-tron",
+                                providers = listOf("NEAR"),
+                                expectedBuy = "49.634251",
+                            )
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                SwapKitSwapResponseJson(
+                    swapId = "tron-swap-1",
+                    tx = tronTx,
+                    meta = SwapKitTxMeta(txType = "TRON"),
+                    targetAddress = "TUh93RjWWSxikbHA2U31pnYJYaP3zL45z5",
+                    expectedBuyAmount = "49.634251",
+                    fees = listOf(SwapKitFee(type = "inbound", chain = "TRON", amount = "13.3735")),
+                    providers = listOf("NEAR"),
+                )
+
+            val result =
+                source().fetch(request(srcToken = tron, dstToken = ethCoin()))
+                    as SwapQuoteResult.Native
+            val quote = result.quote as SwapQuote.SwapKit
+
+            assertEquals("TRON", quote.data.txType)
+            assertEquals("TUh93RjWWSxikbHA2U31pnYJYaP3zL45z5", quote.data.targetAddress)
+            assertEquals("tron-swap-1", quote.data.swapId)
+            // txPayload is the UTF-8 JSON object — round-trips back to the same raw_data_hex.
+            val decoded =
+                Json.parseToJsonElement(quote.data.txPayload.decodeToString()) as JsonObject
+            assertEquals("0a0289752208deadbeef", decoded["raw_data_hex"]!!.jsonPrimitive.content)
+            // 13.3735 TRX inbound fee scaled by 6 native decimals = 13_373_500 sun.
+            assertEquals(BigInteger("13373500"), quote.fees.value)
+            assertEquals("USDT", quote.fees.unit)
+        }
+
+    @Test
+    fun `fetch throws Decoding when the TRON tx is not a JSON object`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-tron", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive("not-an-object"),
+                meta = SwapKitTxMeta(txType = "TRON"),
+                targetAddress = "Ttarget",
+                expectedBuyAmount = "1",
+            )
+
+        assertThrows<SwapKitError.Decoding> { source().fetch(request(srcToken = tronCoin())) }
+    }
+
+    @Test
     fun `fetch throws Decoding when the PSBT tx is not valid base64`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
@@ -951,5 +1024,18 @@ internal class SwapKitQuoteSourceTest {
             priceProviderID = "bitcoin",
             contractAddress = "",
             isNativeToken = true,
+        )
+
+    private fun tronCoin() =
+        Coin(
+            chain = Chain.Tron,
+            ticker = "USDT",
+            logo = "",
+            address = "TLBaRhANQoJFTqre9Nf1mjuwNWjCJeYqUL",
+            decimal = 6,
+            hexPublicKey = "pub",
+            priceProviderID = "tether",
+            contractAddress = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+            isNativeToken = false,
         )
 }

@@ -124,8 +124,11 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                     )
                 else setOf(SwapProvider.JUPITER, SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
-            Chain.Ripple,
-            Chain.Tron -> setOf(SwapProvider.THORCHAIN)
+            Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
+
+            // SwapKit TRON routes are signed by SwapKitTronSigner (TronWeb object → sha256 of
+            // raw_data_hex). Mirrors iOS' `.tron → [.thorchain, .swapkit]`.
+            Chain.Tron -> setOf(SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
 
             Chain.Hyperliquid -> setOf(SwapProvider.LIFI)
 

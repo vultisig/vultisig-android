@@ -53,11 +53,13 @@ import timber.log.Timber
  *    reads zero. EVM routes that omit `tx.gas` are refused (`SwapKitError.Decoding`) rather than
  *    backstopped with the L1-sized default, which would over-estimate L2 fees by multiples.
  *
- * Non-EVM/non-Solana `txType`s (PSBT, TRON, TON, SUI, CARDANO, RIPPLE, …) are out of scope for
- * Phase 1 — they require per-chain signers and the dedicated `SwapKitSwapPayload` proto, which land
- * in subsequent task batches. Such responses surface as [SwapKitError.UnsupportedTxType] so the
- * picker falls back to another provider rather than signing garbage. `SOLANA` and the legacy
- * `SERIALIZED_BASE64` discriminator are aliased; SwapKit flipped them once before.
+ * Non-EVM/non-Solana `txType`s surface as a fully-formed [SwapQuote.SwapKit] for a per-chain signer
+ * to consume: PSBT (Bitcoin, via [com.vultisig.wallet.data.chains.helpers.SwapKitBtcSigner]) and
+ * TRON (TronWeb object, via [com.vultisig.wallet.data.chains.helpers.SwapKitTronSigner]) are wired
+ * today. The remaining types (TON, SUI, CARDANO, RIPPLE, …) still surface as
+ * [SwapKitError.UnsupportedTxType] so the picker falls back to another provider rather than signing
+ * garbage, until their signers land. `SOLANA` and the legacy `SERIALIZED_BASE64` discriminator are
+ * aliased; SwapKit flipped them once before.
  */
 internal class SwapKitQuoteSource
 @Inject
@@ -172,7 +174,8 @@ constructor(
                         ),
                     subProvider = subProvider,
                 )
-            TxKind.PSBT ->
+            TxKind.PSBT,
+            TxKind.TRON ->
                 SwapQuoteResult.Native(
                     buildSwapKitNativeQuote(swapResponse, request, subProvider, best.fees)
                 )
@@ -258,6 +261,7 @@ constructor(
         when (chain) {
             Chain.Solana -> 9
             Chain.Bitcoin -> 8
+            Chain.Tron -> 6
             else -> 18
         }
 
@@ -365,9 +369,10 @@ constructor(
                         ),
                 )
             }
-            // PSBT is dispatched to buildSwapKitNativeQuote before reaching here; the arm keeps the
-            // `when` exhaustive and refuses anything that slips through.
+            // PSBT/TRON are dispatched to buildSwapKitNativeQuote before reaching here; the arm
+            // keeps the `when` exhaustive and refuses anything that slips through.
             TxKind.PSBT,
+            TxKind.TRON,
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
     }
@@ -401,7 +406,7 @@ constructor(
                 fromAmount = request.tokenValue.value,
                 toAmountDecimal = toAmountDecimal,
                 txType = response.meta.txType,
-                txPayload = decodeBinaryTx(response.tx),
+                txPayload = encodeNativeTxPayload(response),
                 targetAddress = targetAddress,
                 memo = null,
                 subProvider = subProvider.orEmpty(),
@@ -421,6 +426,28 @@ constructor(
             subProvider = subProvider,
         )
     }
+
+    /**
+     * Encode `tx` into the raw [SwapKitSwapPayloadJson.txPayload] bytes the per-chain signer
+     * consumes. The wire shape depends on `meta.txType`:
+     * - PSBT → a top-level base64 string ([decodeBinaryTx]).
+     * - TRON → a TronWeb-shaped JSON object (`{txID, raw_data, raw_data_hex, …}`). We UTF-8 encode
+     *   the object verbatim so the cosigning peer reconstructs it and [SwapKitTronSigner] can pull
+     *   `raw_data_hex`. Matches iOS' `buildSwapKitTronPayload`.
+     */
+    private fun encodeNativeTxPayload(response: SwapKitSwapResponseJson): ByteArray =
+        when (txTypeOf(response)) {
+            TxKind.TRON -> {
+                val obj =
+                    response.tx as? JsonObject
+                        ?: throw SwapKitError.Decoding("SwapKit TRON tx is not a JSON object")
+                if ("raw_data_hex" !in obj) {
+                    throw SwapKitError.Decoding("SwapKit TRON tx is missing raw_data_hex")
+                }
+                json.encodeToString(JsonObject.serializer(), obj).encodeToByteArray()
+            }
+            else -> decodeBinaryTx(response.tx)
+        }
 
     /**
      * Decode a base64 unsigned-tx blob (PSBT today; PTB / CBOR as more chains land) from `tx` into
@@ -455,6 +482,7 @@ constructor(
             "solana",
             "serialized_base64" -> TxKind.SOLANA
             "psbt" -> TxKind.PSBT
+            "tron" -> TxKind.TRON
             else -> TxKind.UNSUPPORTED
         }
 
@@ -488,6 +516,7 @@ constructor(
         EVM,
         SOLANA,
         PSBT,
+        TRON,
         UNSUPPORTED,
     }
 
@@ -547,6 +576,7 @@ constructor(
             Chain.Polygon -> "POL"
             Chain.Solana -> "SOL"
             Chain.Bitcoin -> "BTC"
+            Chain.Tron -> "TRON"
             else -> null
         }
 
