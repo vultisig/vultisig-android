@@ -39,6 +39,8 @@ internal class SwapProviderTableTest {
                 coin(Chain.Solana, "SOL", isNative = true),
                 coin(Chain.Solana, "USDC", isNative = false),
                 coin(Chain.Bitcoin, "BTC", isNative = true), // BTC PSBT route
+                coin(Chain.Tron, "TRX", isNative = true), // TRON TronWeb route
+                coin(Chain.Tron, "USDT", isNative = false), // TRC-20 → TRON route
             )
 
         swapKitCoins.forEach { c ->
@@ -67,7 +69,6 @@ internal class SwapProviderTableTest {
                 coin(Chain.MayaChain, "CACAO", isNative = true),
                 coin(Chain.Zcash, "ZEC", isNative = true),
                 coin(Chain.Ripple, "XRP", isNative = true),
-                coin(Chain.Tron, "TRX", isNative = true),
                 coin(Chain.Hyperliquid, "HYPE", isNative = true),
                 coin(Chain.Ton, "TON", isNative = true),
                 coin(Chain.Sui, "SUI", isNative = true),

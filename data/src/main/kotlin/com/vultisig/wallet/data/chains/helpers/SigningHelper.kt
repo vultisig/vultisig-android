@@ -105,16 +105,23 @@ object SigningHelper {
                     messages += message
                 }
                 is SwapPayload.SwapKit -> {
-                    require(swapPayload.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
-                        "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
-                    }
                     messages +=
-                        SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
-                            .getPreSignedImageHash(
-                                psbtBytes = swapPayload.data.txPayload,
-                                targetAddress = swapPayload.data.targetAddress,
-                                fromAmount = swapPayload.data.fromAmount,
-                            )
+                        when (swapPayload.data.txType) {
+                            SwapKitSwapPayloadJson.TX_TYPE_PSBT ->
+                                SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
+                                    .getPreSignedImageHash(
+                                        psbtBytes = swapPayload.data.txPayload,
+                                        targetAddress = swapPayload.data.targetAddress,
+                                        fromAmount = swapPayload.data.fromAmount,
+                                    )
+                            SwapKitSwapPayloadJson.TX_TYPE_TRON ->
+                                SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
+                                    .getPreSignedImageHash(swapPayload.data.txPayload)
+                            else ->
+                                error(
+                                    "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
+                                )
+                        }
                 }
                 else -> Unit
             }
@@ -297,11 +304,18 @@ object SigningHelper {
                 }
 
                 is SwapPayload.SwapKit -> {
-                    require(swapPayload.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
-                        "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
+                    return when (swapPayload.data.txType) {
+                        SwapKitSwapPayloadJson.TX_TYPE_PSBT ->
+                            SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
+                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        SwapKitSwapPayloadJson.TX_TYPE_TRON ->
+                            SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
+                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        else ->
+                            error(
+                                "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
+                            )
                     }
-                    return SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
-                        .getSignedTransaction(swapPayload.data.txPayload, signatures)
                 }
                 else -> {}
             }
