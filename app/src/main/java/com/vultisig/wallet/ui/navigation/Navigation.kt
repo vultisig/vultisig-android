@@ -484,6 +484,13 @@ internal sealed class Route {
      */
     @Serializable data class CosmosStakingWithdrawRewards(val vaultId: String, val chainId: String)
 
+    /**
+     * Active-delegations view for Terra / TerraClassic. Shows Total Staked card with Claim CTA,
+     * per-validator delegation cards with [Stake] / [Unstake] / [Move] action buttons, pending
+     * unbondings section. Routing target of the DeFi-tab "View staking" entry on Terra chains.
+     */
+    @Serializable data class CosmosStakingPositions(val vaultId: String, val chainId: String)
+
     @Serializable data class BondForm(val vaultId: String, val chainId: String)
 
     @Serializable data class Settings(val vaultId: String)
