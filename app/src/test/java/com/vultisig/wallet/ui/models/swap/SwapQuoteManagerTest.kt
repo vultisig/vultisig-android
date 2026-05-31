@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.usecases.SearchTokenUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -95,6 +96,51 @@ internal class SwapQuoteManagerTest {
         advanceTimeBy(15_001L)
 
         assertIs<SwapException.TimeOut>(deferred.await().exceptionOrNull())
+    }
+
+    @Test
+    fun `fetchBestQuote surfaces dust error over generic no-route error`() = runTest {
+        // convertTokenValueToFiat is a relaxed suspend function-type mock; relaxed answers for
+        // such interfaces return a bare Object that can't be cast to FiatValue, throwing a
+        // ClassCastException before getQuote runs. Stub it so both providers reach getQuote and
+        // surface their typed dust/no-route errors.
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.MAYA, any()) } throws
+            SwapException.AmountBelowDustThreshold("amount below dust threshold")
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } throws
+            SwapException.SwapRouteNotAvailable("no route available")
+
+        val manager = createManager()
+        // THORCHAIN is listed first so that reverting to first-by-provider-order would surface
+        // the generic SwapRouteNotAvailable instead of MAYA's actionable dust error.
+        val result = runCatching {
+            manager.fetchBestQuote(
+                candidates =
+                    listOf(
+                        QuoteCandidate(
+                            provider = SwapProvider.THORCHAIN,
+                            vultBPSDiscount = null,
+                            referral = null,
+                        ),
+                        QuoteCandidate(
+                            provider = SwapProvider.MAYA,
+                            vultBPSDiscount = null,
+                            referral = null,
+                        ),
+                    ),
+                src = mockk(relaxed = true),
+                dst = mockk(relaxed = true),
+                srcToken = mockk(relaxed = true),
+                dstToken = mockk(relaxed = true),
+                srcTokenValue = BigInteger.ONE,
+                tokenValue = mockk(relaxed = true),
+                currency = AppCurrency.USD,
+                amount = BigDecimal.ONE,
+            )
+        }
+
+        result.exceptionOrNull().shouldBeInstanceOf<SwapException.AmountBelowDustThreshold>()
     }
 
     @Test
