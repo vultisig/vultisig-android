@@ -339,13 +339,16 @@ constructor(
         when (error) {
             is SwapException.AmountBelowDustThreshold,
             is SwapException.SmallSwapAmount,
-            is SwapException.InsufficentSwapAmount -> 1
+            is SwapException.InsufficentSwapAmount,
+            is SwapException.AmountCannotBeZero,
+            is SwapException.SameAssets -> 1
             is SwapException.InsufficientFunds,
             is SwapException.HighPriceImpact,
             is SwapException.RateLimitExceeded,
             is SwapException.TimeOut,
             is TimeoutCancellationException,
             is SwapException.NetworkConnection,
+            is SwapKitError.Network,
             is SwapKitError.InsufficientBalance,
             is SwapKitError.InsufficientAllowance -> 2
             is SwapException.SwapRouteNotAvailable,
