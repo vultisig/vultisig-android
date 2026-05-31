@@ -71,10 +71,8 @@ internal interface NetworkModule {
                         connectTimeout(15, TimeUnit.SECONDS)
                         readTimeout(PROOF_SERVICE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                         writeTimeout(PROOF_SERVICE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                        // OkHttp enables this by default; disable it so a long-running,
-                        // non-idempotent
-                        // proof request is never implicitly retried (matches the "no auto-retry"
-                        // intent).
+                        // On by default in OkHttp; disable so a slow, non-idempotent /prove
+                        // is never implicitly retried (the "no auto-retry" intent above).
                         retryOnConnectionFailure(false)
                     }
                 }
