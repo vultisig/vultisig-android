@@ -1,0 +1,78 @@
+package com.vultisig.wallet.data.blockchain.cosmos.staking
+
+import com.vultisig.wallet.data.models.Chain
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import org.junit.jupiter.api.Test
+
+/**
+ * Pins the cross-platform staking-config contract for Terra + TerraClassic. Mirrors iOS
+ * `CosmosStakingConfigTests.swift`.
+ */
+class CosmosStakingConfigTests {
+
+    @Test
+    fun `Terra entry matches pinned values`() {
+        val entry = CosmosStakingConfig.entryFor(Chain.Terra)
+        assertEquals("phoenix-1", entry.chainId)
+        assertEquals("uluna", entry.bondDenom)
+        assertEquals("uluna", entry.feeDenom)
+        assertEquals("terravaloper", entry.valoperHrp)
+        assertEquals(300_000L, entry.gasLimit)
+        assertEquals(7_500L, entry.feeAmount)
+        assertEquals(21, entry.unbondingDays)
+    }
+
+    @Test
+    fun `TerraClassic entry matches pinned values`() {
+        val entry = CosmosStakingConfig.entryFor(Chain.TerraClassic)
+        assertEquals("columbus-5", entry.chainId)
+        assertEquals("uluna", entry.bondDenom)
+        assertEquals("uluna", entry.feeDenom)
+        assertEquals("terravaloper", entry.valoperHrp)
+        // LUNC gas (1.5M units / 100M uluna) is the empirically-verified floor — smaller budgets
+        // OoG on columbus-5.
+        assertEquals(1_500_000L, entry.gasLimit)
+        assertEquals(100_000_000L, entry.feeAmount)
+        assertEquals(21, entry.unbondingDays)
+    }
+
+    @Test
+    fun `isStakingSupported returns true for Terra family only`() {
+        assertTrue(CosmosStakingConfig.isStakingSupported(Chain.Terra))
+        assertTrue(CosmosStakingConfig.isStakingSupported(Chain.TerraClassic))
+    }
+
+    @Test
+    fun `isStakingSupported returns false for chains not in the allowlist`() {
+        // THORChain uses its own bond model — even though it's a Cosmos-SDK chain, it must not slip
+        // into the staking allowlist by accident.
+        assertFalse(CosmosStakingConfig.isStakingSupported(Chain.ThorChain))
+        assertFalse(CosmosStakingConfig.isStakingSupported(Chain.GaiaChain))
+        assertFalse(CosmosStakingConfig.isStakingSupported(Chain.Kujira))
+        assertFalse(CosmosStakingConfig.isStakingSupported(Chain.Osmosis))
+        assertFalse(CosmosStakingConfig.isStakingSupported(Chain.Ethereum))
+    }
+
+    @Test
+    fun `entryFor throws CosmosStakingConfigException for unsupported chain`() {
+        val ex =
+            assertFailsWith<CosmosStakingConfigException> {
+                CosmosStakingConfig.entryFor(Chain.GaiaChain)
+            }
+        assertEquals(Chain.GaiaChain, ex.chain)
+    }
+
+    @Test
+    fun `Convenience accessors delegate to the table entry`() {
+        assertEquals("phoenix-1", CosmosStakingConfig.chainIdFor(Chain.Terra))
+        assertEquals("uluna", CosmosStakingConfig.bondDenomFor(Chain.Terra))
+        assertEquals("uluna", CosmosStakingConfig.feeDenomFor(Chain.Terra))
+        assertEquals("terravaloper", CosmosStakingConfig.valoperHrpFor(Chain.Terra))
+        assertEquals(300_000L, CosmosStakingConfig.gasLimitFor(Chain.Terra))
+        assertEquals(7_500L, CosmosStakingConfig.feeAmountFor(Chain.Terra))
+        assertEquals(21, CosmosStakingConfig.unbondingDaysFor(Chain.Terra))
+    }
+}
