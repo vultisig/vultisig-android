@@ -117,6 +117,9 @@ object SigningHelper {
                             SwapKitSwapPayloadJson.TX_TYPE_TRON ->
                                 SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
                                     .getPreSignedImageHash(swapPayload.data.txPayload)
+                            SwapKitSwapPayloadJson.TX_TYPE_SUI ->
+                                SwapKitSuiSigner(eddsaKey)
+                                    .getPreSignedImageHash(swapPayload.data.txPayload)
                             else ->
                                 error(
                                     "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
@@ -310,6 +313,9 @@ object SigningHelper {
                                 .getSignedTransaction(swapPayload.data.txPayload, signatures)
                         SwapKitSwapPayloadJson.TX_TYPE_TRON ->
                             SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
+                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        SwapKitSwapPayloadJson.TX_TYPE_SUI ->
+                            SwapKitSuiSigner(eddsaKey)
                                 .getSignedTransaction(swapPayload.data.txPayload, signatures)
                         else ->
                             error(

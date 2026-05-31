@@ -504,19 +504,18 @@ internal class SwapKitQuoteSourceTest {
 
     @Test
     fun `fetch throws UnsupportedTxType for a still-unwired non-EVM txType`() = runTest {
-        // PSBT (Bitcoin) and TRON are now wired to a Native SwapQuote.SwapKit; the remaining
-        // non-EVM
-        // txTypes (TON/SUI/CARDANO/RIPPLE) still have no signer, so they surface as
+        // PSBT (Bitcoin), TRON, and SUI are now wired to a Native SwapQuote.SwapKit; the remaining
+        // non-EVM txTypes (TON/CARDANO/RIPPLE) still have no signer, so they surface as
         // UnsupportedTxType.
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
             SwapKitQuoteResponseJson(
-                routes = listOf(route(routeId = "r-sui", providers = listOf("CHAINFLIP")))
+                routes = listOf(route(routeId = "r-ton", providers = listOf("CHAINFLIP")))
             )
         coEvery { api.swap(any()) } returns
             SwapKitSwapResponseJson(
                 tx = JsonObject(emptyMap()),
-                meta = SwapKitTxMeta(txType = "SUI"),
+                meta = SwapKitTxMeta(txType = "TON"),
                 expectedBuyAmount = "1",
             )
 
@@ -844,6 +843,50 @@ internal class SwapKitQuoteSourceTest {
         }
 
     @Test
+    fun `fetch decodes a SUI route into a Native SwapQuote SwapKit payload`() = runTest {
+        // SUI's tx is a base64 pre-built PTB (same wire shape as PSBT) → decoded into txPayload
+        // bytes. The inbound SUI fee scales by 9 native decimals, not the source token's decimals.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        val ptbBytes = byteArrayOf(0x00, 0x00, 0x02, 0x11, 0x22, 0x33)
+        val base64 = Base64.getEncoder().encodeToString(ptbBytes)
+        val sui = suiCoin()
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(
+                        route(routeId = "r-sui", providers = listOf("NEAR"), expectedBuy = "10.3")
+                    )
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                swapId = "sui-swap-1",
+                tx = JsonPrimitive(base64),
+                meta = SwapKitTxMeta(txType = "SUI"),
+                targetAddress =
+                    "0x6e894db314206472c3290beaf2b78107fac89154308327206a5c7751c9700d98",
+                expectedBuyAmount = "10.3",
+                fees = listOf(SwapKitFee(type = "inbound", chain = "SUI", amount = "0.0015")),
+                providers = listOf("NEAR"),
+            )
+
+        val result =
+            source().fetch(request(srcToken = sui, dstToken = ethCoin())) as SwapQuoteResult.Native
+        val quote = result.quote as SwapQuote.SwapKit
+
+        assertEquals("SUI", quote.data.txType)
+        assertTrue(ptbBytes.contentEquals(quote.data.txPayload))
+        assertEquals(
+            "0x6e894db314206472c3290beaf2b78107fac89154308327206a5c7751c9700d98",
+            quote.data.targetAddress,
+        )
+        assertEquals("sui-swap-1", quote.data.swapId)
+        assertEquals(sui, quote.data.fromCoin)
+        // 0.0015 SUI inbound fee scaled by 9 native decimals = 1_500_000 MIST.
+        assertEquals(BigInteger("1500000"), quote.fees.value)
+        assertEquals("SUI", quote.fees.unit)
+    }
+
+    @Test
     fun `fetch throws Decoding when the TRON tx is not a JSON object`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
@@ -1060,5 +1103,18 @@ internal class SwapKitQuoteSourceTest {
             priceProviderID = "tether",
             contractAddress = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
             isNativeToken = false,
+        )
+
+    private fun suiCoin() =
+        Coin(
+            chain = Chain.Sui,
+            ticker = "SUI",
+            logo = "",
+            address = "0x6e894db314206472c3290beaf2b78107fac89154308327206a5c7751c9700d98",
+            decimal = 9,
+            hexPublicKey = "pub",
+            priceProviderID = "sui",
+            contractAddress = "",
+            isNativeToken = true,
         )
 }
