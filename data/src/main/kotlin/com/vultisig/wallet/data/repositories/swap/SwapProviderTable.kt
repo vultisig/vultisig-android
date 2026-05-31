@@ -97,7 +97,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             Chain.Mantle -> setOf(SwapProvider.LIFI, SwapProvider.KYBER)
 
             Chain.ThorChain -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
-            Chain.Bitcoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
+            Chain.Bitcoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA, SwapProvider.SWAPKIT)
 
             Chain.Dogecoin,
             Chain.BitcoinCash,

@@ -1747,54 +1747,27 @@ internal class SwapFormViewModelTest {
     @Test
     fun `calculateFees for UTXO chain enables swap after successful plan fee`() =
         runTest(mainDispatcher) {
-            coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
-                GasCalculationResult(
-                    gasFee = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
-                    estimated =
-                        EstimatedGasFee(
-                            formattedTokenValue = "0.000001 BTC",
-                            formattedFiatValue = "$0.05",
-                            tokenValue = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
-                            fiatValue = FiatValue(BigDecimal("0.05"), "USD"),
-                        ),
-                    chain = Chain.Bitcoin,
-                )
-            coEvery {
-                swapGasCalculator.computeUtxoPlanFeeResult(any(), any(), any(), any(), any(), any())
-            } returns
-                GasCalculationResult(
-                    gasFee = TokenValue(value = BigInteger("816"), token = BTC_COIN),
-                    estimated =
-                        EstimatedGasFee(
-                            formattedTokenValue = "0.00000816 BTC",
-                            formattedFiatValue = "$0.00",
-                            tokenValue = TokenValue(value = BigInteger("816"), token = BTC_COIN),
-                            fiatValue = FiatValue(BigDecimal("0.00"), "USD"),
-                        ),
-                    chain = Chain.Bitcoin,
-                )
-            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
-                listOf(SwapProvider.THORCHAIN)
-            coEvery {
-                swapQuoteManager.fetchBestQuote(
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                    any(),
-                )
-            } returns createDefaultQuoteFetchResult()
+            val vm = setupUtxoPlanFeeTest(SwapProvider.THORCHAIN, createThorChainQuote())
+            advanceUntilIdle()
 
-            val vm =
-                createViewModelWithAddresses(
-                    addresses = listOf(btcAddressLargeBalance(), ethAddress()),
-                    srcTokenId = BTC_COIN.id,
-                    dstTokenId = ETH_COIN.id,
-                )
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertFalse(vm.uiState.value.isSwapDisabled)
+            assertEquals("0.00000816 BTC", vm.uiState.value.networkFee)
+        }
+
+    @Test
+    fun `calculateFees for SwapKit BTC routes through the UTXO plan-fee path and enables swap`() =
+        runTest(mainDispatcher) {
+            // Without the SwapKit branch in utxoFeeData, a BTC SwapKit quote never computes the
+            // plan
+            // fee, estimatedNetworkFee* stay null, and swap() aborts with
+            // invalid_gas_fee_calculation. Pin that it now flows through the same path as
+            // Thor/Maya.
+            val vm = setupUtxoPlanFeeTest(SwapProvider.SWAPKIT, createSwapKitBtcQuote())
             advanceUntilIdle()
 
             vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
@@ -2309,6 +2282,71 @@ internal class SwapFormViewModelTest {
             recommendedMinTokenValue = TokenValue(value = BigInteger("1000"), token = ETH_COIN),
             data = mockk(relaxed = true),
         )
+
+    private fun createSwapKitBtcQuote(
+        expectedDstValue: TokenValue = TokenValue(value = BigInteger("95000000"), token = USDC_COIN)
+    ): SwapQuote.SwapKit =
+        SwapQuote.SwapKit(
+            expectedDstValue = expectedDstValue,
+            fees = TokenValue(value = BigInteger("400"), token = BTC_COIN),
+            expiredAt = Clock.System.now() + 1.minutes,
+            data = mockk(relaxed = true),
+            subProvider = "NEAR",
+        )
+
+    /**
+     * Common setup for a BTC (UTXO) plan-fee swap: a successful gas fee + plan fee, the given
+     * provider/quote, and a BTC->ETH vault. Returns the VM ready for the caller to drive amount
+     * input and assert isSwapDisabled / networkFee.
+     */
+    private fun setupUtxoPlanFeeTest(provider: SwapProvider, quote: SwapQuote): SwapFormViewModel {
+        coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
+            GasCalculationResult(
+                gasFee = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                estimated =
+                    EstimatedGasFee(
+                        formattedTokenValue = "0.000001 BTC",
+                        formattedFiatValue = "$0.05",
+                        tokenValue = TokenValue(value = BigInteger("1000"), token = BTC_COIN),
+                        fiatValue = FiatValue(BigDecimal("0.05"), "USD"),
+                    ),
+                chain = Chain.Bitcoin,
+            )
+        coEvery {
+            swapGasCalculator.computeUtxoPlanFeeResult(any(), any(), any(), any(), any(), any())
+        } returns
+            GasCalculationResult(
+                gasFee = TokenValue(value = BigInteger("816"), token = BTC_COIN),
+                estimated =
+                    EstimatedGasFee(
+                        formattedTokenValue = "0.00000816 BTC",
+                        formattedFiatValue = "$0.00",
+                        tokenValue = TokenValue(value = BigInteger("816"), token = BTC_COIN),
+                        fiatValue = FiatValue(BigDecimal("0.00"), "USD"),
+                    ),
+                chain = Chain.Bitcoin,
+            )
+        every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns listOf(provider)
+        coEvery {
+            swapQuoteManager.fetchBestQuote(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } returns createDefaultQuoteFetchResult(quote = quote, provider = provider)
+
+        return createViewModelWithAddresses(
+            addresses = listOf(btcAddressLargeBalance(), ethAddress()),
+            srcTokenId = BTC_COIN.id,
+            dstTokenId = ETH_COIN.id,
+        )
+    }
 
     // endregion
 }

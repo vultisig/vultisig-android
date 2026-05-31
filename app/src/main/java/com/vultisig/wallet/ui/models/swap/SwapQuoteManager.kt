@@ -671,8 +671,12 @@ constructor(
                         ),
                     )
                 val evmResult =
-                    (result as? SwapQuoteResult.Evm)
-                        ?: error("SwapKitQuoteSource must return SwapQuoteResult.Evm")
+                    when (result) {
+                        // Non-EVM SwapKit (Phase 2: BTC/PSBT) arrives as a fully-formed
+                        // SwapQuote.SwapKit on the Native result — cache it directly.
+                        is SwapQuoteResult.Native -> return@getCachedQuoteOrFetch result.quote
+                        is SwapQuoteResult.Evm -> result
+                    }
                 val apiQuote = evmResult.data
                 val expectedDstValue =
                     TokenValue(
@@ -717,7 +721,12 @@ constructor(
         // Read the sub-provider off the returned quote (not a hoisted var): a cache HIT skips the
         // fetch lambda, so a transient var would be null and the label would silently collapse from
         // "via CHAINFLIP" back to the generic "SwapKit" when the form re-opens within the TTL.
-        val resolvedSubProvider = (swapQuote as? SwapQuote.OneInch)?.subProvider
+        val resolvedSubProvider =
+            when (swapQuote) {
+                is SwapQuote.OneInch -> swapQuote.subProvider
+                is SwapQuote.SwapKit -> swapQuote.subProvider
+                else -> null
+            }
         val providerLabel =
             if (resolvedSubProvider.isNullOrBlank()) R.string.swap_for_provider_swapkit.asUiText()
             else formatSwapKitProviderLabel(resolvedSubProvider).asUiText()
