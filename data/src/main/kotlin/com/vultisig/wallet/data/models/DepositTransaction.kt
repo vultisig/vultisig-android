@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.models
 
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import vultisig.keysign.v1.WasmExecuteContractPayload
 
 data class DepositTransaction(
@@ -22,6 +23,13 @@ data class DepositTransaction(
     val pairedAddress: String = "",
     val pool: String = "",
     val utxos: List<UtxoInfo> = emptyList(),
+    /**
+     * Pre-built `signDirect` artefacts when the deposit carries an opaque, app-built SignDoc (e.g.
+     * Cosmos-SDK x/staking + x/distribution msgs for Terra LUNA / LUNC). When set, the keysign
+     * payload builder forwards these bytes to `CosmosHelper.buildSignDirectSigningInput` and skips
+     * the default Cosmos `MsgSend` path. Null for all other deposit flows.
+     */
+    val signDirect: SignDirectProto? = null,
 )
 
 const val OPERATION_MINT = "Mint"

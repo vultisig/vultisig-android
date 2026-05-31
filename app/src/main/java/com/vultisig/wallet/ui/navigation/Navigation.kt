@@ -451,6 +451,14 @@ internal sealed class Route {
         val poolId: String? = null,
     )
 
+    /**
+     * LUNA / LUNC delegate entry point. Opens
+     * [com.vultisig.wallet.ui.screens.cosmosstaking .CosmosDelegateScreen], which collects amount +
+     * validator and routes through the existing verify-deposit / keysign pipeline. Other staking
+     * actions (undelegate, redelegate, claim) follow this same shape in later sessions.
+     */
+    @Serializable data class CosmosStakingDelegate(val vaultId: String, val chainId: String)
+
     @Serializable data class BondForm(val vaultId: String, val chainId: String)
 
     @Serializable data class Settings(val vaultId: String)
