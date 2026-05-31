@@ -18,17 +18,82 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      
-      - name: set up JDK 21
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: gradle
-      
-      - name: git submodule update
-        run: git submodule update --init --recursive
-      
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # Only assemble the debug variant and run debug unit tests.
+      # Avoids the release R8/minify pass and the duplicate release unit-test
+      # run that `./gradlew build` would otherwise perform.
+      - name: Build debug + run unit tests
+        env:
+          TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
+          TRUSTWALLET_USER: ${{ secrets.TRUSTWALLET_USER }}
+        run: ./gradlew assembleDebug testDebugUnitTest --parallel --build-cache
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run lint
+        env:
+          TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
+          TRUSTWALLET_USER: ${{ secrets.TRUSTWALLET_USER }}
+        run: ./gradlew lintDebug --parallel --build-cache
+
+      - name: Archive code analysis reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Lint-Reports
+          path: |
+            app/build/reports/lint-results-debug.html
+            app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
+
+  instrumented-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
@@ -36,17 +101,10 @@ jobs:
       - name: Free disk space
         run: |
           echo "Freeing disk space..."
-          sudo rm -rf /usr/share/dotnet || true                    
-          sudo rm -rf /usr/local/lib/nodejs || true  
+          sudo rm -rf /usr/share/dotnet || true
+          sudo rm -rf /usr/local/lib/nodejs || true
           sudo apt-get clean
           df -h
-
-      # Build and run unit tests
-      - name: Build and run unit tests
-        env:
-          TRUSTWALLET_PAT: ${{ secrets.TRUSTWALLET_PAT }}
-          TRUSTWALLET_USER: ${{ secrets.TRUSTWALLET_USER }}
-        run: ./gradlew build --parallel --build-cache --no-daemon
 
       # Enable KVM for better emulator performance
       - name: Enable KVM
@@ -88,13 +146,3 @@ jobs:
           script: |
             # Run ALL instrumented tests
             ./gradlew app:connectedDebugAndroidTest --stacktrace
-
-      # Archive lint reports
-      - name: Archive code analysis reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Lint-Reports
-          path: |
-            app/build/reports/lint-results-debug.html
-            app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
