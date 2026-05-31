@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -312,7 +312,9 @@ private fun LazyListScope.TronPendingWithdrawalsCard(
             color = Theme.v2.colors.text.primary,
         )
     }
-    items(items = withdrawals, key = { it.expiryEpochMs }) { withdrawal ->
+    itemsIndexed(items = withdrawals, key = { index, _ -> "tron-pending-withdrawal-$index" }) {
+        _,
+        withdrawal ->
         TronPendingWithdrawalRow(withdrawal = withdrawal, isBalanceVisible = isBalanceVisible)
     }
 }
