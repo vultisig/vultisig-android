@@ -20,6 +20,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          # These jobs only read the repo (build/lint/test); they never push.
+          # Don't persist the auth token in git config to reduce attack surface.
+          persist-credentials: false
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -49,6 +52,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          # These jobs only read the repo (build/lint/test); they never push.
+          # Don't persist the auth token in git config to reduce attack surface.
+          persist-credentials: false
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -87,6 +93,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+          # These jobs only read the repo (build/lint/test); they never push.
+          # Don't persist the auth token in git config to reduce attack surface.
+          persist-credentials: false
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -147,5 +156,5 @@ jobs:
           disable-animations: true
           disable-spellchecker: true
           script: |
-            # Run ALL instrumented tests
+            # Run debug instrumented tests (connectedDebugAndroidTest)
             ./gradlew app:connectedDebugAndroidTest --stacktrace
