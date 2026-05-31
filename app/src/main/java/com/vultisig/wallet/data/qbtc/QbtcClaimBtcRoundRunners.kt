@@ -19,14 +19,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout
 import wallet.core.jni.CoinType
 
-/** Identifies the relay session a Secure Vault claim round runs on. */
-internal data class QbtcClaimKeysignSession(
-    val serverUrl: String,
-    val sessionId: String,
-    val encryptionKeyHex: String,
-    val committee: List<String>,
-)
-
 private const val BTC_ROUND_ERROR_PREFIX = "QBTC claim BTC round"
 
 /** The Bitcoin derivation path the vault's ECDSA key signs the claim hash under. */
@@ -126,29 +118,4 @@ constructor(
     private companion object {
         val SERVER_WAIT_TIMEOUT = 60.seconds
     }
-}
-
-/**
- * Secure Vault initiator. The QR handshake (session creation, peer discovery, committee kick-off)
- * has already happened on the pairing screen, so this only runs the DKLS round on the established
- * [session]. Mirrors iOS `QBTCClaimSecureVaultRoundDriver`.
- */
-internal class QbtcClaimSecureVaultRoundRunner(
-    private val session: QbtcClaimKeysignSession,
-    private val sessionApi: SessionApi,
-    private val encryption: Encryption,
-) : QbtcClaimBtcRoundRunner {
-
-    override suspend fun run(input: QbtcClaimBtcRoundInput): QbtcClaimBtcRoundResult =
-        runDklsRound(
-            vault = input.vault,
-            committee = session.committee,
-            serverUrl = session.serverUrl,
-            sessionId = session.sessionId,
-            encryptionKeyHex = session.encryptionKeyHex,
-            messageHashHex = input.messageHashHex,
-            isInitiateDevice = true,
-            sessionApi = sessionApi,
-            encryption = encryption,
-        )
 }
