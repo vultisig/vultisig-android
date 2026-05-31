@@ -54,7 +54,6 @@ android {
         abortOnError = true
         absolutePaths = false
         lintConfig = file("$rootDir/config/lint/lint.xml")
-        baseline = file("lint-baseline.xml")
     }
 }
 
