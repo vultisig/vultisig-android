@@ -82,9 +82,7 @@ internal class SwapKitSuiSigner(private val vaultHexPublicKey: String) {
      * the intent message wraps. Exposed (internal) so a unit test can pin the digest without JNI.
      */
     internal fun digest(ptbBytes: ByteArray): ByteArray {
-        if (ptbBytes.isEmpty()) {
-            throw SwapKitSuiSignerException("SwapKit Sui payload is empty")
-        }
+        require(ptbBytes.isNotEmpty()) { "SwapKit Sui payload is empty" }
         val message = INTENT_PREFIX + ptbBytes
         val blake = Blake2bDigest(256)
         blake.update(message, 0, message.size)

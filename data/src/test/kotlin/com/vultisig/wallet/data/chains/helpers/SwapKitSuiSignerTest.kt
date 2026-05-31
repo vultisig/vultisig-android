@@ -58,6 +58,7 @@ class SwapKitSuiSignerTest {
 
     @Test
     fun `empty payload is rejected`() {
-        assertThrows(SwapKitSuiSignerException::class.java) { signer.digest(ByteArray(0)) }
+        // Empty PTB is an input precondition → IllegalArgumentException via require().
+        assertThrows(IllegalArgumentException::class.java) { signer.digest(ByteArray(0)) }
     }
 }
