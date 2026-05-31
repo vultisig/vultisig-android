@@ -262,7 +262,12 @@ constructor(
         type: String?,
         mscaAddress: String?,
     ) {
+        // Clear all optional form fields so values from a prior loadData() don't
+        // leak when the corresponding arg is absent on a subsequent invocation.
+        addressFieldState.clearText()
+        tokenAmountFieldState.clearText()
         memoFieldState.clearText()
+        slippageFieldState.clearText()
         this.defiType =
             if (type == null) {
                 null
@@ -330,11 +335,14 @@ constructor(
 
     private fun loadVaultName() {
         viewModelScope.safeLaunch {
-            val vaultId = vaultId ?: return@safeLaunch
-            vaultRepository.get(vaultId)?.let { vault ->
-                this@SendFormViewModel.vault = vault
-                uiState.update { it.copy(srcVaultName = vault.name) }
-            }
+            val requestedVaultId = vaultId ?: return@safeLaunch
+            val vault = vaultRepository.get(requestedVaultId) ?: return@safeLaunch
+            // Drop stale completions: a slower fetch for a previous vault must not
+            // overwrite state after a newer loadData() switched the vaultId.
+            if (this@SendFormViewModel.vaultId != requestedVaultId) return@safeLaunch
+
+            this@SendFormViewModel.vault = vault
+            uiState.update { it.copy(srcVaultName = vault.name) }
         }
     }
 
