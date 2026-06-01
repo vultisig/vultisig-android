@@ -55,12 +55,12 @@ import timber.log.Timber
  *
  * Non-EVM/non-Solana `txType`s surface as a fully-formed [SwapQuote.SwapKit] for a per-chain signer
  * to consume: PSBT (Bitcoin, via [com.vultisig.wallet.data.chains.helpers.SwapKitBtcSigner]), TRON
- * (TronWeb object, via [com.vultisig.wallet.data.chains.helpers.SwapKitTronSigner]), and SUI
- * (base64 PTB, via [com.vultisig.wallet.data.chains.helpers.SwapKitSuiSigner]) are wired today. The
- * remaining types (TON, CARDANO, RIPPLE, …) still surface as [SwapKitError.UnsupportedTxType] so
- * the picker falls back to another provider rather than signing garbage, until their signers land.
- * `SOLANA` and the legacy `SERIALIZED_BASE64` discriminator are aliased; SwapKit flipped them once
- * before.
+ * (TronWeb object, via [com.vultisig.wallet.data.chains.helpers.SwapKitTronSigner]), SUI (base64
+ * PTB, via [com.vultisig.wallet.data.chains.helpers.SwapKitSuiSigner]), and CARDANO (hex CBOR, via
+ * [com.vultisig.wallet.data.chains.helpers.SwapKitCardanoSigner]) are wired today. The remaining
+ * types (TON, RIPPLE, …) still surface as [SwapKitError.UnsupportedTxType] so the picker falls back
+ * to another provider rather than signing garbage, until their signers land. `SOLANA` and the
+ * legacy `SERIALIZED_BASE64` discriminator are aliased; SwapKit flipped them once before.
  */
 internal class SwapKitQuoteSource
 @Inject
@@ -177,7 +177,8 @@ constructor(
                 )
             TxKind.PSBT,
             TxKind.TRON,
-            TxKind.SUI ->
+            TxKind.SUI,
+            TxKind.CARDANO ->
                 SwapQuoteResult.Native(
                     buildSwapKitNativeQuote(swapResponse, request, subProvider, best.fees)
                 )
@@ -265,6 +266,8 @@ constructor(
             Chain.Sui -> 9
             Chain.Bitcoin -> 8
             Chain.Tron -> 6
+            // ADA is denominated in lovelace (1 ADA = 1e6 lovelace).
+            Chain.Cardano -> 6
             else -> 18
         }
 
@@ -372,11 +375,12 @@ constructor(
                         ),
                 )
             }
-            // PSBT/TRON/SUI are dispatched to buildSwapKitNativeQuote before reaching here; the arm
-            // keeps the `when` exhaustive and refuses anything that slips through.
+            // PSBT/TRON/SUI/CARDANO are dispatched to buildSwapKitNativeQuote before reaching here;
+            // the arm keeps the `when` exhaustive and refuses anything that slips through.
             TxKind.PSBT,
             TxKind.TRON,
             TxKind.SUI,
+            TxKind.CARDANO,
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
     }
@@ -456,8 +460,37 @@ constructor(
                     ?: throw SwapKitError.Decoding("SwapKit TRON tx is missing raw_data_hex")
                 json.encodeToString(JsonObject.serializer(), obj).encodeToByteArray()
             }
+            // SwapKit returns the Cardano tx as a hex-encoded CBOR string (not base64), mirroring
+            // iOS' `Data(hexString:)` decode path. Decode hex into the raw CBOR envelope bytes the
+            // signer hashes and re-frames.
+            TxKind.CARDANO -> decodeHexTx(response.tx)
             else -> decodeBinaryTx(response.tx)
         }
+
+    /**
+     * Decode a hex-encoded unsigned-tx blob (Cardano CBOR) from `tx` into raw bytes for
+     * [SwapKitSwapPayloadJson.txPayload]. Tolerates an optional `0x` prefix. Rejects odd-length /
+     * non-hex / empty payloads so an unsignable blob is dropped here rather than at sign time.
+     */
+    private fun decodeHexTx(element: JsonElement): ByteArray {
+        val hex =
+            (element as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()
+                ?: throw SwapKitError.Decoding("SwapKit Cardano tx is not a hex string")
+        val stripped = hex.removePrefix("0x").removePrefix("0X")
+        if (stripped.isEmpty() || stripped.length % 2 != 0) {
+            throw SwapKitError.Decoding("SwapKit Cardano tx is not valid hex")
+        }
+        val decoded =
+            runCatching {
+                    ByteArray(stripped.length / 2) {
+                        stripped.substring(it * 2, it * 2 + 2).toInt(16).toByte()
+                    }
+                }
+                .getOrElse {
+                    throw SwapKitError.Decoding("SwapKit Cardano tx is not valid hex", it)
+                }
+        return decoded
+    }
 
     /**
      * Decode a base64 unsigned-tx blob (PSBT today; PTB / CBOR as more chains land) from `tx` into
@@ -494,6 +527,9 @@ constructor(
             "psbt" -> TxKind.PSBT
             "tron" -> TxKind.TRON
             "sui" -> TxKind.SUI
+            // SwapKit emits both "CARDANO" and the "CBOR" alias for the pre-built Cardano envelope.
+            "cardano",
+            "cbor" -> TxKind.CARDANO
             else -> TxKind.UNSUPPORTED
         }
 
@@ -529,6 +565,7 @@ constructor(
         PSBT,
         TRON,
         SUI,
+        CARDANO,
         UNSUPPORTED,
     }
 
@@ -590,6 +627,7 @@ constructor(
             Chain.Bitcoin -> "BTC"
             Chain.Tron -> "TRON"
             Chain.Sui -> "SUI"
+            Chain.Cardano -> "ADA"
             else -> null
         }
 

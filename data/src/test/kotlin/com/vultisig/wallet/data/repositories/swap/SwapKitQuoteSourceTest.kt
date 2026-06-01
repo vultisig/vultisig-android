@@ -504,8 +504,8 @@ internal class SwapKitQuoteSourceTest {
 
     @Test
     fun `fetch throws UnsupportedTxType for a still-unwired non-EVM txType`() = runTest {
-        // PSBT (Bitcoin), TRON, and SUI are now wired to a Native SwapQuote.SwapKit; the remaining
-        // non-EVM txTypes (TON/CARDANO/RIPPLE) still have no signer, so they surface as
+        // PSBT (Bitcoin), TRON, SUI, and CARDANO are now wired to a Native SwapQuote.SwapKit; the
+        // remaining non-EVM txTypes (TON/RIPPLE) still have no signer, so they surface as
         // UnsupportedTxType.
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
@@ -887,6 +887,66 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch decodes a Cardano CBOR route into a Native SwapQuote SwapKit payload`() = runTest {
+        // Cardano's tx is a hex-encoded pre-built CBOR envelope (NOT base64 like PSBT/SUI) →
+        // hex-decoded into txPayload bytes. The inbound ADA fee scales by 6 native decimals.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        val cborBytes =
+            byteArrayOf(0x84.toByte(), 0xA0.toByte(), 0xA0.toByte(), 0xF5.toByte(), 0xF6.toByte())
+        val hex = "84a0a0f5f6"
+        val ada = cardanoCoin()
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(
+                        route(routeId = "r-ada", providers = listOf("NEAR"), expectedBuy = "12.5")
+                    )
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                swapId = "ada-swap-1",
+                tx = JsonPrimitive(hex),
+                meta = SwapKitTxMeta(txType = "CARDANO"),
+                targetAddress = "addr1qtarget",
+                expectedBuyAmount = "12.5",
+                fees = listOf(SwapKitFee(type = "inbound", chain = "ADA", amount = "0.17")),
+                providers = listOf("NEAR"),
+            )
+
+        val result =
+            source().fetch(request(srcToken = ada, dstToken = ethCoin())) as SwapQuoteResult.Native
+        val quote = result.quote as SwapQuote.SwapKit
+
+        assertEquals("NEAR", quote.subProvider)
+        assertEquals("CARDANO", quote.data.txType)
+        assertTrue(cborBytes.contentEquals(quote.data.txPayload))
+        assertEquals("addr1qtarget", quote.data.targetAddress)
+        assertEquals("ada-swap-1", quote.data.swapId)
+        assertEquals(ada, quote.data.fromCoin)
+        // 0.17 ADA inbound fee scaled by 6 native decimals = 170_000 lovelace.
+        assertEquals(BigInteger("170000"), quote.fees.value)
+        assertEquals("ADA", quote.fees.unit)
+    }
+
+    @Test
+    fun `fetch throws Decoding when the Cardano tx is not valid hex`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-ada", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonPrimitive("zzz-not-hex"),
+                meta = SwapKitTxMeta(txType = "CBOR"),
+                targetAddress = "addr1qtarget",
+                expectedBuyAmount = "1",
+            )
+
+        assertThrows<SwapKitError.Decoding> { source().fetch(request(srcToken = cardanoCoin())) }
+    }
+
+    @Test
     fun `fetch throws Decoding when the TRON tx is not a JSON object`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
@@ -1114,6 +1174,19 @@ internal class SwapKitQuoteSourceTest {
             decimal = 9,
             hexPublicKey = "pub",
             priceProviderID = "sui",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
+    private fun cardanoCoin() =
+        Coin(
+            chain = Chain.Cardano,
+            ticker = "ADA",
+            logo = "",
+            address = "addr1vtarget",
+            decimal = 6,
+            hexPublicKey = "pub",
+            priceProviderID = "cardano",
             contractAddress = "",
             isNativeToken = true,
         )

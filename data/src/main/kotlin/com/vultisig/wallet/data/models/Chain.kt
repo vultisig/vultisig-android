@@ -199,6 +199,7 @@ val Chain.isSwapSupported: Boolean
                 Chain.Zcash,
                 Chain.Tron,
                 Chain.Sui,
+                Chain.Cardano,
                 Chain.Hyperliquid,
             )
 

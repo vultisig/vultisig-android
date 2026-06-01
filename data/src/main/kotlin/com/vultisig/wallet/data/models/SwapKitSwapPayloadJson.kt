@@ -79,5 +79,19 @@ data class SwapKitSwapPayloadJson(
          * Sui's submit envelope. Mirrors iOS' `"SUI"`.
          */
         const val TX_TYPE_SUI = "SUI"
+
+        /**
+         * `meta.txType` discriminator for the Cardano signing path. SwapKit returns a hex-encoded
+         * pre-built unsigned CBOR transaction envelope, hex-decoded into [txPayload]; the signer
+         * hashes `cbor(transaction_body)` with Blake2b-256, then splices the Ed25519 vkey witness
+         * back into the envelope. Mirrors iOS' `"CARDANO"`.
+         */
+        const val TX_TYPE_CARDANO = "CARDANO"
+
+        /**
+         * Alias SwapKit also emits for the Cardano CBOR path. Treated identically to
+         * [TX_TYPE_CARDANO] by the dispatcher.
+         */
+        const val TX_TYPE_CBOR = "CBOR"
     }
 }
