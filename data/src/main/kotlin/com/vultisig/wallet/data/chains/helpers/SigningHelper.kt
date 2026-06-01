@@ -127,6 +127,19 @@ object SigningHelper {
                             // targetAddress built from the blockChainSpecific, via the native path.
                             SwapKitSwapPayloadJson.TX_TYPE_CARDANO ->
                                 CardanoHelper.getPreSignedImageHash(payload)
+                            // TON SwapKit is a plain native transfer to the deposit address. The
+                            // KeysignPayload already carries toAddress / toAmount / Ton specifics.
+                            // It reuses the native TonHelper path (no signTon, matching iOS).
+                            SwapKitSwapPayloadJson.TX_TYPE_TON ->
+                                TonHelper.getPreSignedImageHash(payload)
+                            // XRP is deposit-only: no SwapKit signer. SwapPayloadBuilder already
+                            // pointed the KeysignPayload's toAddress / toAmount / memo at the
+                            // deposit r-address, amount, and destination tag, so we reuse the
+                            // native RippleHelper path (which turns a numeric memo into the
+                            // destinationTag). Matches iOS, which lets XRP fall through to the
+                            // per-chain helper.
+                            SwapKitSwapPayloadJson.TX_TYPE_XRP ->
+                                RippleHelper.getPreSignedImageHash(payload)
                             else ->
                                 error(
                                     "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
@@ -333,6 +346,21 @@ object SigningHelper {
                             CardanoHelper.getSignedTransaction(
                                 vaultHexPublicKey = eddsaKey,
                                 vaultHexChainCode = vault.hexChainCode,
+                                keysignPayload = keysignPayload,
+                                signatures = signatures,
+                            )
+                        // TON SwapKit reuses the native TonHelper path (EdDSA), signing the deposit
+                        // transfer off the KeysignPayload's toAddress / toAmount — matching iOS.
+                        SwapKitSwapPayloadJson.TX_TYPE_TON ->
+                            TonHelper.getSignedTransaction(
+                                vaultHexPublicKey = eddsaKey,
+                                payload = keysignPayload,
+                                signatures = signatures,
+                            )
+                        // XRP deposit-only: rebuild + sign a plain XRP Payment off the
+                        // KeysignPayload (toAddress / toAmount / memo) via the native RippleHelper.
+                        SwapKitSwapPayloadJson.TX_TYPE_XRP ->
+                            RippleHelper.getSignedTransaction(
                                 keysignPayload = keysignPayload,
                                 signatures = signatures,
                             )
