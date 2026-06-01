@@ -475,17 +475,19 @@ constructor(
                             }
 
                             is SwapQuote.SwapKit -> {
-                                // BTC PSBT, TRON (TronWeb object), SUI (PTB), and Cardano (CBOR)
-                                // are wired; the remaining SwapKit txTypes (e.g. TON) land with
-                                // their per-chain signers. Guarded loudly so an un-wired txType
-                                // can't reach signing.
+                                // BTC PSBT, TRON (TronWeb object), SUI (PTB), and both Cardano
+                                // flows (deposit-only CARDANO + pre-built CARDANO_PREBUILT) are
+                                // wired; the remaining SwapKit txTypes (e.g. TON) land with their
+                                // per-chain signers. Guarded loudly so an un-wired txType can't
+                                // reach signing.
                                 require(
                                     quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT ||
                                         quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TRON ||
                                         quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_SUI ||
                                         quote.data.txType ==
                                             SwapKitSwapPayloadJson.TX_TYPE_CARDANO ||
-                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_CBOR
+                                        quote.data.txType ==
+                                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT
                                 ) {
                                     "Unsupported SwapKit txType for swap: ${quote.data.txType}"
                                 }

@@ -26,7 +26,10 @@ data class SwapKitSwapRequest(
 @Serializable
 data class SwapKitSwapResponseJson(
     @SerialName("swapId") val swapId: String? = null,
-    @SerialName("tx") val tx: JsonElement,
+    // Nullable: deposit-only flows (Cardano / XRP) return `tx: null` or omit it entirely — routing
+    // lives entirely in [targetAddress]. Pre-built flows (Cardano CBOR, PSBT, …) carry the unsigned
+    // tx here. Callers must treat both null and `JsonNull` as "no tx".
+    @SerialName("tx") val tx: JsonElement? = null,
     @SerialName("meta") val meta: SwapKitTxMeta,
     @SerialName("targetAddress") val targetAddress: String? = null,
     @SerialName("expectedBuyAmount") val expectedBuyAmount: String? = null,

@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -178,7 +179,8 @@ constructor(
             TxKind.PSBT,
             TxKind.TRON,
             TxKind.SUI,
-            TxKind.CARDANO ->
+            TxKind.CARDANO,
+            TxKind.CARDANO_PREBUILT ->
                 SwapQuoteResult.Native(
                     buildSwapKitNativeQuote(swapResponse, request, subProvider, best.fees)
                 )
@@ -381,6 +383,7 @@ constructor(
             TxKind.TRON,
             TxKind.SUI,
             TxKind.CARDANO,
+            TxKind.CARDANO_PREBUILT,
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
     }
@@ -413,7 +416,16 @@ constructor(
                 toCoin = dstToken,
                 fromAmount = request.tokenValue.value,
                 toAmountDecimal = toAmountDecimal,
-                txType = response.meta.txType,
+                // Normalize the keysign-payload discriminator. PSBT/TRON/SUI pass the wire txType
+                // through verbatim, but Cardano's wire `CARDANO`/`CBOR` is split by `tx` presence
+                // into the deposit-only `CARDANO` and the pre-built `CARDANO_PREBUILT` so the
+                // cosigning peer (incl. iOS, which emits the same strings) dispatches correctly.
+                txType =
+                    when (txTypeOf(response)) {
+                        TxKind.CARDANO -> SwapKitSwapPayloadJson.TX_TYPE_CARDANO
+                        TxKind.CARDANO_PREBUILT -> SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT
+                        else -> response.meta.txType
+                    },
                 txPayload = encodeNativeTxPayload(response),
                 targetAddress = targetAddress,
                 memo = null,
@@ -460,10 +472,13 @@ constructor(
                     ?: throw SwapKitError.Decoding("SwapKit TRON tx is missing raw_data_hex")
                 json.encodeToString(JsonObject.serializer(), obj).encodeToByteArray()
             }
-            // SwapKit returns the Cardano tx as a hex-encoded CBOR string (not base64), mirroring
-            // iOS' `Data(hexString:)` decode path. Decode hex into the raw CBOR envelope bytes the
-            // signer hashes and re-frames.
-            TxKind.CARDANO -> decodeHexTx(response.tx)
+            // Deposit-only Cardano: no `tx` to sign — the keysign side builds a plain ADA send to
+            // targetAddress from the blockChainSpecific. Empty payload, mirroring iOS' `.cardano`.
+            TxKind.CARDANO -> ByteArray(0)
+            // Pre-built Cardano: SwapKit returns the tx as a hex-encoded CBOR string (not base64),
+            // mirroring iOS' `Data(hexString:)` path. Decode hex into the raw CBOR envelope bytes
+            // the signer hashes and re-frames.
+            TxKind.CARDANO_PREBUILT -> decodeHexTx(response.tx)
             else -> decodeBinaryTx(response.tx)
         }
 
@@ -472,7 +487,7 @@ constructor(
      * [SwapKitSwapPayloadJson.txPayload]. Tolerates an optional `0x` prefix. Rejects odd-length /
      * non-hex / empty payloads so an unsignable blob is dropped here rather than at sign time.
      */
-    private fun decodeHexTx(element: JsonElement): ByteArray {
+    private fun decodeHexTx(element: JsonElement?): ByteArray {
         val hex =
             (element as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()
                 ?: throw SwapKitError.Decoding("SwapKit Cardano tx is not a hex string")
@@ -497,7 +512,7 @@ constructor(
      * raw bytes for [SwapKitSwapPayloadJson.txPayload]. V3 ships these as a top-level base64
      * [JsonPrimitive].
      */
-    private fun decodeBinaryTx(element: JsonElement): ByteArray {
+    private fun decodeBinaryTx(element: JsonElement?): ByteArray {
         val base64 =
             (element as? JsonPrimitive)?.takeIf { it.isString }?.content
                 ?: throw SwapKitError.Decoding("SwapKit non-EVM tx is not a base64 string")
@@ -527,18 +542,26 @@ constructor(
             "psbt" -> TxKind.PSBT
             "tron" -> TxKind.TRON
             "sui" -> TxKind.SUI
-            // SwapKit emits both "CARDANO" and the "CBOR" alias for the pre-built Cardano envelope.
+            // SwapKit emits both "CARDANO" and the "CBOR" alias for either Cardano shape. The shape
+            // is told apart by `tx`, not the discriminator string: a present `tx` is a pre-built
+            // CBOR envelope to sign; a null/absent `tx` is the deposit-only flow (route entirely on
+            // targetAddress). Mirrors iOS' `.cardanoPrebuilt` vs `.cardano` decode split.
             "cardano",
-            "cbor" -> TxKind.CARDANO
+            "cbor" -> if (response.tx.isTxPresent()) TxKind.CARDANO_PREBUILT else TxKind.CARDANO
             else -> TxKind.UNSUPPORTED
         }
+
+    /**
+     * True when `tx` carries a payload — absent (`null`) and JSON `null` ([JsonNull]) both fail.
+     */
+    private fun JsonElement?.isTxPresent(): Boolean = this != null && this !is JsonNull
 
     /**
      * Pull the Solana base64 swap blob out of `tx`. V3 ships it as a top-level [JsonPrimitive];
      * fall back to the legacy [SwapKitSolanaTx] object shape so a transitional response (or a test
      * fixture using either form) is decoded safely.
      */
-    private fun solanaBase64(element: JsonElement): String {
+    private fun solanaBase64(element: JsonElement?): String {
         (element as? JsonPrimitive)
             ?.takeIf { it.isString }
             ?.content
@@ -566,6 +589,7 @@ constructor(
         TRON,
         SUI,
         CARDANO,
+        CARDANO_PREBUILT,
         UNSUPPORTED,
     }
 
@@ -649,15 +673,17 @@ constructor(
             .getOrNull()
     }
 
-    private inline fun <reified T> decode(element: JsonElement, label: String): T =
-        try {
-            json.decodeFromJsonElement<T>(element)
+    private inline fun <reified T> decode(element: JsonElement?, label: String): T {
+        val el = element ?: throw SwapKitError.Decoding("SwapKit $label tx payload is missing")
+        return try {
+            json.decodeFromJsonElement<T>(el)
         } catch (e: Exception) {
             throw SwapKitError.Decoding(
                 message = "Failed to decode SwapKit $label tx payload",
                 cause = e,
             )
         }
+    }
 
     private companion object {
         /**

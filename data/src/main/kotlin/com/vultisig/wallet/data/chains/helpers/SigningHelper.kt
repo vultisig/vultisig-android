@@ -120,10 +120,13 @@ object SigningHelper {
                             SwapKitSwapPayloadJson.TX_TYPE_SUI ->
                                 SwapKitSuiSigner(eddsaKey)
                                     .getPreSignedImageHash(swapPayload.data.txPayload)
-                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO,
-                            SwapKitSwapPayloadJson.TX_TYPE_CBOR ->
+                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
                                 SwapKitCardanoSigner(eddsaKey)
                                     .getPreSignedImageHash(swapPayload.data.txPayload)
+                            // Deposit-only Cardano: no CBOR to sign — hash a plain ADA send to
+                            // targetAddress built from the blockChainSpecific, via the native path.
+                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO ->
+                                CardanoHelper.getPreSignedImageHash(payload)
                             else ->
                                 error(
                                     "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
@@ -321,10 +324,18 @@ object SigningHelper {
                         SwapKitSwapPayloadJson.TX_TYPE_SUI ->
                             SwapKitSuiSigner(eddsaKey)
                                 .getSignedTransaction(swapPayload.data.txPayload, signatures)
-                        SwapKitSwapPayloadJson.TX_TYPE_CARDANO,
-                        SwapKitSwapPayloadJson.TX_TYPE_CBOR ->
+                        SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT ->
                             SwapKitCardanoSigner(eddsaKey)
                                 .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        // Deposit-only Cardano: build & sign a plain ADA send to targetAddress via
+                        // the native Cardano path (same as a non-swap send).
+                        SwapKitSwapPayloadJson.TX_TYPE_CARDANO ->
+                            CardanoHelper.getSignedTransaction(
+                                vaultHexPublicKey = eddsaKey,
+                                vaultHexChainCode = vault.hexChainCode,
+                                keysignPayload = keysignPayload,
+                                signatures = signatures,
+                            )
                         else ->
                             error(
                                 "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"

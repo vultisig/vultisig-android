@@ -25,6 +25,7 @@ import java.util.Locale
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -888,8 +889,9 @@ internal class SwapKitQuoteSourceTest {
 
     @Test
     fun `fetch decodes a Cardano CBOR route into a Native SwapQuote SwapKit payload`() = runTest {
-        // Cardano's tx is a hex-encoded pre-built CBOR envelope (NOT base64 like PSBT/SUI) →
-        // hex-decoded into txPayload bytes. The inbound ADA fee scales by 6 native decimals.
+        // A present `tx` is the pre-built CBOR flow: hex-encoded (NOT base64 like PSBT/SUI) →
+        // hex-decoded into txPayload bytes, normalized to the CARDANO_PREBUILT discriminator. The
+        // inbound ADA fee scales by 6 native decimals.
         every { config.isFeatureEnabled } returns flowOf(true)
         val cborBytes =
             byteArrayOf(0x84.toByte(), 0xA0.toByte(), 0xA0.toByte(), 0xF5.toByte(), 0xF6.toByte())
@@ -918,7 +920,7 @@ internal class SwapKitQuoteSourceTest {
         val quote = result.quote as SwapQuote.SwapKit
 
         assertEquals("NEAR", quote.subProvider)
-        assertEquals("CARDANO", quote.data.txType)
+        assertEquals("CARDANO_PREBUILT", quote.data.txType)
         assertTrue(cborBytes.contentEquals(quote.data.txPayload))
         assertEquals("addr1qtarget", quote.data.targetAddress)
         assertEquals("ada-swap-1", quote.data.swapId)
@@ -927,6 +929,48 @@ internal class SwapKitQuoteSourceTest {
         assertEquals(BigInteger("170000"), quote.fees.value)
         assertEquals("ADA", quote.fees.unit)
     }
+
+    @Test
+    fun `fetch decodes a deposit-only Cardano route (null tx) into a native ADA send payload`() =
+        runTest {
+            // The two real captured ADA fixtures return `tx: null` — the deposit-only flow. Routing
+            // lives entirely in targetAddress; the payload carries an empty txPayload and the
+            // CARDANO discriminator (vs CARDANO_PREBUILT), so the keysign side builds a plain ADA
+            // send rather than signing pre-built CBOR. Mirrors iOS' `.cardano`.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            val ada = cardanoCoin()
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r-ada-dep",
+                                providers = listOf("NEAR"),
+                                expectedBuy = "12.5",
+                            )
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                SwapKitSwapResponseJson(
+                    swapId = "ada-swap-2",
+                    tx = JsonNull,
+                    meta = SwapKitTxMeta(txType = "CARDANO"),
+                    targetAddress = "addr1qtarget",
+                    expectedBuyAmount = "12.5",
+                    fees = listOf(SwapKitFee(type = "inbound", chain = "ADA", amount = "0.17")),
+                    providers = listOf("NEAR"),
+                )
+
+            val result =
+                source().fetch(request(srcToken = ada, dstToken = ethCoin()))
+                    as SwapQuoteResult.Native
+            val quote = result.quote as SwapQuote.SwapKit
+
+            assertEquals("CARDANO", quote.data.txType)
+            assertTrue(quote.data.txPayload.isEmpty())
+            assertEquals("addr1qtarget", quote.data.targetAddress)
+            assertEquals("ada-swap-2", quote.data.swapId)
+        }
 
     @Test
     fun `fetch throws Decoding when the Cardano tx is not valid hex`() = runTest {

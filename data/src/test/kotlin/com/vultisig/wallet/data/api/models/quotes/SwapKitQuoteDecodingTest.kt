@@ -168,7 +168,7 @@ class SwapKitQuoteDecodingTest {
         assertEquals("999500000", response.expectedBuyAmount)
 
         // tx is JsonElement until the caller decodes onto the matching DTO
-        val evm = json.decodeFromJsonElement(SwapKitEvmTx.serializer(), response.tx)
+        val evm = json.decodeFromJsonElement(SwapKitEvmTx.serializer(), response.tx!!)
         assertEquals("0xRouter", evm.to)
         assertEquals("0xabcdef", evm.data)
         assertEquals("210000", evm.gas)
@@ -190,7 +190,7 @@ class SwapKitQuoteDecodingTest {
 
         // type is lower-cased so dispatch is case-insensitive
         assertEquals(SwapKitTxMeta.TYPE_SOLANA, response.meta.type)
-        val solana = json.decodeFromJsonElement(SwapKitSolanaTx.serializer(), response.tx)
+        val solana = json.decodeFromJsonElement(SwapKitSolanaTx.serializer(), response.tx!!)
         assertEquals("AQID", solana.swapTransaction)
     }
 
