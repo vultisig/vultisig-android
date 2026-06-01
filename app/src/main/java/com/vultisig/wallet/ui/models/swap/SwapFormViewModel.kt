@@ -475,11 +475,18 @@ constructor(
                             }
 
                             is SwapQuote.SwapKit -> {
-                                // Only BTC PSBT is wired today; other SwapKit txTypes (TON / ADA /
-                                // SUI / TRON) land with their per-chain signers. SwapProviderTable
-                                // does not yet offer SwapKit on Bitcoin, so this branch is reached
-                                // only once enablement ships — guarded loudly until then.
-                                require(quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
+                                // BTC PSBT, TRON (TronWeb object), SUI (PTB), TON (native
+                                // transfer), and XRP (deposit-only native Payment) are wired; the
+                                // remaining SwapKit txTypes (ADA) land with their per-chain
+                                // signers. Guarded loudly so an un-wired txType can't reach
+                                // signing.
+                                require(
+                                    quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT ||
+                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TRON ||
+                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_SUI ||
+                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TON ||
+                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_XRP
+                                ) {
                                     "Unsupported SwapKit txType for swap: ${quote.data.txType}"
                                 }
                                 val specificAndUtxo =
@@ -494,9 +501,9 @@ constructor(
                                     srcToken = srcToken,
                                     srcTokenValue = srcTokenValue,
                                     dstToken = dstToken,
-                                    // SwapKit's source-chain deposit address — where the BTC the
-                                    // PSBT spends is sent. Signing is driven entirely by the PSBT
-                                    // bytes carried on the payload, not by this blockChainSpecific.
+                                    // SwapKit's source-chain deposit address. Signing is driven
+                                    // entirely by the payload bytes (PSBT / TronWeb object), not by
+                                    // this blockChainSpecific.
                                     dstAddress = quote.data.targetAddress,
                                     expectedDstTokenValue = dstTokenValue,
                                     blockChainSpecific = specificAndUtxo,

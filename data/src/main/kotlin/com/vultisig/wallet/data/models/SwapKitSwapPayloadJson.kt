@@ -64,5 +64,39 @@ data class SwapKitSwapPayloadJson(
     companion object {
         /** `meta.txType` discriminator for the Bitcoin PSBT signing path. */
         const val TX_TYPE_PSBT = "PSBT"
+
+        /**
+         * `meta.txType` discriminator for the TRON signing path. SwapKit returns a TronWeb-shaped
+         * object (`txID` / `raw_data` / `raw_data_hex`) JSON-encoded into [txPayload]; the signer
+         * hashes `raw_data_hex` and re-assembles the broadcast envelope. Mirrors iOS' `"TRON"`.
+         */
+        const val TX_TYPE_TRON = "TRON"
+
+        /**
+         * `meta.txType` discriminator for the Sui signing path. SwapKit returns a base64-encoded
+         * pre-built programmable transaction block (PTB), base64-decoded into [txPayload]; the
+         * signer hashes `intent_prefix || ptb` with Blake2b-32 and wraps the Ed25519 signature in
+         * Sui's submit envelope. Mirrors iOS' `"SUI"`.
+         */
+        const val TX_TYPE_SUI = "SUI"
+
+        /**
+         * `meta.txType` discriminator for the TON signing path. SwapKit returns `tx` as a
+         * `[{address, amount}]` array (raw nano-TON amounts) JSON-encoded into [txPayload]. A TON
+         * SwapKit swap is a plain native transfer to the deposit [targetAddress] — routing is by
+         * the deposit address itself (Chainflip / NEAR), no memo — so signing reuses the existing
+         * [com.vultisig.wallet.data.crypto.TonHelper] native path off `toAddress` / `toAmount`
+         * rather than a dedicated signer. Mirrors iOS' `"TON"`.
+         */
+        const val TX_TYPE_TON = "TON"
+
+        /**
+         * `meta.txType` discriminator for the XRP (Ripple) deposit-only path. SwapKit returns no
+         * transaction body — only a deposit r-address (and optional destination tag). [txPayload]
+         * is empty; the cosigning peer rebuilds a plain XRP Payment to [targetAddress] for
+         * [fromAmount] via the existing `RippleHelper`, attaching the destination tag carried in
+         * [memo]. Mirrors iOS' `"XRP"`.
+         */
+        const val TX_TYPE_XRP = "XRP"
     }
 }

@@ -105,16 +105,40 @@ object SigningHelper {
                     messages += message
                 }
                 is SwapPayload.SwapKit -> {
-                    require(swapPayload.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
-                        "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
-                    }
                     messages +=
-                        SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
-                            .getPreSignedImageHash(
-                                psbtBytes = swapPayload.data.txPayload,
-                                targetAddress = swapPayload.data.targetAddress,
-                                fromAmount = swapPayload.data.fromAmount,
-                            )
+                        when (swapPayload.data.txType) {
+                            SwapKitSwapPayloadJson.TX_TYPE_PSBT ->
+                                SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
+                                    .getPreSignedImageHash(
+                                        psbtBytes = swapPayload.data.txPayload,
+                                        targetAddress = swapPayload.data.targetAddress,
+                                        fromAmount = swapPayload.data.fromAmount,
+                                    )
+                            SwapKitSwapPayloadJson.TX_TYPE_TRON ->
+                                SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
+                                    .getPreSignedImageHash(swapPayload.data.txPayload)
+                            SwapKitSwapPayloadJson.TX_TYPE_SUI ->
+                                SwapKitSuiSigner(eddsaKey)
+                                    .getPreSignedImageHash(swapPayload.data.txPayload)
+                            // TON SwapKit is a plain native transfer to the deposit address. The
+                            // KeysignPayload already carries toAddress / toAmount / Ton specifics.
+                            // It reuses the native TonHelper path (no signTon, matching iOS).
+                            SwapKitSwapPayloadJson.TX_TYPE_TON ->
+                                TonHelper.getPreSignedImageHash(payload)
+                            // XRP is deposit-only: no SwapKit signer. SwapPayloadBuilder already
+                            // pointed the KeysignPayload's toAddress / toAmount / memo at the
+                            // deposit r-address, amount, and destination tag, so we reuse the
+                            // native
+                            // RippleHelper path (which turns a numeric memo into the
+                            // destinationTag).
+                            // Matches iOS, which lets XRP fall through to the per-chain helper.
+                            SwapKitSwapPayloadJson.TX_TYPE_XRP ->
+                                RippleHelper.getPreSignedImageHash(payload)
+                            else ->
+                                error(
+                                    "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
+                                )
+                        }
                 }
                 else -> Unit
             }
@@ -312,11 +336,36 @@ object SigningHelper {
                 }
 
                 is SwapPayload.SwapKit -> {
-                    require(swapPayload.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT) {
-                        "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
+                    return when (swapPayload.data.txType) {
+                        SwapKitSwapPayloadJson.TX_TYPE_PSBT ->
+                            SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
+                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        SwapKitSwapPayloadJson.TX_TYPE_TRON ->
+                            SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
+                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        SwapKitSwapPayloadJson.TX_TYPE_SUI ->
+                            SwapKitSuiSigner(eddsaKey)
+                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        // TON SwapKit reuses the native TonHelper path (EdDSA), signing the deposit
+                        // transfer off the KeysignPayload's toAddress / toAmount — matching iOS.
+                        SwapKitSwapPayloadJson.TX_TYPE_TON ->
+                            TonHelper.getSignedTransaction(
+                                vaultHexPublicKey = eddsaKey,
+                                payload = keysignPayload,
+                                signatures = signatures,
+                            )
+                        // XRP deposit-only: rebuild + sign a plain XRP Payment off the
+                        // KeysignPayload (toAddress / toAmount / memo) via the native RippleHelper.
+                        SwapKitSwapPayloadJson.TX_TYPE_XRP ->
+                            RippleHelper.getSignedTransaction(
+                                keysignPayload = keysignPayload,
+                                signatures = signatures,
+                            )
+                        else ->
+                            error(
+                                "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
+                            )
                     }
-                    return SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
-                        .getSignedTransaction(swapPayload.data.txPayload, signatures)
                 }
                 else -> {}
             }

@@ -8,6 +8,9 @@ import org.bouncycastle.crypto.digests.Blake2bDigest
 
 object Utils {
     fun deviceName(context: Context): String {
+        // ANDROID_ID is read only for a human-readable device label: just the last 3 chars are
+        // appended to Build.MODEL below. It is not stored or used as a tracking identifier, hence
+        // the HardwareIds lint baseline entry in data/lint-baseline.xml.
         val identifierForVendor: String? =
             Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID)
         return "${android.os.Build.MODEL}-${identifierForVendor?.takeLast(3) ?: "N/A"}"

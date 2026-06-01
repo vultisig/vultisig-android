@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.repositories.swap
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
+import com.vultisig.wallet.data.models.isSwapSupported
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -39,6 +40,11 @@ internal class SwapProviderTableTest {
                 coin(Chain.Solana, "SOL", isNative = true),
                 coin(Chain.Solana, "USDC", isNative = false),
                 coin(Chain.Bitcoin, "BTC", isNative = true), // BTC PSBT route
+                coin(Chain.Tron, "TRX", isNative = true), // TRON TronWeb route
+                coin(Chain.Tron, "USDT", isNative = false), // TRC-20 → TRON route
+                coin(Chain.Sui, "SUI", isNative = true), // SUI PTB route
+                coin(Chain.Ton, "TON", isNative = true), // TON native deposit route
+                coin(Chain.Ripple, "XRP", isNative = true), // XRP deposit-only route
             )
 
         swapKitCoins.forEach { c ->
@@ -66,11 +72,7 @@ internal class SwapProviderTableTest {
                 coin(Chain.ThorChain, "RUNE", isNative = true),
                 coin(Chain.MayaChain, "CACAO", isNative = true),
                 coin(Chain.Zcash, "ZEC", isNative = true),
-                coin(Chain.Ripple, "XRP", isNative = true),
-                coin(Chain.Tron, "TRX", isNative = true),
                 coin(Chain.Hyperliquid, "HYPE", isNative = true),
-                coin(Chain.Ton, "TON", isNative = true),
-                coin(Chain.Sui, "SUI", isNative = true),
                 coin(Chain.Cardano, "ADA", isNative = true),
                 coin(Chain.Polkadot, "DOT", isNative = true),
             )
@@ -79,6 +81,20 @@ internal class SwapProviderTableTest {
             assertFalse(
                 SwapProvider.SWAPKIT in table.providersFor(c),
                 "Did not expect SWAPKIT for ${c.chain}/${c.ticker} but got ${table.providersFor(c)}",
+            )
+        }
+    }
+
+    @Test
+    fun `SwapKit-wired chains are marked swap-supported so the Swap action button shows`() {
+        // ChainTokensViewModel.canSwap reads Chain.isSwapSupported to show the Swap button on the
+        // account screen. A chain can offer SWAPKIT in the provider table yet stay invisible to the
+        // user if it is missing from isSwapSupported — the Sui regression that hid the button while
+        // iOS showed it. Pin every SwapKit-wired native chain here.
+        listOf(Chain.Bitcoin, Chain.Tron, Chain.Sui, Chain.Ripple).forEach { chain ->
+            assertTrue(
+                chain.isSwapSupported,
+                "$chain offers SWAPKIT but is not marked isSwapSupported — Swap button would hide",
             )
         }
     }
