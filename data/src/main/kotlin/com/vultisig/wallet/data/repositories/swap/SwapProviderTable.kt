@@ -124,19 +124,29 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                     )
                 else setOf(SwapProvider.JUPITER, SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
-            Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
+            // SwapKit XRP is deposit-only — no signer; the native RippleHelper builds the Payment
+            // to
+            // SwapKit's deposit r-address. Mirrors iOS' `.ripple → [.thorchain, .swapkit]`.
+            Chain.Ripple -> setOf(SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
 
             // SwapKit TRON routes are signed by SwapKitTronSigner (TronWeb object → sha256 of
             // raw_data_hex). Mirrors iOS' `.tron → [.thorchain, .swapkit]`.
             Chain.Tron -> setOf(SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
 
+            // SwapKit TON routes are a plain native deposit transfer signed via TonHelper. TON has
+            // no native Thor/Maya route on Android, so it is SwapKit-only. Mirrors iOS'
+            // `.ton → [.swapkit]`.
+            Chain.Ton -> setOf(SwapProvider.SWAPKIT)
+
             Chain.Hyperliquid -> setOf(SwapProvider.LIFI)
+
+            // SwapKit SUI routes are signed by SwapKitSuiSigner (Blake2b-32 of the intent-prefixed
+            // PTB, Ed25519 envelope). Mirrors iOS' `.sui → [.swapkit]`.
+            Chain.Sui -> setOf(SwapProvider.SWAPKIT)
 
             Chain.Polkadot,
             Chain.Bittensor,
             Chain.Dydx,
-            Chain.Sui,
-            Chain.Ton,
             Chain.Osmosis,
             Chain.Terra,
             Chain.TerraClassic,

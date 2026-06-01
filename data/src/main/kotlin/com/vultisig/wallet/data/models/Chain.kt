@@ -198,6 +198,8 @@ val Chain.isSwapSupported: Boolean
                 Chain.ZkSync,
                 Chain.Zcash,
                 Chain.Tron,
+                Chain.Sui,
+                Chain.Ton,
                 Chain.Hyperliquid,
             )
 
@@ -452,6 +454,28 @@ val Chain.blockTimeMs: Long
             Chain.Sei,
             Chain.Hyperliquid -> 1_000L
             else -> 4_000L
+        }
+
+/**
+ * The on-chain native fee denom for a Cosmos-family chain (e.g. `rune`, `uatom`), `null` otherwise.
+ * Separate from [feeUnit], which carries UI labels (`Gwei`, `BTC/vbyte`) and THORChain's `Rune`
+ * ticker rather than the `rune` denom. Mirrors the Windows `cosmosFeeCoinDenom` table.
+ */
+val Chain.cosmosNativeDenom: String?
+    get() =
+        when (this) {
+            Chain.ThorChain -> "rune"
+            Chain.MayaChain -> "cacao"
+            Chain.GaiaChain -> "uatom"
+            Chain.Kujira -> "ukuji"
+            Chain.Dydx -> "adydx"
+            Chain.Osmosis -> "uosmo"
+            Chain.Terra,
+            Chain.TerraClassic -> "uluna"
+            Chain.Noble -> "uusdc"
+            Chain.Akash -> "uakt"
+            Chain.Qbtc -> "qbtc"
+            else -> null
         }
 
 fun Chain.toValue(value: BigInteger): BigDecimal = coinType.toValue(value)
