@@ -120,6 +120,11 @@ object SigningHelper {
                             SwapKitSwapPayloadJson.TX_TYPE_SUI ->
                                 SwapKitSuiSigner(eddsaKey)
                                     .getPreSignedImageHash(swapPayload.data.txPayload)
+                            // TON SwapKit is a plain native transfer to the deposit address. The
+                            // KeysignPayload already carries toAddress / toAmount / Ton specifics.
+                            // It reuses the native TonHelper path (no signTon, matching iOS).
+                            SwapKitSwapPayloadJson.TX_TYPE_TON ->
+                                TonHelper.getPreSignedImageHash(payload)
                             // XRP is deposit-only: no SwapKit signer. SwapPayloadBuilder already
                             // pointed the KeysignPayload's toAddress / toAmount / memo at the
                             // deposit r-address, amount, and destination tag, so we reuse the
@@ -326,6 +331,14 @@ object SigningHelper {
                         SwapKitSwapPayloadJson.TX_TYPE_SUI ->
                             SwapKitSuiSigner(eddsaKey)
                                 .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        // TON SwapKit reuses the native TonHelper path (EdDSA), signing the deposit
+                        // transfer off the KeysignPayload's toAddress / toAmount — matching iOS.
+                        SwapKitSwapPayloadJson.TX_TYPE_TON ->
+                            TonHelper.getSignedTransaction(
+                                vaultHexPublicKey = eddsaKey,
+                                payload = keysignPayload,
+                                signatures = signatures,
+                            )
                         // XRP deposit-only: rebuild + sign a plain XRP Payment off the
                         // KeysignPayload (toAddress / toAmount / memo) via the native RippleHelper.
                         SwapKitSwapPayloadJson.TX_TYPE_XRP ->
