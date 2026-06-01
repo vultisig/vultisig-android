@@ -425,7 +425,11 @@ constructor(
                 toCoin = dstToken,
                 fromAmount = request.tokenValue.value,
                 toAmountDecimal = toAmountDecimal,
-                txType = response.meta.txType,
+                // Store the canonical discriminator, NOT the raw wire value: SwapKit ships XRP as
+                // either `XRP` or `RIPPLE`, so persisting `meta.txType` verbatim would make the
+                // signing-side gate (which matches TX_TYPE_XRP) reject a `RIPPLE` route. Mirrors
+                // iOS, which normalises the payload txType in buildSwapKitRipplePayload.
+                txType = canonicalTxType(response),
                 txPayload = encodeNativeTxPayload(response),
                 targetAddress = targetAddress,
                 memo = memo,
@@ -477,6 +481,23 @@ constructor(
             // nothing to carry here.
             TxKind.XRP -> ByteArray(0)
             else -> decodeBinaryTx(response.tx)
+        }
+
+    /**
+     * Map the route onto the canonical [SwapKitSwapPayloadJson] txType discriminator the signing
+     * side dispatches on — independent of the raw `meta.txType` casing/aliasing (e.g. SwapKit's
+     * `XRP` vs `RIPPLE`). Only the native (non-EVM/Solana) kinds reach [buildSwapKitNativeQuote].
+     */
+    private fun canonicalTxType(response: SwapKitSwapResponseJson): String =
+        when (txTypeOf(response)) {
+            TxKind.PSBT -> SwapKitSwapPayloadJson.TX_TYPE_PSBT
+            TxKind.TRON -> SwapKitSwapPayloadJson.TX_TYPE_TRON
+            TxKind.SUI -> SwapKitSwapPayloadJson.TX_TYPE_SUI
+            TxKind.XRP -> SwapKitSwapPayloadJson.TX_TYPE_XRP
+            // EVM/Solana ride the EVM envelope and never reach the native-quote builder; fall back
+            // to the raw value so an unexpected kind still surfaces a descriptive
+            // UnsupportedTxType.
+            else -> response.meta.txType
         }
 
     /**

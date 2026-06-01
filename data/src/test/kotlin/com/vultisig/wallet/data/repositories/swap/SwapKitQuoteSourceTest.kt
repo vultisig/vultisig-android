@@ -928,6 +928,29 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch normalises a RIPPLE wire txType to the canonical XRP discriminator`() = runTest {
+        // SwapKit ships XRP as either "XRP" or "RIPPLE". The payload must carry the canonical
+        // TX_TYPE_XRP so the signing-side gate (which matches "XRP") accepts a "RIPPLE" route —
+        // otherwise pressing Swap throws "Unsupported SwapKit txType for swap: RIPPLE".
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-xrp", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonNull,
+                meta = SwapKitTxMeta(txType = "RIPPLE"),
+                targetAddress = "rDepositAddr123",
+                expectedBuyAmount = "1",
+            )
+
+        val result = source().fetch(request(srcToken = rippleCoin())) as SwapQuoteResult.Native
+        val quote = result.quote as SwapQuote.SwapKit
+        assertEquals("XRP", quote.data.txType)
+    }
+
+    @Test
     fun `fetch falls back to meta destinationTag when the top-level tag is absent`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
