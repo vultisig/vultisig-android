@@ -306,6 +306,15 @@ internal class JoinKeysignSendGasFeeTest {
         payload.dappSuppliedNativeFee(Chain.ThorChain, parse) shouldBe null
     }
 
+    /** A signDirect fee purely in a foreign denom is treated as "no dApp fee" (fall back). */
+    @Test
+    fun `dapp fee returns null when signDirect fee is in a foreign denom`() {
+        val payload = cosmosPayload(signDirect = signDirect())
+        val parse = parseReturning(directFee("ibc/ABC123" to "100"))
+
+        payload.dappSuppliedNativeFee(Chain.ThorChain, parse) shouldBe null
+    }
+
     /** Amino is consulted first; signDirect is only parsed when Amino has no native-denom entry. */
     @Test
     fun `dapp fee prefers signAmino over signDirect`() {
