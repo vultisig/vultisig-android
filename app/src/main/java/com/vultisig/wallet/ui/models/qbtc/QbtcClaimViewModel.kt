@@ -116,8 +116,13 @@ constructor(
                 }
                 is QbtcClaimLoadResult.Available -> {
                     claimable = result.utxos
+                    // Preselect up to the cap, mirroring iOS's `prefix(maxClaimUtxos)`. Selecting
+                    // everything unbounded would push the count past the cap on wallets with >50
+                    // claimable UTXOs and permanently disable Confirm.
                     selectedKeys.clear()
-                    selectedKeys.addAll(claimable.map { it.key() })
+                    selectedKeys.addAll(
+                        claimable.take(QbtcClaimConfig.MAX_CLAIM_UTXOS).map { it.key() }
+                    )
                     emitSelecting()
                 }
             }
@@ -137,11 +142,12 @@ constructor(
         // Ignore repeated taps while a claim is already running — a second run would
         // start a duplicate keysign + proof request and risk a double broadcast.
         if (claimJob?.isActive == true) return
+        // Enforce the selection invariant in the ViewModel too, not only via the button state.
+        if (!canConfirm()) return
         val vault = vault ?: return
         val btcCoin = btcCoin ?: return
         val qbtcCoin = qbtcCoin ?: return
         val selected = claimable.filter { it.key() in selectedKeys }
-        if (selected.isEmpty()) return
 
         val orchestrator =
             QbtcClaimOrchestrator(
@@ -198,6 +204,9 @@ constructor(
             }
     }
 
+    private fun canConfirm(): Boolean =
+        selectedKeys.isNotEmpty() && selectedKeys.size <= QbtcClaimConfig.MAX_CLAIM_UTXOS
+
     private fun emitSelecting() {
         val total = claimable.filter { it.key() in selectedKeys }.sumOf { it.amount }
         val cap = minOf(claimable.size, QbtcClaimConfig.MAX_CLAIM_UTXOS)
@@ -206,9 +215,7 @@ constructor(
                 utxos = claimable.map { it.toUiModel() },
                 selectedKeys = selectedKeys.toSet(),
                 totalSelectedSats = total,
-                canConfirm =
-                    selectedKeys.isNotEmpty() &&
-                        selectedKeys.size <= QbtcClaimConfig.MAX_CLAIM_UTXOS,
+                canConfirm = canConfirm(),
                 isAllSelected = selectedKeys.size == cap,
             )
     }
