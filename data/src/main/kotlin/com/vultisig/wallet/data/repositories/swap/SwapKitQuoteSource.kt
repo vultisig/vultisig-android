@@ -541,7 +541,16 @@ constructor(
 
     /** Parse a destination tag that may arrive as a JSON number or a numeric string. */
     private fun tagLongOrNull(element: JsonElement?): Long? =
-        (element as? JsonPrimitive)?.content?.trim()?.toLongOrNull()
+        (element as? JsonPrimitive)?.content?.destinationTagOrNull()
+
+    /**
+     * Parse a destination-tag string, rejecting anything outside XRP's uint32 `DestinationTag`
+     * range. Signed `toLongOrNull` would otherwise let a negative or `>2^32-1` wire value flow
+     * through `memo` onto the uint32 field; iOS rejects the same with `UInt64(...)` and emits no
+     * tag.
+     */
+    private fun String.destinationTagOrNull(): Long? =
+        trim().toLongOrNull()?.takeIf { it in 0..0xFFFFFFFFL }
 
     /**
      * Split an XRP target address into its bare r-address and an optional destination tag carried
@@ -559,21 +568,21 @@ constructor(
                     .filter { it.isNotEmpty() }
                     .firstNotNullOfOrNull { pair ->
                         val parts = pair.split('=', limit = 2)
-                        if (parts.size == 2 && parts[0] == "dt") parts[1].toLongOrNull() else null
+                        if (parts.size == 2 && parts[0] == "dt") parts[1].destinationTagOrNull()
+                        else null
                     }
             return bare to tag
         }
         val pipe = address.indexOf('|')
         if (pipe >= 0) {
-            // A `|` unambiguously announces a destination tag. If the suffix isn't numeric the
-            // response is malformed — fail the route rather than pass `rAddr|abc` through as the
-            // XRP
-            // destination (unsignable) or silently drop a tag the deposit may require to be
-            // credited.
+            // A `|` unambiguously announces a destination tag. If the suffix isn't a valid uint32
+            // tag the response is malformed — fail the route rather than pass `rAddr|abc` through
+            // as the XRP destination (unsignable) or silently drop a tag the deposit may require to
+            // be credited.
             val tag =
-                address.substring(pipe + 1).toLongOrNull()
+                address.substring(pipe + 1).destinationTagOrNull()
                     ?: throw SwapKitError.Decoding(
-                        "SwapKit XRP targetAddress has a non-numeric destination-tag suffix"
+                        "SwapKit XRP targetAddress has an invalid destination-tag suffix"
                     )
             return address.substring(0, pipe) to tag
         }

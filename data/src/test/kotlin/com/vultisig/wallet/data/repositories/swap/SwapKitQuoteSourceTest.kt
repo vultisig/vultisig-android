@@ -1042,6 +1042,72 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch drops an out-of-uint32-range top-level XRP destination tag`() = runTest {
+        // XRP's DestinationTag is uint32. A negative (or >2^32-1) wire value must not flow onto the
+        // field — emit no tag, matching iOS' UInt64 guard, rather than passing it through `memo`.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-xrp", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonNull,
+                meta = SwapKitTxMeta(txType = "XRP"),
+                targetAddress = "rDepositAddr123",
+                expectedBuyAmount = "1",
+                destinationTag = JsonPrimitive(-1L),
+            )
+
+        val result = source().fetch(request(srcToken = rippleCoin())) as SwapQuoteResult.Native
+        val quote = result.quote as SwapQuote.SwapKit
+        assertNull(quote.data.memo)
+        assertEquals("rDepositAddr123", quote.data.targetAddress)
+    }
+
+    @Test
+    fun `fetch accepts the max uint32 XRP destination tag`() = runTest {
+        // 2^32-1 is the largest valid DestinationTag — it must survive the range guard.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-xrp", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonNull,
+                meta = SwapKitTxMeta(txType = "XRP"),
+                targetAddress = "rDepositAddr123",
+                expectedBuyAmount = "1",
+                destinationTag = JsonPrimitive(4294967295L),
+            )
+
+        val result = source().fetch(request(srcToken = rippleCoin())) as SwapQuoteResult.Native
+        val quote = result.quote as SwapQuote.SwapKit
+        assertEquals("4294967295", quote.data.memo)
+    }
+
+    @Test
+    fun `fetch throws Decoding when the XRP pipe suffix is out of uint32 range`() = runTest {
+        // A `|` announces a tag; an out-of-uint32-range suffix is as malformed as a non-numeric
+        // one.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-xrp", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonNull,
+                meta = SwapKitTxMeta(txType = "XRP"),
+                targetAddress = "rDepositAddr123|4294967296",
+                expectedBuyAmount = "1",
+            )
+
+        assertThrows<SwapKitError.Decoding> { source().fetch(request(srcToken = rippleCoin())) }
+    }
+
+    @Test
     fun `fetch throws Decoding when the TRON tx is not a JSON object`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns
