@@ -3,11 +3,18 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.tron.GetTronFrozenBalancesUseCase
 import com.vultisig.wallet.data.blockchain.tron.TronFrozenBalanceState
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.TokenId
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
@@ -25,6 +32,9 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
+import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.submit.AccountValidator
 import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
@@ -33,11 +43,21 @@ import com.vultisig.wallet.ui.models.send.submit.SendStrategyContext
 import com.vultisig.wallet.ui.models.send.submit.SendStrategyFactory
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 
 /**
@@ -73,6 +93,8 @@ internal class SendFormGraph(
     private val getTronFrozenBalances: GetTronFrozenBalancesUseCase,
     private val sendStrategyFactory: SendStrategyFactory,
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
+    private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
     private val uiState: MutableStateFlow<SendFormUiModel>,
     private val selectedToken: MutableStateFlow<Coin?>,
     private val accountsState: MutableStateFlow<AccountsLoadState>,
@@ -85,10 +107,6 @@ internal class SendFormGraph(
     private val operatorFeesBondFieldState: TextFieldState,
     private val providerBondFieldState: TextFieldState,
     private val slippageFieldState: TextFieldState,
-    private val vaultProvider: () -> Vault?,
-    private val vaultIdProvider: () -> VaultId?,
-    private val defiTypeProvider: () -> DeFiNavActions?,
-    private val mscaAddressProvider: () -> String?,
     private val selectedTokenProvider: () -> Coin?,
     private val selectedAccountProvider: () -> Account?,
     private val isAutocompoundProvider: () -> Boolean,
@@ -98,6 +116,16 @@ internal class SendFormGraph(
     private val showError: (UiText) -> Unit,
     private val emitFocusField: (SendFocusField) -> Unit,
 ) {
+    private var vault: Vault? = null
+    private var vaultId: VaultId? = null
+    private var defiType: DeFiNavActions? = null // Default is send, no defi form
+    private var mscaAddress: String? = null
+
+    private val vaultProvider: () -> Vault? = { vault }
+    private val vaultIdProvider: () -> VaultId? = { vaultId }
+    private val defiTypeProvider: () -> DeFiNavActions? = { defiType }
+    private val mscaAddressProvider: () -> String? = { mscaAddress }
+
     private val planFee = MutableStateFlow<Long?>(null)
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
     private val gasFee = MutableStateFlow<TokenValue?>(null)
@@ -303,5 +331,268 @@ internal class SendFormGraph(
                 showError = showError,
             )
         )
+    }
+
+    /**
+     * Loads the initial form state from the navigation [args]: resolves the DeFi type, loads
+     * accounts, preselects the deep-linked token/address, and seeds amount/memo/slippage.
+     *
+     * @param args the `Route.Send` navigation arguments that opened the form.
+     */
+    fun initialize(args: Route.Send) {
+        defiType = if (args.type == null) null else parseDepositType(args.type)
+        mscaAddress = args.mscaAddress
+        vaultId = args.vaultId
+        accountsLoader.load(args.vaultId)
+        loadVaultName()
+        initFormType()
+
+        if (args.address != null) {
+            setAddressFromQrCode(
+                qrCode = args.address,
+                preSelectedChainId = args.chainId,
+                preSelectedTokenId = args.tokenId,
+            )
+        } else {
+            tokenPreselectionService.preSelect(
+                preSelectedChainIds = listOf(args.chainId),
+                preSelectedTokenId = args.tokenId,
+            )
+        }
+
+        if (args.tokenId != null && args.address == null) {
+            expandSection(SendSections.Address)
+        }
+
+        if (args.tokenId != null && args.address != null) {
+            expandSection(SendSections.Amount)
+        }
+
+        args.amount?.let { tokenAmountFieldState.setTextAndPlaceCursorAtEnd(it) }
+
+        args.memo?.let { memoFieldState.setTextAndPlaceCursorAtEnd(it) }
+
+        if (defiType == DeFiNavActions.REDEEM_YRUNE || defiType == DeFiNavActions.REDEEM_YTCY) {
+            slippageFieldState.setTextAndPlaceCursorAtEnd("1.0")
+        }
+    }
+
+    private fun initFormType() {
+        val autoCompound =
+            defiType == DeFiNavActions.STAKE_STCY || defiType == DeFiNavActions.UNSTAKE_STCY
+        val initialResourceType =
+            if (tronStakingService.isStakingType()) TronResourceType.BANDWIDTH else null
+        uiState.update {
+            it.copy(
+                defiType = defiType,
+                isAutocompound = autoCompound,
+                tronResourceType = initialResourceType,
+            )
+        }
+        tronStakingService.initIfStakingType()
+    }
+
+    private fun loadVaultName() {
+        scope.safeLaunch {
+            val id = vaultId ?: return@safeLaunch
+            val loaded = vaultRepository.get(id) ?: return@safeLaunch
+            vault = loaded
+            uiState.update { it.copy(srcVaultName = loaded.name) }
+        }
+    }
+
+    /** Launches the collectors that mirror collaborator/repository state into [uiState]. */
+    fun bindUiState() {
+        scope.launch {
+            addressManager.isDstAddressComplete.collect { isComplete ->
+                uiState.update { it.copy(isDstAddressComplete = isComplete) }
+            }
+        }
+        scope.launch {
+            addressManager.onAddressValidated.collect { expandSection(SendSections.Amount) }
+        }
+        scope.launch {
+            amountManager.reapingError.collect { error ->
+                uiState.update { it.copy(reapingError = error) }
+            }
+        }
+        scope.launch {
+            advanceGasUiRepository.shouldShowAdvanceGasSettingsIcon.collect {
+                shouldShowAdvanceGasSettingsIcon ->
+                uiState.update { it.copy(hasGasSettings = shouldShowAdvanceGasSettingsIcon) }
+            }
+        }
+        scope.launch {
+            appCurrency.collect { currency ->
+                uiState.update { it.copy(fiatCurrency = currency.ticker) }
+            }
+        }
+        advanceGasUiRepository.showSettings
+            .onEach { showGasSettings ->
+                uiState.update { it.copy(showGasSettings = showGasSettings) }
+            }
+            .launchIn(scope)
+        scope.launch { collectSelectedAccount() }
+    }
+
+    private suspend fun collectSelectedAccount() {
+        combine(selectedToken.filterNotNull(), accounts, isSwitchingAccounts) {
+                token,
+                accounts,
+                switching ->
+                if (switching) return@combine null // <-- SKIP during transitions
+
+                val address = token.address
+                val hasMemo = token.isNativeToken || token.chain.standard == TokenStandard.COSMOS
+
+                val uiModel =
+                    accountToTokenBalanceUiModelMapper(
+                        SendSrc(
+                            Address(chain = token.chain, address = address, accounts = accounts),
+                            accounts.find { it.token.id.equals(token.id, true) }
+                                ?: Account(
+                                    token = token,
+                                    tokenValue = null,
+                                    fiatValue = null,
+                                    price = null,
+                                ),
+                        )
+                    )
+
+                advanceGasUiRepository.updateTokenStandard(token.chain.standard)
+                uiState.update {
+                    it.copy(srcAddress = address, selectedCoin = uiModel, hasMemo = hasMemo)
+                }
+            }
+            .collect()
+    }
+
+    /**
+     * Applies a scanned/deep-linked address to [fieldState], switching the selected chain/token
+     * when the address belongs to a different chain than the current selection.
+     *
+     * @param qrCode the scanned address payload (ignored when null/blank).
+     * @param preSelectedChainId optional chain to constrain the address to.
+     * @param preSelectedTokenId optional token to preselect after a chain switch.
+     * @param fieldState the address field to populate (destination address by default).
+     */
+    fun setAddressFromQrCode(
+        qrCode: String?,
+        preSelectedChainId: ChainId?,
+        preSelectedTokenId: TokenId?,
+        fieldState: TextFieldState = addressFieldState,
+    ) {
+        if (qrCode.isNullOrBlank()) return
+        Timber.d("setAddressFromQrCode(address = $qrCode)")
+
+        fieldState.setTextAndPlaceCursorAtEnd(qrCode)
+
+        val vaultId = vaultId
+        if (vaultId.isNullOrBlank()) return
+
+        val chainValidForAddress =
+            preSelectedChainId?.let { listOf(Chain.fromRaw(preSelectedChainId)) }
+                ?: Chain.entries.filter { chain ->
+                    chainAccountAddressRepository.isValid(chain, qrCode)
+                }
+
+        val selectedChain = selectedTokenProvider()?.chain
+
+        if (chainValidForAddress.isNotEmpty() && !chainValidForAddress.contains(selectedChain)) {
+            Timber.d(
+                "Address from QR has a different chain " +
+                    "than selected token, switching. $chainValidForAddress != $selectedChain"
+            )
+            val preSelectedChainIds = chainValidForAddress.map { it.id }
+
+            tokenNetworkSelectionDelegate.checkChainIdExistInAccounts(
+                preSelectedChainIds = preSelectedChainIds,
+                vaultId = vaultId,
+            )
+
+            tokenPreselectionService.preSelect(
+                preSelectedChainIds = preSelectedChainIds,
+                preSelectedTokenId = preSelectedTokenId,
+                forcePreselection = true,
+            )
+        }
+    }
+
+    /**
+     * Toggles the staking auto-compound mode, switching the underlying account data source (TCY ⇄
+     * sTCY) and pinning the matching token once it loads.
+     *
+     * @param checked whether auto-compound (stable compound) is enabled.
+     */
+    fun onAutoCompound(checked: Boolean) {
+        uiState.update { it.copy(isAutocompound = checked) }
+
+        val vaultId = vaultId
+        if (
+            (defiType != DeFiNavActions.UNSTAKE_TCY && defiType != DeFiNavActions.UNSTAKE_STCY) ||
+                vaultId == null
+        ) {
+            return
+        }
+
+        isSwitchingAccounts.value = true
+        selectedToken.value = null
+
+        // Route the data-source switch through AccountsLoader so accountsState has a single
+        // writer — the previous in-VM collect raced against the already-running loader,
+        // and for UNSTAKE_TCY the two collectors pulled from different APIs. The callback
+        // runs per emission so we can pin the token selection on the first emission
+        // containing the target ticker (the tokenSelected flag prevents a later hydration
+        // emission from re-calling selectToken, which would wipe the user's typed amount).
+        val targetTicker = if (checked) "sTCY" else "TCY"
+        var tokenSelected = false
+        accountsLoader.loadForAutoCompoundSwitch(vaultId = vaultId, useStableCompound = checked) {
+            loadedAccounts ->
+            // Release the gate on every emission — if the target ticker is never found the
+            // form must still become interactive rather than staying gated forever. Setting
+            // to false repeatedly is a no-op once already false.
+            isSwitchingAccounts.value = false
+            if (!tokenSelected) {
+                loadedAccounts
+                    .find {
+                        it.token.ticker.equals(targetTicker, true) &&
+                            it.token.chain == Chain.ThorChain
+                    }
+                    ?.let {
+                        tokenSelected = true
+                        tokenNetworkSelectionDelegate.selectToken(it.token)
+                    }
+            }
+        }
+    }
+
+    /**
+     * Opens the address book and applies the chosen entry to the output or provider field.
+     *
+     * @param addressType which field the selected address should populate.
+     */
+    fun openAddressBook(addressType: AddressBookType = AddressBookType.OUTPUT) {
+        scope.safeLaunch {
+            val vaultId = vaultId ?: return@safeLaunch
+            val selectedChain = selectedTokenProvider()?.chain ?: return@safeLaunch
+
+            val address =
+                requestAddressBookEntry(chainId = selectedChain.id, excludeVaultId = vaultId)
+                    ?: return@safeLaunch
+
+            when (addressType) {
+                AddressBookType.OUTPUT -> {
+                    tokenNetworkSelectionDelegate.checkIfTokenSelectionRequired(
+                        currentChain = selectedChain,
+                        newChain = address.chain,
+                    )
+                    addressManager.setOutputAddress(address.address)
+                }
+
+                AddressBookType.PROVIDER -> {
+                    providerBondFieldState.setTextAndPlaceCursorAtEnd(address.address)
+                }
+            }
+        }
     }
 }
