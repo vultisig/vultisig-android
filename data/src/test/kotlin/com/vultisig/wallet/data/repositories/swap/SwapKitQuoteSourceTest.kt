@@ -996,6 +996,48 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch extracts the XRP destination tag from the pipe suffix and strips it`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-xrp", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonNull,
+                meta = SwapKitTxMeta(txType = "XRP"),
+                // `|N` pipe form of the destination-tag suffix.
+                targetAddress = "rDepositAddr123|42",
+                expectedBuyAmount = "1",
+            )
+
+        val result = source().fetch(request(srcToken = rippleCoin())) as SwapQuoteResult.Native
+        val quote = result.quote as SwapQuote.SwapKit
+        assertEquals("42", quote.data.memo)
+        assertEquals("rDepositAddr123", quote.data.targetAddress)
+    }
+
+    @Test
+    fun `fetch throws Decoding when the XRP pipe suffix is non-numeric`() = runTest {
+        // A `|` announces a tag; a non-numeric suffix is malformed. Fail the route rather than pass
+        // an unsignable address (or silently drop a tag the deposit may require) downstream.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes = listOf(route(routeId = "r-xrp", providers = listOf("NEAR")))
+            )
+        coEvery { api.swap(any()) } returns
+            SwapKitSwapResponseJson(
+                tx = JsonNull,
+                meta = SwapKitTxMeta(txType = "XRP"),
+                targetAddress = "rDepositAddr123|abc",
+                expectedBuyAmount = "1",
+            )
+
+        assertThrows<SwapKitError.Decoding> { source().fetch(request(srcToken = rippleCoin())) }
+    }
+
+    @Test
     fun `fetch throws Decoding when the TRON tx is not a JSON object`() = runTest {
         every { config.isFeatureEnabled } returns flowOf(true)
         coEvery { api.quote(any()) } returns

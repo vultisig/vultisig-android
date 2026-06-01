@@ -539,8 +539,17 @@ constructor(
         }
         val pipe = address.indexOf('|')
         if (pipe >= 0) {
-            val tag = address.substring(pipe + 1).toLongOrNull()
-            if (tag != null) return address.substring(0, pipe) to tag
+            // A `|` unambiguously announces a destination tag. If the suffix isn't numeric the
+            // response is malformed — fail the route rather than pass `rAddr|abc` through as the
+            // XRP
+            // destination (unsignable) or silently drop a tag the deposit may require to be
+            // credited.
+            val tag =
+                address.substring(pipe + 1).toLongOrNull()
+                    ?: throw SwapKitError.Decoding(
+                        "SwapKit XRP targetAddress has a non-numeric destination-tag suffix"
+                    )
+            return address.substring(0, pipe) to tag
         }
         return address to null
     }
