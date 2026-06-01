@@ -233,12 +233,13 @@ constructor(
                     estimateFeesFiat = "",
                     blockChainSpecific = specific.blockChainSpecific,
                     signDirect = keysignPayload.signDirect,
+                    cosmosStakingPayload = payload,
                 )
 
             depositTransactionRepository.addTransaction(depositTx)
 
             navigator.route(
-                Route.VerifyDeposit(transactionId = depositTx.id, vaultId = route.vaultId)
+                Route.CosmosStakingVerify(vaultId = route.vaultId, transactionId = depositTx.id)
             )
             _state.update { it.copy(isSubmitting = false) }
         }

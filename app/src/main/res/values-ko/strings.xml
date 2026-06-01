@@ -1281,4 +1281,17 @@
     <string name="cosmos_staking_no_rewards">이 체인에 청구 가능한 보상이 없습니다</string>
     <string name="cosmos_staking_empty_positions">아직 활성 %1$s 포지션이 없습니다</string>
     <string name="cosmos_staking_commission">수수료 %1$s%%</string>
+    <!-- Cosmos staking verify summary — issue #4499 -->
+    <string name="cosmos_staking_youre_staking">스테이킹 중</string>
+    <string name="cosmos_staking_youre_unstaking">언스테이킹 중</string>
+    <string name="cosmos_staking_youre_moving">이동 중</string>
+    <string name="cosmos_staking_youre_claiming">청구 중</string>
+    <string name="cosmos_staking_verify_from">보낸 사람</string>
+    <string name="cosmos_staking_verify_network">네트워크</string>
+    <string name="cosmos_staking_verify_est_fee">예상 네트워크 수수료</string>
+    <string name="cosmos_staking_verify_sign">거래 서명</string>
+    <string name="cosmos_staking_source_validator">출발 검증인</string>
+    <string name="cosmos_staking_destination_validator">도착 검증인</string>
+    <string name="cosmos_staking_claim_from_validators">%1$d명의 검증인으로부터 청구</string>
+    <string name="cosmos_staking_commission_suffix">수수료 %1$s%%</string>
 </resources>

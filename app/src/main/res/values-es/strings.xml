@@ -1262,4 +1262,17 @@
     <string name="cosmos_staking_no_rewards">Sin recompensas reclamables en esta cadena</string>
     <string name="cosmos_staking_empty_positions">Aún no tienes posiciones activas de %1$s</string>
     <string name="cosmos_staking_commission">Comisión %1$s%%</string>
+    <!-- Cosmos staking verify summary — issue #4499 -->
+    <string name="cosmos_staking_youre_staking">Estás apostando</string>
+    <string name="cosmos_staking_youre_unstaking">Estás retirando</string>
+    <string name="cosmos_staking_youre_moving">Estás moviendo</string>
+    <string name="cosmos_staking_youre_claiming">Estás reclamando</string>
+    <string name="cosmos_staking_verify_from">Desde</string>
+    <string name="cosmos_staking_verify_network">Red</string>
+    <string name="cosmos_staking_verify_est_fee">Comisión estimada de red</string>
+    <string name="cosmos_staking_verify_sign">Firmar transacción</string>
+    <string name="cosmos_staking_source_validator">Validador origen</string>
+    <string name="cosmos_staking_destination_validator">Validador destino</string>
+    <string name="cosmos_staking_claim_from_validators">Reclamar de %1$d validadores</string>
+    <string name="cosmos_staking_commission_suffix">%1$s%% comisión</string>
 </resources>

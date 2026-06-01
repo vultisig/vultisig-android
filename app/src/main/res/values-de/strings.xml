@@ -1264,4 +1264,17 @@
     <string name="cosmos_staking_no_rewards">Keine einforderbaren Belohnungen auf dieser Chain</string>
     <string name="cosmos_staking_empty_positions">Du hast noch keine aktiven %1$s-Positionen</string>
     <string name="cosmos_staking_commission">Provision %1$s%%</string>
+    <!-- Cosmos staking verify summary — issue #4499 -->
+    <string name="cosmos_staking_youre_staking">Du stakst</string>
+    <string name="cosmos_staking_youre_unstaking">Du unstakst</string>
+    <string name="cosmos_staking_youre_moving">Du verschiebst</string>
+    <string name="cosmos_staking_youre_claiming">Du beanspruchst</string>
+    <string name="cosmos_staking_verify_from">Von</string>
+    <string name="cosmos_staking_verify_network">Netzwerk</string>
+    <string name="cosmos_staking_verify_est_fee">Geschätzte Netzwerkgebühr</string>
+    <string name="cosmos_staking_verify_sign">Transaktion signieren</string>
+    <string name="cosmos_staking_source_validator">Quell-Validator</string>
+    <string name="cosmos_staking_destination_validator">Ziel-Validator</string>
+    <string name="cosmos_staking_claim_from_validators">Von %1$d Validatoren beanspruchen</string>
+    <string name="cosmos_staking_commission_suffix">%1$s%% Provision</string>
 </resources>

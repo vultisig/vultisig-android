@@ -1587,4 +1587,17 @@
     <string name="cosmos_staking_no_rewards">此链上没有可领取的奖励</string>
     <string name="cosmos_staking_empty_positions">您还没有活跃的 %1$s 仓位</string>
     <string name="cosmos_staking_commission">佣金 %1$s%%</string>
+    <!-- Cosmos staking verify summary — issue #4499 -->
+    <string name="cosmos_staking_youre_staking">您正在质押</string>
+    <string name="cosmos_staking_youre_unstaking">您正在解除质押</string>
+    <string name="cosmos_staking_youre_moving">您正在移动</string>
+    <string name="cosmos_staking_youre_claiming">您正在领取</string>
+    <string name="cosmos_staking_verify_from">来自</string>
+    <string name="cosmos_staking_verify_network">网络</string>
+    <string name="cosmos_staking_verify_est_fee">预计网络费用</string>
+    <string name="cosmos_staking_verify_sign">签署交易</string>
+    <string name="cosmos_staking_source_validator">来源验证人</string>
+    <string name="cosmos_staking_destination_validator">目标验证人</string>
+    <string name="cosmos_staking_claim_from_validators">从 %1$d 个验证人领取</string>
+    <string name="cosmos_staking_commission_suffix">%1$s%% 佣金</string>
 </resources>

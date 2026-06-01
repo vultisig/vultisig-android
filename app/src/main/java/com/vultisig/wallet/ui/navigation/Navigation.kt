@@ -484,6 +484,14 @@ internal sealed class Route {
      */
     @Serializable data class CosmosStakingWithdrawRewards(val vaultId: String, val chainId: String)
 
+    /**
+     * Staking-specific verify summary for LUNA / LUNC (delegate / undelegate / redelegate / claim).
+     * Loads the persisted [com.vultisig.wallet.data.models.DepositTransaction] by id and renders
+     * the iOS-style "You're staking / unstaking / moving / claiming" summary before keysign.
+     */
+    @Serializable
+    data class CosmosStakingVerify(val vaultId: String, val transactionId: TransactionId)
+
     @Serializable data class BondForm(val vaultId: String, val chainId: String)
 
     @Serializable data class Settings(val vaultId: String)

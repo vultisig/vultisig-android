@@ -30,6 +30,15 @@ data class DepositTransaction(
      * the default Cosmos `MsgSend` path. Null for all other deposit flows.
      */
     val signDirect: SignDirectProto? = null,
+    /**
+     * Structured staking intent (op type + validator addresses) used purely to render the
+     * staking-specific Verify summary — "You're staking / unstaking / moving / claiming". The
+     * SignDoc bytes in [signDirect] are the signing contract; this field is display-only and not
+     * part of the keysign payload.
+     */
+    val cosmosStakingPayload:
+        com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingPayload? =
+        null,
 )
 
 const val OPERATION_MINT = "Mint"

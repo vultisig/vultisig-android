@@ -1256,4 +1256,17 @@
     <string name="cosmos_staking_no_rewards">Geen claimbare beloningen op deze keten</string>
     <string name="cosmos_staking_empty_positions">Je hebt nog geen actieve %1$s-posities</string>
     <string name="cosmos_staking_commission">Commissie %1$s%%</string>
+    <!-- Cosmos staking verify summary — issue #4499 -->
+    <string name="cosmos_staking_youre_staking">Je staket</string>
+    <string name="cosmos_staking_youre_unstaking">Je ontstaket</string>
+    <string name="cosmos_staking_youre_moving">Je verplaatst</string>
+    <string name="cosmos_staking_youre_claiming">Je claimt</string>
+    <string name="cosmos_staking_verify_from">Van</string>
+    <string name="cosmos_staking_verify_network">Netwerk</string>
+    <string name="cosmos_staking_verify_est_fee">Geschatte netwerkkosten</string>
+    <string name="cosmos_staking_verify_sign">Transactie ondertekenen</string>
+    <string name="cosmos_staking_source_validator">Bronvalidator</string>
+    <string name="cosmos_staking_destination_validator">Bestemmingsvalidator</string>
+    <string name="cosmos_staking_claim_from_validators">Claim van %1$d validators</string>
+    <string name="cosmos_staking_commission_suffix">%1$s%% commissie</string>
 </resources>

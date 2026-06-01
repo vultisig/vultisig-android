@@ -1274,4 +1274,17 @@
     <string name="cosmos_staking_no_rewards">Нет наград к получению в этой сети</string>
     <string name="cosmos_staking_empty_positions">У вас пока нет активных позиций %1$s</string>
     <string name="cosmos_staking_commission">Комиссия %1$s%%</string>
+    <!-- Cosmos staking verify summary — issue #4499 -->
+    <string name="cosmos_staking_youre_staking">Вы стейкаете</string>
+    <string name="cosmos_staking_youre_unstaking">Вы снимаете стейк</string>
+    <string name="cosmos_staking_youre_moving">Вы перемещаете</string>
+    <string name="cosmos_staking_youre_claiming">Вы получаете</string>
+    <string name="cosmos_staking_verify_from">От</string>
+    <string name="cosmos_staking_verify_network">Сеть</string>
+    <string name="cosmos_staking_verify_est_fee">Расчётная комиссия сети</string>
+    <string name="cosmos_staking_verify_sign">Подписать транзакцию</string>
+    <string name="cosmos_staking_source_validator">Исходный валидатор</string>
+    <string name="cosmos_staking_destination_validator">Целевой валидатор</string>
+    <string name="cosmos_staking_claim_from_validators">Получить с %1$d валидаторов</string>
+    <string name="cosmos_staking_commission_suffix">%1$s%% комиссия</string>
 </resources>

@@ -1272,4 +1272,17 @@
     <string name="cosmos_staking_no_rewards">Nema nagrada za preuzimanje na ovom lancu</string>
     <string name="cosmos_staking_empty_positions">Još nemate aktivnih %1$s pozicija</string>
     <string name="cosmos_staking_commission">Provizija %1$s%%</string>
+    <!-- Cosmos staking verify summary — issue #4499 -->
+    <string name="cosmos_staking_youre_staking">Stakate</string>
+    <string name="cosmos_staking_youre_unstaking">Povlačite ulog</string>
+    <string name="cosmos_staking_youre_moving">Premještate</string>
+    <string name="cosmos_staking_youre_claiming">Preuzimate</string>
+    <string name="cosmos_staking_verify_from">Od</string>
+    <string name="cosmos_staking_verify_network">Mreža</string>
+    <string name="cosmos_staking_verify_est_fee">Procijenjena mrežna naknada</string>
+    <string name="cosmos_staking_verify_sign">Potpiši transakciju</string>
+    <string name="cosmos_staking_source_validator">Izvorni validator</string>
+    <string name="cosmos_staking_destination_validator">Odredišni validator</string>
+    <string name="cosmos_staking_claim_from_validators">Preuzmi od %1$d validatora</string>
+    <string name="cosmos_staking_commission_suffix">%1$s%% provizija</string>
 </resources>
