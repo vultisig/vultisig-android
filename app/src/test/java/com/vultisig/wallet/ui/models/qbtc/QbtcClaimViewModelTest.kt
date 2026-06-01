@@ -4,6 +4,7 @@ package com.vultisig.wallet.ui.models.qbtc
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ClaimProofResponse
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ClaimableUtxo
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.LoadClaimableQbtcUtxosUseCase
@@ -12,12 +13,18 @@ import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBtcRoundRe
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimLoadResult
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcProofService
+import com.vultisig.wallet.data.mappers.PayloadToProtoMapper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.qbtc.QbtcClaimFastVaultRoundRunner
 import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.CompressQrUseCase
+import com.vultisig.wallet.data.usecases.Encryption
+import com.vultisig.wallet.data.usecases.GenerateQrBitmap
+import com.vultisig.wallet.data.usecases.GenerateServiceName
+import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -34,6 +41,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.protobuf.ProtoBuf
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -51,6 +60,15 @@ internal class QbtcClaimViewModelTest {
     private lateinit var proofService: QbtcProofService
     private lateinit var roundRunner: QbtcClaimFastVaultRoundRunner
     private lateinit var explorerLinkRepository: ExplorerLinkRepository
+    private lateinit var sessionApi: SessionApi
+    private lateinit var discoverParticipants: DiscoverParticipantsUseCase
+    private lateinit var payloadToProtoMapper: PayloadToProtoMapper
+    private lateinit var compressQr: CompressQrUseCase
+    private lateinit var generateQrBitmap: GenerateQrBitmap
+    private lateinit var generateServiceName: GenerateServiceName
+    private lateinit var encryption: Encryption
+    private lateinit var protoBuf: ProtoBuf
+    private lateinit var json: Json
 
     @BeforeEach
     fun setUp() {
@@ -64,6 +82,15 @@ internal class QbtcClaimViewModelTest {
         proofService = mockk(relaxed = true)
         roundRunner = mockk(relaxed = true)
         explorerLinkRepository = mockk(relaxed = true)
+        sessionApi = mockk(relaxed = true)
+        discoverParticipants = mockk(relaxed = true)
+        payloadToProtoMapper = mockk(relaxed = true)
+        compressQr = mockk(relaxed = true)
+        generateQrBitmap = mockk(relaxed = true)
+        generateServiceName = mockk(relaxed = true)
+        encryption = mockk(relaxed = true)
+        protoBuf = mockk(relaxed = true)
+        json = mockk(relaxed = true)
         coEvery { vaultRepository.get(VAULT_ID) } returns fastVault()
         every { explorerLinkRepository.getTransactionLink(Chain.Qbtc, any()) } returns ""
     }
@@ -83,6 +110,15 @@ internal class QbtcClaimViewModelTest {
             proofService = proofService,
             fastVaultRoundRunner = roundRunner,
             explorerLinkRepository = explorerLinkRepository,
+            sessionApi = sessionApi,
+            discoverParticipants = discoverParticipants,
+            payloadToProtoMapper = payloadToProtoMapper,
+            compressQr = compressQr,
+            generateQrBitmap = generateQrBitmap,
+            generateServiceName = generateServiceName,
+            encryption = encryption,
+            protoBuf = protoBuf,
+            json = json,
         )
 
     @Test

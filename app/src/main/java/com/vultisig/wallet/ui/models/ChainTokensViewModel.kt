@@ -19,7 +19,6 @@ import com.vultisig.wallet.data.models.canSelectTokens
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.models.isBuySupported
 import com.vultisig.wallet.data.models.isDepositSupported
-import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.models.isSwapSupported
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.monoToneLogo
@@ -170,10 +169,10 @@ constructor(
     }
 
     /**
-     * Surfaces the "Claim your QBTC" banner on the Bitcoin chain-detail screen when a Fast Vault
-     * has a QBTC (MLDSA) key and at least one claimable UTXO. Runs off the main load so the token
-     * list never waits on it; a failure just leaves the banner hidden. Secure Vault claiming is
-     * gated out for now — the BTC round works, but the multi-device pairing screen is a follow-up.
+     * Surfaces the "Claim your QBTC" banner on the Bitcoin chain-detail screen when the vault has a
+     * QBTC (MLDSA) key and at least one claimable UTXO. Runs off the main load so the token list
+     * never waits on it; a failure just leaves the banner hidden. Both Fast Vaults (server co-sign)
+     * and Secure Vaults (device co-sign via QR pairing) are supported.
      */
     private fun checkQbtcClaimEligibility(chain: Chain) {
         if (chain != Chain.Bitcoin) {
@@ -182,12 +181,7 @@ constructor(
         }
         val vault = currentVault
         val btcAddress = vault?.coins?.firstOrNull { it.chain == Chain.Bitcoin }?.address
-        if (
-            vault == null ||
-                vault.pubKeyMLDSA.isEmpty() ||
-                !vault.isFastVault() ||
-                btcAddress.isNullOrEmpty()
-        ) {
+        if (vault == null || vault.pubKeyMLDSA.isEmpty() || btcAddress.isNullOrEmpty()) {
             uiState.update { it.copy(showQbtcClaimBanner = false) }
             return
         }

@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.qbtc
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -61,6 +62,7 @@ internal fun QbtcClaimScreen(viewModel: QbtcClaimViewModel = hiltViewModel()) {
         onBackClick = viewModel::back,
         onToggle = viewModel::toggle,
         onConfirm = viewModel::confirm,
+        onStartSecureVault = viewModel::startSecureVaultClaim,
         onRetry = viewModel::retry,
     )
 }
@@ -72,6 +74,7 @@ internal fun QbtcClaimScreen(
     onBackClick: () -> Unit,
     onToggle: (String) -> Unit,
     onConfirm: (password: String) -> Unit,
+    onStartSecureVault: () -> Unit,
     onRetry: () -> Unit,
 ) {
     var passwordPrompt by remember { mutableStateOf(false) }
@@ -95,7 +98,7 @@ internal fun QbtcClaimScreen(
                 VsButton(
                     label = ctaLabel(state),
                     state = if (state.canConfirm) VsButtonState.Enabled else VsButtonState.Disabled,
-                    onClick = { if (isFastVault) passwordPrompt = true else onConfirm("") },
+                    onClick = { if (isFastVault) passwordPrompt = true else onStartSecureVault() },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
                 )
             }
@@ -106,6 +109,7 @@ internal fun QbtcClaimScreen(
                 CenteredProgress(stringResource(R.string.qbtc_claim_loading))
             is QbtcClaimUiState.Blocked -> BlockedContent(state.reason)
             is QbtcClaimUiState.Selecting -> SelectingContent(state, onToggle)
+            is QbtcClaimUiState.Pairing -> PairingContent(state)
             is QbtcClaimUiState.Signing ->
                 CenteredProgress(stringResource(R.string.qbtc_claim_proving))
             is QbtcClaimUiState.Done -> DoneContent(state)
@@ -358,6 +362,43 @@ private fun CenteredMessage(title: String, detail: String) {
 private fun CenteredProgress(label: String) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         VsSigningProgressIndicator(text = label)
+    }
+}
+
+@Composable
+private fun PairingContent(state: QbtcClaimUiState.Pairing) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+        modifier = Modifier.fillMaxSize().padding(top = 24.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.qbtc_claim_pair_instruction),
+            style = Theme.brockmann.body.m.medium,
+            color = Theme.v2.colors.text.primary,
+            textAlign = TextAlign.Center,
+        )
+        val qr = state.qr
+        if (qr != null) {
+            Image(
+                painter = qr,
+                contentDescription = null,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = 48.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Theme.v2.colors.text.primary),
+            )
+        } else {
+            VsSigningProgressIndicator(text = stringResource(R.string.qbtc_claim_title))
+        }
+        state.joinedDevices.forEach { device ->
+            Text(
+                text = device,
+                style = Theme.brockmann.body.s.regular,
+                color = Theme.v2.colors.text.secondary,
+            )
+        }
     }
 }
 

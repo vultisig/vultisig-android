@@ -1245,6 +1245,7 @@
     <string name="qbtc_claim_proving">Генерация доказательства и отправка…</string>
     <string name="qbtc_claim_success_title">QBTC получен</string>
     <string name="qbtc_claim_password_title">Введите пароль хранилища</string>
+    <string name="qbtc_claim_pair_instruction">Отсканируйте это другим устройством, чтобы совместно подписать получение</string>
     <string name="qbtc_claim_cancel">Отмена</string>
     <string name="qbtc_claim_failed">Получение не удалось</string>
     <string name="qbtc_claim_unavailable_title">Получение отключено</string>

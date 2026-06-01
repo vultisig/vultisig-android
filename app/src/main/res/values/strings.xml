@@ -1286,6 +1286,7 @@
     <string name="qbtc_claim_proving">Generating proof and broadcasting…</string>
     <string name="qbtc_claim_success_title">QBTC claimed</string>
     <string name="qbtc_claim_password_title">Enter vault password</string>
+    <string name="qbtc_claim_pair_instruction">Scan this with your other device to co-sign the claim</string>
     <string name="qbtc_claim_cancel">Cancel</string>
     <string name="qbtc_claim_failed">Claim failed</string>
     <string name="qbtc_claim_unavailable_title">Claiming is disabled</string>

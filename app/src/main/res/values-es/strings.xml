@@ -1233,6 +1233,7 @@
     <string name="qbtc_claim_proving">Generando prueba y transmitiendo…</string>
     <string name="qbtc_claim_success_title">QBTC reclamado</string>
     <string name="qbtc_claim_password_title">Introduce la contraseña de la bóveda</string>
+    <string name="qbtc_claim_pair_instruction">Escanea esto con tu otro dispositivo para firmar la reclamación de forma conjunta</string>
     <string name="qbtc_claim_cancel">Cancelar</string>
     <string name="qbtc_claim_failed">Reclamación fallida</string>
     <string name="qbtc_claim_unavailable_title">La reclamación está deshabilitada</string>

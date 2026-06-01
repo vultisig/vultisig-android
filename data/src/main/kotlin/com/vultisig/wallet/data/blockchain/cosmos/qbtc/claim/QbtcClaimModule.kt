@@ -27,4 +27,10 @@ internal interface QbtcClaimModule {
     fun bindLoadClaimableQbtcUtxosUseCase(
         impl: LoadClaimableQbtcUtxosUseCaseImpl
     ): LoadClaimableQbtcUtxosUseCase
+
+    @Binds
+    @Singleton
+    fun bindComputeQbtcClaimMessageHashUseCase(
+        impl: ComputeQbtcClaimMessageHashUseCaseImpl
+    ): ComputeQbtcClaimMessageHashUseCase
 }

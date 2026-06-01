@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ComputeQbtcClaimMessageHashUseCase
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
@@ -51,6 +52,8 @@ import com.vultisig.wallet.data.models.proto.v1.KeysignPayloadProto
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.swapAssetComparisonName
 import com.vultisig.wallet.data.models.swapProviderFromWireId
+import com.vultisig.wallet.data.qbtc.QbtcClaimPeerRoundRunner
+import com.vultisig.wallet.data.qbtc.QbtcClaimResultPoller
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
@@ -173,6 +176,11 @@ sealed interface JoinKeysignState {
 
     data object Keysign : JoinKeysignState
 
+    /**
+     * QBTC claim co-sign: [txHash] null while signing, set once the initiator pushes the result.
+     */
+    data class QbtcClaim(val txHash: String?, val totalSats: Long?) : JoinKeysignState
+
     data class Error(val errorType: JoinKeysignError) : JoinKeysignState
 }
 
@@ -229,6 +237,9 @@ constructor(
     private val blockaidSimulationService: BlockaidSimulationService,
     private val buildHeroContent: BuildHeroContentUseCase,
     private val thorchainMemoParser: ThorchainMemoParser,
+    private val computeQbtcClaimMessageHash: ComputeQbtcClaimMessageHashUseCase,
+    private val qbtcClaimPeerRoundRunner: QbtcClaimPeerRoundRunner,
+    private val qbtcClaimResultPoller: QbtcClaimResultPoller,
 ) : ViewModel() {
     companion object {
         private const val VAULT_PARAMETER = "vault"
@@ -404,7 +415,11 @@ constructor(
                             return@launch
                         }
                     }
-                    currentState.value = JoinKeysignState.JoinKeysign
+                    if (_keysignPayload?.isQbtcClaim == true) {
+                        startQbtcClaimCosign()
+                    } else {
+                        currentState.value = JoinKeysignState.JoinKeysign
+                    }
                 } else {
                     currentState.value = JoinKeysignState.DiscoverService
                 }
@@ -537,6 +552,10 @@ constructor(
         }
 
         this@JoinKeysignViewModel._keysignPayload = ksPayload
+
+        // A QBTC claim payload is a flag carrier with no real tx body — skip the Send/verify
+        // UI build; startQbtcClaimCosign() drives the co-sign once the server address is set.
+        if (ksPayload.isQbtcClaim) return true
 
         loadTransaction(ksPayload)
         return true
@@ -1436,6 +1455,43 @@ constructor(
             MediatorServiceDiscoveryListener(nsdManager, _serviceName, ::onServerAddressDiscovered)
         _nsdManager = nsdManager
         nsdManager.discoverServices("_http._tcp.", NsdManager.PROTOCOL_DNS_SD, _discoveryListener)
+    }
+
+    /**
+     * Co-signs a QBTC claim as the second device. The claim hash is recomputed locally from this
+     * vault's own Bitcoin + QBTC accounts (never trusted from the QR), then DKLS runs as the
+     * non-initiating device; afterwards we poll the relay for the initiator's broadcast result so
+     * the done screen can show the tx hash.
+     */
+    private fun startQbtcClaimCosign() {
+        if (!isJoiningKeysign.compareAndSet(false, true)) return
+        currentState.value = JoinKeysignState.QbtcClaim(txHash = null, totalSats = null)
+        viewModelScope.safeLaunch(
+            onError = { e ->
+                Timber.e(e, "QBTC claim co-sign failed")
+                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+            }
+        ) {
+            val btc =
+                _currentVault.coins.firstOrNull { it.chain == Chain.Bitcoin }
+                    ?: error("Missing Bitcoin account for QBTC claim co-sign")
+            val qbtc =
+                _currentVault.coins.firstOrNull { it.chain == Chain.Qbtc }
+                    ?: error("Missing QBTC account for QBTC claim co-sign")
+            val messageHashHex =
+                computeQbtcClaimMessageHash(btc.address, btc.hexPublicKey, qbtc.address)
+            val session =
+                qbtcClaimPeerRoundRunner.coSign(
+                    vault = _currentVault,
+                    messageHashHex = messageHashHex,
+                    serverUrl = _serverAddress,
+                    sessionId = _sessionID,
+                    encryptionKeyHex = _encryptionKeyHex,
+                )
+            val result = qbtcClaimResultPoller.poll(session)
+            currentState.value =
+                JoinKeysignState.QbtcClaim(txHash = result?.txHash, totalSats = result?.totalSats)
+        }
     }
 
     fun joinKeysign() {
