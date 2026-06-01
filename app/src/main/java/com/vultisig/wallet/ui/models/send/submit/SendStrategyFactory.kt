@@ -41,7 +41,45 @@ internal data class SendStrategies(
     val mint: MintStrategy,
     val redeem: RedeemStrategy,
     val withdrawUsdcCircle: WithdrawUsdcCircleStrategy,
-)
+) {
+
+    /**
+     * Submits the form using the strategy that matches [defiType].
+     *
+     * @param defiType the active DeFi action, or `null` for a plain send.
+     */
+    fun submitFor(defiType: DeFiNavActions?) {
+        when (defiType) {
+            DeFiNavActions.BOND -> bond.submit()
+            DeFiNavActions.UNBOND -> unbond.submit()
+            DeFiNavActions.STAKE_RUJI,
+            DeFiNavActions.STAKE_TCY,
+            DeFiNavActions.STAKE_STCY -> stake.submit()
+
+            DeFiNavActions.UNSTAKE_RUJI,
+            DeFiNavActions.UNSTAKE_TCY,
+            DeFiNavActions.UNSTAKE_STCY,
+            DeFiNavActions.WITHDRAW_RUJI -> unstake.submit()
+
+            DeFiNavActions.MINT_YRUNE,
+            DeFiNavActions.MINT_YTCY -> mint.submit()
+
+            DeFiNavActions.REDEEM_YRUNE,
+            DeFiNavActions.REDEEM_YTCY -> redeem.submit()
+
+            DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withdrawUsdcCircle.submit()
+
+            null,
+            DeFiNavActions.DEPOSIT_USDC_CIRCLE,
+            DeFiNavActions.STAKE_CACAO,
+            DeFiNavActions.UNSTAKE_CACAO,
+            DeFiNavActions.ADD_LP,
+            DeFiNavActions.REMOVE_LP,
+            DeFiNavActions.FREEZE_TRX,
+            DeFiNavActions.UNFREEZE_TRX -> default.submit()
+        }
+    }
+}
 
 /**
  * Per-`SendFormViewModel` state needed to construct the submit strategies — scope, field states,
