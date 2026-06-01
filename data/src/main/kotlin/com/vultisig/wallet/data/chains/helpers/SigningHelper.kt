@@ -205,12 +205,27 @@ object SigningHelper {
 
                     Chain.Terra,
                     Chain.TerraClassic -> {
-                        TerraHelper(
-                                coinType = chain.coinType,
-                                denom = chain.feeUnit,
-                                gasLimit = CosmosHelper.getChainGasLimit(chain),
-                            )
-                            .getPreSignedImageHash(payload)
+                        // Staking flows carry a pre-encoded SignDoc (MsgDelegate / MsgUndelegate /
+                        // MsgBeginRedelegate / MsgWithdrawDelegatorReward) on `signDirect`.
+                        // TerraHelper only knows bank sends + CW20 transfers and would otherwise
+                        // sign a MsgSend to the `terravaloper…` validator — the chain rejects that
+                        // with "invalid to address: hrp does not match bech32 prefix". Route
+                        // signDirect through CosmosHelper, which signs the SignDoc verbatim.
+                        if (payload.signDirect != null) {
+                            CosmosHelper(
+                                    coinType = chain.coinType,
+                                    denom = chain.feeUnit,
+                                    gasLimit = CosmosHelper.getChainGasLimit(chain),
+                                )
+                                .getPreSignedImageHash(payload)
+                        } else {
+                            TerraHelper(
+                                    coinType = chain.coinType,
+                                    denom = chain.feeUnit,
+                                    gasLimit = CosmosHelper.getChainGasLimit(chain),
+                                )
+                                .getPreSignedImageHash(payload)
+                        }
                     }
 
                     Chain.MayaChain -> {
@@ -351,12 +366,23 @@ object SigningHelper {
 
             Chain.TerraClassic,
             Chain.Terra -> {
-                return TerraHelper(
-                        coinType = chain.coinType,
-                        denom = chain.feeUnit,
-                        gasLimit = CosmosHelper.getChainGasLimit(chain),
-                    )
-                    .getSignedTransaction(keysignPayload, signatures)
+                // Mirror the getPreSignedImageHash routing: staking SignDocs must be signed +
+                // assembled by CosmosHelper, not rebuilt as a bank send by TerraHelper.
+                return if (keysignPayload.signDirect != null) {
+                    CosmosHelper(
+                            coinType = chain.coinType,
+                            denom = chain.feeUnit,
+                            gasLimit = CosmosHelper.getChainGasLimit(chain),
+                        )
+                        .getSignedTransaction(keysignPayload, signatures)
+                } else {
+                    TerraHelper(
+                            coinType = chain.coinType,
+                            denom = chain.feeUnit,
+                            gasLimit = CosmosHelper.getChainGasLimit(chain),
+                        )
+                        .getSignedTransaction(keysignPayload, signatures)
+                }
             }
 
             Chain.Solana -> {
