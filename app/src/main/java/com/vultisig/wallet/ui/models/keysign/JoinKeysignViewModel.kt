@@ -39,6 +39,7 @@ import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.cosmosNativeDenom
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.isSecuredAssetEligible
@@ -956,13 +957,12 @@ constructor(
 
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-                    val fallbackFeeAmount =
-                        resolveFallbackFeeAmount(payload.blockChainSpecific, blockchainTransaction)
                     val estimatedTokenFees =
-                        computeJoinKeysignNetworkFee(
-                            blockChainSpecific = payload.blockChainSpecific,
+                        resolveJoinKeysignNetworkFee(
+                            payload = payload,
+                            chain = chain,
                             nativeCoin = nativeCoin,
-                            fallbackFeeAmount = fallbackFeeAmount,
+                            blockchainTransaction = blockchainTransaction,
                         )
 
                     val totalGasAndFee =
@@ -1042,15 +1042,11 @@ constructor(
                             }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                         } else {
-                            val fallbackFeeAmount =
-                                resolveFallbackFeeAmount(
-                                    payload.blockChainSpecific,
-                                    blockchainTransaction,
-                                )
-                            computeJoinKeysignNetworkFee(
-                                blockChainSpecific = payload.blockChainSpecific,
+                            resolveJoinKeysignNetworkFee(
+                                payload = payload,
+                                chain = chain,
                                 nativeCoin = nativeCoin,
-                                fallbackFeeAmount = fallbackFeeAmount,
+                                blockchainTransaction = blockchainTransaction,
                             )
                         }
 
@@ -1656,6 +1652,29 @@ constructor(
         }
 
     /**
+     * Network Fee for the join-keysign deposit and non-UTXO send paths. Prefers the dApp-supplied
+     * fee carried in the signed Cosmos message ([dappSuppliedNativeFee]) so Rujira/CosmWasm
+     * requests show the fee that is actually broadcast (issue #4390); otherwise falls back to
+     * [computeJoinKeysignNetworkFee]. [resolveFallbackFeeAmount] and its fee-service call only run
+     * when no dApp fee is present.
+     */
+    private suspend fun resolveJoinKeysignNetworkFee(
+        payload: KeysignPayload,
+        chain: Chain,
+        nativeCoin: Coin,
+        blockchainTransaction: Transfer,
+    ): TokenValue =
+        payload.dappSuppliedNativeFee(chain, parseCosmosMessage)?.let {
+            TokenValue(value = it, token = nativeCoin)
+        }
+            ?: computeJoinKeysignNetworkFee(
+                blockChainSpecific = payload.blockChainSpecific,
+                nativeCoin = nativeCoin,
+                fallbackFeeAmount =
+                    resolveFallbackFeeAmount(payload.blockChainSpecific, blockchainTransaction),
+            )
+
+    /**
      * Fetches the chain's native coin for the Universal Router swap-intent decoder so a native-ETH
      * leg renders the right ticker. Non-fatal — a failed RPC just means the row displays the bare
      * zero address. [CancellationException] propagates so structured-concurrency cancellation isn't
@@ -1898,3 +1917,54 @@ internal fun computeJoinKeysignSwapNetworkFee(
 internal fun defaultEvmSwapGasLimit(chain: Chain): BigInteger =
     if (chain == Chain.Mantle) EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
     else EthereumFeeService.DEFAULT_SWAP_LIMIT
+
+/**
+ * The native-denom fee a dApp embedded in this keysign request, or `null` when it carries no
+ * dApp-supplied Cosmos fee — i.e. a wallet-built native tx, where [KeysignPayload.signAmino] and
+ * [KeysignPayload.signDirect] are both absent. Callers fall back to the estimated fee on `null`.
+ *
+ * Rujira/CosmWasm dApps put the fee they want signed in [KeysignPayload.signAmino] (Amino JSON) or
+ * [KeysignPayload.signDirect] (`authInfo` protobuf), and `ThorChainHelper`/`CosmosHelper` sign
+ * those bytes verbatim — so this is the fee actually broadcast, including the legitimate `0` Rujira
+ * uses today. Reading it keeps the join Network Fee row in step with the signed message instead of
+ * the wallet's own estimate (issue #4390).
+ *
+ * Only entries in the chain's [Chain.cosmosNativeDenom] are summed: a fee specified purely in
+ * another denom yields `null` (fall back to the estimate) rather than mixing units on one row,
+ * matching the Windows resolver. Returns `null` if any matched amount is unparseable, so the caller
+ * never displays a misleading `0`.
+ */
+internal fun KeysignPayload.dappSuppliedNativeFee(
+    chain: Chain,
+    parseCosmosMessage: ParseCosmosMessageUseCase,
+): BigInteger? {
+    val nativeDenom = chain.cosmosNativeDenom ?: return null
+
+    val aminoMatched =
+        signAmino?.fee?.amount?.filter { it?.denom?.lowercase() == nativeDenom }.orEmpty()
+    if (aminoMatched.isNotEmpty()) {
+        return aminoMatched.map { it?.amount }.sumDenomAmountsOrNull()
+    }
+
+    val directMatched =
+        signDirect
+            ?.let { runCatching { parseCosmosMessage(it) }.getOrNull() }
+            ?.authInfoFee
+            ?.amount
+            ?.filter { it.denom.lowercase() == nativeDenom }
+            .orEmpty()
+    if (directMatched.isNotEmpty()) {
+        return directMatched.map { it.amount }.sumDenomAmountsOrNull()
+    }
+
+    return null
+}
+
+/** Sums the raw Cosmos fee amounts, or `null` if any entry is missing or not a valid integer. */
+private fun List<String?>.sumDenomAmountsOrNull(): BigInteger? {
+    var total = BigInteger.ZERO
+    for (raw in this) {
+        total += raw?.toBigIntegerOrNull() ?: return null
+    }
+    return total
+}
