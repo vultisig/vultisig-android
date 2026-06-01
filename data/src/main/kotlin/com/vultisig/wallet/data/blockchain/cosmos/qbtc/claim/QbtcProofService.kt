@@ -6,6 +6,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 
@@ -39,6 +41,11 @@ constructor(@QbtcProofHttpClient private val httpClient: HttpClient) : QbtcProof
 
     override suspend fun generateProof(request: ClaimProofRequest): ClaimProofResponse =
         httpClient
-            .post("${Endpoints.QBTC_PROOF_SERVICE_URL}/prove") { setBody(request) }
+            .post("${Endpoints.QBTC_PROOF_SERVICE_URL}/prove") {
+                // This dedicated client has no DefaultRequest plugin, so set the JSON content
+                // type explicitly — otherwise the request body isn't serialized as JSON.
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
             .bodyOrThrow()
 }
