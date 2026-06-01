@@ -11,12 +11,14 @@ import com.vultisig.wallet.data.utils.compatibleDerivationPath
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import timber.log.Timber
@@ -63,7 +65,7 @@ internal class QbtcClaimRelayResultPusher(
     }
 }
 
-/** Polls the relay for the initiator's pushed broadcast result; null if none arrives. */
+/** Polls the relay for the initiator's pushed broadcast result. */
 internal class QbtcClaimResultPoller
 @Inject
 constructor(
@@ -72,7 +74,27 @@ constructor(
     private val json: Json,
 ) {
 
-    suspend fun poll(session: QbtcClaimKeysignSession): QbtcClaimResultMessage? =
+    /**
+     * Polls until the initiator's broadcast result arrives or [timeout] elapses. The initiator only
+     * pushes the result after its proof POST + broadcast finishes, which can be well after the
+     * shared DKLS round both devices just ran — so a single read would almost always miss it.
+     * Returns null if nothing arrives in time; the peer still signed successfully.
+     */
+    suspend fun awaitResult(
+        session: QbtcClaimKeysignSession,
+        timeout: Duration = DEFAULT_TIMEOUT,
+        interval: Duration = POLL_INTERVAL,
+    ): QbtcClaimResultMessage? =
+        withTimeoutOrNull(timeout) {
+            var result = fetch(session)
+            while (currentCoroutineContext().isActive && result == null) {
+                delay(interval)
+                result = fetch(session)
+            }
+            result
+        }
+
+    private suspend fun fetch(session: QbtcClaimKeysignSession): QbtcClaimResultMessage? =
         try {
             val raw =
                 sessionApi.getSetupMessage(
@@ -90,6 +112,11 @@ constructor(
             Timber.w(e, "QBTC claim result poll failed")
             null
         }
+
+    private companion object {
+        val DEFAULT_TIMEOUT = 300.seconds
+        val POLL_INTERVAL = 2.seconds
+    }
 }
 
 /**

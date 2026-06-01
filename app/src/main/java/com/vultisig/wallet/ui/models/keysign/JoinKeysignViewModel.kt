@@ -1488,7 +1488,7 @@ constructor(
                     sessionId = _sessionID,
                     encryptionKeyHex = _encryptionKeyHex,
                 )
-            val result = qbtcClaimResultPoller.poll(session)
+            val result = qbtcClaimResultPoller.awaitResult(session)
             currentState.value =
                 JoinKeysignState.QbtcClaim(txHash = result?.txHash, totalSats = result?.totalSats)
         }
