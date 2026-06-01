@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -57,7 +58,10 @@ import com.vultisig.wallet.ui.theme.Theme
 internal fun CosmosDelegateScreen(viewModel: CosmosDelegateViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
 
-    V2Scaffold(title = "Stake ${state.ticker.ifEmpty { "Token" }}") {
+    V2Scaffold(
+        title =
+            stringResource(R.string.cosmos_staking_delegate_title, state.ticker.ifEmpty { "Token" })
+    ) {
         DelegateContent(
             state = state,
             amountText = viewModel.amountFieldState.text.toString(),
@@ -95,7 +99,7 @@ private fun DelegateContent(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            SectionLabel(label = "Amount (${state.ticker.ifEmpty { "Token" }})")
+            SectionLabel(label = stringResource(R.string.cosmos_staking_amount))
             BasicTextField(
                 value = amountText,
                 onValueChange = onAmountChange,
@@ -117,7 +121,7 @@ private fun DelegateContent(
                         .padding(horizontal = 16.dp, vertical = 14.dp),
             )
 
-            SectionLabel(label = "Validator")
+            SectionLabel(label = stringResource(R.string.cosmos_staking_validator_picker))
             ValidatorRow(selected = state.selectedValidator, onClick = onPickValidator)
 
             val errorMessage = state.errorMessage
@@ -195,7 +199,7 @@ private fun ValidatorPickerSheet(
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Text(
-                text = "Pick a validator",
+                text = stringResource(R.string.cosmos_staking_select_validator),
                 style = Theme.brockmann.headings.title3,
                 color = Theme.v2.colors.text.primary,
             )
@@ -218,14 +222,14 @@ private fun ValidatorPickerSheet(
 
             if (isLoading) {
                 Text(
-                    text = "Loading validators…",
+                    text = stringResource(R.string.cosmos_staking_loading_validators),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.secondary,
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
                 )
             } else if (validators.isEmpty()) {
                 Text(
-                    text = "No validators match your search",
+                    text = stringResource(R.string.cosmos_staking_no_validators_found),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.secondary,
                     modifier = Modifier.fillMaxWidth().padding(16.dp),

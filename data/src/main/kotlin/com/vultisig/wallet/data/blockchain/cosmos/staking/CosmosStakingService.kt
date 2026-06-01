@@ -27,6 +27,23 @@ interface CosmosStakingService {
     suspend fun fetchValidators(chain: Chain): List<CosmosValidator>
 
     suspend fun fetchRedelegations(chain: Chain, address: String): List<CosmosRedelegationEntry>
+
+    /** `/cosmos/mint/v1beta1/inflation` — annualized inflation as a `cosmos.Dec` string. */
+    suspend fun fetchMintInflation(chain: Chain): CosmosMintInflationResponse
+
+    /** `/cosmos/staking/v1beta1/pool` — bonded / not-bonded supply totals in base units. */
+    suspend fun fetchStakingPool(chain: Chain): CosmosStakingPoolResponse
+
+    /**
+     * `/cosmos/bank/v1beta1/supply/by_denom?denom={denom}` — total supply of the bond denom in base
+     * units. Pair with the staking pool to derive `bondedRatio`.
+     */
+    suspend fun fetchBankSupplyByDenom(chain: Chain, denom: String): CosmosBankSupplyResponse
+
+    /**
+     * `/cosmos/distribution/v1beta1/params` — community-pool skim before per-validator commission.
+     */
+    suspend fun fetchDistributionParams(chain: Chain): CosmosDistributionParamsResponse
 }
 
 internal class CosmosStakingServiceImpl @Inject constructor(private val httpClient: HttpClient) :
@@ -85,6 +102,37 @@ internal class CosmosStakingServiceImpl @Inject constructor(private val httpClie
             .get("$baseUrl/cosmos/staking/v1beta1/delegators/$address/redelegations")
             .bodyOrThrow<CosmosRedelegationResponse>()
             .toRedelegations()
+    }
+
+    override suspend fun fetchMintInflation(chain: Chain): CosmosMintInflationResponse {
+        val baseUrl = baseUrlFor(chain)
+        return httpClient
+            .get("$baseUrl/cosmos/mint/v1beta1/inflation")
+            .bodyOrThrow<CosmosMintInflationResponse>()
+    }
+
+    override suspend fun fetchStakingPool(chain: Chain): CosmosStakingPoolResponse {
+        val baseUrl = baseUrlFor(chain)
+        return httpClient
+            .get("$baseUrl/cosmos/staking/v1beta1/pool")
+            .bodyOrThrow<CosmosStakingPoolResponse>()
+    }
+
+    override suspend fun fetchBankSupplyByDenom(
+        chain: Chain,
+        denom: String,
+    ): CosmosBankSupplyResponse {
+        val baseUrl = baseUrlFor(chain)
+        return httpClient
+            .get("$baseUrl/cosmos/bank/v1beta1/supply/by_denom") { parameter("denom", denom) }
+            .bodyOrThrow<CosmosBankSupplyResponse>()
+    }
+
+    override suspend fun fetchDistributionParams(chain: Chain): CosmosDistributionParamsResponse {
+        val baseUrl = baseUrlFor(chain)
+        return httpClient
+            .get("$baseUrl/cosmos/distribution/v1beta1/params")
+            .bodyOrThrow<CosmosDistributionParamsResponse>()
     }
 
     private fun baseUrlFor(chain: Chain): String =

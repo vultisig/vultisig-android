@@ -290,7 +290,11 @@ val Chain.isDeFiSupported: Boolean
             Chain.ThorChain,
             Chain.MayaChain,
             Chain.Ethereum,
-            Chain.Tron -> true
+            Chain.Tron,
+            // Terra family surfaces a DeFi (staking) positions view — delegate / undelegate /
+            // redelegate / claim. Matches Windows `supportedDefiChains` + iOS DeFi-tab `.stake`.
+            Chain.Terra,
+            Chain.TerraClassic -> true
             else -> false
         }
 

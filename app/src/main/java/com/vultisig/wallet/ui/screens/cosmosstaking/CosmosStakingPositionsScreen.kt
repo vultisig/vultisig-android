@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.cosmosstaking
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,8 +21,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -49,9 +55,14 @@ import java.time.format.DateTimeFormatter
  */
 @Composable
 internal fun CosmosStakingPositionsScreen(
-    viewModel: CosmosStakingPositionsViewModel = hiltViewModel()
+    vaultId: String,
+    chainId: String,
+    viewModel: CosmosStakingPositionsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    androidx.compose.runtime.LaunchedEffect(vaultId, chainId) {
+        viewModel.setData(vaultId = vaultId, chainId = chainId)
+    }
     V2Scaffold(title = "${state.ticker.ifEmpty { "Staking" }} positions") {
         PositionsContent(
             state = state,
@@ -76,7 +87,7 @@ private fun PositionsContent(
         when {
             state.isLoading && state.positions.isEmpty() ->
                 Text(
-                    text = "Loading positions…",
+                    text = stringResource(R.string.cosmos_staking_loading_positions),
                     style = Theme.brockmann.body.s.medium,
                     color = Theme.v2.colors.text.secondary,
                     modifier = Modifier.fillMaxWidth().padding(24.dp),
@@ -114,7 +125,7 @@ private fun PositionsContent(
                         item {
                             UiSpacer(size = 16.dp)
                             Text(
-                                text = "Pending unbondings",
+                                text = stringResource(R.string.cosmos_staking_pending_unbondings),
                                 style = Theme.brockmann.body.s.medium,
                                 color = Theme.v2.colors.text.primary,
                             )
@@ -150,13 +161,21 @@ private fun EmptyPositions(ticker: String, error: String?, onStake: () -> Unit) 
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "You have no active ${ticker.ifEmpty { "staking" }} positions yet",
+                text =
+                    stringResource(
+                        R.string.cosmos_staking_empty_positions,
+                        ticker.ifEmpty { "Token" },
+                    ),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.secondary,
             )
             UiSpacer(size = 16.dp)
             VsButton(
-                label = "Stake ${ticker.ifEmpty { "Token" }}",
+                label =
+                    stringResource(
+                        R.string.cosmos_staking_delegate_title,
+                        ticker.ifEmpty { "Token" },
+                    ),
                 variant = VsButtonVariant.CTA,
                 state = VsButtonState.Enabled,
                 onClick = onStake,
@@ -195,7 +214,7 @@ private fun TotalStakedCard(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            text = "Total Staked $ticker",
+            text = stringResource(R.string.cosmos_staking_total_staked, ticker),
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.secondary,
         )
@@ -210,7 +229,7 @@ private fun TotalStakedCard(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             VsButton(
-                label = "Delegate to new validator",
+                label = stringResource(R.string.cosmos_staking_delegate_new_validator),
                 variant = VsButtonVariant.CTA,
                 size = VsButtonSize.Small,
                 state = VsButtonState.Enabled,
@@ -219,7 +238,7 @@ private fun TotalStakedCard(
             )
             if (hasAnyClaimableRewards) {
                 VsButton(
-                    label = "Claim",
+                    label = stringResource(R.string.cosmos_staking_action_claim),
                     variant = VsButtonVariant.Secondary,
                     size = VsButtonSize.Small,
                     state = VsButtonState.Enabled,
@@ -254,27 +273,45 @@ private fun PositionRow(
                 .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // Validator identity + status badge
+        // Validator identity (avatar + moniker + address) + status badge
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text =
-                        position.validatorMoniker.ifEmpty { truncated(position.validatorAddress) },
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
+            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                ValidatorAvatar(
+                    avatarUrl = position.validatorAvatarUrl,
+                    monogram =
+                        position.validatorMoniker
+                            .ifEmpty { position.validatorAddress }
+                            .take(1)
+                            .uppercase(),
+                    size = 36.dp,
                 )
-                Text(
-                    text = truncated(position.validatorAddress),
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.text.secondary,
-                )
+                UiSpacer(size = 8.dp)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text =
+                            position.validatorMoniker.ifEmpty {
+                                truncated(position.validatorAddress)
+                            },
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.primary,
+                    )
+                    Text(
+                        text = truncated(position.validatorAddress),
+                        style = Theme.brockmann.supplementary.caption,
+                        color = Theme.v2.colors.text.secondary,
+                    )
+                }
             }
             Text(
-                text = if (isChurnedOut) "Churned out" else "Active",
+                text =
+                    stringResource(
+                        if (isChurnedOut) R.string.cosmos_staking_validator_churned_out
+                        else R.string.cosmos_staking_validator_active
+                    ),
                 style = Theme.brockmann.supplementary.caption,
                 color =
                     if (isChurnedOut) Theme.v2.colors.alerts.warning
@@ -290,13 +327,36 @@ private fun PositionRow(
                 color = Theme.v2.colors.text.primary,
             )
         }
+
+        // APY row — hidden when null (matches iOS / Windows behavior under chain-APY fan-out
+        // failure). Value is fractional (0.05 = 5%); render as a percentage with 2 decimals.
+        val apy = position.apyPercent
+        if (apy != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = stringResource(R.string.cosmos_staking_apy),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.secondary,
+                )
+                Text(
+                    text =
+                        "${apy.multiply(java.math.BigDecimal(100)).setScale(2, java.math.RoundingMode.HALF_UP).toPlainString()}%",
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.alerts.success,
+                )
+            }
+        }
+
         if (position.pendingReward > java.math.BigDecimal.ZERO) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = "Next award",
+                    text = stringResource(R.string.cosmos_staking_next_award),
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.secondary,
                 )
@@ -314,7 +374,7 @@ private fun PositionRow(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             VsButton(
-                label = "Unstake",
+                label = stringResource(R.string.cosmos_staking_action_undelegate),
                 variant = VsButtonVariant.Secondary,
                 size = VsButtonSize.Small,
                 state = if (isLocked) VsButtonState.Disabled else VsButtonState.Enabled,
@@ -322,7 +382,7 @@ private fun PositionRow(
                 modifier = Modifier.weight(1f),
             )
             VsButton(
-                label = "Move",
+                label = stringResource(R.string.cosmos_staking_action_redelegate),
                 variant = VsButtonVariant.Secondary,
                 size = VsButtonSize.Small,
                 state = if (isLocked) VsButtonState.Disabled else VsButtonState.Enabled,
@@ -330,7 +390,7 @@ private fun PositionRow(
                 modifier = Modifier.weight(1f),
             )
             VsButton(
-                label = "Stake",
+                label = stringResource(R.string.cosmos_staking_action_delegate),
                 variant = VsButtonVariant.CTA,
                 size = VsButtonSize.Small,
                 state = VsButtonState.Enabled,
@@ -347,7 +407,7 @@ private fun PositionRow(
                     .withZone(ZoneId.systemDefault())
                     .format(unlockDate)
             Text(
-                text = "Locked for 21 days — unlocks $formatted",
+                text = stringResource(R.string.cosmos_staking_unbonding_lock_notice, 21, formatted),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
             )
@@ -389,6 +449,55 @@ private fun UnbondingCard(unbonding: CosmosUnbondingDelegation) {
             )
         }
     }
+}
+
+/**
+ * Validator avatar — Keybase profile picture when resolved, otherwise a deterministic colored
+ * monogram (first character of the moniker / address). Mirrors iOS `KeybaseAvatarView` + Windows
+ * `ValidatorAvatar` colored-initial fallback.
+ */
+@Composable
+private fun ValidatorAvatar(
+    avatarUrl: String?,
+    monogram: String,
+    size: androidx.compose.ui.unit.Dp,
+) {
+    if (avatarUrl != null) {
+        AsyncImage(
+            model = avatarUrl,
+            contentDescription = null,
+            modifier = Modifier.size(size).clip(CircleShape),
+        )
+    } else {
+        Box(
+            modifier = Modifier.size(size).clip(CircleShape).background(monogramColor(monogram)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = monogram,
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.primary,
+            )
+        }
+    }
+}
+
+/**
+ * Deterministic background color keyed off the monogram so the same validator is always the same
+ * hue.
+ */
+private fun monogramColor(monogram: String): androidx.compose.ui.graphics.Color {
+    val palette =
+        listOf(
+            androidx.compose.ui.graphics.Color(0xFF2D4BF3),
+            androidx.compose.ui.graphics.Color(0xFF0A8A6B),
+            androidx.compose.ui.graphics.Color(0xFF8A2BE2),
+            androidx.compose.ui.graphics.Color(0xFFB8860B),
+            androidx.compose.ui.graphics.Color(0xFFC2410C),
+            androidx.compose.ui.graphics.Color(0xFF0E7490),
+        )
+    val index = if (monogram.isEmpty()) 0 else (monogram[0].code % palette.size)
+    return palette[index]
 }
 
 private fun truncated(address: String): String =

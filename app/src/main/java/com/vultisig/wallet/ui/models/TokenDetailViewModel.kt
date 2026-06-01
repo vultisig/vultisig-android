@@ -90,20 +90,6 @@ constructor(
 
     fun deposit() {
         viewModelScope.launch {
-            // Mirror ChainTokensViewModel: Terra family taps land on the staking positions view
-            // where the only real Terra "deposit" actions live (delegate / claim / unstake / move).
-            val chain =
-                com.vultisig.wallet.data.models.Chain.entries.firstOrNull {
-                    it.raw.equals(chainRaw, ignoreCase = true)
-                }
-            if (
-                chain != null &&
-                    com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingConfig
-                        .isStakingSupported(chain)
-            ) {
-                navigator.route(Route.CosmosStakingPositions(vaultId = vaultId, chainId = chainRaw))
-                return@launch
-            }
             navigator.route(Route.Deposit(vaultId = vaultId, chainId = chainRaw))
         }
     }

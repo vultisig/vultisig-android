@@ -25,10 +25,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosRedelegationCooldownState
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -49,7 +51,13 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
-    V2Scaffold(title = "Move ${state.ticker.ifEmpty { "Token" }}") {
+    V2Scaffold(
+        title =
+            stringResource(
+                R.string.cosmos_staking_redelegate_title,
+                state.ticker.ifEmpty { "Token" },
+            )
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -84,7 +92,7 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
                     )
 
                     Text(
-                        text = "Destination validator",
+                        text = stringResource(R.string.cosmos_staking_redelegate_source),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.v2.colors.text.primary,
                     )
@@ -105,7 +113,7 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
             }
 
             VsButton(
-                label = "Continue",
+                label = stringResource(R.string.cosmos_staking_continue),
                 variant = VsButtonVariant.CTA,
                 state =
                     if (
@@ -185,7 +193,7 @@ private fun DstValidatorPickerSheet(
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Text(
-                text = "Pick destination",
+                text = stringResource(R.string.cosmos_staking_pick_destination),
                 style = Theme.brockmann.headings.title3,
                 color = Theme.v2.colors.text.primary,
             )
@@ -205,14 +213,14 @@ private fun DstValidatorPickerSheet(
             when {
                 isLoading ->
                     Text(
-                        text = "Loading validators…",
+                        text = stringResource(R.string.cosmos_staking_loading_validators),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.v2.colors.text.secondary,
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                     )
                 validators.isEmpty() ->
                     Text(
-                        text = "No validators match your search",
+                        text = stringResource(R.string.cosmos_staking_no_validators_found),
                         style = Theme.brockmann.body.s.medium,
                         color = Theme.v2.colors.text.secondary,
                         modifier = Modifier.fillMaxWidth().padding(16.dp),

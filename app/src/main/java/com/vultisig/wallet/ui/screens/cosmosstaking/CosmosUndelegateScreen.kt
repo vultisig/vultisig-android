@@ -18,11 +18,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -40,7 +42,13 @@ import com.vultisig.wallet.ui.theme.Theme
 @Composable
 internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsState()
-    V2Scaffold(title = "Unstake ${state.ticker.ifEmpty { "Token" }}") {
+    V2Scaffold(
+        title =
+            stringResource(
+                R.string.cosmos_staking_undelegate_title,
+                state.ticker.ifEmpty { "Token" },
+            )
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -85,7 +93,7 @@ internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltV
             }
 
             VsButton(
-                label = "Continue",
+                label = stringResource(R.string.cosmos_staking_continue),
                 variant = VsButtonVariant.CTA,
                 state = if (state.isSubmitting) VsButtonState.Disabled else VsButtonState.Enabled,
                 onClick = viewModel::submit,
@@ -99,7 +107,7 @@ internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltV
 internal fun ValidatorReadonlyBlock(moniker: String, address: String) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
-            text = "Validator",
+            text = stringResource(R.string.cosmos_staking_validator_picker),
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
         )
@@ -120,7 +128,7 @@ internal fun ValidatorReadonlyBlock(moniker: String, address: String) {
 internal fun AmountBlock(ticker: String, amountText: String, onAmountChange: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "Amount (${ticker.ifEmpty { "Token" }})",
+            text = stringResource(R.string.cosmos_staking_amount),
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
         )
@@ -187,7 +195,7 @@ internal fun StakedBalanceRow(staked: String, ticker: String) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Staked",
+            text = stringResource(R.string.cosmos_staking_total_staked, ticker),
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.secondary,
         )

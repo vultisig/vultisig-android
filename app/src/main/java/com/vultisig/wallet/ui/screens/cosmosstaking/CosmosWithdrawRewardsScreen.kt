@@ -20,8 +20,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosWithdrawRewardsCandidate
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -43,7 +45,7 @@ internal fun CosmosWithdrawRewardsScreen(
     viewModel: CosmosWithdrawRewardsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    V2Scaffold(title = "Claim ${state.ticker.ifEmpty { "Rewards" }}") {
+    V2Scaffold(title = stringResource(R.string.cosmos_staking_claim_rewards_title)) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 HeaderRow(
@@ -61,14 +63,14 @@ internal fun CosmosWithdrawRewardsScreen(
                 when {
                     state.isLoading ->
                         Text(
-                            text = "Loading rewards…",
+                            text = stringResource(R.string.cosmos_staking_loading_rewards),
                             style = Theme.brockmann.body.s.medium,
                             color = Theme.v2.colors.text.secondary,
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                         )
                     state.candidates.isEmpty() ->
                         Text(
-                            text = "No claimable rewards on this chain",
+                            text = stringResource(R.string.cosmos_staking_no_rewards),
                             style = Theme.brockmann.body.s.medium,
                             color = Theme.v2.colors.text.secondary,
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -120,12 +122,12 @@ private fun HeaderRow(maxBatchSize: Int, onSelectAll: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Select validators (max $maxBatchSize)",
+            text = stringResource(R.string.cosmos_staking_claim_rewards_select_validators),
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.secondary,
         )
         Text(
-            text = "Select all",
+            text = stringResource(R.string.cosmos_staking_claim_rewards_select_all),
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.primary.accent4,
             modifier = Modifier.clickable(onClick = onSelectAll).padding(horizontal = 6.dp),
@@ -230,7 +232,7 @@ private fun androidx.compose.foundation.layout.BoxScope.FooterSummary(
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
-                text = "Total rewards",
+                text = stringResource(R.string.cosmos_staking_claim_rewards_total_rewards),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
             )
@@ -242,7 +244,7 @@ private fun androidx.compose.foundation.layout.BoxScope.FooterSummary(
         }
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
-                text = "Estimated fee",
+                text = stringResource(R.string.cosmos_staking_claim_rewards_estimated_fee),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
             )
@@ -255,14 +257,14 @@ private fun androidx.compose.foundation.layout.BoxScope.FooterSummary(
 
         if (!hasSufficientBalanceForFee) {
             Text(
-                text = "Insufficient $ticker balance to cover the batch fee",
+                text = stringResource(R.string.cosmos_staking_insufficient_gas, ticker),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.alerts.error,
             )
         }
 
         VsButton(
-            label = "Continue",
+            label = stringResource(R.string.cosmos_staking_continue),
             variant = VsButtonVariant.CTA,
             state =
                 if (isSubmitting || !isValidForm) VsButtonState.Disabled else VsButtonState.Enabled,

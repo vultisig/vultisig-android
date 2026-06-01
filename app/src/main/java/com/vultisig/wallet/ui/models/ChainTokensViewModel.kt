@@ -153,23 +153,6 @@ constructor(
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
             val chainRaw = chainRaw ?: return@launch
-            // Route Terra / TerraClassic taps of "Deposit" to the LUNA / LUNC staking positions
-            // view, which lets the user delegate, undelegate, redelegate, or claim rewards. The
-            // generic deposit-memo form is not meaningful on either Terra chain — only staking and
-            // sending are real actions there. Detected via `CosmosStakingConfig` so the routing
-            // table stays single-source-of-truth.
-            val chain =
-                com.vultisig.wallet.data.models.Chain.entries.firstOrNull {
-                    it.raw.equals(chainRaw, ignoreCase = true)
-                }
-            if (
-                chain != null &&
-                    com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingConfig
-                        .isStakingSupported(chain)
-            ) {
-                navigator.route(Route.CosmosStakingPositions(vaultId = vaultId, chainId = chainRaw))
-                return@launch
-            }
             navigator.route(Route.Deposit(vaultId = vaultId, chainId = chainRaw))
         }
     }

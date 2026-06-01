@@ -30,11 +30,18 @@ data class CosmosStakePositionRow(
     val stakedAmount: BigDecimal,
     val pendingReward: BigDecimal,
     /**
-     * Fractional APY (`0.05` = 5%). Always `null` in this PR until [CosmosStakingAPYResolver] is
-     * ported. The view layer hides the APY row when `null`, matching iOS behavior under chain-APY
+     * Fractional APY (`0.05` = 5%). Populated by [CosmosStakingAPYResolver.computeValidatorAPY]
+     * when the chain APY fan-out succeeds (or via [CosmosStakingAPYResolver.baselineFallback] for
+     * LUNA). The view layer hides the APY row when `null`, matching iOS behavior under chain-APY
      * fan-out failure.
      */
     val apyPercent: BigDecimal? = null,
+    /**
+     * Resolved Keybase avatar URL for the validator, or `null` when the identity is missing or the
+     * Keybase lookup didn't find an avatar. The view layer renders a deterministic monogram avatar
+     * when this is `null`.
+     */
+    val validatorAvatarUrl: String? = null,
     val validatorStatus: ValidatorStatus,
     /**
      * Earliest non-expired unbonding completion timestamp for the validator, or `null` when there
