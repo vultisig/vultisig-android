@@ -56,11 +56,13 @@ import timber.log.Timber
  * Non-EVM/non-Solana `txType`s surface as a fully-formed [SwapQuote.SwapKit] for a per-chain signer
  * to consume: PSBT (Bitcoin, via [com.vultisig.wallet.data.chains.helpers.SwapKitBtcSigner]), TRON
  * (TronWeb object, via [com.vultisig.wallet.data.chains.helpers.SwapKitTronSigner]), and SUI
- * (base64 PTB, via [com.vultisig.wallet.data.chains.helpers.SwapKitSuiSigner]) are wired today. The
- * remaining types (TON, CARDANO, RIPPLE, …) still surface as [SwapKitError.UnsupportedTxType] so
- * the picker falls back to another provider rather than signing garbage, until their signers land.
- * `SOLANA` and the legacy `SERIALIZED_BASE64` discriminator are aliased; SwapKit flipped them once
- * before.
+ * (base64 PTB, via [com.vultisig.wallet.data.chains.helpers.SwapKitSuiSigner]) are wired today. XRP
+ * is deposit-only — SwapKit returns no tx body, so the payload carries an empty [txPayload] plus
+ * the deposit address + destination tag and the cosigning peer rebuilds a plain XRP Payment via the
+ * existing `RippleHelper`. The remaining types (TON, CARDANO, …) still surface as
+ * [SwapKitError.UnsupportedTxType] so the picker falls back to another provider rather than signing
+ * garbage, until their signers land. `SOLANA` and the legacy `SERIALIZED_BASE64` discriminator are
+ * aliased; SwapKit flipped them once before.
  */
 internal class SwapKitQuoteSource
 @Inject
@@ -177,7 +179,8 @@ constructor(
                 )
             TxKind.PSBT,
             TxKind.TRON,
-            TxKind.SUI ->
+            TxKind.SUI,
+            TxKind.XRP ->
                 SwapQuoteResult.Native(
                     buildSwapKitNativeQuote(swapResponse, request, subProvider, best.fees)
                 )
@@ -265,6 +268,7 @@ constructor(
             Chain.Sui -> 9
             Chain.Bitcoin -> 8
             Chain.Tron -> 6
+            Chain.Ripple -> 6
             else -> 18
         }
 
@@ -372,11 +376,12 @@ constructor(
                         ),
                 )
             }
-            // PSBT/TRON/SUI are dispatched to buildSwapKitNativeQuote before reaching here; the arm
-            // keeps the `when` exhaustive and refuses anything that slips through.
+            // PSBT/TRON/SUI/XRP are dispatched to buildSwapKitNativeQuote before reaching here; the
+            // arm keeps the `when` exhaustive and refuses anything that slips through.
             TxKind.PSBT,
             TxKind.TRON,
             TxKind.SUI,
+            TxKind.XRP,
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
         }
     }
@@ -398,11 +403,22 @@ constructor(
         val srcToken = request.srcToken
         val dstToken = request.dstToken
         val toAmountDecimal = parseExpectedBuyAmount(response.expectedBuyAmount)
-        // Deposit-only chains (Cardano / XRP) route entirely on `targetAddress`, so a blank value
-        // would stage an unspendable quote — refuse it rather than emit a quote that can't settle.
-        val targetAddress =
+        val isXrp = txTypeOf(response) == TxKind.XRP
+        // Deposit-only chains (XRP) route entirely on `targetAddress`, so a blank value would stage
+        // an unspendable quote — refuse it rather than emit a quote that can't settle. For XRP the
+        // address may carry a `?dt=`/`|` destination-tag suffix; strip it so only the bare
+        // r-address
+        // is used as the payment destination (the tag rides `memo`).
+        val rawTargetAddress =
             response.targetAddress?.takeIf { it.isNotBlank() }
                 ?: throw SwapKitError.Decoding("SwapKit non-EVM response missing targetAddress")
+        val targetAddress =
+            if (isXrp) extractTagSuffix(rawTargetAddress).first else rawTargetAddress
+        // XRP destination tag (rare): top-level field → meta → address suffix. Carried as a numeric
+        // string in `memo`; RippleHelper parses a numeric memo into the RippleOperationPayment's
+        // destinationTag. Mirrors iOS' resolvedDestinationTag.
+        val memo =
+            if (isXrp) resolveDestinationTag(response, rawTargetAddress)?.toString() else null
         val payload =
             SwapKitSwapPayloadJson(
                 fromCoin = srcToken,
@@ -412,7 +428,7 @@ constructor(
                 txType = response.meta.txType,
                 txPayload = encodeNativeTxPayload(response),
                 targetAddress = targetAddress,
-                memo = null,
+                memo = memo,
                 subProvider = subProvider.orEmpty(),
                 swapId = response.swapId.orEmpty(),
             )
@@ -456,8 +472,57 @@ constructor(
                     ?: throw SwapKitError.Decoding("SwapKit TRON tx is missing raw_data_hex")
                 json.encodeToString(JsonObject.serializer(), obj).encodeToByteArray()
             }
+            // XRP is deposit-only: SwapKit returns no transaction body. The cosigning peer rebuilds
+            // a plain XRP Payment from the payload's targetAddress / fromAmount / memo, so there is
+            // nothing to carry here.
+            TxKind.XRP -> ByteArray(0)
             else -> decodeBinaryTx(response.tx)
         }
+
+    /**
+     * Resolve the XRP destination tag, highest priority first: top-level `destinationTag` → meta →
+     * `?dt=`/`|` suffix on the (raw, un-stripped) target address. Each numeric source is parsed
+     * defensively (number or string). Mirrors iOS' `resolvedDestinationTag`.
+     */
+    private fun resolveDestinationTag(
+        response: SwapKitSwapResponseJson,
+        rawTargetAddress: String,
+    ): Long? =
+        tagLongOrNull(response.destinationTag)
+            ?: tagLongOrNull(response.meta.destinationTag)
+            ?: extractTagSuffix(rawTargetAddress).second
+
+    /** Parse a destination tag that may arrive as a JSON number or a numeric string. */
+    private fun tagLongOrNull(element: JsonElement?): Long? =
+        (element as? JsonPrimitive)?.content?.trim()?.toLongOrNull()
+
+    /**
+     * Split an XRP target address into its bare r-address and an optional destination tag carried
+     * as a `?dt=N` query parameter or a `|N` suffix. Returns the address verbatim with a null tag
+     * when neither form is present. Mirrors iOS' `extractTagSuffix`.
+     */
+    private fun extractTagSuffix(address: String): Pair<String, Long?> {
+        val q = address.indexOf('?')
+        if (q >= 0) {
+            val bare = address.substring(0, q)
+            val tag =
+                address
+                    .substring(q + 1)
+                    .split('&')
+                    .filter { it.isNotEmpty() }
+                    .firstNotNullOfOrNull { pair ->
+                        val parts = pair.split('=', limit = 2)
+                        if (parts.size == 2 && parts[0] == "dt") parts[1].toLongOrNull() else null
+                    }
+            return bare to tag
+        }
+        val pipe = address.indexOf('|')
+        if (pipe >= 0) {
+            val tag = address.substring(pipe + 1).toLongOrNull()
+            if (tag != null) return address.substring(0, pipe) to tag
+        }
+        return address to null
+    }
 
     /**
      * Decode a base64 unsigned-tx blob (PSBT today; PTB / CBOR as more chains land) from `tx` into
@@ -494,6 +559,10 @@ constructor(
             "psbt" -> TxKind.PSBT
             "tron" -> TxKind.TRON
             "sui" -> TxKind.SUI
+            // SwapKit has shipped both `XRP` (canonical) and `RIPPLE` for the same deposit-only
+            // flow; accept both so a wire flip doesn't drop the route. Mirrors iOS.
+            "xrp",
+            "ripple" -> TxKind.XRP
             else -> TxKind.UNSUPPORTED
         }
 
@@ -529,6 +598,7 @@ constructor(
         PSBT,
         TRON,
         SUI,
+        XRP,
         UNSUPPORTED,
     }
 
@@ -590,6 +660,7 @@ constructor(
             Chain.Bitcoin -> "BTC"
             Chain.Tron -> "TRON"
             Chain.Sui -> "SUI"
+            Chain.Ripple -> "XRP"
             else -> null
         }
 

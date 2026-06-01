@@ -4,6 +4,7 @@ import java.util.Locale
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 
 /**
  * Body sent to `POST /v3/swap`. Per the SwapKit V3 docs the caller picks a route by [routeId] and
@@ -26,7 +27,9 @@ data class SwapKitSwapRequest(
 @Serializable
 data class SwapKitSwapResponseJson(
     @SerialName("swapId") val swapId: String? = null,
-    @SerialName("tx") val tx: JsonElement,
+    // Defaults to [JsonNull] so deposit-only routes (XRP) that omit `tx` still decode — the body is
+    // only read by the EVM/Solana/PSBT/TRON/SUI paths, which always carry it.
+    @SerialName("tx") val tx: JsonElement = JsonNull,
     @SerialName("meta") val meta: SwapKitTxMeta,
     @SerialName("targetAddress") val targetAddress: String? = null,
     @SerialName("expectedBuyAmount") val expectedBuyAmount: String? = null,
@@ -35,6 +38,12 @@ data class SwapKitSwapResponseJson(
     // refreshed /v3/swap reply stays fresh. Mirrors iOS' SwapKitSwapResponse.fees.
     @SerialName("fees") val fees: List<SwapKitFee> = emptyList(),
     @SerialName("providers") val providers: List<String> = emptyList(),
+    // XRP destination tag. SwapKit surfaces it (rarely) as a numeric or string-encoded value at the
+    // top level; kept as a raw [JsonElement] and parsed defensively so a number-vs-string wire flip
+    // doesn't break decoding. Resolution order (highest first): top-level → [SwapKitTxMeta] →
+    // `?dt=`/`|` suffix on [targetAddress]. Mirrors iOS'
+    // SwapKitSwapResponse.resolvedDestinationTag.
+    @SerialName("destinationTag") val destinationTag: JsonElement? = null,
     @SerialName("error") val error: String? = null,
     @SerialName("message") val message: String? = null,
 )
@@ -53,6 +62,9 @@ data class SwapKitTxMeta(
     // Null for native-source / non-EVM routes that need no approval. Mirrors iOS, which derives
     // the spender as `meta.approvalAddress`.
     @SerialName("approvalAddress") val approvalAddress: String? = null,
+    // XRP destination tag carried in meta (beats the address suffix, loses to the top-level field).
+    // Raw [JsonElement] for the same number-or-string defensiveness as the top-level field.
+    @SerialName("destinationTag") val destinationTag: JsonElement? = null,
 ) {
     /**
      * Lower-cased txType used to dispatch onto an EVM or Solana signer. Computed once at

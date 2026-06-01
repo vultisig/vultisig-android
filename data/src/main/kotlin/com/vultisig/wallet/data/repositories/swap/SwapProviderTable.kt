@@ -124,7 +124,10 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                     )
                 else setOf(SwapProvider.JUPITER, SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
-            Chain.Ripple -> setOf(SwapProvider.THORCHAIN)
+            // SwapKit XRP is deposit-only — no signer; the native RippleHelper builds the Payment
+            // to
+            // SwapKit's deposit r-address. Mirrors iOS' `.ripple → [.thorchain, .swapkit]`.
+            Chain.Ripple -> setOf(SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
 
             // SwapKit TRON routes are signed by SwapKitTronSigner (TronWeb object → sha256 of
             // raw_data_hex). Mirrors iOS' `.tron → [.thorchain, .swapkit]`.
