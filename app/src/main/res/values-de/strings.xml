@@ -1225,10 +1225,12 @@
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">QBTC abrufen</string>
     <string name="qbtc_claim_loading">Berechtigung wird geprüft…</string>
-    <string name="qbtc_claim_hero_title">Gesamt abrufbar</string>
-    <string name="qbtc_claim_description">Rufen Sie Ihre Bitcoin-UTXOs als quantensicheres QBTC ab. Ihr Bitcoin bleibt unangetastet.</string>
+    <string name="qbtc_claim_hero_title">Abrufbares QBTC</string>
+    <string name="qbtc_claim_tab">Abrufen</string>
+    <string name="qbtc_claim_description">QBTC ist eine quantenresistente Version von BTC. Ihre vorhandenen BTC-UTXOs können im Verhältnis 1:1 als QBTC abgerufen werden. Wählen Sie unten aus, welche UTXOs Sie abrufen möchten.</string>
+    <string name="qbtc_claim_description_emphasis">quantenresistente</string>
     <string name="qbtc_claim_eligible_header">Berechtigte UTXOs</string>
-    <string name="qbtc_claim_utxo_block_format">Bestätigt in Block %1$d</string>
+    <string name="qbtc_claim_utxo_block_format">Bestätigt · vor %1$d Blöcken</string>
     <string name="qbtc_claim_utxo_pending">Ausstehend</string>
     <string name="qbtc_claim_cta_all">Alle abrufen</string>
     <string name="qbtc_claim_cta_partial">%1$d von %2$d abrufen</string>

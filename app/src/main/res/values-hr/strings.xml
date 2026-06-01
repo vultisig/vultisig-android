@@ -1233,10 +1233,12 @@
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Preuzmi QBTC</string>
     <string name="qbtc_claim_loading">Provjera prihvatljivosti…</string>
-    <string name="qbtc_claim_hero_title">Ukupno za preuzimanje</string>
-    <string name="qbtc_claim_description">Preuzmite svoje Bitcoin UTXO-ove kao kvantno-sigurni QBTC. Vaš Bitcoin ostaje netaknut.</string>
+    <string name="qbtc_claim_hero_title">QBTC za preuzimanje</string>
+    <string name="qbtc_claim_tab">Preuzmi</string>
+    <string name="qbtc_claim_description">QBTC je kvantno-otporna verzija BTC-a. Vaši postojeći BTC UTXO-ovi prihvatljivi su za preuzimanje kao QBTC u omjeru 1:1. Odaberite u nastavku koje UTXO-ove želite preuzeti.</string>
+    <string name="qbtc_claim_description_emphasis">kvantno-otporna</string>
     <string name="qbtc_claim_eligible_header">Prihvatljivi UTXO-ovi</string>
-    <string name="qbtc_claim_utxo_block_format">Potvrđeno u bloku %1$d</string>
+    <string name="qbtc_claim_utxo_block_format">Potvrđeno · prije %1$d blokova</string>
     <string name="qbtc_claim_utxo_pending">Na čekanju</string>
     <string name="qbtc_claim_cta_all">Preuzmi sve</string>
     <string name="qbtc_claim_cta_partial">Preuzmi %1$d od %2$d</string>

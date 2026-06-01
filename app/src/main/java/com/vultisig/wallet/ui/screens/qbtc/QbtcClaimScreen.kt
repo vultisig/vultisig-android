@@ -11,12 +11,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,11 +34,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,7 +55,6 @@ import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.library.UiCheckbox
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
@@ -90,7 +99,7 @@ internal fun QbtcClaimScreen(
     }
 
     V3Scaffold(
-        title = stringResource(R.string.qbtc_claim_title),
+        title = null,
         onBackClick = onBackClick,
         applyGradientBackground = true,
         bottomBar = {
@@ -120,21 +129,21 @@ internal fun QbtcClaimScreen(
 
 @Composable
 private fun SelectingContent(state: QbtcClaimUiState.Selecting, onToggle: (String) -> Unit) {
-    LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        item { QbtcClaimHeroCard(state.totalSelectedSats) }
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         item {
-            Text(
-                text = stringResource(R.string.qbtc_claim_description),
-                style = Theme.brockmann.body.s.regular,
-                color = Theme.v2.colors.text.secondary,
-            )
-        }
-        item {
-            Text(
-                text = stringResource(R.string.qbtc_claim_eligible_header),
-                style = Theme.brockmann.supplementary.footnote,
-                color = Theme.v2.colors.text.tertiary,
-            )
+            Column(modifier = Modifier.padding(bottom = 8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    QbtcClaimHeroCard(state.totalEligibleSats)
+                    ClaimTabHeader()
+                    QbtcClaimDescription()
+                }
+                UiSpacer(size = 16.dp)
+                Text(
+                    text = stringResource(R.string.qbtc_claim_eligible_header),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+            }
         }
         items(state.utxos, key = { it.key }) { utxo ->
             QbtcClaimUtxoRow(
@@ -147,39 +156,93 @@ private fun SelectingContent(state: QbtcClaimUiState.Selecting, onToggle: (Strin
 }
 
 @Composable
-private fun QbtcClaimHeroCard(totalSats: Long) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
+    Box(
         modifier =
             Modifier.fillMaxWidth()
                 .height(118.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(
                     Brush.verticalGradient(
-                        listOf(
-                            Theme.v2.colors.alerts.info.copy(alpha = 0.09f),
-                            Theme.v2.colors.alerts.info.copy(alpha = 0f),
-                        )
+                        listOf(QbtcHeroGlow.copy(alpha = 0.09f), QbtcHeroGlow.copy(alpha = 0f))
                     )
                 )
-                .border(
-                    1.dp,
-                    Theme.v2.colors.primary.accent4.copy(alpha = 0.17f),
-                    RoundedCornerShape(16.dp),
-                )
-                .padding(horizontal = 16.dp),
+                .border(1.dp, QbtcHeroBorder.copy(alpha = 0.17f), RoundedCornerShape(16.dp))
     ) {
-        Column {
+        Image(
+            painter = painterResource(R.drawable.qbtc),
+            contentDescription = null,
+            modifier = Modifier.align(Alignment.TopEnd).size(200.dp).offset(x = 36.dp, y = (-26).dp),
+        )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.align(Alignment.CenterStart).padding(horizontal = 16.dp),
+        ) {
             Text(
                 text = stringResource(R.string.qbtc_claim_hero_title),
                 style = Theme.brockmann.body.l.medium,
                 color = Theme.v2.colors.text.primary,
             )
-            UiSpacer(size = 6.dp)
             Text(
-                text = QbtcClaimAmountFormatter.formatQbtc(totalSats),
+                text = QbtcClaimAmountFormatter.formatQbtc(totalEligibleSats),
                 style = Theme.satoshi.price.title1,
                 color = Theme.v2.colors.text.primary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ClaimTabHeader() {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Text(
+            text = stringResource(R.string.qbtc_claim_tab),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+        )
+        Box(
+            modifier =
+                Modifier.width(48.dp).height(1.5.dp).background(Theme.v2.colors.primary.accent4)
+        )
+    }
+}
+
+@Composable
+private fun QbtcClaimDescription() {
+    val full = stringResource(R.string.qbtc_claim_description)
+    val emphasis = stringResource(R.string.qbtc_claim_description_emphasis)
+    val annotated = buildAnnotatedString {
+        val idx = full.indexOf(emphasis)
+        if (idx >= 0) {
+            append(full.substring(0, idx))
+            withStyle(SpanStyle(color = Theme.v2.colors.text.primary)) { append(emphasis) }
+            append(full.substring(idx + emphasis.length))
+        } else {
+            append(full)
+        }
+    }
+    Text(
+        text = annotated,
+        style = Theme.brockmann.supplementary.caption,
+        color = Theme.v2.colors.text.secondary,
+    )
+}
+
+@Composable
+private fun QbtcClaimCheckbox(checked: Boolean) {
+    val ringColor =
+        if (checked) Theme.v2.colors.alerts.success
+        else Theme.v2.colors.text.tertiary.copy(alpha = 0.5f)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(24.dp).clip(CircleShape).border(1.5.dp, ringColor, CircleShape),
+    ) {
+        if (checked) {
+            Icon(
+                painter = painterResource(R.drawable.check),
+                contentDescription = null,
+                tint = Theme.v2.colors.alerts.success,
+                modifier = Modifier.size(14.dp),
             )
         }
     }
@@ -201,8 +264,8 @@ private fun QbtcClaimUtxoRow(
                 .clickable(onClick = onToggle)
                 .padding(16.dp),
     ) {
-        UiCheckbox(checked = isSelected, onCheckedChange = { onToggle() })
-        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        QbtcClaimCheckbox(checked = isSelected)
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
             Text(
                 text = utxo.shortId,
                 style = Theme.brockmann.button.semibold.medium,
@@ -213,11 +276,10 @@ private fun QbtcClaimUtxoRow(
                     utxo.subtitleBlockHeight?.let {
                         stringResource(R.string.qbtc_claim_utxo_block_format, it)
                     } ?: stringResource(R.string.qbtc_claim_utxo_pending),
-                style = Theme.brockmann.body.xs.regular,
+                style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.tertiary,
             )
         }
-        UiSpacer(weight = 1f)
         Column(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -229,12 +291,15 @@ private fun QbtcClaimUtxoRow(
             )
             Text(
                 text = utxo.btcAmount,
-                style = Theme.brockmann.body.xs.regular,
+                style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.tertiary,
             )
         }
     }
 }
+
+private val QbtcHeroGlow = Color(0xFF5FBFFF)
+private val QbtcHeroBorder = Color(0xFFB090F5)
 
 @Composable
 private fun DoneContent(state: QbtcClaimUiState.Done) {

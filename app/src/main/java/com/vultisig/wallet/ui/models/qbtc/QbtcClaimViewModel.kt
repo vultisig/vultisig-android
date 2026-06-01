@@ -90,6 +90,7 @@ internal sealed interface QbtcClaimUiState {
         val utxos: List<QbtcClaimUtxoUiModel>,
         val selectedKeys: Set<String>,
         val totalSelectedSats: Long,
+        val totalEligibleSats: Long,
         val canConfirm: Boolean,
         val isAllSelected: Boolean,
     ) : QbtcClaimUiState
@@ -382,12 +383,14 @@ constructor(
 
     private fun emitSelecting() {
         val total = selectedUtxos().sumOf { it.amount }
+        val totalEligible = claimable.sumOf { it.amount }
         val cap = minOf(claimable.size, QbtcClaimConfig.MAX_CLAIM_UTXOS)
         uiState.value =
             QbtcClaimUiState.Selecting(
                 utxos = claimable.map { it.toUiModel() },
                 selectedKeys = selectedKeys.toSet(),
                 totalSelectedSats = total,
+                totalEligibleSats = totalEligible,
                 canConfirm = canConfirm(),
                 isAllSelected = selectedKeys.size == cap,
             )

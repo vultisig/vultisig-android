@@ -161,6 +161,7 @@ class PreviewActivity : ComponentActivity() {
                         VerifyUniversalRouterPreview(expanded = true, useUrRows = false)
                     "universal_router_verify_after" ->
                         VerifyUniversalRouterPreview(expanded = true, useUrRows = true)
+                    "qbtc_claim" -> QbtcClaimSelectingPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -1397,4 +1398,78 @@ private fun ShareQrPreview(info: QrShareInfo) {
             modifier = Modifier.fillMaxWidth(),
         )
     }
+}
+
+@Composable
+private fun QbtcClaimSelectingPreview() {
+    val utxos =
+        listOf(
+            com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel(
+                key = "a3f1:0",
+                shortId = "a3f1…8d2c:0",
+                subtitleBlockHeight = 142,
+                qbtcAmount = "0.75 QBTC",
+                btcAmount = "0.75 BTC",
+            ),
+            com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel(
+                key = "b7c4:2",
+                shortId = "b7c4…1e9f:2",
+                subtitleBlockHeight = 38,
+                qbtcAmount = "0.25 QBTC",
+                btcAmount = "0.25 BTC",
+            ),
+            com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel(
+                key = "d9e2:1",
+                shortId = "d9e2…4a7b:1",
+                subtitleBlockHeight = 7,
+                qbtcAmount = "0.10 QBTC",
+                btcAmount = "0.10 BTC",
+            ),
+            com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel(
+                key = "f0a1:0",
+                shortId = "f0a1…22c5:0",
+                subtitleBlockHeight = 91,
+                qbtcAmount = "0.20 QBTC",
+                btcAmount = "0.20 BTC",
+            ),
+            com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel(
+                key = "9b6e:3",
+                shortId = "9b6e…77fa:3",
+                subtitleBlockHeight = 256,
+                qbtcAmount = "0.15 QBTC",
+                btcAmount = "0.15 BTC",
+            ),
+            com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel(
+                key = "4c2d:0",
+                shortId = "4c2d…be10:0",
+                subtitleBlockHeight = 12,
+                qbtcAmount = "0.05 QBTC",
+                btcAmount = "0.05 BTC",
+            ),
+            com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel(
+                key = "e8f7:1",
+                shortId = "e8f7…3d44:1",
+                subtitleBlockHeight = 504,
+                qbtcAmount = "0.00 QBTC",
+                btcAmount = "0.00 BTC",
+            ),
+        )
+    val state =
+        com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState.Selecting(
+            utxos = utxos,
+            selectedKeys = utxos.take(5).map { it.key }.toSet(),
+            totalSelectedSats = 125_000_000L,
+            totalEligibleSats = 150_000_000L,
+            canConfirm = true,
+            isAllSelected = false,
+        )
+    com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen(
+        state = state,
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
 }

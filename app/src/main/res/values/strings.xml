@@ -1276,10 +1276,12 @@
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Claim QBTC</string>
     <string name="qbtc_claim_loading">Checking eligibility…</string>
-    <string name="qbtc_claim_hero_title">Total claimable</string>
-    <string name="qbtc_claim_description">Claim your Bitcoin UTXOs as quantum-safe QBTC. Your Bitcoin stays untouched.</string>
+    <string name="qbtc_claim_hero_title">Claimable QBTC</string>
+    <string name="qbtc_claim_tab">Claim</string>
+    <string name="qbtc_claim_description">QBTC is a quantum-resistant version of BTC. Your existing BTC UTXOs are eligible to be claimed as QBTC at a 1:1 ratio. Select which UTXOs to claim below.</string>
+    <string name="qbtc_claim_description_emphasis">quantum-resistant</string>
     <string name="qbtc_claim_eligible_header">Eligible UTXOs</string>
-    <string name="qbtc_claim_utxo_block_format">Confirmed at block %1$d</string>
+    <string name="qbtc_claim_utxo_block_format">Confirmed · %1$d blocks ago</string>
     <string name="qbtc_claim_utxo_pending">Pending</string>
     <string name="qbtc_claim_cta_all">Claim All</string>
     <string name="qbtc_claim_cta_partial">Claim %1$d of %2$d</string>

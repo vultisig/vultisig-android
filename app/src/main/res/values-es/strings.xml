@@ -1223,10 +1223,12 @@
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Reclamar QBTC</string>
     <string name="qbtc_claim_loading">Comprobando elegibilidad…</string>
-    <string name="qbtc_claim_hero_title">Total reclamable</string>
-    <string name="qbtc_claim_description">Reclama tus UTXOs de Bitcoin como QBTC a prueba de cuántica. Tu Bitcoin permanece intacto.</string>
+    <string name="qbtc_claim_hero_title">QBTC reclamable</string>
+    <string name="qbtc_claim_tab">Reclamar</string>
+    <string name="qbtc_claim_description">QBTC es una versión resistente a la cuántica de BTC. Tus UTXOs de BTC existentes son elegibles para reclamarse como QBTC en una proporción de 1:1. Selecciona abajo qué UTXOs reclamar.</string>
+    <string name="qbtc_claim_description_emphasis">resistente a la cuántica</string>
     <string name="qbtc_claim_eligible_header">UTXOs elegibles</string>
-    <string name="qbtc_claim_utxo_block_format">Confirmado en el bloque %1$d</string>
+    <string name="qbtc_claim_utxo_block_format">Confirmado · hace %1$d bloques</string>
     <string name="qbtc_claim_utxo_pending">Pendiente</string>
     <string name="qbtc_claim_cta_all">Reclamar todo</string>
     <string name="qbtc_claim_cta_partial">Reclamar %1$d de %2$d</string>

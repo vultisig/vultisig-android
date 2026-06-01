@@ -1217,10 +1217,12 @@
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">QBTC claimen</string>
     <string name="qbtc_claim_loading">Geschiktheid controleren…</string>
-    <string name="qbtc_claim_hero_title">Totaal claimbaar</string>
-    <string name="qbtc_claim_description">Claim uw Bitcoin-UTXO\'s als kwantumveilige QBTC. Uw Bitcoin blijft onaangeroerd.</string>
+    <string name="qbtc_claim_hero_title">Claimbare QBTC</string>
+    <string name="qbtc_claim_tab">Claimen</string>
+    <string name="qbtc_claim_description">QBTC is een kwantumbestendige versie van BTC. Uw bestaande BTC-UTXO\'s komen in aanmerking om in een verhouding van 1:1 als QBTC te worden geclaimd. Selecteer hieronder welke UTXO\'s u wilt claimen.</string>
+    <string name="qbtc_claim_description_emphasis">kwantumbestendige</string>
     <string name="qbtc_claim_eligible_header">Geschikte UTXO\'s</string>
-    <string name="qbtc_claim_utxo_block_format">Bevestigd in blok %1$d</string>
+    <string name="qbtc_claim_utxo_block_format">Bevestigd · %1$d blokken geleden</string>
     <string name="qbtc_claim_utxo_pending">In behandeling</string>
     <string name="qbtc_claim_cta_all">Alles claimen</string>
     <string name="qbtc_claim_cta_partial">%1$d van %2$d claimen</string>

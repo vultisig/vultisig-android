@@ -1226,10 +1226,12 @@
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Preleva QBTC</string>
     <string name="qbtc_claim_loading">Verifica dell\'idoneità…</string>
-    <string name="qbtc_claim_hero_title">Totale prelevabile</string>
-    <string name="qbtc_claim_description">Preleva i tuoi UTXO Bitcoin come QBTC a prova di quantistica. Il tuo Bitcoin rimane intatto.</string>
+    <string name="qbtc_claim_hero_title">QBTC prelevabile</string>
+    <string name="qbtc_claim_tab">Preleva</string>
+    <string name="qbtc_claim_description">QBTC è una versione resistente alla quantistica di BTC. I tuoi UTXO BTC esistenti sono idonei a essere prelevati come QBTC con un rapporto di 1:1. Seleziona di seguito quali UTXO prelevare.</string>
+    <string name="qbtc_claim_description_emphasis">resistente alla quantistica</string>
     <string name="qbtc_claim_eligible_header">UTXO idonei</string>
-    <string name="qbtc_claim_utxo_block_format">Confermato al blocco %1$d</string>
+    <string name="qbtc_claim_utxo_block_format">Confermato · %1$d blocchi fa</string>
     <string name="qbtc_claim_utxo_pending">In sospeso</string>
     <string name="qbtc_claim_cta_all">Preleva tutto</string>
     <string name="qbtc_claim_cta_partial">Preleva %1$d di %2$d</string>

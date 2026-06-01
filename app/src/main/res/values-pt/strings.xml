@@ -1221,10 +1221,12 @@
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Resgatar QBTC</string>
     <string name="qbtc_claim_loading">A verificar elegibilidade…</string>
-    <string name="qbtc_claim_hero_title">Total resgatável</string>
-    <string name="qbtc_claim_description">Resgate os seus UTXOs de Bitcoin como QBTC resistente à computação quântica. O seu Bitcoin permanece intacto.</string>
+    <string name="qbtc_claim_hero_title">QBTC resgatável</string>
+    <string name="qbtc_claim_tab">Resgatar</string>
+    <string name="qbtc_claim_description">QBTC é uma versão resistente à computação quântica do BTC. Os seus UTXOs de BTC existentes são elegíveis para serem resgatados como QBTC numa proporção de 1:1. Selecione abaixo quais UTXOs resgatar.</string>
+    <string name="qbtc_claim_description_emphasis">resistente à computação quântica</string>
     <string name="qbtc_claim_eligible_header">UTXOs elegíveis</string>
-    <string name="qbtc_claim_utxo_block_format">Confirmado no bloco %1$d</string>
+    <string name="qbtc_claim_utxo_block_format">Confirmado · há %1$d blocos</string>
     <string name="qbtc_claim_utxo_pending">Pendente</string>
     <string name="qbtc_claim_cta_all">Resgatar tudo</string>
     <string name="qbtc_claim_cta_partial">Resgatar %1$d de %2$d</string>
