@@ -120,6 +120,11 @@ object SigningHelper {
                             SwapKitSwapPayloadJson.TX_TYPE_SUI ->
                                 SwapKitSuiSigner(eddsaKey)
                                     .getPreSignedImageHash(swapPayload.data.txPayload)
+                            // TON SwapKit is a plain native transfer to the deposit address. The
+                            // KeysignPayload already carries toAddress / toAmount / Ton specifics.
+                            // It reuses the native TonHelper path (no signTon, matching iOS).
+                            SwapKitSwapPayloadJson.TX_TYPE_TON ->
+                                TonHelper.getPreSignedImageHash(payload)
                             else ->
                                 error(
                                     "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
@@ -317,6 +322,14 @@ object SigningHelper {
                         SwapKitSwapPayloadJson.TX_TYPE_SUI ->
                             SwapKitSuiSigner(eddsaKey)
                                 .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        // TON SwapKit reuses the native TonHelper path (EdDSA), signing the deposit
+                        // transfer off the KeysignPayload's toAddress / toAmount — matching iOS.
+                        SwapKitSwapPayloadJson.TX_TYPE_TON ->
+                            TonHelper.getSignedTransaction(
+                                vaultHexPublicKey = eddsaKey,
+                                payload = keysignPayload,
+                                signatures = signatures,
+                            )
                         else ->
                             error(
                                 "Unsupported SwapKit txType for signing: ${swapPayload.data.txType}"
