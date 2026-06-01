@@ -37,6 +37,12 @@ android {
         proto { srcDir("${project.rootProject.rootDir}/commondata/proto") }
     }
     tasks.withType<Test> { useJUnitPlatform() }
+    lint {
+        abortOnError = true
+        absolutePaths = false
+        lintConfig = file("$rootDir/config/lint/lint.xml")
+        baseline = file("lint-baseline.xml")
+    }
 }
 
 kotlin { jvmToolchain(21) }

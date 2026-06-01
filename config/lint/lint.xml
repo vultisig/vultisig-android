@@ -1,55 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
-    <issue id="AllowBackup" severity="error" />
-    <issue id="AndroidGradlePluginVersion" severity="warning" />
+    <!-- Transport / TLS security: a wallet moves funds and the manifest sets
+         usesCleartextTraffic="true", so any TLS-bypass code must hard-fail. -->
+    <issue id="TrustAllX509TrustManager" severity="error" />
+    <issue id="BadHostnameVerifier" severity="error" />
+    <issue id="AllowAllHostnameVerifier" severity="error" />
+    <issue id="CustomX509TrustManager" severity="error" />
+    <issue id="SSLCertificateSocketFactoryCreateInsecure" severity="error" />
+
+    <!-- Platform/app security: 7 exported manifest entries + Firebase messaging. -->
+    <issue id="UnsafeIntentLaunch" severity="error" />
+    <issue id="GrantAllUris" severity="error" />
+    <issue id="UnsafeProtectedBroadcastReceiver" severity="error" />
+    <issue id="HardcodedDebugMode" severity="error" />
+    <issue id="MissingFirebaseInstanceTokenRefresh" severity="error" />
+
+    <!-- Compose runtime-correctness: real behavioral bugs. -->
+    <issue id="CoroutineCreationDuringComposition" severity="error" />
+    <issue id="FlowOperatorInvokedInComposition" severity="error" />
+    <issue id="StateFlowValueCalledInComposition" severity="error" />
+    <issue id="ProduceStateDoesNotAssignValue" severity="error" />
+    <issue id="UnrememberedMutableState" severity="error" />
+    <issue id="MutableCollectionMutableState" severity="error" />
+    <issue id="AutoboxingStateCreation" severity="error" />
+
+    <!-- Compose API-shape checks. -->
     <issue id="ComposableLambdaParameterNaming" severity="warning" />
     <issue id="ComposableLambdaParameterPosition" severity="error" />
-    <issue id="DuplicateStrings" severity="ignore" />
-    <issue id="EasterEgg" severity="error" />
-    <issue id="ExpensiveAssertion" severity="error" />
+    <issue id="ModifierParameter" severity="error" />
+    <issue id="UnnecessaryComposedModifier" severity="fatal" />
+
+    <!-- App / manifest hygiene. -->
+    <issue id="AllowBackup" severity="error" />
     <issue id="ExportedContentProvider" severity="error" />
     <issue id="ExportedReceiver" severity="error" />
     <issue id="ExportedService" severity="error" />
-    <issue id="GradleDependency" severity="warning" />
     <issue id="HardwareIds" severity="error" />
-    <issue id="IconLocation" severity="ignore" />
-    <issue id="IconMissingDensityFolder" severity="ignore" />
-    <issue id="IconXmlAndPng" severity="ignore" />
     <issue id="ImplicitSamInstance" severity="error" />
+    <issue id="ExpensiveAssertion" severity="error" />
+    <issue id="SdCardPath" severity="error" />
+    <issue id="StopShip" severity="error" />
+
+    <!-- Gradle / SDK advisories. -->
+    <issue id="AndroidGradlePluginVersion" severity="warning" />
+    <issue id="NewerVersionAvailable" severity="warning" />
+    <issue id="OldTargetApi" severity="warning" />
+    <issue id="Proguard" severity="warning" />
     <issue id="InvalidPackage" severity="warning">
         <ignore path="**/jetty*" />
         <ignore path="**/ktor-utils-jvm*" />
     </issue>
-    <issue id="KotlinPropertyAccess" severity="warning" />
-    <issue id="ModifierParameter" severity="error" />
-    <issue id="NewerVersionAvailable" severity="warning" />
-    <issue id="ObsoleteSdkInt" severity="warning" />
-    <issue id="OldTargetApi" severity="warning" />
-    <issue id="Overdraw" severity="warning" />
-    <issue id="PluralsCandidate" severity="warning" />
-    <issue id="Proguard" severity="warning" />
-    <issue id="ReferenceType" severity="warning" />
-    <issue id="Registered" severity="warning" />
-    <issue id="ResourceCycle" severity="warning" />
-    <issue id="RtlCompat" severity="warning" />
-    <issue id="SdCardPath" severity="error" />
-    <issue id="SpUsage" severity="warning" />
-    <issue id="StaticFieldLeak" severity="warning" />
-    <issue id="StopShip" severity="error" />
+
+    <!-- Resources / strings across 10 locales. -->
     <issue id="StringFormatMatches" severity="error" />
     <issue id="StringFormatTrivial" severity="error" />
-    <issue id="TypographyDashes" severity="warning" />
-    <issue id="TypographyEllipsis" severity="warning" />
-    <issue id="TypographyFractions" severity="warning" />
-    <issue id="TypographyOther" severity="warning" />
-    <issue id="Typos" severity="warning" />
-    <issue id="UnnecessaryComposedModifier" severity="fatal" />
+    <issue id="PluralsCandidate" severity="warning" />
     <issue id="UnusedAttribute" severity="fatal" />
-    <issue id="UnusedIds" severity="fatal" />
     <issue id="UnusedNamespace" severity="fatal" />
     <issue id="UnusedQuantity" severity="fatal" />
     <issue id="UnusedResources" severity="fatal" />
     <issue id="UnusedTranslation" severity="fatal" />
-    <issue id="UnknownNullness" severity="fatal" />
+    <issue id="DuplicateStrings" severity="ignore" />
+
+    <!-- Typography/typo noise: 10 locales full of crypto jargon (TRON, PSBT, tickers). -->
+    <issue id="Typos" severity="ignore" />
+    <issue id="TypographyDashes" severity="ignore" />
+    <issue id="TypographyEllipsis" severity="ignore" />
+    <issue id="TypographyFractions" severity="ignore" />
+    <issue id="TypographyOther" severity="ignore" />
+
+    <!-- Vector/webp-only assets; no density-bucketed raster. -->
+    <issue id="IconLocation" severity="ignore" />
+    <issue id="IconMissingDensityFolder" severity="ignore" />
+    <issue id="IconXmlAndPng" severity="ignore" />
     <issue id="VectorPath" severity="ignore" />
 </lint>

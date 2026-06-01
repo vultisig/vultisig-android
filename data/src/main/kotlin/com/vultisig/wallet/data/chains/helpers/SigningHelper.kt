@@ -117,6 +117,9 @@ object SigningHelper {
                             SwapKitSwapPayloadJson.TX_TYPE_TRON ->
                                 SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
                                     .getPreSignedImageHash(swapPayload.data.txPayload)
+                            SwapKitSwapPayloadJson.TX_TYPE_SUI ->
+                                SwapKitSuiSigner(eddsaKey)
+                                    .getPreSignedImageHash(swapPayload.data.txPayload)
                             // TON SwapKit is a plain native transfer to the deposit address. The
                             // KeysignPayload already carries toAddress / toAmount / Ton specifics.
                             // It reuses the native TonHelper path (no signTon, matching iOS).
@@ -315,6 +318,9 @@ object SigningHelper {
                                 .getSignedTransaction(swapPayload.data.txPayload, signatures)
                         SwapKitSwapPayloadJson.TX_TYPE_TRON ->
                             SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
+                                .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        SwapKitSwapPayloadJson.TX_TYPE_SUI ->
+                            SwapKitSuiSigner(eddsaKey)
                                 .getSignedTransaction(swapPayload.data.txPayload, signatures)
                         // TON SwapKit reuses the native TonHelper path (EdDSA), signing the deposit
                         // transfer off the KeysignPayload's toAddress / toAmount — matching iOS.

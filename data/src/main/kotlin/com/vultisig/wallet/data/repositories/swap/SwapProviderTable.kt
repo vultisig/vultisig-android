@@ -137,10 +137,13 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
 
             Chain.Hyperliquid -> setOf(SwapProvider.LIFI)
 
+            // SwapKit SUI routes are signed by SwapKitSuiSigner (Blake2b-32 of the intent-prefixed
+            // PTB, Ed25519 envelope). Mirrors iOS' `.sui → [.swapkit]`.
+            Chain.Sui -> setOf(SwapProvider.SWAPKIT)
+
             Chain.Polkadot,
             Chain.Bittensor,
             Chain.Dydx,
-            Chain.Sui,
             Chain.Osmosis,
             Chain.Terra,
             Chain.TerraClassic,

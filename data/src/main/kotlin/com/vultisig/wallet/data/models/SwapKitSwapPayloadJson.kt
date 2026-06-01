@@ -73,6 +73,14 @@ data class SwapKitSwapPayloadJson(
         const val TX_TYPE_TRON = "TRON"
 
         /**
+         * `meta.txType` discriminator for the Sui signing path. SwapKit returns a base64-encoded
+         * pre-built programmable transaction block (PTB), base64-decoded into [txPayload]; the
+         * signer hashes `intent_prefix || ptb` with Blake2b-32 and wraps the Ed25519 signature in
+         * Sui's submit envelope. Mirrors iOS' `"SUI"`.
+         */
+        const val TX_TYPE_SUI = "SUI"
+
+        /**
          * `meta.txType` discriminator for the TON signing path. SwapKit returns `tx` as a
          * `[{address, amount}]` array (raw nano-TON amounts) JSON-encoded into [txPayload]. A TON
          * SwapKit swap is a plain native transfer to the deposit [targetAddress] — routing is by

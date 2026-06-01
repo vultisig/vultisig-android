@@ -134,10 +134,11 @@ class SwapQuoteRepositoryTest {
 
     @Test
     fun `unsupported chain returns null`() {
-        val sui1 = coin(Chain.Sui, "SUI")
-        val sui2 = coin(Chain.Sui, "USDC", contractAddress = "0xabc")
+        // Sui now routes through SwapKit; Polkadot remains a no-swap chain.
+        val dot1 = coin(Chain.Polkadot, "DOT")
+        val dot2 = coin(Chain.Polkadot, "DOT")
 
-        val providers = providerTable.eligibleProvidersFor(sui1, sui2)
+        val providers = providerTable.eligibleProvidersFor(dot1, dot2)
 
         assertTrue(providers.isEmpty())
     }
