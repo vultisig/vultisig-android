@@ -222,7 +222,13 @@ constructor(
         preSelectedChainId: ChainId?,
         preSelectedTokenId: TokenId?,
         fieldState: TextFieldState = addressFieldState,
-    ) = graph.setAddressFromQrCode(qrCode, preSelectedChainId, preSelectedTokenId, fieldState)
+    ) =
+        graph.tokenNetworkSelectionDelegate.setAddressFromQrCode(
+            qrCode,
+            preSelectedChainId,
+            preSelectedTokenId,
+            fieldState,
+        )
 
     fun setOutputAddress(address: String) {
         graph.addressManager.setOutputAddress(address)
@@ -250,10 +256,11 @@ constructor(
         }
     }
 
-    fun onAutoCompound(checked: Boolean) = graph.onAutoCompound(checked)
+    fun onAutoCompound(checked: Boolean) =
+        graph.tokenNetworkSelectionDelegate.onAutoCompound(checked)
 
     fun openAddressBook(addressType: AddressBookType = AddressBookType.OUTPUT) =
-        graph.openAddressBook(addressType)
+        graph.addressManager.openAddressBook(addressType)
 
     fun dismissGasSettings() {
         advanceGasUiRepository.hideSettings()

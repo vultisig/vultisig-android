@@ -10,10 +10,7 @@ import com.vultisig.wallet.data.blockchain.tron.TronFrozenBalanceState
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.ChainId
 import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.TokenId
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
@@ -57,20 +54,22 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import wallet.core.jni.proto.Bitcoin
 
 /**
- * Owns the construction and wiring of every [SendFormViewModel] collaborator.
+ * Owns the construction and wiring of every [SendFormViewModel] collaborator, plus the
+ * form-identity state that wiring needs ([vault], [vaultId], [defiType], [mscaAddress]) — seeded
+ * once by [initialize] from the navigation args and exposed to collaborators through the
+ * locally-defined provider lambdas ([vaultProvider], [defiTypeProvider], ...).
  *
  * Collaborators are declared as `by lazy` so the dependency graph is resolved on first access
  * rather than by property-declaration order — reordering declarations can no longer silently NPE
  * the way it could when this wiring lived inline in the ViewModel body.
  *
- * The ViewModel passes in the shared flows it owns (e.g. [uiState], [selectedToken]) plus
- * live-bound providers and callbacks that close over its mutable state ([vaultProvider],
- * [expandSection], ...), so collaborators always read current ViewModel state rather than a
- * construction-time snapshot.
+ * The ViewModel still passes in the shared flows it owns (e.g. [uiState], [selectedToken]) plus the
+ * UI callbacks that touch its private state ([expandSection], [showError], ...). Heavy business
+ * methods (`setAddressFromQrCode`, `onAutoCompound`, `openAddressBook`) live in the delegates that
+ * already own the collaborators they call, not here.
  */
 @ExperimentalStdlibApi
 internal class SendFormGraph(
@@ -186,9 +185,15 @@ internal class SendFormGraph(
         AddressManager(
             scope = scope,
             addressFieldState = addressFieldState,
+            providerBondFieldState = providerBondFieldState,
             selectedToken = selectedToken,
             chainAccountAddressRepository = chainAccountAddressRepository,
             addressParserRepository = addressParserRepository,
+            requestAddressBookEntry = requestAddressBookEntry,
+            vaultIdProvider = vaultIdProvider,
+            checkIfTokenSelectionRequired = { currentChain, newChain ->
+                tokenNetworkSelectionDelegate.checkIfTokenSelectionRequired(currentChain, newChain)
+            },
         )
     }
 
@@ -293,6 +298,10 @@ internal class SendFormGraph(
             vaultIdProvider = vaultIdProvider,
             accounts = accounts,
             selectedToken = selectedToken,
+            addressFieldState = addressFieldState,
+            uiState = uiState,
+            isSwitchingAccounts = isSwitchingAccounts,
+            defiTypeProvider = defiTypeProvider,
             expandSection = expandSection,
         )
     }
@@ -348,7 +357,7 @@ internal class SendFormGraph(
         initFormType()
 
         if (args.address != null) {
-            setAddressFromQrCode(
+            tokenNetworkSelectionDelegate.setAddressFromQrCode(
                 qrCode = args.address,
                 preSelectedChainId = args.chainId,
                 preSelectedTokenId = args.tokenId,
@@ -465,134 +474,5 @@ internal class SendFormGraph(
                 }
             }
             .collect()
-    }
-
-    /**
-     * Applies a scanned/deep-linked address to [fieldState], switching the selected chain/token
-     * when the address belongs to a different chain than the current selection.
-     *
-     * @param qrCode the scanned address payload (ignored when null/blank).
-     * @param preSelectedChainId optional chain to constrain the address to.
-     * @param preSelectedTokenId optional token to preselect after a chain switch.
-     * @param fieldState the address field to populate (destination address by default).
-     */
-    fun setAddressFromQrCode(
-        qrCode: String?,
-        preSelectedChainId: ChainId?,
-        preSelectedTokenId: TokenId?,
-        fieldState: TextFieldState = addressFieldState,
-    ) {
-        if (qrCode.isNullOrBlank()) return
-        Timber.d("setAddressFromQrCode(address = $qrCode)")
-
-        fieldState.setTextAndPlaceCursorAtEnd(qrCode)
-
-        val vaultId = vaultId
-        if (vaultId.isNullOrBlank()) return
-
-        val chainValidForAddress =
-            preSelectedChainId?.let { listOf(Chain.fromRaw(preSelectedChainId)) }
-                ?: Chain.entries.filter { chain ->
-                    chainAccountAddressRepository.isValid(chain, qrCode)
-                }
-
-        val selectedChain = selectedTokenProvider()?.chain
-
-        if (chainValidForAddress.isNotEmpty() && !chainValidForAddress.contains(selectedChain)) {
-            Timber.d(
-                "Address from QR has a different chain " +
-                    "than selected token, switching. $chainValidForAddress != $selectedChain"
-            )
-            val preSelectedChainIds = chainValidForAddress.map { it.id }
-
-            tokenNetworkSelectionDelegate.checkChainIdExistInAccounts(
-                preSelectedChainIds = preSelectedChainIds,
-                vaultId = vaultId,
-            )
-
-            tokenPreselectionService.preSelect(
-                preSelectedChainIds = preSelectedChainIds,
-                preSelectedTokenId = preSelectedTokenId,
-                forcePreselection = true,
-            )
-        }
-    }
-
-    /**
-     * Toggles the staking auto-compound mode, switching the underlying account data source (TCY ⇄
-     * sTCY) and pinning the matching token once it loads.
-     *
-     * @param checked whether auto-compound (stable compound) is enabled.
-     */
-    fun onAutoCompound(checked: Boolean) {
-        uiState.update { it.copy(isAutocompound = checked) }
-
-        val vaultId = vaultId
-        if (
-            (defiType != DeFiNavActions.UNSTAKE_TCY && defiType != DeFiNavActions.UNSTAKE_STCY) ||
-                vaultId == null
-        ) {
-            return
-        }
-
-        isSwitchingAccounts.value = true
-        selectedToken.value = null
-
-        // Route the data-source switch through AccountsLoader so accountsState has a single
-        // writer — the previous in-VM collect raced against the already-running loader,
-        // and for UNSTAKE_TCY the two collectors pulled from different APIs. The callback
-        // runs per emission so we can pin the token selection on the first emission
-        // containing the target ticker (the tokenSelected flag prevents a later hydration
-        // emission from re-calling selectToken, which would wipe the user's typed amount).
-        val targetTicker = if (checked) "sTCY" else "TCY"
-        var tokenSelected = false
-        accountsLoader.loadForAutoCompoundSwitch(vaultId = vaultId, useStableCompound = checked) {
-            loadedAccounts ->
-            // Release the gate on every emission — if the target ticker is never found the
-            // form must still become interactive rather than staying gated forever. Setting
-            // to false repeatedly is a no-op once already false.
-            isSwitchingAccounts.value = false
-            if (!tokenSelected) {
-                loadedAccounts
-                    .find {
-                        it.token.ticker.equals(targetTicker, true) &&
-                            it.token.chain == Chain.ThorChain
-                    }
-                    ?.let {
-                        tokenSelected = true
-                        tokenNetworkSelectionDelegate.selectToken(it.token)
-                    }
-            }
-        }
-    }
-
-    /**
-     * Opens the address book and applies the chosen entry to the output or provider field.
-     *
-     * @param addressType which field the selected address should populate.
-     */
-    fun openAddressBook(addressType: AddressBookType = AddressBookType.OUTPUT) {
-        scope.safeLaunch {
-            val vaultId = vaultId ?: return@safeLaunch
-            val selectedChain = selectedTokenProvider()?.chain ?: return@safeLaunch
-
-            val address =
-                requestAddressBookEntry(chainId = selectedChain.id, excludeVaultId = vaultId)
-                    ?: return@safeLaunch
-
-            when (addressType) {
-                AddressBookType.OUTPUT -> {
-                    tokenNetworkSelectionDelegate.checkIfTokenSelectionRequired(
-                        currentChain = selectedChain,
-                        newChain = address.chain,
-                    )
-                    addressManager.setOutputAddress(address.address)
-                }
-
-                AddressBookType.PROVIDER -> {
-                    providerBondFieldState.setTextAndPlaceCursorAtEnd(address.address)
-                }
-            }
-        }
     }
 }
