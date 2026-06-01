@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,10 +15,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,31 +36,41 @@ import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
-import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
+import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.v2.containers.ContainerType
+import com.vultisig.wallet.ui.components.v2.containers.CornerType
+import com.vultisig.wallet.ui.components.v2.containers.V2Container
+import com.vultisig.wallet.ui.components.v2.tab.VsTab
+import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsViewModel
+import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
+import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
+import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
+import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+private val COSMOS_STAKING_TABS = listOf(com.vultisig.wallet.ui.screens.v2.defi.DeFiTab.STAKED)
+
 /**
- * Active-delegations view — entry point users land on from the DeFi tab when they tap their Terra /
- * TerraClassic chain. Shows:
- * - **Total Staked card** with "Delegate to new validator" CTA + per-row Claim button (when
- *   rewards > 0).
- * - **Per-validator cards** with active/churned-out status badge, staked amount, pending reward,
- *   `[Unstake] [Move] [Stake]` action row. Active validators with no pending unbonding can use all
- *   three; churned-out or unbonding validators have Unstake + Move disabled.
- * - **Pending unbondings** section listing in-flight withdrawals with 21-day completion dates.
- * - **Empty state** with a single "Stake" CTA.
+ * LUNA / LUNC active-delegations view — reuses the shared DeFi-chain chrome (balance banner +
+ * "Staked" tab + Manage Positions) so it matches Maya/Tron and iOS. Inside the Staked tab:
+ * - **Total Staked card** with "Delegate to New Validator" CTA + Claim button (when rewards > 0).
+ * - **Active Delegations** per-validator cards (avatar, Active/Churned-out badge, staked, next
+ *   award, `[Unstake] [Move] [Stake]`).
+ * - **Pending Unbondings** section.
+ * - When the position is disabled in Manage Positions → the shared "No positions selected" state.
  *
  * Mirrors iOS `CosmosStakeDefiView.swift` (vultisig-ios PR #4432).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CosmosStakingPositionsScreen(
     vaultId: String,
@@ -60,133 +78,150 @@ internal fun CosmosStakingPositionsScreen(
     viewModel: CosmosStakingPositionsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
-    androidx.compose.runtime.LaunchedEffect(vaultId, chainId) {
-        viewModel.setData(vaultId = vaultId, chainId = chainId)
-    }
-    V2Scaffold(title = "${state.ticker.ifEmpty { "Staking" }} positions") {
-        PositionsContent(
-            state = state,
-            onStakeMore = viewModel::stakeMore,
-            onClaimAll = viewModel::claimAll,
-            onUnstake = viewModel::unstake,
-            onMove = viewModel::move,
-        )
-    }
-}
+    var isRefreshing by remember { mutableStateOf(false) }
 
-@Composable
-private fun PositionsContent(
-    state: CosmosStakingPositionsUiState,
-    onStakeMore: () -> Unit,
-    onClaimAll: () -> Unit,
-    onUnstake: (CosmosStakePositionRow) -> Unit,
-    onMove: (CosmosStakePositionRow) -> Unit,
-) {
-    val errorMessage = state.errorMessage
-    Box(modifier = Modifier.fillMaxSize()) {
-        when {
-            state.isLoading && state.positions.isEmpty() ->
-                Text(
-                    text = stringResource(R.string.cosmos_staking_loading_positions),
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.secondary,
-                    modifier = Modifier.fillMaxWidth().padding(24.dp),
-                )
-            state.positions.isEmpty() ->
-                EmptyPositions(ticker = state.ticker, error = errorMessage, onStake = onStakeMore)
-            else -> {
-                LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-                    item {
-                        TotalStakedCard(
-                            ticker = state.ticker,
-                            totalStaked = state.totalStaked.toPlainString(),
-                            hasAnyClaimableRewards =
-                                state.positions.any {
-                                    it.pendingReward > java.math.BigDecimal.ZERO
-                                },
-                            onDelegateToNewValidator = onStakeMore,
-                            onClaimAll = onClaimAll,
+    LaunchedEffect(vaultId, chainId) { viewModel.setData(vaultId = vaultId, chainId = chainId) }
+    LaunchedEffect(state.isLoading) { if (isRefreshing && !state.isLoading) isRefreshing = false }
+
+    RegisterChainDashboardTopBarAction(
+        icon = R.drawable.ic_shapes_plus_x_square_circle,
+        onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
+    )
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.refresh()
+        },
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)
+            ) {
+                Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
+                    BalanceBanner(
+                        title = chainId,
+                        isLoading = state.isLoading && state.positions.isEmpty(),
+                        totalValue = state.totalAmountPrice,
+                        image = R.drawable.referral_data_banner,
+                        isBalanceVisible = state.isBalanceVisible,
+                    )
+                }
+
+                Row(
+                    modifier =
+                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    VsTabGroup(index = 0) {
+                        COSMOS_STAKING_TABS.forEach { tab ->
+                            tab { VsTab(label = stringResource(tab.displayNameRes), onClick = {}) }
+                        }
+                    }
+                    V2Container(
+                        type = ContainerType.SECONDARY,
+                        cornerType = CornerType.Circular,
+                        modifier =
+                            Modifier.clickOnce(
+                                onClick = { viewModel.setPositionSelectionDialogVisibility(true) }
+                            ),
+                    ) {
+                        UiIcon(
+                            drawableResId = R.drawable.edit_chain,
+                            size = 16.dp,
+                            modifier = Modifier.padding(all = 12.dp),
+                            tint = Theme.v2.colors.primary.accent4,
                         )
                     }
-                    item { UiSpacer(size = 12.dp) }
+                }
 
-                    items(state.positions, key = { it.validatorAddress }) { position ->
-                        PositionRow(
-                            position = position,
-                            ticker = state.ticker,
-                            onUnstake = { onUnstake(position) },
-                            onMove = { onMove(position) },
-                            onStakeMore = onStakeMore,
-                        )
-                        UiSpacer(size = 8.dp)
-                    }
-
-                    if (state.pendingUnbondings.isNotEmpty()) {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (!state.isPositionEnabled) {
                         item {
-                            UiSpacer(size = 16.dp)
-                            Text(
-                                text = stringResource(R.string.cosmos_staking_pending_unbondings),
-                                style = Theme.brockmann.body.s.medium,
-                                color = Theme.v2.colors.text.primary,
+                            NoPositionsContainer(
+                                onManagePositionsClick = {
+                                    viewModel.setPositionSelectionDialogVisibility(true)
+                                }
                             )
-                            UiSpacer(size = 8.dp)
                         }
-                        items(state.pendingUnbondings, key = { it.validatorAddress }) { unbonding ->
-                            UnbondingCard(unbonding = unbonding)
-                            UiSpacer(size = 8.dp)
+                    } else {
+                        item {
+                            TotalStakedCard(
+                                ticker = state.ticker,
+                                totalStaked = state.totalStaked.toPlainString(),
+                                hasAnyClaimableRewards =
+                                    state.positions.any {
+                                        it.pendingReward > java.math.BigDecimal.ZERO
+                                    },
+                                onDelegateToNewValidator = viewModel::stakeMore,
+                                onClaimAll = viewModel::claimAll,
+                            )
+                        }
+
+                        if (state.positions.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text =
+                                        stringResource(R.string.cosmos_staking_active_delegations),
+                                    style = Theme.brockmann.body.s.medium,
+                                    color = Theme.v2.colors.text.secondary,
+                                )
+                            }
+                            items(state.positions, key = { it.validatorAddress }) { position ->
+                                PositionRow(
+                                    position = position,
+                                    ticker = state.ticker,
+                                    onUnstake = { viewModel.unstake(position) },
+                                    onMove = { viewModel.move(position) },
+                                    onStakeMore = viewModel::stakeMore,
+                                )
+                            }
+                        }
+
+                        if (state.pendingUnbondings.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text =
+                                        stringResource(R.string.cosmos_staking_pending_unbondings),
+                                    style = Theme.brockmann.body.s.medium,
+                                    color = Theme.v2.colors.text.primary,
+                                )
+                            }
+                            items(state.pendingUnbondings, key = { it.validatorAddress }) {
+                                unbonding ->
+                                UnbondingCard(unbonding = unbonding)
+                            }
                         }
                     }
 
+                    val errorMessage = state.errorMessage
                     if (errorMessage != null) {
                         item {
                             Text(
                                 text = errorMessage,
                                 style = Theme.brockmann.supplementary.caption,
                                 color = Theme.v2.colors.alerts.error,
-                                modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                             )
                         }
                     }
                 }
             }
-        }
-    }
-}
 
-@Composable
-private fun EmptyPositions(ticker: String, error: String?, onStake: () -> Unit) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier.fillMaxWidth().align(Alignment.Center).padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text =
-                    stringResource(
-                        R.string.cosmos_staking_empty_positions,
-                        ticker.ifEmpty { "Token" },
-                    ),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.secondary,
-            )
-            UiSpacer(size = 16.dp)
-            VsButton(
-                label =
-                    stringResource(
-                        R.string.cosmos_staking_delegate_title,
-                        ticker.ifEmpty { "Token" },
-                    ),
-                variant = VsButtonVariant.CTA,
-                state = VsButtonState.Enabled,
-                onClick = onStake,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            if (error != null) {
-                UiSpacer(size = 12.dp)
-                Text(
-                    text = error,
-                    style = Theme.brockmann.supplementary.caption,
-                    color = Theme.v2.colors.alerts.error,
+            if (state.showPositionSelectionDialog) {
+                val searchTextFieldState = remember { TextFieldState() }
+                PositionsSelectionDialog(
+                    stakePositions = state.stakePositionsDialog,
+                    selectedPositions = state.tempSelectedPositions,
+                    searchTextFieldState = searchTextFieldState,
+                    onPositionSelectionChange = viewModel::onPositionSelectionChange,
+                    onDoneClick = viewModel::onPositionSelectionDone,
+                    onCancelClick = { viewModel.setPositionSelectionDialogVisibility(false) },
                 )
             }
         }

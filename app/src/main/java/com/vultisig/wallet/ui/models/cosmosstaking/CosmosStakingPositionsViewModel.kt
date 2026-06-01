@@ -14,11 +14,14 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
 import com.vultisig.wallet.data.blockchain.cosmos.staking.KeybaseAvatarService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
+import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -41,7 +44,21 @@ internal data class CosmosStakingPositionsUiState(
     val totalStaked: BigDecimal = BigDecimal.ZERO,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-)
+    // DeFi-chrome state (balance banner + Staked tab + Manage Positions), mirroring Tron/Maya.
+    val isBalanceVisible: Boolean = true,
+    /** Fiat total shown in the balance banner. No LUNA/LUNC spot feed yet → $0.00 (iOS parity). */
+    val totalAmountPrice: String = "$0.00",
+    val selectedTab: DeFiTab = DeFiTab.STAKED,
+    val showPositionSelectionDialog: Boolean = false,
+    /** Single stake-position tile (LUNA / LUNC) shown in the Manage Positions sheet. */
+    val stakePositionsDialog: List<PositionUiModelDialog> = emptyList(),
+    /** Enabled position keys. Defaults to [ticker] so the user's stake shows immediately. */
+    val selectedPositions: List<String> = emptyList(),
+    val tempSelectedPositions: List<String> = emptyList(),
+) {
+    val isPositionEnabled: Boolean
+        get() = ticker.isNotEmpty() && selectedPositions.contains(ticker)
+}
 
 /**
  * View-model for the LUNA / LUNC active-delegations view. Fans out four LCD reads (delegations,
@@ -383,7 +400,56 @@ constructor(
                         "Native ${chain.raw} coin not loaded for this vault"
                     )
             coin = nativeCoin
-            _state.update { it.copy(ticker = nativeCoin.ticker, coinLogo = nativeCoin.logo) }
+            val ticker = nativeCoin.ticker
+            _state.update {
+                it.copy(
+                    ticker = ticker,
+                    coinLogo = nativeCoin.logo,
+                    stakePositionsDialog =
+                        listOf(
+                            PositionUiModelDialog(
+                                logo = getCoinLogo(nativeCoin.logo),
+                                ticker = ticker,
+                                positionKey = ticker,
+                            )
+                        ),
+                    // Default-enabled so the user sees their delegations on first open (Tron
+                    // pattern); the Manage Positions sheet can toggle it off.
+                    selectedPositions = listOf(ticker),
+                    tempSelectedPositions = listOf(ticker),
+                )
+            }
+        }
+    }
+
+    fun onTabSelected(tab: DeFiTab) {
+        _state.update { it.copy(selectedTab = tab) }
+    }
+
+    fun setPositionSelectionDialogVisibility(visible: Boolean) {
+        _state.update {
+            it.copy(
+                showPositionSelectionDialog = visible,
+                tempSelectedPositions = it.selectedPositions,
+            )
+        }
+    }
+
+    fun onPositionSelectionChange(ticker: String, selected: Boolean) {
+        _state.update {
+            val updated =
+                if (selected) it.tempSelectedPositions + ticker
+                else it.tempSelectedPositions - ticker
+            it.copy(tempSelectedPositions = updated)
+        }
+    }
+
+    fun onPositionSelectionDone() {
+        _state.update {
+            it.copy(
+                showPositionSelectionDialog = false,
+                selectedPositions = it.tempSelectedPositions,
+            )
         }
     }
 
