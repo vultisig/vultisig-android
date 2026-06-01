@@ -89,5 +89,14 @@ data class SwapKitSwapPayloadJson(
          * rather than a dedicated signer. Mirrors iOS' `"TON"`.
          */
         const val TX_TYPE_TON = "TON"
+
+        /**
+         * `meta.txType` discriminator for the XRP (Ripple) deposit-only path. SwapKit returns no
+         * transaction body — only a deposit r-address (and optional destination tag). [txPayload]
+         * is empty; the cosigning peer rebuilds a plain XRP Payment to [targetAddress] for
+         * [fromAmount] via the existing `RippleHelper`, attaching the destination tag carried in
+         * [memo]. Mirrors iOS' `"XRP"`.
+         */
+        const val TX_TYPE_XRP = "XRP"
     }
 }
