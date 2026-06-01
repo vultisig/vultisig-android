@@ -456,14 +456,9 @@ val Chain.blockTimeMs: Long
         }
 
 /**
- * The on-chain native fee denomination for a Cosmos-family chain, exactly as it appears in the
- * Cosmos `Fee` message (`signAmino.fee.amount[].denom` or the decoded `authInfo` fee). Returns
- * `null` for non-Cosmos chains.
- *
- * Kept separate from [feeUnit] on purpose: [feeUnit] doubles as a UI label that, for other chains,
- * holds values like `Gwei` or `BTC/vbyte`, and for THORChain the ticker `Rune` rather than the
- * `rune` denom — matching a dApp fee needs the protocol denom, not the label. Mirrors the Windows
- * `cosmosFeeCoinDenom` table so both platforms resolve the same denom.
+ * The on-chain native fee denom for a Cosmos-family chain (e.g. `rune`, `uatom`), `null` otherwise.
+ * Separate from [feeUnit], which carries UI labels (`Gwei`, `BTC/vbyte`) and THORChain's `Rune`
+ * ticker rather than the `rune` denom. Mirrors the Windows `cosmosFeeCoinDenom` table.
  */
 val Chain.cosmosNativeDenom: String?
     get() =

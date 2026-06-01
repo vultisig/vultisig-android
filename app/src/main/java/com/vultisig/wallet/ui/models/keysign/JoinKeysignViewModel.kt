@@ -1652,11 +1652,9 @@ constructor(
         }
 
     /**
-     * Network Fee for the join-keysign deposit and non-UTXO send paths. Prefers the dApp-supplied
-     * fee carried in the signed Cosmos message ([dappSuppliedNativeFee]) so Rujira/CosmWasm
-     * requests show the fee that is actually broadcast (issue #4390); otherwise falls back to
-     * [computeJoinKeysignNetworkFee]. [resolveFallbackFeeAmount] and its fee-service call only run
-     * when no dApp fee is present.
+     * Network Fee for the join-keysign deposit and non-UTXO send paths: the dApp-supplied fee when
+     * present ([dappSuppliedNativeFee], issue #4390), otherwise [computeJoinKeysignNetworkFee]. The
+     * fallback and its fee-service call only run when there is no dApp fee.
      */
     private suspend fun resolveJoinKeysignNetworkFee(
         payload: KeysignPayload,
@@ -1919,20 +1917,13 @@ internal fun defaultEvmSwapGasLimit(chain: Chain): BigInteger =
     else EthereumFeeService.DEFAULT_SWAP_LIMIT
 
 /**
- * The native-denom fee a dApp embedded in this keysign request, or `null` when it carries no
- * dApp-supplied Cosmos fee — i.e. a wallet-built native tx, where [KeysignPayload.signAmino] and
- * [KeysignPayload.signDirect] are both absent. Callers fall back to the estimated fee on `null`.
+ * The fee a dApp signed in [KeysignPayload.signAmino] or [KeysignPayload.signDirect], or `null` for
+ * a wallet-built native tx (both absent) so callers fall back to the estimate. The cosmos signers
+ * sign these bytes verbatim, so this is the fee actually broadcast — including the `0` Rujira uses
+ * today (issue #4390).
  *
- * Rujira/CosmWasm dApps put the fee they want signed in [KeysignPayload.signAmino] (Amino JSON) or
- * [KeysignPayload.signDirect] (`authInfo` protobuf), and `ThorChainHelper`/`CosmosHelper` sign
- * those bytes verbatim — so this is the fee actually broadcast, including the legitimate `0` Rujira
- * uses today. Reading it keeps the join Network Fee row in step with the signed message instead of
- * the wallet's own estimate (issue #4390).
- *
- * Only entries in the chain's [Chain.cosmosNativeDenom] are summed: a fee specified purely in
- * another denom yields `null` (fall back to the estimate) rather than mixing units on one row,
- * matching the Windows resolver. Returns `null` if any matched amount is unparseable, so the caller
- * never displays a misleading `0`.
+ * Only [Chain.cosmosNativeDenom] entries are summed; a fee in another denom, or an unparseable
+ * amount, yields `null` rather than a misleading `0`. Mirrors the Windows resolver.
  */
 internal fun KeysignPayload.dappSuppliedNativeFee(
     chain: Chain,
