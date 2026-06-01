@@ -3,11 +3,15 @@
 package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.tron.GetTronFrozenBalancesUseCase
 import com.vultisig.wallet.data.blockchain.tron.TronFrozenBalanceState
+import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
@@ -25,6 +29,9 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GetAvailableTokenBalanceUseCase
+import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.models.mappers.AccountToTokenBalanceUiModelMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.submit.AccountValidator
 import com.vultisig.wallet.ui.models.send.submit.BitcoinPlanService
@@ -33,24 +40,36 @@ import com.vultisig.wallet.ui.models.send.submit.SendStrategyContext
 import com.vultisig.wallet.ui.models.send.submit.SendStrategyFactory
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.model.DeFiNavActions
+import com.vultisig.wallet.ui.screens.v2.defi.model.parseDepositType
 import com.vultisig.wallet.ui.utils.UiText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import wallet.core.jni.proto.Bitcoin
 
 /**
- * Owns the construction and wiring of every [SendFormViewModel] collaborator.
+ * Owns the construction and wiring of every [SendFormViewModel] collaborator, plus the
+ * form-identity state that wiring needs ([vault], [vaultId], [defiType], [mscaAddress]) — seeded
+ * once by [initialize] from the navigation args and exposed to collaborators through the
+ * locally-defined provider lambdas ([vaultProvider], [defiTypeProvider], ...).
  *
  * Collaborators are declared as `by lazy` so the dependency graph is resolved on first access
  * rather than by property-declaration order — reordering declarations can no longer silently NPE
  * the way it could when this wiring lived inline in the ViewModel body.
  *
- * The ViewModel passes in the shared flows it owns (e.g. [uiState], [selectedToken]) plus
- * live-bound providers and callbacks that close over its mutable state ([vaultProvider],
- * [expandSection], ...), so collaborators always read current ViewModel state rather than a
- * construction-time snapshot.
+ * The ViewModel still passes in the shared flows it owns (e.g. [uiState], [selectedToken]) plus the
+ * UI callbacks that touch its private state ([expandSection], [showError], ...). Heavy business
+ * methods (`setAddressFromQrCode`, `onAutoCompound`, `openAddressBook`) live in the delegates that
+ * already own the collaborators they call, not here.
  */
 @ExperimentalStdlibApi
 internal class SendFormGraph(
@@ -73,6 +92,8 @@ internal class SendFormGraph(
     private val getTronFrozenBalances: GetTronFrozenBalancesUseCase,
     private val sendStrategyFactory: SendStrategyFactory,
     private val mapTokenValueToString: TokenValueToStringWithUnitMapper,
+    private val accountToTokenBalanceUiModelMapper: AccountToTokenBalanceUiModelMapper,
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
     private val uiState: MutableStateFlow<SendFormUiModel>,
     private val selectedToken: MutableStateFlow<Coin?>,
     private val accountsState: MutableStateFlow<AccountsLoadState>,
@@ -85,10 +106,6 @@ internal class SendFormGraph(
     private val operatorFeesBondFieldState: TextFieldState,
     private val providerBondFieldState: TextFieldState,
     private val slippageFieldState: TextFieldState,
-    private val vaultProvider: () -> Vault?,
-    private val vaultIdProvider: () -> VaultId?,
-    private val defiTypeProvider: () -> DeFiNavActions?,
-    private val mscaAddressProvider: () -> String?,
     private val selectedTokenProvider: () -> Coin?,
     private val selectedAccountProvider: () -> Account?,
     private val isAutocompoundProvider: () -> Boolean,
@@ -98,6 +115,16 @@ internal class SendFormGraph(
     private val showError: (UiText) -> Unit,
     private val emitFocusField: (SendFocusField) -> Unit,
 ) {
+    private var vault: Vault? = null
+    private var vaultId: VaultId? = null
+    private var defiType: DeFiNavActions? = null // Default is send, no defi form
+    private var mscaAddress: String? = null
+
+    private val vaultProvider: () -> Vault? = { vault }
+    private val vaultIdProvider: () -> VaultId? = { vaultId }
+    private val defiTypeProvider: () -> DeFiNavActions? = { defiType }
+    private val mscaAddressProvider: () -> String? = { mscaAddress }
+
     private val planFee = MutableStateFlow<Long?>(null)
     private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
     private val gasFee = MutableStateFlow<TokenValue?>(null)
@@ -158,9 +185,15 @@ internal class SendFormGraph(
         AddressManager(
             scope = scope,
             addressFieldState = addressFieldState,
+            providerBondFieldState = providerBondFieldState,
             selectedToken = selectedToken,
             chainAccountAddressRepository = chainAccountAddressRepository,
             addressParserRepository = addressParserRepository,
+            requestAddressBookEntry = requestAddressBookEntry,
+            vaultIdProvider = vaultIdProvider,
+            checkIfTokenSelectionRequired = { currentChain, newChain ->
+                tokenNetworkSelectionDelegate.checkIfTokenSelectionRequired(currentChain, newChain)
+            },
         )
     }
 
@@ -265,6 +298,10 @@ internal class SendFormGraph(
             vaultIdProvider = vaultIdProvider,
             accounts = accounts,
             selectedToken = selectedToken,
+            addressFieldState = addressFieldState,
+            uiState = uiState,
+            isSwitchingAccounts = isSwitchingAccounts,
+            defiTypeProvider = defiTypeProvider,
             expandSection = expandSection,
         )
     }
@@ -303,5 +340,139 @@ internal class SendFormGraph(
                 showError = showError,
             )
         )
+    }
+
+    /**
+     * Loads the initial form state from the navigation [args]: resolves the DeFi type, loads
+     * accounts, preselects the deep-linked token/address, and seeds amount/memo/slippage.
+     *
+     * @param args the `Route.Send` navigation arguments that opened the form.
+     */
+    fun initialize(args: Route.Send) {
+        defiType = if (args.type == null) null else parseDepositType(args.type)
+        mscaAddress = args.mscaAddress
+        vaultId = args.vaultId
+        accountsLoader.load(args.vaultId)
+        loadVaultName()
+        initFormType()
+
+        if (args.address != null) {
+            tokenNetworkSelectionDelegate.setAddressFromQrCode(
+                qrCode = args.address,
+                preSelectedChainId = args.chainId,
+                preSelectedTokenId = args.tokenId,
+            )
+        } else {
+            tokenPreselectionService.preSelect(
+                preSelectedChainIds = listOf(args.chainId),
+                preSelectedTokenId = args.tokenId,
+            )
+        }
+
+        if (args.tokenId != null && args.address == null) {
+            expandSection(SendSections.Address)
+        }
+
+        if (args.tokenId != null && args.address != null) {
+            expandSection(SendSections.Amount)
+        }
+
+        args.amount?.let { tokenAmountFieldState.setTextAndPlaceCursorAtEnd(it) }
+
+        args.memo?.let { memoFieldState.setTextAndPlaceCursorAtEnd(it) }
+
+        if (defiType == DeFiNavActions.REDEEM_YRUNE || defiType == DeFiNavActions.REDEEM_YTCY) {
+            slippageFieldState.setTextAndPlaceCursorAtEnd("1.0")
+        }
+    }
+
+    private fun initFormType() {
+        val autoCompound =
+            defiType == DeFiNavActions.STAKE_STCY || defiType == DeFiNavActions.UNSTAKE_STCY
+        val initialResourceType =
+            if (tronStakingService.isStakingType()) TronResourceType.BANDWIDTH else null
+        uiState.update {
+            it.copy(
+                defiType = defiType,
+                isAutocompound = autoCompound,
+                tronResourceType = initialResourceType,
+            )
+        }
+        tronStakingService.initIfStakingType()
+    }
+
+    private fun loadVaultName() {
+        scope.safeLaunch {
+            val id = vaultId ?: return@safeLaunch
+            val loaded = vaultRepository.get(id) ?: return@safeLaunch
+            vault = loaded
+            uiState.update { it.copy(srcVaultName = loaded.name) }
+        }
+    }
+
+    /** Launches the collectors that mirror collaborator/repository state into [uiState]. */
+    fun bindUiState() {
+        scope.launch {
+            addressManager.isDstAddressComplete.collect { isComplete ->
+                uiState.update { it.copy(isDstAddressComplete = isComplete) }
+            }
+        }
+        scope.launch {
+            addressManager.onAddressValidated.collect { expandSection(SendSections.Amount) }
+        }
+        scope.launch {
+            amountManager.reapingError.collect { error ->
+                uiState.update { it.copy(reapingError = error) }
+            }
+        }
+        scope.launch {
+            advanceGasUiRepository.shouldShowAdvanceGasSettingsIcon.collect {
+                shouldShowAdvanceGasSettingsIcon ->
+                uiState.update { it.copy(hasGasSettings = shouldShowAdvanceGasSettingsIcon) }
+            }
+        }
+        scope.launch {
+            appCurrency.collect { currency ->
+                uiState.update { it.copy(fiatCurrency = currency.ticker) }
+            }
+        }
+        advanceGasUiRepository.showSettings
+            .onEach { showGasSettings ->
+                uiState.update { it.copy(showGasSettings = showGasSettings) }
+            }
+            .launchIn(scope)
+        scope.launch { collectSelectedAccount() }
+    }
+
+    private suspend fun collectSelectedAccount() {
+        combine(selectedToken.filterNotNull(), accounts, isSwitchingAccounts) {
+                token,
+                accounts,
+                switching ->
+                if (switching) return@combine null // <-- SKIP during transitions
+
+                val address = token.address
+                val hasMemo = token.isNativeToken || token.chain.standard == TokenStandard.COSMOS
+
+                val uiModel =
+                    accountToTokenBalanceUiModelMapper(
+                        SendSrc(
+                            Address(chain = token.chain, address = address, accounts = accounts),
+                            accounts.find { it.token.id.equals(token.id, true) }
+                                ?: Account(
+                                    token = token,
+                                    tokenValue = null,
+                                    fiatValue = null,
+                                    price = null,
+                                ),
+                        )
+                    )
+
+                advanceGasUiRepository.updateTokenStandard(token.chain.standard)
+                uiState.update {
+                    it.copy(srcAddress = address, selectedCoin = uiModel, hasMemo = hasMemo)
+                }
+            }
+            .collect()
     }
 }

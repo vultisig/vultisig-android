@@ -2,9 +2,12 @@ package com.vultisig.wallet.ui.models.send
 
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.utils.asAddressInput
 import com.vultisig.wallet.ui.utils.textAsFlow
 import kotlinx.coroutines.CancellationException
@@ -28,9 +31,13 @@ import timber.log.Timber
 internal class AddressManager(
     private val scope: CoroutineScope,
     private val addressFieldState: TextFieldState,
+    private val providerBondFieldState: TextFieldState,
     private val selectedToken: StateFlow<Coin?>,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val addressParserRepository: AddressParserRepository,
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
+    private val vaultIdProvider: () -> String?,
+    private val checkIfTokenSelectionRequired: (currentChain: Chain, newChain: Chain) -> Unit,
 ) {
     private val _resolvedDstAddress = MutableStateFlow<String?>(null)
     val resolvedDstAddress: StateFlow<String?> = _resolvedDstAddress.asStateFlow()
@@ -51,6 +58,33 @@ internal class AddressManager(
 
     fun setOutputAddress(address: String) {
         addressFieldState.setTextAndPlaceCursorAtEnd(address)
+    }
+
+    /**
+     * Opens the address book and applies the chosen entry to the output or provider field.
+     *
+     * @param addressType which field the selected address should populate.
+     */
+    fun openAddressBook(addressType: AddressBookType = AddressBookType.OUTPUT) {
+        scope.safeLaunch {
+            val vaultId = vaultIdProvider() ?: return@safeLaunch
+            val selectedChain = selectedToken.value?.chain ?: return@safeLaunch
+
+            val address =
+                requestAddressBookEntry(chainId = selectedChain.id, excludeVaultId = vaultId)
+                    ?: return@safeLaunch
+
+            when (addressType) {
+                AddressBookType.OUTPUT -> {
+                    checkIfTokenSelectionRequired(selectedChain, address.chain)
+                    setOutputAddress(address.address)
+                }
+
+                AddressBookType.PROVIDER -> {
+                    providerBondFieldState.setTextAndPlaceCursorAtEnd(address.address)
+                }
+            }
+        }
     }
 
     private suspend fun collectIsComplete() {
