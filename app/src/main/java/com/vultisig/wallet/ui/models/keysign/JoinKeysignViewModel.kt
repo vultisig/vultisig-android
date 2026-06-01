@@ -39,6 +39,7 @@ import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.cosmosNativeDenom
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.isSecuredAssetEligible
@@ -956,13 +957,12 @@ constructor(
 
                     val nativeCoin =
                         withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-                    val fallbackFeeAmount =
-                        resolveFallbackFeeAmount(payload.blockChainSpecific, blockchainTransaction)
                     val estimatedTokenFees =
-                        computeJoinKeysignNetworkFee(
-                            blockChainSpecific = payload.blockChainSpecific,
+                        resolveJoinKeysignNetworkFee(
+                            payload = payload,
+                            chain = chain,
                             nativeCoin = nativeCoin,
-                            fallbackFeeAmount = fallbackFeeAmount,
+                            blockchainTransaction = blockchainTransaction,
                         )
 
                     val totalGasAndFee =
@@ -1042,15 +1042,11 @@ constructor(
                             }
                             TokenValue(value = BigInteger.valueOf(plan.fee), token = nativeCoin)
                         } else {
-                            val fallbackFeeAmount =
-                                resolveFallbackFeeAmount(
-                                    payload.blockChainSpecific,
-                                    blockchainTransaction,
-                                )
-                            computeJoinKeysignNetworkFee(
-                                blockChainSpecific = payload.blockChainSpecific,
+                            resolveJoinKeysignNetworkFee(
+                                payload = payload,
+                                chain = chain,
                                 nativeCoin = nativeCoin,
-                                fallbackFeeAmount = fallbackFeeAmount,
+                                blockchainTransaction = blockchainTransaction,
                             )
                         }
 
@@ -1656,6 +1652,27 @@ constructor(
         }
 
     /**
+     * Network Fee for the join-keysign deposit and non-UTXO send paths: the dApp-supplied fee when
+     * present ([dappSuppliedNativeFee], issue #4390), otherwise [computeJoinKeysignNetworkFee]. The
+     * fallback and its fee-service call only run when there is no dApp fee.
+     */
+    private suspend fun resolveJoinKeysignNetworkFee(
+        payload: KeysignPayload,
+        chain: Chain,
+        nativeCoin: Coin,
+        blockchainTransaction: Transfer,
+    ): TokenValue =
+        payload.dappSuppliedNativeFee(chain, parseCosmosMessage)?.let {
+            TokenValue(value = it, token = nativeCoin)
+        }
+            ?: computeJoinKeysignNetworkFee(
+                blockChainSpecific = payload.blockChainSpecific,
+                nativeCoin = nativeCoin,
+                fallbackFeeAmount =
+                    resolveFallbackFeeAmount(payload.blockChainSpecific, blockchainTransaction),
+            )
+
+    /**
      * Fetches the chain's native coin for the Universal Router swap-intent decoder so a native-ETH
      * leg renders the right ticker. Non-fatal — a failed RPC just means the row displays the bare
      * zero address. [CancellationException] propagates so structured-concurrency cancellation isn't
@@ -1898,3 +1915,47 @@ internal fun computeJoinKeysignSwapNetworkFee(
 internal fun defaultEvmSwapGasLimit(chain: Chain): BigInteger =
     if (chain == Chain.Mantle) EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
     else EthereumFeeService.DEFAULT_SWAP_LIMIT
+
+/**
+ * The fee a dApp signed in [KeysignPayload.signAmino] or [KeysignPayload.signDirect], or `null` for
+ * a wallet-built native tx (both absent) so callers fall back to the estimate. The cosmos signers
+ * sign these bytes verbatim, so this is the fee actually broadcast — including the `0` Rujira uses
+ * today (issue #4390).
+ *
+ * Only [Chain.cosmosNativeDenom] entries are summed; a fee in another denom, or an unparseable
+ * amount, yields `null` rather than a misleading `0`. Mirrors the Windows resolver.
+ */
+internal fun KeysignPayload.dappSuppliedNativeFee(
+    chain: Chain,
+    parseCosmosMessage: ParseCosmosMessageUseCase,
+): BigInteger? {
+    val nativeDenom = chain.cosmosNativeDenom ?: return null
+
+    val aminoMatched =
+        signAmino?.fee?.amount?.filter { it?.denom?.lowercase() == nativeDenom }.orEmpty()
+    if (aminoMatched.isNotEmpty()) {
+        return aminoMatched.map { it?.amount }.sumDenomAmountsOrNull()
+    }
+
+    val directMatched =
+        signDirect
+            ?.let { runCatching { parseCosmosMessage(it) }.getOrNull() }
+            ?.authInfoFee
+            ?.amount
+            ?.filter { it.denom.lowercase() == nativeDenom }
+            .orEmpty()
+    if (directMatched.isNotEmpty()) {
+        return directMatched.map { it.amount }.sumDenomAmountsOrNull()
+    }
+
+    return null
+}
+
+/** Sums the raw Cosmos fee amounts, or `null` if any entry is missing or not a valid integer. */
+private fun List<String?>.sumDenomAmountsOrNull(): BigInteger? {
+    var total = BigInteger.ZERO
+    for (raw in this) {
+        total += raw?.toBigIntegerOrNull() ?: return null
+    }
+    return total
+}
