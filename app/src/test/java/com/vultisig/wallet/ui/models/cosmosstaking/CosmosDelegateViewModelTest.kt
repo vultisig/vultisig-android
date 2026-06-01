@@ -36,6 +36,8 @@ internal class CosmosDelegateViewModelTest {
 
     private val vaultRepository: VaultRepository = mockk()
     private val cosmosStakingService: CosmosStakingService = mockk()
+    private val balanceRepository: com.vultisig.wallet.data.repositories.BalanceRepository =
+        mockk(relaxed = true)
     private val blockChainSpecificRepository: BlockChainSpecificRepository = mockk(relaxed = true)
     private val buildPayload: BuildCosmosStakingKeysignPayloadUseCase = mockk(relaxed = true)
     private val depositTransactionRepository: DepositTransactionRepository = mockk(relaxed = true)
@@ -125,6 +127,7 @@ internal class CosmosDelegateViewModelTest {
             vaultRepository = vaultRepository,
             cosmosStakingService = cosmosStakingService,
             blockChainSpecificRepository = blockChainSpecificRepository,
+            balanceRepository = balanceRepository,
             buildCosmosStakingKeysignPayload = buildPayload,
             depositTransactionRepository = depositTransactionRepository,
             navigator = navigator,

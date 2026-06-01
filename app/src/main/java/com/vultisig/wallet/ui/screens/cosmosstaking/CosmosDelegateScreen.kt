@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -27,12 +28,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
+import com.vultisig.wallet.ui.components.PercentageChip
+import com.vultisig.wallet.ui.components.TokenAmountInput
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -41,18 +43,13 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosDelegateUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosDelegateViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import java.math.BigDecimal
 
 /**
- * Form screen for LUNA / LUNC delegate. Inputs: amount + validator (picked through a modal sheet).
- *
- * Polish (matching the iOS Figma exactly) lives in later sessions:
- * - Headroom-aware stakeable balance display + 25/50/75/Max chips
- * - Fiat toggle
- * - Validator card details (commission, voting power %, Keybase avatar)
- * - Inline validation errors per field
- *
- * The MVP here proves the end-to-end path compiles + routes correctly into the existing
- * verify-deposit / keysign pipeline.
+ * Stake form for LUNA / LUNC — mirrors iOS `CosmosDelegateTransactionScreen`: centered amount
+ * input, 25/50/75/Max chips, "Balance available", and a validator picker row that opens the
+ * [ValidatorPickerSheet]. On Continue the VM builds the `signDirect` keysign payload and routes to
+ * the verify screen.
  */
 @Composable
 internal fun CosmosDelegateScreen(viewModel: CosmosDelegateViewModel = hiltViewModel()) {
@@ -64,20 +61,20 @@ internal fun CosmosDelegateScreen(viewModel: CosmosDelegateViewModel = hiltViewM
     ) {
         DelegateContent(
             state = state,
-            amountText = viewModel.amountFieldState.text.toString(),
-            onAmountChange = { newText ->
-                viewModel.amountFieldState.edit { replace(0, length, newText) }
-            },
+            amountFieldState = viewModel.amountFieldState,
+            onPercentage = viewModel::onPercentageChange,
             onPickValidator = viewModel::openValidatorPicker,
             onSubmit = viewModel::submit,
         )
 
         if (state.isShowingPicker) {
             ValidatorPickerSheet(
+                title = stringResource(R.string.cosmos_staking_select_validator),
                 searchQuery = state.validatorSearchQuery,
                 onSearchQueryChange = viewModel::onSearchQueryChange,
                 isLoading = state.isLoadingValidators,
                 validators = viewModel.visibleValidators(state),
+                ticker = state.ticker,
                 selectedValidatorAddress = state.selectedValidator?.operatorAddress,
                 onValidatorSelected = viewModel::selectValidator,
                 onDismiss = viewModel::closeValidatorPicker,
@@ -89,8 +86,8 @@ internal fun CosmosDelegateScreen(viewModel: CosmosDelegateViewModel = hiltViewM
 @Composable
 private fun DelegateContent(
     state: CosmosDelegateUiState,
-    amountText: String,
-    onAmountChange: (String) -> Unit,
+    amountFieldState: TextFieldState,
+    onPercentage: (Int) -> Unit,
     onPickValidator: () -> Unit,
     onSubmit: () -> Unit,
 ) {
@@ -99,30 +96,13 @@ private fun DelegateContent(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            SectionLabel(label = stringResource(R.string.cosmos_staking_amount))
-            BasicTextField(
-                value = amountText,
-                onValueChange = onAmountChange,
-                singleLine = true,
-                textStyle =
-                    TextStyle(
-                        color = Theme.v2.colors.text.primary,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    ),
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(
-                            width = 1.dp,
-                            color = Theme.v2.colors.border.normal,
-                            shape = RoundedCornerShape(12.dp),
-                        )
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
+            AmountCard(
+                state = state,
+                amountFieldState = amountFieldState,
+                onPercentage = onPercentage,
             )
 
-            SectionLabel(label = stringResource(R.string.cosmos_staking_validator_picker))
-            ValidatorRow(selected = state.selectedValidator, onClick = onPickValidator)
+            ValidatorPickerField(selected = state.selectedValidator, onClick = onPickValidator)
 
             val errorMessage = state.errorMessage
             if (errorMessage != null) {
@@ -135,7 +115,7 @@ private fun DelegateContent(
         }
 
         VsButton(
-            label = stringResourceOrFallback(R.string.send_continue_button, "Continue"),
+            label = stringResource(R.string.cosmos_staking_continue),
             variant = VsButtonVariant.CTA,
             state = if (state.isSubmitting) VsButtonState.Disabled else VsButtonState.Enabled,
             onClick = onSubmit,
@@ -144,13 +124,70 @@ private fun DelegateContent(
     }
 }
 
+/** Centered amount input + 25/50/75/Max chips + balance-available row, in a bordered card. */
 @Composable
-private fun SectionLabel(label: String) {
-    Text(text = label, style = Theme.brockmann.body.s.medium, color = Theme.v2.colors.text.primary)
+internal fun AmountCard(
+    state: CosmosDelegateUiState,
+    amountFieldState: TextFieldState,
+    onPercentage: (Int) -> Unit,
+) {
+    val percentages = listOf(25, 50, 75, 100)
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.cosmos_staking_amount),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+        )
+        TokenAmountInput(
+            primaryFieldState = amountFieldState,
+            primaryLabel = state.ticker.ifEmpty { "Token" },
+            secondaryText = "",
+            maxBalance = state.stakeableBalance.takeIf { it > BigDecimal.ZERO },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            percentages.forEach { percent ->
+                PercentageChip(
+                    title = if (percent == 100) stringResource(R.string.max) else "$percent%",
+                    isSelected = state.percentageSelected == percent,
+                    onClick = { onPercentage(percent) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(
+                text = stringResource(R.string.send_form_balance_available),
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.secondary,
+            )
+            Text(
+                text =
+                    "${state.stakeableBalance.stripTrailingZeros().toPlainString()} ${state.ticker}",
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+        }
+    }
 }
 
+/** "Validator >" picker opener row — shows the selected validator's moniker when picked. */
 @Composable
-private fun ValidatorRow(selected: CosmosValidator?, onClick: () -> Unit) {
+internal fun ValidatorPickerField(selected: CosmosValidator?, onClick: () -> Unit) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
@@ -161,12 +198,14 @@ private fun ValidatorRow(selected: CosmosValidator?, onClick: () -> Unit) {
                     shape = RoundedCornerShape(12.dp),
                 )
                 .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = selected?.moniker?.ifEmpty { selected.operatorAddress } ?: "Select a validator",
+            text =
+                selected?.moniker?.ifEmpty { selected.operatorAddress }
+                    ?: stringResource(R.string.cosmos_staking_validator_picker),
             style = Theme.brockmann.body.s.medium,
             color =
                 if (selected != null) Theme.v2.colors.text.primary
@@ -180,13 +219,19 @@ private fun ValidatorRow(selected: CosmosValidator?, onClick: () -> Unit) {
     }
 }
 
+/**
+ * Searchable validator picker bottom sheet — mirrors iOS `ValidatorSelectionScreen`: each row shows
+ * the moniker, voting power (total staked), and commission %, sorted by voting power desc.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ValidatorPickerSheet(
+internal fun ValidatorPickerSheet(
+    title: String,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     isLoading: Boolean,
     validators: List<CosmosValidator>,
+    ticker: String,
     selectedValidatorAddress: String?,
     onValidatorSelected: (CosmosValidator) -> Unit,
     onDismiss: () -> Unit,
@@ -199,7 +244,7 @@ private fun ValidatorPickerSheet(
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Text(
-                text = stringResource(R.string.cosmos_staking_select_validator),
+                text = title,
                 style = Theme.brockmann.headings.title3,
                 color = Theme.v2.colors.text.primary,
             )
@@ -220,30 +265,32 @@ private fun ValidatorPickerSheet(
 
             UiSpacer(size = 12.dp)
 
-            if (isLoading) {
-                Text(
-                    text = stringResource(R.string.cosmos_staking_loading_validators),
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.secondary,
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                )
-            } else if (validators.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.cosmos_staking_no_validators_found),
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.secondary,
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                )
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxWidth().height(420.dp)) {
-                    items(validators, key = { it.operatorAddress }) { validator ->
-                        ValidatorPickerRow(
-                            validator = validator,
-                            isSelected = validator.operatorAddress == selectedValidatorAddress,
-                            onClick = { onValidatorSelected(validator) },
-                        )
+            when {
+                isLoading ->
+                    Text(
+                        text = stringResource(R.string.cosmos_staking_loading_validators),
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.secondary,
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    )
+                validators.isEmpty() ->
+                    Text(
+                        text = stringResource(R.string.cosmos_staking_no_validators_found),
+                        style = Theme.brockmann.body.s.medium,
+                        color = Theme.v2.colors.text.secondary,
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    )
+                else ->
+                    LazyColumn(modifier = Modifier.fillMaxWidth().height(440.dp)) {
+                        items(validators, key = { it.operatorAddress }) { validator ->
+                            ValidatorPickerRow(
+                                validator = validator,
+                                ticker = ticker,
+                                isSelected = validator.operatorAddress == selectedValidatorAddress,
+                                onClick = { onValidatorSelected(validator) },
+                            )
+                        }
                     }
-                }
             }
 
             UiSpacer(size = 16.dp)
@@ -254,12 +301,14 @@ private fun ValidatorPickerSheet(
 @Composable
 private fun ValidatorPickerRow(
     validator: CosmosValidator,
+    ticker: String,
     isSelected: Boolean,
     onClick: () -> Unit,
 ) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
+                .padding(vertical = 4.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = if (isSelected) 2.dp else 1.dp,
@@ -270,23 +319,37 @@ private fun ValidatorPickerRow(
                 )
                 .clickable(onClick = onClick)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = validator.moniker.ifEmpty { validator.operatorAddress },
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
             )
             Text(
-                text = "Commission ${(validator.commission.movePointRight(2)).toPlainString()}%",
+                text = "${formatVotingPower(validator.votingPower, ticker)} $ticker",
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
             )
         }
+        Text(
+            text =
+                "${validator.commission.movePointRight(2).stripTrailingZeros().toPlainString()}%",
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.secondary,
+        )
     }
 }
 
-@Composable
-private fun stringResourceOrFallback(id: Int, fallback: String): String =
-    runCatching { androidx.compose.ui.res.stringResource(id) }.getOrDefault(fallback)
+/**
+ * Voting power arrives as bond-denom base units (uint string). Render it in whole-token units with
+ * thousands separators, matching the iOS validator picker (e.g. "137,888,608,306 LUNC"). LUNA/LUNC
+ * use 6 decimals.
+ */
+private fun formatVotingPower(votingPowerBaseUnits: BigDecimal, ticker: String): String {
+    val decimals = if (ticker == "LUNA" || ticker == "LUNC") 6 else 6
+    val whole = votingPowerBaseUnits.movePointLeft(decimals).toBigInteger()
+    return "%,d".format(whole)
+}

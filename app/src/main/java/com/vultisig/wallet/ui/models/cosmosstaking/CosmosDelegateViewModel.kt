@@ -42,6 +42,13 @@ internal data class CosmosDelegateUiState(
     val validatorSearchQuery: String = "",
     val isShowingPicker: Boolean = false,
     val isLoadingValidators: Boolean = false,
+    /**
+     * Headroom-aware stakeable balance (human decimal) — total native balance minus the single-msg
+     * fee reservation, since the fee is paid in the bond denom. Mirrors iOS `stakeableBalance`.
+     * Caps the amount input + drives the "Balance available" row and the 25/50/75/Max chips.
+     */
+    val stakeableBalance: BigDecimal = BigDecimal.ZERO,
+    val percentageSelected: Int = -1,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
 )
@@ -69,6 +76,7 @@ constructor(
     private val vaultRepository: VaultRepository,
     private val cosmosStakingService: CosmosStakingService,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
+    private val balanceRepository: com.vultisig.wallet.data.repositories.BalanceRepository,
     private val buildCosmosStakingKeysignPayload: BuildCosmosStakingKeysignPayloadUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<com.vultisig.wallet.ui.navigation.Destination>,
@@ -105,6 +113,20 @@ constructor(
 
     fun onSearchQueryChange(query: String) {
         _state.update { it.copy(validatorSearchQuery = query) }
+    }
+
+    /** 25/50/75/100% chip → fill the amount field from the stakeable balance. */
+    fun onPercentageChange(percent: Int) {
+        _state.update { it.copy(percentageSelected = percent) }
+        val available = _state.value.stakeableBalance
+        if (available <= BigDecimal.ZERO) return
+        val amount =
+            available
+                .multiply(BigDecimal(percent))
+                .divide(BigDecimal(100), 6, java.math.RoundingMode.DOWN)
+                .stripTrailingZeros()
+                .toPlainString()
+        amountFieldState.edit { replace(0, length, amount) }
     }
 
     fun dismissError() {
@@ -259,7 +281,28 @@ constructor(
                     )
 
             coin = nativeCoin
-            _state.update { it.copy(ticker = nativeCoin.ticker) }
+
+            // Headroom-aware stakeable balance: total native balance minus the single-msg fee
+            // reservation (fee is paid in the bond denom). Mirrors iOS `stakeableBalance`.
+            val entry = CosmosStakingConfig.entryFor(chain)
+            val feeReservation = BigDecimal(entry.feeAmount).movePointLeft(nativeCoin.decimal)
+            val total =
+                withContext(ioDispatcher) {
+                    runCatching {
+                            val pair =
+                                balanceRepository.getCachedTokenBalanceAndPrice(
+                                    nativeCoin.address,
+                                    nativeCoin,
+                                )
+                            pair.tokenBalance.tokenValue?.let {
+                                BigDecimal(it.value).movePointLeft(nativeCoin.decimal)
+                            } ?: BigDecimal.ZERO
+                        }
+                        .getOrDefault(BigDecimal.ZERO)
+                }
+            val stakeable = (total - feeReservation).coerceAtLeast(BigDecimal.ZERO)
+
+            _state.update { it.copy(ticker = nativeCoin.ticker, stakeableBalance = stakeable) }
         }
     }
 
