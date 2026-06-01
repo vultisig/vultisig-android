@@ -2643,7 +2643,7 @@ object Coins {
                 address = "",
                 decimal = 9,
                 hexPublicKey = "",
-                priceProviderID = "suilend",
+                priceProviderID = "send-token-2",
                 contractAddress =
                     "0xb45fcfcc2cc07ce0702cc2d229621e046c906ef14d9b25e8e4d25f6e8763fef7::send::SEND",
                 isNativeToken = false,
