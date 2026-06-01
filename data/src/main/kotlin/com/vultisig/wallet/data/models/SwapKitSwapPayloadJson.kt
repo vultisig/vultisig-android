@@ -79,5 +79,24 @@ data class SwapKitSwapPayloadJson(
          * Sui's submit envelope. Mirrors iOS' `"SUI"`.
          */
         const val TX_TYPE_SUI = "SUI"
+
+        /**
+         * `meta.txType` discriminator for the TON signing path. SwapKit returns `tx` as a
+         * `[{address, amount}]` array (raw nano-TON amounts) JSON-encoded into [txPayload]. A TON
+         * SwapKit swap is a plain native transfer to the deposit [targetAddress] — routing is by
+         * the deposit address itself (Chainflip / NEAR), no memo — so signing reuses the existing
+         * [com.vultisig.wallet.data.crypto.TonHelper] native path off `toAddress` / `toAmount`
+         * rather than a dedicated signer. Mirrors iOS' `"TON"`.
+         */
+        const val TX_TYPE_TON = "TON"
+
+        /**
+         * `meta.txType` discriminator for the XRP (Ripple) deposit-only path. SwapKit returns no
+         * transaction body — only a deposit r-address (and optional destination tag). [txPayload]
+         * is empty; the cosigning peer rebuilds a plain XRP Payment to [targetAddress] for
+         * [fromAmount] via the existing `RippleHelper`, attaching the destination tag carried in
+         * [memo]. Mirrors iOS' `"XRP"`.
+         */
+        const val TX_TYPE_XRP = "XRP"
     }
 }
