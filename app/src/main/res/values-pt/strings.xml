@@ -1243,6 +1243,7 @@
     <string name="qbtc_claim_error_invalid_btc_key">Chave pública de Bitcoin inválida.</string>
     <string name="qbtc_claim_error_proof_mismatch">O serviço de prova devolveu dados não correspondentes. O resgate não foi submetido.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">Não foi possível transmitir o resgate. Por favor, tente novamente mais tarde.</string>
+    <string name="qbtc_claim_error_pairing_timeout">O outro dispositivo não se juntou a tempo. Certifique-se de que ambos os dispositivos estão ligados e tente novamente.</string>
     <string name="qbtc_claim_banner_subtitle">O mesmo Bitcoin. Resistente à computação quântica.</string>
     <string name="qbtc_claim_banner_title">Resgate o seu QBTC</string>
     <string name="qbtc_claim_banner_cta">Resgatar agora</string>

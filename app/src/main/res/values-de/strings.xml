@@ -1247,6 +1247,7 @@
     <string name="qbtc_claim_error_invalid_btc_key">Ungültiger öffentlicher Bitcoin-Schlüssel.</string>
     <string name="qbtc_claim_error_proof_mismatch">Der Nachweisdienst hat nicht übereinstimmende Daten zurückgegeben. Der Abruf wurde nicht übermittelt.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">Der Abruf konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.</string>
+    <string name="qbtc_claim_error_pairing_timeout">Das andere Gerät ist nicht rechtzeitig beigetreten. Stellen Sie sicher, dass beide Geräte verbunden sind, und versuchen Sie es erneut.</string>
     <string name="qbtc_claim_banner_subtitle">Dasselbe Bitcoin. Quantensicher.</string>
     <string name="qbtc_claim_banner_title">Rufen Sie Ihr QBTC ab</string>
     <string name="qbtc_claim_banner_cta">Jetzt abrufen</string>

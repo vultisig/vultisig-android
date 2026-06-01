@@ -1570,6 +1570,7 @@
     <string name="qbtc_claim_error_invalid_btc_key">无效的 Bitcoin 公钥。</string>
     <string name="qbtc_claim_error_proof_mismatch">证明服务返回了不匹配的数据。提取未提交。</string>
     <string name="qbtc_claim_error_broadcast_unavailable">无法广播提取。请稍后重试。</string>
+    <string name="qbtc_claim_error_pairing_timeout">另一台设备未及时加入。请确保两台设备均已连接，然后重试。</string>
     <string name="qbtc_claim_banner_subtitle">同样的 Bitcoin。抗量子。</string>
     <string name="qbtc_claim_banner_title">提取您的 QBTC</string>
     <string name="qbtc_claim_banner_cta">立即提取</string>

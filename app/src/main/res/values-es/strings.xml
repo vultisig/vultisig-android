@@ -1245,6 +1245,7 @@
     <string name="qbtc_claim_error_invalid_btc_key">Clave pública de Bitcoin no válida.</string>
     <string name="qbtc_claim_error_proof_mismatch">El servicio de prueba devolvió datos no coincidentes. La reclamación no se envió.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">No se pudo transmitir la reclamación. Por favor, inténtalo de nuevo más tarde.</string>
+    <string name="qbtc_claim_error_pairing_timeout">El otro dispositivo no se unió a tiempo. Asegúrate de que ambos dispositivos estén conectados e inténtalo de nuevo.</string>
     <string name="qbtc_claim_banner_subtitle">El mismo Bitcoin. A prueba de cuántica.</string>
     <string name="qbtc_claim_banner_title">Reclama tu QBTC</string>
     <string name="qbtc_claim_banner_cta">Reclamar ahora</string>

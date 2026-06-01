@@ -311,6 +311,8 @@ private fun FailedContent(error: QbtcClaimError, onRetry: () -> Unit) {
                 stringResource(R.string.qbtc_claim_error_proof_mismatch)
             QbtcClaimError.BROADCAST_UNAVAILABLE ->
                 stringResource(R.string.qbtc_claim_error_broadcast_unavailable)
+            QbtcClaimError.PAIRING_TIMEOUT ->
+                stringResource(R.string.qbtc_claim_error_pairing_timeout)
             QbtcClaimError.GENERIC -> stringResource(R.string.qbtc_claim_failed)
         }
     Column(

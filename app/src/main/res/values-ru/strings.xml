@@ -1257,6 +1257,7 @@
     <string name="qbtc_claim_error_invalid_btc_key">Недействительный публичный ключ Bitcoin.</string>
     <string name="qbtc_claim_error_proof_mismatch">Сервис доказательств вернул несовпадающие данные. Запрос на получение не был отправлен.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">Не удалось отправить запрос на получение. Пожалуйста, попробуйте позже.</string>
+    <string name="qbtc_claim_error_pairing_timeout">Другое устройство не присоединилось вовремя. Убедитесь, что оба устройства подключены, и попробуйте ещё раз.</string>
     <string name="qbtc_claim_banner_subtitle">Тот же Bitcoin. Квантово-устойчивый.</string>
     <string name="qbtc_claim_banner_title">Получите свой QBTC</string>
     <string name="qbtc_claim_banner_cta">Получить сейчас</string>

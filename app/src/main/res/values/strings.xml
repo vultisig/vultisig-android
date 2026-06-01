@@ -1298,6 +1298,7 @@
     <string name="qbtc_claim_error_invalid_btc_key">Invalid Bitcoin public key.</string>
     <string name="qbtc_claim_error_proof_mismatch">The proof service returned mismatched data. The claim was not submitted.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">The claim could not be broadcast. Please try again later.</string>
+    <string name="qbtc_claim_error_pairing_timeout">The other device didn\'t join in time. Make sure both devices are connected and try again.</string>
     <string name="qbtc_claim_banner_subtitle">Same Bitcoin. Quantum-safe.</string>
     <string name="qbtc_claim_banner_title">Claim your QBTC</string>
     <string name="qbtc_claim_banner_cta">Claim Now</string>

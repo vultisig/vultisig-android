@@ -1264,6 +1264,7 @@
     <string name="qbtc_claim_error_invalid_btc_key">잘못된 Bitcoin 공개 키입니다.</string>
     <string name="qbtc_claim_error_proof_mismatch">증명 서비스가 일치하지 않는 데이터를 반환했습니다. 청구가 제출되지 않았습니다.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">청구를 브로드캐스트할 수 없습니다. 나중에 다시 시도해 주세요.</string>
+    <string name="qbtc_claim_error_pairing_timeout">다른 기기가 제때 참여하지 않았습니다. 두 기기가 모두 연결되어 있는지 확인한 후 다시 시도해 주세요.</string>
     <string name="qbtc_claim_banner_subtitle">같은 Bitcoin. 양자 내성.</string>
     <string name="qbtc_claim_banner_title">QBTC를 청구하세요</string>
     <string name="qbtc_claim_banner_cta">지금 청구</string>

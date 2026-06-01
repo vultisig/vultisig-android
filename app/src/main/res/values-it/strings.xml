@@ -1248,6 +1248,7 @@
     <string name="qbtc_claim_error_invalid_btc_key">Chiave pubblica Bitcoin non valida.</string>
     <string name="qbtc_claim_error_proof_mismatch">Il servizio di prova ha restituito dati non corrispondenti. Il prelievo non è stato inviato.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">Impossibile trasmettere il prelievo. Riprova più tardi.</string>
+    <string name="qbtc_claim_error_pairing_timeout">L\'altro dispositivo non si è unito in tempo. Assicurati che entrambi i dispositivi siano connessi e riprova.</string>
     <string name="qbtc_claim_banner_subtitle">Lo stesso Bitcoin. A prova di quantistica.</string>
     <string name="qbtc_claim_banner_title">Preleva il tuo QBTC</string>
     <string name="qbtc_claim_banner_cta">Preleva ora</string>

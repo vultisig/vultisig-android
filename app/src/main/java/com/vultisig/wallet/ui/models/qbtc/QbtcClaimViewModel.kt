@@ -56,6 +56,7 @@ import io.ktor.util.encodeBase64
 import java.math.BigInteger
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -64,6 +65,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.json.Json
@@ -219,6 +221,10 @@ constructor(
         claimJob =
             viewModelScope.safeLaunch {
                 val session = pairAndKickoff(vault, btcCoin)
+                if (session == null) {
+                    uiState.value = QbtcClaimUiState.Failed(QbtcClaimError.PAIRING_TIMEOUT)
+                    return@safeLaunch
+                }
                 runOrchestrator(
                     vault,
                     btcCoin,
@@ -270,9 +276,10 @@ constructor(
      * Provisions a relay session, shows the pairing QR (a normal keysign QR flagged `isQbtcClaim`),
      * waits for the co-signing device to register, then kicks off the committee and returns the
      * established session. The peer recomputes the claim hash itself, so the QR carries no signing
-     * material.
+     * material. Returns null if no peer joins within [PEER_DISCOVERY_TIMEOUT] so the caller can
+     * surface a clear error instead of leaving the user stranded on the pairing screen.
      */
-    private suspend fun pairAndKickoff(vault: Vault, btcCoin: Coin): QbtcClaimKeysignSession {
+    private suspend fun pairAndKickoff(vault: Vault, btcCoin: Coin): QbtcClaimKeysignSession? {
         val sessionId = UUID.randomUUID().toString()
         val encryptionKeyHex = Utils.encryptionKeyHex
         val serverUrl = Endpoints.VULTISIG_RELAY_URL
@@ -288,12 +295,18 @@ constructor(
         sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
 
         val peersNeeded = (Utils.getThreshold(vault.signers.size) - 1).coerceAtLeast(1)
+        // Bounded by a generous, human-paced timeout — pairing means picking up a second device and
+        // scanning, so it allows far longer than the Fast Vault runner's 60s server-response wait.
+        // withTimeoutOrNull (not withTimeout) avoids a TimeoutCancellationException that safeLaunch
+        // would rethrow as a plain cancellation, which would leave the UI stuck on Pairing.
         val peers =
-            discoverParticipants(serverUrl, sessionId, localPartyId)
-                .onEach { devices ->
-                    uiState.value = QbtcClaimUiState.Pairing(qr = qr, joinedDevices = devices)
-                }
-                .first { it.size >= peersNeeded }
+            withTimeoutOrNull(PEER_DISCOVERY_TIMEOUT) {
+                discoverParticipants(serverUrl, sessionId, localPartyId)
+                    .onEach { devices ->
+                        uiState.value = QbtcClaimUiState.Pairing(qr = qr, joinedDevices = devices)
+                    }
+                    .first { it.size >= peersNeeded }
+            } ?: return null
 
         val committee = (listOf(localPartyId) + peers.take(peersNeeded)).distinct()
         sessionApi.startWithCommittee(serverUrl, sessionId, committee)
@@ -393,4 +406,8 @@ constructor(
 
     private fun ClaimableUtxo.shortTxid(): String =
         if (txid.length <= 14) "$txid:$vout" else "${txid.take(4)}…${txid.takeLast(4)}:$vout"
+
+    private companion object {
+        val PEER_DISCOVERY_TIMEOUT = 300.seconds
+    }
 }

@@ -1255,6 +1255,7 @@
     <string name="qbtc_claim_error_invalid_btc_key">Nevažeći javni Bitcoin ključ.</string>
     <string name="qbtc_claim_error_proof_mismatch">Servis za dokaze vratio je nepodudarne podatke. Preuzimanje nije poslano.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">Preuzimanje nije moglo biti emitirano. Molimo pokušajte ponovno kasnije.</string>
+    <string name="qbtc_claim_error_pairing_timeout">Drugi uređaj nije se pridružio na vrijeme. Provjerite jesu li oba uređaja povezana i pokušajte ponovno.</string>
     <string name="qbtc_claim_banner_subtitle">Isti Bitcoin. Kvantno-siguran.</string>
     <string name="qbtc_claim_banner_title">Preuzmite svoj QBTC</string>
     <string name="qbtc_claim_banner_cta">Preuzmi sada</string>

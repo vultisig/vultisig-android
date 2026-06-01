@@ -1239,6 +1239,7 @@
     <string name="qbtc_claim_error_invalid_btc_key">Ongeldige openbare Bitcoin-sleutel.</string>
     <string name="qbtc_claim_error_proof_mismatch">De bewijsservice heeft niet-overeenkomende gegevens geretourneerd. De claim is niet ingediend.</string>
     <string name="qbtc_claim_error_broadcast_unavailable">De claim kon niet worden uitgezonden. Probeer het later opnieuw.</string>
+    <string name="qbtc_claim_error_pairing_timeout">Het andere apparaat is niet op tijd toegetreden. Zorg ervoor dat beide apparaten verbonden zijn en probeer het opnieuw.</string>
     <string name="qbtc_claim_banner_subtitle">Dezelfde Bitcoin. Kwantumveilig.</string>
     <string name="qbtc_claim_banner_title">Claim uw QBTC</string>
     <string name="qbtc_claim_banner_cta">Nu claimen</string>
