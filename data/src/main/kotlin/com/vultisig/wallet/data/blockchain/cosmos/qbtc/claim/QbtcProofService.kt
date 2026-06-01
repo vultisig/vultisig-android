@@ -10,6 +10,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import timber.log.Timber
 
 /**
  * Client for the QBTC proof service. `generateProof` is long-running (up to
@@ -35,7 +36,10 @@ constructor(@QbtcProofHttpClient private val httpClient: HttpClient) : QbtcProof
                 .isHealthy
         } catch (e: CancellationException) {
             throw e
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            // A health probe is intentionally any-failure-means-unhealthy; log so a swallowed
+            // failure stays diagnosable rather than silent.
+            Timber.w(e, "QBTC proof service health check failed")
             false
         }
 

@@ -4,6 +4,8 @@ package com.vultisig.wallet.data.qbtc
 
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.usecases.Encryption
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -13,8 +15,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 internal class QbtcClaimResultPollerTest {
@@ -56,8 +56,8 @@ internal class QbtcClaimResultPollerTest {
 
         val result = poller.awaitResult(session, timeout = 60.seconds, interval = 1.seconds)
 
-        assertEquals("ABC123", result?.txHash)
-        assertEquals(5_000L, result?.totalSats)
+        result?.txHash shouldBe "ABC123"
+        result?.totalSats shouldBe 5_000L
     }
 
     @Test
@@ -67,6 +67,6 @@ internal class QbtcClaimResultPollerTest {
 
         val result = poller.awaitResult(session, timeout = 5.seconds, interval = 1.seconds)
 
-        assertNull(result)
+        result.shouldBeNull()
     }
 }

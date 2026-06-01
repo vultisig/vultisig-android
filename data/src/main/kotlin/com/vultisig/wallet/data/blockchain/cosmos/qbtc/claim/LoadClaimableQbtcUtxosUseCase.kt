@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim
 
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
+import timber.log.Timber
 
 /** Why the QBTC claim flow can't proceed. Mirrors iOS `QBTCClaimBlockedReason`. */
 sealed interface QbtcClaimBlockedReason {
@@ -53,7 +54,10 @@ constructor(
                 chainService.isClaimWithProofDisabled()
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                // Fail closed on anything (incl. a protocol/parse error from the param endpoint),
+                // but log so an unexpected failure isn't indistinguishable from a network timeout.
+                Timber.e(e, "QBTC kill-switch check failed; failing closed")
                 return QbtcClaimLoadResult.Blocked(QbtcClaimBlockedReason.KillSwitchClosed)
             }
         if (disabled) {
@@ -67,6 +71,7 @@ constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                Timber.e(e, "Failed to load claimable QBTC UTXOs")
                 return QbtcClaimLoadResult.Blocked(
                     QbtcClaimBlockedReason.UtxoFetchFailed(e.message.orEmpty())
                 )
