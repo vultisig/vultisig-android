@@ -110,8 +110,11 @@ constructor(
         if (this.vaultId == vaultId && this.chainId == chainId) return
         this.vaultId = vaultId
         this.chainId = chainId
+        // [loadCoin] resolves the native coin then chains into [refresh] from the SAME coroutine.
+        // We must NOT call refresh() here in parallel: loadCoin only assigns `coin` after it
+        // suspends on the vault read, so a parallel refresh() would observe `coin == null`, bail at
+        // its `coin ?: return` guard, and the delegations list would never load on first open.
         loadCoin()
-        refresh()
     }
 
     fun refresh() {
@@ -419,6 +422,8 @@ constructor(
                     tempSelectedPositions = listOf(ticker),
                 )
             }
+            // Now that `coin` is resolved, load the delegations / unbondings / rewards fan-out.
+            refresh()
         }
     }
 

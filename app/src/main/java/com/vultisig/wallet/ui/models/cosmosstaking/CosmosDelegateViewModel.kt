@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingConfig
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingPayload
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
+import com.vultisig.wallet.data.blockchain.cosmos.staking.KeybaseAvatarService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.ValidatorBech32Preflight
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -79,11 +80,25 @@ constructor(
     private val balanceRepository: com.vultisig.wallet.data.repositories.BalanceRepository,
     private val buildCosmosStakingKeysignPayload: BuildCosmosStakingKeysignPayloadUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
+    private val keybaseAvatarService: KeybaseAvatarService,
     private val navigator: Navigator<com.vultisig.wallet.ui.navigation.Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val route: Route.CosmosStakingDelegate = savedStateHandle.toRoute()
+
+    /**
+     * Lazily resolves a validator's Keybase avatar for the picker rows. Returns `null` when the
+     * validator advertises no identity or Keybase has no picture — the row falls back to the
+     * monogram. The [KeybaseAvatarService] caches per identity, so the LazyColumn re-resolving a
+     * scrolled-away row is a cache hit.
+     */
+    suspend fun resolveValidatorAvatar(identity: String?): String? {
+        val id = identity?.takeIf { it.isNotEmpty() } ?: return null
+        return withContext(ioDispatcher) {
+            runCatching { keybaseAvatarService.avatarUrl(id) }.getOrNull()
+        }
+    }
 
     val amountFieldState: TextFieldState = TextFieldState()
 

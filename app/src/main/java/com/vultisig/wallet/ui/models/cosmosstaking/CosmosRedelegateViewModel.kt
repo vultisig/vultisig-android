@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingConfig
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingPayload
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
+import com.vultisig.wallet.data.blockchain.cosmos.staking.KeybaseAvatarService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.ValidatorBech32Preflight
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
@@ -78,9 +79,21 @@ constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val buildCosmosStakingKeysignPayload: BuildCosmosStakingKeysignPayloadUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
+    private val keybaseAvatarService: KeybaseAvatarService,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
+
+    /**
+     * Lazily resolves a validator's Keybase avatar for the destination-picker rows (monogram
+     * fallback when absent). [KeybaseAvatarService] caches per identity.
+     */
+    suspend fun resolveValidatorAvatar(identity: String?): String? {
+        val id = identity?.takeIf { it.isNotEmpty() } ?: return null
+        return withContext(ioDispatcher) {
+            runCatching { keybaseAvatarService.avatarUrl(id) }.getOrNull()
+        }
+    }
 
     private val route: Route.CosmosStakingRedelegate = savedStateHandle.toRoute()
 
@@ -93,9 +106,13 @@ constructor(
     private var coin: Coin? = null
 
     init {
+        // loadValidators() is chain-only and safe to run in parallel. loadCooldown() reads
+        // `coin.address`, so it must NOT launch here alongside loadCoinAndStakedBalance(): coin is
+        // only assigned after that coroutine suspends on the vault read, so a parallel cooldown
+        // fetch would observe `coin == null`, bail at its guard, and silently skip the 21-day
+        // redelegation gate on first open. It is chained from loadCoinAndStakedBalance() instead.
         loadCoinAndStakedBalance()
         loadValidators()
-        loadCooldown()
     }
 
     fun openValidatorPicker() {
@@ -294,6 +311,8 @@ constructor(
                     percentageSelected = 100,
                 )
             }
+            // `coin` is now resolved — evaluate the redelegation cooldown gate.
+            loadCooldown()
         }
     }
 

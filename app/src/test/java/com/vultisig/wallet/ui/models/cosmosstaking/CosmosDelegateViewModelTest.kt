@@ -130,6 +130,7 @@ internal class CosmosDelegateViewModelTest {
             balanceRepository = balanceRepository,
             buildCosmosStakingKeysignPayload = buildPayload,
             depositTransactionRepository = depositTransactionRepository,
+            keybaseAvatarService = mockk(relaxed = true),
             navigator = navigator,
             ioDispatcher = testDispatcher,
         )

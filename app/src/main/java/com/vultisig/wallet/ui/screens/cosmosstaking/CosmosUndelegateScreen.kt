@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.screens.cosmosstaking
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -19,10 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -59,22 +54,12 @@ internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltV
                     address = state.validatorAddress,
                 )
 
-                AmountBlock(
+                StakingAmountCard(
                     ticker = state.ticker,
-                    amountText = viewModel.amountFieldState.text.toString(),
-                    onAmountChange = { v ->
-                        viewModel.amountFieldState.edit { replace(0, length, v) }
-                    },
-                )
-
-                PercentagePicker(
-                    selected = state.percentageSelected,
-                    onSelect = viewModel::onPercentageChange,
-                )
-
-                StakedBalanceRow(
-                    staked = state.stakedBalance.toPlainString(),
-                    ticker = state.ticker,
+                    amountFieldState = viewModel.amountFieldState,
+                    available = state.stakedBalance,
+                    percentageSelected = state.percentageSelected,
+                    onPercentage = viewModel::onPercentageChange,
                 )
 
                 val unbondingMsg = state.unbondingLockMessage
@@ -120,89 +105,6 @@ internal fun ValidatorReadonlyBlock(moniker: String, address: String) {
             text = address,
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.secondary,
-        )
-    }
-}
-
-@Composable
-internal fun AmountBlock(ticker: String, amountText: String, onAmountChange: (String) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            text = stringResource(R.string.cosmos_staking_amount),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
-        )
-        BasicTextField(
-            value = amountText,
-            onValueChange = onAmountChange,
-            singleLine = true,
-            textStyle =
-                TextStyle(
-                    color = Theme.v2.colors.text.primary,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
-                ),
-            modifier =
-                Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(
-                        width = 1.dp,
-                        color = Theme.v2.colors.border.normal,
-                        shape = RoundedCornerShape(12.dp),
-                    )
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-        )
-    }
-}
-
-@Composable
-internal fun PercentagePicker(selected: Int, onSelect: (Int) -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf(25, 50, 75, 100).forEach { percent ->
-            val isActive = selected == percent
-            Box(
-                modifier =
-                    Modifier.weight(1f)
-                        .clip(RoundedCornerShape(10.dp))
-                        .border(
-                            width = if (isActive) 2.dp else 1.dp,
-                            color =
-                                if (isActive) Theme.v2.colors.primary.accent4
-                                else Theme.v2.colors.border.normal,
-                            shape = RoundedCornerShape(10.dp),
-                        )
-                        .clickable { onSelect(percent) }
-                        .padding(vertical = 10.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = if (percent == 100) "Max" else "$percent%",
-                    style = Theme.brockmann.body.s.medium,
-                    color =
-                        if (isActive) Theme.v2.colors.primary.accent4
-                        else Theme.v2.colors.text.primary,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-internal fun StakedBalanceRow(staked: String, ticker: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = stringResource(R.string.cosmos_staking_total_staked, ticker),
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.secondary,
-        )
-        Text(
-            text = "$staked $ticker",
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
         )
     }
 }

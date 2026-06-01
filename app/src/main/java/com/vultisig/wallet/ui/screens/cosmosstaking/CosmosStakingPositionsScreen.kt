@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -36,6 +38,8 @@ import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
+import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
@@ -50,10 +54,12 @@ import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsViewModel
 import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
-import com.vultisig.wallet.ui.screens.v2.defi.BalanceBanner
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
 import com.vultisig.wallet.ui.screens.v2.defi.PositionsSelectionDialog
 import com.vultisig.wallet.ui.theme.Theme
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.text.DecimalFormat
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -100,11 +106,10 @@ internal fun CosmosStakingPositionsScreen(
                 modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)
             ) {
                 Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
-                    BalanceBanner(
-                        title = chainId,
-                        isLoading = state.isLoading && state.positions.isEmpty(),
-                        totalValue = state.totalAmountPrice,
-                        image = R.drawable.referral_data_banner,
+                    CosmosStakingBalanceBanner(
+                        chainName = chainId,
+                        coinLogo = state.coinLogo,
+                        balanceFiat = state.totalAmountPrice,
                         isBalanceVisible = state.isBalanceVisible,
                     )
                 }
@@ -153,14 +158,11 @@ internal fun CosmosStakingPositionsScreen(
                     } else {
                         item {
                             TotalStakedCard(
+                                coinLogo = state.coinLogo,
                                 ticker = state.ticker,
-                                totalStaked = state.totalStaked.toPlainString(),
-                                hasAnyClaimableRewards =
-                                    state.positions.any {
-                                        it.pendingReward > java.math.BigDecimal.ZERO
-                                    },
+                                totalStaked = formatStakeAmount(state.totalStaked),
+                                totalFiat = state.totalAmountPrice,
                                 onDelegateToNewValidator = viewModel::stakeMore,
-                                onClaimAll = viewModel::claimAll,
                             )
                         }
 
@@ -177,6 +179,7 @@ internal fun CosmosStakingPositionsScreen(
                                 PositionRow(
                                     position = position,
                                     ticker = state.ticker,
+                                    fiat = state.totalAmountPrice,
                                     onUnstake = { viewModel.unstake(position) },
                                     onMove = { viewModel.move(position) },
                                     onStakeMore = viewModel::stakeMore,
@@ -230,11 +233,11 @@ internal fun CosmosStakingPositionsScreen(
 
 @Composable
 private fun TotalStakedCard(
+    coinLogo: String,
     ticker: String,
     totalStaked: String,
-    hasAnyClaimableRewards: Boolean,
+    totalFiat: String,
     onDelegateToNewValidator: () -> Unit,
-    onClaimAll: () -> Unit,
 ) {
     Column(
         modifier =
@@ -246,41 +249,45 @@ private fun TotalStakedCard(
                     shape = RoundedCornerShape(16.dp),
                 )
                 .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            text = stringResource(R.string.cosmos_staking_total_staked, ticker),
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.secondary,
-        )
-        Text(
-            text = "$totalStaked $ticker",
-            style = Theme.brockmann.headings.title3,
-            color = Theme.v2.colors.text.primary,
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            VsButton(
-                label = stringResource(R.string.cosmos_staking_delegate_new_validator),
-                variant = VsButtonVariant.CTA,
-                size = VsButtonSize.Small,
-                state = VsButtonState.Enabled,
-                onClick = onDelegateToNewValidator,
-                modifier = Modifier.weight(1f),
+        // Coin logo + "Total Staked LUNC" headline + amount + fiat subtitle (iOS layout).
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            AsyncImage(
+                model = getCoinLogo(coinLogo),
+                contentDescription = null,
+                modifier = Modifier.size(40.dp).clip(CircleShape),
             )
-            if (hasAnyClaimableRewards) {
-                VsButton(
-                    label = stringResource(R.string.cosmos_staking_action_claim),
-                    variant = VsButtonVariant.Secondary,
-                    size = VsButtonSize.Small,
-                    state = VsButtonState.Enabled,
-                    onClick = onClaimAll,
+            UiSpacer(size = 12.dp)
+            Column {
+                Text(
+                    text = stringResource(R.string.cosmos_staking_total_staked, ticker),
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.secondary,
+                )
+                Text(
+                    text = "$totalStaked $ticker",
+                    style = Theme.brockmann.headings.title2,
+                    color = Theme.v2.colors.text.primary,
+                )
+                Text(
+                    text = totalFiat,
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.secondary,
                 )
             }
         }
+
+        UiGradientHorizontalDivider()
+
+        VsButton(
+            label = stringResource(R.string.cosmos_staking_delegate_new_validator),
+            variant = VsButtonVariant.CTA,
+            size = VsButtonSize.Medium,
+            state = VsButtonState.Enabled,
+            onClick = onDelegateToNewValidator,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -288,6 +295,7 @@ private fun TotalStakedCard(
 private fun PositionRow(
     position: CosmosStakePositionRow,
     ticker: String,
+    fiat: String,
     onUnstake: () -> Unit,
     onMove: () -> Unit,
     onStakeMore: () -> Unit,
@@ -305,8 +313,8 @@ private fun PositionRow(
                     color = Theme.v2.colors.border.normal,
                     shape = RoundedCornerShape(12.dp),
                 )
-                .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         // Validator identity (avatar + moniker + address) + status badge
         Row(
@@ -322,16 +330,16 @@ private fun PositionRow(
                             .ifEmpty { position.validatorAddress }
                             .take(1)
                             .uppercase(),
-                    size = 36.dp,
+                    size = 40.dp,
                 )
-                UiSpacer(size = 8.dp)
+                UiSpacer(size = 12.dp)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text =
                             position.validatorMoniker.ifEmpty {
                                 truncated(position.validatorAddress)
                             },
-                        style = Theme.brockmann.body.s.medium,
+                        style = Theme.brockmann.body.m.medium,
                         color = Theme.v2.colors.text.primary,
                     )
                     Text(
@@ -354,12 +362,26 @@ private fun PositionRow(
             )
         }
 
-        // Staked + reward
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        // Staked amount (left) + fiat value (right) — iOS "Staked: 1 LUNC" / "$0.00".
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
-                text = "${position.stakedAmount.toPlainString()} $ticker",
-                style = Theme.brockmann.body.s.medium,
+                text =
+                    stringResource(
+                        R.string.cosmos_staking_staked_row_amount,
+                        formatStakeAmount(position.stakedAmount),
+                        ticker,
+                    ),
+                style = Theme.brockmann.body.m.medium,
                 color = Theme.v2.colors.text.primary,
+            )
+            Text(
+                text = fiat,
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.secondary,
             )
         }
 
@@ -385,22 +407,33 @@ private fun PositionRow(
             }
         }
 
-        if (position.pendingReward > java.math.BigDecimal.ZERO) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
+        UiGradientHorizontalDivider()
+
+        // 🏆 Next Award (left) + pending reward (right) — iOS shows this even at tiny values.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "🏆",
+                    style = Theme.brockmann.supplementary.caption,
+                    color = Theme.v2.colors.text.secondary,
+                )
+                UiSpacer(size = 6.dp)
                 Text(
                     text = stringResource(R.string.cosmos_staking_next_award),
                     style = Theme.brockmann.supplementary.caption,
                     color = Theme.v2.colors.text.secondary,
                 )
-                Text(
-                    text = "${position.pendingReward.toPlainString()} $ticker",
-                    style = Theme.brockmann.body.s.medium,
-                    color = Theme.v2.colors.text.primary,
-                )
             }
+            Text(
+                text = "${formatStakeAmount(position.pendingReward)} $ticker",
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+                maxLines = 1,
+            )
         }
 
         // Action buttons — Unstake + Move disabled when locked (matches iOS spec).
@@ -492,7 +525,7 @@ private fun UnbondingCard(unbonding: CosmosUnbondingDelegation) {
  * `ValidatorAvatar` colored-initial fallback.
  */
 @Composable
-private fun ValidatorAvatar(
+internal fun ValidatorAvatar(
     avatarUrl: String?,
     monogram: String,
     size: androidx.compose.ui.unit.Dp,
@@ -521,7 +554,7 @@ private fun ValidatorAvatar(
  * Deterministic background color keyed off the monogram so the same validator is always the same
  * hue.
  */
-private fun monogramColor(monogram: String): androidx.compose.ui.graphics.Color {
+internal fun monogramColor(monogram: String): androidx.compose.ui.graphics.Color {
     val palette =
         listOf(
             androidx.compose.ui.graphics.Color(0xFF2D4BF3),
@@ -535,6 +568,105 @@ private fun monogramColor(monogram: String): androidx.compose.ui.graphics.Color 
     return palette[index]
 }
 
-private fun truncated(address: String): String =
+internal fun truncated(address: String): String =
     if (address.length > 14) "${address.substring(0, 8)}…${address.substring(address.length - 4)}"
     else address
+
+/** iOS Terra hero-banner teal (`#34E6BF`) — gradient fill + border tint. */
+private val CosmosBannerTeal = androidx.compose.ui.graphics.Color(0xFF34E6BF)
+
+/**
+ * LUNA / LUNC hero banner — mirrors iOS `DefiChainBalanceView`: a teal-tinted gradient card with
+ * the chain name, a "Balance" label, and the fiat total, plus the coin logo encircled by two faint
+ * rings bleeding off the trailing edge. Replaces the generic referral banner the shared
+ * [BalanceBanner] would otherwise show.
+ */
+@Composable
+private fun CosmosStakingBalanceBanner(
+    chainName: String,
+    coinLogo: String,
+    balanceFiat: String,
+    isBalanceVisible: Boolean,
+) {
+    Box(
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(118.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .border(
+                    width = 1.dp,
+                    color = CosmosBannerTeal.copy(alpha = 0.17f),
+                    shape = RoundedCornerShape(16.dp),
+                )
+                .background(
+                    androidx.compose.ui.graphics.Brush.verticalGradient(
+                        listOf(
+                            CosmosBannerTeal.copy(alpha = 0.09f),
+                            androidx.compose.ui.graphics.Color.Transparent,
+                        )
+                    )
+                )
+    ) {
+        // Trailing decorative: coin logo + two concentric rings, bleeding off the edge at 60%.
+        Box(
+            modifier =
+                Modifier.align(Alignment.CenterEnd).padding(end = 12.dp).alpha(0.6f).size(120.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            AsyncImage(
+                model = getCoinLogo(coinLogo),
+                contentDescription = null,
+                modifier = Modifier.size(92.dp).clip(CircleShape),
+            )
+            Box(
+                modifier =
+                    Modifier.size(92.dp)
+                        .border(
+                            2.dp,
+                            Theme.v2.colors.alerts.success.copy(alpha = 0.4f),
+                            CircleShape,
+                        )
+            )
+            Box(
+                modifier =
+                    Modifier.size(120.dp)
+                        .border(
+                            1.dp,
+                            Theme.v2.colors.alerts.success.copy(alpha = 0.25f),
+                            CircleShape,
+                        )
+            )
+        }
+
+        Column(modifier = Modifier.padding(start = 16.dp, top = 20.dp)) {
+            Text(
+                text = chainName,
+                style = Theme.brockmann.body.l.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+            UiSpacer(size = 8.dp)
+            Text(
+                text = stringResource(R.string.select_chain_balance_title),
+                style = Theme.brockmann.supplementary.caption,
+                color = Theme.v2.colors.text.primary,
+            )
+            UiSpacer(size = 4.dp)
+            Text(
+                text = if (isBalanceVisible) balanceFiat else "• • • • • •",
+                style = Theme.satoshi.price.title1,
+                color = Theme.v2.colors.text.primary,
+            )
+        }
+    }
+}
+
+/**
+ * Whole-token amount formatter shared across the staking cards. Mirrors iOS
+ * `CosmosStakeDefiView.formatAmount` (decimal style, min 0 / max 6 fraction digits, half-even
+ * rounding, locale grouping) so values like a raw `0.005657133717398625` reward render as
+ * `0.005657` instead of overflowing the row.
+ */
+private val stakeAmountFormat: DecimalFormat =
+    DecimalFormat("#,##0.######").apply { roundingMode = RoundingMode.HALF_EVEN }
+
+internal fun formatStakeAmount(value: BigDecimal): String = stakeAmountFormat.format(value)

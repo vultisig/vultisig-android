@@ -23,6 +23,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +43,9 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButton
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonSize
+import com.vultisig.wallet.ui.components.v2.buttons.VsCircleButtonType
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosDelegateUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosDelegateViewModel
@@ -77,6 +84,7 @@ internal fun CosmosDelegateScreen(viewModel: CosmosDelegateViewModel = hiltViewM
                 ticker = state.ticker,
                 selectedValidatorAddress = state.selectedValidator?.operatorAddress,
                 onValidatorSelected = viewModel::selectValidator,
+                onResolveAvatar = viewModel::resolveValidatorAvatar,
                 onDismiss = viewModel::closeValidatorPicker,
             )
         }
@@ -96,9 +104,11 @@ private fun DelegateContent(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            AmountCard(
-                state = state,
+            StakingAmountCard(
+                ticker = state.ticker,
                 amountFieldState = amountFieldState,
+                available = state.stakeableBalance,
+                percentageSelected = state.percentageSelected,
                 onPercentage = onPercentage,
             )
 
@@ -124,11 +134,17 @@ private fun DelegateContent(
     }
 }
 
-/** Centered amount input + 25/50/75/Max chips + balance-available row, in a bordered card. */
+/**
+ * Centered amount input + 25/50/75/Max chips + balance-available row, in a bordered card. Shared by
+ * the delegate / undelegate / redelegate forms — `available` is the stakeable balance (delegate) or
+ * the staked balance at the source validator (undelegate / redelegate).
+ */
 @Composable
-internal fun AmountCard(
-    state: CosmosDelegateUiState,
+internal fun StakingAmountCard(
+    ticker: String,
     amountFieldState: TextFieldState,
+    available: BigDecimal,
+    percentageSelected: Int,
     onPercentage: (Int) -> Unit,
 ) {
     val percentages = listOf(25, 50, 75, 100)
@@ -151,9 +167,9 @@ internal fun AmountCard(
         )
         TokenAmountInput(
             primaryFieldState = amountFieldState,
-            primaryLabel = state.ticker.ifEmpty { "Token" },
+            primaryLabel = ticker.ifEmpty { "Token" },
             secondaryText = "",
-            maxBalance = state.stakeableBalance.takeIf { it > BigDecimal.ZERO },
+            maxBalance = available.takeIf { it > BigDecimal.ZERO },
             modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
         )
         Row(
@@ -163,7 +179,7 @@ internal fun AmountCard(
             percentages.forEach { percent ->
                 PercentageChip(
                     title = if (percent == 100) stringResource(R.string.max) else "$percent%",
-                    isSelected = state.percentageSelected == percent,
+                    isSelected = percentageSelected == percent,
                     onClick = { onPercentage(percent) },
                     modifier = Modifier.weight(1f),
                 )
@@ -176,8 +192,7 @@ internal fun AmountCard(
                 color = Theme.v2.colors.text.secondary,
             )
             Text(
-                text =
-                    "${state.stakeableBalance.stripTrailingZeros().toPlainString()} ${state.ticker}",
+                text = "${available.stripTrailingZeros().toPlainString()} $ticker",
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
             )
@@ -234,19 +249,27 @@ internal fun ValidatorPickerSheet(
     ticker: String,
     selectedValidatorAddress: String?,
     onValidatorSelected: (CosmosValidator) -> Unit,
+    onResolveAvatar: suspend (String?) -> String?,
     onDismiss: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    // Two-tap staging (iOS parity): tapping a row stages the pick locally; the trailing ✓ commits
+    // it (which closes the sheet) and the leading ✕ dismisses without committing.
+    var pickedAddress by remember { mutableStateOf(selectedValidatorAddress) }
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = Theme.v2.colors.backgrounds.primary,
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-            Text(
-                text = title,
-                style = Theme.brockmann.headings.title3,
-                color = Theme.v2.colors.text.primary,
+            ValidatorPickerHeader(
+                title = title,
+                onClose = onDismiss,
+                onConfirm = {
+                    validators
+                        .firstOrNull { it.operatorAddress == pickedAddress }
+                        ?.let(onValidatorSelected)
+                },
             )
 
             UiSpacer(size = 12.dp)
@@ -256,11 +279,21 @@ internal fun ValidatorPickerSheet(
                 onValueChange = onSearchQueryChange,
                 singleLine = true,
                 textStyle = TextStyle(color = Theme.v2.colors.text.primary, fontSize = 16.sp),
+                decorationBox = { inner ->
+                    if (searchQuery.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.token_selection_search_hint),
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.text.secondary,
+                        )
+                    }
+                    inner()
+                },
                 modifier =
                     Modifier.fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
                         .background(Theme.v2.colors.backgrounds.secondary)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
             )
 
             UiSpacer(size = 12.dp)
@@ -286,8 +319,9 @@ internal fun ValidatorPickerSheet(
                             ValidatorPickerRow(
                                 validator = validator,
                                 ticker = ticker,
-                                isSelected = validator.operatorAddress == selectedValidatorAddress,
-                                onClick = { onValidatorSelected(validator) },
+                                isSelected = validator.operatorAddress == pickedAddress,
+                                onResolveAvatar = onResolveAvatar,
+                                onClick = { pickedAddress = validator.operatorAddress },
                             )
                         }
                     }
@@ -298,13 +332,48 @@ internal fun ValidatorPickerSheet(
     }
 }
 
+/**
+ * ✕ (dismiss) / title / ✓ (confirm) header for the validator picker. Uses the same [VsCircleButton]
+ * chrome as the "Select Positions" sheet (tertiary close + primary tick).
+ */
+@Composable
+private fun ValidatorPickerHeader(title: String, onClose: () -> Unit, onConfirm: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        VsCircleButton(
+            drawableResId = R.drawable.big_close,
+            onClick = onClose,
+            type = VsCircleButtonType.Tertiary,
+            size = VsCircleButtonSize.Small,
+        )
+        Text(
+            text = title,
+            style = Theme.brockmann.headings.title3,
+            color = Theme.v2.colors.text.primary,
+        )
+        VsCircleButton(
+            drawableResId = R.drawable.big_tick,
+            onClick = onConfirm,
+            size = VsCircleButtonSize.Small,
+        )
+    }
+}
+
 @Composable
 private fun ValidatorPickerRow(
     validator: CosmosValidator,
     ticker: String,
     isSelected: Boolean,
+    onResolveAvatar: suspend (String?) -> String?,
     onClick: () -> Unit,
 ) {
+    val avatarUrl by
+        produceState<String?>(initialValue = null, key1 = validator.operatorAddress) {
+            value = onResolveAvatar(validator.identity)
+        }
     Row(
         modifier =
             Modifier.fillMaxWidth()
@@ -322,26 +391,47 @@ private fun ValidatorPickerRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        ValidatorAvatar(
+            avatarUrl = avatarUrl,
+            monogram = validator.moniker.ifEmpty { validator.operatorAddress }.take(1).uppercase(),
+            size = 36.dp,
+        )
+        UiSpacer(size = 12.dp)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = validator.moniker.ifEmpty { validator.operatorAddress },
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
+                maxLines = 1,
             )
             Text(
                 text = "${formatVotingPower(validator.votingPower, ticker)} $ticker",
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
+                maxLines = 1,
             )
         }
+        UiSpacer(size = 8.dp)
         Text(
-            text =
-                "${validator.commission.movePointRight(2).stripTrailingZeros().toPlainString()}%",
+            text = "${formatCommissionPercent(validator.commission)}%",
             style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.secondary,
+            color = Theme.v2.colors.text.primary,
+            maxLines = 1,
         )
     }
 }
+
+/**
+ * Commission arrives as a fraction (`0.0456…` = 4.56%). Render as a percentage with at most two
+ * fraction digits, trailing zeros stripped — matches iOS `ValidatorCard.commissionText` (e.g.
+ * "20%", "4.56%") instead of dumping the raw 18-decimal `cosmos.Dec`.
+ */
+private fun formatCommissionPercent(commission: BigDecimal): String =
+    commission
+        .movePointRight(2)
+        .setScale(2, java.math.RoundingMode.HALF_UP)
+        .stripTrailingZeros()
+        .toPlainString()
 
 /**
  * Voting power arrives as bond-denom base units (uint string). Render it in whole-token units with
