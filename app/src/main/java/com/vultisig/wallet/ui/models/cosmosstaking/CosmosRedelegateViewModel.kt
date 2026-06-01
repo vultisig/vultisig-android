@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.blockchain.cosmos.staking.BuildCosmosStakingKeysignPayloadUseCase
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosRedelegationCooldownGate
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosRedelegationCooldownState
@@ -31,7 +32,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -78,6 +79,7 @@ constructor(
     private val buildCosmosStakingKeysignPayload: BuildCosmosStakingKeysignPayloadUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val navigator: Navigator<Destination>,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val route: Route.CosmosStakingRedelegate = savedStateHandle.toRoute()
@@ -167,7 +169,7 @@ constructor(
         ) {
             val coin = coin ?: return@safeLaunch setError("Wallet not loaded yet")
             val vault =
-                withContext(Dispatchers.IO) { vaultRepository.get(route.vaultId) }
+                withContext(ioDispatcher) { vaultRepository.get(route.vaultId) }
                     ?: return@safeLaunch setError("Vault not found: ${route.vaultId}")
 
             try {
@@ -188,7 +190,7 @@ constructor(
             val gasFee = TokenValue(value = BigInteger.valueOf(entry.feeAmount), token = coin)
 
             val specific =
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     blockChainSpecificRepository.getSpecific(
                         chain = coin.chain,
                         address = coin.address,
@@ -256,7 +258,7 @@ constructor(
                 return@safeLaunch setError("Staking is not supported on ${chain.raw}")
             }
             val vault =
-                withContext(Dispatchers.IO) { vaultRepository.get(route.vaultId) }
+                withContext(ioDispatcher) { vaultRepository.get(route.vaultId) }
                     ?: return@safeLaunch setError("Vault not found: ${route.vaultId}")
             val nativeCoin =
                 vault.coins.firstOrNull { it.chain == chain && it.isNativeToken }
@@ -267,7 +269,7 @@ constructor(
 
             val entry = CosmosStakingConfig.entryFor(chain)
             val delegations =
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     cosmosStakingService.fetchDelegations(chain, nativeCoin.address)
                 }
             val matching =
@@ -307,7 +309,7 @@ constructor(
                     ?: return@safeLaunch
             _state.update { it.copy(isLoadingValidators = true, errorMessage = null) }
             val validators =
-                withContext(Dispatchers.IO) { cosmosStakingService.fetchValidators(chain) }
+                withContext(ioDispatcher) { cosmosStakingService.fetchValidators(chain) }
             val srcMoniker =
                 validators
                     .firstOrNull { it.operatorAddress == route.validatorSrcAddress }
@@ -346,7 +348,7 @@ constructor(
             val coin = coin ?: return@safeLaunch
             _state.update { it.copy(isLoadingCooldown = true) }
             val redelegations =
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     cosmosStakingService.fetchRedelegations(chain, coin.address)
                 }
             val cooldown =

@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.cosmosstaking
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosDelegation
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosDelegatorRewards
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
@@ -23,7 +24,7 @@ import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.Instant
 import javax.inject.Inject
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -71,6 +72,7 @@ constructor(
     private val apyResolver: CosmosStakingAPYResolver,
     private val keybaseAvatarService: KeybaseAvatarService,
     private val navigator: Navigator<Destination>,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     /**
@@ -113,7 +115,7 @@ constructor(
 
             // Parallel fan-out — same shape as iOS `refresh(address:decimals:)`.
             val (delegations, unbondings, rewards, validators) =
-                withContext(Dispatchers.IO) {
+                withContext(ioDispatcher) {
                     val delegationsDeferred = async {
                         runCatching { cosmosStakingService.fetchDelegations(chain, coin.address) }
                             .also { it.exceptionOrNull()?.let { Timber.w(it, "delegations") } }
@@ -170,7 +172,7 @@ constructor(
             // Resolve chain APY in parallel with the validator metadata join. Failure collapses to
             // null and the rows degrade to baseline (LUNA) or hide (LUNC) APY.
             val chainApy =
-                withContext(Dispatchers.IO) { apyResolver.chainApy(chain, entry.bondDenom) }
+                withContext(ioDispatcher) { apyResolver.chainApy(chain, entry.bondDenom) }
 
             val positions =
                 delegations.map { delegation ->
@@ -373,7 +375,7 @@ constructor(
                 return@safeLaunch setError("Staking is not supported on ${chain.raw}")
             }
             val vault =
-                withContext(Dispatchers.IO) { vaultRepository.get(vaultId) }
+                withContext(ioDispatcher) { vaultRepository.get(vaultId) }
                     ?: return@safeLaunch setError("Vault not found: $vaultId")
             val nativeCoin =
                 vault.coins.firstOrNull { it.chain == chain && it.isNativeToken }
