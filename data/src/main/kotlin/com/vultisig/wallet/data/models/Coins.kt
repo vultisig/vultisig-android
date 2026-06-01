@@ -2562,7 +2562,136 @@ object Coins {
                 isNativeToken = true,
             )
 
-        val all = listOf(ETH, SUI)
+        val DEEP =
+            Coin(
+                chain = Chain.Sui,
+                ticker = "DEEP",
+                logo = "https://s2.coinmarketcap.com/static/img/coins/64x64/33391.png",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "deep",
+                contractAddress =
+                    "0xdeeb7a4662eec9f2f3def03fb937a663dddaa2e215b8078a284d026b7946c270::deep::DEEP",
+                isNativeToken = false,
+            )
+
+        val WAL =
+            Coin(
+                chain = Chain.Sui,
+                ticker = "WAL",
+                logo = "https://coin-images.coingecko.com/coins/images/54914/large/WAL_logo.png",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "walrus-2",
+                contractAddress =
+                    "0x356a26eb9e012a68958082340d4c4116e7f55615cf27affcff209cf0ae544f59::wal::WAL",
+                isNativeToken = false,
+            )
+
+        val CETUS =
+            Coin(
+                chain = Chain.Sui,
+                ticker = "CETUS",
+                logo =
+                    "https://raw.githubusercontent.com/cosmostation/chainlist/main/chain/sui/asset/cetus.png",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "cetus-protocol",
+                contractAddress =
+                    "0x06864a6f921804860930db6ddbe2e16acdf8504495ea7481637a1c8b9a8fe54b::cetus::CETUS",
+                isNativeToken = false,
+            )
+
+        val NAVX =
+            Coin(
+                chain = Chain.Sui,
+                ticker = "NAVX",
+                logo =
+                    "https://raw.githubusercontent.com/cosmostation/chainlist/main/chain/sui/asset/navx.png",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "navi",
+                contractAddress =
+                    "0xa99b8952d4f7d947ea77fe0ecdcc9e5fc0bcab2841d6e2a5aa00c3044e5544b5::navx::NAVX",
+                isNativeToken = false,
+            )
+
+        val BLUE =
+            Coin(
+                chain = Chain.Sui,
+                ticker = "BLUE",
+                logo =
+                    "https://coin-images.coingecko.com/coins/images/30883/large/BLUE_200x200.png",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "bluefin",
+                contractAddress =
+                    "0xe1b45a0e641b9955a20aa0ad1c1f4ad86aad8afb07296d4085e349a50e90bdca::blue::BLUE",
+                isNativeToken = false,
+            )
+
+        val SEND =
+            Coin(
+                chain = Chain.Sui,
+                ticker = "SEND",
+                logo = "https://coin-images.coingecko.com/coins/images/50989/large/SEND.png",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "suilend",
+                contractAddress =
+                    "0xb45fcfcc2cc07ce0702cc2d229621e046c906ef14d9b25e8e4d25f6e8763fef7::send::SEND",
+                isNativeToken = false,
+            )
+
+        val USDC =
+            Coin(
+                chain = Chain.Sui,
+                ticker = "USDC",
+                logo = "usdc",
+                address = "",
+                decimal = 6,
+                hexPublicKey = "",
+                priceProviderID = "usd-coin",
+                contractAddress =
+                    "0xdba34672e30cb065b1f93e3ab55318768fd6fef66c15942c9f7cb846e2f900e7::usdc::USDC",
+                isNativeToken = false,
+            )
+
+        val AXOL =
+            Coin(
+                chain = Chain.Sui,
+                ticker = "AXOL",
+                logo = "https://coin-images.coingecko.com/coins/images/50412/large/AXOL.png",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "axol",
+                contractAddress =
+                    "0xf00eb7ab086967a33c04a853ad960e5c6b0955ef5a47d50b376d83856dc1215e::axol::AXOL",
+                isNativeToken = false,
+            )
+
+        val LOFI =
+            Coin(
+                chain = Chain.Sui,
+                ticker = "LOFI",
+                logo = "https://s2.coinmarketcap.com/static/img/coins/64x64/34187.png",
+                address = "",
+                decimal = 9,
+                hexPublicKey = "",
+                priceProviderID = "lofi-2",
+                contractAddress =
+                    "0xf22da9a24ad027cccb5f2d496cbe91de953d363513db08a3a734d361c7c17503::LOFI::LOFI",
+                isNativeToken = false,
+            )
+
+        val all = listOf(ETH, SUI, DEEP, WAL, CETUS, NAVX, BLUE, SEND, USDC, AXOL, LOFI)
     }
 
     object Terra {
