@@ -641,7 +641,7 @@ internal fun SwapScreen(
                 } else {
                     VsButton(
                         label =
-                            if (state.isLoading) {
+                            if (srcAmountTextFieldState.text.isEmpty()) {
                                 stringResource(R.string.swap_swap_button_fill_in_amount)
                             } else {
                                 stringResource(R.string.swap_swap_button)

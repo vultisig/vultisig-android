@@ -663,7 +663,7 @@ internal class SwapFormViewModelTest {
             assertEquals("0", state.srcFiatValue)
             assertNull(state.formError)
             // hasQuote must drop on flip, otherwise the fee block stays on screen during the
-            // 450ms debounce while collectTotalFee can still combine the new pair's gas with
+            // 300ms debounce while collectTotalFee can still combine the new pair's gas with
             // the prior pair's swapFeeFiat.
             assertFalse(state.hasQuote)
         }
@@ -706,15 +706,18 @@ internal class SwapFormViewModelTest {
             vm.srcAmountState.setTextAndPlaceCursorAtEnd("100")
             Snapshot.sendApplyNotifications()
 
-            // Before debounce expires, isLoading should not have triggered full calculation
-            advanceTimeBy(100) // total 500ms, debounce is 450ms from last change
+            // The spinner is set ahead of the debounce, so it shows immediately on input even
+            // before the 300ms debounce expires and the quote fetch starts.
+            advanceTimeBy(100) // total 500ms elapsed, but only 100ms since the last change
+            assertTrue(vm.uiState.value.isLoading)
 
-            // Let debounce complete
+            // Let the debounce expire and the (single) quote fetch complete.
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            // Only the final amount "100" should have been used for quote
-            // (verified indirectly by checking state settled)
+            // Only the final amount "100" should have been used for one quote fetch, and the
+            // spinner clears once it settles.
+            assertFalse(vm.uiState.value.isLoading)
         }
 
     // endregion
