@@ -110,6 +110,18 @@ class QbtcClaimOrchestrator(
             )
         val messageHashHex = hashes.messageHash.toHex()
 
+        // TEMP diagnostic (public data only): proves whether the BTC coin's pubkey owns the
+        // claimed address — addressHash160 MUST equal the UTXO address's witness program, else the
+        // chain returns "no valid claimable UTXOs". Remove once the claim is confirmed working.
+        Timber.d(
+            "QBTC claim binding: btcAddress=%s btcPubkey=%s addressHash160=%s qbtcAddress=%s messageHash=%s",
+            input.btcCoin.address,
+            input.btcCoin.hexPublicKey,
+            hashes.addressHash.toHex(),
+            input.qbtcCoin.address,
+            messageHashHex,
+        )
+
         _phase.value = QbtcClaimPhase.SigningBtc
         val btcSig =
             btcRoundRunner.run(
