@@ -378,9 +378,10 @@ class UtxoHelper(
      * structured PSBT payload, ready to be dispatched to the MPC engine. Bypasses WalletCore tx
      * planning entirely. Only P2WPKH and P2SH-P2WPKH inputs are supported; P2TR is rejected.
      *
-     * Bitcoin-only: the witness-program shapes parsed here (`0x00 0x14 <20-byte hash>`) are
-     * meaningful only for the Bitcoin chain. UTXO siblings (BCH, Doge, LTC, Dash, Zcash) use legacy
-     * P2PKH and must not route through this path.
+     * Segwit-only: the witness-program shapes parsed here (`0x00 0x14 <20-byte hash>`) are
+     * meaningful only for the native-segwit chains (Bitcoin and Litecoin). UTXO siblings (BCH,
+     * Doge, Dash, Zcash) use legacy P2PKH and must not route through this path — they go through
+     * [SwapKitLegacyP2PKHSigner] / [SwapKitZcashSigner] instead.
      *
      * @param expectedToAddress destination shown on the Verify screen (`payload.toAddress`); pinned
      *   to a non-change output via its scriptPubKey so the displayed address can't drift from what
@@ -393,8 +394,8 @@ class UtxoHelper(
         expectedToAddress: String,
         expectedToAmount: BigInteger,
     ): List<String> {
-        require(coinType == CoinType.BITCOIN) {
-            "SignBitcoin PSBT co-signing is only supported on Bitcoin, got $coinType"
+        require(coinType == CoinType.BITCOIN || coinType == CoinType.LITECOIN) {
+            "SignBitcoin PSBT co-signing is only supported on Bitcoin and Litecoin, got $coinType"
         }
         verifyOwnership(signBitcoin, expectedToAddress, expectedToAmount)
         return computeOurSighashes(signBitcoin).map { Numeric.toHexStringNoPrefix(it) }.sorted()
