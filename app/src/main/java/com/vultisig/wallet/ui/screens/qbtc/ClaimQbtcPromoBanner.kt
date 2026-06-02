@@ -47,11 +47,11 @@ internal fun ClaimQbtcPromoBanner(onClaim: () -> Unit, modifier: Modifier = Modi
                     drawRect(
                         brush =
                             Brush.radialGradient(
-                                0f to QbtcBannerGlow.copy(alpha = 0.7f),
-                                0.5f to QbtcBannerGlow.copy(alpha = 0.2f),
+                                0f to QbtcBannerGlow.copy(alpha = 0.3f),
+                                0.45f to QbtcBannerGlow.copy(alpha = 0.1f),
                                 1f to Color.Transparent,
                                 center = Offset(size.width / 2f, size.height / 2f + 30.dp.toPx()),
-                                radius = size.maxDimension * 0.55f,
+                                radius = size.maxDimension * 0.4f,
                             )
                     )
                 },
@@ -86,7 +86,7 @@ internal fun ClaimQbtcPromoBanner(onClaim: () -> Unit, modifier: Modifier = Modi
                 color = Theme.v2.colors.text.primary,
                 modifier =
                     Modifier.clip(RoundedCornerShape(99.dp))
-                        .background(Theme.v2.colors.buttons.primary)
+                        .background(Theme.v2.colors.buttons.ctaPrimary)
                         .clickable(onClick = onClaim)
                         .padding(horizontal = 24.dp, vertical = 12.dp),
             )
