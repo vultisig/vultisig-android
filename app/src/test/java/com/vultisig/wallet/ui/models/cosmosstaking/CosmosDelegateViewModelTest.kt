@@ -14,11 +14,11 @@ import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.math.BigDecimal
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -141,10 +141,7 @@ internal class CosmosDelegateViewModelTest {
             val model = vm()
             val visible = model.visibleValidators(model.state.value)
             // Only the 2 bonded non-jailed remain, Beta (900) before Alpha (100).
-            assertEquals(
-                listOf("terravaloper1b", "terravaloper1a"),
-                visible.map { it.operatorAddress },
-            )
+            visible.map { it.operatorAddress } shouldBe listOf("terravaloper1b", "terravaloper1a")
         }
 
     @Test
@@ -152,14 +149,14 @@ internal class CosmosDelegateViewModelTest {
         val model = vm()
         model.onSearchQueryChange("alph")
         val visible = model.visibleValidators(model.state.value)
-        assertEquals(1, visible.size)
-        assertEquals("terravaloper1a", visible.first().operatorAddress)
+        visible.size shouldBe 1
+        visible.first().operatorAddress shouldBe "terravaloper1a"
     }
 
     @Test
     fun `submit without a selected validator surfaces an error`() = runTest {
         val model = vm()
         model.submit()
-        assertTrue(model.state.value.errorMessage != null)
+        model.state.value.errorMessage shouldNotBe null
     }
 }

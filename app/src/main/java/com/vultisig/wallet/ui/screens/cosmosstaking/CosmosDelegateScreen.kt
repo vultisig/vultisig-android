@@ -405,7 +405,7 @@ private fun ValidatorPickerRow(
                 maxLines = 1,
             )
             Text(
-                text = "${formatVotingPower(validator.votingPower, ticker)} $ticker",
+                text = "${formatVotingPower(validator.votingPower)} $ticker",
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
                 maxLines = 1,
@@ -438,8 +438,8 @@ private fun formatCommissionPercent(commission: BigDecimal): String =
  * thousands separators, matching the iOS validator picker (e.g. "137,888,608,306 LUNC"). LUNA/LUNC
  * use 6 decimals.
  */
-private fun formatVotingPower(votingPowerBaseUnits: BigDecimal, ticker: String): String {
-    val decimals = if (ticker == "LUNA" || ticker == "LUNC") 6 else 6
-    val whole = votingPowerBaseUnits.movePointLeft(decimals).toBigInteger()
+private fun formatVotingPower(votingPowerBaseUnits: BigDecimal): String {
+    // Terra (LUNA) and Terra Classic (LUNC) both use 6 base-unit decimals.
+    val whole = votingPowerBaseUnits.movePointLeft(6).toBigInteger()
     return "%,d".format(whole)
 }
