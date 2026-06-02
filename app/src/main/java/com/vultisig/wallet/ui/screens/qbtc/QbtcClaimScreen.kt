@@ -258,17 +258,17 @@ private fun QbtcClaimCheckbox(checked: Boolean) {
             Modifier.size(24.dp)
                 .clip(CircleShape)
                 .background(
-                    if (checked) Theme.v2.colors.alerts.success.copy(alpha = 0.12f)
+                    if (checked) Theme.v2.colors.alerts.success.copy(alpha = 0.05f)
                     else Color.Transparent
                 )
-                .border(1.5.dp, ringColor, CircleShape),
+                .border(1.dp, ringColor, CircleShape),
     ) {
         if (checked) {
             Icon(
-                painter = painterResource(R.drawable.check),
+                painter = painterResource(R.drawable.qbtc_claim_check),
                 contentDescription = null,
                 tint = Theme.v2.colors.alerts.success,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(16.87.dp),
             )
         }
     }
