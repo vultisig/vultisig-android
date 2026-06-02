@@ -377,7 +377,21 @@ internal class SwapKitLegacyP2PKHSigner(
      */
     private fun parseLegacyUnsignedTx(data: ByteArray): ParsedLegacyTx {
         val cursor = PsbtCursor(data)
-        cursor.readUInt32LE() // version
+        val version = cursor.readUInt32LE()
+        // WalletCore's legacy Bitcoin compiler takes no tx-version input and emits version 1 on
+        // this
+        // path (confirmed against the DOGE / BCH / DASH mainnet broadcasts, whose tx_ids matched
+        // the
+        // quoted PSBT). A PSBT declaring any other version can't be reproduced — it would rebuild
+        // to
+        // a different tx_id and silently break NEAR route tracking — so reject it loudly, mirroring
+        // the ZEC expiryHeight guard.
+        if (version != WALLETCORE_LEGACY_TX_VERSION) {
+            throw SwapKitLegacyP2PKHSignerException(
+                "SwapKit PSBT unsigned-tx version $version is unsupported; WalletCore reproduces " +
+                    "only version $WALLETCORE_LEGACY_TX_VERSION on the legacy P2PKH path"
+            )
+        }
         val inCount = cursor.readCompactSize()
         val inputs =
             (0L until inCount).map {
@@ -471,5 +485,10 @@ internal class SwapKitLegacyP2PKHSigner(
     private companion object {
         private const val KEY_NON_WITNESS_UTXO = "00"
         private const val KEY_WITNESS_UTXO = "01"
+
+        /**
+         * Tx version WalletCore emits (and thus can reproduce) on the legacy P2PKH compile path.
+         */
+        private const val WALLETCORE_LEGACY_TX_VERSION = 1L
     }
 }

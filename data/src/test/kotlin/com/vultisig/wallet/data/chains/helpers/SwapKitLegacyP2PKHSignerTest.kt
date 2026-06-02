@@ -187,6 +187,32 @@ class SwapKitLegacyP2PKHSignerTest {
     }
 
     @Test
+    fun `rejects an unsigned-tx version other than 1`() {
+        // WalletCore emits version 1 on the legacy path and can't be told otherwise, so a v2 PSBT
+        // would rebuild to a different tx_id — reject it up front rather than mistrack.
+        val psbt =
+            encodeLegacyPsbt(
+                inputs =
+                    listOf(
+                        LegacyIn(
+                            prevTxIdDisplay = TXID_ONE,
+                            vout = 0,
+                            sequence = 0xFFFFFFFFL,
+                            amount = 100_000,
+                            prevScriptHex = p2pkh("11".repeat(20)),
+                        )
+                    ),
+                outputs = listOf(LegacyOut(amount = 99_000, scriptHex = p2pkh("33".repeat(20)))),
+                version = 2,
+            )
+        val e =
+            assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+            }
+        assertTrue(e.message!!.contains("version 2 is unsupported"))
+    }
+
+    @Test
     fun `rejects an unsigned-tx body with trailing bytes`() {
         val psbt =
             encodeLegacyPsbt(
@@ -496,6 +522,7 @@ class SwapKitLegacyP2PKHSignerTest {
         inputs: List<LegacyIn>,
         outputs: List<LegacyOut>,
         lockTime: Long = 0,
+        version: Long = 1,
         unsignedTxTrailerHex: String? = null,
     ): ByteArray {
         // Precompute the embedded prev-tx for NON_WITNESS inputs so the unsigned-tx outpoint can
@@ -513,7 +540,7 @@ class SwapKitLegacyP2PKHSignerTest {
         }
 
         val unsigned = ByteArrayOutputStream()
-        unsigned.write(le32(1)) // version
+        unsigned.write(le32(version))
         unsigned.write(varInt(inputs.size.toLong()))
         inputs.forEachIndexed { i, input ->
             unsigned.write(outpointLE(i))
