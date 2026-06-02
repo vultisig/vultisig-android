@@ -735,6 +735,189 @@ internal class SwapFormViewModelTest {
 
     // endregion
 
+    // region calculateFees — instant quote UX (#4712)
+
+    @Test
+    fun `selectSrcPercentage fetches a quote immediately, bypassing the typing debounce`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.selectSrcPercentage(1.0f)
+            Snapshot.sendApplyNotifications()
+            // Well under the 300ms typing debounce — only an immediate (0ms) fetch can have fired.
+            advanceTimeBy(50)
+
+            coVerify(exactly = 1) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+        }
+
+    @Test
+    fun `free typing still waits for the debounce before fetching`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            // Before the 300ms debounce elapses, no quote fetch should have fired.
+            advanceTimeBy(50)
+            coVerify(exactly = 0) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+
+            advanceTimeBy(300)
+            advanceUntilIdle()
+            coVerify(exactly = 1) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+        }
+
+    @Test
+    fun `indicative rate fills the destination before the firm quote resolves`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery { swapQuoteManager.computeIndicativeQuote(any(), any(), any(), any()) } returns
+                IndicativeQuote(estimatedDstTokenValue = "1.23", estimatedDstFiatValue = "$4.56")
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("2")
+            Snapshot.sendApplyNotifications()
+            // Before the debounce/firm quote: the greyed indicative estimate is already shown.
+            advanceTimeBy(50)
+            val indicative = vm.uiState.value
+            assertEquals("1.23", indicative.estimatedDstTokenValue)
+            assertEquals("$4.56", indicative.estimatedDstFiatValue)
+            assertTrue(indicative.isDstEstimated)
+
+            // Once the firm quote resolves it replaces the indicative value (no longer greyed).
+            advanceTimeBy(300)
+            advanceUntilIdle()
+            val firm = vm.uiState.value
+            assertEquals("95.0", firm.estimatedDstTokenValue)
+            assertFalse(firm.isDstEstimated)
+        }
+
+    @Test
+    fun `silent quote refresh keeps the destination value and does not flash loading`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+            assertEquals("95.0", vm.uiState.value.estimatedDstTokenValue)
+            assertFalse(vm.uiState.value.isLoading)
+
+            // Drive the expiry-triggered refresh (quote lives ~1 minute). The refresh is downstream
+            // of the loading/indicative side effects, so it must not flash the spinner or blank the
+            // previously shown destination value.
+            advanceTimeBy(61_000)
+            assertFalse(vm.uiState.value.isLoading)
+            assertEquals("95.0", vm.uiState.value.estimatedDstTokenValue)
+            advanceUntilIdle()
+            assertEquals("95.0", vm.uiState.value.estimatedDstTokenValue)
+        }
+
+    // endregion
+
     // region calculateFees — error handling
 
     @Test

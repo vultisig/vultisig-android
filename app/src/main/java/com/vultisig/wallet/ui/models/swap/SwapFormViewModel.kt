@@ -87,6 +87,9 @@ internal data class SwapFormUiModel(
     val srcFiatValue: String = "0",
     val estimatedDstTokenValue: String = "0",
     val estimatedDstFiatValue: String = "0",
+    // True while the shown destination value is an indicative spot-price estimate (rendered greyed)
+    // rather than a firm provider quote. Display-only — never gates Continue (#4712).
+    val isDstEstimated: Boolean = false,
     val provider: UiText = UiText.Empty,
     val networkFee: String = "",
     val networkFeeFiat: String = "",
@@ -166,11 +169,28 @@ constructor(
 
     private var refreshQuoteJob: Job? = null
 
+    // Set true right before a programmatic amount change (percentage / Max) so the next amount
+    // emission skips the typing debounce and fetches a quote immediately (#4712). Reset as soon as
+    // it is consumed by the quote flow so it never leaks into subsequent free typing. Only ever
+    // touched on the main thread (UI callbacks + the Main-dispatched quote flow).
+    private var fetchQuoteImmediately = false
+
+    // Length of the previous source-amount text, used to distinguish a paste (multi-character jump)
+    // from free typing so a paste also fetches immediately (#4712).
+    private var lastSrcAmountLength = 0
+
     private data class PreFlipState(
         val srcAmount: String,
         val srcTokenId: String,
         val dstTokenId: String,
         val flippedAmount: String,
+    )
+
+    private data class QuoteInput(
+        val address: Pair<SendSrc, SendSrc>,
+        val amount: BigDecimal?,
+        // True when the change should bypass the typing debounce (percentage / Max / paste).
+        val immediate: Boolean,
     )
 
     private var preFlipState: PreFlipState? = null
@@ -805,6 +825,10 @@ constructor(
                 .multiply(percentage.toBigDecimal())
                 .formatFlippedAmount(srcTokenValue.decimals)
 
+        // A percentage / Max tap is an explicit, deliberate amount — fetch the quote immediately
+        // instead of waiting out the typing debounce (#4712). Set the flag before mutating the text
+        // so the resulting emission is already marked immediate.
+        fetchQuoteImmediately = true
         srcAmountState.setTextAndPlaceCursorAtEnd(amount)
     }
 
@@ -916,30 +940,51 @@ constructor(
     @OptIn(FlowPreview::class)
     private fun calculateFees() {
         viewModelScope.safeLaunch {
+            // Emits once per source-amount change carrying whether the quote should fetch
+            // immediately (percentage / Max / paste) instead of waiting out the typing debounce.
+            val amountChanges =
+                srcAmountState
+                    .textAsFlow()
+                    .map { it.toString() }
+                    .map { text ->
+                        // A multi-character jump is a paste; length is tracked across empties
+                        // (before the notEmpty filter) so a clear-then-paste is still detected.
+                        val isPaste = text.length - lastSrcAmountLength > 1
+                        lastSrcAmountLength = text.length
+                        text to isPaste
+                    }
+                    .filter { (text, _) -> text.isNotEmpty() }
+                    .map { (_, isPaste) ->
+                        val immediate = fetchQuoteImmediately || isPaste
+                        fetchQuoteImmediately = false
+                        immediate
+                    }
+
             combine(selectedSrc.filterNotNull(), selectedDst.filterNotNull()) { src, dst ->
                     src to dst
                 }
                 .distinctUntilChanged()
-                .combine(
-                    srcAmountState
-                        .textAsFlow()
-                        .filter { it.isNotEmpty() }
-                        // Show the spinner immediately on real typing, ahead of the debounce, so
-                        // the form doesn't look frozen while we wait. Gating it on this branch
-                        // keeps it to user input: the silent refreshes (refreshQuoteState timer,
-                        // gas bump) don't flow through here, so they no longer flash the spinner
-                        // (#4712). The debounce below still coalesces the actual quote fetch, so
-                        // this adds no extra provider requests.
-                        .onEach { isLoading = true }
-                ) { address, _ ->
-                    address to srcAmount
+                .combine(amountChanges) { address, immediate ->
+                    QuoteInput(address = address, amount = srcAmount, immediate = immediate)
                 }
-                .combine(refreshQuoteState) { it, _ -> it }
-                .debounce(300L)
+                // Fires on real user intent (typing, paste, percentage, token change) but not on
+                // the
+                // silent refreshes combined in below — so the spinner appears immediately ahead of
+                // the debounce and an instant indicative estimate fills the destination field while
+                // we wait, without flashing on background refreshes (#4712).
+                .onEach { input ->
+                    isLoading = true
+                    showIndicativeRate(input)
+                }
+                .combine(refreshQuoteState) { input, _ -> input }
+                // Percentage / Max / paste skip the debounce (0ms); free typing still coalesces at
+                // 300ms so rapid edits fire a single quote fetch.
+                .debounce { input -> if (input.immediate) 0L else QUOTE_DEBOUNCE_MS }
                 // collectLatest so newer input cancels an in-flight fetch instead of letting a
                 // stale fetch write isLoading = false after the user has already typed again.
-                .collectLatest { (address, amount) ->
-                    val (src, dst) = address
+                .collectLatest { input ->
+                    val (src, dst) = input.address
+                    val amount = input.amount
 
                     val srcToken = src.account.token
                     val dstToken = dst.account.token
@@ -1109,6 +1154,7 @@ constructor(
                                 srcFiatValue = quoteResult.srcFiatValueText,
                                 estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
                                 estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
+                                isDstEstimated = false,
                                 fee = feeText,
                                 outboundFee = quoteResult.outboundFeeText,
                                 swapFeePercent = quoteResult.swapFeePercent,
@@ -1245,6 +1291,32 @@ constructor(
         }
     }
 
+    /**
+     * Fill the destination field with an instant indicative estimate from cached spot prices while
+     * the firm quote resolves, so it never blanks on input or while refetching (#4712). Cached-only
+     * and display-only: a cold price leaves the previous value untouched, and the firm quote always
+     * overwrites this with [SwapFormUiModel.isDstEstimated] = false.
+     */
+    private suspend fun showIndicativeRate(input: QuoteInput) {
+        val (src, dst) = input.address
+        val srcToken = src.account.token
+        val dstToken = dst.account.token
+        val amount = input.amount ?: return
+        if (amount <= BigDecimal.ZERO || srcToken == dstToken) return
+
+        val currency = appCurrencyRepository.currency.first()
+        val indicative =
+            swapQuoteManager.computeIndicativeQuote(srcToken, dstToken, amount, currency) ?: return
+
+        uiState.update {
+            it.copy(
+                estimatedDstTokenValue = indicative.estimatedDstTokenValue,
+                estimatedDstFiatValue = indicative.estimatedDstFiatValue,
+                isDstEstimated = true,
+            )
+        }
+    }
+
     private fun launchRefreshQuoteTimer(expiredAt: Instant) {
         refreshQuoteJob?.cancel()
         refreshQuoteJob =
@@ -1275,6 +1347,7 @@ constructor(
                 srcFiatValue = "0",
                 estimatedDstTokenValue = "0",
                 estimatedDstFiatValue = "0",
+                isDstEstimated = false,
                 fee = "0",
                 totalFee = "0",
                 vultBpsDiscount = null,
@@ -1307,6 +1380,9 @@ constructor(
     companion object {
         const val ETH_GAS_LIMIT: Long = SwapGasCalculator.ETH_GAS_LIMIT
         const val ARB_GAS_LIMIT: Long = SwapGasCalculator.ARB_GAS_LIMIT
+        // Coalesces rapid free typing into a single quote fetch; bypassed (0ms) for
+        // percentage / Max / paste.
+        private const val QUOTE_DEBOUNCE_MS = 300L
     }
 }
 
