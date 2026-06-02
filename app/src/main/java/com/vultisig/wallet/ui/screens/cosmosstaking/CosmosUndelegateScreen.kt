@@ -41,7 +41,7 @@ internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltV
         title =
             stringResource(
                 R.string.cosmos_staking_undelegate_title,
-                state.ticker.ifEmpty { "Token" },
+                state.ticker.ifEmpty { stringResource(R.string.cosmos_staking_token_fallback) },
             )
     ) {
         Box(modifier = Modifier.fillMaxSize()) {

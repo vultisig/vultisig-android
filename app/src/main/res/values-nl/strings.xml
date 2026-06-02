@@ -1219,6 +1219,7 @@
     <string name="cosmos_staking_action_delegate">Staken</string>
     <string name="cosmos_staking_action_redelegate">Verplaatsen</string>
     <string name="cosmos_staking_action_undelegate">Ontstaken</string>
+    <string name="cosmos_staking_token_fallback">Token</string>
     <string name="cosmos_staking_active_delegations">Actieve Delegaties</string>
     <string name="cosmos_staking_apy">APY</string>
     <string name="cosmos_staking_claim_rewards_cap_message">Max %1$d validators per claim — splits grotere sets</string>
@@ -1231,23 +1232,21 @@
     <string name="cosmos_staking_delegate_title">%1$s staken</string>
     <string name="cosmos_staking_insufficient_gas">Onvoldoende %1$s voor gas — claim van minder validators</string>
     <string name="cosmos_staking_next_award">Volgende beloning</string>
-    <string name="cosmos_staking_no_delegations">Geen actieve delegaties</string>
     <string name="cosmos_staking_no_validators_found">Geen validators gevonden</string>
     <string name="cosmos_staking_pending_unbondings">Lopende ontbindingen</string>
-    <string name="cosmos_staking_redelegate_cooldown_blocked">Kan niet herdelegeren vanaf deze validator tot %1$s</string>
     <string name="cosmos_staking_redelegate_source">Van validator</string>
     <string name="cosmos_staking_redelegate_title">Herdelegeren %1$s</string>
     <string name="cosmos_staking_select_validator">Validator selecteren</string>
     <string name="cosmos_staking_staked_row_amount">Gestaket: %1$s %2$s</string>
     <string name="cosmos_staking_total_staked">Totaal gestaket %1$s</string>
-    <string name="cosmos_staking_unbonding_footer_days">%1$d-daagse ontbindingsvergrendeling</string>
-    <string name="cosmos_staking_unbonding_footer_unlock">Ontgrendelt %1$s</string>
     <string name="cosmos_staking_unbonding_lock_notice">%1$d-daagse vergrendeling — ontgrendelt %2$s</string>
+    <string name="cosmos_staking_unbonding_entry_format">%1$s basiseenheden · ontgrendelt %2$s</string>
     <string name="cosmos_staking_undelegate_title">%1$s ontstaken</string>
     <string name="cosmos_staking_validator_active">Actief</string>
     <string name="cosmos_staking_validator_churned_out">Uitgevallen</string>
     <string name="cosmos_staking_validator_picker">Validator</string>
     <string name="cosmos_staking_pick_destination">Kies bestemming</string>
+    <string name="cosmos_staking_pick_destination_validator">Kies een bestemmingsvalidator</string>
     <string name="cosmos_staking_continue">Doorgaan</string>
     <string name="cosmos_staking_amount">Bedrag</string>
     <string name="cosmos_staking_loading_validators">Validators laden…</string>
@@ -1255,7 +1254,6 @@
     <string name="cosmos_staking_loading_rewards">Beloningen laden…</string>
     <string name="cosmos_staking_no_rewards">Geen claimbare beloningen op deze keten</string>
     <string name="cosmos_staking_empty_positions">Je hebt nog geen actieve %1$s-posities</string>
-    <string name="cosmos_staking_commission">Commissie %1$s%%</string>
     <!-- Cosmos staking verify summary — issue #4499 -->
     <string name="cosmos_staking_youre_staking">Je staket</string>
     <string name="cosmos_staking_youre_unstaking">Je ontstaket</string>
@@ -1267,6 +1265,4 @@
     <string name="cosmos_staking_verify_sign">Transactie ondertekenen</string>
     <string name="cosmos_staking_source_validator">Bronvalidator</string>
     <string name="cosmos_staking_destination_validator">Bestemmingsvalidator</string>
-    <string name="cosmos_staking_claim_from_validators">Claim van %1$d validators</string>
-    <string name="cosmos_staking_commission_suffix">%1$s%% commissie</string>
 </resources>

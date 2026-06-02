@@ -170,6 +170,11 @@ constructor(
         val currentState = _state.value
         if (currentState.isSubmitting || !currentState.validForm) return
 
+        // Flip the flag before launching so two quick taps can't both pass the guard above and
+        // enqueue duplicate submit coroutines (each would persist its own DepositTransaction).
+        // Cleared by setError on any failure path.
+        _state.update { it.copy(isSubmitting = true, errorMessage = null) }
+
         viewModelScope.safeLaunch(
             onError = { e -> setError(e.message ?: "Failed to build claim transaction") }
         ) {
@@ -177,8 +182,6 @@ constructor(
             val vault =
                 withContext(ioDispatcher) { vaultRepository.get(route.vaultId) }
                     ?: return@safeLaunch setError("Vault not found: ${route.vaultId}")
-
-            _state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
             val entry = CosmosStakingConfig.entryFor(coin.chain)
             // Preserve LCD return order for byte-equality with the SDK reference (iOS comment).

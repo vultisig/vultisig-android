@@ -156,8 +156,7 @@ private fun CapWarning(maxBatchSize: Int) {
         )
         UiSpacer(size = 6.dp)
         Text(
-            text =
-                "Max $maxBatchSize validators per batch — split additional claims into separate transactions",
+            text = stringResource(R.string.cosmos_staking_claim_rewards_cap_message, maxBatchSize),
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.secondary,
         )

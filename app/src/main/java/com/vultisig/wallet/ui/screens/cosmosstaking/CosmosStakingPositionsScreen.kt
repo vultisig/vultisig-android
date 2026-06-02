@@ -162,6 +162,9 @@ internal fun CosmosStakingPositionsScreen(
                                 ticker = state.ticker,
                                 totalStaked = formatStakeAmount(state.totalStaked),
                                 totalFiat = state.totalAmountPrice,
+                                hasClaimableRewards =
+                                    state.positions.any { it.pendingReward > BigDecimal.ZERO },
+                                onClaim = viewModel::claimAll,
                                 onDelegateToNewValidator = viewModel::stakeMore,
                             )
                         }
@@ -183,6 +186,28 @@ internal fun CosmosStakingPositionsScreen(
                                     onUnstake = { viewModel.unstake(position) },
                                     onMove = { viewModel.move(position) },
                                     onStakeMore = viewModel::stakeMore,
+                                )
+                            }
+                        } else {
+                            // No delegations yet: surface a loading hint while the first fetch is
+                            // in
+                            // flight, then an empty-state once it settles (the screen would
+                            // otherwise
+                            // render only the zeroed Total Staked card).
+                            item {
+                                Text(
+                                    text =
+                                        if (state.isLoading)
+                                            stringResource(
+                                                R.string.cosmos_staking_loading_positions
+                                            )
+                                        else
+                                            stringResource(
+                                                R.string.cosmos_staking_empty_positions,
+                                                state.ticker,
+                                            ),
+                                    style = Theme.brockmann.body.s.medium,
+                                    color = Theme.v2.colors.text.secondary,
                                 )
                             }
                         }
@@ -237,6 +262,8 @@ private fun TotalStakedCard(
     ticker: String,
     totalStaked: String,
     totalFiat: String,
+    hasClaimableRewards: Boolean,
+    onClaim: () -> Unit,
     onDelegateToNewValidator: () -> Unit,
 ) {
     Column(
@@ -279,6 +306,18 @@ private fun TotalStakedCard(
         }
 
         UiGradientHorizontalDivider()
+
+        // Claim button only when there are pending rewards to withdraw (iOS spec).
+        if (hasClaimableRewards) {
+            VsButton(
+                label = stringResource(R.string.cosmos_staking_action_claim),
+                variant = VsButtonVariant.Secondary,
+                size = VsButtonSize.Medium,
+                state = VsButtonState.Enabled,
+                onClick = onClaim,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         VsButton(
             label = stringResource(R.string.cosmos_staking_delegate_new_validator),
@@ -511,7 +550,12 @@ private fun UnbondingCard(unbonding: CosmosUnbondingDelegation) {
                     }
                     .getOrDefault(entry.completionTime.toString())
             Text(
-                text = "${entry.balance.toPlainString()} base units · unlocks $completion",
+                text =
+                    stringResource(
+                        R.string.cosmos_staking_unbonding_entry_format,
+                        entry.balance.toPlainString(),
+                        completion,
+                    ),
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
             )

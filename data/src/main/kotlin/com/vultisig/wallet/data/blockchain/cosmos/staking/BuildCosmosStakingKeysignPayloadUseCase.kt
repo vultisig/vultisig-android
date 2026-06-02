@@ -70,7 +70,8 @@ internal class BuildCosmosStakingKeysignPayloadUseCaseImpl @Inject constructor()
                 is CosmosStakingPayload.Delegate -> payload.validatorAddress
                 is CosmosStakingPayload.Undelegate -> payload.validatorAddress
                 is CosmosStakingPayload.Redelegate -> payload.validatorDstAddress
-                is CosmosStakingPayload.WithdrawRewards -> payload.validators.first()
+                is CosmosStakingPayload.WithdrawRewards ->
+                    payload.validators.firstOrNull().orEmpty()
             }
 
         val toAmount =

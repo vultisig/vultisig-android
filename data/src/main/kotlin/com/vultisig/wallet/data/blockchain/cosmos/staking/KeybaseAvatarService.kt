@@ -6,9 +6,12 @@ import io.ktor.client.request.parameter
 import io.ktor.client.statement.bodyAsText
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -57,6 +60,10 @@ internal class KeybaseAvatarServiceImpl @Inject constructor(private val httpClie
         val trimmed = identity.trim()
         if (trimmed.isEmpty()) return null
 
+        // Ownership is decided inside the mutex so only the creator runs the fetch; an identity
+        // check after the lock would also be true for coalescing callers (they share the same
+        // deferred reference) and let duplicate Keybase requests slip through.
+        var owns = false
         val deferred: CompletableDeferred<String?> =
             mutex.withLock {
                 cache[trimmed]?.let { entry ->
@@ -69,14 +76,21 @@ internal class KeybaseAvatarServiceImpl @Inject constructor(private val httpClie
                 }
                 val newDeferred = CompletableDeferred<String?>()
                 inFlight[trimmed] = newDeferred
+                owns = true
                 newDeferred
             }
 
-        if (!deferred.isCompleted && deferred === inFlight[trimmed]) {
+        if (owns) {
             val result =
                 try {
                     fetch(trimmed)
-                } catch (e: Throwable) {
+                } catch (e: CancellationException) {
+                    // Don't swallow cancellation: drop the in-flight entry so a later lookup can
+                    // retry, unblock any coalescing awaiters with a benign null, then propagate.
+                    withContext(NonCancellable) { mutex.withLock { inFlight.remove(trimmed) } }
+                    deferred.complete(null)
+                    throw e
+                } catch (e: Exception) {
                     Timber.w(e, "Keybase lookup failed for identity %s", trimmed)
                     null
                 }

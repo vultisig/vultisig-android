@@ -1235,6 +1235,7 @@
     <string name="cosmos_staking_action_delegate">Ulog</string>
     <string name="cosmos_staking_action_redelegate">Premjesti</string>
     <string name="cosmos_staking_action_undelegate">Povuci</string>
+    <string name="cosmos_staking_token_fallback">Token</string>
     <string name="cosmos_staking_active_delegations">Aktivne Delegacije</string>
     <string name="cosmos_staking_apy">APY</string>
     <string name="cosmos_staking_claim_rewards_cap_message">Maks. %1$d validatora po preuzimanju — podijelite veće skupine</string>
@@ -1247,23 +1248,21 @@
     <string name="cosmos_staking_delegate_title">Stake %1$s</string>
     <string name="cosmos_staking_insufficient_gas">Nedovoljno %1$s za gas — preuzmi od manje validatora</string>
     <string name="cosmos_staking_next_award">Sljedeća nagrada</string>
-    <string name="cosmos_staking_no_delegations">Nema aktivnih delegacija</string>
     <string name="cosmos_staking_no_validators_found">Nije pronađen nijedan validator</string>
     <string name="cosmos_staking_pending_unbondings">Razdvajanja na čekanju</string>
-    <string name="cosmos_staking_redelegate_cooldown_blocked">Redelegacija s ovog validatora nije moguća do %1$s</string>
     <string name="cosmos_staking_redelegate_source">Od validatora</string>
     <string name="cosmos_staking_redelegate_title">Redelegiraj %1$s</string>
     <string name="cosmos_staking_select_validator">Odaberite validatora</string>
     <string name="cosmos_staking_staked_row_amount">Stakeano: %1$s %2$s</string>
     <string name="cosmos_staking_total_staked">Ukupno stake-ano %1$s</string>
-    <string name="cosmos_staking_unbonding_footer_days">Zaključavanje odvezivanja od %1$d dana</string>
-    <string name="cosmos_staking_unbonding_footer_unlock">Otključava se %1$s</string>
     <string name="cosmos_staking_unbonding_lock_notice">Zaključavanje od %1$d dana — otključava se %2$s</string>
+    <string name="cosmos_staking_unbonding_entry_format">%1$s osnovnih jedinica · otključava se %2$s</string>
     <string name="cosmos_staking_undelegate_title">Povući %1$s</string>
     <string name="cosmos_staking_validator_active">Aktivan</string>
     <string name="cosmos_staking_validator_churned_out">Isključen</string>
     <string name="cosmos_staking_validator_picker">Validator</string>
     <string name="cosmos_staking_pick_destination">Odaberi odredište</string>
+    <string name="cosmos_staking_pick_destination_validator">Odaberi odredišni validator</string>
     <string name="cosmos_staking_continue">Nastavi</string>
     <string name="cosmos_staking_amount">Iznos</string>
     <string name="cosmos_staking_loading_validators">Učitavanje validatora…</string>
@@ -1271,7 +1270,6 @@
     <string name="cosmos_staking_loading_rewards">Učitavanje nagrada…</string>
     <string name="cosmos_staking_no_rewards">Nema nagrada za preuzimanje na ovom lancu</string>
     <string name="cosmos_staking_empty_positions">Još nemate aktivnih %1$s pozicija</string>
-    <string name="cosmos_staking_commission">Provizija %1$s%%</string>
     <!-- Cosmos staking verify summary — issue #4499 -->
     <string name="cosmos_staking_youre_staking">Stakate</string>
     <string name="cosmos_staking_youre_unstaking">Povlačite ulog</string>
@@ -1283,6 +1281,4 @@
     <string name="cosmos_staking_verify_sign">Potpiši transakciju</string>
     <string name="cosmos_staking_source_validator">Izvorni validator</string>
     <string name="cosmos_staking_destination_validator">Odredišni validator</string>
-    <string name="cosmos_staking_claim_from_validators">Preuzmi od %1$d validatora</string>
-    <string name="cosmos_staking_commission_suffix">%1$s%% provizija</string>
 </resources>

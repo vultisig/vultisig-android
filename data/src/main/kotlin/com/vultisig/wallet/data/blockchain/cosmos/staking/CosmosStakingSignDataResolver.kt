@@ -31,6 +31,9 @@ object CosmosStakingSignDataResolver {
      */
     const val MAX_BATCH_WITHDRAW_VALIDATORS = 8
 
+    /** Matches a positive integer with no sign, leading zero, or non-digit characters. */
+    private val POSITIVE_INTEGER = Regex("^[1-9]\\d*$")
+
     sealed class ResolverException(message: String) : IllegalArgumentException(message) {
         object MissingChainSpecific :
             ResolverException("Cosmos blockchain-specific data is required")
@@ -42,6 +45,9 @@ object CosmosStakingSignDataResolver {
 
         class MissingPayloadField(val field: String) :
             ResolverException("Missing required payload field: $field")
+
+        class InvalidAmount(val field: String) :
+            ResolverException("Invalid amount for $field: expected a positive integer")
 
         class ValidatorPreflightFailed(val reason: String) :
             ResolverException("Validator preflight failed: $reason")
@@ -124,7 +130,7 @@ object CosmosStakingSignDataResolver {
         denom: String,
     ): ByteArray {
         require(payload.validatorAddress) { "validatorAddress" }
-        require(payload.amount) { "amount" }
+        requirePositiveAmount(payload.amount) { "amount" }
         preflight(payload.validatorAddress, chain)
         return CosmosStakingHelper.encodeDelegate(
             delegator = delegator,
@@ -141,7 +147,7 @@ object CosmosStakingSignDataResolver {
         denom: String,
     ): ByteArray {
         require(payload.validatorAddress) { "validatorAddress" }
-        require(payload.amount) { "amount" }
+        requirePositiveAmount(payload.amount) { "amount" }
         preflight(payload.validatorAddress, chain)
         return CosmosStakingHelper.encodeUndelegate(
             delegator = delegator,
@@ -159,7 +165,7 @@ object CosmosStakingSignDataResolver {
     ): ByteArray {
         require(payload.validatorSrcAddress) { "validatorSrcAddress" }
         require(payload.validatorDstAddress) { "validatorDstAddress" }
-        require(payload.amount) { "amount" }
+        requirePositiveAmount(payload.amount) { "amount" }
         preflight(payload.validatorSrcAddress, chain)
         preflight(payload.validatorDstAddress, chain)
         return CosmosStakingHelper.encodeBeginRedelegate(
@@ -197,13 +203,25 @@ object CosmosStakingSignDataResolver {
             ValidatorBech32Preflight.validate(validator, chain)
         } catch (e: ValidatorBech32Preflight.ValidatorBech32Exception) {
             throw ResolverException.ValidatorPreflightFailed(
-                e.message ?: "validator bech32 invalid"
-            )
+                    e.message ?: "validator bech32 invalid"
+                )
+                .apply { initCause(e) }
         }
     }
 
     private fun require(value: String, name: () -> String) {
-        if (value.isEmpty()) throw ResolverException.MissingPayloadField(name())
+        if (value.isBlank()) throw ResolverException.MissingPayloadField(name())
+    }
+
+    /**
+     * Last local preflight for stake amounts. The UI builds base-unit strings, but upstream callers
+     * (tests, scripted payloads) can wire a payload directly, so reject anything that is not a
+     * trimmed positive integer before it reaches the SignDoc bytes.
+     */
+    private fun requirePositiveAmount(value: String, name: () -> String) {
+        if (!value.trim().matches(POSITIVE_INTEGER)) {
+            throw ResolverException.InvalidAmount(name())
+        }
     }
 
     /**

@@ -1277,6 +1277,7 @@
     <string name="cosmos_staking_action_delegate">Stake</string>
     <string name="cosmos_staking_action_redelegate">Move</string>
     <string name="cosmos_staking_action_undelegate">Unstake</string>
+    <string name="cosmos_staking_token_fallback">Token</string>
     <string name="cosmos_staking_active_delegations">Active Delegations</string>
     <string name="cosmos_staking_apy">APY</string>
     <string name="cosmos_staking_claim_rewards_cap_message">Max %1$d validators per claim — split larger sets</string>
@@ -1289,23 +1290,21 @@
     <string name="cosmos_staking_delegate_title">Stake %1$s</string>
     <string name="cosmos_staking_insufficient_gas">Insufficient %1$s for gas — claim from fewer validators</string>
     <string name="cosmos_staking_next_award">Next Award</string>
-    <string name="cosmos_staking_no_delegations">No active delegations</string>
     <string name="cosmos_staking_no_validators_found">No validators found</string>
     <string name="cosmos_staking_pending_unbondings">Pending Unbondings</string>
-    <string name="cosmos_staking_redelegate_cooldown_blocked">Cannot redelegate from this validator until %1$s</string>
     <string name="cosmos_staking_redelegate_source">From Validator</string>
     <string name="cosmos_staking_redelegate_title">Redelegate %1$s</string>
     <string name="cosmos_staking_select_validator">Select Validator</string>
     <string name="cosmos_staking_staked_row_amount">Staked: %1$s %2$s</string>
     <string name="cosmos_staking_total_staked">Total Staked %1$s</string>
-    <string name="cosmos_staking_unbonding_footer_days">%1$d-day unbonding lock</string>
-    <string name="cosmos_staking_unbonding_footer_unlock">Unlocks %1$s</string>
     <string name="cosmos_staking_unbonding_lock_notice">%1$d-day unbonding lock — unlocks %2$s</string>
+    <string name="cosmos_staking_unbonding_entry_format">%1$s base units · unlocks %2$s</string>
     <string name="cosmos_staking_undelegate_title">Unstake %1$s</string>
     <string name="cosmos_staking_validator_active">Active</string>
     <string name="cosmos_staking_validator_churned_out">Churned Out</string>
     <string name="cosmos_staking_validator_picker">Validator</string>
     <string name="cosmos_staking_pick_destination">Pick destination</string>
+    <string name="cosmos_staking_pick_destination_validator">Pick a destination validator</string>
     <string name="cosmos_staking_continue">Continue</string>
     <string name="cosmos_staking_amount">Amount</string>
     <string name="cosmos_staking_loading_validators">Loading validators…</string>
@@ -1313,7 +1312,6 @@
     <string name="cosmos_staking_loading_rewards">Loading rewards…</string>
     <string name="cosmos_staking_no_rewards">No claimable rewards on this chain</string>
     <string name="cosmos_staking_empty_positions">You have no active %1$s positions yet</string>
-    <string name="cosmos_staking_commission">Commission %1$s%%</string>
     <!-- Cosmos staking verify summary — issue #4499 -->
     <string name="cosmos_staking_youre_staking">You’re staking</string>
     <string name="cosmos_staking_youre_unstaking">You’re unstaking</string>
@@ -1325,6 +1323,4 @@
     <string name="cosmos_staking_verify_sign">Sign transaction</string>
     <string name="cosmos_staking_source_validator">Source Validator</string>
     <string name="cosmos_staking_destination_validator">Destination Validator</string>
-    <string name="cosmos_staking_claim_from_validators">Claim from %1$d validators</string>
-    <string name="cosmos_staking_commission_suffix">%1$s%% commission</string>
 </resources>

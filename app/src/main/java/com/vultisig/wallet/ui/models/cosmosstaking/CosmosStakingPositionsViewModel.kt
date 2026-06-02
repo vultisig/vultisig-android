@@ -209,10 +209,6 @@ constructor(
                     )
                 }
 
-            // Fire-and-forget avatar resolution — each emission updates the row in-place. The
-            // initial render uses the monogram fallback; avatars swap in as the network catches up.
-            resolveAvatarsAsync(positions)
-
             val totalStaked = positions.fold(BigDecimal.ZERO) { acc, p -> acc + p.stakedAmount }
 
             _state.update {
@@ -223,6 +219,12 @@ constructor(
                     isLoading = false,
                 )
             }
+
+            // Fire-and-forget avatar resolution — each emission updates the row in-place. Published
+            // after the list is in `_state` so a cache-hit patch can't land on an empty `positions`
+            // and then be overwritten. The initial render uses the monogram fallback; avatars swap
+            // in as the network catches up.
+            resolveAvatarsAsync(positions)
         }
     }
 
@@ -235,7 +237,7 @@ constructor(
     }
 
     fun unstake(position: CosmosStakePositionRow) {
-        if (!canActOn(position)) return
+        if (!canUnstake(position)) return
         val vaultId = vaultId ?: return
         val chainId = chainId ?: return
         navigateSafely {
@@ -250,7 +252,7 @@ constructor(
     }
 
     fun move(position: CosmosStakePositionRow) {
-        if (!canActOn(position)) return
+        if (!canMove(position)) return
         val vaultId = vaultId ?: return
         val chainId = chainId ?: return
         navigateSafely {
@@ -375,7 +377,13 @@ constructor(
             }
     }
 
-    private fun canActOn(position: CosmosStakePositionRow): Boolean =
+    // A churned-out validator (jailed / unbonded) can no longer accept stake, but the user must
+    // still be able to exit the position — so Unstake only requires the absence of a pending
+    // unbonding, while Move/Stake stay gated on the validator being Active.
+    private fun canUnstake(position: CosmosStakePositionRow): Boolean =
+        position.pendingUnbondingUnlockDate == null
+
+    private fun canMove(position: CosmosStakePositionRow): Boolean =
         position.validatorStatus == CosmosStakePositionRow.ValidatorStatus.Active &&
             position.pendingUnbondingUnlockDate == null
 

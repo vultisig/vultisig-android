@@ -124,10 +124,29 @@ class CosmosStakingSignDataResolverTests {
                 amount = "",
             )
         val ex =
-            assertFailsWith<CosmosStakingSignDataResolver.ResolverException.MissingPayloadField> {
+            assertFailsWith<CosmosStakingSignDataResolver.ResolverException.InvalidAmount> {
                 resolve(payload)
             }
         assertEquals("amount", ex.field)
+    }
+
+    @Test
+    fun `delegate rejects non-positive and malformed amounts`() {
+        listOf("0", "-1", " ", "abc", "1.5", "01").forEach { bad ->
+            val payload =
+                CosmosStakingPayload.Delegate(
+                    validatorAddress = FX.VALIDATOR_A,
+                    denom = "uluna",
+                    amount = bad,
+                )
+            val ex =
+                assertFailsWith<CosmosStakingSignDataResolver.ResolverException.InvalidAmount>(
+                    "amount '$bad' should be rejected"
+                ) {
+                    resolve(payload)
+                }
+            assertEquals("amount", ex.field)
+        }
     }
 
     @Test

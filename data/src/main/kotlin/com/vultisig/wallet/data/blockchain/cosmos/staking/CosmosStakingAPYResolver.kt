@@ -87,6 +87,10 @@ constructor(private val cosmosStakingService: CosmosStakingService) : CosmosStak
 
     override suspend fun chainApy(chain: Chain, stakingDenom: String): CosmosChainApyData? {
         // Cache hit, then in-flight coalescing, then fresh fan-out — all under the mutex.
+        // Ownership is decided inside the mutex so only the creator runs the fan-out; an identity
+        // check after the lock would be true for every coalescing caller too (they share the same
+        // deferred reference) and let duplicate 4-GET fan-outs slip through.
+        var owns = false
         val deferred: CompletableDeferred<CosmosChainApyData?> =
             mutex.withLock {
                 cache[chain]?.let { entry ->
@@ -99,11 +103,12 @@ constructor(private val cosmosStakingService: CosmosStakingService) : CosmosStak
                 }
                 val newDeferred = CompletableDeferred<CosmosChainApyData?>()
                 inFlight[chain] = newDeferred
+                owns = true
                 newDeferred
             }
 
-        // If this caller "owns" the deferred (was the first), perform the fan-out.
-        if (!deferred.isCompleted && deferred === inFlight[chain]) {
+        // Only the caller that created the deferred performs the fan-out.
+        if (owns) {
             val result =
                 try {
                     fanOut(chain, stakingDenom)

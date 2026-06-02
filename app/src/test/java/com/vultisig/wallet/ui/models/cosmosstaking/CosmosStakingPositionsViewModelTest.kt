@@ -166,12 +166,22 @@ internal class CosmosStakingPositionsViewModelTest {
     }
 
     @Test
-    fun `unstake on a churned-out validator is a no-op`() = runTest {
+    fun `unstake on a churned-out validator navigates to the undelegate route`() = runTest {
         val model = vm()
         val churned = model.state.value.positions.first { it.validatorAddress == churnedVal }
         model.unstake(churned)
-        // Churned-out is locked — no navigation.
-        coVerify(exactly = 0) { navigator.route(any<Route.CosmosStakingUndelegate>()) }
+        // Churned-out (jailed / unbonded) can no longer accept stake, but the user must still be
+        // able to exit the position — Unstake is the only sensible action (iOS parity).
+        coVerify { navigator.route(any<Route.CosmosStakingUndelegate>()) }
+    }
+
+    @Test
+    fun `move on a churned-out validator is a no-op`() = runTest {
+        val model = vm()
+        val churned = model.state.value.positions.first { it.validatorAddress == churnedVal }
+        model.move(churned)
+        // Redelegation requires an Active source validator — churned-out can only be unstaked.
+        coVerify(exactly = 0) { navigator.route(any<Route.CosmosStakingRedelegate>()) }
     }
 
     @Test

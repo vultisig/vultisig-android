@@ -1237,6 +1237,7 @@
     <string name="cosmos_staking_action_delegate">Стейк</string>
     <string name="cosmos_staking_action_redelegate">Переместить</string>
     <string name="cosmos_staking_action_undelegate">Снять стейк</string>
+    <string name="cosmos_staking_token_fallback">Токен</string>
     <string name="cosmos_staking_active_delegations">Активные делегации</string>
     <string name="cosmos_staking_apy">APY</string>
     <string name="cosmos_staking_claim_rewards_cap_message">Максимум %1$d валидаторов за получение — разделите большие наборы</string>
@@ -1249,23 +1250,21 @@
     <string name="cosmos_staking_delegate_title">Стейк %1$s</string>
     <string name="cosmos_staking_insufficient_gas">Недостаточно %1$s для газа — получите с меньшего числа валидаторов</string>
     <string name="cosmos_staking_next_award">Следующая награда</string>
-    <string name="cosmos_staking_no_delegations">Нет активных делегаций</string>
     <string name="cosmos_staking_no_validators_found">Валидаторы не найдены</string>
     <string name="cosmos_staking_pending_unbondings">Ожидающие отвязки</string>
-    <string name="cosmos_staking_redelegate_cooldown_blocked">Нельзя переделегировать с этого валидатора до %1$s</string>
     <string name="cosmos_staking_redelegate_source">От валидатора</string>
     <string name="cosmos_staking_redelegate_title">Переделегировать %1$s</string>
     <string name="cosmos_staking_select_validator">Выбрать валидатора</string>
     <string name="cosmos_staking_staked_row_amount">В стейке: %1$s %2$s</string>
     <string name="cosmos_staking_total_staked">Всего в стейке %1$s</string>
-    <string name="cosmos_staking_unbonding_footer_days">Блокировка отвязки на %1$d дн.</string>
-    <string name="cosmos_staking_unbonding_footer_unlock">Разблокируется %1$s</string>
     <string name="cosmos_staking_unbonding_lock_notice">Блокировка на %1$d дн. — разблокируется %2$s</string>
+    <string name="cosmos_staking_unbonding_entry_format">%1$s базовых единиц · разблокируется %2$s</string>
     <string name="cosmos_staking_undelegate_title">Снять стейк %1$s</string>
     <string name="cosmos_staking_validator_active">Активен</string>
     <string name="cosmos_staking_validator_churned_out">Выбыл</string>
     <string name="cosmos_staking_validator_picker">Валидатор</string>
     <string name="cosmos_staking_pick_destination">Выбрать назначение</string>
+    <string name="cosmos_staking_pick_destination_validator">Выберите целевой валидатор</string>
     <string name="cosmos_staking_continue">Продолжить</string>
     <string name="cosmos_staking_amount">Сумма</string>
     <string name="cosmos_staking_loading_validators">Загрузка валидаторов…</string>
@@ -1273,7 +1272,6 @@
     <string name="cosmos_staking_loading_rewards">Загрузка наград…</string>
     <string name="cosmos_staking_no_rewards">Нет наград к получению в этой сети</string>
     <string name="cosmos_staking_empty_positions">У вас пока нет активных позиций %1$s</string>
-    <string name="cosmos_staking_commission">Комиссия %1$s%%</string>
     <!-- Cosmos staking verify summary — issue #4499 -->
     <string name="cosmos_staking_youre_staking">Вы стейкаете</string>
     <string name="cosmos_staking_youre_unstaking">Вы снимаете стейк</string>
@@ -1285,6 +1283,4 @@
     <string name="cosmos_staking_verify_sign">Подписать транзакцию</string>
     <string name="cosmos_staking_source_validator">Исходный валидатор</string>
     <string name="cosmos_staking_destination_validator">Целевой валидатор</string>
-    <string name="cosmos_staking_claim_from_validators">Получить с %1$d валидаторов</string>
-    <string name="cosmos_staking_commission_suffix">%1$s%% комиссия</string>
 </resources>

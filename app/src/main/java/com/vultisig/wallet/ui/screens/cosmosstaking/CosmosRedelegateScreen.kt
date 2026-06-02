@@ -144,7 +144,7 @@ private fun DstValidatorPickerRow(selected: CosmosValidator?, onClick: () -> Uni
         Text(
             text =
                 selected?.moniker?.ifEmpty { selected.operatorAddress }
-                    ?: "Pick a destination validator",
+                    ?: stringResource(R.string.cosmos_staking_pick_destination_validator),
             style = Theme.brockmann.body.s.medium,
             color =
                 if (selected != null) Theme.v2.colors.text.primary

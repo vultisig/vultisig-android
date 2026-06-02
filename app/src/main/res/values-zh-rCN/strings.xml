@@ -1550,6 +1550,7 @@
     <string name="cosmos_staking_action_delegate">质押</string>
     <string name="cosmos_staking_action_redelegate">移动</string>
     <string name="cosmos_staking_action_undelegate">取消质押</string>
+    <string name="cosmos_staking_token_fallback">代币</string>
     <string name="cosmos_staking_active_delegations">当前委托</string>
     <string name="cosmos_staking_apy">APY</string>
     <string name="cosmos_staking_claim_rewards_cap_message">每次最多领取 %1$d 个验证者 — 请拆分更大的集合</string>
@@ -1562,23 +1563,21 @@
     <string name="cosmos_staking_delegate_title">质押 %1$s</string>
     <string name="cosmos_staking_insufficient_gas">%1$s 不足以支付手续费 — 请减少验证者数量</string>
     <string name="cosmos_staking_next_award">下次奖励</string>
-    <string name="cosmos_staking_no_delegations">暂无活跃委托</string>
     <string name="cosmos_staking_no_validators_found">未找到验证人</string>
     <string name="cosmos_staking_pending_unbondings">解绑中</string>
-    <string name="cosmos_staking_redelegate_cooldown_blocked">直到 %1$s 之前无法从该验证者重新委托</string>
     <string name="cosmos_staking_redelegate_source">源验证者</string>
     <string name="cosmos_staking_redelegate_title">重新委托 %1$s</string>
     <string name="cosmos_staking_select_validator">选择验证人</string>
     <string name="cosmos_staking_staked_row_amount">已质押: %1$s %2$s</string>
     <string name="cosmos_staking_total_staked">总质押 %1$s</string>
-    <string name="cosmos_staking_unbonding_footer_days">%1$d 天解绑锁定</string>
-    <string name="cosmos_staking_unbonding_footer_unlock">解锁 %1$s</string>
     <string name="cosmos_staking_unbonding_lock_notice">%1$d 天锁定 — 将于 %2$s 解锁</string>
+    <string name="cosmos_staking_unbonding_entry_format">%1$s 基本单位 · 将于 %2$s 解锁</string>
     <string name="cosmos_staking_undelegate_title">取消质押 %1$s</string>
     <string name="cosmos_staking_validator_active">活跃</string>
     <string name="cosmos_staking_validator_churned_out">已退出</string>
     <string name="cosmos_staking_validator_picker">验证人</string>
     <string name="cosmos_staking_pick_destination">选择目标</string>
+    <string name="cosmos_staking_pick_destination_validator">选择目标验证人</string>
     <string name="cosmos_staking_continue">继续</string>
     <string name="cosmos_staking_amount">金额</string>
     <string name="cosmos_staking_loading_validators">正在加载验证人…</string>
@@ -1586,7 +1585,6 @@
     <string name="cosmos_staking_loading_rewards">正在加载奖励…</string>
     <string name="cosmos_staking_no_rewards">此链上没有可领取的奖励</string>
     <string name="cosmos_staking_empty_positions">您还没有活跃的 %1$s 仓位</string>
-    <string name="cosmos_staking_commission">佣金 %1$s%%</string>
     <!-- Cosmos staking verify summary — issue #4499 -->
     <string name="cosmos_staking_youre_staking">您正在质押</string>
     <string name="cosmos_staking_youre_unstaking">您正在解除质押</string>
@@ -1598,6 +1596,4 @@
     <string name="cosmos_staking_verify_sign">签署交易</string>
     <string name="cosmos_staking_source_validator">来源验证人</string>
     <string name="cosmos_staking_destination_validator">目标验证人</string>
-    <string name="cosmos_staking_claim_from_validators">从 %1$d 个验证人领取</string>
-    <string name="cosmos_staking_commission_suffix">%1$s%% 佣金</string>
 </resources>

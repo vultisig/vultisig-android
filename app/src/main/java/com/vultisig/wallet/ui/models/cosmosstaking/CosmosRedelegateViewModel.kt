@@ -181,6 +181,10 @@ constructor(
             return setError("Amount exceeds your staked balance at this validator")
         }
 
+        // Flip the flag before launching so two quick taps can't both pass the guard above and
+        // start duplicate submit coroutines. Cleared by setError on any failure path.
+        _state.update { it.copy(isSubmitting = true, errorMessage = null) }
+
         viewModelScope.safeLaunch(
             onError = { e -> setError(e.message ?: "Failed to build redelegate transaction") }
         ) {
@@ -192,11 +196,9 @@ constructor(
             try {
                 ValidatorBech32Preflight.validate(route.validatorSrcAddress, coin.chain)
                 ValidatorBech32Preflight.validate(dstValidator.operatorAddress, coin.chain)
-            } catch (e: ValidatorBech32Preflight.ValidatorBech32Exception) {
+            } catch (_: ValidatorBech32Preflight.ValidatorBech32Exception) {
                 return@safeLaunch setError("One of the validator addresses is invalid")
             }
-
-            _state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
             val entry = CosmosStakingConfig.entryFor(coin.chain)
             val amountBaseUnits =
