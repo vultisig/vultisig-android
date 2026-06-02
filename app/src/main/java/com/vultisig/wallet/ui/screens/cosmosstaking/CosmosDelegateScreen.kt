@@ -395,6 +395,7 @@ private fun ValidatorPickerRow(
             avatarUrl = avatarUrl,
             monogram = validator.moniker.ifEmpty { validator.operatorAddress }.take(1).uppercase(),
             size = 36.dp,
+            colorKey = validator.operatorAddress,
         )
         UiSpacer(size = 12.dp)
         Column(modifier = Modifier.weight(1f)) {

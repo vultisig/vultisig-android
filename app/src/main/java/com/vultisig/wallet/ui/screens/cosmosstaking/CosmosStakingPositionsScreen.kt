@@ -341,7 +341,8 @@ private fun PositionRow(
 ) {
     val isChurnedOut = position.validatorStatus == CosmosStakePositionRow.ValidatorStatus.ChurnedOut
     val isUnbonding = position.pendingUnbondingUnlockDate != null
-    // Unstake must remain available for churned-out validators so the user can exit a position whose
+    // Unstake must remain available for churned-out validators so the user can exit a position
+    // whose
     // validator got slashed/kicked. Only `isUnbonding` blocks Unstake. Move/Redelegate requires the
     // dst slot to be Active per CosmosStakingPositionsViewModel.canMove.
     val isUnstakeLocked = isUnbonding
@@ -374,6 +375,7 @@ private fun PositionRow(
                             .take(1)
                             .uppercase(),
                     size = 40.dp,
+                    colorKey = position.validatorAddress,
                 )
                 UiSpacer(size = 12.dp)
                 Column(modifier = Modifier.weight(1f)) {
@@ -579,6 +581,10 @@ internal fun ValidatorAvatar(
     avatarUrl: String?,
     monogram: String,
     size: androidx.compose.ui.unit.Dp,
+    // Full, stable identifier (valoper address / moniker) used to pick the fallback hue. Defaults
+    // to the monogram for callers without a richer key, but passing the full key avoids the
+    // one-colour-per-leading-letter collisions on a screen with several delegations.
+    colorKey: String = monogram,
 ) {
     if (avatarUrl != null) {
         AsyncImage(
@@ -588,7 +594,7 @@ internal fun ValidatorAvatar(
         )
     } else {
         Box(
-            modifier = Modifier.size(size).clip(CircleShape).background(monogramColor(monogram)),
+            modifier = Modifier.size(size).clip(CircleShape).background(monogramColor(colorKey)),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -601,10 +607,11 @@ internal fun ValidatorAvatar(
 }
 
 /**
- * Deterministic background color keyed off the monogram so the same validator is always the same
- * hue.
+ * Deterministic background color keyed off the full identifier so the same validator is always the
+ * same hue. Hashing the whole string (not just the first character) keeps validators that share a
+ * leading letter from collapsing onto the same colour on a screen with several delegations.
  */
-internal fun monogramColor(monogram: String): androidx.compose.ui.graphics.Color {
+internal fun monogramColor(key: String): androidx.compose.ui.graphics.Color {
     val palette =
         listOf(
             androidx.compose.ui.graphics.Color(0xFF2D4BF3),
@@ -613,9 +620,15 @@ internal fun monogramColor(monogram: String): androidx.compose.ui.graphics.Color
             androidx.compose.ui.graphics.Color(0xFFB8860B),
             androidx.compose.ui.graphics.Color(0xFFC2410C),
             androidx.compose.ui.graphics.Color(0xFF0E7490),
+            androidx.compose.ui.graphics.Color(0xFFBE185D),
+            androidx.compose.ui.graphics.Color(0xFF15803D),
+            androidx.compose.ui.graphics.Color(0xFF6D28D9),
+            androidx.compose.ui.graphics.Color(0xFF0369A1),
+            androidx.compose.ui.graphics.Color(0xFFA16207),
+            androidx.compose.ui.graphics.Color(0xFF9D174D),
         )
-    val index = if (monogram.isEmpty()) 0 else (monogram[0].code % palette.size)
-    return palette[index]
+    if (key.isEmpty()) return palette[0]
+    return palette[(key.hashCode() % palette.size + palette.size) % palette.size]
 }
 
 internal fun truncated(address: String): String =

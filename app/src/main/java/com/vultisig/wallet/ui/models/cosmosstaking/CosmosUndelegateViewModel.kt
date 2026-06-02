@@ -69,8 +69,8 @@ internal data class CosmosUndelegateUiState(
     /**
      * Result of the spec Risk 3 preflight: `spendableBalance >= estimatedFee`. When false, the
      * inline "insufficient liquid balance for fee" microcopy appears and Continue is disabled. A
-     * staking-heavy user often has 100% of their LUNA bonded; without this check they would burn
-     * an MPC signing round on a tx the chain immediately rejects.
+     * staking-heavy user often has 100% of their LUNA bonded; without this check they would burn an
+     * MPC signing round on a tx the chain immediately rejects.
      */
     val hasSufficientBalanceForFee: Boolean = true,
     val isLoading: Boolean = true,
@@ -140,7 +140,8 @@ constructor(
             return setError("Amount exceeds your staked balance at this validator")
         }
         // Defense-in-depth: the form also gates on validForm, but a scripted/programmatic submit
-        // path (or a stale snapshot from a state race) could still slip through. The check is cheap.
+        // path (or a stale snapshot from a state race) could still slip through. The check is
+        // cheap.
         if (!currentState.hasSufficientBalanceForFee) {
             return setError(
                 context.getString(
