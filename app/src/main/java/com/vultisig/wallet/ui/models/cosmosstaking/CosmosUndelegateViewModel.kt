@@ -1,9 +1,11 @@
 package com.vultisig.wallet.ui.models.cosmosstaking
 
+import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.blockchain.cosmos.staking.BuildCosmosStakingKeysignPayloadUseCase
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingAmountFormatter
@@ -24,6 +26,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.Instant
@@ -96,6 +99,7 @@ constructor(
     private val buildCosmosStakingKeysignPayload: BuildCosmosStakingKeysignPayloadUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val balanceRepository: BalanceRepository,
+    @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -139,7 +143,10 @@ constructor(
         // path (or a stale snapshot from a state race) could still slip through. The check is cheap.
         if (!currentState.hasSufficientBalanceForFee) {
             return setError(
-                "Not enough liquid ${currentState.ticker} to cover the network fee. Claim rewards first or top up."
+                context.getString(
+                    R.string.cosmos_staking_insufficient_fee_balance,
+                    currentState.ticker,
+                )
             )
         }
 

@@ -206,7 +206,10 @@ constructor(
         // burns an MPC signing round on a tx the chain rejects with `code:11 insufficient fees`.
         if (!currentState.hasSufficientBalanceForFee) {
             return setError(
-                "Not enough liquid ${currentState.ticker} to cover the network fee. Claim rewards first or top up."
+                context.getString(
+                    R.string.cosmos_staking_insufficient_fee_balance,
+                    currentState.ticker,
+                )
             )
         }
 

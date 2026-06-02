@@ -113,6 +113,7 @@ internal class CosmosUndelegateViewModelTest {
             buildCosmosStakingKeysignPayload = buildPayload,
             depositTransactionRepository = depositTransactionRepository,
             balanceRepository = mockk(relaxed = true),
+            context = mockk(relaxed = true),
             navigator = navigator,
             ioDispatcher = testDispatcher,
         )
