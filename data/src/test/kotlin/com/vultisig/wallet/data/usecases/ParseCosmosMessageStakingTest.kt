@@ -102,9 +102,11 @@ class ParseCosmosMessageStakingTest {
             CosmosStakingHelper.buildAuthInfo(
                 pubKey = ByteArray(33) { 0x02 },
                 sequence = 1L,
-                gasLimit = 300_000L,
+                // Values mirror current Terra config (CosmosStakingConfig.kt). The parser is
+                // gas/fee-agnostic — keeping in sync with config to avoid stale-value drift.
+                gasLimit = 400_000L,
                 feeDenom = "uluna",
-                feeAmount = 7_500L,
+                feeAmount = 10_000L,
             )
         return SignDirectProto(
             bodyBytes = Base64.getEncoder().encodeToString(body),

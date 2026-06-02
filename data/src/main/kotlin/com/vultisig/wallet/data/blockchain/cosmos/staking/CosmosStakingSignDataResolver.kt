@@ -26,8 +26,9 @@ object CosmosStakingSignDataResolver {
     /**
      * Hard cap on validators in a single batched withdraw-rewards tx. Mirrors the UI soft cap;
      * enforced again here so the resolver cannot be bypassed by upstream callers wiring payloads
-     * directly (e.g. tests, scripted payloads). LUNC's 1.5M-per-msg gas budget means a 9-validator
-     * batch would exceed block gas limit on `columbus-5`.
+     * directly (e.g. tests, scripted payloads). LUNC's 2M-per-msg gas budget means an 8-validator
+     * batch lands at 16M total gas (under columbus-5 block budget); raising the cap would push the
+     * batch past block reality.
      */
     const val MAX_BATCH_WITHDRAW_VALIDATORS = 8
 

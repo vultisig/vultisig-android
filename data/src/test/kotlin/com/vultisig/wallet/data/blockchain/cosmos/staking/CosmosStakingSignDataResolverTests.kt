@@ -340,9 +340,11 @@ class CosmosStakingSignDataResolverTests {
             CosmosStakingHelper.buildAuthInfo(
                 pubKey = ByteArray(33) { 0x02 },
                 sequence = FX.SEQUENCE,
-                gasLimit = 300_000L,
+                // Terra gas/fee bumped (300_000 -> 400_000, 7_500 -> 10_000) after mainnet OoG
+                // on redelegate. See CosmosStakingConfig.kt for the on-chain receipt + reasoning.
+                gasLimit = 400_000L,
                 feeDenom = "uluna",
-                feeAmount = 7_500L,
+                feeAmount = 10_000L,
             )
         assertContentEquals(expectedAuth, Base64.getDecoder().decode(result.authInfoBytes))
     }
@@ -368,9 +370,11 @@ class CosmosStakingSignDataResolverTests {
             CosmosStakingHelper.buildAuthInfo(
                 pubKey = ByteArray(33) { 0x02 },
                 sequence = FX.SEQUENCE,
-                gasLimit = 1_500_000L,
+                // LUNC bumped 1.5M -> 2M gas, fee scaled to preserve the ~66.6667 uluna/gas
+                // price ratio (100M / 1.5M ≈ 133_333_334 / 2M). See CosmosStakingConfig.kt.
+                gasLimit = 2_000_000L,
                 feeDenom = "uluna",
-                feeAmount = 100_000_000L,
+                feeAmount = 133_333_334L,
             )
         assertContentEquals(expectedAuth, Base64.getDecoder().decode(result.authInfoBytes))
     }
@@ -387,11 +391,11 @@ class CosmosStakingSignDataResolverTests {
             CosmosStakingHelper.buildAuthInfo(
                 pubKey = ByteArray(33) { 0x02 },
                 sequence = FX.SEQUENCE,
-                // 3 msgs × 300_000 base = 900_000
-                gasLimit = 900_000L,
+                // 3 msgs × 400_000 base = 1_200_000 (Terra)
+                gasLimit = 1_200_000L,
                 feeDenom = "uluna",
-                // 3 msgs × 7_500 base = 22_500
-                feeAmount = 22_500L,
+                // 3 msgs × 10_000 base = 30_000
+                feeAmount = 30_000L,
             )
         assertContentEquals(expectedAuth, Base64.getDecoder().decode(result.authInfoBytes))
     }

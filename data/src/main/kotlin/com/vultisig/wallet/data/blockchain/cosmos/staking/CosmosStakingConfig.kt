@@ -11,8 +11,11 @@ import com.vultisig.wallet.data.models.Chain
  * semantics ([isStakingSupported]).
  *
  * Values mirror iOS `CosmosStakingConfig.swift` (vultisig-ios PR #4432) and the agent app's
- * `COSMOS_CHAIN_CONFIG` table. LUNC gas (1.5M units / 100M uluna) is the empirically-verified floor
- * — smaller budgets OoG on `columbus-5`.
+ * `COSMOS_CHAIN_CONFIG` table. The gas budgets are empirically-verified floors with headroom for
+ * the heaviest single-msg path (MsgBeginRedelegate, which mutates BOTH src + dst validator records
+ * and costs more gas than a single-validator delegate/undelegate). Phoenix-1 redelegate was
+ * observed at 300_140 gas in mainnet tx 44A3CE6C...EAF31 (OoG against the prior 300_000 floor) so
+ * the Terra floor was raised to 400_000 with proportional fee.
  */
 object CosmosStakingConfig {
 
@@ -34,8 +37,11 @@ object CosmosStakingConfig {
                     bondDenom = "uluna",
                     feeDenom = "uluna",
                     valoperHrp = "terravaloper",
-                    gasLimit = 300_000L,
-                    feeAmount = 7_500L,
+                    // 300_000 was the prior floor; observed OoG on redelegate at 300_140 gasUsed
+                    // (phoenix-1 tx 44A3CE6C...EAF31). Raised to 400_000 to absorb the dual-record
+                    // x/staking write that MsgBeginRedelegate performs. Fee scaled 1:1.
+                    gasLimit = 400_000L,
+                    feeAmount = 10_000L,
                     unbondingDays = 21,
                 ),
             Chain.TerraClassic to
@@ -44,8 +50,13 @@ object CosmosStakingConfig {
                     bondDenom = "uluna",
                     feeDenom = "uluna",
                     valoperHrp = "terravaloper",
-                    gasLimit = 1_500_000L,
-                    feeAmount = 100_000_000L,
+                    // LUNC redelegate hits the same dual-record path. Bumping 1.5M -> 2M for
+                    // headroom (8-validator claim batch = 16M total gas, still inside
+                    // columbus-5's per-block budget). Fee scaled to preserve the prior gas-price
+                    // ratio: old `100M / 1.5M = 66.6667 uluna/gas`. New: `133_333_334 / 2M =
+                    // 66.6667 uluna/gas` (rounded up by 1).
+                    gasLimit = 2_000_000L,
+                    feeAmount = 133_333_334L,
                     unbondingDays = 21,
                 ),
         )

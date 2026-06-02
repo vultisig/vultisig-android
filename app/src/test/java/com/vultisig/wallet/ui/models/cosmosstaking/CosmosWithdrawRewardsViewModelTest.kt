@@ -162,9 +162,11 @@ internal class CosmosWithdrawRewardsViewModelTest {
     @Test
     fun `estimated fee scales with selection count`() = runTest {
         val model = vm()
-        // 8 selected × 7_500 uluna fee = 60_000 uluna = 0.06 LUNA at 6 decimals.
+        // 8 selected × 10_000 uluna fee = 80_000 uluna = 0.08 LUNA at 6 decimals. Fee bumped from
+        // 7_500 -> 10_000 after gas budget was raised to absorb redelegate's heavier path
+        // (CosmosStakingConfig.kt).
         val fee = model.state.value.estimatedFee
-        assertEquals(0, BigDecimal("0.06").compareTo(fee.stripTrailingZeros()))
+        assertEquals(0, BigDecimal("0.08").compareTo(fee.stripTrailingZeros()))
     }
 
     @Test

@@ -20,8 +20,12 @@ class CosmosStakingConfigTests {
         assertEquals("uluna", entry.bondDenom)
         assertEquals("uluna", entry.feeDenom)
         assertEquals("terravaloper", entry.valoperHrp)
-        assertEquals(300_000L, entry.gasLimit)
-        assertEquals(7_500L, entry.feeAmount)
+        // Bumped from 300_000 -> 400_000 after observed OoG on phoenix-1 redelegate at 300_140
+        // gasUsed (tx 44A3CE6C...EAF31). MsgBeginRedelegate writes two validator records so it
+        // costs more than delegate/undelegate. Fee scaled proportionally to keep the gas-price
+        // (uluna/gas) ratio constant.
+        assertEquals(400_000L, entry.gasLimit)
+        assertEquals(10_000L, entry.feeAmount)
         assertEquals(21, entry.unbondingDays)
     }
 
@@ -32,10 +36,11 @@ class CosmosStakingConfigTests {
         assertEquals("uluna", entry.bondDenom)
         assertEquals("uluna", entry.feeDenom)
         assertEquals("terravaloper", entry.valoperHrp)
-        // LUNC gas (1.5M units / 100M uluna) is the empirically-verified floor — smaller budgets
-        // OoG on columbus-5.
-        assertEquals(1_500_000L, entry.gasLimit)
-        assertEquals(100_000_000L, entry.feeAmount)
+        // LUNC redelegate also hits the dual-record path. Bumped 1.5M -> 2M for headroom; fee
+        // scaled to preserve prior gas-price ratio (~66.6667 uluna/gas). 8-validator claim batch
+        // = 16M total gas, still under columbus-5 per-block budget.
+        assertEquals(2_000_000L, entry.gasLimit)
+        assertEquals(133_333_334L, entry.feeAmount)
         assertEquals(21, entry.unbondingDays)
     }
 
@@ -68,7 +73,7 @@ class CosmosStakingConfigTests {
     @Test
     fun `Convenience accessors delegate to the table entry`() {
         assertEquals("terravaloper", CosmosStakingConfig.valoperHrpFor(Chain.Terra))
-        assertEquals(7_500L, CosmosStakingConfig.feeAmountFor(Chain.Terra))
+        assertEquals(10_000L, CosmosStakingConfig.feeAmountFor(Chain.Terra))
         assertEquals(21, CosmosStakingConfig.unbondingDaysFor(Chain.Terra))
     }
 
@@ -78,6 +83,6 @@ class CosmosStakingConfigTests {
         assertEquals("phoenix-1", entry.chainId)
         assertEquals("uluna", entry.bondDenom)
         assertEquals("uluna", entry.feeDenom)
-        assertEquals(300_000L, entry.gasLimit)
+        assertEquals(400_000L, entry.gasLimit)
     }
 }
