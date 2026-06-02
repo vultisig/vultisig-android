@@ -188,7 +188,7 @@ internal class CosmosStakingPositionsViewModelTest {
         model.unstake(churned)
         // Churned-out (jailed / unbonded) can no longer accept stake, but the user must still be
         // able to exit the position — Unstake is the only sensible action (iOS parity).
-        coVerify { navigator.route(any<Route.CosmosStakingUndelegate>()) }
+        coVerify { navigator.route(any<Route.CosmosStakingUndelegate>(), any()) }
     }
 
     @Test
@@ -197,7 +197,7 @@ internal class CosmosStakingPositionsViewModelTest {
         val churned = model.state.value.positions.first { it.validatorAddress == churnedVal }
         model.move(churned)
         // Redelegation requires an Active source validator — churned-out can only be unstaked.
-        coVerify(exactly = 0) { navigator.route(any<Route.CosmosStakingRedelegate>()) }
+        coVerify(exactly = 0) { navigator.route(any<Route.CosmosStakingRedelegate>(), any()) }
     }
 
     @Test
@@ -205,7 +205,7 @@ internal class CosmosStakingPositionsViewModelTest {
         val model = vm()
         val active = model.state.value.positions.first { it.validatorAddress == activeVal }
         model.unstake(active)
-        coVerify { navigator.route(any<Route.CosmosStakingUndelegate>()) }
+        coVerify { navigator.route(any<Route.CosmosStakingUndelegate>(), any()) }
     }
 
     @Test
@@ -281,6 +281,6 @@ internal class CosmosStakingPositionsViewModelTest {
         val active = model.state.value.positions.first { it.validatorAddress == activeVal }
         assertNotNull(active.pendingUnbondingUnlockDate)
         model.move(active)
-        coVerify(exactly = 0) { navigator.route(any<Route.CosmosStakingRedelegate>()) }
+        coVerify(exactly = 0) { navigator.route(any<Route.CosmosStakingRedelegate>(), any()) }
     }
 }

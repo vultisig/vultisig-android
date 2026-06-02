@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
@@ -276,7 +277,10 @@ constructor(
         val vaultId = vaultId ?: return
         val chainId = chainId ?: return
         navigateSafely {
-            navigator.route(Route.CosmosStakingDelegate(vaultId = vaultId, chainId = chainId))
+            navigator.route(
+                Route.CosmosStakingDelegate(vaultId = vaultId, chainId = chainId),
+                popOptionsForStaking(Route.CosmosStakingDelegate::class.java),
+            )
         }
     }
 
@@ -290,7 +294,8 @@ constructor(
                     vaultId = vaultId,
                     chainId = chainId,
                     validatorAddress = position.validatorAddress,
-                )
+                ),
+                popOptionsForStaking(Route.CosmosStakingUndelegate::class.java),
             )
         }
     }
@@ -305,7 +310,8 @@ constructor(
                     vaultId = vaultId,
                     chainId = chainId,
                     validatorSrcAddress = position.validatorAddress,
-                )
+                ),
+                popOptionsForStaking(Route.CosmosStakingRedelegate::class.java),
             )
         }
     }
@@ -315,10 +321,23 @@ constructor(
         val chainId = chainId ?: return
         navigateSafely {
             navigator.route(
-                Route.CosmosStakingWithdrawRewards(vaultId = vaultId, chainId = chainId)
+                Route.CosmosStakingWithdrawRewards(vaultId = vaultId, chainId = chainId),
+                popOptionsForStaking(Route.CosmosStakingWithdrawRewards::class.java),
             )
         }
     }
+
+    /**
+     * Forces any prior backstack entry of the SAME staking destination class to be popped before
+     * the new one lands. Required because `NavController.buildOptions` sets `launchSingleTop = true`
+     * — without `popUpTo` the navigator reuses the existing entry (and its Hilt-scoped ViewModel,
+     * whose `route` field was set once at init via `savedStateHandle.toRoute()`). Symptom (mainnet
+     * tx 6E4615C1…B379D): tapping Claim from the TerraClassic positions screen rebroadcast against
+     * the PRIOR phoenix-1 chain context when the user had visited the LUNA claim earlier in the
+     * session. Forcing a fresh entry resets the savedStateHandle to the new chain's args.
+     */
+    private fun popOptionsForStaking(routeClass: Class<*>): NavigationOptions =
+        NavigationOptions(popUpToRoute = routeClass.kotlin, inclusive = true)
 
     fun dismissError() {
         _state.update { it.copy(errorMessage = null) }
