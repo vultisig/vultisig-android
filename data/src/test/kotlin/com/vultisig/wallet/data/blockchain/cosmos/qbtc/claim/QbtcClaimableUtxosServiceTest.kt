@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 class QbtcClaimableUtxosServiceTest {
 
     @Test
-    fun `maps blockchair utxos and drops malformed rows`() = runTest {
+    fun `maps blockchair utxos to confirmations and drops malformed rows`() = runTest {
         val info =
             BlockChairInfo(
                 address = BlockChairAddress(balance = 0, unspentOutputCount = 0),
@@ -51,6 +51,7 @@ class QbtcClaimableUtxosServiceTest {
                             blockId = 5,
                         ), // bad value
                     ),
+                currentBlockHeight = 1_000_283,
             )
         val service = QbtcClaimableUtxosServiceImpl(FakeBlockChairApi(info))
 
@@ -58,18 +59,53 @@ class QbtcClaimableUtxosServiceTest {
 
         assertEquals(
             listOf(
+                // tip 1_000_283 − block 1_000_142 + 1 = 142 confirmations
                 ClaimableUtxo(
                     txid = "aa".repeat(32),
                     vout = 3,
                     amount = 100_000,
-                    blockHeight = 1_000_142,
+                    confirmations = 142,
                 ),
+                // unconfirmed (blockId 0) → null confirmations
                 ClaimableUtxo(
                     txid = "bb".repeat(32),
                     vout = 0,
                     amount = 300_000,
-                    blockHeight = null,
+                    confirmations = null,
                 ),
+            ),
+            result,
+        )
+    }
+
+    @Test
+    fun `confirmations are null when the chain tip is unknown`() = runTest {
+        val info =
+            BlockChairInfo(
+                address = BlockChairAddress(balance = 0, unspentOutputCount = 0),
+                utxos =
+                    listOf(
+                        BlockChairUtxoInfo(
+                            "aa".repeat(32),
+                            index = 0,
+                            value = 100_000,
+                            blockId = 900_000,
+                        )
+                    ),
+                currentBlockHeight = null,
+            )
+        val service = QbtcClaimableUtxosServiceImpl(FakeBlockChairApi(info))
+
+        val result = service.fetchClaimableCandidates("addr")
+
+        assertEquals(
+            listOf(
+                ClaimableUtxo(
+                    txid = "aa".repeat(32),
+                    vout = 0,
+                    amount = 100_000,
+                    confirmations = null,
+                )
             ),
             result,
         )

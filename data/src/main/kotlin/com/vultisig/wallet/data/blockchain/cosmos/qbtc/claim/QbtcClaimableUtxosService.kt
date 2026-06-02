@@ -18,18 +18,24 @@ internal class QbtcClaimableUtxosServiceImpl
 @Inject
 constructor(private val blockChairApi: BlockChairApi) : QbtcClaimableUtxosService {
 
-    override suspend fun fetchClaimableCandidates(btcAddress: String): List<ClaimableUtxo> =
-        blockChairApi.getAddressInfo(Chain.Bitcoin, btcAddress)?.utxos.orEmpty().mapNotNull { utxo
-            ->
+    override suspend fun fetchClaimableCandidates(btcAddress: String): List<ClaimableUtxo> {
+        val info = blockChairApi.getAddressInfo(Chain.Bitcoin, btcAddress)
+        val currentBlockHeight = info?.currentBlockHeight
+        return info?.utxos.orEmpty().mapNotNull { utxo ->
             if (utxo.transactionHash.isEmpty() || utxo.index < 0 || utxo.value < 0) {
                 null
             } else {
+                val blockId = utxo.blockId.takeIf { it > 0 }?.toLong()
                 ClaimableUtxo(
                     txid = utxo.transactionHash,
                     vout = utxo.index,
                     amount = utxo.value,
-                    blockHeight = utxo.blockId.takeIf { it > 0 }?.toLong(),
+                    confirmations =
+                        blockId?.let { id ->
+                            currentBlockHeight?.let { (it - id + 1).coerceAtLeast(0) }
+                        },
                 )
             }
         }
+    }
 }

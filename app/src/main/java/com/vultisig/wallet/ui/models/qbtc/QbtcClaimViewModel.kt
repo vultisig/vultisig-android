@@ -75,7 +75,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 internal data class QbtcClaimUtxoUiModel(
     val key: String,
     val shortId: String,
-    val subtitleBlockHeight: Long?,
+    val subtitleConfirmations: Long?,
     val qbtcAmount: String,
     val btcAmount: String,
 )
@@ -401,7 +401,7 @@ constructor(
         QbtcClaimUtxoUiModel(
             key = key(),
             shortId = shortTxid(),
-            subtitleBlockHeight = blockHeight,
+            subtitleConfirmations = confirmations,
             qbtcAmount = QbtcClaimAmountFormatter.formatQbtc(amount),
             btcAmount = QbtcClaimAmountFormatter.formatBtc(amount),
         )

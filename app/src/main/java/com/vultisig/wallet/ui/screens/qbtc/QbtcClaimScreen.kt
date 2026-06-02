@@ -108,7 +108,7 @@ internal fun QbtcClaimScreen(
     V3Scaffold(
         title = null,
         onBackClick = onBackClick,
-        applyGradientBackground = true,
+        applyGradientBackground = false,
         bottomBar = {
             if (state is QbtcClaimUiState.Selecting) {
                 VsButton(
@@ -182,7 +182,13 @@ private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
         Image(
             painter = painterResource(R.drawable.qbtc_claim_hero),
             contentDescription = null,
-            modifier = Modifier.align(Alignment.TopEnd).size(201.dp).offset(x = 32.dp, y = (-17).dp),
+            // Figma: 200.78 x 206 hero coin overflowing the card top-right (left=175, top=-17 in a
+            // 344-wide card → right edge 31.78 past the card edge).
+            modifier =
+                Modifier.align(Alignment.TopEnd)
+                    .width(200.78.dp)
+                    .height(206.dp)
+                    .offset(x = 31.78.dp, y = (-17).dp),
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -293,7 +299,7 @@ private fun QbtcClaimUtxoRow(
             )
             Text(
                 text =
-                    utxo.subtitleBlockHeight?.let {
+                    utxo.subtitleConfirmations?.let {
                         stringResource(R.string.qbtc_claim_utxo_block_format, it)
                     } ?: stringResource(R.string.qbtc_claim_utxo_pending),
                 style = Theme.brockmann.supplementary.caption,
