@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -103,8 +104,8 @@ internal fun CosmosWithdrawRewardsScreen(
 
             FooterSummary(
                 ticker = state.ticker,
-                totalSelectedReward = state.totalSelectedReward.toPlainString(),
-                estimatedFee = state.estimatedFee.toPlainString(),
+                totalSelectedReward = formatStakeAmount(state.totalSelectedReward),
+                estimatedFee = formatStakeAmount(state.estimatedFee),
                 hasSufficientBalanceForFee = state.hasSufficientBalanceForFee,
                 isSubmitting = state.isSubmitting,
                 isValidForm = state.validForm,
@@ -188,20 +189,28 @@ private fun CandidateRow(
         UiSpacer(size = 8.dp)
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = candidate.validatorMoniker.ifEmpty { candidate.validatorAddress },
+                text = candidate.validatorMoniker.ifEmpty { truncated(candidate.validatorAddress) },
                 style = Theme.brockmann.body.s.medium,
                 color = Theme.v2.colors.text.primary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = candidate.validatorAddress,
+                text = truncated(candidate.validatorAddress),
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
+        UiSpacer(size = 8.dp)
+        // Format to the shared 6-fraction-digit style — the raw reward is a high-precision decimal
+        // that would otherwise wrap and collapse the validator column to a single character wide.
         Text(
-            text = "${candidate.pendingReward.toPlainString()} $ticker",
+            text = "${formatStakeAmount(candidate.pendingReward)} $ticker",
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
+            maxLines = 1,
         )
     }
 }
