@@ -315,8 +315,6 @@ internal fun ChainTokensScreen(
                         }
                     }
 
-                    // Promo banner sits BELOW the asset list (Bitcoin token first, then the
-                    // "Claim your QBTC" banner), matching Figma 75201:107954.
                     if (uiModel.showQbtcClaimBanner) {
                         ClaimQbtcPromoBanner(
                             onClaim = onClaimQbtc,

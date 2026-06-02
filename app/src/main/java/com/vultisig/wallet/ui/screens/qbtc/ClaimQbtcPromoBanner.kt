@@ -27,13 +27,6 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.theme.Theme
 
-/**
- * "Claim your QBTC" promo card shown on the Bitcoin chain-detail screen when the vault is eligible
- * (has a QBTC key + a Bitcoin address). Tapping the CTA opens the claim flow. Mirrors iOS
- * `ClaimQbtcPromoBanner` and Figma node 75201:113838: a 156dp surface-2 card with decorative QBTC
- * coins bleeding off the left/right edges (clipped), a muted subtitle, a large title, and a primary
- * "Claim Now" pill.
- */
 @Composable
 internal fun ClaimQbtcPromoBanner(onClaim: () -> Unit, modifier: Modifier = Modifier) {
     Box(
@@ -85,10 +78,6 @@ internal fun ClaimQbtcPromoBanner(onClaim: () -> Unit, modifier: Modifier = Modi
     }
 }
 
-/**
- * Decorative QBTC coins that bleed off the left and right edges of the banner, clipped by the
- * parent's rounded corners. Positions/rotations mirror the Figma decorations (node 75201:113838).
- */
 @Composable
 private fun QbtcCoinDecorations() {
     Box(modifier = Modifier.fillMaxWidth().height(156.dp)) {
@@ -129,12 +118,6 @@ private fun QbtcCoin(size: androidx.compose.ui.unit.Dp, rotation: Float, modifie
     )
 }
 
-/**
- * Bottom-anchored "Claim QBTC" CTA shown on the QBTC chain-detail screen when the vault is
- * eligible. Mirrors Figma node 74880:112093: a primary pill button pinned near the bottom with a
- * vertical gradient fade (screen bg up to transparent) behind it so the token list scrolls under
- * it. Tapping the CTA opens the claim flow.
- */
 @Composable
 internal fun ClaimQbtcBottomCta(onClaim: () -> Unit, modifier: Modifier = Modifier) {
     Box(

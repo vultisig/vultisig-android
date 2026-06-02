@@ -178,10 +178,6 @@ private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
                 )
                 .border(1.dp, QbtcHeroBorder.copy(alpha = 0.17f), RoundedCornerShape(16.dp))
     ) {
-        // Figma `imgFrame1000005808`: gold coin + concentric rings + soft glow,
-        // overflowing the top-right of the 118dp-tall card. The asset bakes in
-        // the 0.6 opacity and rings, so it is placed directly. Figma: 200.78w x
-        // 206h, offset left 175 / top -17 within a 344w card.
         Image(
             painter = painterResource(R.drawable.qbtc_claim_hero),
             contentDescription = null,
@@ -207,9 +203,6 @@ private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
 
 @Composable
 private fun ClaimTabHeader() {
-    // Figma: "Claim" tab (Body S Medium) with a short accent underline matching
-    // the text width (iOS sizes the rule to the label via fixedSize). The Column
-    // wraps its content width so the underline tracks the label, not the screen.
     Column(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier.width(IntrinsicSize.Min),
@@ -249,9 +242,6 @@ private fun QbtcClaimDescription() {
 
 @Composable
 private fun QbtcClaimCheckbox(checked: Boolean) {
-    // Figma checkbox: selected = green/teal ring + check; unselected = empty
-    // ring. Mirrors iOS (alertSuccess ring + faint fill when selected,
-    // textTertiary @0.6 otherwise), 24dp circle, 1.5dp ring.
     val ringColor =
         if (checked) Theme.v2.colors.alerts.success
         else Theme.v2.colors.text.tertiary.copy(alpha = 0.6f)
@@ -461,12 +451,6 @@ private fun CenteredProgress(label: String) {
     }
 }
 
-/**
- * Signing/proving progress for the claim flow. Mirrors iOS, which renders the QBTC coin logo above
- * the in-progress indicator (`SendCryptoKeysignView` with `coinLogo`). Structurally echoes
- * [VsSigningProgressIndicator] but stacks the coin logo above the Rive spinner so the user sees
- * what is being claimed.
- */
 @Composable
 private fun ClaimSigningProgress(label: String, @androidx.annotation.DrawableRes logoRes: Int) {
     Column(

@@ -166,17 +166,8 @@ constructor(
         }
     }
 
-    /**
-     * Surfaces the two QBTC-claim entry points on the chain-detail screen:
-     * - the "Claim your QBTC" promo banner on the **Bitcoin** chain-detail (entry point A), and
-     * - the bottom "Claim QBTC" CTA on the **QBTC** chain-detail (entry point B).
-     *
-     * Eligibility is computed instantly from in-memory vault state — the vault has a QBTC (MLDSA)
-     * key and a Bitcoin address — so neither entry point waits on a network call. The claim screen
-     * still runs the authoritative claimable-UTXO check and shows a "nothing to claim" state when
-     * there's nothing entitled. Both Fast Vaults (server co-sign) and Secure Vaults (device co-sign
-     * via QR pairing) are supported.
-     */
+    // Instant in-memory eligibility (MLDSA key + BTC address); the claim screen does the real
+    // check.
     private fun checkQbtcClaimEligibility(chain: Chain) {
         val vault = currentVault
         val btcAddress = vault?.coins?.firstOrNull { it.chain == Chain.Bitcoin }?.address
