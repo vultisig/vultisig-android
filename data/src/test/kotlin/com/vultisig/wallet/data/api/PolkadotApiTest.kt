@@ -13,7 +13,7 @@ import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 
@@ -24,7 +24,7 @@ class PolkadotApiTest {
 
     @Test
     fun `isExtrinsicInChain matches the blake2b-256 hash of an extrinsic in the head block`() =
-        runBlocking {
+        runTest {
             var requests = 0
             val api =
                 polkadotApi(
@@ -44,7 +44,7 @@ class PolkadotApiTest {
         }
 
     @Test
-    fun `isExtrinsicInChain walks back to a parent block via parentHash`() = runBlocking {
+    fun `isExtrinsicInChain walks back to a parent block via parentHash`() = runTest {
         var requests = 0
         val api =
             polkadotApi(
@@ -65,24 +65,23 @@ class PolkadotApiTest {
     }
 
     @Test
-    fun `isExtrinsicInChain returns false and stops after depth blocks when not found`() =
-        runBlocking {
-            var requests = 0
-            val api =
-                polkadotApi(
-                    MockEngine {
-                        requests++
-                        respond(
-                            content = blockResponse(parentHash = PARENT, extrinsics = emptyList()),
-                            status = HttpStatusCode.OK,
-                            headers = jsonHeaders,
-                        )
-                    }
-                )
+    fun `isExtrinsicInChain returns false and stops after depth blocks when not found`() = runTest {
+        var requests = 0
+        val api =
+            polkadotApi(
+                MockEngine {
+                    requests++
+                    respond(
+                        content = blockResponse(parentHash = PARENT, extrinsics = emptyList()),
+                        status = HttpStatusCode.OK,
+                        headers = jsonHeaders,
+                    )
+                }
+            )
 
-            assertEquals(false, api.isExtrinsicInChain(EXT_HASH, depth = 3))
-            assertEquals(3, requests)
-        }
+        assertEquals(false, api.isExtrinsicInChain(EXT_HASH, depth = 3))
+        assertEquals(3, requests)
+    }
 
     private fun blockResponse(parentHash: String, extrinsics: List<String>): String {
         val ext = extrinsics.joinToString(",") { "\"$it\"" }
