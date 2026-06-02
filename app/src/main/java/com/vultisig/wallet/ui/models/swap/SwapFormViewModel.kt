@@ -923,9 +923,12 @@ constructor(
                     address to srcAmount
                 }
                 .combine(refreshQuoteState) { it, _ -> it }
-                .debounce(450L)
+                // Show the spinner immediately on input, ahead of the debounce, so the form
+                // doesn't look frozen while we wait. The debounce below still coalesces the
+                // actual quote fetch, so this adds no extra provider requests.
+                .onEach { isLoading = true }
+                .debounce(300L)
                 .collect { (address, amount) ->
-                    isLoading = true
                     val (src, dst) = address
 
                     val srcToken = src.account.token
