@@ -1255,7 +1255,6 @@
     <string name="qbtc_claim_success_title">QBTC 청구 완료</string>
     <string name="qbtc_claim_password_title">볼트 비밀번호 입력</string>
     <string name="qbtc_claim_pair_instruction">청구를 공동 서명하려면 다른 기기로 이것을 스캔하세요</string>
-    <string name="qbtc_claim_cancel">취소</string>
     <string name="qbtc_claim_failed">청구 실패</string>
     <string name="qbtc_claim_unavailable_title">청구가 비활성화됨</string>
     <string name="qbtc_claim_unavailable_detail">QBTC 청구가 네트워크에서 일시적으로 비활성화되었습니다. 나중에 다시 시도해 주세요.</string>

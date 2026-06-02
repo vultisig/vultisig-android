@@ -1289,7 +1289,6 @@
     <string name="qbtc_claim_success_title">QBTC claimed</string>
     <string name="qbtc_claim_password_title">Enter vault password</string>
     <string name="qbtc_claim_pair_instruction">Scan this with your other device to co-sign the claim</string>
-    <string name="qbtc_claim_cancel">Cancel</string>
     <string name="qbtc_claim_failed">Claim failed</string>
     <string name="qbtc_claim_unavailable_title">Claiming is disabled</string>
     <string name="qbtc_claim_unavailable_detail">QBTC claiming is temporarily disabled on the network. Please try again later.</string>
