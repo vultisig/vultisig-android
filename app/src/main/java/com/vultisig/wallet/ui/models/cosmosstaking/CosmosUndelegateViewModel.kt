@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -226,7 +227,11 @@ constructor(
             depositTransactionRepository.addTransaction(depositTx)
 
             navigator.route(
-                Route.CosmosStakingVerify(vaultId = route.vaultId, transactionId = depositTx.id)
+                Route.CosmosStakingVerify(vaultId = route.vaultId, transactionId = depositTx.id),
+                NavigationOptions(
+                    popUpToRoute = Route.CosmosStakingVerify::class,
+                    inclusive = true,
+                ),
             )
             _state.update { it.copy(isSubmitting = false) }
         }
