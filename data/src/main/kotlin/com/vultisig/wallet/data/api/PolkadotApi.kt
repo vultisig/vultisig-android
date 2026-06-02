@@ -62,8 +62,22 @@ interface PolkadotApi {
      * contains an extrinsic whose blake2b-256 hash matches [txHash]. Substrate full nodes do not
      * index extrinsics by hash, so confirmation is done by scanning recent blocks via plain RPC
      * instead of depending on a third-party indexer (e.g. Subscan).
+     *
+     * Head-relative, so only suitable right after broadcast (the inclusion block is near the head).
+     * For status polling that may run long after broadcast, use [isExtrinsicInBlockRange], whose
+     * window is anchored to an absolute block and does not drift as the head advances.
      */
     suspend fun isExtrinsicInChain(txHash: String, depth: Int): Boolean
+
+    /**
+     * Returns true if an extrinsic whose blake2b-256 hash matches [txHash] appears in any block in
+     * the inclusive number range `[fromBlock, toBlock]`. The range is anchored at [toBlock] (which
+     * the caller caps at the live head) and walked backward via `parentHash` down to [fromBlock] —
+     * Substrate blocks only link to their parent and number sequentially, so the absolute window is
+     * scanned regardless of how far the head has since advanced past it. This keeps a confirmed but
+     * already-buried inclusion block reachable, unlike a head-relative scan.
+     */
+    suspend fun isExtrinsicInBlockRange(txHash: String, fromBlock: Long, toBlock: Long): Boolean
 }
 
 internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpClient) :
@@ -213,6 +227,40 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
         }
         return false
     }
+
+    override suspend fun isExtrinsicInBlockRange(
+        txHash: String,
+        fromBlock: Long,
+        toBlock: Long,
+    ): Boolean {
+        val target = txHash.removePrefix("0x").lowercase()
+        if (target.isEmpty() || toBlock < fromBlock) return false
+
+        // Anchor at the top of the window and descend via parentHash. Block numbers are sequential
+        // in Substrate, so the parent of block N is N-1 — we count down instead of re-reading the
+        // header number each hop.
+        var blockHash: String? = getBlockHashByNumber(toBlock) ?: return false
+        var current = toBlock
+        while (current >= fromBlock) {
+            val block = getBlock(blockHash)?.block ?: break
+            if (block.extrinsics.any { extrinsicHash(it) == target }) {
+                return true
+            }
+            blockHash = block.header.parentHash
+            current--
+        }
+        return false
+    }
+
+    private suspend fun getBlockHashByNumber(number: Long): String? =
+        httpClient
+            .postRpc<PolkadotGetBlockHashJson>(
+                url = POLKADOT_API_URL,
+                method = "chain_getBlockHash",
+                params = buildJsonArray { add(number) },
+            )
+            .result
+            .takeIf { it.isNotBlank() }
 
     private suspend fun getBlock(blockHash: String?): PolkadotBlockResultJson? {
         return httpClient

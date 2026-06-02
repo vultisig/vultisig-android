@@ -9,6 +9,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import java.math.BigInteger
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -89,13 +90,66 @@ class PolkadotStatusProviderTest {
         assertEquals(MAX_SCAN_DEPTH, depth.captured)
     }
 
+    @Test
+    fun `extrinsic found inside the absolute inclusion window maps to Confirmed`() = runTest {
+        coEvery { transactionHistoryRepository.getTransaction(any(), any()) } returns
+            entityWithBroadcastBlock(BROADCAST_BLOCK)
+        coEvery { polkadotApi.getBlockHeader() } returns BigInteger.valueOf(BROADCAST_BLOCK + 5)
+        val from = slot<Long>()
+        val to = slot<Long>()
+        coEvery { polkadotApi.isExtrinsicInBlockRange(TX_HASH, capture(from), capture(to)) } returns
+            true
+
+        val result = provider.checkStatus(TX_HASH, Chain.Polkadot)
+
+        assertEquals(TransactionResult.Confirmed, result)
+        // Anchored at the broadcast block; the window top is capped at the live head (+5 here).
+        assertEquals(BROADCAST_BLOCK, from.captured)
+        assertEquals(BROADCAST_BLOCK + 5, to.captured)
+    }
+
+    @Test
+    fun `not yet included while the mortal era is still open stays Pending`() = runTest {
+        coEvery { transactionHistoryRepository.getTransaction(any(), any()) } returns
+            entityWithBroadcastBlock(BROADCAST_BLOCK)
+        // Head is past the inclusion window but still inside the finality margin.
+        coEvery { polkadotApi.getBlockHeader() } returns
+            BigInteger.valueOf(BROADCAST_BLOCK + INCLUSION_WINDOW_BLOCKS + 5)
+        coEvery { polkadotApi.isExtrinsicInBlockRange(TX_HASH, any(), any()) } returns false
+
+        val result = provider.checkStatus(TX_HASH, Chain.Polkadot)
+
+        assertEquals(TransactionResult.Pending, result)
+    }
+
+    @Test
+    fun `missing extrinsic past the mortal era resolves to terminal Failed`() = runTest {
+        coEvery { transactionHistoryRepository.getTransaction(any(), any()) } returns
+            entityWithBroadcastBlock(BROADCAST_BLOCK)
+        // Head has advanced well past the window + finality margin, so it can never be included.
+        coEvery { polkadotApi.getBlockHeader() } returns
+            BigInteger.valueOf(BROADCAST_BLOCK + INCLUSION_WINDOW_BLOCKS + FINALITY_MARGIN + 1)
+        coEvery { polkadotApi.isExtrinsicInBlockRange(TX_HASH, any(), any()) } returns false
+
+        val result = provider.checkStatus(TX_HASH, Chain.Polkadot)
+
+        assertTrue(result is TransactionResult.Failed, "expected terminal Failed, got $result")
+    }
+
     private fun entityBroadcastMinutesAgo(minutes: Long): TransactionHistoryEntity =
         mockk(relaxed = true) {
             every { timestamp } returns System.currentTimeMillis() - minutes * 60 * 1_000
+            every { broadcastBlockNumber } returns null
         }
+
+    private fun entityWithBroadcastBlock(block: Long): TransactionHistoryEntity =
+        mockk(relaxed = true) { every { broadcastBlockNumber } returns block }
 
     private companion object {
         const val TX_HASH = "0xdeadbeef"
         const val MAX_SCAN_DEPTH = 130
+        const val BROADCAST_BLOCK = 1_000_000L
+        const val INCLUSION_WINDOW_BLOCKS = 64L
+        const val FINALITY_MARGIN = 10L
     }
 }

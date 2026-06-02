@@ -83,6 +83,48 @@ class PolkadotApiTest {
         assertEquals(3, requests)
     }
 
+    @Test
+    fun `isExtrinsicInBlockRange finds an extrinsic inside the window`() = runTest {
+        var requests = 0
+        val api =
+            polkadotApi(
+                MockEngine {
+                    requests++
+                    // First call resolves the window-top block number to a hash, the rest fetch
+                    // blocks while walking down via parentHash.
+                    val body =
+                        if (requests == 1) hashResponse(HEAD_HASH)
+                        else blockResponse(parentHash = PARENT, extrinsics = listOf(EXT))
+                    respond(content = body, status = HttpStatusCode.OK, headers = jsonHeaders)
+                }
+            )
+
+        assertTrue(api.isExtrinsicInBlockRange(EXT_HASH, fromBlock = 100, toBlock = 102))
+        // 1 getBlockHash + 1 getBlock: found at the window top (block 102).
+        assertEquals(2, requests)
+    }
+
+    @Test
+    fun `isExtrinsicInBlockRange walks down to fromBlock and stops when not found`() = runTest {
+        var requests = 0
+        val api =
+            polkadotApi(
+                MockEngine {
+                    requests++
+                    val body =
+                        if (requests == 1) hashResponse(HEAD_HASH)
+                        else blockResponse(parentHash = PARENT, extrinsics = emptyList())
+                    respond(content = body, status = HttpStatusCode.OK, headers = jsonHeaders)
+                }
+            )
+
+        assertEquals(false, api.isExtrinsicInBlockRange(EXT_HASH, fromBlock = 98, toBlock = 100))
+        // 1 getBlockHash + 3 getBlock (blocks 100, 99, 98); must not scan below fromBlock.
+        assertEquals(4, requests)
+    }
+
+    private fun hashResponse(hash: String): String = """{"jsonrpc":"2.0","id":1,"result":"$hash"}"""
+
     private fun blockResponse(parentHash: String, extrinsics: List<String>): String {
         val ext = extrinsics.joinToString(",") { "\"$it\"" }
         return """
@@ -108,5 +150,6 @@ class PolkadotApiTest {
         const val EXT_HASH = "0xd3b70ba9181914a6c2132283204e411dd826b130dc5bb239f718938e788dee7e"
         const val PARENT = "0x98a821471c5f40bbaf9fd7798f89419ae81b9e6c4434dd16a2adecd55a82c9c2"
         const val GENESIS = "0x91b171bb158e2d3848fa23a9f1c25182fb8e20313b2c1eb49219da7a70ce90c3"
+        const val HEAD_HASH = "0x7b2c8f0d6a3e1f4c5b9d8e2a1f0c3b6d9e8a7f4c1b0d3e6a9f8c7b4d1e0a3f6c"
     }
 }
