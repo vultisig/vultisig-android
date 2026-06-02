@@ -18,9 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,7 +45,6 @@ import com.vultisig.wallet.ui.components.clickOnce
 import com.vultisig.wallet.ui.components.inputs.VsCodeInputField
 import com.vultisig.wallet.ui.components.inputs.VsCodeInputFieldState
 import com.vultisig.wallet.ui.components.rememberClipboardText
-import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v3.V3Icon
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.keygen.FastVaultVerificationViewModel
@@ -57,27 +54,22 @@ import com.vultisig.wallet.ui.models.keygen.VerifyPinState
 import com.vultisig.wallet.ui.theme.Theme
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FastVaultVerificationScreen(model: FastVaultVerificationViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
-    val sheetState =
-        rememberModalBottomSheetState(
-            skipPartiallyExpanded = true,
-            confirmValueChange = { !state.isSingleKeygen },
-        )
 
-    V2BottomSheet(sheetState = sheetState, onDismissRequest = model::back) {
-        FastVaultVerificationScreen(
-            state = state,
-            codeFieldState = model.codeFieldState,
-            onBackClick = model::back,
-            onCodeChanged = model::processCode,
-            onPasteClick = model::paste,
-            onChangeEmailClick = model::changeEmail,
-            onRetryClick = model::retry,
-        )
-    }
+    // EXPERIMENT: render the content full-screen in the MAIN window instead of inside a
+    // ModalBottomSheet (a secondary Dialog window). Some emulators fail to allocate a GPU buffer
+    // for that secondary window and paint it black; the main Activity window renders fine.
+    FastVaultVerificationScreen(
+        state = state,
+        codeFieldState = model.codeFieldState,
+        onBackClick = model::back,
+        onCodeChanged = model::processCode,
+        onPasteClick = model::paste,
+        onChangeEmailClick = model::changeEmail,
+        onRetryClick = model::retry,
+    )
 }
 
 @Composable

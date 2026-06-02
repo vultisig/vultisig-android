@@ -287,7 +287,9 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             VaultBackupOnboardingScreen()
         }
 
-        dialog<FastVaultVerification> { FastVaultVerificationScreen() }
+        // EXPERIMENT: composable<> (main window) instead of dialog<> (secondary window) — see
+        // FastVaultVerificationScreen; avoids the emulator black-secondary-window glitch.
+        composable<FastVaultVerification> { FastVaultVerificationScreen() }
 
         composable<BackupVault>(
             typeMap = mapOf(typeOf<BackupPasswordType>() to BackupPasswordTypeNavType)
