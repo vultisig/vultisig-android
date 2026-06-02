@@ -43,6 +43,7 @@ internal class SwapProviderTableTest {
                 coin(Chain.Tron, "TRX", isNative = true), // TRON TronWeb route
                 coin(Chain.Tron, "USDT", isNative = false), // TRC-20 → TRON route
                 coin(Chain.Sui, "SUI", isNative = true), // SUI PTB route
+                coin(Chain.Cardano, "ADA", isNative = true), // Cardano CBOR / deposit route
                 coin(Chain.Ton, "TON", isNative = true), // TON native deposit route
                 coin(Chain.Ripple, "XRP", isNative = true), // XRP deposit-only route
             )
@@ -73,7 +74,6 @@ internal class SwapProviderTableTest {
                 coin(Chain.MayaChain, "CACAO", isNative = true),
                 coin(Chain.Zcash, "ZEC", isNative = true),
                 coin(Chain.Hyperliquid, "HYPE", isNative = true),
-                coin(Chain.Cardano, "ADA", isNative = true),
                 coin(Chain.Polkadot, "DOT", isNative = true),
             )
 
@@ -91,12 +91,13 @@ internal class SwapProviderTableTest {
         // account screen. A chain can offer SWAPKIT in the provider table yet stay invisible to the
         // user if it is missing from isSwapSupported — the Sui regression that hid the button while
         // iOS showed it. Pin every SwapKit-wired native chain here.
-        listOf(Chain.Bitcoin, Chain.Tron, Chain.Sui, Chain.Ripple).forEach { chain ->
-            assertTrue(
-                chain.isSwapSupported,
-                "$chain offers SWAPKIT but is not marked isSwapSupported — Swap button would hide",
-            )
-        }
+        listOf(Chain.Bitcoin, Chain.Tron, Chain.Sui, Chain.Cardano, Chain.Ton, Chain.Ripple)
+            .forEach { chain ->
+                assertTrue(
+                    chain.isSwapSupported,
+                    "$chain offers SWAPKIT but is not marked isSwapSupported — Swap button would hide",
+                )
+            }
     }
 
     @Test

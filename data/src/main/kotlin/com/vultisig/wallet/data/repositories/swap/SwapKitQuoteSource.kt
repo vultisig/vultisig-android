@@ -29,6 +29,7 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -58,14 +59,15 @@ import timber.log.Timber
  * Non-EVM/non-Solana `txType`s surface as a fully-formed [SwapQuote.SwapKit] for a per-chain signer
  * to consume: PSBT (Bitcoin, via [com.vultisig.wallet.data.chains.helpers.SwapKitBtcSigner]), TRON
  * (TronWeb object, via [com.vultisig.wallet.data.chains.helpers.SwapKitTronSigner]), SUI (base64
- * PTB, via [com.vultisig.wallet.data.chains.helpers.SwapKitSuiSigner]) and TON (transfer array,
- * signed via the native [com.vultisig.wallet.data.crypto.TonHelper] path) are wired today. XRP is
- * deposit-only — SwapKit returns no tx body, so the payload carries an empty [txPayload] plus the
- * deposit address + destination tag and the cosigning peer rebuilds a plain XRP Payment via the
- * existing `RippleHelper`. The remaining types (CARDANO, …) still surface as
- * [SwapKitError.UnsupportedTxType] so the picker falls back to another provider rather than signing
- * garbage, until their signers land. `SOLANA` and the legacy `SERIALIZED_BASE64` discriminator are
- * aliased; SwapKit flipped them once before.
+ * PTB, via [com.vultisig.wallet.data.chains.helpers.SwapKitSuiSigner]), CARDANO (pre-built hex
+ * CBOR, via [com.vultisig.wallet.data.chains.helpers.SwapKitCardanoSigner]), and TON (transfer
+ * array, signed via the native [com.vultisig.wallet.data.crypto.TonHelper] path) are wired today.
+ * XRP and deposit-only Cardano carry no tx body — the payload holds an empty [txPayload] plus the
+ * deposit address (XRP also the destination tag) and the cosigning peer rebuilds a plain native
+ * send (XRP Payment via `RippleHelper`; ADA send via `CardanoHelper`). The remaining types still
+ * surface as [SwapKitError.UnsupportedTxType] so the picker falls back to another provider rather
+ * than signing garbage, until their signers land. `SOLANA` and the legacy `SERIALIZED_BASE64`
+ * discriminator are aliased; SwapKit flipped them once before.
  */
 internal class SwapKitQuoteSource
 @Inject
@@ -183,6 +185,8 @@ constructor(
             TxKind.PSBT,
             TxKind.TRON,
             TxKind.SUI,
+            TxKind.CARDANO,
+            TxKind.CARDANO_PREBUILT,
             TxKind.TON,
             TxKind.XRP ->
                 SwapQuoteResult.Native(
@@ -273,6 +277,8 @@ constructor(
             Chain.Ton -> 9
             Chain.Bitcoin -> 8
             Chain.Tron -> 6
+            // ADA is denominated in lovelace (1 ADA = 1e6 lovelace).
+            Chain.Cardano -> 6
             Chain.Ripple -> 6
             else -> 18
         }
@@ -381,11 +387,14 @@ constructor(
                         ),
                 )
             }
-            // PSBT/TRON/SUI/TON/XRP are dispatched to buildSwapKitNativeQuote before reaching here;
-            // the arm keeps the `when` exhaustive and refuses anything that slips through.
+            // PSBT/TRON/SUI/CARDANO/TON/XRP are dispatched to buildSwapKitNativeQuote before
+            // reaching here; the arm keeps the `when` exhaustive and refuses anything that slips
+            // through.
             TxKind.PSBT,
             TxKind.TRON,
             TxKind.SUI,
+            TxKind.CARDANO,
+            TxKind.CARDANO_PREBUILT,
             TxKind.TON,
             TxKind.XRP,
             TxKind.UNSUPPORTED -> throw SwapKitError.UnsupportedTxType(response.meta.txType)
@@ -433,9 +442,10 @@ constructor(
                 fromAmount = request.tokenValue.value,
                 toAmountDecimal = toAmountDecimal,
                 // Store the canonical discriminator, NOT the raw wire value: SwapKit ships XRP as
-                // either `XRP` or `RIPPLE`, so persisting `meta.txType` verbatim would make the
-                // signing-side gate (which matches TX_TYPE_XRP) reject a `RIPPLE` route. Mirrors
-                // iOS, which normalises the payload txType in buildSwapKitRipplePayload.
+                // either `XRP` or `RIPPLE`, and Cardano as `CARDANO` or `CBOR` (and split by `tx`
+                // presence into deposit-only vs pre-built), so persisting `meta.txType` verbatim
+                // would make the signing-side gate reject those routes. Mirrors iOS, which
+                // normalises the payload txType in its buildSwapKit*Payload builders.
                 txType = canonicalTxType(response),
                 txPayload = encodeNativeTxPayload(response),
                 targetAddress = targetAddress,
@@ -486,6 +496,13 @@ constructor(
                     ?: throw SwapKitError.Decoding("SwapKit TRON tx is missing raw_data_hex")
                 json.encodeToString(JsonObject.serializer(), obj).encodeToByteArray()
             }
+            // Deposit-only Cardano: no `tx` to sign — the keysign side builds a plain ADA send to
+            // targetAddress from the blockChainSpecific. Empty payload, mirroring iOS' `.cardano`.
+            TxKind.CARDANO -> ByteArray(0)
+            // Pre-built Cardano: SwapKit returns the tx as a hex-encoded CBOR string (not base64),
+            // mirroring iOS' `Data(hexString:)` path. Decode hex into the raw CBOR envelope bytes
+            // the signer hashes and re-frames.
+            TxKind.CARDANO_PREBUILT -> decodeHexTx(response.tx)
             TxKind.TON -> {
                 val transfers = decodeTonTransfers(response.tx)
                 if (transfers.isEmpty()) {
@@ -509,6 +526,31 @@ constructor(
         }
 
     /**
+     * Decode a hex-encoded unsigned-tx blob (Cardano CBOR) from `tx` into raw bytes for
+     * [SwapKitSwapPayloadJson.txPayload]. Tolerates an optional `0x` prefix. Rejects odd-length /
+     * non-hex / empty payloads so an unsignable blob is dropped here rather than at sign time.
+     */
+    private fun decodeHexTx(element: JsonElement?): ByteArray {
+        val hex =
+            (element as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()
+                ?: throw SwapKitError.Decoding("SwapKit Cardano tx is not a hex string")
+        val stripped = hex.removePrefix("0x").removePrefix("0X")
+        if (stripped.isEmpty() || stripped.length % 2 != 0) {
+            throw SwapKitError.Decoding("SwapKit Cardano tx is not valid hex")
+        }
+        val decoded =
+            runCatching {
+                    ByteArray(stripped.length / 2) {
+                        stripped.substring(it * 2, it * 2 + 2).toInt(16).toByte()
+                    }
+                }
+                .getOrElse {
+                    throw SwapKitError.Decoding("SwapKit Cardano tx is not valid hex", it)
+                }
+        return decoded
+    }
+
+    /**
      * Map the route onto the canonical [SwapKitSwapPayloadJson] txType discriminator the signing
      * side dispatches on — independent of the raw `meta.txType` casing/aliasing (e.g. SwapKit's
      * `XRP` vs `RIPPLE`). Only the native (non-EVM/Solana) kinds reach [buildSwapKitNativeQuote].
@@ -520,6 +562,11 @@ constructor(
             TxKind.SUI -> SwapKitSwapPayloadJson.TX_TYPE_SUI
             TxKind.TON -> SwapKitSwapPayloadJson.TX_TYPE_TON
             TxKind.XRP -> SwapKitSwapPayloadJson.TX_TYPE_XRP
+            // Cardano's wire `CARDANO`/`CBOR` is split by `tx` presence into the deposit-only
+            // CARDANO and the pre-built CARDANO_PREBUILT so the cosigning peer (incl. iOS, which
+            // emits the same strings) dispatches correctly.
+            TxKind.CARDANO -> SwapKitSwapPayloadJson.TX_TYPE_CARDANO
+            TxKind.CARDANO_PREBUILT -> SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT
             // EVM/Solana ride the EVM envelope and never reach the native-quote builder; fall back
             // to the raw value so an unexpected kind still surfaces a descriptive
             // UnsupportedTxType.
@@ -605,7 +652,7 @@ constructor(
      * raw bytes for [SwapKitSwapPayloadJson.txPayload]. V3 ships these as a top-level base64
      * [JsonPrimitive].
      */
-    private fun decodeBinaryTx(element: JsonElement): ByteArray {
+    private fun decodeBinaryTx(element: JsonElement?): ByteArray {
         val base64 =
             (element as? JsonPrimitive)?.takeIf { it.isString }?.content
                 ?: throw SwapKitError.Decoding("SwapKit non-EVM tx is not a base64 string")
@@ -635,6 +682,12 @@ constructor(
             "psbt" -> TxKind.PSBT
             "tron" -> TxKind.TRON
             "sui" -> TxKind.SUI
+            // SwapKit emits both "CARDANO" and the "CBOR" alias for either Cardano shape. The shape
+            // is told apart by `tx`, not the discriminator string: a present `tx` is a pre-built
+            // CBOR envelope to sign; a null/absent `tx` is the deposit-only flow (route entirely on
+            // targetAddress). Mirrors iOS' `.cardanoPrebuilt` vs `.cardano` decode split.
+            "cardano",
+            "cbor" -> if (response.tx.isTxPresent()) TxKind.CARDANO_PREBUILT else TxKind.CARDANO
             "ton" -> TxKind.TON
             // SwapKit has shipped both `XRP` (canonical) and `RIPPLE` for the same deposit-only
             // flow; accept both so a wire flip doesn't drop the route. Mirrors iOS.
@@ -644,11 +697,16 @@ constructor(
         }
 
     /**
+     * True when `tx` carries a payload — absent (`null`) and JSON `null` ([JsonNull]) both fail.
+     */
+    private fun JsonElement?.isTxPresent(): Boolean = this != null && this !is JsonNull
+
+    /**
      * Pull the Solana base64 swap blob out of `tx`. V3 ships it as a top-level [JsonPrimitive];
      * fall back to the legacy [SwapKitSolanaTx] object shape so a transitional response (or a test
      * fixture using either form) is decoded safely.
      */
-    private fun solanaBase64(element: JsonElement): String {
+    private fun solanaBase64(element: JsonElement?): String {
         (element as? JsonPrimitive)
             ?.takeIf { it.isString }
             ?.content
@@ -675,6 +733,8 @@ constructor(
         PSBT,
         TRON,
         SUI,
+        CARDANO,
+        CARDANO_PREBUILT,
         TON,
         XRP,
         UNSUPPORTED,
@@ -738,6 +798,7 @@ constructor(
             Chain.Bitcoin -> "BTC"
             Chain.Tron -> "TRON"
             Chain.Sui -> "SUI"
+            Chain.Cardano -> "ADA"
             Chain.Ton -> "TON"
             Chain.Ripple -> "XRP"
             else -> null
@@ -761,15 +822,17 @@ constructor(
             .getOrNull()
     }
 
-    private inline fun <reified T> decode(element: JsonElement, label: String): T =
-        try {
-            json.decodeFromJsonElement<T>(element)
+    private inline fun <reified T> decode(element: JsonElement?, label: String): T {
+        val el = element ?: throw SwapKitError.Decoding("SwapKit $label tx payload is missing")
+        return try {
+            json.decodeFromJsonElement<T>(el)
         } catch (e: Exception) {
             throw SwapKitError.Decoding(
                 message = "Failed to decode SwapKit $label tx payload",
                 cause = e,
             )
         }
+    }
 
     private companion object {
         /**

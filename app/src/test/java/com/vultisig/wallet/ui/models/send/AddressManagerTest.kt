@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.repositories.AddressParserRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -44,7 +45,10 @@ internal class AddressManagerTest {
     private val chainAccountAddressRepository: ChainAccountAddressRepository = mockk(relaxed = true)
     private val addressParserRepository: AddressParserRepository = mockk(relaxed = true)
 
+    private val requestAddressBookEntry: RequestAddressBookEntryUseCase = mockk(relaxed = true)
+
     private val addressFieldState = TextFieldState()
+    private val providerBondFieldState = TextFieldState()
     private val selectedToken = MutableStateFlow<Coin?>(null)
 
     @BeforeEach
@@ -263,9 +267,13 @@ internal class AddressManagerTest {
         AddressManager(
             scope = scope,
             addressFieldState = addressFieldState,
+            providerBondFieldState = providerBondFieldState,
             selectedToken = selectedToken,
             chainAccountAddressRepository = chainAccountAddressRepository,
             addressParserRepository = addressParserRepository,
+            requestAddressBookEntry = requestAddressBookEntry,
+            vaultIdProvider = { null },
+            checkIfTokenSelectionRequired = { _, _ -> },
         )
 
     private fun ethToken(): Coin =

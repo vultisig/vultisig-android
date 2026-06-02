@@ -81,6 +81,33 @@ data class SwapKitSwapPayloadJson(
         const val TX_TYPE_SUI = "SUI"
 
         /**
+         * Keysign-payload discriminator for the **deposit-only** Cardano flow. SwapKit returns no
+         * `tx` (null/absent), so [txPayload] is empty and the only routing info is [targetAddress];
+         * the dispatcher builds a plain ADA send to it via the native Cardano path (no CBOR
+         * signer). Canonical `CARDANO` case in `swapkit_swap_payload.proto`. Mirrors iOS'
+         * deposit-only `.cardano` → `txType="CARDANO"`.
+         */
+        const val TX_TYPE_CARDANO = "CARDANO"
+
+        /**
+         * Keysign-payload discriminator for the **pre-built CBOR** Cardano flow. SwapKit returns a
+         * hex-encoded unsigned CBOR transaction envelope, hex-decoded into [txPayload]; the signer
+         * hashes `cbor(transaction_body)` with Blake2b-256, then splices the Ed25519 vkey witness
+         * back into the envelope. Distinct from the deposit-only [TX_TYPE_CARDANO] so the
+         * dispatcher routes independently — and so a vault mixing iOS and Android cosigns the same
+         * flow (iOS emits `"CARDANO_PREBUILT"` here too).
+         */
+        const val TX_TYPE_CARDANO_PREBUILT = "CARDANO_PREBUILT"
+
+        /**
+         * Wire-level `meta.txType` alias SwapKit also emits for the Cardano CBOR response (upstream
+         * switched from `"CARDANO"` to `"CBOR"` un-versioned). The quote source normalizes it onto
+         * [TX_TYPE_CARDANO] / [TX_TYPE_CARDANO_PREBUILT] based on `tx` presence before it reaches
+         * the keysign payload, so it is never a keysign discriminator itself.
+         */
+        const val TX_TYPE_CBOR = "CBOR"
+
+        /**
          * `meta.txType` discriminator for the TON signing path. SwapKit returns `tx` as a
          * `[{address, amount}]` array (raw nano-TON amounts) JSON-encoded into [txPayload]. A TON
          * SwapKit swap is a plain native transfer to the deposit [targetAddress] — routing is by
