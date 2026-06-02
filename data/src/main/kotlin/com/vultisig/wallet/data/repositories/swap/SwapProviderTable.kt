@@ -144,6 +144,10 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             // PTB, Ed25519 envelope). Mirrors iOS' `.sui → [.swapkit]`.
             Chain.Sui -> setOf(SwapProvider.SWAPKIT)
 
+            // SwapKit Cardano routes are signed by SwapKitCardanoSigner (Blake2b-256 of the CBOR tx
+            // body, Ed25519 vkey witness). Mirrors iOS' `.cardano → [.swapkit]`.
+            Chain.Cardano -> setOf(SwapProvider.SWAPKIT)
+
             Chain.Polkadot,
             Chain.Bittensor,
             Chain.Dydx,
@@ -152,7 +156,6 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             Chain.TerraClassic,
             Chain.Noble,
             Chain.Akash,
-            Chain.Cardano,
             Chain.Sei,
             Chain.Qbtc -> emptySet()
         }

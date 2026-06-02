@@ -65,6 +65,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -476,16 +477,20 @@ constructor(
 
                             is SwapQuote.SwapKit -> {
                                 // BTC PSBT, TRON (TronWeb object), SUI (PTB), TON (native
-                                // transfer), and XRP (deposit-only native Payment) are wired; the
-                                // remaining SwapKit txTypes (ADA) land with their per-chain
-                                // signers. Guarded loudly so an un-wired txType can't reach
-                                // signing.
+                                // transfer), XRP (deposit-only native Payment), and both Cardano
+                                // flows (deposit-only CARDANO + pre-built CARDANO_PREBUILT) are
+                                // wired with their per-chain signers/native paths. Guarded loudly
+                                // so an un-wired txType can't reach signing.
                                 require(
                                     quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT ||
                                         quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TRON ||
                                         quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_SUI ||
                                         quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TON ||
-                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_XRP
+                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_XRP ||
+                                        quote.data.txType ==
+                                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO ||
+                                        quote.data.txType ==
+                                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT
                                 ) {
                                     "Unsupported SwapKit txType for swap: ${quote.data.txType}"
                                 }
@@ -915,13 +920,25 @@ constructor(
                     src to dst
                 }
                 .distinctUntilChanged()
-                .combine(srcAmountState.textAsFlow().filter { it.isNotEmpty() }) { address, _ ->
+                .combine(
+                    srcAmountState
+                        .textAsFlow()
+                        .filter { it.isNotEmpty() }
+                        // Show the spinner immediately on real typing, ahead of the debounce, so
+                        // the form doesn't look frozen while we wait. Gating it on this branch
+                        // keeps it to user input: the silent refreshes (refreshQuoteState timer,
+                        // gas bump) don't flow through here, so they no longer flash the spinner
+                        // (#4712). The debounce below still coalesces the actual quote fetch, so
+                        // this adds no extra provider requests.
+                        .onEach { isLoading = true }
+                ) { address, _ ->
                     address to srcAmount
                 }
                 .combine(refreshQuoteState) { it, _ -> it }
-                .debounce(450L)
-                .collect { (address, amount) ->
-                    isLoading = true
+                .debounce(300L)
+                // collectLatest so newer input cancels an in-flight fetch instead of letting a
+                // stale fetch write isLoading = false after the user has already typed again.
+                .collectLatest { (address, amount) ->
                     val (src, dst) = address
 
                     val srcToken = src.account.token

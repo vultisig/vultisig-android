@@ -27,8 +27,10 @@ data class SwapKitSwapRequest(
 @Serializable
 data class SwapKitSwapResponseJson(
     @SerialName("swapId") val swapId: String? = null,
-    // Defaults to [JsonNull] so deposit-only routes (XRP) that omit `tx` still decode — the body is
-    // only read by the EVM/Solana/PSBT/TRON/SUI paths, which always carry it.
+    // Defaults to [JsonNull] so deposit-only routes (XRP, Cardano) that omit `tx` or send `tx:
+    // null` still decode — routing then lives entirely in [targetAddress]. The pre-built flows
+    // (Cardano CBOR, PSBT, SUI, TRON, EVM, Solana) carry the unsigned tx here. Callers treat
+    // [JsonNull] as "no tx".
     @SerialName("tx") val tx: JsonElement = JsonNull,
     @SerialName("meta") val meta: SwapKitTxMeta,
     @SerialName("targetAddress") val targetAddress: String? = null,
