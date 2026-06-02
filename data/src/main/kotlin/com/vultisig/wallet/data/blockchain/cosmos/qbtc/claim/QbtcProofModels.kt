@@ -8,10 +8,7 @@ import kotlinx.serialization.Serializable
  * or beyond the target width is returned unchanged — never truncated, since truncating a real
  * signature would corrupt it. Mirrors iOS `ClaimProofRequest.padSigHex` and vultisig-windows.
  */
-internal fun padSigHex(hex: String, byteLength: Int): String {
-    val target = byteLength * 2
-    return if (hex.length < target) "0".repeat(target - hex.length) + hex else hex
-}
+internal fun padSigHex(hex: String, byteLength: Int): String = hex.padStart(byteLength * 2, '0')
 
 @Serializable data class ClaimProofUtxoRef(val txid: String, val vout: Int)
 

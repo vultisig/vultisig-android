@@ -23,19 +23,20 @@ constructor(private val blockChairApi: BlockChairApi) : QbtcClaimableUtxosServic
         val currentBlockHeight = info?.currentBlockHeight
         return info?.utxos.orEmpty().mapNotNull { utxo ->
             if (utxo.transactionHash.isEmpty() || utxo.index < 0 || utxo.value < 0) {
-                null
-            } else {
-                val blockId = utxo.blockId.takeIf { it > 0 }?.toLong()
-                ClaimableUtxo(
-                    txid = utxo.transactionHash,
-                    vout = utxo.index,
-                    amount = utxo.value,
-                    confirmations =
-                        blockId?.let { id ->
-                            currentBlockHeight?.let { (it - id + 1).coerceAtLeast(0) }
-                        },
-                )
+                return@mapNotNull null
             }
+            val blockId = utxo.blockId.takeIf { it > 0 }?.toLong()
+            ClaimableUtxo(
+                txid = utxo.transactionHash,
+                vout = utxo.index,
+                amount = utxo.value,
+                confirmations =
+                    if (blockId != null && currentBlockHeight != null) {
+                        (currentBlockHeight - blockId + 1).coerceAtLeast(0)
+                    } else {
+                        null
+                    },
+            )
         }
     }
 }

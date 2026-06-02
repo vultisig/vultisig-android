@@ -307,7 +307,7 @@ internal class QbtcClaimViewModelTest {
         )
 
     private fun utxos(n: Int): List<ClaimableUtxo> =
-        (0 until n).map { ClaimableUtxo(txid = "%064x".format(it), vout = 0, amount = 1_000L) }
+        List(n) { ClaimableUtxo(txid = "%064x".format(it), vout = 0, amount = 1_000L) }
 
     private companion object {
         const val VAULT_ID = "vault-1"

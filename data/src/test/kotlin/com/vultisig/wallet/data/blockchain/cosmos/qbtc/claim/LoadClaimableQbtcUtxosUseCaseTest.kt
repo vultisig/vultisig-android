@@ -16,9 +16,10 @@ class LoadClaimableQbtcUtxosUseCaseTest {
         val utxos = FakeUtxosService(listOf(candidate))
         val result = useCase(chain, utxos).invoke("tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx")
 
-        assertTrue(result is QbtcClaimLoadResult.Blocked)
-        result as QbtcClaimLoadResult.Blocked
-        assertTrue(result.reason is QbtcClaimBlockedReason.UnsupportedBtcAddress)
+        assertTrue(
+            (result as QbtcClaimLoadResult.Blocked).reason
+                is QbtcClaimBlockedReason.UnsupportedBtcAddress
+        )
         assertEquals(0, chain.disabledCalls)
         assertEquals(0, utxos.fetchCalls)
     }

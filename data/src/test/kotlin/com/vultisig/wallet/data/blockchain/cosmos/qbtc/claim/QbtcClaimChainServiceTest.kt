@@ -60,32 +60,33 @@ class QbtcClaimChainServiceTest {
     @Test
     fun `filterClaimable rewrites amounts, drops claimed and not-indexed, and fails open`() =
         runTest {
+            val claimableTxid = "aa".repeat(32)
+            val claimedTxid = "bb".repeat(32)
+            val notIndexedTxid = "cc".repeat(32)
+            val transientTxid = "dd".repeat(32)
+            val negativeTxid = "ee".repeat(32)
+
             val claimable =
-                ClaimableUtxo(txid = "aa".repeat(32), vout = 0, amount = 500_000) // chain says 400k
+                ClaimableUtxo(txid = claimableTxid, vout = 0, amount = 500_000) // chain says 400k
             val claimed =
-                ClaimableUtxo(txid = "bb".repeat(32), vout = 1, amount = 300_000) // entitled 0
-            val notIndexed =
-                ClaimableUtxo(txid = "cc".repeat(32), vout = 2, amount = 200_000) // 404
+                ClaimableUtxo(txid = claimedTxid, vout = 1, amount = 300_000) // entitled 0
+            val notIndexed = ClaimableUtxo(txid = notIndexedTxid, vout = 2, amount = 200_000) // 404
             val transient =
-                ClaimableUtxo(txid = "dd".repeat(32), vout = 3, amount = 100_000) // 500 → keep
+                ClaimableUtxo(txid = transientTxid, vout = 3, amount = 100_000) // 500 → keep
             val negative =
-                ClaimableUtxo(
-                    txid = "ee".repeat(32),
-                    vout = 4,
-                    amount = 50_000,
-                ) // entitled -1 → drop
+                ClaimableUtxo(txid = negativeTxid, vout = 4, amount = 50_000) // entitled -1 → drop
 
             val service =
                 QbtcClaimChainServiceImpl(
                     client { path ->
                         when {
-                            path.contains("aa".repeat(32)) ->
-                                HttpStatusCode.OK to utxoBody("aa".repeat(32), "400000")
-                            path.contains("bb".repeat(32)) ->
-                                HttpStatusCode.OK to utxoBody("bb".repeat(32), "0")
-                            path.contains("cc".repeat(32)) -> HttpStatusCode.NotFound to ""
-                            path.contains("ee".repeat(32)) ->
-                                HttpStatusCode.OK to utxoBody("ee".repeat(32), "-1")
+                            path.contains(claimableTxid) ->
+                                HttpStatusCode.OK to utxoBody(claimableTxid, "400000")
+                            path.contains(claimedTxid) ->
+                                HttpStatusCode.OK to utxoBody(claimedTxid, "0")
+                            path.contains(notIndexedTxid) -> HttpStatusCode.NotFound to ""
+                            path.contains(negativeTxid) ->
+                                HttpStatusCode.OK to utxoBody(negativeTxid, "-1")
                             else -> HttpStatusCode.InternalServerError to "boom"
                         }
                     }

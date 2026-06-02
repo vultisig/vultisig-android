@@ -182,8 +182,6 @@ private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
         Image(
             painter = painterResource(R.drawable.qbtc_claim_hero),
             contentDescription = null,
-            // Figma: 200.78 x 206 hero coin overflowing the card top-right (left=175, top=-17 in a
-            // 344-wide card → right edge 31.78 past the card edge).
             modifier =
                 Modifier.align(Alignment.TopEnd)
                     .width(200.78.dp)
