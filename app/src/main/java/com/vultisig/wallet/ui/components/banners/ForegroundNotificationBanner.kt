@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -95,6 +96,10 @@ internal fun ForegroundNotificationBanner(
     // banner width settles it off-screen and reports the dismissal; a shorter drag springs back.
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
+
+    // Reset any residual swipe offset when a new (or re-shown) request is bound,
+    // so a previously dismissed banner doesn't reappear off-screen.
+    LaunchedEffect(qrCodeData) { offsetX.snapTo(0f) }
 
     Box(
         modifier =
