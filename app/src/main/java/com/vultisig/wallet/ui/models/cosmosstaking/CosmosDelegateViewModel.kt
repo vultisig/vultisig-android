@@ -189,6 +189,11 @@ constructor(
             return setError("Amount exceeds your available balance")
         }
 
+        // Flip the flag BEFORE launching so two rapid taps can't both pass the `isSubmitting` guard
+        // above and queue duplicate submit coroutines. Matches the pattern in the other three
+        // staking VMs. setError() clears the flag on any failure path.
+        _state.update { it.copy(isSubmitting = true, errorMessage = null) }
+
         viewModelScope.safeLaunch(
             onError = { e -> setError(e.message ?: "Failed to build delegate transaction") }
         ) {
@@ -206,8 +211,6 @@ constructor(
                     "Selected validator is not a valid Terra valoper address"
                 )
             }
-
-            _state.update { it.copy(isSubmitting = true, errorMessage = null) }
 
             val entry = CosmosStakingConfig.entryFor(coin.chain)
             // Use the shared formatter — guarantees the same RoundingMode.DOWN truncation across

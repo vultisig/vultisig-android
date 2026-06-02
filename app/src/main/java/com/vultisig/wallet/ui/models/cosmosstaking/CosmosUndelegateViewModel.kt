@@ -15,6 +15,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -54,10 +55,28 @@ internal data class CosmosUndelegateUiState(
      */
     val unbondingLockMessage: String? = null,
     val percentageSelected: Int = 100,
+    /** Liquid bond-denom balance (human decimal). Drives [hasSufficientBalanceForFee]. */
+    val spendableBalance: BigDecimal = BigDecimal.ZERO,
+    /**
+     * Per-chain fixed fee in human decimal units. Used by the fee-preflight check so the user is
+     * never sent into an MPC ceremony for a tx the chain will reject with `code:11 insufficient
+     * fees`.
+     */
+    val estimatedFee: BigDecimal = BigDecimal.ZERO,
+    /**
+     * Result of the spec Risk 3 preflight: `spendableBalance >= estimatedFee`. When false, the
+     * inline "insufficient liquid balance for fee" microcopy appears and Continue is disabled. A
+     * staking-heavy user often has 100% of their LUNA bonded; without this check they would burn
+     * an MPC signing round on a tx the chain immediately rejects.
+     */
+    val hasSufficientBalanceForFee: Boolean = true,
     val isLoading: Boolean = true,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
-)
+) {
+    val validForm: Boolean
+        get() = hasSufficientBalanceForFee
+}
 
 /**
  * View-model for the LUNA / LUNC undelegate flow. Validator is pre-selected by the caller (always
@@ -76,6 +95,7 @@ constructor(
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val buildCosmosStakingKeysignPayload: BuildCosmosStakingKeysignPayloadUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
+    private val balanceRepository: BalanceRepository,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -114,6 +134,13 @@ constructor(
         }
         if (amountDecimal > currentState.stakedBalance) {
             return setError("Amount exceeds your staked balance at this validator")
+        }
+        // Defense-in-depth: the form also gates on validForm, but a scripted/programmatic submit
+        // path (or a stale snapshot from a state race) could still slip through. The check is cheap.
+        if (!currentState.hasSufficientBalanceForFee) {
+            return setError(
+                "Not enough liquid ${currentState.ticker} to cover the network fee. Claim rewards first or top up."
+            )
         }
 
         // Flip the flag before launching so two quick taps can't both pass the guard above and
@@ -242,6 +269,10 @@ constructor(
 
             val unbondingMsg = buildUnbondingLockMessage(chain)
 
+            val spendableBalance = withContext(ioDispatcher) { fetchSpendableBalance(nativeCoin) }
+            val estimatedFee = BigDecimal(entry.feeAmount).movePointLeft(nativeCoin.decimal)
+            val hasSufficientBalanceForFee = spendableBalance >= estimatedFee
+
             // Default to 100% selected (iOS pattern) — pre-fill the amount field so the user can
             // confirm with one tap if they want to unstake everything.
             amountFieldState.edit {
@@ -255,10 +286,25 @@ constructor(
                     stakedBalance = stakedBalance,
                     unbondingLockMessage = unbondingMsg,
                     percentageSelected = 100,
+                    spendableBalance = spendableBalance,
+                    estimatedFee = estimatedFee,
+                    hasSufficientBalanceForFee = hasSufficientBalanceForFee,
                     isLoading = false,
                 )
             }
         }
+    }
+
+    private suspend fun fetchSpendableBalance(coin: Coin): BigDecimal {
+        // Cached native-coin balance via BalanceRepository (same path the send-form uses). Falls
+        // back to zero on cache miss, which conservatively trips the insufficient-fee warning until
+        // the next refresh — preferring a false-positive block over a false-negative MPC burn.
+        return runCatching {
+                val pair = balanceRepository.getCachedTokenBalanceAndPrice(coin.address, coin)
+                val tokenValue = pair.tokenBalance.tokenValue ?: return@runCatching BigDecimal.ZERO
+                BigDecimal(tokenValue.value).movePointLeft(coin.decimal)
+            }
+            .getOrDefault(BigDecimal.ZERO)
     }
 
     private suspend fun validatorMonikerAndIdentity(

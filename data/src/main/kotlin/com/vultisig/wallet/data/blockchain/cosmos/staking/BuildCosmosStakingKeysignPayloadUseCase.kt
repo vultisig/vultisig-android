@@ -64,14 +64,14 @@ internal class BuildCosmosStakingKeysignPayloadUseCaseImpl @Inject constructor()
         // redelegate the operator (`terravaloper1…`) is what we're sending stake to; for
         // withdrawRewards there's no single destination — use the first validator as a best-effort
         // display value. The actual transaction routing is driven by the SignDirect bytes, not
-        // `toAddress`.
+        // `toAddress`. The resolver throws `NoValidatorsToClaim` before reaching here for an empty
+        // list, so `first()` is safe (the previous `.firstOrNull().orEmpty()` was unreachable).
         val toAddress =
             when (payload) {
                 is CosmosStakingPayload.Delegate -> payload.validatorAddress
                 is CosmosStakingPayload.Undelegate -> payload.validatorAddress
                 is CosmosStakingPayload.Redelegate -> payload.validatorDstAddress
-                is CosmosStakingPayload.WithdrawRewards ->
-                    payload.validators.firstOrNull().orEmpty()
+                is CosmosStakingPayload.WithdrawRewards -> payload.validators.first()
             }
 
         val toAmount =

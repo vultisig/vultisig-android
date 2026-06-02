@@ -4,16 +4,20 @@ import java.time.Clock
 import java.time.Instant
 
 /**
- * The cosmos-sdk x/staking module rejects a `MsgBeginRedelegate` if an unexpired redelegation
- * record exists for the same `(src → *)` pair — this is the 21-day cooldown that prevents
- * validator-hopping. The rejection happens post-broadcast, after MPC has already signed.
+ * The cosmos-sdk x/staking module rejects a `MsgBeginRedelegate` via
+ * `HasReceivingRedelegation(delAddr, valSrcAddr)` — i.e. when the proposed SOURCE validator is the
+ * DESTINATION of an existing unfinished redelegation by the same delegator. After `A → B`, a new
+ * `B → C` is rejected with `ErrTransitiveRedelegation`. The 21-day cooldown is enforced
+ * post-broadcast, after MPC has already signed.
  *
  * This gate evaluates `/cosmos/staking/v1beta1/delegators/{addr}/redelegations` BEFORE the SignDoc
- * is built. If any unfinished redelegation entry references the requested source validator, the
- * redelegate flow is blocked and the UI surfaces the earliest unlock date inline. Spec Risk 4:
+ * is built. The filter looks at `dstValidator == sourceValidator` — i.e. the proposed source was
+ * recently a destination — to mirror the chain's `HasReceivingRedelegation` rule. Spec Risk 4:
  * "Don't surprise the user with an MPC burn".
  *
- * Port of iOS `CosmosRedelegationCooldownGate.swift` (vultisig-ios PR #4432).
+ * Port of iOS `CosmosRedelegationCooldownGate.swift` (vultisig-ios PR #4432). The iOS port had the
+ * filter flipped (was `srcValidator == sourceValidator`); patched here, upstream fix tracked
+ * separately.
  */
 object CosmosRedelegationCooldownGate {
 
@@ -32,7 +36,7 @@ object CosmosRedelegationCooldownGate {
         val pending =
             redelegations
                 .asSequence()
-                .filter { it.srcValidator == sourceValidator && it.completionTime.isAfter(now) }
+                .filter { it.dstValidator == sourceValidator && it.completionTime.isAfter(now) }
                 .map { it.completionTime }
                 .sorted()
                 .toList()

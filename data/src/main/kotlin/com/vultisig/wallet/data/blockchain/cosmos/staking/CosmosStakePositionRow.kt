@@ -7,16 +7,12 @@ import java.time.Instant
  * Per-validator row in the LUNA / LUNC DeFi stake segment. Built by the positions view-model from
  * `CosmosDelegation` joined against `CosmosValidator` metadata, `CosmosDelegatorRewards`, and
  * `CosmosUnbondingDelegation`. The row carries everything the per-validator card needs to render:
- * staked amount, pending reward, validator status badge (active / churned out), and the earliest
- * non-expired unbonding-completion timestamp (when set, Unstake + Move are disabled and the row
- * footers an "Unlocks {date}" microcopy).
+ * staked amount, pending reward, validator status badge (active / churned out), per-validator APY,
+ * Keybase avatar, and the earliest non-expired unbonding-completion timestamp (when set, Move is
+ * disabled and the row footers an "Unlocks {date}" microcopy; Unstake remains available so the
+ * user can always exit a position).
  *
  * Mirrors iOS `CosmosStakePositionRow` (vultisig-ios PR #4432).
- *
- * **APY is deferred**: iOS computes a per-validator APY via [CosmosStakingAPYResolver] (LCD fan-out
- * over mint inflation, staking pool, bank supply, distribution params). That resolver is not yet
- * ported on Android — [apyPercent] is left `null` here so the view layer hides the APY row the same
- * way iOS does when the chain APY data is unavailable.
  */
 data class CosmosStakePositionRow(
     val validatorAddress: String,

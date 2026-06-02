@@ -122,6 +122,8 @@ internal class CosmosRedelegateViewModelTest {
             buildCosmosStakingKeysignPayload = buildPayload,
             depositTransactionRepository = depositTransactionRepository,
             keybaseAvatarService = mockk(relaxed = true),
+            balanceRepository = mockk(relaxed = true),
+            context = mockk(relaxed = true),
             navigator = navigator,
             ioDispatcher = testDispatcher,
         )
@@ -136,11 +138,14 @@ internal class CosmosRedelegateViewModelTest {
 
     @Test
     fun `cooldown blocks submit and surfaces the unlock message`() = runTest {
+        // Transitive redelegation rule (cosmos-sdk HasReceivingRedelegation): we want to redelegate
+        // FROM srcValidator, but it was the DESTINATION of an active redelegation, so the chain
+        // would reject. Gate must catch this and surface the unlock date.
         coEvery { cosmosStakingService.fetchRedelegations(any(), any()) } returns
             listOf(
                 CosmosRedelegationEntry(
-                    srcValidator = srcValidator,
-                    dstValidator = "terravaloper1other",
+                    srcValidator = "terravaloper1other",
+                    dstValidator = srcValidator,
                     completionTime = Instant.now().plusSeconds(10L * 86_400L),
                 )
             )

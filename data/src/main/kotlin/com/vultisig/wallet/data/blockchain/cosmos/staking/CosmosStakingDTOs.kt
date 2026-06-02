@@ -231,11 +231,16 @@ data class CosmosValidatorListResponse(val validators: List<WireValidator>) {
     fun toValidators(): List<CosmosValidator> =
         validators.map { wire ->
             val identity = wire.description.identity?.takeIf { it.isNotEmpty() }
+            // Commission parse-failure defaults to ONE (treat as 100%, worst APY, sinks the
+            // validator to the bottom of the sort) rather than ZERO. A malformed rate falling to
+            // ZERO would invert the APY ranking and push the broken validator to the TOP of the
+            // picker — exactly the validator we want to bury, not surface.
+            val commission =
+                wire.commission.commissionRates.rate.toBigDecimalOrNull() ?: BigDecimal.ONE
             CosmosValidator(
                 operatorAddress = wire.operatorAddress,
                 moniker = wire.description.moniker,
-                commission =
-                    wire.commission.commissionRates.rate.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+                commission = commission,
                 jailed = wire.jailed ?: false,
                 status = mapStatus(wire.status),
                 votingPower = wire.tokens.toBigDecimalOrNull() ?: BigDecimal.ZERO,

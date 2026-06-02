@@ -1,9 +1,11 @@
 package com.vultisig.wallet.ui.models.cosmosstaking
 
+import android.content.Context
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.blockchain.cosmos.staking.BuildCosmosStakingKeysignPayloadUseCase
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosRedelegationCooldownGate
@@ -19,6 +21,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.DepositTransaction
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.repositories.BalanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -27,6 +30,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.ZoneId
@@ -55,9 +59,24 @@ internal data class CosmosRedelegateUiState(
     val cooldownState: CosmosRedelegationCooldownState = CosmosRedelegationCooldownState.Available,
     val cooldownBlockedMessage: String? = null,
     val percentageSelected: Int = 100,
+    /** Liquid bond-denom balance (human decimal). Drives [hasSufficientBalanceForFee]. */
+    val spendableBalance: BigDecimal = BigDecimal.ZERO,
+    /** Per-chain fixed fee in human decimal units, used by the fee preflight. */
+    val estimatedFee: BigDecimal = BigDecimal.ZERO,
+    /**
+     * Result of the spec Risk 3 preflight: `spendableBalance >= estimatedFee`. When false the
+     * inline "insufficient liquid balance for fee" microcopy appears and Continue is disabled.
+     * Without this, a 100%-bonded user is led into an MPC ceremony for a tx the chain immediately
+     * rejects with `code:11 insufficient fees`.
+     */
+    val hasSufficientBalanceForFee: Boolean = true,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
-)
+) {
+    val validForm: Boolean
+        get() =
+            cooldownState is CosmosRedelegationCooldownState.Available && hasSufficientBalanceForFee
+}
 
 /**
  * View-model for the LUNA / LUNC redelegate flow. Source validator is pre-selected from the
@@ -80,6 +99,8 @@ constructor(
     private val buildCosmosStakingKeysignPayload: BuildCosmosStakingKeysignPayloadUseCase,
     private val depositTransactionRepository: DepositTransactionRepository,
     private val keybaseAvatarService: KeybaseAvatarService,
+    private val balanceRepository: BalanceRepository,
+    @ApplicationContext private val context: Context,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -179,6 +200,14 @@ constructor(
         }
         if (amountDecimal > currentState.stakedBalance) {
             return setError("Amount exceeds your staked balance at this validator")
+        }
+        // Defense-in-depth fee preflight — also gated on the form via validForm. The redelegate
+        // fee is fixed per chain in CosmosStakingConfig; without this check a 100%-bonded user
+        // burns an MPC signing round on a tx the chain rejects with `code:11 insufficient fees`.
+        if (!currentState.hasSufficientBalanceForFee) {
+            return setError(
+                "Not enough liquid ${currentState.ticker} to cover the network fee. Claim rewards first or top up."
+            )
         }
 
         // Flip the flag before launching so two quick taps can't both pass the guard above and
@@ -306,16 +335,35 @@ constructor(
                 replace(0, length, stakedBalance.stripTrailingZeros().toPlainString())
             }
 
+            val spendableBalance = withContext(ioDispatcher) { fetchSpendableBalance(nativeCoin) }
+            val estimatedFee = BigDecimal(entry.feeAmount).movePointLeft(nativeCoin.decimal)
+            val hasSufficientBalanceForFee = spendableBalance >= estimatedFee
+
             _state.update {
                 it.copy(
                     ticker = nativeCoin.ticker,
                     stakedBalance = stakedBalance,
                     percentageSelected = 100,
+                    spendableBalance = spendableBalance,
+                    estimatedFee = estimatedFee,
+                    hasSufficientBalanceForFee = hasSufficientBalanceForFee,
                 )
             }
             // `coin` is now resolved — evaluate the redelegation cooldown gate.
             loadCooldown()
         }
+    }
+
+    private suspend fun fetchSpendableBalance(coin: Coin): BigDecimal {
+        // Cached native-coin balance via BalanceRepository (same path the send-form uses). Falls
+        // back to zero on cache miss — conservatively trips the insufficient-fee warning until the
+        // next refresh, preferring a false-positive block over a false-negative MPC burn.
+        return runCatching {
+                val pair = balanceRepository.getCachedTokenBalanceAndPrice(coin.address, coin)
+                val tokenValue = pair.tokenBalance.tokenValue ?: return@runCatching BigDecimal.ZERO
+                BigDecimal(tokenValue.value).movePointLeft(coin.decimal)
+            }
+            .getOrDefault(BigDecimal.ZERO)
     }
 
     private fun loadValidators() {
@@ -386,7 +434,12 @@ constructor(
                             DateTimeFormatter.ofPattern("MMM d, yyyy")
                                 .withZone(ZoneId.systemDefault())
                                 .format(cooldown.unlocksAt)
-                        "This validator is under a 21-day redelegation cooldown — unlocks $formatted"
+                        val days = CosmosStakingConfig.unbondingDaysFor(chain)
+                        context.getString(
+                            R.string.cosmos_staking_redelegate_cooldown_message,
+                            days,
+                            formatted,
+                        )
                     }
                 }
             _state.update {

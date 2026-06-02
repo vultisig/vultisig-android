@@ -1266,4 +1266,7 @@
     <string name="cosmos_staking_verify_sign">Transactie ondertekenen</string>
     <string name="cosmos_staking_source_validator">Bronvalidator</string>
     <string name="cosmos_staking_destination_validator">Bestemmingsvalidator</string>
+    <string name="cosmos_staking_redelegate_cooldown_message">Source validator is under a %1$d-day redelegation cooldown - unlocks %2$s</string>
+    <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
+    <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
 </resources>

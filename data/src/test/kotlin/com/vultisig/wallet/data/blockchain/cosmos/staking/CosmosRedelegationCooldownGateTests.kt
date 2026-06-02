@@ -34,8 +34,10 @@ class CosmosRedelegationCooldownGateTests {
     }
 
     @Test
-    fun `outgoing from src already in cooldown returns Blocked with unlocksAt`() {
-        val redelegations = listOf(CosmosRedelegationEntry(srcA, dstB, fiveDaysFromNow))
+    fun `transitive redelegation (src was recent dst) is Blocked with unlocksAt`() {
+        // After `srcB -> srcA`, redelegating from srcA is blocked — cosmos-sdk
+        // `HasReceivingRedelegation(delAddr, srcA)` returns true because srcA was the destination.
+        val redelegations = listOf(CosmosRedelegationEntry(srcB, srcA, fiveDaysFromNow))
         val state =
             CosmosRedelegationCooldownGate.evaluate(
                 sourceValidator = srcA,
@@ -47,11 +49,11 @@ class CosmosRedelegationCooldownGateTests {
     }
 
     @Test
-    fun `Blocked returns the EARLIEST unlock when multiple entries exist`() {
+    fun `Blocked returns the EARLIEST unlock when multiple entries target src as dst`() {
         val redelegations =
             listOf(
-                CosmosRedelegationEntry(srcA, dstB, tenDaysFromNow),
-                CosmosRedelegationEntry(srcA, dstA, fiveDaysFromNow),
+                CosmosRedelegationEntry(srcB, srcA, tenDaysFromNow),
+                CosmosRedelegationEntry(dstA, srcA, fiveDaysFromNow),
             )
         val state =
             CosmosRedelegationCooldownGate.evaluate(
@@ -64,11 +66,10 @@ class CosmosRedelegationCooldownGateTests {
     }
 
     @Test
-    fun `entry whose src targets a DIFFERENT validator does not block`() {
-        // iOS only checks src == sourceValidator. Unlike my earlier (over-conservative) port,
-        // an entry where dst == sourceValidator does NOT trip the gate — the chain only rejects
-        // when the same validator is the SOURCE of a pending redelegation.
-        val redelegations = listOf(CosmosRedelegationEntry(srcB, srcA, fiveDaysFromNow))
+    fun `outgoing redelegation FROM src does NOT block (chain allows multiple from same src)`() {
+        // The chain only blocks new `B -> C` when B was a recent DST. An active `A -> B` does NOT
+        // prevent another `A -> C` (different dst). The gate must not over-block.
+        val redelegations = listOf(CosmosRedelegationEntry(srcA, dstB, fiveDaysFromNow))
         val state =
             CosmosRedelegationCooldownGate.evaluate(
                 sourceValidator = srcA,
@@ -80,7 +81,7 @@ class CosmosRedelegationCooldownGateTests {
 
     @Test
     fun `expired entries are ignored`() {
-        val redelegations = listOf(CosmosRedelegationEntry(srcA, dstA, tenDaysAgo))
+        val redelegations = listOf(CosmosRedelegationEntry(srcB, srcA, tenDaysAgo))
         val state =
             CosmosRedelegationCooldownGate.evaluate(
                 sourceValidator = srcA,
@@ -93,7 +94,7 @@ class CosmosRedelegationCooldownGateTests {
     @Test
     fun `entry exactly at now boundary is treated as expired`() {
         // `> now` per iOS — completionTime == now is past, not pending.
-        val redelegations = listOf(CosmosRedelegationEntry(srcA, dstA, now))
+        val redelegations = listOf(CosmosRedelegationEntry(srcB, srcA, now))
         val state =
             CosmosRedelegationCooldownGate.evaluate(
                 sourceValidator = srcA,

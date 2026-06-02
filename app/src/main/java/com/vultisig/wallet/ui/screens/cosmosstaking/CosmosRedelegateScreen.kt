@@ -56,7 +56,9 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
                     UnbondingLockNotice(
                         message =
                             state.cooldownBlockedMessage
-                                ?: "Source validator is under a 21-day redelegation cooldown"
+                                ?: stringResource(
+                                    R.string.cosmos_staking_redelegate_cooldown_fallback
+                                )
                     )
                 } else {
                     ValidatorReadonlyBlock(

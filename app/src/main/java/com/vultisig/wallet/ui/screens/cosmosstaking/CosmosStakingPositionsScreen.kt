@@ -341,7 +341,11 @@ private fun PositionRow(
 ) {
     val isChurnedOut = position.validatorStatus == CosmosStakePositionRow.ValidatorStatus.ChurnedOut
     val isUnbonding = position.pendingUnbondingUnlockDate != null
-    val isLocked = isChurnedOut || isUnbonding
+    // Unstake must remain available for churned-out validators so the user can exit a position whose
+    // validator got slashed/kicked. Only `isUnbonding` blocks Unstake. Move/Redelegate requires the
+    // dst slot to be Active per CosmosStakingPositionsViewModel.canMove.
+    val isUnstakeLocked = isUnbonding
+    val isMoveLocked = isChurnedOut || isUnbonding
 
     Column(
         modifier =
@@ -475,7 +479,9 @@ private fun PositionRow(
             )
         }
 
-        // Action buttons — Unstake + Move disabled when locked (matches iOS spec).
+        // Action buttons — Unstake only blocked while unbonding (churned-out validators must remain
+        // exitable). Move blocked while either unbonding or churned-out (chain rejects stake into a
+        // non-bonded validator).
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -484,7 +490,7 @@ private fun PositionRow(
                 label = stringResource(R.string.cosmos_staking_action_undelegate),
                 variant = VsButtonVariant.Secondary,
                 size = VsButtonSize.Small,
-                state = if (isLocked) VsButtonState.Disabled else VsButtonState.Enabled,
+                state = if (isUnstakeLocked) VsButtonState.Disabled else VsButtonState.Enabled,
                 onClick = onUnstake,
                 modifier = Modifier.weight(1f),
             )
@@ -492,7 +498,7 @@ private fun PositionRow(
                 label = stringResource(R.string.cosmos_staking_action_redelegate),
                 variant = VsButtonVariant.Secondary,
                 size = VsButtonSize.Small,
-                state = if (isLocked) VsButtonState.Disabled else VsButtonState.Enabled,
+                state = if (isMoveLocked) VsButtonState.Disabled else VsButtonState.Enabled,
                 onClick = onMove,
                 modifier = Modifier.weight(1f),
             )
