@@ -2,14 +2,17 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.PolkadotGetStorageJson
 import com.vultisig.wallet.data.api.models.RpcPayload
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotBlockResultJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotBroadcastTransactionJson
-import com.vultisig.wallet.data.api.models.cosmos.PolkadotExtrinsicResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHashJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHeaderJson
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetRunTimeVersionJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -54,7 +57,13 @@ interface PolkadotApi {
 
     suspend fun getPartialFee(tx: String): BigInteger
 
-    suspend fun getTxStatus(txHash: String): PolkadotExtrinsicResponseJson?
+    /**
+     * Walks back up to [depth] blocks from the current best head and returns true if a block
+     * contains an extrinsic whose blake2b-256 hash matches [txHash]. Substrate full nodes do not
+     * index extrinsics by hash, so confirmation is done by scanning recent blocks via plain RPC
+     * instead of depending on a third-party indexer (e.g. Subscan).
+     */
+    suspend fun isExtrinsicInChain(txHash: String, depth: Int): Boolean
 }
 
 internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpClient) :
@@ -185,17 +194,44 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
             ?.toBigIntegerOrNull() ?: throw Exception("Can't obtained Partial Fee")
     }
 
-    override suspend fun getTxStatus(txHash: String): PolkadotExtrinsicResponseJson? {
+    override suspend fun isExtrinsicInChain(txHash: String, depth: Int): Boolean {
+        val target = txHash.removePrefix("0x").lowercase()
+        if (target.isEmpty()) return false
 
-        val response =
-            httpClient.post(POLKADOT_EXTRINSIC_API_URL) { setBody(mapOf("hash" to txHash)) }
-        return response.bodyOrThrow<PolkadotExtrinsicResponseJson>()
+        // Start from the best head (params omitted) and follow parentHash links. Inclusion in the
+        // best chain is enough to treat the transaction as on-chain; GRANDPA finalizes within a
+        // couple of blocks so a reorg deep enough to drop it is not a practical concern here.
+        var blockHash: String? = null
+        var scanned = 0
+        while (scanned < depth) {
+            val block = getBlock(blockHash)?.block ?: break
+            if (block.extrinsics.any { extrinsicHash(it) == target }) {
+                return true
+            }
+            blockHash = block.header.parentHash
+            scanned++
+        }
+        return false
     }
+
+    private suspend fun getBlock(blockHash: String?): PolkadotBlockResultJson? {
+        return httpClient
+            .postRpc<PolkadotGetBlockJson>(
+                url = POLKADOT_API_URL,
+                method = "chain_getBlock",
+                params = buildJsonArray { if (blockHash != null) add(blockHash) },
+            )
+            .result
+    }
+
+    // Canonical Substrate extrinsic hash: blake2b-256 over the full SCALE-encoded extrinsic, the
+    // same bytes broadcast via author_submitExtrinsic. Mirrors PolkadotHelper.getSignedTransaction.
+    private fun extrinsicHash(extrinsicHex: String): String =
+        Numeric.toHexStringNoPrefix(Utils.blake2bHash(Numeric.hexStringToByteArray(extrinsicHex)))
+            .lowercase()
 
     private companion object {
         private const val POLKADOT_API_URL = "https://api.vultisig.com/dot/"
-        private const val POLKADOT_EXTRINSIC_API_URL =
-            "https://assethub-polkadot.api.subscan.io/api/scan/extrinsic"
         // xxHash128("System") + xxHash128("Account") — well-known Substrate storage prefix
         private const val SYSTEM_ACCOUNT_PREFIX =
             "26aa394eea5630e07c48ae0c9558cef7b99d880ec681799c0cf30e8886371da9"
