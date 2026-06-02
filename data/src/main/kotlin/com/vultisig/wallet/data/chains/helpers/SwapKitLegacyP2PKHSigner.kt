@@ -110,7 +110,7 @@ internal class SwapKitLegacyP2PKHSigner(
                 )
             }
 
-        return assembleSigningInput(inputs, parsedTx.outputs, targetAddress)
+        return assembleSigningInput(inputs, parsedTx.outputs, parsedTx.lockTime, targetAddress)
     }
 
     /**
@@ -125,6 +125,7 @@ internal class SwapKitLegacyP2PKHSigner(
     private fun assembleSigningInput(
         inputs: List<LegacyP2PKHInput>,
         outputs: List<LegacyP2PKHOutput>,
+        lockTime: Long,
         targetAddressHint: String,
     ): ByteArray {
         if (inputs.isEmpty() || outputs.isEmpty()) {
@@ -204,6 +205,9 @@ internal class SwapKitLegacyP2PKHSigner(
                 .setUseMaxAmount(false)
                 .setAmount(depositAmount)
                 .setCoinType(coinType.value())
+                // Reproduce the PSBT's lockTime so the rebuilt tx_id matches the one the NEAR route
+                // tracks; WalletCore otherwise defaults it to 0.
+                .setLockTime(lockTime.toInt())
                 .setToAddress(depositAddress)
                 .setChangeAddress(changeAddress)
                 .setFixedDustThreshold(coinType.getDustThreshold)
@@ -314,6 +318,7 @@ internal class SwapKitLegacyP2PKHSigner(
     )
 
     private data class ParsedLegacyTx(
+        val lockTime: Long,
         val inputs: List<ParsedLegacyTxInput>,
         val outputs: List<LegacyP2PKHOutput>,
     )
@@ -349,7 +354,7 @@ internal class SwapKitLegacyP2PKHSigner(
                 val scriptLen = cursor.readCompactSize()
                 LegacyP2PKHOutput(amount, cursor.readBytes(cursor.asLength(scriptLen)))
             }
-        cursor.readUInt32LE() // locktime
+        val lockTime = cursor.readUInt32LE()
         // The unsigned-tx body must consume exactly; trailing bytes (e.g. a stray BIP-144 witness
         // flag) would be silently dropped from the rebuilt tx, diverging it from the PSBT body.
         if (!cursor.isAtEnd) {
@@ -357,7 +362,7 @@ internal class SwapKitLegacyP2PKHSigner(
                 "SwapKit PSBT unsigned-tx body has trailing bytes"
             )
         }
-        return ParsedLegacyTx(inputs, outputs)
+        return ParsedLegacyTx(lockTime, inputs, outputs)
     }
 
     /**

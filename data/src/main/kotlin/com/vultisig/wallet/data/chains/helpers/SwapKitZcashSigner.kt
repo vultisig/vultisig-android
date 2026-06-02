@@ -98,12 +98,13 @@ internal class SwapKitZcashSigner(
                 )
             }
 
-        return assembleSigningInput(inputs, parsedTx.outputs, targetAddress)
+        return assembleSigningInput(inputs, parsedTx.outputs, parsedTx.lockTime, targetAddress)
     }
 
     private fun assembleSigningInput(
         inputs: List<SaplingInput>,
         outputs: List<SaplingOutput>,
+        lockTime: Long,
         targetAddressHint: String,
     ): ByteArray {
         if (inputs.isEmpty() || outputs.isEmpty()) {
@@ -176,6 +177,9 @@ internal class SwapKitZcashSigner(
                 .setUseMaxAmount(false)
                 .setAmount(depositAmount)
                 .setCoinType(coinType.value())
+                // Reproduce the PSBT's lockTime so the rebuilt tx_id matches the one the NEAR route
+                // tracks; WalletCore otherwise defaults it to 0.
+                .setLockTime(lockTime.toInt())
                 .setToAddress(depositAddress)
                 .setChangeAddress(changeAddress)
                 .addAllUtxo(utxos)
@@ -274,6 +278,7 @@ internal class SwapKitZcashSigner(
     )
 
     private data class ParsedSaplingTx(
+        val lockTime: Long,
         val inputs: List<ParsedSaplingTxInput>,
         val outputs: List<SaplingOutput>,
     )
@@ -318,8 +323,19 @@ internal class SwapKitZcashSigner(
                 val scriptLen = cursor.readCompactSize()
                 SaplingOutput(amount, cursor.readBytes(cursor.asLength(scriptLen)))
             }
-        cursor.readUInt32LE() // lockTime
-        cursor.readUInt32LE() // expiryHeight
+        val lockTime = cursor.readUInt32LE()
+        val expiryHeight = cursor.readUInt32LE()
+        // WalletCore's `Bitcoin.SigningInput` has no expiryHeight field, so a non-zero expiryHeight
+        // can't be threaded into the rebuilt tx — WalletCore would emit it with expiryHeight 0 and
+        // a
+        // different tx_id than the PSBT the NEAR route is tracked by. Reject it loudly rather than
+        // silently mistrack. (lockTime, by contrast, IS settable — see assembleSigningInput.)
+        if (expiryHeight != 0L) {
+            throw SwapKitZcashSignerException(
+                "SwapKit ZEC PSBT has expiryHeight $expiryHeight; only 0 (no expiry) is supported " +
+                    "because WalletCore can't reproduce a non-zero expiry in the rebuilt tx"
+            )
+        }
         // Sapling-v4 transparent-only: all shielded fields must be zero.
         val valueBalance = cursor.readUInt64LE()
         val nShieldedSpend = cursor.readCompactSize()
@@ -338,7 +354,7 @@ internal class SwapKitZcashSigner(
         if (!cursor.isAtEnd) {
             throw SwapKitZcashSignerException("SwapKit ZEC unsigned-tx body has trailing bytes")
         }
-        return ParsedSaplingTx(inputs, outputs)
+        return ParsedSaplingTx(lockTime, inputs, outputs)
     }
 
     private fun assertP2PKHAndExtractKeyHash(

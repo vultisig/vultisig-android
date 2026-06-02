@@ -93,6 +93,23 @@ class SwapKitZcashSignerTest {
     }
 
     @Test
+    fun `rejects a non-zero expiryHeight`() {
+        // WalletCore can't reproduce a non-zero expiryHeight in the rebuilt tx, so a route shipping
+        // one is rejected loudly rather than mistracked under a diverging tx_id.
+        val psbt =
+            encodeSaplingPsbt(
+                inputs = listOf(saplingIn(amount = 100_000)),
+                outputs = listOf(SaplingOut(99_000, p2pkh("22".repeat(20)))),
+                expiryHeight = 1_000_000,
+            )
+        val e =
+            assertThrows(SwapKitZcashSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "")
+            }
+        assertTrue(e.message!!.contains("expiryHeight"))
+    }
+
+    @Test
     fun `rejects an unsigned-tx input carrying a non-empty scriptSig`() {
         val psbt =
             encodeSaplingPsbt(
@@ -178,6 +195,8 @@ class SwapKitZcashSignerTest {
         inputs: List<SaplingIn>,
         outputs: List<SaplingOut>,
         versionGroupId: Long = SAPLING_VERSION_GROUP_ID,
+        lockTime: Long = 0,
+        expiryHeight: Long = 0,
         valueBalance: Long = 0,
         nShieldedSpend: Long = 0,
         nShieldedOutput: Long = 0,
@@ -204,8 +223,8 @@ class SwapKitZcashSignerTest {
             unsigned.write(varInt(script.size.toLong()))
             unsigned.write(script)
         }
-        unsigned.write(le32(0)) // lockTime
-        unsigned.write(le32(0)) // expiryHeight
+        unsigned.write(le32(lockTime))
+        unsigned.write(le32(expiryHeight))
         unsigned.write(le64(valueBalance))
         unsigned.write(varInt(nShieldedSpend))
         unsigned.write(varInt(nShieldedOutput))
