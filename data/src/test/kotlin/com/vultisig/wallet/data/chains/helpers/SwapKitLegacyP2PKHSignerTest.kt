@@ -351,6 +351,69 @@ class SwapKitLegacyP2PKHSignerTest {
     }
 
     @Test
+    fun `buildSigningInputData - BCH reproduces the PSBT and selects the SIGHASH_FORKID hash type`() {
+        try {
+            // BCH rides the same legacy path as DOGE/DASH but is the one chain whose CoinType flips
+            // the sighash to SIGHASH_ALL | SIGHASH_FORKID (0x41). Pin both the reconstruction and
+            // that FORKID selection so the BCH-specific branch is covered.
+            val depositHash = "22".repeat(20)
+            val changeHash = "11".repeat(20)
+            val psbt =
+                encodeLegacyPsbt(
+                    inputs =
+                        listOf(
+                            LegacyIn(
+                                prevTxIdDisplay = TXID_ONE,
+                                vout = 3,
+                                sequence = 0xFFFFFFFEL,
+                                amount = 100_000,
+                                prevScriptHex = p2pkh(changeHash),
+                            )
+                        ),
+                    outputs =
+                        listOf(
+                            LegacyOut(amount = 60_000, scriptHex = p2pkh(depositHash)),
+                            LegacyOut(amount = 39_000, scriptHex = p2pkh(changeHash)),
+                        ),
+                    lockTime = 770_000,
+                )
+
+            val input =
+                Bitcoin.SigningInput.parseFrom(
+                    signer(CoinType.BITCOINCASH).buildSigningInputData(psbt, "", FROM_AMOUNT)
+                )
+
+            // SIGHASH_ALL (0x01) | SIGHASH_FORKID (0x40) — the BCH-only sighash flag.
+            assertEquals(0x41, input.hashType)
+
+            assertEquals(770_000, input.lockTime)
+            assertEquals(SigningError.OK, input.plan.error)
+            assertEquals(100_000L, input.plan.availableAmount)
+            assertEquals(60_000L, input.plan.amount)
+            assertEquals(39_000L, input.plan.change)
+            assertEquals(1_000L, input.plan.fee)
+
+            assertEquals(1, input.utxoCount)
+            val utxo = input.getUtxo(0)
+            assertArrayEquals(
+                Numeric.hexStringToByteArray(TXID_ONE).reversedArray(),
+                utxo.outPoint.hash.toByteArray(),
+            )
+            assertEquals(3, utxo.outPoint.index)
+            assertEquals(0xFFFFFFFE.toInt(), utxo.outPoint.sequence)
+            assertEquals(100_000L, utxo.amount)
+            assertEquals(p2pkh(changeHash), Numeric.toHexStringNoPrefix(utxo.script.toByteArray()))
+
+            // BCH legacy P2PKH addresses use version byte 0x00 → Base58 `1…` (CashAddr derives the
+            // same hash160), so WalletCore re-emits the exact output scripts the PSBT shipped.
+            assertTrue(input.toAddress.startsWith("1"), "deposit ${input.toAddress}")
+            assertTrue(input.changeAddress.startsWith("1"), "change ${input.changeAddress}")
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
     fun `rejects a NON_WITNESS_UTXO that does not hash to the outpoint txid`() {
         // BIP-174 binding: the embedded prev-tx must double-SHA256 to the input's outpoint txid.
         // corruptNonWitnessTxid points the outpoint at an unrelated txid while still embedding a
