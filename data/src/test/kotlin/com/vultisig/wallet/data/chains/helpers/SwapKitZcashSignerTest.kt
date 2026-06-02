@@ -2,11 +2,14 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.utils.Numeric
 import java.io.ByteArrayOutputStream
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
+import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 /**
  * Tests for [SwapKitZcashSigner] (transparent ZEC Sapling-v4 PSBT signing).
@@ -153,6 +156,64 @@ class SwapKitZcashSignerTest {
             val hashes = signer().getPreSignedImageHash(psbt, "")
             assertEquals(1, hashes.size)
             assertEquals(64, hashes[0].length)
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `buildSigningInputData - frozen plan reproduces inputs, outputs, lockTime, branchId (ZEC)`() {
+        try {
+            // Building the Sapling Bitcoin.SigningInput needs the WalletCore JNI; parsing the proto
+            // back is pure and the expectations come from the PSBT, so this pins the reconstruction
+            // (the bytes WalletCore compiles into the broadcast tx) without a precomputed golden.
+            val depositHash = "22".repeat(20)
+            val changeHash = "11".repeat(20)
+            val psbt =
+                encodeSaplingPsbt(
+                    inputs =
+                        listOf(
+                            SaplingIn(
+                                prevTxIdDisplay = TXID_ONE,
+                                vout = 2,
+                                sequence = 0xFFFFFFFFL,
+                                amount = 100_000,
+                                prevScriptHex = p2pkh(changeHash),
+                            )
+                        ),
+                    outputs =
+                        listOf(
+                            SaplingOut(60_000, p2pkh(depositHash)),
+                            SaplingOut(39_000, p2pkh(changeHash)),
+                        ),
+                    lockTime = 880_000,
+                )
+
+            val input = Bitcoin.SigningInput.parseFrom(signer().buildSigningInputData(psbt, ""))
+
+            assertEquals(880_000, input.lockTime)
+
+            assertEquals(SigningError.OK, input.plan.error)
+            assertEquals(100_000L, input.plan.availableAmount)
+            assertEquals(60_000L, input.plan.amount)
+            assertEquals(39_000L, input.plan.change)
+            assertEquals(1_000L, input.plan.fee)
+            // ZIP-243 branch id must be on the plan or WalletCore derives the wrong digest.
+            assertEquals("f04dec4d", Numeric.toHexStringNoPrefix(input.plan.branchId.toByteArray()))
+
+            assertEquals(1, input.utxoCount)
+            val utxo = input.getUtxo(0)
+            assertArrayEquals(
+                Numeric.hexStringToByteArray(TXID_ONE).reversedArray(),
+                utxo.outPoint.hash.toByteArray(),
+            )
+            assertEquals(2, utxo.outPoint.index)
+            assertEquals(100_000L, utxo.amount)
+            assertEquals(p2pkh(changeHash), Numeric.toHexStringNoPrefix(utxo.script.toByteArray()))
+
+            // Derived from the PSBT output hash160s as transparent `t1…` addresses.
+            assertTrue(input.toAddress.startsWith("t1"), "deposit ${input.toAddress}")
+            assertTrue(input.changeAddress.startsWith("t1"), "change ${input.changeAddress}")
         } catch (e: Throwable) {
             skipIfJniUnavailable(e)
         }

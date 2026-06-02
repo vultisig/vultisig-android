@@ -2,12 +2,15 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.utils.Numeric
 import java.io.ByteArrayOutputStream
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import wallet.core.jni.CoinType
+import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 /**
  * Tests for [SwapKitLegacyP2PKHSigner] (DOGE / BCH / DASH legacy-P2PKH PSBT signing).
@@ -277,6 +280,75 @@ class SwapKitLegacyP2PKHSignerTest {
         }
     }
 
+    @Test
+    fun `buildSigningInputData - frozen plan reproduces the PSBT inputs, outputs, lockTime (DOGE)`() {
+        try {
+            // The frozen Bitcoin.SigningInput is what WalletCore compiles into the broadcast tx, so
+            // pinning every field it carries pins the reconstruction the PR leans on. Building it
+            // needs the WalletCore JNI (address derivation, script building); parsing the proto
+            // back
+            // is pure, and the expectations are derived from the PSBT — no precomputed golden
+            // needed.
+            val depositHash = "22".repeat(20)
+            val changeHash = "11".repeat(20)
+            val psbt =
+                encodeLegacyPsbt(
+                    inputs =
+                        listOf(
+                            LegacyIn(
+                                prevTxIdDisplay = TXID_ONE,
+                                vout = 3,
+                                sequence = 0xFFFFFFFEL,
+                                amount = 100_000,
+                                prevScriptHex = p2pkh(changeHash),
+                            )
+                        ),
+                    outputs =
+                        listOf(
+                            LegacyOut(amount = 60_000, scriptHex = p2pkh(depositHash)),
+                            LegacyOut(amount = 39_000, scriptHex = p2pkh(changeHash)),
+                        ),
+                    lockTime = 770_000,
+                )
+
+            val input =
+                Bitcoin.SigningInput.parseFrom(
+                    signer(CoinType.DOGECOIN).buildSigningInputData(psbt, "")
+                )
+
+            // lockTime threaded through (the review fix) so the rebuilt tx_id matches the PSBT.
+            assertEquals(770_000, input.lockTime)
+
+            // Frozen plan: amounts/fee derived verbatim from the PSBT, never replanned.
+            assertEquals(SigningError.OK, input.plan.error)
+            assertEquals(100_000L, input.plan.availableAmount)
+            assertEquals(60_000L, input.plan.amount)
+            assertEquals(39_000L, input.plan.change)
+            assertEquals(1_000L, input.plan.fee)
+
+            // The single UTXO is re-emitted verbatim: outpoint (LE hash + index + sequence),
+            // amount,
+            // and the exact prevout scriptPubKey.
+            assertEquals(1, input.utxoCount)
+            val utxo = input.getUtxo(0)
+            assertArrayEquals(
+                Numeric.hexStringToByteArray(TXID_ONE).reversedArray(),
+                utxo.outPoint.hash.toByteArray(),
+            )
+            assertEquals(3, utxo.outPoint.index)
+            assertEquals(0xFFFFFFFE.toInt(), utxo.outPoint.sequence)
+            assertEquals(100_000L, utxo.amount)
+            assertEquals(p2pkh(changeHash), Numeric.toHexStringNoPrefix(utxo.script.toByteArray()))
+
+            // toAddress/changeAddress are derived from the PSBT's own output hash160s (DOGE `D…`),
+            // so WalletCore re-emits the exact output scripts the PSBT shipped.
+            assertTrue(input.toAddress.startsWith("D"), "deposit ${input.toAddress}")
+            assertTrue(input.changeAddress.startsWith("D"), "change ${input.changeAddress}")
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
     private data class LegacyIn(
         val prevTxIdDisplay: String,
         val vout: Long,
@@ -302,6 +374,7 @@ class SwapKitLegacyP2PKHSignerTest {
     private fun encodeLegacyPsbt(
         inputs: List<LegacyIn>,
         outputs: List<LegacyOut>,
+        lockTime: Long = 0,
         unsignedTxTrailerHex: String? = null,
     ): ByteArray {
         val unsigned = ByteArrayOutputStream()
@@ -323,7 +396,7 @@ class SwapKitLegacyP2PKHSignerTest {
             unsigned.write(varInt(script.size.toLong()))
             unsigned.write(script)
         }
-        unsigned.write(le32(0)) // locktime
+        unsigned.write(le32(lockTime))
         unsignedTxTrailerHex?.let { unsigned.write(Numeric.hexStringToByteArray(it)) }
 
         val psbt = ByteArrayOutputStream()
