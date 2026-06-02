@@ -476,21 +476,13 @@ constructor(
                             }
 
                             is SwapQuote.SwapKit -> {
-                                // BTC PSBT, TRON (TronWeb object), SUI (PTB), TON (native
-                                // transfer), XRP (deposit-only native Payment), and both Cardano
-                                // flows (deposit-only CARDANO + pre-built CARDANO_PREBUILT) are
-                                // wired with their per-chain signers/native paths. Guarded loudly
-                                // so an un-wired txType can't reach signing.
+                                // Pre-flight gate: refuse a route whose txType has no wired signing
+                                // path before staging keysign. Sourced from
+                                // SwapKitSwapPayloadJson.SIGNABLE_TX_TYPES — the same list
+                                // SigningHelper dispatches on — so this guard can't drift from what
+                                // the dispatcher actually accepts.
                                 require(
-                                    quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT ||
-                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TRON ||
-                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_SUI ||
-                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TON ||
-                                        quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_XRP ||
-                                        quote.data.txType ==
-                                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO ||
-                                        quote.data.txType ==
-                                            SwapKitSwapPayloadJson.TX_TYPE_CARDANO_PREBUILT
+                                    SwapKitSwapPayloadJson.isSignableTxType(quote.data.txType)
                                 ) {
                                     "Unsupported SwapKit txType for swap: ${quote.data.txType}"
                                 }
