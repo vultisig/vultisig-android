@@ -166,5 +166,35 @@ data class SwapKitSwapPayloadJson(
          * [memo]. Mirrors iOS' `"XRP"`.
          */
         const val TX_TYPE_XRP = "XRP"
+
+        /**
+         * Every `txType` the signing pipeline can actually handle — each has a branch in
+         * `SigningHelper`'s SwapKit dispatch (a per-chain signer or a native-helper fall-through).
+         * The single source of truth for "is this route signable", so the pre-flight gate in
+         * `SwapFormViewModel` cannot drift from what the dispatcher accepts: a new chain that
+         * reaches signing must be added here, and anything not listed is rejected before keysign
+         * instead of surfacing an `error(...)` mid-sign. [TX_TYPE_CBOR] is deliberately absent — it
+         * is a wire alias normalised onto the Cardano discriminators upstream and never a keysign
+         * txType.
+         */
+        val SIGNABLE_TX_TYPES: Set<String> =
+            setOf(
+                TX_TYPE_PSBT,
+                TX_TYPE_PSBT_DOGE,
+                TX_TYPE_PSBT_BCH,
+                TX_TYPE_PSBT_DASH,
+                TX_TYPE_PSBT_ZEC,
+                TX_TYPE_TRON,
+                TX_TYPE_SUI,
+                TX_TYPE_TON,
+                TX_TYPE_XRP,
+                TX_TYPE_CARDANO,
+                TX_TYPE_CARDANO_PREBUILT,
+            )
+
+        /**
+         * True when [txType] has a wired signing path in `SigningHelper`. See [SIGNABLE_TX_TYPES].
+         */
+        fun isSignableTxType(txType: String): Boolean = txType in SIGNABLE_TX_TYPES
     }
 }

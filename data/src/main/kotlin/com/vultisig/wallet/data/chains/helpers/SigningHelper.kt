@@ -125,6 +125,7 @@ object SigningHelper {
                                     .getPreSignedImageHash(
                                         psbtBytes = swapPayload.data.txPayload,
                                         targetAddress = swapPayload.data.targetAddress,
+                                        fromAmount = swapPayload.data.fromAmount,
                                     )
                             // Transparent ZEC (Sapling-v4 body, ZIP-243 sighash).
                             SwapKitSwapPayloadJson.TX_TYPE_PSBT_ZEC ->
@@ -132,6 +133,7 @@ object SigningHelper {
                                     .getPreSignedImageHash(
                                         psbtBytes = swapPayload.data.txPayload,
                                         targetAddress = swapPayload.data.targetAddress,
+                                        fromAmount = swapPayload.data.fromAmount,
                                     )
                             SwapKitSwapPayloadJson.TX_TYPE_TRON ->
                                 SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
@@ -357,6 +359,7 @@ object SigningHelper {
                                 .getSignedTransaction(
                                     psbtBytes = swapPayload.data.txPayload,
                                     targetAddress = swapPayload.data.targetAddress,
+                                    fromAmount = swapPayload.data.fromAmount,
                                     signatures = signatures,
                                 )
                         SwapKitSwapPayloadJson.TX_TYPE_PSBT_ZEC ->
@@ -364,6 +367,7 @@ object SigningHelper {
                                 .getSignedTransaction(
                                     psbtBytes = swapPayload.data.txPayload,
                                     targetAddress = swapPayload.data.targetAddress,
+                                    fromAmount = swapPayload.data.fromAmount,
                                     signatures = signatures,
                                 )
                         SwapKitSwapPayloadJson.TX_TYPE_TRON ->

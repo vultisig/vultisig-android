@@ -4,6 +4,8 @@ import com.google.protobuf.ByteString
 import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.utils.Numeric
+import java.math.BigInteger
+import java.security.MessageDigest
 import tss.KeysignResponse
 import wallet.core.jni.Base58
 import wallet.core.jni.BitcoinScript
@@ -39,8 +41,12 @@ internal class SwapKitZcashSigner(
     private val utxo = UtxoHelper(coinType, vaultHexPublicKey, vaultHexChainCode)
 
     /** ZIP-243 preimage hashes (sorted hex) for every input. */
-    fun getPreSignedImageHash(psbtBytes: ByteArray, targetAddress: String): List<String> {
-        val inputData = buildSigningInputData(psbtBytes, targetAddress)
+    fun getPreSignedImageHash(
+        psbtBytes: ByteArray,
+        targetAddress: String,
+        fromAmount: BigInteger,
+    ): List<String> {
+        val inputData = buildSigningInputData(psbtBytes, targetAddress, fromAmount)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes).checkError()
         return preSigningOutput.hashPublicKeysList
@@ -57,17 +63,23 @@ internal class SwapKitZcashSigner(
     fun getSignedTransaction(
         psbtBytes: ByteArray,
         targetAddress: String,
+        fromAmount: BigInteger,
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
-        val inputData = buildSigningInputData(psbtBytes, targetAddress)
+        val inputData = buildSigningInputData(psbtBytes, targetAddress, fromAmount)
         return utxo.getSignedTransaction(inputData, signatures)
     }
 
     /**
      * Build the serialized [Bitcoin.SigningInput] with a frozen [Bitcoin.TransactionPlan] (branch
-     * id set) derived directly from the Sapling PSBT bytes. Exposed `internal` for unit tests.
+     * id set) derived directly from the Sapling PSBT bytes. [fromAmount] is the quoted swap amount
+     * (zatoshi) used to bound the miner fee. Exposed `internal` for unit tests.
      */
-    internal fun buildSigningInputData(psbtBytes: ByteArray, targetAddress: String): ByteArray {
+    internal fun buildSigningInputData(
+        psbtBytes: ByteArray,
+        targetAddress: String,
+        fromAmount: BigInteger,
+    ): ByteArray {
         if (psbtBytes.isEmpty()) {
             throw SwapKitZcashSignerException("SwapKit ZEC PSBT payload is empty")
         }
@@ -86,7 +98,12 @@ internal class SwapKitZcashSigner(
         val inputs =
             parsedTx.inputs.mapIndexed { index, parsedInput ->
                 val (amount, scriptPubKey) =
-                    resolvePrevUtxo(inputMaps[index], parsedInput.prevIndex, index)
+                    resolvePrevUtxo(
+                        inputMaps[index],
+                        parsedInput.prevTxIdLE,
+                        parsedInput.prevIndex,
+                        index,
+                    )
                 val keyHash = assertP2PKHAndExtractKeyHash(scriptPubKey, index, "input")
                 SaplingInput(
                     prevTxIdLE = parsedInput.prevTxIdLE,
@@ -98,13 +115,20 @@ internal class SwapKitZcashSigner(
                 )
             }
 
-        return assembleSigningInput(inputs, parsedTx.outputs, parsedTx.lockTime, targetAddress)
+        return assembleSigningInput(
+            inputs,
+            parsedTx.outputs,
+            parsedTx.lockTime,
+            fromAmount,
+            targetAddress,
+        )
     }
 
     private fun assembleSigningInput(
         inputs: List<SaplingInput>,
         outputs: List<SaplingOutput>,
         lockTime: Long,
+        fromAmount: BigInteger,
         targetAddressHint: String,
     ): ByteArray {
         if (inputs.isEmpty() || outputs.isEmpty()) {
@@ -126,6 +150,16 @@ internal class SwapKitZcashSigner(
         if (fee < 0) {
             throw SwapKitZcashSignerException(
                 "SwapKit ZEC PSBT negative fee: inputs=$totalIn outputs=$totalOut"
+            )
+        }
+        // Fee ceiling — bound the miner fee by the quoted swap amount (the Verify screen never
+        // shows
+        // the fee and the deposit address isn't bound, so an under-allocated change output would
+        // otherwise burn the remainder to the miner). Mirrors the legacy signer.
+        if (BigInteger.valueOf(fee) > fromAmount) {
+            throw SwapKitZcashSignerException(
+                "SwapKit ZEC PSBT miner fee $fee exceeds the quoted swap amount $fromAmount; " +
+                    "refusing to sign"
             )
         }
 
@@ -198,11 +232,12 @@ internal class SwapKitZcashSigner(
 
     private fun resolvePrevUtxo(
         inputMap: Map<String, ByteArray>,
+        prevTxIdLE: ByteArray,
         prevIndex: Long,
         inputIndex: Int,
     ): Pair<Long, ByteArray> {
         inputMap[KEY_NON_WITNESS_UTXO]?.let {
-            return parseNonWitnessUtxo(it, prevIndex, inputIndex)
+            return parseNonWitnessUtxo(it, prevTxIdLE, prevIndex, inputIndex)
         }
         inputMap[KEY_WITNESS_UTXO]?.let {
             return parseWitnessUtxo(it, inputIndex)
@@ -214,9 +249,18 @@ internal class SwapKitZcashSigner(
 
     private fun parseNonWitnessUtxo(
         data: ByteArray,
+        prevTxIdLE: ByteArray,
         prevIndex: Long,
         inputIndex: Int,
     ): Pair<Long, ByteArray> {
+        // BIP-174: double-SHA256 of the embedded prev-tx must equal the outpoint txid, or a
+        // substituted record could feed a forged amount into the ZIP-243 sighash (which commits the
+        // input amount) — caught here rather than as a broadcast rejection.
+        if (!sha256d(data).contentEquals(prevTxIdLE)) {
+            throw SwapKitZcashSignerException(
+                "SwapKit ZEC PSBT input #$inputIndex NON_WITNESS_UTXO does not hash to its outpoint txid"
+            )
+        }
         val cursor = PsbtCursor(data)
         cursor.readUInt32LE()
         val inCount = cursor.readCompactSize()
@@ -381,6 +425,11 @@ internal class SwapKitZcashSigner(
     /** ZEC transparent `t1…` address from a 20-byte hash160 (two-byte prefix `0x1C 0xB8`). */
     private fun zcashAddress(hash: ByteArray): String? =
         Base58.encode(byteArrayOf(0x1C, 0xB8.toByte()) + hash)
+
+    private fun sha256d(data: ByteArray): ByteArray {
+        val digest = MessageDigest.getInstance("SHA-256")
+        return digest.digest(digest.digest(data))
+    }
 
     private companion object {
         private const val KEY_NON_WITNESS_UTXO = "00"

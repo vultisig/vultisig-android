@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.utils.Numeric
 import java.io.ByteArrayOutputStream
+import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -29,7 +30,7 @@ class SwapKitLegacyP2PKHSignerTest {
     fun `rejects empty payload`() {
         val e =
             assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
-                signer().buildSigningInputData(ByteArray(0), "")
+                signer().buildSigningInputData(ByteArray(0), "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("empty"))
     }
@@ -53,7 +54,7 @@ class SwapKitLegacyP2PKHSignerTest {
             )
         val e =
             assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("input #0"))
         assertTrue(e.message!!.contains("not P2PKH"))
@@ -78,7 +79,7 @@ class SwapKitLegacyP2PKHSignerTest {
             )
         val e =
             assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("output #0"))
         assertTrue(e.message!!.contains("not P2PKH"))
@@ -107,7 +108,7 @@ class SwapKitLegacyP2PKHSignerTest {
             )
         val e =
             assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("3 outputs"))
     }
@@ -131,7 +132,7 @@ class SwapKitLegacyP2PKHSignerTest {
             )
         val e =
             assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("negative fee"))
     }
@@ -156,7 +157,7 @@ class SwapKitLegacyP2PKHSignerTest {
             )
         val e =
             assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("missing a prev-tx UTXO record"))
     }
@@ -180,7 +181,7 @@ class SwapKitLegacyP2PKHSignerTest {
             )
         val e =
             assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("scriptSig must be empty"))
     }
@@ -204,7 +205,7 @@ class SwapKitLegacyP2PKHSignerTest {
             )
         val e =
             assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("trailing bytes"))
     }
@@ -230,7 +231,7 @@ class SwapKitLegacyP2PKHSignerTest {
                             LegacyOut(amount = 39_000, scriptHex = p2pkh("11".repeat(20))),
                         ),
                 )
-            val hashes = signer(CoinType.DOGECOIN).getPreSignedImageHash(psbt, "")
+            val hashes = signer(CoinType.DOGECOIN).getPreSignedImageHash(psbt, "", FROM_AMOUNT)
             assertEquals(1, hashes.size)
             assertEquals(64, hashes[0].length)
         } catch (e: Throwable) {
@@ -269,7 +270,7 @@ class SwapKitLegacyP2PKHSignerTest {
                             LegacyOut(amount = 9_000, scriptHex = prevScript),
                         ),
                 )
-            val hashes = signer(CoinType.DASH).getPreSignedImageHash(psbt, "")
+            val hashes = signer(CoinType.DASH).getPreSignedImageHash(psbt, "", FROM_AMOUNT)
             // One sighash per signable input.
             assertEquals(2, hashes.size)
             // Sorted, distinct, 32-byte hex digests.
@@ -313,7 +314,7 @@ class SwapKitLegacyP2PKHSignerTest {
 
             val input =
                 Bitcoin.SigningInput.parseFrom(
-                    signer(CoinType.DOGECOIN).buildSigningInputData(psbt, "")
+                    signer(CoinType.DOGECOIN).buildSigningInputData(psbt, "", FROM_AMOUNT)
                 )
 
             // lockTime threaded through (the review fix) so the rebuilt tx_id matches the PSBT.
@@ -349,6 +350,59 @@ class SwapKitLegacyP2PKHSignerTest {
         }
     }
 
+    @Test
+    fun `rejects a NON_WITNESS_UTXO that does not hash to the outpoint txid`() {
+        // BIP-174 binding: the embedded prev-tx must double-SHA256 to the input's outpoint txid.
+        // corruptNonWitnessTxid points the outpoint at an unrelated txid while still embedding a
+        // (well-formed) prev-tx — the binding check must reject it before any signing.
+        val psbt =
+            encodeLegacyPsbt(
+                inputs =
+                    listOf(
+                        LegacyIn(
+                            prevTxIdDisplay = TXID_ONE,
+                            vout = 0,
+                            sequence = 0xFFFFFFFFL,
+                            amount = 100_000,
+                            prevScriptHex = p2pkh("11".repeat(20)),
+                            useNonWitnessUtxo = true,
+                            corruptNonWitnessTxid = true,
+                        )
+                    ),
+                outputs = listOf(LegacyOut(amount = 99_000, scriptHex = p2pkh("33".repeat(20)))),
+            )
+        val e =
+            assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+            }
+        assertTrue(e.message!!.contains("does not hash to its outpoint txid"))
+    }
+
+    @Test
+    fun `rejects a miner fee that exceeds the quoted swap amount`() {
+        // inputs 100_000, single 10_000 output → 90_000 fee. With a quoted swap amount of only
+        // 1_000 the fee dwarfs it, so the ceiling refuses to sign (the balance-burn guard).
+        val psbt =
+            encodeLegacyPsbt(
+                inputs =
+                    listOf(
+                        LegacyIn(
+                            prevTxIdDisplay = TXID_ONE,
+                            vout = 0,
+                            sequence = 0xFFFFFFFFL,
+                            amount = 100_000,
+                            prevScriptHex = p2pkh("11".repeat(20)),
+                        )
+                    ),
+                outputs = listOf(LegacyOut(amount = 10_000, scriptHex = p2pkh("22".repeat(20)))),
+            )
+        val e =
+            assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "", BigInteger.valueOf(1_000))
+            }
+        assertTrue(e.message!!.contains("exceeds the quoted swap amount"))
+    }
+
     private data class LegacyIn(
         val prevTxIdDisplay: String,
         val vout: Long,
@@ -358,6 +412,10 @@ class SwapKitLegacyP2PKHSignerTest {
         val useNonWitnessUtxo: Boolean = false,
         val omitPrevUtxo: Boolean = false,
         val unsignedScriptSigHex: String? = null,
+        // Force the unsigned-tx outpoint to [prevTxIdDisplay] instead of the embedded prev-tx's
+        // real
+        // double-SHA256, so the NON_WITNESS_UTXO binding check fails.
+        val corruptNonWitnessTxid: Boolean = false,
     )
 
     private data class LegacyOut(val amount: Long, val scriptHex: String)
@@ -377,11 +435,25 @@ class SwapKitLegacyP2PKHSignerTest {
         lockTime: Long = 0,
         unsignedTxTrailerHex: String? = null,
     ): ByteArray {
+        // Precompute the embedded prev-tx for NON_WITNESS inputs so the unsigned-tx outpoint can
+        // bind to its real double-SHA256 (the txid), matching BIP-174.
+        val prevTxByInput =
+            inputs.map { input ->
+                if (input.useNonWitnessUtxo && !input.omitPrevUtxo) {
+                    encodePrevTx(input.vout, input.amount, input.prevScriptHex)
+                } else null
+            }
+        fun outpointLE(i: Int): ByteArray {
+            val prevTx = prevTxByInput[i]
+            return if (prevTx != null && !inputs[i].corruptNonWitnessTxid) sha256d(prevTx)
+            else Numeric.hexStringToByteArray(inputs[i].prevTxIdDisplay).reversedArray()
+        }
+
         val unsigned = ByteArrayOutputStream()
         unsigned.write(le32(1)) // version
         unsigned.write(varInt(inputs.size.toLong()))
-        inputs.forEach { input ->
-            unsigned.write(Numeric.hexStringToByteArray(input.prevTxIdDisplay).reversedArray())
+        inputs.forEachIndexed { i, input ->
+            unsigned.write(outpointLE(i))
             unsigned.write(le32(input.vout))
             val scriptSig =
                 input.unsignedScriptSigHex?.let { Numeric.hexStringToByteArray(it) } ?: ByteArray(0)
@@ -407,11 +479,11 @@ class SwapKitLegacyP2PKHSignerTest {
         psbt.write(unsignedBytes)
         psbt.write(0x00) // global map terminator
 
-        inputs.forEach { input ->
+        inputs.forEachIndexed { i, input ->
             if (!input.omitPrevUtxo) {
                 if (input.useNonWitnessUtxo) {
                     // NON_WITNESS_UTXO (key 0x00): a full prev-tx whose output[vout] is the UTXO.
-                    val prevTx = encodePrevTx(input.vout, input.amount, input.prevScriptHex)
+                    val prevTx = prevTxByInput[i]!!
                     psbt.write(byteArrayOf(0x01, 0x00))
                     psbt.write(varInt(prevTx.size.toLong()))
                     psbt.write(prevTx)
@@ -477,6 +549,11 @@ class SwapKitLegacyP2PKHSignerTest {
             else -> byteArrayOf(0xFEu.toByte()) + le32(v)
         }
 
+    private fun sha256d(data: ByteArray): ByteArray {
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        return digest.digest(digest.digest(data))
+    }
+
     private fun skipIfJniUnavailable(e: Throwable) {
         if (
             e is UnsatisfiedLinkError ||
@@ -489,6 +566,9 @@ class SwapKitLegacyP2PKHSignerTest {
 
     private companion object {
         private val MAGIC = byteArrayOf(0x70, 0x73, 0x62, 0x74, 0xff.toByte())
+        // Generous quoted swap amount — well above every fixture's fee so the fee-ceiling bound
+        // never trips except in the dedicated rejection test (which passes its own small value).
+        private val FROM_AMOUNT = BigInteger.valueOf(1_000_000)
         private const val TXID_ONE =
             "0000000000000000000000000000000000000000000000000000000000000001"
         private const val TXID_TWO =

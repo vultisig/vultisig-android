@@ -5,6 +5,8 @@ import com.vultisig.wallet.data.crypto.checkError
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.getDustThreshold
+import java.math.BigInteger
+import java.security.MessageDigest
 import tss.KeysignResponse
 import wallet.core.jni.Base58
 import wallet.core.jni.BitcoinScript
@@ -48,8 +50,12 @@ internal class SwapKitLegacyP2PKHSigner(
      * preimage construction via the frozen-plan input data and [coinType] (BCH gets SIGHASH_FORKID
      * through `hashTypeForCoin`).
      */
-    fun getPreSignedImageHash(psbtBytes: ByteArray, targetAddress: String): List<String> {
-        val inputData = buildSigningInputData(psbtBytes, targetAddress)
+    fun getPreSignedImageHash(
+        psbtBytes: ByteArray,
+        targetAddress: String,
+        fromAmount: BigInteger,
+    ): List<String> {
+        val inputData = buildSigningInputData(psbtBytes, targetAddress, fromAmount)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes).checkError()
         return preSigningOutput.hashPublicKeysList
@@ -66,18 +72,24 @@ internal class SwapKitLegacyP2PKHSigner(
     fun getSignedTransaction(
         psbtBytes: ByteArray,
         targetAddress: String,
+        fromAmount: BigInteger,
         signatures: Map<String, KeysignResponse>,
     ): SignedTransactionResult {
-        val inputData = buildSigningInputData(psbtBytes, targetAddress)
+        val inputData = buildSigningInputData(psbtBytes, targetAddress, fromAmount)
         return utxo.getSignedTransaction(inputData, signatures)
     }
 
     /**
      * Build the serialized [Bitcoin.SigningInput] with a **frozen** [Bitcoin.TransactionPlan]
-     * derived directly from the PSBT bytes. Exposed `internal` so per-chain unit tests can pin the
-     * structural shape (input count, scriptPubKey patterns, plan amount/change/fee).
+     * derived directly from the PSBT bytes. [fromAmount] is the quoted swap amount (source-chain
+     * base units) used to bound the miner fee. Exposed `internal` so per-chain unit tests can pin
+     * the structural shape (input count, scriptPubKey patterns, plan amount/change/fee).
      */
-    internal fun buildSigningInputData(psbtBytes: ByteArray, targetAddress: String): ByteArray {
+    internal fun buildSigningInputData(
+        psbtBytes: ByteArray,
+        targetAddress: String,
+        fromAmount: BigInteger,
+    ): ByteArray {
         if (psbtBytes.isEmpty()) {
             throw SwapKitLegacyP2PKHSignerException("SwapKit PSBT payload is empty")
         }
@@ -98,7 +110,12 @@ internal class SwapKitLegacyP2PKHSigner(
         val inputs =
             parsedTx.inputs.mapIndexed { index, parsedInput ->
                 val (amount, scriptPubKey) =
-                    resolvePrevUtxo(inputMaps[index], parsedInput.prevIndex, index)
+                    resolvePrevUtxo(
+                        inputMaps[index],
+                        parsedInput.prevTxIdLE,
+                        parsedInput.prevIndex,
+                        index,
+                    )
                 val keyHash = assertP2PKHAndExtractKeyHash(scriptPubKey, index, "input")
                 LegacyP2PKHInput(
                     prevTxIdLE = parsedInput.prevTxIdLE,
@@ -110,7 +127,13 @@ internal class SwapKitLegacyP2PKHSigner(
                 )
             }
 
-        return assembleSigningInput(inputs, parsedTx.outputs, parsedTx.lockTime, targetAddress)
+        return assembleSigningInput(
+            inputs,
+            parsedTx.outputs,
+            parsedTx.lockTime,
+            fromAmount,
+            targetAddress,
+        )
     }
 
     /**
@@ -126,6 +149,7 @@ internal class SwapKitLegacyP2PKHSigner(
         inputs: List<LegacyP2PKHInput>,
         outputs: List<LegacyP2PKHOutput>,
         lockTime: Long,
+        fromAmount: BigInteger,
         targetAddressHint: String,
     ): ByteArray {
         if (inputs.isEmpty() || outputs.isEmpty()) {
@@ -147,6 +171,18 @@ internal class SwapKitLegacyP2PKHSigner(
         if (fee < 0) {
             throw SwapKitLegacyP2PKHSignerException(
                 "SwapKit PSBT negative fee: inputs=$totalIn outputs=$totalOut"
+            )
+        }
+        // Fee ceiling. The Verify screen never surfaces the miner fee, and the legacy path doesn't
+        // bind the deposit address, so a PSBT that under-allocates the change output would burn the
+        // remainder to the miner. A fixed sat/vByte ceiling like the BTC path isn't portable here
+        // (DOGE's legitimate fees run orders of magnitude higher), so bound the fee by the quoted
+        // swap amount: a miner fee larger than the amount being swapped is pathological and
+        // refused.
+        if (BigInteger.valueOf(fee) > fromAmount) {
+            throw SwapKitLegacyP2PKHSignerException(
+                "SwapKit PSBT miner fee $fee exceeds the quoted swap amount $fromAmount; refusing " +
+                    "to sign"
             )
         }
 
@@ -233,11 +269,12 @@ internal class SwapKitLegacyP2PKHSigner(
      */
     private fun resolvePrevUtxo(
         inputMap: Map<String, ByteArray>,
+        prevTxIdLE: ByteArray,
         prevIndex: Long,
         inputIndex: Int,
     ): Pair<Long, ByteArray> {
         inputMap[KEY_NON_WITNESS_UTXO]?.let {
-            return parseNonWitnessUtxo(it, prevIndex, inputIndex)
+            return parseNonWitnessUtxo(it, prevTxIdLE, prevIndex, inputIndex)
         }
         inputMap[KEY_WITNESS_UTXO]?.let {
             return parseWitnessUtxo(it, inputIndex)
@@ -253,9 +290,20 @@ internal class SwapKitLegacyP2PKHSigner(
      */
     private fun parseNonWitnessUtxo(
         data: ByteArray,
+        prevTxIdLE: ByteArray,
         prevIndex: Long,
         inputIndex: Int,
     ): Pair<Long, ByteArray> {
+        // BIP-174 binds a NON_WITNESS_UTXO to its input: double-SHA256 of the embedded prev-tx must
+        // equal the outpoint txid. Without this a substituted record feeds a forged amount into the
+        // sighash — and because BCH (SIGHASH_FORKID) and ZEC (ZIP-243) commit the input amount to
+        // the digest, a wrong value only surfaces as a network rejection at broadcast instead of a
+        // clear failure up front.
+        if (!sha256d(data).contentEquals(prevTxIdLE)) {
+            throw SwapKitLegacyP2PKHSignerException(
+                "SwapKit PSBT input #$inputIndex NON_WITNESS_UTXO does not hash to its outpoint txid"
+            )
+        }
         val cursor = PsbtCursor(data)
         cursor.readUInt32LE() // version
         val inCount = cursor.readCompactSize()
@@ -414,6 +462,11 @@ internal class SwapKitLegacyP2PKHSigner(
             CoinType.DASH -> byteArrayOf(0x4C)
             else -> null
         }
+
+    private fun sha256d(data: ByteArray): ByteArray {
+        val digest = MessageDigest.getInstance("SHA-256")
+        return digest.digest(digest.digest(data))
+    }
 
     private companion object {
         private const val KEY_NON_WITNESS_UTXO = "00"

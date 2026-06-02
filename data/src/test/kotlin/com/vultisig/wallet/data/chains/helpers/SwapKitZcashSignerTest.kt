@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.utils.Numeric
 import java.io.ByteArrayOutputStream
+import java.math.BigInteger
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -28,7 +29,7 @@ class SwapKitZcashSignerTest {
     fun `rejects empty payload`() {
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(ByteArray(0), "")
+                signer().buildSigningInputData(ByteArray(0), "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("empty"))
     }
@@ -43,7 +44,7 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("unsupported Zcash version"))
     }
@@ -59,7 +60,7 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("shielded"))
     }
@@ -74,7 +75,7 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("shielded"))
     }
@@ -89,7 +90,7 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("input #0"))
         assertTrue(e.message!!.contains("not P2PKH"))
@@ -107,7 +108,7 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("expiryHeight"))
     }
@@ -121,9 +122,25 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("scriptSig must be empty"))
+    }
+
+    @Test
+    fun `rejects a miner fee that exceeds the quoted swap amount`() {
+        // inputs 100_000, single 10_000 output → 90_000 fee. A quoted swap amount of only 1_000
+        // makes the fee dwarf it, so the ceiling refuses to sign (the balance-burn guard).
+        val psbt =
+            encodeSaplingPsbt(
+                inputs = listOf(saplingIn(amount = 100_000)),
+                outputs = listOf(SaplingOut(10_000, p2pkh("22".repeat(20)))),
+            )
+        val e =
+            assertThrows(SwapKitZcashSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "", BigInteger.valueOf(1_000))
+            }
+        assertTrue(e.message!!.contains("exceeds the quoted swap amount"))
     }
 
     @Test
@@ -136,7 +153,7 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "")
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
             }
         assertTrue(e.message!!.contains("trailing bytes"))
     }
@@ -153,7 +170,7 @@ class SwapKitZcashSignerTest {
                             SaplingOut(39_000, p2pkh("11".repeat(20))),
                         ),
                 )
-            val hashes = signer().getPreSignedImageHash(psbt, "")
+            val hashes = signer().getPreSignedImageHash(psbt, "", FROM_AMOUNT)
             assertEquals(1, hashes.size)
             assertEquals(64, hashes[0].length)
         } catch (e: Throwable) {
@@ -189,7 +206,10 @@ class SwapKitZcashSignerTest {
                     lockTime = 880_000,
                 )
 
-            val input = Bitcoin.SigningInput.parseFrom(signer().buildSigningInputData(psbt, ""))
+            val input =
+                Bitcoin.SigningInput.parseFrom(
+                    signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+                )
 
             assertEquals(880_000, input.lockTime)
 
@@ -340,6 +360,9 @@ class SwapKitZcashSignerTest {
 
     private companion object {
         private val MAGIC = byteArrayOf(0x70, 0x73, 0x62, 0x74, 0xff.toByte())
+        // Generous quoted swap amount — above every fixture's fee so the ceiling never trips except
+        // in the dedicated rejection test (which passes its own small value).
+        private val FROM_AMOUNT = BigInteger.valueOf(1_000_000)
         private const val TXID_ONE =
             "0000000000000000000000000000000000000000000000000000000000000001"
         private const val SAPLING_TX_VERSION = 0x80000004L
