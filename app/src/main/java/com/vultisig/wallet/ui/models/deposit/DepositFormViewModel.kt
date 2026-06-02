@@ -282,11 +282,12 @@ constructor(
         }
 
     private val address = MutableStateFlow<Address?>(null)
-    private val secureAssetNodeValue = MutableStateFlow<String?>(null)
     private var addressJob: Job? = null
+    private var securedAssetThorAddressJob: Job? = null
     private var whitelistJob: Job? = null
     private var loadLpJob: Job? = null
     private var switchInboundJob: Job? = null
+    private var withdrawSecuredAssetJob: Job? = null
     private var cacaoMaturityJob: Job? = null
     private var depositTypeAction: String? = null
     private var bondAddress: String? = null
@@ -501,11 +502,18 @@ constructor(
                         updateTokenAmount(account, chain, targetTicker, vaultId)
                     }
 
+                    depositOption
+                }
+                .collect { depositOption ->
+                    // Populate the user's own THORChain address for the SecuredAsset form here,
+                    // outside the (pure) transform, and never resolve the inbound vault as a side
+                    // effect — that is done synchronously in createSecuredAssetTransaction so the
+                    // destination always matches the currently-selected asset's chain.
                     if (depositOption == DepositOption.SecuredAsset) {
                         collectSecuredAssetAddresses()
                     }
+                    setMetadataInfo()
                 }
-                .collect { setMetadataInfo() }
         }
 
         viewModelScope.launch {
@@ -688,7 +696,7 @@ constructor(
                         }
                 val totalPoolUnits = pool.units.toBigIntegerOrNull() ?: BigInteger.ZERO
                 val cacaoDepth = pool.cacaoDepth.toBigIntegerOrNull() ?: BigInteger.ZERO
-                val userAvailableUnits = userLpUnits.toLongOrNull()
+                val userAvailableUnits = userLpUnits.toBigIntegerOrNull()
                 val userCacao =
                     if (userAvailableUnits != null) {
                         RemoveLpCalculator.computeAmountDisplay(
@@ -800,19 +808,13 @@ constructor(
                 val userUnits = position.units
                 val runeRedeemBase = position.runeRedeemValue
                 val symbol = Coins.ThorChain.RUNE.ticker
-                val userUnitsLongOrNull =
-                    userUnits
-                        .takeIf { it.signum() > 0 && it.bitLength() < Long.SIZE_BITS }
-                        ?.toLong()
                 val userRune =
-                    userUnitsLongOrNull?.let { userUnitsLong ->
-                        RemoveLpCalculator.computeAmountDisplay(
-                            selectedUnits = userUnitsLong,
-                            poolDepth = runeRedeemBase,
-                            totalPoolUnits = userUnits,
-                            decimals = RemoveLpCalculator.RUNE_DECIMALS,
-                        )
-                    }
+                    RemoveLpCalculator.computeAmountDisplay(
+                        selectedUnits = userUnits,
+                        poolDepth = runeRedeemBase,
+                        totalPoolUnits = userUnits,
+                        decimals = RemoveLpCalculator.RUNE_DECIMALS,
+                    )
                 val balanceText =
                     if (userRune != null) {
                         UiText.FormattedText(
@@ -856,8 +858,13 @@ constructor(
 
     fun setRemoveLpPercent(percent: Float) {
         val s = state.value
-        val availableUnits = s.availableLpUnits?.toLongOrNull() ?: return
-        val selectedUnits = (percent * availableUnits).toLong().coerceAtLeast(0L)
+        val availableUnits = s.availableLpUnits?.toBigIntegerOrNull() ?: return
+        // Keep the slider→units math fully in BigInteger so whale positions whose units exceed
+        // Long.MAX_VALUE still move the slider and compute exact withdrawal amounts. `percent` is a
+        // 0f..1f fraction; convert it to integer basis points (0..10000) to retain sub-percent
+        // precision, then `units * bps / 10000`.
+        val basisPoints = (percent * 10_000).toInt().coerceIn(0, 10_000).toBigInteger()
+        val selectedUnits = availableUnits.multiply(basisPoints).divide(BigInteger.valueOf(10_000L))
         val cacaoDisplay =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = selectedUnits,
@@ -980,6 +987,9 @@ constructor(
         // freshly reset dstAddressError or keep writing to thorAddressFieldState from a stale
         // Switch context.
         switchInboundJob?.cancel()
+        // Stop the previous WithdrawSecuredAsset address collector so re-selecting the option does
+        // not leak an additional permanent collector running handleWithdrawSecuredAsset.
+        withdrawSecuredAssetJob?.cancel()
         viewModelScope.launch {
             resetTextFields()
             _state.update { it.copy(depositOption = option) }
@@ -1079,11 +1089,12 @@ constructor(
                 }
 
                 DepositOption.WithdrawSecuredAsset -> {
-                    viewModelScope.launch {
-                        this@DepositFormViewModel.address.filterNotNull().collect { address ->
-                            handleWithdrawSecuredAsset(address)
+                    withdrawSecuredAssetJob =
+                        viewModelScope.launch {
+                            this@DepositFormViewModel.address.filterNotNull().collect { address ->
+                                handleWithdrawSecuredAsset(address)
+                            }
                         }
-                    }
                 }
 
                 else -> Unit
@@ -1121,31 +1132,27 @@ constructor(
     }
 
     private fun collectSecuredAssetAddresses() {
-        viewModelScope.safeLaunch(
-            onError = { Timber.e(it, "Failed to collect secured asset addresses") }
-        ) {
-            val vaultId = vaultId ?: return@safeLaunch
-            val vault =
-                vaultRepository.get(vaultId)
-                    ?: run {
-                        return@safeLaunch
-                    }
-            val (thorAddress) =
-                chainAccountAddressRepository.getAddress(chain = Chain.ThorChain, vault = vault)
+        securedAssetThorAddressJob?.cancel()
+        securedAssetThorAddressJob =
+            viewModelScope.safeLaunch(
+                onError = { Timber.e(it, "Failed to collect secured asset addresses") }
+            ) {
+                val vaultId = vaultId ?: return@safeLaunch
+                val vault =
+                    vaultRepository.get(vaultId)
+                        ?: run {
+                            return@safeLaunch
+                        }
+                val (thorAddress) =
+                    chainAccountAddressRepository.getAddress(chain = Chain.ThorChain, vault = vault)
 
-            thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
-
-            fetchSecuredAssetInboundAddress()
-        }
+                thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
+            }
     }
 
     private suspend fun fetchSecuredAssetInboundAddress(): InboundAddressResult {
         val chainName = state.value.selectedToken.getChainName()
-        val result = fetchThorChainInboundForChain(chainName)
-        if (result is InboundAddressResult.Available) {
-            secureAssetNodeValue.value = result.address
-        }
-        return result
+        return fetchThorChainInboundForChain(chainName)
     }
 
     /**
@@ -1685,6 +1692,11 @@ constructor(
 
         val thorAddress = thorAddressFieldState.text.toString()
 
+        // Invalidate any cached UTXO plan so a re-submitted deposit recomputes its Bitcoin
+        // transaction plan (UTXO selection + fee) for the current amount/destination/token rather
+        // than reusing a stale plan from a previous submit.
+        planBtc.value = null
+
         val selectedAccount =
             getSelectedAccount()
                 ?: throw InvalidTransactionDataException(
@@ -1702,27 +1714,24 @@ constructor(
         val srcAddress = selectedToken.address
 
         val dstAddr =
-            secureAssetNodeValue.value
-                ?: when (val result = fetchSecuredAssetInboundAddress()) {
-                    is InboundAddressResult.Available -> result.address
-                    InboundAddressResult.Halted ->
-                        throw InvalidTransactionDataException(
-                            UiText.FormattedText(
-                                R.string.deposit_error_thorchain_chain_halted,
-                                listOf(selectedToken.getChainName()),
-                            )
+            when (val result = fetchSecuredAssetInboundAddress()) {
+                is InboundAddressResult.Available -> result.address
+                InboundAddressResult.Halted ->
+                    throw InvalidTransactionDataException(
+                        UiText.FormattedText(
+                            R.string.deposit_error_thorchain_chain_halted,
+                            listOf(selectedToken.getChainName()),
                         )
-                    InboundAddressResult.Unsupported ->
-                        throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.deposit_error_not_secured_asset)
-                        )
-                    InboundAddressResult.FetchFailed ->
-                        throw InvalidTransactionDataException(
-                            UiText.StringResource(
-                                R.string.deposit_error_thorchain_inbound_unavailable
-                            )
-                        )
-                }
+                    )
+                InboundAddressResult.Unsupported ->
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.deposit_error_not_secured_asset)
+                    )
+                InboundAddressResult.FetchFailed ->
+                    throw InvalidTransactionDataException(
+                        UiText.StringResource(R.string.deposit_error_thorchain_inbound_unavailable)
+                    )
+            }
         if (dstAddr.isBlank()) {
             throw InvalidTransactionDataException(
                 UiText.StringResource(R.string.send_error_no_address)
@@ -2581,21 +2590,31 @@ constructor(
                     UiText.StringResource(R.string.send_error_no_token)
                 )
 
-        if ((selectedAccount.tokenValue?.value ?: BigInteger.ZERO) < tokenAmountInt) {
-
-            // For all other operations, or if the unstakable check failed
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_insufficient_balance)
-            )
-        }
-
-        if (nativeTokenValue < gas.value) {
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.insufficient_native_token,
-                    listOf(nativeTokenAccount.token.ticker),
+        if (selectedToken.isNativeToken) {
+            // Native-token deposits pay the amount and the gas from the same balance, so validate
+            // amount + gas in-form; otherwise a full-balance amount fails late at signing.
+            if (nativeTokenValue < tokenAmountInt + gas.value) {
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_insufficient_balance)
                 )
-            )
+            }
+        } else {
+            if ((selectedAccount.tokenValue?.value ?: BigInteger.ZERO) < tokenAmountInt) {
+
+                // For all other operations, or if the unstakable check failed
+                throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_error_insufficient_balance)
+                )
+            }
+
+            if (nativeTokenValue < gas.value) {
+                throw InvalidTransactionDataException(
+                    UiText.FormattedText(
+                        R.string.insufficient_native_token,
+                        listOf(nativeTokenAccount.token.ticker),
+                    )
+                )
+            }
         }
 
         return tokenAmountInt
