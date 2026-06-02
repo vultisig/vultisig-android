@@ -26,34 +26,26 @@ internal enum class BtcAddressType(val circuit: QbtcClaimCircuit) {
          * [UnsupportedBtcAddressException] for formats the claim can't handle (testnet, unknown, or
          * malformed lengths).
          */
-        fun detect(address: String): BtcAddressType =
-            when {
+        fun detect(address: String): BtcAddressType {
+            fun unsupported(): Nothing =
+                throw UnsupportedBtcAddressException("Unsupported Bitcoin address format: $address")
+            return when {
                 address.startsWith("tb1") ->
                     throw UnsupportedBtcAddressException(
                         "Testnet Bitcoin addresses are not supported: $address"
                     )
                 address.startsWith("1") -> P2PKH
                 address.startsWith("3") -> P2SH_P2WPKH
-                address.startsWith("bc1p") ->
-                    if (address.length == 62) P2TR
-                    else
-                        throw UnsupportedBtcAddressException(
-                            "Unsupported Bitcoin address format: $address"
-                        )
+                address.startsWith("bc1p") -> if (address.length == 62) P2TR else unsupported()
                 address.startsWith("bc1q") ->
                     when (address.length) {
                         42 -> P2WPKH
                         62 -> P2WSH
-                        else ->
-                            throw UnsupportedBtcAddressException(
-                                "Unsupported Bitcoin address format: $address"
-                            )
+                        else -> unsupported()
                     }
-                else ->
-                    throw UnsupportedBtcAddressException(
-                        "Unsupported Bitcoin address format: $address"
-                    )
+                else -> unsupported()
             }
+        }
     }
 }
 

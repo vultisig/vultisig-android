@@ -37,33 +37,22 @@ object QbtcHelper {
 
     private fun bech32Encode(hrp: String, data: ByteArray): String {
         val values = data.map { it.toInt() and 0xFF }
-        val checksum = bech32CreateChecksum(hrp, values)
-        val combined = values + checksum
-        val sb = StringBuilder(hrp)
-        sb.append('1')
-        for (v in combined) {
-            sb.append(BECH32_CHARSET[v])
+        val combined = values + bech32CreateChecksum(hrp, values)
+        return buildString {
+            append(hrp)
+            append('1')
+            combined.forEach { append(BECH32_CHARSET[it]) }
         }
-        return sb.toString()
     }
 
     private fun bech32CreateChecksum(hrp: String, data: List<Int>): List<Int> {
-        val values = bech32HrpExpand(hrp) + data + listOf(0, 0, 0, 0, 0, 0)
+        val values = bech32HrpExpand(hrp) + data + List(6) { 0 }
         val polymod = bech32Polymod(values) xor 1
         return (0 until 6).map { (polymod shr (5 * (5 - it))) and 31 }
     }
 
-    private fun bech32HrpExpand(hrp: String): List<Int> {
-        val result = mutableListOf<Int>()
-        for (c in hrp) {
-            result.add(c.code shr 5)
-        }
-        result.add(0)
-        for (c in hrp) {
-            result.add(c.code and 31)
-        }
-        return result
-    }
+    private fun bech32HrpExpand(hrp: String): List<Int> =
+        hrp.map { it.code shr 5 } + 0 + hrp.map { it.code and 31 }
 
     private fun bech32Polymod(values: List<Int>): Int {
         val gen = intArrayOf(0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3)
@@ -71,9 +60,9 @@ object QbtcHelper {
         for (v in values) {
             val top = chk shr 25
             chk = ((chk and 0x1ffffff) shl 5) xor v
-            for (i in gen.indices) {
+            gen.forEachIndexed { i, g ->
                 if ((top shr i) and 1 != 0) {
-                    chk = chk xor gen[i]
+                    chk = chk xor g
                 }
             }
         }

@@ -180,10 +180,9 @@ constructor(
     }
 
     fun toggle(key: String) {
-        if (key in selectedKeys) {
-            selectedKeys.remove(key)
-        } else if (selectedKeys.size < QbtcClaimConfig.MAX_CLAIM_UTXOS) {
-            selectedKeys.add(key)
+        when {
+            key in selectedKeys -> selectedKeys.remove(key)
+            selectedKeys.size < QbtcClaimConfig.MAX_CLAIM_UTXOS -> selectedKeys.add(key)
         }
         emitSelecting()
     }

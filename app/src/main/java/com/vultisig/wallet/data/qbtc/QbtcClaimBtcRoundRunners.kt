@@ -10,9 +10,11 @@ import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
 import com.vultisig.wallet.data.utils.compatibleDerivationPath
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.first
@@ -75,13 +77,13 @@ internal class QbtcClaimFastVaultRoundRunner
 constructor(
     private val sessionApi: SessionApi,
     private val encryption: Encryption,
-    private val vultiSignerRepository: com.vultisig.wallet.data.repositories.VultiSignerRepository,
+    private val vultiSignerRepository: VultiSignerRepository,
     private val discoverParticipants: DiscoverParticipantsUseCase,
 ) : QbtcClaimBtcRoundRunner {
 
     override suspend fun run(input: QbtcClaimBtcRoundInput): QbtcClaimBtcRoundResult {
         val serverUrl = Endpoints.VULTISIG_RELAY_URL
-        val sessionId = java.util.UUID.randomUUID().toString()
+        val sessionId = UUID.randomUUID().toString()
         val encryptionKeyHex = Utils.encryptionKeyHex
         val localPartyId = input.vault.localPartyID
 

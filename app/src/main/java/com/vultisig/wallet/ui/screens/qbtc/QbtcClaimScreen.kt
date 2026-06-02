@@ -1,5 +1,6 @@
 package com.vultisig.wallet.ui.screens.qbtc
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -452,7 +453,7 @@ private fun CenteredProgress(label: String) {
 }
 
 @Composable
-private fun ClaimSigningProgress(label: String, @androidx.annotation.DrawableRes logoRes: Int) {
+private fun ClaimSigningProgress(label: String, @DrawableRes logoRes: Int) {
     Column(
         modifier =
             Modifier.fillMaxSize()

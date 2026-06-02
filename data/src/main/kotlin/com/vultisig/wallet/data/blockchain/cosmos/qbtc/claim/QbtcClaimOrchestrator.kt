@@ -97,7 +97,7 @@ class QbtcClaimOrchestrator(
 
     private suspend fun runInternal(input: QbtcClaimRunInput) {
         val compressedPubkey =
-            runCatching { input.btcCoin.hexPublicKey.hexToByteArrayOrNull() }.getOrNull()
+            input.btcCoin.hexPublicKey.hexToByteArrayOrNull()
                 ?: throw QbtcClaimException(QbtcClaimError.INVALID_BTC_PUBLIC_KEY)
 
         // Cheap, fail-fast hashing — rejects schnorr / wrong-length keys before any network.

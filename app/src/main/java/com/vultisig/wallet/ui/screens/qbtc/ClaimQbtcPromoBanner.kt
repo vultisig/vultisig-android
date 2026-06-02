@@ -19,9 +19,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiSpacer
@@ -110,7 +113,7 @@ private fun QbtcCoinDecorations() {
 }
 
 @Composable
-private fun QbtcCoin(size: androidx.compose.ui.unit.Dp, rotation: Float, modifier: Modifier) {
+private fun QbtcCoin(size: Dp, rotation: Float, modifier: Modifier) {
     Image(
         painter = painterResource(R.drawable.qbtc),
         contentDescription = null,
@@ -128,12 +131,9 @@ internal fun ClaimQbtcBottomCta(onClaim: () -> Unit, modifier: Modifier = Modifi
                 .height(120.dp)
                 .background(
                     brush =
-                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                        Brush.verticalGradient(
                             colors =
-                                listOf(
-                                    androidx.compose.ui.graphics.Color.Transparent,
-                                    Theme.v2.colors.backgrounds.background,
-                                )
+                                listOf(Color.Transparent, Theme.v2.colors.backgrounds.background)
                         )
                 ),
     ) {
