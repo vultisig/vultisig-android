@@ -196,6 +196,10 @@ internal data class DepositFormUiModel(
     val totalGas: UiText = UiText.Empty,
     val estimatedFee: UiText = UiText.Empty,
     val removeLpPercent: Float = 0f,
+    // Slider-derived withdrawal fraction in basis points (0..10000). Stored so the submit path can
+    // reuse the exact value used to compute the displayed redeem amount, keeping the shown amount
+    // and the on-chain memo in sync at sub-percent granularity.
+    val removeLpBasisPoints: Int = 0,
     val removeLpCacaoDisplay: String = "",
 )
 
@@ -863,8 +867,9 @@ constructor(
         // Long.MAX_VALUE still move the slider and compute exact withdrawal amounts. `percent` is a
         // 0f..1f fraction; convert it to integer basis points (0..10000) to retain sub-percent
         // precision, then `units * bps / 10000`.
-        val basisPoints = (percent * 10_000).toInt().coerceIn(0, 10_000).toBigInteger()
-        val selectedUnits = availableUnits.multiply(basisPoints).divide(BigInteger.valueOf(10_000L))
+        val basisPoints = (percent * 10_000).toInt().coerceIn(0, 10_000)
+        val selectedUnits =
+            availableUnits.multiply(basisPoints.toBigInteger()).divide(BigInteger.valueOf(10_000L))
         val cacaoDisplay =
             RemoveLpCalculator.computeAmountDisplay(
                 selectedUnits = selectedUnits,
@@ -873,7 +878,13 @@ constructor(
                 decimals = s.removeLpDecimals,
             ) ?: return
         lpUnitsFieldState.setTextAndPlaceCursorAtEnd(selectedUnits.toString())
-        _state.update { it.copy(removeLpPercent = percent, removeLpCacaoDisplay = cacaoDisplay) }
+        _state.update {
+            it.copy(
+                removeLpPercent = percent,
+                removeLpBasisPoints = basisPoints,
+                removeLpCacaoDisplay = cacaoDisplay,
+            )
+        }
     }
 
     private suspend fun updateTokenAmount(
@@ -2077,11 +2088,17 @@ constructor(
         val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
 
         val s = state.value
-        val basisPoints = (s.removeLpPercent * 100).toInt()
+        // Reuse the exact basis points (0..10000) the slider used to compute the displayed redeem
+        // amount so the on-chain memo withdraws the same fraction the user saw.
+        val basisPoints = s.removeLpBasisPoints
 
-        validateBasisPoints(basisPoints)?.let { throw InvalidTransactionDataException(it) }
+        if (basisPoints <= 0 || basisPoints > 10_000) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.send_from_invalid_amount)
+            )
+        }
 
-        val memo = DepositMemo.RemoveLiquidity(poolId, basisPoints * 100)
+        val memo = DepositMemo.RemoveLiquidity(poolId, basisPoints)
 
         val specific =
             blockChainSpecificRepository.getSpecific(
