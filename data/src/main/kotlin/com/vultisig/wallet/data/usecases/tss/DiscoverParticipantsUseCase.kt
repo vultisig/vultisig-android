@@ -3,6 +3,7 @@ package com.vultisig.wallet.data.usecases.tss
 import com.vultisig.wallet.data.api.SessionApi
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -36,6 +37,8 @@ constructor(private val sessionApi: SessionApi) : DiscoverParticipantsUseCase {
                 cachedValue =
                     sessionApi.getParticipants(serverUrl, sessionId).filter { it != localPartyId }
                 emit(cachedValue)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "Error getting participants")
                 emit(cachedValue)
