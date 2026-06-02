@@ -17,6 +17,9 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.KeybaseAvatarService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.settings.AppCurrency
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -25,11 +28,14 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigDecimal
+import java.text.NumberFormat
 import java.time.Instant
+import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -47,6 +53,8 @@ internal class CosmosStakingPositionsViewModelTest {
     private val cosmosStakingService: CosmosStakingService = mockk()
     private val apyResolver: CosmosStakingAPYResolver = mockk(relaxed = true)
     private val keybaseAvatarService: KeybaseAvatarService = mockk(relaxed = true)
+    private val tokenPriceRepository: TokenPriceRepository = mockk(relaxed = true)
+    private val appCurrencyRepository: AppCurrencyRepository = mockk()
     private val navigator: Navigator<Destination> = mockk(relaxed = true)
 
     private val activeVal = "terravaloper1active"
@@ -113,6 +121,12 @@ internal class CosmosStakingPositionsViewModelTest {
                 communityTax = BigDecimal("0.02"),
             )
         coEvery { keybaseAvatarService.avatarUrl(any()) } returns "https://keybase.io/a.jpg"
+        // LUNA spot price = $0.058 → fiat = stakedAmount × 0.058, formatted in USD.
+        coEvery { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+        coEvery { appCurrencyRepository.getCurrencyFormat() } returns
+            NumberFormat.getCurrencyInstance(Locale.US)
+        coEvery { tokenPriceRepository.refresh(any()) } returns Unit
+        coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns BigDecimal("0.058")
     }
 
     @AfterEach
@@ -126,6 +140,8 @@ internal class CosmosStakingPositionsViewModelTest {
                 cosmosStakingService = cosmosStakingService,
                 apyResolver = apyResolver,
                 keybaseAvatarService = keybaseAvatarService,
+                tokenPriceRepository = tokenPriceRepository,
+                appCurrencyRepository = appCurrencyRepository,
                 navigator = navigator,
                 ioDispatcher = testDispatcher,
             )
@@ -190,6 +206,32 @@ internal class CosmosStakingPositionsViewModelTest {
         val active = model.state.value.positions.first { it.validatorAddress == activeVal }
         model.unstake(active)
         coVerify { navigator.route(any<Route.CosmosStakingUndelegate>()) }
+    }
+
+    @Test
+    fun `fiat values are resolved from spot price for banner total and rows`() = runTest {
+        val model = vm()
+        val s = model.state.value
+        // iOS parity: the banner shows the staked total in fiat (not the liquid balance), so it
+        // carries the same value as the Total Staked card. 4 LUNA × $0.058 = $0.232 → "$0.23".
+        assertEquals("$0.23", s.totalStakedFiat)
+        assertEquals(s.totalStakedFiat, s.totalAmountPrice)
+        // Per-row = each validator's staked amount × price (3 LUNA → $0.17, 1 LUNA → $0.06).
+        val active = s.positions.first { it.validatorAddress == activeVal }
+        val churned = s.positions.first { it.validatorAddress == churnedVal }
+        assertEquals("$0.17", active.stakedFiatDisplay)
+        assertEquals("$0.06", churned.stakedFiatDisplay)
+    }
+
+    @Test
+    fun `price cache miss degrades fiat to zero without erroring`() = runTest {
+        coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
+        val model = vm()
+        val s = model.state.value
+        assertEquals(null, s.errorMessage)
+        assertEquals(2, s.positions.size)
+        assertEquals("$0.00", s.totalStakedFiat)
+        assertEquals("$0.00", s.positions.first().stakedFiatDisplay)
     }
 
     @Test

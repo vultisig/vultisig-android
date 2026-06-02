@@ -161,7 +161,7 @@ internal fun CosmosStakingPositionsScreen(
                                 coinLogo = state.coinLogo,
                                 ticker = state.ticker,
                                 totalStaked = formatStakeAmount(state.totalStaked),
-                                totalFiat = state.totalAmountPrice,
+                                totalFiat = state.totalStakedFiat,
                                 hasClaimableRewards =
                                     state.positions.any { it.pendingReward > BigDecimal.ZERO },
                                 onClaim = viewModel::claimAll,
@@ -182,7 +182,7 @@ internal fun CosmosStakingPositionsScreen(
                                 PositionRow(
                                     position = position,
                                     ticker = state.ticker,
-                                    fiat = state.totalAmountPrice,
+                                    fiat = position.stakedFiatDisplay,
                                     onUnstake = { viewModel.unstake(position) },
                                     onMove = { viewModel.move(position) },
                                     onStakeMore = viewModel::stakeMore,

@@ -15,6 +15,8 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.KeybaseAvatarService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.getCoinLogo
+import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
@@ -25,6 +27,7 @@ import com.vultisig.wallet.ui.screens.v2.defi.model.PositionUiModelDialog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.text.NumberFormat
 import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -32,6 +35,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -46,8 +50,14 @@ internal data class CosmosStakingPositionsUiState(
     val errorMessage: String? = null,
     // DeFi-chrome state (balance banner + Staked tab + Manage Positions), mirroring Tron/Maya.
     val isBalanceVisible: Boolean = true,
-    /** Fiat total shown in the balance banner. No LUNA/LUNC spot feed yet → $0.00 (iOS parity). */
+    /**
+     * Fiat shown in the hero banner. Mirrors iOS `DefiBalanceService.cosmosStakingTotalBalance` —
+     * the chain's DeFi balance is the *staked* total in fiat (`stakedBalance × spot price`), not
+     * the liquid wallet balance — so it carries the same value as [totalStakedFiat].
+     */
     val totalAmountPrice: String = "$0.00",
+    /** Staked-total fiat shown on the Total Staked card — `totalStaked × spot price`. */
+    val totalStakedFiat: String = "$0.00",
     val selectedTab: DeFiTab = DeFiTab.STAKED,
     val showPositionSelectionDialog: Boolean = false,
     /** Single stake-position tile (LUNA / LUNC) shown in the Manage Positions sheet. */
@@ -88,6 +98,8 @@ constructor(
     private val cosmosStakingService: CosmosStakingService,
     private val apyResolver: CosmosStakingAPYResolver,
     private val keybaseAvatarService: KeybaseAvatarService,
+    private val tokenPriceRepository: TokenPriceRepository,
+    private val appCurrencyRepository: AppCurrencyRepository,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -207,6 +219,18 @@ constructor(
             val chainApy =
                 withContext(ioDispatcher) { apyResolver.chainApy(chain, entry.bondDenom) }
 
+            // Resolve the spot price so the banner, the Total Staked card, and each row can show
+            // fiat (iOS parity — the screen previously hardcoded $0.00). Price is cosmetic: a fetch
+            // failure degrades every fiat slot to a zero-formatted value rather than erroring.
+            val currency = appCurrencyRepository.currency.first()
+            val currencyFormat = appCurrencyRepository.getCurrencyFormat()
+            val price =
+                withContext(ioDispatcher) {
+                    runCatching { tokenPriceRepository.refresh(listOf(coin)) }
+                    runCatching { tokenPriceRepository.getCachedPrice(coin.id, currency) }
+                        .getOrNull()
+                } ?: BigDecimal.ZERO
+
             val positions =
                 delegations.map { delegation ->
                     buildRow(
@@ -219,16 +243,23 @@ constructor(
                         now = now,
                         chainApy = chainApy,
                         chain = chain,
+                        price = price,
+                        currencyFormat = currencyFormat,
                     )
                 }
 
             val totalStaked = positions.fold(BigDecimal.ZERO) { acc, p -> acc + p.stakedAmount }
+            // iOS parity: the DeFi banner shows the staked total in fiat (not the liquid wallet
+            // balance), so the banner and the Total Staked card carry the same value.
+            val totalStakedFiat = currencyFormat.format(totalStaked.multiply(price))
 
             _state.update {
                 it.copy(
                     positions = positions,
                     pendingUnbondings = unbondings,
                     totalStaked = totalStaked,
+                    totalStakedFiat = totalStakedFiat,
+                    totalAmountPrice = totalStakedFiat,
                     isLoading = false,
                 )
             }
@@ -302,9 +333,12 @@ constructor(
         now: Instant,
         chainApy: com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosChainApyData?,
         chain: Chain,
+        price: BigDecimal,
+        currencyFormat: NumberFormat,
     ): CosmosStakePositionRow {
         val raw = BigInteger(delegation.balance.amount).toBigDecimal().movePointLeft(decimals)
         val pendingReward = pendingRewardRaw.movePointLeft(decimals)
+        val stakedFiatDisplay = currencyFormat.format(raw.multiply(price))
 
         val status =
             when {
@@ -345,6 +379,7 @@ constructor(
             validatorMoniker = validator?.moniker.orEmpty(),
             validatorIdentity = validator?.identity,
             stakedAmount = raw,
+            stakedFiatDisplay = stakedFiatDisplay,
             pendingReward = pendingReward,
             apyPercent = apyPercent,
             validatorAvatarUrl = null,

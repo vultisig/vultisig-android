@@ -28,6 +28,12 @@ data class CosmosStakePositionRow(
      */
     val validatorIdentity: String?,
     val stakedAmount: BigDecimal,
+    /**
+     * Pre-formatted fiat value of [stakedAmount] (`stakedAmount × spot price`) in the user's
+     * currency — e.g. `"$0.35"`. Empty until the positions view-model resolves the price; a price
+     * cache miss formats zero rather than blocking the row.
+     */
+    val stakedFiatDisplay: String = "",
     val pendingReward: BigDecimal,
     /**
      * Fractional APY (`0.05` = 5%). Populated by [CosmosStakingAPYResolver.computeValidatorAPY]
