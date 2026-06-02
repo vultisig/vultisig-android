@@ -715,8 +715,21 @@ internal class SwapFormViewModelTest {
             advanceTimeBy(400)
             advanceUntilIdle()
 
-            // Only the final amount "100" should have been used for one quote fetch, and the
-            // spinner clears once it settles.
+            // Only the final amount "100" should have been used for one quote fetch (rapid edits
+            // are coalesced by the debounce), and the spinner clears once it settles.
+            coVerify(exactly = 1) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
             assertFalse(vm.uiState.value.isLoading)
         }
 
