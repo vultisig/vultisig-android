@@ -160,7 +160,12 @@ constructor(
 
     fun onForegroundBannerTapped() {
         val qrCodeData = _foregroundNotification.value?.qrCodeData ?: return
-        clearForegroundNotification()
+        // Do NOT clear the banner here. Clearing is bound to banner visibility, so an eager
+        // clear hides the banner before navigation lands — and if navigation is dropped (the
+        // user is inside a nested keysign/send flow), the user is left with no banner and no
+        // destination. The route-change observer in MainActivityContent clears the banner once
+        // Route.Keysign.Join / Keygen.Join is actually reached. Until then the banner stays so
+        // the signing request remains actionable; the user can also swipe it away to dismiss.
         onPushNotificationReceived(qrCodeData)
     }
 

@@ -157,4 +157,26 @@ internal class MainViewModelTest {
 
             assertNull(vm.foregroundNotification.value)
         }
+
+    @Test
+    fun `onForegroundBannerTapped keeps banner visible until navigation lands`() =
+        runTest(dispatcher) {
+            coEvery { vaultRepository.hasVaults() } returns true
+            coEvery { vaultRepository.getByEcdsa(any()) } returns null
+            coEvery { getKeysignTransactionSummary.invoke(any()) } returns null
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.onForegroundPushReceived("vultisig://qr-payload")
+            advanceUntilIdle()
+            assertNotNull(vm.foregroundNotification.value)
+
+            // Tapping must NOT clear the banner synchronously — the route observer clears it
+            // only once Keysign.Join / Keygen.Join is reached, so the request stays actionable
+            // even if navigation is dropped while inside a nested flow (issue #4623).
+            vm.onForegroundBannerTapped()
+
+            assertNotNull(vm.foregroundNotification.value)
+        }
 }
