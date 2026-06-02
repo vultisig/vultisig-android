@@ -174,10 +174,17 @@ private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
                 .clip(RoundedCornerShape(16.dp))
                 .background(
                     Brush.verticalGradient(
-                        listOf(QbtcHeroGlow.copy(alpha = 0.09f), QbtcHeroGlow.copy(alpha = 0f))
+                        listOf(
+                            Theme.v2.colors.alerts.info.copy(alpha = 0.09f),
+                            Theme.v2.colors.alerts.info.copy(alpha = 0f),
+                        )
                     )
                 )
-                .border(1.dp, QbtcHeroBorder.copy(alpha = 0.17f), RoundedCornerShape(16.dp))
+                .border(
+                    1.dp,
+                    Theme.v2.colors.primary.accent4.copy(alpha = 0.17f),
+                    RoundedCornerShape(16.dp),
+                )
     ) {
         Image(
             painter = painterResource(R.drawable.qbtc_claim_hero),
@@ -321,9 +328,6 @@ private fun QbtcClaimUtxoRow(
         }
     }
 }
-
-private val QbtcHeroGlow = Color(0xFF5FBFFF)
-private val QbtcHeroBorder = Color(0xFFB090F5)
 
 @Composable
 private fun DoneContent(state: QbtcClaimUiState.Done) {
