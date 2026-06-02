@@ -475,13 +475,22 @@ constructor(
                             }
 
                             is SwapQuote.SwapKit -> {
-                                // BTC PSBT, TRON (TronWeb object), SUI (PTB), TON (native
+                                // BTC/LTC segwit PSBT, DOGE/BCH/DASH legacy-P2PKH PSBT, ZEC
+                                // Sapling-v4 PSBT, TRON (TronWeb object), SUI (PTB), TON (native
                                 // transfer), XRP (deposit-only native Payment), and both Cardano
                                 // flows (deposit-only CARDANO + pre-built CARDANO_PREBUILT) are
                                 // wired with their per-chain signers/native paths. Guarded loudly
                                 // so an un-wired txType can't reach signing.
                                 require(
                                     quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_PSBT ||
+                                        quote.data.txType ==
+                                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_DOGE ||
+                                        quote.data.txType ==
+                                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_BCH ||
+                                        quote.data.txType ==
+                                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_DASH ||
+                                        quote.data.txType ==
+                                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_ZEC ||
                                         quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TRON ||
                                         quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_SUI ||
                                         quote.data.txType == SwapKitSwapPayloadJson.TX_TYPE_TON ||
