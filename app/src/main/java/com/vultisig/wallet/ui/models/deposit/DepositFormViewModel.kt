@@ -260,7 +260,7 @@ constructor(
 
     private var rujiMergeBalances = MutableStateFlow<List<MergeAccount>?>(null)
     private var rujiStakeBalances = MutableStateFlow<RujiStakeBalances?>(null)
-    private val planBtc = MutableStateFlow<Bitcoin.TransactionPlan?>(null)
+    private var planBtc: Bitcoin.TransactionPlan? = null
 
     val tokenAmountFieldState = TextFieldState()
     val fiatAmountFieldState = TextFieldState()
@@ -1179,6 +1179,7 @@ constructor(
             when {
                 inboundAddress == null -> InboundAddressResult.Unsupported
                 inboundAddress.halted ||
+                    inboundAddress.chainTradingPaused ||
                     inboundAddress.chainLPActionsPaused ||
                     inboundAddress.globalTradingPaused -> InboundAddressResult.Halted
                 else -> InboundAddressResult.Available(inboundAddress.address)
@@ -1702,11 +1703,16 @@ constructor(
                 )
 
         val thorAddress = thorAddressFieldState.text.toString()
+        if (thorAddress.isBlank()) {
+            throw InvalidTransactionDataException(
+                UiText.StringResource(R.string.thorchain_address_not_found_in_vault)
+            )
+        }
 
         // Invalidate any cached UTXO plan so a re-submitted deposit recomputes its Bitcoin
         // transaction plan (UTXO selection + fee) for the current amount/destination/token rather
         // than reusing a stale plan from a previous submit.
-        planBtc.value = null
+        planBtc = null
 
         val selectedAccount =
             getSelectedAccount()
@@ -1804,7 +1810,7 @@ constructor(
                 )
                 .let { specific ->
                     if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                        planBtc.value
+                        planBtc
                             ?: getBitcoinTransactionPlan(
                                     vaultId = vaultId,
                                     selectedToken = selectedToken,
@@ -1813,7 +1819,7 @@ constructor(
                                     specific = specific,
                                     memo = memo,
                                 )
-                                .also { plan -> planBtc.value = plan }
+                                .also { plan -> planBtc = plan }
 
                         selectUtxosIfNeeded(chain, specific)
                     } else {
@@ -2819,7 +2825,7 @@ constructor(
         specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
 
         val updatedUtxo =
-            planBtc.value?.utxosOrBuilderList?.map { planUtxo ->
+            planBtc?.utxosOrBuilderList?.map { planUtxo ->
                 UtxoInfo(
                     hash = planUtxo.outPoint.hash.toByteArray().reversedArray().toHexString(),
                     index = planUtxo.outPoint.index.toUInt(),
@@ -2843,7 +2849,7 @@ constructor(
                 )
             )
         }
-        if (planBtc.value?.error != SigningError.OK) {
+        if (planBtc?.error != SigningError.OK) {
             throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
         }
     }
