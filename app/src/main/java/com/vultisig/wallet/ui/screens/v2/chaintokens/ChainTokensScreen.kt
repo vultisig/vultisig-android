@@ -50,6 +50,7 @@ import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.ChainTokensViewModel
 import com.vultisig.wallet.ui.screens.ResourceTwoCardsRow
+import com.vultisig.wallet.ui.screens.qbtc.ClaimQbtcBottomCta
 import com.vultisig.wallet.ui.screens.qbtc.ClaimQbtcPromoBanner
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainAccount
 import com.vultisig.wallet.ui.screens.v2.chaintokens.components.ChainLogo
@@ -322,7 +323,14 @@ internal fun ChainTokensScreen(
                     }
                 }
 
-                BottomFadeEffect(modifier = Modifier.align(Alignment.BottomCenter))
+                if (uiModel.showClaimQbtcButton) {
+                    ClaimQbtcBottomCta(
+                        onClaim = onClaimQbtc,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                    )
+                } else {
+                    BottomFadeEffect(modifier = Modifier.align(Alignment.BottomCenter))
+                }
             }
         },
     )

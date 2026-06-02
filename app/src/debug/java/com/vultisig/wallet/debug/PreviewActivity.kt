@@ -162,6 +162,8 @@ class PreviewActivity : ComponentActivity() {
                     "universal_router_verify_after" ->
                         VerifyUniversalRouterPreview(expanded = true, useUrRows = true)
                     "qbtc_claim" -> QbtcClaimSelectingPreview()
+                    "btc_detail_claim" -> BtcDetailClaimPreview()
+                    "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -1398,6 +1400,100 @@ private fun ShareQrPreview(info: QrShareInfo) {
             modifier = Modifier.fillMaxWidth(),
         )
     }
+}
+
+/**
+ * Entry point A — the "Claim your QBTC" promo banner on the **Bitcoin** chain-detail screen.
+ * Renders the stateless [ChainTokensScreen] with a mocked Bitcoin [ChainTokensUiModel] and
+ * `showQbtcClaimBanner = true` so the banner appears below the Tokens tab header, above the token
+ * list. Used to capture the PR screenshot.
+ */
+@Composable
+private fun BtcDetailClaimPreview() {
+    com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen(
+        uiModel =
+            com.vultisig.wallet.ui.models.ChainTokensUiModel(
+                chainName = "Bitcoin",
+                chainAddress = "btc1qPgm5x8d3f4a2b9c0e1f2g3h4i5j6k97b454",
+                totalBalance = "$31,010.77",
+                chainLogo = R.drawable.bitcoin,
+                explorerURL = "https://mempool.space/",
+                showQbtcClaimBanner = true,
+                tokens =
+                    listOf(
+                        com.vultisig.wallet.ui.models.ChainTokenUiModel(
+                            id = "btc-1",
+                            name = "BTC",
+                            balance = "0.4372 BTC",
+                            fiatBalance = "$31,010.77",
+                            price = "$76,694.00",
+                            tokenLogo = R.drawable.bitcoin,
+                            chainLogo = R.drawable.bitcoin,
+                        )
+                    ),
+            ),
+        onBackClick = {},
+        onRefresh = {},
+        onShowSearchBar = {},
+        onHideSearchBar = {},
+        onSend = {},
+        onSwap = {},
+        onBuy = {},
+        onDeposit = {},
+        onReceive = {},
+        onHistory = {},
+        onSelectTokens = {},
+        onTokenClick = {},
+        onShowReviewPopUp = {},
+        onClaimQbtc = {},
+    )
+}
+
+/**
+ * Entry point B — the bottom "Claim QBTC" CTA on the **QBTC** chain-detail screen. Renders the
+ * stateless [ChainTokensScreen] with a mocked QBTC [ChainTokensUiModel] and `showClaimQbtcButton =
+ * true` so the gradient-backed pill is pinned near the bottom while the token list scrolls under
+ * it. Used to capture the PR screenshot.
+ */
+@Composable
+private fun QbtcDetailClaimPreview() {
+    com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen(
+        uiModel =
+            com.vultisig.wallet.ui.models.ChainTokensUiModel(
+                chainName = "Quantum Bitcoin",
+                chainAddress = "btc1qPgm5x8d3f4a2b9c0e1f2g3h4i5j6k97b454",
+                totalBalance = "$31,010.77",
+                chainLogo = R.drawable.qbtc,
+                explorerURL = "https://mempool.space/",
+                showClaimQbtcButton = true,
+                tokens =
+                    listOf(
+                        com.vultisig.wallet.ui.models.ChainTokenUiModel(
+                            id = "qbtc-1",
+                            name = "QBTC",
+                            balance = "0.4372 QBTC",
+                            fiatBalance = "$31,010.77",
+                            price = "$76,694.00",
+                            tokenLogo = R.drawable.qbtc,
+                            chainLogo = R.drawable.qbtc,
+                        )
+                    ),
+            ),
+        onBackClick = {},
+        onRefresh = {},
+        onShowSearchBar = {},
+        onHideSearchBar = {},
+        onSend = {},
+        onSwap = {},
+        onBuy = {},
+        onDeposit = {},
+        onReceive = {},
+        onHistory = {},
+        onSelectTokens = {},
+        onTokenClick = {},
+        onShowReviewPopUp = {},
+        onClaimQbtc = {},
+    )
 }
 
 @Composable
