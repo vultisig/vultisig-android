@@ -181,6 +181,13 @@ constructor(
         if (amountDecimal == null || amountDecimal <= BigDecimal.ZERO) {
             return setError("Enter a positive amount to delegate")
         }
+        // Guard the headroom-aware stakeable balance, mirroring the undelegate / redelegate flows.
+        // On
+        // a balance-cache miss `stakeableBalance` is zero, so an over-balance delegate is rejected
+        // here instead of burning an MPC ceremony on an on-chain insufficient-funds rejection.
+        if (amountDecimal > currentState.stakeableBalance) {
+            return setError("Amount exceeds your available balance")
+        }
 
         viewModelScope.safeLaunch(
             onError = { e -> setError(e.message ?: "Failed to build delegate transaction") }

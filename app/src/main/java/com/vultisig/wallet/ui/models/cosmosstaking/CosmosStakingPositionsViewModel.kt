@@ -133,13 +133,15 @@ constructor(
             val coin = coin ?: return@safeLaunch
             _state.update { it.copy(isLoading = true, errorMessage = null) }
 
-            // Parallel fan-out — same shape as iOS `refresh(address:decimals:)`.
-            val (delegations, unbondings, rewards, validators) =
+            // Parallel fan-out — same shape as iOS `refresh(address:decimals:)`. Delegations is the
+            // load-bearing read and keeps its [Result] so a failure surfaces an error banner (iOS
+            // sets `self.error` on this branch alone); unbondings / rewards / validators degrade
+            // silently to empty so a transient outage on any of them just hides that sub-row.
+            val (delegationsResult, unbondings, rewards, validators) =
                 withContext(ioDispatcher) {
                     val delegationsDeferred = async {
                         runCatching { cosmosStakingService.fetchDelegations(chain, coin.address) }
                             .also { it.exceptionOrNull()?.let { Timber.w(it, "delegations") } }
-                            .getOrDefault(emptyList())
                     }
                     val unbondingsDeferred = async {
                         runCatching {
@@ -166,6 +168,17 @@ constructor(
                         rewardsDeferred.await(),
                         validatorsDeferred.await(),
                     )
+                }
+
+            // A failed delegations read must not be swallowed into an empty positions view — a
+            // vault
+            // with active stake would falsely render the empty state on a transient LCD blip.
+            // Surface
+            // the error so the user sees a retry instead of a silent "no positions".
+            val delegations =
+                delegationsResult.getOrElse {
+                    _state.update { it.copy(isLoading = false) }
+                    return@safeLaunch setError("Failed to load staking positions")
                 }
 
             val entry = CosmosStakingConfig.entryFor(chain)

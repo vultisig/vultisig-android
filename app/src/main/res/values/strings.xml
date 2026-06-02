@@ -1303,6 +1303,7 @@
     <string name="cosmos_staking_validator_active">Active</string>
     <string name="cosmos_staking_validator_churned_out">Churned Out</string>
     <string name="cosmos_staking_validator_picker">Validator</string>
+    <string name="cosmos_staking_validators">Validators</string>
     <string name="cosmos_staking_pick_destination">Pick destination</string>
     <string name="cosmos_staking_pick_destination_validator">Pick a destination validator</string>
     <string name="cosmos_staking_continue">Continue</string>

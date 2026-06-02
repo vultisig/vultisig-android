@@ -1,10 +1,8 @@
 package com.vultisig.wallet.data.blockchain.cosmos.staking
 
-import java.security.MessageDigest
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -301,102 +299,6 @@ class CosmosStakingHelperTests {
         assertEquals(FX.DENOM, ProtoParser.string(1, coin))
         assertEquals(FX.FEE_AMOUNT.toString(), ProtoParser.string(2, coin))
         assertEquals(FX.GAS_LIMIT, ProtoParser.varint(2, fee))
-    }
-
-    // MARK: - SignDoc
-
-    @Test
-    fun `SignDoc bytes change when account number changes`() {
-        val body =
-            CosmosStakingHelper.buildTxBodyMulti(
-                listOf(
-                    CosmosStakingHelper.encodeDelegate(
-                        FX.DELEGATOR,
-                        FX.VALIDATOR,
-                        FX.AMOUNT,
-                        FX.DENOM,
-                    )
-                )
-            )
-        val authInfo =
-            CosmosStakingHelper.buildAuthInfo(
-                FX.PUBKEY,
-                FX.SEQUENCE,
-                FX.GAS_LIMIT,
-                FX.DENOM,
-                FX.FEE_AMOUNT,
-            )
-        val a = CosmosStakingHelper.buildSignDoc(body, authInfo, FX.CHAIN_ID, FX.ACCOUNT_NUMBER)
-        val b = CosmosStakingHelper.buildSignDoc(body, authInfo, FX.CHAIN_ID, FX.ACCOUNT_NUMBER + 1)
-        assertNotEquals(a.bytes.toList(), b.bytes.toList())
-        assertNotEquals(a.hashHex, b.hashHex)
-    }
-
-    @Test
-    fun `SignDoc hash is SHA-256 of bytes`() {
-        val body =
-            CosmosStakingHelper.buildTxBodyMulti(
-                listOf(
-                    CosmosStakingHelper.encodeDelegate(
-                        FX.DELEGATOR,
-                        FX.VALIDATOR,
-                        FX.AMOUNT,
-                        FX.DENOM,
-                    )
-                )
-            )
-        val authInfo =
-            CosmosStakingHelper.buildAuthInfo(
-                FX.PUBKEY,
-                FX.SEQUENCE,
-                FX.GAS_LIMIT,
-                FX.DENOM,
-                FX.FEE_AMOUNT,
-            )
-        val doc = CosmosStakingHelper.buildSignDoc(body, authInfo, FX.CHAIN_ID, FX.ACCOUNT_NUMBER)
-        assertEquals(64, doc.hashHex.length)
-        assertEquals(doc.hashHex.lowercase(), doc.hashHex)
-        val expected =
-            MessageDigest.getInstance("SHA-256").digest(doc.bytes).joinToString("") {
-                "%02x".format(it.toInt() and 0xFF)
-            }
-        assertEquals(expected, doc.hashHex)
-    }
-
-    @Test
-    fun `SignDoc is deterministic`() {
-        val msg =
-            CosmosStakingHelper.encodeDelegate(FX.DELEGATOR, FX.VALIDATOR, FX.AMOUNT, FX.DENOM)
-        val body = CosmosStakingHelper.buildTxBodyMulti(listOf(msg))
-        val authInfo =
-            CosmosStakingHelper.buildAuthInfo(
-                FX.PUBKEY,
-                FX.SEQUENCE,
-                FX.GAS_LIMIT,
-                FX.DENOM,
-                FX.FEE_AMOUNT,
-            )
-        val a = CosmosStakingHelper.buildSignDoc(body, authInfo, FX.CHAIN_ID, FX.ACCOUNT_NUMBER)
-        val b = CosmosStakingHelper.buildSignDoc(body, authInfo, FX.CHAIN_ID, FX.ACCOUNT_NUMBER)
-        assertContentEquals(a.bytes, b.bytes)
-        assertEquals(a.hashHex, b.hashHex)
-    }
-
-    @Test
-    fun `Hex digest is exactly 64 chars and all-lowercase`() {
-        val msg =
-            CosmosStakingHelper.encodeDelegate(FX.DELEGATOR, FX.VALIDATOR, FX.AMOUNT, FX.DENOM)
-        val body = CosmosStakingHelper.buildTxBodyMulti(listOf(msg))
-        val authInfo =
-            CosmosStakingHelper.buildAuthInfo(
-                FX.PUBKEY,
-                FX.SEQUENCE,
-                FX.GAS_LIMIT,
-                FX.DENOM,
-                FX.FEE_AMOUNT,
-            )
-        val doc = CosmosStakingHelper.buildSignDoc(body, authInfo, FX.CHAIN_ID, FX.ACCOUNT_NUMBER)
-        assertTrue(doc.hashHex.all { it.isDigit() || it in 'a'..'f' })
     }
 
     // MARK: - Proto wire-format parser (test-only)

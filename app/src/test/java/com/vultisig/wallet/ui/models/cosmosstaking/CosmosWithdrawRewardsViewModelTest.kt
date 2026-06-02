@@ -168,6 +168,21 @@ internal class CosmosWithdrawRewardsViewModelTest {
     }
 
     @Test
+    fun `rewards fetch failure surfaces an error instead of a false empty claim screen`() =
+        runTest {
+            // Entry to this screen is gated on the positions card already showing rewards above
+            // zero, so swallowing a transient rewards-fetch failure to an empty list would render a
+            // false "no rewards" with no retry. The failure must surface as an error instead.
+            coEvery { cosmosStakingService.fetchDelegatorRewards(any(), any()) } throws
+                RuntimeException("LCD 503")
+            val model = vm()
+            val s = model.state.value
+            assertEquals(true, s.candidates.isEmpty())
+            assertFalse(s.isLoading)
+            assertTrue(s.errorMessage != null)
+        }
+
+    @Test
     fun `insufficient balance disables the form`() = runTest {
         coEvery { balanceRepository.getCachedTokenBalanceAndPrice(any(), any()) } returns
             TokenBalanceAndPrice(

@@ -1,7 +1,6 @@
 package com.vultisig.wallet.data.blockchain.cosmos.staking
 
 import java.io.ByteArrayOutputStream
-import java.security.MessageDigest
 
 /**
  * Pure stateless byte-builder for Cosmos-SDK x/staking + x/distribution messages.
@@ -27,16 +26,6 @@ object CosmosStakingHelper {
      * reserved for legacy hardware paths and not exercised here.
      */
     private const val SIGN_MODE_DIRECT: Long = 1L
-
-    data class SignDocArtifacts(val bytes: ByteArray, val hashHex: String) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is SignDocArtifacts) return false
-            return bytes.contentEquals(other.bytes) && hashHex == other.hashHex
-        }
-
-        override fun hashCode(): Int = 31 * bytes.contentHashCode() + hashHex.hashCode()
-    }
 
     /**
      * Encodes a `MsgDelegate` into `Any { type_url, value }`. Wire shape of `value`: `{
@@ -168,28 +157,6 @@ object CosmosStakingHelper {
         return authInfo.toByteArray()
     }
 
-    /**
-     * Builds the SignDoc bytes and returns them alongside their SHA-256 hex digest — the digest is
-     * the pre-image hash that the MPC layer signs.
-     *
-     * SignDoc wire shape: `{ body_bytes(1), auth_info_bytes(2), chain_id(3), account_number(4) }`.
-     */
-    fun buildSignDoc(
-        bodyBytes: ByteArray,
-        authInfoBytes: ByteArray,
-        chainId: String,
-        accountNumber: Long,
-    ): SignDocArtifacts {
-        val signDoc = ByteArrayOutputStream()
-        signDoc.appendProtoBytes(1, bodyBytes)
-        signDoc.appendProtoBytes(2, authInfoBytes)
-        signDoc.appendProtoString(3, chainId)
-        signDoc.appendProtoVarint(4, accountNumber)
-        val bytes = signDoc.toByteArray()
-        val digest = MessageDigest.getInstance("SHA-256").digest(bytes)
-        return SignDocArtifacts(bytes = bytes, hashHex = digest.toHexLowercase())
-    }
-
     /** `Coin` wire shape: `{ denom(1), amount(2) }`. */
     private fun encodeCoin(denom: String, amount: String): ByteArray {
         val coin = ByteArrayOutputStream()
@@ -205,17 +172,6 @@ object CosmosStakingHelper {
         anyMsg.appendProtoBytes(2, value)
         return anyMsg.toByteArray()
     }
-
-    private fun ByteArray.toHexLowercase(): String =
-        buildString(size * 2) {
-            for (byte in this@toHexLowercase) {
-                val v = byte.toInt() and 0xFF
-                append(HEX_CHARS[v ushr 4])
-                append(HEX_CHARS[v and 0x0F])
-            }
-        }
-
-    private const val HEX_CHARS = "0123456789abcdef"
 }
 
 /**

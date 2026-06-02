@@ -1261,6 +1261,7 @@
     <string name="cosmos_staking_validator_active">Aktivan</string>
     <string name="cosmos_staking_validator_churned_out">Isključen</string>
     <string name="cosmos_staking_validator_picker">Validator</string>
+    <string name="cosmos_staking_validators">Validatori</string>
     <string name="cosmos_staking_pick_destination">Odaberi odredište</string>
     <string name="cosmos_staking_pick_destination_validator">Odaberi odredišni validator</string>
     <string name="cosmos_staking_continue">Nastavi</string>

@@ -193,6 +193,32 @@ internal class CosmosStakingPositionsViewModelTest {
     }
 
     @Test
+    fun `delegations fetch failure surfaces an error instead of empty positions`() = runTest {
+        // A transient LCD failure on the load-bearing delegations read must not be swallowed into a
+        // false "no positions" empty state — it has to surface an error so the user sees a retry.
+        coEvery { cosmosStakingService.fetchDelegations(any(), any()) } throws
+            RuntimeException("LCD 503")
+        val model = vm()
+        val s = model.state.value
+        assertNotNull(s.errorMessage)
+        assertEquals(true, s.positions.isEmpty())
+        assertEquals(false, s.isLoading)
+    }
+
+    @Test
+    fun `rewards fetch failure degrades silently to zero pending reward`() = runTest {
+        // Unlike delegations, a rewards-read failure degrades per-row: the position still renders
+        // with zero pending reward rather than dropping the row or erroring the whole view.
+        coEvery { cosmosStakingService.fetchDelegatorRewards(any(), any()) } throws
+            RuntimeException("LCD 503")
+        val model = vm()
+        val s = model.state.value
+        assertEquals(2, s.positions.size)
+        val active = s.positions.first { it.validatorAddress == activeVal }
+        assertEquals(0, BigDecimal.ZERO.compareTo(active.pendingReward))
+    }
+
+    @Test
     fun `unbonding validator disables actions`() = runTest {
         coEvery { cosmosStakingService.fetchUnbondingDelegations(any(), any()) } returns
             listOf(

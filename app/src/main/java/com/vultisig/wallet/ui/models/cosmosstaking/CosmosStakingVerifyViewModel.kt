@@ -183,19 +183,27 @@ constructor(
                         resolve(payload.validatorDstAddress, byAddress),
                     ),
                 )
-            is CosmosStakingPayload.WithdrawRewards -> {
-                val value =
-                    if (payload.validators.size == 1) resolve(payload.validators.first(), byAddress)
-                    else null
-                if (value != null)
-                    listOf(
-                        CosmosStakingVerifyValidatorRow(
-                            R.string.cosmos_staking_validator_picker,
-                            value,
+            is CosmosStakingPayload.WithdrawRewards ->
+                when (payload.validators.size) {
+                    0 -> emptyList()
+                    1 ->
+                        listOf(
+                            CosmosStakingVerifyValidatorRow(
+                                R.string.cosmos_staking_validator_picker,
+                                resolve(payload.validators.first(), byAddress),
+                            )
                         )
-                    )
-                else emptyList()
-            }
+                    // A batched claim signs N withdraw msgs in one ceremony — show the validator
+                    // count so the user isn't signing a multi-msg batch blind (iOS renders a
+                    // "Validators: N" count row rather than dropping the row entirely).
+                    else ->
+                        listOf(
+                            CosmosStakingVerifyValidatorRow(
+                                R.string.cosmos_staking_validators,
+                                payload.validators.size.toString(),
+                            )
+                        )
+                }
             null -> emptyList()
         }
 

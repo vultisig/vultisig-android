@@ -277,16 +277,22 @@ constructor(
             // Sequential fetches — the LCD is fast enough that parallel fan-out's complexity
             // isn't worth it here; the positions view (which the user lands on first) already
             // hits these endpoints in parallel.
+            // Rewards is the load-bearing read here — entry to this screen is gated on the
+            // positions
+            // card already showing rewards above zero, so swallowing a transient failure to an
+            // empty
+            // list would render a false "no rewards" with no retry. Surface the error instead.
             val rewards =
                 withContext(ioDispatcher) {
-                    runCatching {
+                        runCatching {
                             cosmosStakingService.fetchDelegatorRewards(chain, nativeCoin.address)
                         }
-                        .getOrDefault(
-                            com.vultisig.wallet.data.blockchain.cosmos.staking
-                                .CosmosDelegatorRewards(emptyList(), emptyList())
-                        )
-                }
+                    }
+                    .getOrElse {
+                        Timber.w(it, "Failed to fetch delegator rewards")
+                        _state.update { s -> s.copy(isLoading = false) }
+                        return@safeLaunch setError("Failed to load rewards")
+                    }
             val validators =
                 withContext(ioDispatcher) {
                     runCatching { cosmosStakingService.fetchValidators(chain) }

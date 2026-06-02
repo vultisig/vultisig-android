@@ -67,12 +67,17 @@ class CosmosStakingConfigTests {
 
     @Test
     fun `Convenience accessors delegate to the table entry`() {
-        assertEquals("phoenix-1", CosmosStakingConfig.chainIdFor(Chain.Terra))
-        assertEquals("uluna", CosmosStakingConfig.bondDenomFor(Chain.Terra))
-        assertEquals("uluna", CosmosStakingConfig.feeDenomFor(Chain.Terra))
         assertEquals("terravaloper", CosmosStakingConfig.valoperHrpFor(Chain.Terra))
-        assertEquals(300_000L, CosmosStakingConfig.gasLimitFor(Chain.Terra))
         assertEquals(7_500L, CosmosStakingConfig.feeAmountFor(Chain.Terra))
         assertEquals(21, CosmosStakingConfig.unbondingDaysFor(Chain.Terra))
+    }
+
+    @Test
+    fun `Table entry exposes the expected Terra config`() {
+        val entry = CosmosStakingConfig.entryFor(Chain.Terra)
+        assertEquals("phoenix-1", entry.chainId)
+        assertEquals("uluna", entry.bondDenom)
+        assertEquals("uluna", entry.feeDenom)
+        assertEquals(300_000L, entry.gasLimit)
     }
 }

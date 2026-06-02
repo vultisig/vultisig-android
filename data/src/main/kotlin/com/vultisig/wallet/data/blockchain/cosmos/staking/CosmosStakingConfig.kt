@@ -54,15 +54,7 @@ object CosmosStakingConfig {
 
     fun isStakingSupported(chain: Chain): Boolean = table.containsKey(chain)
 
-    fun chainIdFor(chain: Chain): String = entryFor(chain).chainId
-
-    fun bondDenomFor(chain: Chain): String = entryFor(chain).bondDenom
-
-    fun feeDenomFor(chain: Chain): String = entryFor(chain).feeDenom
-
     fun valoperHrpFor(chain: Chain): String = entryFor(chain).valoperHrp
-
-    fun gasLimitFor(chain: Chain): Long = entryFor(chain).gasLimit
 
     fun feeAmountFor(chain: Chain): Long = entryFor(chain).feeAmount
 
