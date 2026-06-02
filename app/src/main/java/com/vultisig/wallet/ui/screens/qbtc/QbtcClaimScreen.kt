@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,13 +20,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
@@ -40,8 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -52,14 +52,20 @@ import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimAmountForm
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.ui.components.CopyIcon
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.inputs.VsTextInputField
+import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
+import com.vultisig.wallet.ui.components.rive.RiveAnimation
+import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimViewModel
+import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -89,7 +95,7 @@ internal fun QbtcClaimScreen(
     var passwordPrompt by remember { mutableStateOf(false) }
 
     if (passwordPrompt) {
-        FastVaultPasswordDialog(
+        FastVaultPasswordSheet(
             onDismiss = { passwordPrompt = false },
             onConfirm = {
                 passwordPrompt = false
@@ -120,7 +126,10 @@ internal fun QbtcClaimScreen(
             is QbtcClaimUiState.Selecting -> SelectingContent(state, onToggle)
             is QbtcClaimUiState.Pairing -> PairingContent(state)
             is QbtcClaimUiState.Signing ->
-                CenteredProgress(stringResource(R.string.qbtc_claim_proving))
+                ClaimSigningProgress(
+                    label = stringResource(R.string.qbtc_claim_proving),
+                    logoRes = R.drawable.qbtc,
+                )
             is QbtcClaimUiState.Done -> DoneContent(state)
             is QbtcClaimUiState.Failed -> FailedContent(state.error, onRetry)
         }
@@ -169,10 +178,14 @@ private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
                 )
                 .border(1.dp, QbtcHeroBorder.copy(alpha = 0.17f), RoundedCornerShape(16.dp))
     ) {
+        // Figma `imgFrame1000005808`: gold coin + concentric rings + soft glow,
+        // overflowing the top-right of the 118dp-tall card. The asset bakes in
+        // the 0.6 opacity and rings, so it is placed directly. Figma: 200.78w x
+        // 206h, offset left 175 / top -17 within a 344w card.
         Image(
-            painter = painterResource(R.drawable.qbtc),
+            painter = painterResource(R.drawable.qbtc_claim_hero),
             contentDescription = null,
-            modifier = Modifier.align(Alignment.TopEnd).size(200.dp).offset(x = 36.dp, y = (-26).dp),
+            modifier = Modifier.align(Alignment.TopEnd).size(201.dp).offset(x = 32.dp, y = (-17).dp),
         )
         Column(
             verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -194,7 +207,13 @@ private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
 
 @Composable
 private fun ClaimTabHeader() {
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    // Figma: "Claim" tab (Body S Medium) with a short accent underline matching
+    // the text width (iOS sizes the rule to the label via fixedSize). The Column
+    // wraps its content width so the underline tracks the label, not the screen.
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier.width(IntrinsicSize.Min),
+    ) {
         Text(
             text = stringResource(R.string.qbtc_claim_tab),
             style = Theme.brockmann.body.s.medium,
@@ -202,7 +221,7 @@ private fun ClaimTabHeader() {
         )
         Box(
             modifier =
-                Modifier.width(48.dp).height(1.5.dp).background(Theme.v2.colors.primary.accent4)
+                Modifier.fillMaxWidth().height(1.5.dp).background(Theme.v2.colors.primary.accent4)
         )
     }
 }
@@ -230,12 +249,22 @@ private fun QbtcClaimDescription() {
 
 @Composable
 private fun QbtcClaimCheckbox(checked: Boolean) {
+    // Figma checkbox: selected = green/teal ring + check; unselected = empty
+    // ring. Mirrors iOS (alertSuccess ring + faint fill when selected,
+    // textTertiary @0.6 otherwise), 24dp circle, 1.5dp ring.
     val ringColor =
         if (checked) Theme.v2.colors.alerts.success
-        else Theme.v2.colors.text.tertiary.copy(alpha = 0.5f)
+        else Theme.v2.colors.text.tertiary.copy(alpha = 0.6f)
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.size(24.dp).clip(CircleShape).border(1.5.dp, ringColor, CircleShape),
+        modifier =
+            Modifier.size(24.dp)
+                .clip(CircleShape)
+                .background(
+                    if (checked) Theme.v2.colors.alerts.success.copy(alpha = 0.12f)
+                    else Color.Transparent
+                )
+                .border(1.5.dp, ringColor, CircleShape),
     ) {
         if (checked) {
             Icon(
@@ -432,6 +461,46 @@ private fun CenteredProgress(label: String) {
     }
 }
 
+/**
+ * Signing/proving progress for the claim flow. Mirrors iOS, which renders the QBTC coin logo above
+ * the in-progress indicator (`SendCryptoKeysignView` with `coinLogo`). Structurally echoes
+ * [VsSigningProgressIndicator] but stacks the coin logo above the Rive spinner so the user sees
+ * what is being claimed.
+ */
+@Composable
+private fun ClaimSigningProgress(label: String, @androidx.annotation.DrawableRes logoRes: Int) {
+    Column(
+        modifier =
+            Modifier.fillMaxSize()
+                .background(color = Theme.v2.colors.backgrounds.primary)
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        UiSpacer(weight = 1f)
+
+        Image(
+            painter = painterResource(logoRes),
+            contentDescription = null,
+            modifier = Modifier.size(72.dp).clip(CircleShape),
+        )
+
+        UiSpacer(24.dp)
+
+        RiveAnimation(animation = R.raw.riv_connecting_with_server, modifier = Modifier.size(24.dp))
+
+        UiSpacer(16.dp)
+
+        Text(
+            text = label,
+            color = Theme.v2.colors.text.primary,
+            style = Theme.brockmann.headings.title2,
+            textAlign = TextAlign.Center,
+        )
+
+        UiSpacer(weight = 1f)
+    }
+}
+
 @Composable
 private fun PairingContent(state: QbtcClaimUiState.Pairing) {
     Column(
@@ -469,30 +538,64 @@ private fun PairingContent(state: QbtcClaimUiState.Pairing) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun FastVaultPasswordDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var password by remember { mutableStateOf("") }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.qbtc_claim_password_title)) },
-        text = {
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+private fun FastVaultPasswordSheet(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
+    val passwordFieldState = remember { TextFieldState() }
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+
+    val submit = { onConfirm(passwordFieldState.text.toString()) }
+
+    V2BottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            UiSpacer(size = 32.dp)
+
+            UiIcon(
+                drawableResId = R.drawable.focus_lock,
+                size = 32.dp,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                tint = Theme.v2.colors.primary.accent4,
             )
-        },
-        confirmButton = {
-            TextButton(enabled = password.isNotEmpty(), onClick = { onConfirm(password) }) {
-                Text(stringResource(R.string.qbtc_claim_title))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.qbtc_claim_cancel)) }
-        },
-    )
+
+            UiSpacer(size = 10.dp)
+
+            Text(
+                text = stringResource(R.string.qbtc_claim_password_title),
+                color = Theme.v2.colors.text.primary,
+                style = Theme.brockmann.headings.title3,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+
+            UiSpacer(12.dp)
+            FadingHorizontalDivider()
+            UiSpacer(size = 20.dp)
+
+            LaunchedEffect(Unit) { focusRequester.requestFocus() }
+
+            VsTextInputField(
+                textFieldState = passwordFieldState,
+                hint = stringResource(R.string.backup_password_screen_enter_password),
+                type =
+                    VsTextInputFieldType.Password(
+                        isVisible = isPasswordVisible,
+                        onVisibilityClick = { isPasswordVisible = !isPasswordVisible },
+                    ),
+                focusRequester = focusRequester,
+                imeAction = ImeAction.Go,
+                onKeyboardAction = { submit() },
+                invisibleIcon = R.drawable.eye_closed,
+            )
+
+            UiSpacer(size = 16.dp)
+
+            VsButton(
+                label = stringResource(R.string.qbtc_claim_title),
+                onClick = submit,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
 }
 
 @Composable
