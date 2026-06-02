@@ -287,13 +287,6 @@ internal fun ChainTokensScreen(
                         searchTextFieldState = uiModel.searchTextFieldState,
                     )
 
-                    if (uiModel.showQbtcClaimBanner) {
-                        ClaimQbtcPromoBanner(
-                            onClaim = onClaimQbtc,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        )
-                    }
-
                     TopShineContainer(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         LazyColumn {
                             itemsIndexed(items = uiModel.tokens, key = { _, token -> token.id }) {
@@ -320,6 +313,15 @@ internal fun ChainTokensScreen(
                                 }
                             }
                         }
+                    }
+
+                    // Promo banner sits BELOW the asset list (Bitcoin token first, then the
+                    // "Claim your QBTC" banner), matching Figma 75201:107954.
+                    if (uiModel.showQbtcClaimBanner) {
+                        ClaimQbtcPromoBanner(
+                            onClaim = onClaimQbtc,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
                     }
                 }
 
