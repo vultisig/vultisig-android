@@ -298,8 +298,16 @@ internal class SwapKitZcashSigner(
             (0L until inCount).map {
                 val prevBytes = cursor.readBytes(32)
                 val prevIndex = cursor.readUInt32LE()
+                // Unsigned-tx inputs must carry empty scriptSigs; reject a non-empty one rather
+                // than
+                // silently skip it (the frozen plan rebuilds the tx from these fields, so dropped
+                // bytes would change the broadcast tx_id the route is tracked by).
                 val sigLen = cursor.readCompactSize()
-                cursor.readBytes(cursor.asLength(sigLen))
+                if (sigLen != 0L) {
+                    throw SwapKitZcashSignerException(
+                        "SwapKit ZEC unsigned-tx input #$it scriptSig must be empty"
+                    )
+                }
                 val sequence = cursor.readUInt32LE()
                 ParsedSaplingTxInput(prevBytes, prevIndex, sequence)
             }
@@ -323,6 +331,12 @@ internal class SwapKitZcashSigner(
             throw SwapKitZcashSignerException(
                 "SwapKit ZEC PSBT carries a shielded bundle; only transparent-only txs are supported"
             )
+        }
+        // Transparent-only Sapling v4 ends right after the (all-zero) shielded counts — there is no
+        // joinSplit/binding-sig payload. Trailing bytes would be dropped from the rebuilt tx and
+        // diverge it from the quoted PSBT body, so consume the body exactly.
+        if (!cursor.isAtEnd) {
+            throw SwapKitZcashSignerException("SwapKit ZEC unsigned-tx body has trailing bytes")
         }
         return ParsedSaplingTx(inputs, outputs)
     }

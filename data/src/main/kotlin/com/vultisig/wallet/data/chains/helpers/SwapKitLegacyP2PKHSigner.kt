@@ -330,8 +330,15 @@ internal class SwapKitLegacyP2PKHSigner(
             (0L until inCount).map {
                 val prevBytes = cursor.readBytes(32) // internal little-endian wire order
                 val prevIndex = cursor.readUInt32LE()
+                // A PSBT's unsigned tx must carry empty scriptSigs. Reject a non-empty one rather
+                // than silently skip it — the frozen plan rebuilds the tx from these parsed fields,
+                // so dropped bytes would change the broadcast tx_id the route is tracked by.
                 val scriptSigLen = cursor.readCompactSize()
-                cursor.readBytes(cursor.asLength(scriptSigLen)) // empty in unsigned tx
+                if (scriptSigLen != 0L) {
+                    throw SwapKitLegacyP2PKHSignerException(
+                        "SwapKit PSBT unsigned-tx input #$it scriptSig must be empty"
+                    )
+                }
                 val sequence = cursor.readUInt32LE()
                 ParsedLegacyTxInput(prevBytes, prevIndex, sequence)
             }
@@ -343,6 +350,13 @@ internal class SwapKitLegacyP2PKHSigner(
                 LegacyP2PKHOutput(amount, cursor.readBytes(cursor.asLength(scriptLen)))
             }
         cursor.readUInt32LE() // locktime
+        // The unsigned-tx body must consume exactly; trailing bytes (e.g. a stray BIP-144 witness
+        // flag) would be silently dropped from the rebuilt tx, diverging it from the PSBT body.
+        if (!cursor.isAtEnd) {
+            throw SwapKitLegacyP2PKHSignerException(
+                "SwapKit PSBT unsigned-tx body has trailing bytes"
+            )
+        }
         return ParsedLegacyTx(inputs, outputs)
     }
 

@@ -93,6 +93,35 @@ class SwapKitZcashSignerTest {
     }
 
     @Test
+    fun `rejects an unsigned-tx input carrying a non-empty scriptSig`() {
+        val psbt =
+            encodeSaplingPsbt(
+                inputs = listOf(saplingIn(amount = 100_000, unsignedScriptSigHex = "ab")),
+                outputs = listOf(SaplingOut(99_000, p2pkh("22".repeat(20)))),
+            )
+        val e =
+            assertThrows(SwapKitZcashSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "")
+            }
+        assertTrue(e.message!!.contains("scriptSig must be empty"))
+    }
+
+    @Test
+    fun `rejects an unsigned-tx body with trailing bytes`() {
+        val psbt =
+            encodeSaplingPsbt(
+                inputs = listOf(saplingIn(amount = 100_000)),
+                outputs = listOf(SaplingOut(99_000, p2pkh("22".repeat(20)))),
+                unsignedTxTrailerHex = "ff",
+            )
+        val e =
+            assertThrows(SwapKitZcashSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "")
+            }
+        assertTrue(e.message!!.contains("trailing bytes"))
+    }
+
+    @Test
     fun `getPreSignedImageHash - transparent happy path returns one sighash per input`() {
         try {
             val psbt =
@@ -118,17 +147,23 @@ class SwapKitZcashSignerTest {
         val sequence: Long,
         val amount: Long,
         val prevScriptHex: String,
+        val unsignedScriptSigHex: String? = null,
     )
 
     private data class SaplingOut(val amount: Long, val scriptHex: String)
 
-    private fun saplingIn(amount: Long, prevScriptHex: String = p2pkh("11".repeat(20))) =
+    private fun saplingIn(
+        amount: Long,
+        prevScriptHex: String = p2pkh("11".repeat(20)),
+        unsignedScriptSigHex: String? = null,
+    ) =
         SaplingIn(
             prevTxIdDisplay = TXID_ONE,
             vout = 0,
             sequence = 0xFFFFFFFFL,
             amount = amount,
             prevScriptHex = prevScriptHex,
+            unsignedScriptSigHex = unsignedScriptSigHex,
         )
 
     private fun p2pkh(hash20Hex: String): String = "76a914$hash20Hex" + "88ac"
@@ -147,6 +182,7 @@ class SwapKitZcashSignerTest {
         nShieldedSpend: Long = 0,
         nShieldedOutput: Long = 0,
         nJoinSplit: Long = 0,
+        unsignedTxTrailerHex: String? = null,
     ): ByteArray {
         val unsigned = ByteArrayOutputStream()
         unsigned.write(le32(SAPLING_TX_VERSION)) // 0x80000004
@@ -155,7 +191,10 @@ class SwapKitZcashSignerTest {
         inputs.forEach { input ->
             unsigned.write(Numeric.hexStringToByteArray(input.prevTxIdDisplay).reversedArray())
             unsigned.write(le32(input.vout))
-            unsigned.write(varInt(0)) // empty scriptSig
+            val scriptSig =
+                input.unsignedScriptSigHex?.let { Numeric.hexStringToByteArray(it) } ?: ByteArray(0)
+            unsigned.write(varInt(scriptSig.size.toLong()))
+            unsigned.write(scriptSig)
             unsigned.write(le32(input.sequence))
         }
         unsigned.write(varInt(outputs.size.toLong()))
@@ -171,6 +210,7 @@ class SwapKitZcashSignerTest {
         unsigned.write(varInt(nShieldedSpend))
         unsigned.write(varInt(nShieldedOutput))
         unsigned.write(varInt(nJoinSplit))
+        unsignedTxTrailerHex?.let { unsigned.write(Numeric.hexStringToByteArray(it)) }
 
         val psbt = ByteArrayOutputStream()
         psbt.write(MAGIC)

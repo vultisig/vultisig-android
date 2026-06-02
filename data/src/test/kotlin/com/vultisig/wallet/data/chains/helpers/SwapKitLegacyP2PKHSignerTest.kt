@@ -159,6 +159,54 @@ class SwapKitLegacyP2PKHSignerTest {
     }
 
     @Test
+    fun `rejects an unsigned-tx input carrying a non-empty scriptSig`() {
+        val psbt =
+            encodeLegacyPsbt(
+                inputs =
+                    listOf(
+                        LegacyIn(
+                            prevTxIdDisplay = TXID_ONE,
+                            vout = 0,
+                            sequence = 0xFFFFFFFFL,
+                            amount = 100_000,
+                            prevScriptHex = p2pkh("11".repeat(20)),
+                            unsignedScriptSigHex = "ab",
+                        )
+                    ),
+                outputs = listOf(LegacyOut(amount = 99_000, scriptHex = p2pkh("33".repeat(20)))),
+            )
+        val e =
+            assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "")
+            }
+        assertTrue(e.message!!.contains("scriptSig must be empty"))
+    }
+
+    @Test
+    fun `rejects an unsigned-tx body with trailing bytes`() {
+        val psbt =
+            encodeLegacyPsbt(
+                inputs =
+                    listOf(
+                        LegacyIn(
+                            prevTxIdDisplay = TXID_ONE,
+                            vout = 0,
+                            sequence = 0xFFFFFFFFL,
+                            amount = 100_000,
+                            prevScriptHex = p2pkh("11".repeat(20)),
+                        )
+                    ),
+                outputs = listOf(LegacyOut(amount = 99_000, scriptHex = p2pkh("33".repeat(20)))),
+                unsignedTxTrailerHex = "ff",
+            )
+        val e =
+            assertThrows(SwapKitLegacyP2PKHSignerException::class.java) {
+                signer().buildSigningInputData(psbt, "")
+            }
+        assertTrue(e.message!!.contains("trailing bytes"))
+    }
+
+    @Test
     fun `getPreSignedImageHash - DOGE happy path returns one sighash per input (WITNESS_UTXO)`() {
         try {
             val psbt =
@@ -237,6 +285,7 @@ class SwapKitLegacyP2PKHSignerTest {
         val prevScriptHex: String,
         val useNonWitnessUtxo: Boolean = false,
         val omitPrevUtxo: Boolean = false,
+        val unsignedScriptSigHex: String? = null,
     )
 
     private data class LegacyOut(val amount: Long, val scriptHex: String)
@@ -250,14 +299,21 @@ class SwapKitLegacyP2PKHSignerTest {
      * Minimal BIP-174 PSBT encoder for a **legacy** (non-segwit) tx: magic + global unsigned-tx +
      * per-input WITNESS_UTXO or NON_WITNESS_UTXO maps. The unsigned-tx body has no marker/flag.
      */
-    private fun encodeLegacyPsbt(inputs: List<LegacyIn>, outputs: List<LegacyOut>): ByteArray {
+    private fun encodeLegacyPsbt(
+        inputs: List<LegacyIn>,
+        outputs: List<LegacyOut>,
+        unsignedTxTrailerHex: String? = null,
+    ): ByteArray {
         val unsigned = ByteArrayOutputStream()
         unsigned.write(le32(1)) // version
         unsigned.write(varInt(inputs.size.toLong()))
         inputs.forEach { input ->
             unsigned.write(Numeric.hexStringToByteArray(input.prevTxIdDisplay).reversedArray())
             unsigned.write(le32(input.vout))
-            unsigned.write(varInt(0)) // empty scriptSig
+            val scriptSig =
+                input.unsignedScriptSigHex?.let { Numeric.hexStringToByteArray(it) } ?: ByteArray(0)
+            unsigned.write(varInt(scriptSig.size.toLong()))
+            unsigned.write(scriptSig)
             unsigned.write(le32(input.sequence))
         }
         unsigned.write(varInt(outputs.size.toLong()))
@@ -268,6 +324,7 @@ class SwapKitLegacyP2PKHSignerTest {
             unsigned.write(script)
         }
         unsigned.write(le32(0)) // locktime
+        unsignedTxTrailerHex?.let { unsigned.write(Numeric.hexStringToByteArray(it)) }
 
         val psbt = ByteArrayOutputStream()
         psbt.write(MAGIC)
