@@ -20,6 +20,7 @@ import com.vultisig.wallet.ui.components.v2.snackbar.VSSnackbarState
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.NavigateAction
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
@@ -160,29 +161,83 @@ constructor(
 
     fun onForegroundBannerTapped() {
         val qrCodeData = _foregroundNotification.value?.qrCodeData ?: return
-        clearForegroundNotification()
+        // Do NOT clear the banner here. Clearing is bound to banner visibility, so an eager
+        // clear hides the banner before navigation lands — and if navigation is dropped (the
+        // user is inside a nested keysign/send flow), the user is left with no banner and no
+        // destination. The route-change observer in MainActivityContent clears the banner once
+        // Route.Keysign.Join / Keygen.Join is actually reached. Until then the banner stays so
+        // the signing request remains actionable; the user can also swipe it away to dismiss.
         onPushNotificationReceived(qrCodeData)
     }
 
     fun clearForegroundNotification() {
         foregroundPushJob?.cancel()
+        // Cancel any in-flight navigation a banner tap may have launched, so swiping the
+        // banner away (or any other dismissal) does not still land the user on the Join
+        // screen they tried to dismiss while the lookup was still suspended.
+        navigationJob?.cancel()
         _foregroundNotification.value = null
     }
 
+    private var navigationJob: kotlinx.coroutines.Job? = null
+
     fun onPushNotificationReceived(qrCodeData: String) {
-        viewModelScope.safeLaunch {
-            _navigationReady.await()
-            val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
-            val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
-            if (vault == null) {
-                snackbarFlow.showMessage(
-                    UiText.StringResource(R.string.push_notification_vault_not_found),
-                    SnackbarType.Error,
-                )
-                return@safeLaunch
+        navigationJob?.cancel()
+        navigationJob =
+            viewModelScope.safeLaunch {
+                _navigationReady.await()
+                val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
+                val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
+                if (vault == null) {
+                    snackbarFlow.showMessage(
+                        UiText.StringResource(R.string.push_notification_vault_not_found),
+                        SnackbarType.Error,
+                    )
+                    // No navigation happens on this branch, so the route-change observer will
+                    // never clear the banner — clear it here so it doesn't linger forever.
+                    _foregroundNotification.value = null
+                    return@safeLaunch
+                }
+                val direction = getDirectionByQrCodeUseCase(qrCodeData, vault.id)
+                // A join must always land on a FRESH Keysign.Join / Keygen.Join entry.
+                // NavController.buildOptions sets launchSingleTop = true on every navigation, so
+                // without popUpTo the navigator reuses an existing join entry and its Hilt-scoped
+                // ViewModel — whose QR was read once at init via the route args. If the joiner is
+                // already sitting on a finished/polling Keysign.Join entry, the second request
+                // would silently reuse that dead ViewModel and never start the new join (#4623).
+                // Popping the prior join entry inclusive forces a new entry (and tears down the
+                // old polling ViewModel). Mirrors JoinKeygenViewModel and the cosmos staking VMs.
+                when (direction) {
+                    is Route.Keysign.Join ->
+                        navigator.route(
+                            direction,
+                            NavigationOptions(
+                                popUpToRoute = Route.Keysign.Join::class,
+                                inclusive = true,
+                            ),
+                        )
+
+                    is Route.Keygen.Join ->
+                        navigator.route(
+                            direction,
+                            NavigationOptions(
+                                popUpToRoute = Route.Keygen.Join::class,
+                                inclusive = true,
+                            ),
+                        )
+
+                    else -> {
+                        navigator.route(direction)
+                        // Join routes are cleared by the route-change observer in
+                        // MainActivityContent once the destination is actually reached. That
+                        // deferral protects the banner when the user is inside a nested flow and
+                        // navigation may not land immediately. Destinations that never reach that
+                        // observer (Send, ScanError) are cleared here so the banner doesn't stay
+                        // stuck after a successful dispatch.
+                        _foregroundNotification.value = null
+                    }
+                }
             }
-            navigator.route(getDirectionByQrCodeUseCase(qrCodeData, vault.id))
-        }
     }
 
     fun openUri(uri: Uri) {
