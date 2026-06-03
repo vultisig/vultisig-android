@@ -3,7 +3,10 @@ package com.vultisig.wallet.data
 import android.content.Context
 import android.content.SharedPreferences
 import android.security.keystore.KeyPermanentlyInvalidatedException
+import androidx.datastore.core.DataMigration
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.vultisig.wallet.data.sources.AppDataStore
 import com.vultisig.wallet.data.sources.AppDataStoreImpl
@@ -42,8 +45,28 @@ internal interface MainDataModule {
         @Singleton
         fun provideDataStore(@ApplicationContext context: Context) =
             PreferenceDataStoreFactory.create(
-                produceFile = { context.preferencesDataStoreFile("app_pref") }
+                migrations = listOf(removeLegacyBuyVultBannerKey()),
+                produceFile = { context.preferencesDataStoreFile("app_pref") },
             )
+
+        /**
+         * Drops the old app-level `buy_vult_banner_dismissed` flag. The Buy VULT banner dismissal
+         * is now stored per-vault (`buy_vult_banner_dismissed/<vaultId>`), so the global key is
+         * dead and would otherwise linger in DataStore for users who dismissed it before this
+         * change.
+         */
+        private fun removeLegacyBuyVultBannerKey(): DataMigration<Preferences> {
+            val legacyKey = booleanPreferencesKey("buy_vult_banner_dismissed")
+            return object : DataMigration<Preferences> {
+                override suspend fun shouldMigrate(currentData: Preferences) =
+                    currentData.contains(legacyKey)
+
+                override suspend fun migrate(currentData: Preferences) =
+                    currentData.toMutablePreferences().apply { remove(legacyKey) }.toPreferences()
+
+                override suspend fun cleanUp() = Unit
+            }
+        }
 
         /** Provides the [IoDispatcher]-qualified [CoroutineDispatcher]. */
         @Provides @IoDispatcher fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO

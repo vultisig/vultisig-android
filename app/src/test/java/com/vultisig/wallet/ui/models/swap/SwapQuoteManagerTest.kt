@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
 import com.vultisig.wallet.data.usecases.ConvertTokenToToken
@@ -26,9 +27,11 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -43,6 +46,7 @@ internal class SwapQuoteManagerTest {
 
     private val swapQuoteRepository: SwapQuoteRepository = mockk(relaxed = true)
     private val tokenRepository: TokenRepository = mockk(relaxed = true)
+    private val tokenPriceRepository: TokenPriceRepository = mockk(relaxed = true)
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase = mockk(relaxed = true)
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper =
         mockk(relaxed = true)
@@ -54,6 +58,7 @@ internal class SwapQuoteManagerTest {
         SwapQuoteManager(
             swapQuoteRepository = swapQuoteRepository,
             tokenRepository = tokenRepository,
+            tokenPriceRepository = tokenPriceRepository,
             convertTokenValueToFiat = convertTokenValueToFiat,
             mapTokenValueToDecimalUiString = mapTokenValueToDecimalUiString,
             fiatValueToString = fiatValueToString,
@@ -289,6 +294,66 @@ internal class SwapQuoteManagerTest {
         assertEquals(SwapProvider.SWAPKIT, best.candidate.provider)
         assertEquals(BigDecimal("200"), best.result.estimatedDstFiat.value)
     }
+
+    @Test
+    fun `computeIndicativeQuote derives dst from cached spot prices`() = runTest {
+        val src = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+        val dst = coin(Chain.Bitcoin, "BTC", "btc", 8)
+        coEvery { tokenPriceRepository.getCachedPrice(src.id, AppCurrency.USD) } returns
+            BigDecimal("2000")
+        coEvery { tokenPriceRepository.getCachedPrice(dst.id, AppCurrency.USD) } returns
+            BigDecimal("40000")
+
+        val dstTokenValueSlot = slot<TokenValue>()
+        every { mapTokenValueToDecimalUiString(capture(dstTokenValueSlot)) } returns "0.1"
+        coEvery { fiatValueToString(any(), any()) } returns "$4,000.00"
+
+        val result =
+            createManager().computeIndicativeQuote(src, dst, BigDecimal("2"), AppCurrency.USD)
+
+        assertNotNull(result)
+        assertEquals("0.1", result.estimatedDstTokenValue)
+        assertEquals("$4,000.00", result.estimatedDstFiatValue)
+        // 2 ETH * $2000 / $40000 = 0.1 BTC
+        assertEquals(BigDecimal("0.1"), dstTokenValueSlot.captured.decimal.stripTrailingZeros())
+    }
+
+    @Test
+    fun `computeIndicativeQuote returns null when a price is not cached`() = runTest {
+        val src = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+        val dst = coin(Chain.Bitcoin, "BTC", "btc", 8)
+        coEvery { tokenPriceRepository.getCachedPrice(src.id, AppCurrency.USD) } returns
+            BigDecimal("2000")
+        coEvery { tokenPriceRepository.getCachedPrice(dst.id, AppCurrency.USD) } returns null
+
+        val result =
+            createManager().computeIndicativeQuote(src, dst, BigDecimal("2"), AppCurrency.USD)
+
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun `computeIndicativeQuote returns null for zero price, zero amount, or same token`() =
+        runTest {
+            val src = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+            val dst = coin(Chain.Bitcoin, "BTC", "btc", 8)
+            coEvery { tokenPriceRepository.getCachedPrice(any(), AppCurrency.USD) } returns
+                BigDecimal.ZERO
+            val manager = createManager()
+
+            assertEquals(
+                null,
+                manager.computeIndicativeQuote(src, dst, BigDecimal("2"), AppCurrency.USD),
+            )
+            assertEquals(
+                null,
+                manager.computeIndicativeQuote(src, dst, BigDecimal.ZERO, AppCurrency.USD),
+            )
+            assertEquals(
+                null,
+                manager.computeIndicativeQuote(src, src, BigDecimal("2"), AppCurrency.USD),
+            )
+        }
 
     private fun coin(chain: Chain, ticker: String, address: String, decimals: Int) =
         Coin(

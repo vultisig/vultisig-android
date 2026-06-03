@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteRequest
 import com.vultisig.wallet.data.repositories.swap.SwapQuoteResult
@@ -63,11 +64,22 @@ internal data class QuoteCandidate(
 
 internal data class BestQuote(val candidate: QuoteCandidate, val result: QuoteFetchResult)
 
+/**
+ * Display-only indicative destination estimate derived from cached spot prices, shown greyed while
+ * the firm quote is still resolving so the destination field never blanks (#4712). It is never used
+ * to build a signed transaction — only the firm [SwapQuote] gates Continue.
+ */
+internal data class IndicativeQuote(
+    val estimatedDstTokenValue: String,
+    val estimatedDstFiatValue: String,
+)
+
 internal class SwapQuoteManager
 @Inject
 constructor(
     private val swapQuoteRepository: SwapQuoteRepository,
     private val tokenRepository: TokenRepository,
+    private val tokenPriceRepository: TokenPriceRepository,
     private val convertTokenValueToFiat: ConvertTokenValueToFiatUseCase,
     private val mapTokenValueToDecimalUiString: TokenValueToDecimalUiStringMapper,
     private val fiatValueToString: FiatValueToStringMapper,
@@ -76,6 +88,45 @@ constructor(
 ) {
 
     private val quoteCache = QuoteCache()
+
+    /**
+     * Compute an instant, indicative destination amount from already-cached spot prices: `dst =
+     * srcAmount × priceSrc / priceDst`. Cached-only by design — it must never hit the network
+     * (that's the firm quote's job), so a cold price simply returns null and the caller keeps the
+     * previous value visible. The result reuses the same formatters as the firm quote so the greyed
+     * placeholder reads identically to the value that replaces it.
+     */
+    suspend fun computeIndicativeQuote(
+        srcToken: Coin,
+        dstToken: Coin,
+        amount: BigDecimal,
+        currency: AppCurrency,
+    ): IndicativeQuote? {
+        if (amount <= BigDecimal.ZERO || srcToken.id == dstToken.id) return null
+
+        val srcPrice = tokenPriceRepository.getCachedPrice(srcToken.id, currency) ?: return null
+        val dstPrice = tokenPriceRepository.getCachedPrice(dstToken.id, currency) ?: return null
+        if (srcPrice <= BigDecimal.ZERO || dstPrice <= BigDecimal.ZERO) return null
+
+        val srcFiatValue = amount.multiply(srcPrice)
+        val dstDecimal =
+            srcFiatValue.divide(
+                dstPrice,
+                dstToken.decimal.coerceAtMost(MAX_INDICATIVE_DECIMALS),
+                RoundingMode.DOWN,
+            )
+        val dstTokenValue =
+            TokenValue(
+                value = dstDecimal.movePointRight(dstToken.decimal).toBigInteger(),
+                token = dstToken,
+            )
+
+        return IndicativeQuote(
+            estimatedDstTokenValue = mapTokenValueToDecimalUiString(dstTokenValue),
+            estimatedDstFiatValue =
+                fiatValueToString(FiatValue(value = srcFiatValue, currency = currency.ticker)),
+        )
+    }
 
     suspend fun fetchQuote(
         provider: SwapProvider,
@@ -936,6 +987,10 @@ constructor(
         private const val SWAPKIT_AFFILIATE_FEE_BPS = 50
         private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val QUOTE_FETCH_TIMEOUT_MS = 15_000L
+        /**
+         * Matches the firm quote's UI formatter cap so the indicative value never out-renders it.
+         */
+        private const val MAX_INDICATIVE_DECIMALS = 8
     }
 }
 

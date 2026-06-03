@@ -25,6 +25,10 @@ data class CommonTransactionHistoryData(
     val timestamp: Long,
     val txHash: String,
     val explorerUrl: String,
+    /**
+     * Chain head block number at broadcast; see [TransactionHistoryEntity.broadcastBlockNumber].
+     */
+    val broadcastBlockNumber: Long? = null,
 )
 
 @Serializable
@@ -70,6 +74,7 @@ internal fun TransactionHistoryData.toEntity(
         confirmedAt = genericData.confirmedAt,
         failureReason = genericData.failureReason,
         lastCheckedAt = genericData.lastCheckedAt,
+        broadcastBlockNumber = genericData.broadcastBlockNumber,
         payload = this,
     )
 

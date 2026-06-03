@@ -28,6 +28,24 @@ internal object RemoveLpCalculator {
         poolDepth: BigInteger,
         totalPoolUnits: BigInteger,
         decimals: Int,
+    ): String? =
+        computeAmountDisplay(
+            selectedUnits = selectedUnits.toBigInteger(),
+            poolDepth = poolDepth,
+            totalPoolUnits = totalPoolUnits,
+            decimals = decimals,
+        )
+
+    /**
+     * [BigInteger] overload of [computeAmountDisplay] for LP positions whose unit counts exceed
+     * `Long.MAX_VALUE` (whale positions). Keeps the redeem-amount math in full-precision
+     * fixed-point so no precision is lost converting through `Long`.
+     */
+    fun computeAmountDisplay(
+        selectedUnits: BigInteger,
+        poolDepth: BigInteger,
+        totalPoolUnits: BigInteger,
+        decimals: Int,
     ): String? {
         if (totalPoolUnits.signum() <= 0) return null
         return selectedUnits

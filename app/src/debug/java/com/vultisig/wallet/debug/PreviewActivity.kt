@@ -85,6 +85,7 @@ import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
+import com.vultisig.wallet.ui.screens.swap.SwapFormQuoteLoadingPreview
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
@@ -142,6 +143,7 @@ class PreviewActivity : ComponentActivity() {
                     "ton_display_multi" -> TonDisplayPreview(messageCount = 4)
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
+                    "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
                     "import_seedphrase" -> ImportSeedphrasePreview()
                     "defi_account_list" -> DeFiAccountListPreview()
                     "share_qr_keysign" -> ShareQrKeysignPreview()

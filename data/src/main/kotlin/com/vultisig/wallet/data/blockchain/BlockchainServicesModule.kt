@@ -3,6 +3,8 @@ package com.vultisig.wallet.data.blockchain
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalanceService
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService
 import com.vultisig.wallet.data.blockchain.maya.MayaCacaoStakingService
@@ -115,6 +117,17 @@ internal interface BlockchainServicesModule {
         ): TronDeFiBalanceService =
             TronDeFiBalanceService(
                 tronApi = tronApi,
+                stakingDetailsRepository = stakingDetailsRepository,
+            )
+
+        @Provides
+        @Singleton
+        fun provideCosmosStakingDeFiBalanceService(
+            cosmosStakingService: CosmosStakingService,
+            stakingDetailsRepository: StakingDetailsRepository,
+        ): CosmosStakingDeFiBalanceService =
+            CosmosStakingDeFiBalanceService(
+                cosmosStakingService = cosmosStakingService,
                 stakingDetailsRepository = stakingDetailsRepository,
             )
     }

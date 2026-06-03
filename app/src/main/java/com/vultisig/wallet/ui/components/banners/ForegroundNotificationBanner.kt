@@ -1,17 +1,23 @@
 package com.vultisig.wallet.ui.components.banners
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,10 +28,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.UiIcon
@@ -35,7 +43,9 @@ import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlinx.coroutines.launch
 
 // background: url(<image>) lightgray -122.071px -89.692px / 162.123% 190.598% no-repeat,
 //             linear-gradient(46deg, #0439C7 20.77%, #4879FD 109.97%);
@@ -74,16 +84,58 @@ internal fun ForegroundNotificationBanner(
     vaultName: String,
     transactionSummary: UiText,
     onTap: () -> Unit,
+    onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val summary = transactionSummary.asString()
     val shape = RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp)
     val imagePainter = painterResource(R.drawable.foreground_layer)
 
+    // Horizontal swipe-to-dismiss: lets the user flick away a stale or unwanted signing
+    // request (e.g. an old notification) without acting on it. Dragging past ~35% of the
+    // banner width settles it off-screen and reports the dismissal; a shorter drag springs back.
+    val offsetX = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+
+    // Reset any residual swipe offset when a new (or re-shown) request is bound,
+    // so a previously dismissed banner doesn't reappear off-screen.
+    LaunchedEffect(qrCodeData) { offsetX.snapTo(0f) }
+
     Box(
         modifier =
             modifier
                 .fillMaxWidth()
+                .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                .pointerInput(Unit) {
+                    val dismissThreshold = size.width * 0.35f
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { change, dragAmount ->
+                            change.consume()
+                            scope.launch { offsetX.snapTo(offsetX.value + dragAmount) }
+                        },
+                        onDragEnd = {
+                            scope.launch {
+                                if (abs(offsetX.value) >= dismissThreshold) {
+                                    val target =
+                                        if (offsetX.value > 0) size.width.toFloat()
+                                        else -size.width.toFloat()
+                                    offsetX.animateTo(target)
+                                    onDismiss()
+                                    // Reset the retained offset: when the same signing session
+                                    // re-broadcasts, MainActivityContent reuses this subtree
+                                    // (keyed by qrCodeData), so LaunchedEffect(qrCodeData) won't
+                                    // re-fire and the banner would otherwise reappear off-screen.
+                                    offsetX.snapTo(0f)
+                                } else {
+                                    offsetX.animateTo(0f)
+                                }
+                            }
+                        },
+                        // A drag interrupted by a second pointer or an arena steal runs neither
+                        // onDragEnd branch; without this the banner freezes at its partial offset.
+                        onDragCancel = { scope.launch { offsetX.animateTo(0f) } },
+                    )
+                }
                 .clip(shape)
                 .bannerBackground(
                     imagePainter = imagePainter,
@@ -163,5 +215,6 @@ private fun ForegroundNotificationBannerPreview() {
         vaultName = "Vault #2",
         transactionSummary = UiText.DynamicString("Swap 10 ETH → USDC"),
         onTap = {},
+        onDismiss = {},
     )
 }

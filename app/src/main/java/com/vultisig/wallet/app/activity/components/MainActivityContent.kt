@@ -80,6 +80,7 @@ internal fun MainActivityContent(
         lastNotification = lastNotification,
         isOffline = mainViewModel.isOffline.collectAsStateWithLifecycle().value,
         onBannerTap = mainViewModel::onForegroundBannerTapped,
+        onBannerDismiss = mainViewModel::clearForegroundNotification,
         navContent = {
             LaunchedEffect(navController) {
                 navController.currentBackStackEntryFlow.first()
@@ -128,6 +129,7 @@ private fun MainActivityContent(
     lastNotification: ForegroundNotificationState?,
     isOffline: Boolean,
     onBannerTap: () -> Unit,
+    onBannerDismiss: () -> Unit,
     navContent: @Composable () -> Unit,
     overlayContent: @Composable BoxScope.() -> Unit = {},
 ) {
@@ -171,6 +173,7 @@ private fun MainActivityContent(
                         vaultName = notification.vaultName,
                         transactionSummary = notification.transactionSummary,
                         onTap = onBannerTap,
+                        onDismiss = onBannerDismiss,
                     )
                 }
             }
@@ -195,6 +198,7 @@ private fun MainActivityContentPreview() {
         lastNotification = notification,
         isOffline = false,
         onBannerTap = {},
+        onBannerDismiss = {},
         navContent = {
             VaultAccountsScreen(
                 state =
