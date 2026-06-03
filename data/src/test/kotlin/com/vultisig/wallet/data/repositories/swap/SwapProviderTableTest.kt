@@ -40,6 +40,11 @@ internal class SwapProviderTableTest {
                 coin(Chain.Solana, "SOL", isNative = true),
                 coin(Chain.Solana, "USDC", isNative = false),
                 coin(Chain.Bitcoin, "BTC", isNative = true), // BTC PSBT route
+                coin(Chain.Litecoin, "LTC", isNative = true), // LTC segwit PSBT route
+                coin(Chain.Dogecoin, "DOGE", isNative = true), // DOGE legacy P2PKH route
+                coin(Chain.BitcoinCash, "BCH", isNative = true), // BCH legacy P2PKH (FORKID) route
+                coin(Chain.Dash, "DASH", isNative = true), // DASH legacy P2PKH route
+                coin(Chain.Zcash, "ZEC", isNative = true), // ZEC Sapling-v4 transparent route
                 coin(Chain.Tron, "TRX", isNative = true), // TRON TronWeb route
                 coin(Chain.Tron, "USDT", isNative = false), // TRC-20 → TRON route
                 coin(Chain.Sui, "SUI", isNative = true), // SUI PTB route
@@ -66,13 +71,9 @@ internal class SwapProviderTableTest {
                 coin(Chain.Mantle, "MNT", isNative = true),
                 coin(Chain.Blast, "ETH", isNative = true),
                 coin(Chain.CronosChain, "CRO", isNative = true),
-                coin(Chain.BitcoinCash, "BCH", isNative = true),
-                coin(Chain.Litecoin, "LTC", isNative = true),
-                coin(Chain.Dogecoin, "DOGE", isNative = true),
                 coin(Chain.GaiaChain, "ATOM", isNative = true),
                 coin(Chain.ThorChain, "RUNE", isNative = true),
                 coin(Chain.MayaChain, "CACAO", isNative = true),
-                coin(Chain.Zcash, "ZEC", isNative = true),
                 coin(Chain.Hyperliquid, "HYPE", isNative = true),
                 coin(Chain.Polkadot, "DOT", isNative = true),
             )
@@ -91,7 +92,19 @@ internal class SwapProviderTableTest {
         // account screen. A chain can offer SWAPKIT in the provider table yet stay invisible to the
         // user if it is missing from isSwapSupported — the Sui regression that hid the button while
         // iOS showed it. Pin every SwapKit-wired native chain here.
-        listOf(Chain.Bitcoin, Chain.Tron, Chain.Sui, Chain.Cardano, Chain.Ton, Chain.Ripple)
+        listOf(
+                Chain.Bitcoin,
+                Chain.Litecoin,
+                Chain.Dogecoin,
+                Chain.BitcoinCash,
+                Chain.Dash,
+                Chain.Zcash,
+                Chain.Tron,
+                Chain.Sui,
+                Chain.Cardano,
+                Chain.Ton,
+                Chain.Ripple,
+            )
             .forEach { chain ->
                 assertTrue(
                     chain.isSwapSupported,
