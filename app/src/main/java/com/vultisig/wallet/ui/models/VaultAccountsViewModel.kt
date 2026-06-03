@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -137,6 +138,7 @@ constructor(
     private val setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase,
     private val lastOpenedVaultRepository: LastOpenedVaultRepository,
     private val enableTokenUseCase: EnableTokenUseCase,
+    private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
     private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
     private val tiersNFTRepository: TiersNFTRepository,
@@ -154,6 +156,12 @@ constructor(
     private var loadVaultNameJob: Job? = null
     private var loadAccountsJob: Job? = null
     private var loadDeFiBalancesJob: Job? = null
+    private var buyVultBannerJob: Job? = null
+
+    // In-memory "dismissed for this visit" flag. When the vault holds less than the Silver-tier
+    // VULT amount, closing the Buy VULT banner only flips this (no persistence), so it returns the
+    // next time the home screen is entered or the vault is switched.
+    private val buyVultSessionDismissed = MutableStateFlow(false)
 
     private val _requestNotificationPermission = Channel<Unit>(Channel.BUFFERED)
     val requestNotificationPermission = _requestNotificationPermission.receiveAsFlow()
@@ -161,14 +169,20 @@ constructor(
     init {
         collectCryptoConnectionType()
         collectLastOpenedVault()
-        collectBuyVultBannerDismissed()
     }
 
-    private fun collectBuyVultBannerDismissed() {
-        vaultDataStoreRepository
-            .readBuyVultBannerDismissed()
-            .onEach { dismissed -> uiState.update { it.copy(showBuyVultBanner = !dismissed) } }
-            .launchIn(viewModelScope)
+    private fun collectBuyVultBannerDismissed(vaultId: VaultId) {
+        buyVultBannerJob?.cancel()
+        buyVultBannerJob =
+            viewModelScope.launch {
+                combine(
+                        vaultDataStoreRepository.readBuyVultBannerDismissed(vaultId),
+                        buyVultSessionDismissed,
+                    ) { persisted, session ->
+                        !persisted && !session
+                    }
+                    .collect { show -> uiState.update { it.copy(showBuyVultBanner = show) } }
+            }
     }
 
     private fun collectCryptoConnectionType() {
@@ -207,6 +221,11 @@ constructor(
         val vaultChanged = this.vaultId != null && this.vaultId != vaultId
 
         this.vaultId = vaultId
+        if (vaultChanged) {
+            // Don't carry a per-visit Buy VULT dismissal across to the next vault.
+            buyVultSessionDismissed.value = false
+        }
+        collectBuyVultBannerDismissed(vaultId)
         loadVaultNameAndShowBackup(vaultId)
         loadAccounts(vaultId)
         loadBalanceVisibility(vaultId)
@@ -323,7 +342,15 @@ constructor(
     }
 
     fun dismissBuyVultBanner() {
-        viewModelScope.safeLaunch { vaultDataStoreRepository.setBuyVultBannerDismissed(true) }
+        val vaultId = vaultId ?: return
+        // Always hide for the current visit; only persist once the vault reaches Silver tier,
+        // otherwise the banner returns on the next entry to the home screen / vault switch.
+        buyVultSessionDismissed.value = true
+        viewModelScope.safeLaunch {
+            if (getDiscountBpsUseCase.hasReachedSilverTier(vaultId)) {
+                vaultDataStoreRepository.setBuyVultBannerDismissed(vaultId, true)
+            }
+        }
     }
 
     fun receive() {
