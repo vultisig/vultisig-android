@@ -148,9 +148,7 @@ constructor(
                     broadcast = {
                         polkadotApi.broadcastTransaction(tx.rawTransaction).orKnownHash(tx)
                     },
-                    verify = { hash ->
-                        polkadotApi.getTxStatus(hash)?.data?.extrinsicHash?.isNotBlank() == true
-                    },
+                    verify = { hash -> polkadotApi.isExtrinsicInChain(hash, VERIFY_SCAN_DEPTH) },
                 )
 
             Chain.Bittensor -> {
@@ -249,5 +247,9 @@ constructor(
     private companion object {
         const val VERIFY_ATTEMPTS = 3
         const val VERIFY_BACKOFF_MS = 2_000L
+        // The duplicate-broadcast peer raced us moments ago, so its extrinsic is at the head; a
+        // shallow scan is enough to confirm it landed without re-fetching deep history each
+        // attempt.
+        const val VERIFY_SCAN_DEPTH = 5
     }
 }

@@ -135,10 +135,10 @@ class PolkadotHelper(private val vaultHexPublicKey: String) {
 
         return SignedTransactionResult(
             rawTransaction = Numeric.toHexStringNoPrefix(output.encoded.toByteArray()),
-            transactionHash =
-                Numeric.toHexString(
-                    Utils.blake2bHash(output.encoded.toByteArray().take(32).toByteArray())
-                ),
+            // Canonical Substrate extrinsic hash: blake2b-256 over the full SCALE-encoded
+            // extrinsic. The previous `.take(32)` truncation produced a hash that matched neither
+            // the on-chain extrinsic nor the explorer, breaking status lookups and the tx link.
+            transactionHash = Numeric.toHexString(Utils.blake2bHash(output.encoded.toByteArray())),
         )
     }
 

@@ -866,6 +866,14 @@ constructor(
                         confirmedAt = null,
                         failureReason = null,
                         lastCheckedAt = now,
+                        // Polkadot extrinsics are mortal: persist the head block at broadcast so
+                        // the
+                        // status poller can scan the absolute inclusion window instead of a
+                        // head-relative one that drifts out of reach. Null for other chains.
+                        broadcastBlockNumber =
+                            (keysignPayload?.blockChainSpecific as? BlockChainSpecific.Polkadot)
+                                ?.currentBlockNumber
+                                ?.toLong(),
                     )
                 transactionHistoryRepository.recordTransaction(
                     vaultId = vault.id,

@@ -2,14 +2,17 @@ package com.vultisig.wallet.data.api
 
 import com.vultisig.wallet.data.api.models.PolkadotGetStorageJson
 import com.vultisig.wallet.data.api.models.RpcPayload
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotBlockResultJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotBroadcastTransactionJson
-import com.vultisig.wallet.data.api.models.cosmos.PolkadotExtrinsicResponseJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHashJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockHeaderJson
+import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetBlockJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetNonceJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotGetRunTimeVersionJson
 import com.vultisig.wallet.data.api.models.cosmos.PolkadotQueryInfoResponseJson
 import com.vultisig.wallet.data.api.utils.postRpc
+import com.vultisig.wallet.data.common.Utils
+import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -54,7 +57,27 @@ interface PolkadotApi {
 
     suspend fun getPartialFee(tx: String): BigInteger
 
-    suspend fun getTxStatus(txHash: String): PolkadotExtrinsicResponseJson?
+    /**
+     * Walks back up to [depth] blocks from the current best head and returns true if a block
+     * contains an extrinsic whose blake2b-256 hash matches [txHash]. Substrate full nodes do not
+     * index extrinsics by hash, so confirmation is done by scanning recent blocks via plain RPC
+     * instead of depending on a third-party indexer (e.g. Subscan).
+     *
+     * Head-relative, so only suitable right after broadcast (the inclusion block is near the head).
+     * For status polling that may run long after broadcast, use [isExtrinsicInBlockRange], whose
+     * window is anchored to an absolute block and does not drift as the head advances.
+     */
+    suspend fun isExtrinsicInChain(txHash: String, depth: Int): Boolean
+
+    /**
+     * Returns true if an extrinsic whose blake2b-256 hash matches [txHash] appears in any block in
+     * the inclusive number range `[fromBlock, toBlock]`. The range is anchored at [toBlock] (which
+     * the caller caps at the live head) and walked backward via `parentHash` down to [fromBlock] —
+     * Substrate blocks only link to their parent and number sequentially, so the absolute window is
+     * scanned regardless of how far the head has since advanced past it. This keeps a confirmed but
+     * already-buried inclusion block reachable, unlike a head-relative scan.
+     */
+    suspend fun isExtrinsicInBlockRange(txHash: String, fromBlock: Long, toBlock: Long): Boolean
 }
 
 internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpClient) :
@@ -185,17 +208,89 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
             ?.toBigIntegerOrNull() ?: throw Exception("Can't obtained Partial Fee")
     }
 
-    override suspend fun getTxStatus(txHash: String): PolkadotExtrinsicResponseJson? {
+    override suspend fun isExtrinsicInChain(txHash: String, depth: Int): Boolean {
+        val target = txHash.removePrefix("0x").lowercase()
+        if (target.isEmpty()) return false
 
-        val response =
-            httpClient.post(POLKADOT_EXTRINSIC_API_URL) { setBody(mapOf("hash" to txHash)) }
-        return response.bodyOrThrow<PolkadotExtrinsicResponseJson>()
+        // Start from the best head (params omitted) and follow parentHash links. Inclusion in the
+        // best chain is enough to treat the transaction as on-chain; GRANDPA finalizes within a
+        // couple of blocks so a reorg deep enough to drop it is not a practical concern here.
+        var blockHash: String? = null
+        var scanned = 0
+        while (scanned < depth) {
+            val block = getBlock(blockHash)?.block ?: break
+            if (block.extrinsics.any { extrinsicHash(it) == target }) {
+                return true
+            }
+            blockHash = block.header.parentHash
+            scanned++
+        }
+        return false
     }
+
+    override suspend fun isExtrinsicInBlockRange(
+        txHash: String,
+        fromBlock: Long,
+        toBlock: Long,
+    ): Boolean {
+        val target = txHash.removePrefix("0x").lowercase()
+        if (target.isEmpty() || toBlock < fromBlock) return false
+
+        // Anchor at the top of the window and descend via parentHash. Block numbers are sequential
+        // in Substrate, so the parent of block N is N-1 — we count down instead of re-reading the
+        // header number each hop.
+        //
+        // A null hash/block mid-walk means the RPC returned an error envelope (postRpc reads a
+        // nullable result), not that the extrinsic is absent. Returning false here would be
+        // indistinguishable from a genuine miss, so checkByInclusionWindow could terminally Fail a
+        // confirmed transfer once the head passes the window. Instead we throw on an incomplete
+        // scan so it propagates to checkStatus and the tx stays Pending for a later retry; false is
+        // returned only after the full window was traversed without a match.
+        var blockHash: String =
+            getBlockHashByNumber(toBlock)
+                ?: error("Polkadot block hash unavailable for $toBlock; inclusion scan incomplete")
+        var current = toBlock
+        while (current >= fromBlock) {
+            val block =
+                getBlock(blockHash)?.block
+                    ?: error("Polkadot block $current unavailable; inclusion scan incomplete")
+            if (block.extrinsics.any { extrinsicHash(it) == target }) {
+                return true
+            }
+            blockHash = block.header.parentHash
+            current--
+        }
+        return false
+    }
+
+    private suspend fun getBlockHashByNumber(number: Long): String? =
+        httpClient
+            .postRpc<PolkadotGetBlockHashJson>(
+                url = POLKADOT_API_URL,
+                method = "chain_getBlockHash",
+                params = buildJsonArray { add(number) },
+            )
+            .result
+            .takeIf { it.isNotBlank() }
+
+    private suspend fun getBlock(blockHash: String?): PolkadotBlockResultJson? {
+        return httpClient
+            .postRpc<PolkadotGetBlockJson>(
+                url = POLKADOT_API_URL,
+                method = "chain_getBlock",
+                params = buildJsonArray { if (blockHash != null) add(blockHash) },
+            )
+            .result
+    }
+
+    // Canonical Substrate extrinsic hash: blake2b-256 over the full SCALE-encoded extrinsic, the
+    // same bytes broadcast via author_submitExtrinsic. Mirrors PolkadotHelper.getSignedTransaction.
+    private fun extrinsicHash(extrinsicHex: String): String =
+        Numeric.toHexStringNoPrefix(Utils.blake2bHash(Numeric.hexStringToByteArray(extrinsicHex)))
+            .lowercase()
 
     private companion object {
         private const val POLKADOT_API_URL = "https://api.vultisig.com/dot/"
-        private const val POLKADOT_EXTRINSIC_API_URL =
-            "https://assethub-polkadot.api.subscan.io/api/scan/extrinsic"
         // xxHash128("System") + xxHash128("Account") — well-known Substrate storage prefix
         private const val SYSTEM_ACCOUNT_PREFIX =
             "26aa394eea5630e07c48ae0c9558cef7b99d880ec681799c0cf30e8886371da9"
