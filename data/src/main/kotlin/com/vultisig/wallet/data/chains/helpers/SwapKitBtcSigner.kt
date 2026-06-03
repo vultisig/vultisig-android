@@ -28,12 +28,17 @@ internal class SwapKitBtcSignerException(message: String) : Exception(message)
  * and the SwapKit BTC providers observed (NEAR / GARDEN / FLASHNET), which place only the user's
  * UTXOs in the inputs (every input is `is_ours`). PSBT framing primitives live in
  * [SwapKitPsbtParser]; the BIP-144 unsigned-tx body parser stays here.
+ *
+ * [coinType] is BITCOIN by default and LITECOIN for the LTC route. Litecoin is also native segwit
+ * (P2WPKH / P2SH-P2WPKH) so the BIP-143 sighash + segwit serialization are byte-identical; only the
+ * vault address / lock-script derivation (used for the change-output binding) differs, and those go
+ * through [coinType]. Mirrors iOS, where BTC and LTC share `SwapKitBTCSigner`.
  */
 internal class SwapKitBtcSigner(
     private val vaultHexPublicKey: String,
     private val vaultHexChainCode: String,
+    private val coinType: CoinType = CoinType.BITCOIN,
 ) {
-    private val coinType = CoinType.BITCOIN
     private val utxo = UtxoHelper(coinType, vaultHexPublicKey, vaultHexChainCode)
 
     /**

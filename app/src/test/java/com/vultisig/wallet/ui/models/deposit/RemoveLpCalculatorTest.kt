@@ -127,4 +127,20 @@ internal class RemoveLpCalculatorTest {
         // 10^20 base units / 10^8 = 10^12 RUNE
         assertEquals("1000000000000.000", result)
     }
+
+    @Test
+    fun `BigInteger selectedUnits exceeding Long_MAX_VALUE redeems exact half`() {
+        // Whale LP position whose unit count itself exceeds Long.MAX_VALUE: selecting half the
+        // pool's units must redeem exactly half the depth with no Long truncation.
+        val totalUnits = BigInteger("20000000000000000000") // 2 * 10^19, > Long.MAX_VALUE
+        val selectedUnits = BigInteger("10000000000000000000") // 10^19 = half of total
+        val result =
+            RemoveLpCalculator.computeAmountDisplay(
+                selectedUnits = selectedUnits,
+                poolDepth = BigInteger.valueOf(10_000_000_000L), // 100 RUNE
+                totalPoolUnits = totalUnits,
+                decimals = RemoveLpCalculator.RUNE_DECIMALS,
+            )
+        assertEquals("50.000", result)
+    }
 }
