@@ -203,6 +203,7 @@ constructor(
                 memo = transaction.memo,
                 libType = vault.libType,
                 wasmExecuteContractPayload = transaction.wasmExecuteContractPayload,
+                signDirect = transaction.signDirect,
                 defiAction =
                     if (transaction.operation == OPERATION_CIRCLE_WITHDRAW) {
                         DeFiAction.CIRCLE_USDC_WITHDRAW

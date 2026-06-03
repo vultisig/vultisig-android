@@ -760,3 +760,16 @@ internal val MIGRATION_31_32 =
             }
         }
     }
+
+// Adds broadcastBlockNumber: the chain head block number captured at broadcast. Polkadot status
+// confirmation scans the absolute inclusion window from this block instead of a head-relative
+// window, so a confirmed transfer is no longer missed once the head advances past it. Nullable —
+// existing rows keep NULL and fall back to the legacy head-relative scan.
+internal val MIGRATION_32_33 =
+    object : Migration(32, 33) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Nullable column, no DEFAULT clause — matches the entity (no defaultValue annotation)
+            // so Room's TableInfo validation passes; existing rows get NULL implicitly.
+            db.execSQL("ALTER TABLE transaction_history ADD COLUMN broadcastBlockNumber INTEGER")
+        }
+    }
