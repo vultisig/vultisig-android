@@ -272,6 +272,7 @@
     <string name="signing_error_broadcast_rejected">Транзакция отклонена сетью.</string>
     <string name="signing_error_broadcast_rejected_s">Транзакция отклонена сетью: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Быстрая подпись</string>
+    <string name="verify_transaction_paired_btn_title">Парное</string>
     <string name="keysign_sign_transaction">Подписать транзакцию</string>
     <string name="sign_transaction">Подписать транзакцию</string>
     <string name="keysign_password_title">Пароль</string>
@@ -482,7 +483,6 @@
     <string name="verify_deposit_function_overview">Обзор функций</string>
     <string name="verify_deposit_sending">Вы отправляете</string>
     <string name="verify_deposit_network">Сеть</string>
-    <string name="verify_deposit_hold_paired">Удерживайте для парной подписи</string>
     <string name="verify_deposit_sign_transaction">Подписать транзакцию</string>
     <string name="referral_invite_sheet_description">Поделитесь своим уникальным реферальным кодом, чтобы пригласить друзей. Они получат скидку, а чем больше они торгуют, тем больше вы зарабатываете — напрямую в вашем хранилище.</string>
     <string name="referral_create_referral">Создать реферала</string>

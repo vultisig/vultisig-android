@@ -273,6 +273,7 @@
     <string name="signing_error_broadcast_rejected">Mreža je odbila transakciju.</string>
     <string name="signing_error_broadcast_rejected_s">Mreža je odbila transakciju: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Brzi znak</string>
+    <string name="verify_transaction_paired_btn_title">Upareno</string>
     <string name="keysign_sign_transaction">Potpiši transakciju</string>
     <string name="sign_transaction">Potpiši transakciju</string>
     <string name="keysign_password_title">Lozinka</string>
@@ -484,7 +485,6 @@
     <string name="verify_deposit_function_overview">Pregled funkcija</string>
     <string name="verify_deposit_sending">Šaljete</string>
     <string name="verify_deposit_network">Mreža</string>
-    <string name="verify_deposit_hold_paired">Dugo pritisnite za upareni potpis</string>
     <string name="verify_deposit_sign_transaction">Potpiši transakciju</string>
     <string name="referral_invite_sheet_description">Podijeli svoj jedinstveni kod preporuke i pozovi prijatelje. Oni dobivaju popust, a što više trguju, više zarađuješ – direktno dostavljeno u tvoj trezor.</string>
     <string name="referral_create_referral">Kreiraj preporuku</string>

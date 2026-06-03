@@ -273,6 +273,7 @@
     <string name="signing_error_broadcast_rejected">Transaktion vom Netzwerk abgelehnt.</string>
     <string name="signing_error_broadcast_rejected_s">Transaktion vom Netzwerk abgelehnt: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Schnelle Signatur</string>
+    <string name="verify_transaction_paired_btn_title">Gekoppelt</string>
     <string name="keysign_sign_transaction">Transaktion unterschreiben</string>
     <string name="sign_transaction">Transaktion signieren</string>
     <string name="keysign_password_title">Passwort</string>
@@ -483,7 +484,6 @@
     <string name="verify_deposit_function_overview">Funktionsübersicht</string>
     <string name="verify_deposit_sending">Sie senden</string>
     <string name="verify_deposit_network">Netzwerk</string>
-    <string name="verify_deposit_hold_paired">Gedrückt halten für gekoppelte Signatur</string>
     <string name="verify_deposit_sign_transaction">Transaktion signieren</string>
     <string name="referral_invite_sheet_description">Teilen Sie Ihren einzigartigen Empfehlungscode, um Freunde einzuladen. Sie erhalten einen Rabatt und je mehr sie handeln, desto mehr verdienen Sie – direkt in Ihren Tresor geliefert.</string>
     <string name="referral_create_referral">Empfehlung erstellen</string>

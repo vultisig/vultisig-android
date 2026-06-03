@@ -512,6 +512,7 @@
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_fast_sign_btn_title">快速签名</string>
+    <string name="verify_transaction_paired_btn_title">配对</string>
 
     <!-- Keysign -->
     <string name="keysign_sign_transaction">签署交易</string>
@@ -727,7 +728,6 @@
     <string name="verify_deposit_function_overview">功能概览</string>
     <string name="verify_deposit_sending">您正在发送</string>
     <string name="verify_deposit_network">网络</string>
-    <string name="verify_deposit_hold_paired">保持配对签名</string>
     <string name="verify_deposit_sign_transaction">签署交易</string>
 
     <!-- Referral -->

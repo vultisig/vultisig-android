@@ -362,6 +362,7 @@
     <string name="signing_error_broadcast_rejected">네트워크가 거래를 거부했습니다.</string>
     <string name="signing_error_broadcast_rejected_s">네트워크가 거래를 거부했습니다: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">빠른 서명</string>
+    <string name="verify_transaction_paired_btn_title">페어링</string>
     <string name="keysign_sign_transaction">거래 서명</string>
     <string name="sign_transaction">거래 서명</string>
     <string name="keysign_password_title">비밀번호</string>
@@ -647,7 +648,6 @@
     <string name="verify_deposit_function_overview">함수 개요</string>
     <string name="verify_deposit_sending">보내는 중</string>
     <string name="verify_deposit_network">네트워크</string>
-    <string name="verify_deposit_hold_paired">페어링된 기기로 서명하려면 길게 누르세요</string>
     <string name="verify_deposit_sign_transaction">거래 서명</string>
 
     <string name="referral_invite_sheet_description">고유한 추천 코드를 공유하여 친구를 초대하세요. 친구는 할인을 받고 거래할수록 더 많은 보상을 받습니다 — 볼트로 직접 전달됩니다</string>
