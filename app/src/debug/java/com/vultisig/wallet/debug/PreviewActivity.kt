@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
@@ -181,6 +182,7 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_claim" -> QbtcClaimSelectingPreview()
                     "qbtc_claim_done" -> QbtcClaimDonePreview()
                     "qbtc_claim_error" -> QbtcClaimErrorPreview()
+                    "qbtc_claim_blocked" -> QbtcClaimBlockedPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     else -> SwapConfirmPreview()
@@ -1545,6 +1547,19 @@ private fun QbtcClaimDonePreview() {
 private fun QbtcClaimErrorPreview() {
     QbtcClaimScreen(
         state = QbtcClaimUiState.Failed(error = QbtcClaimError.BROADCAST_UNAVAILABLE),
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
+}
+
+@Composable
+private fun QbtcClaimBlockedPreview() {
+    QbtcClaimScreen(
+        state = QbtcClaimUiState.Blocked(reason = QbtcClaimBlockedReason.NoUtxos),
         isFastVault = true,
         onBackClick = {},
         onToggle = {},

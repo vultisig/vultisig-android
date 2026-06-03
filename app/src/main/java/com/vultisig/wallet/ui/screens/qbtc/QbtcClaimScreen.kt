@@ -112,6 +112,8 @@ internal fun QbtcClaimScreen(
         is QbtcClaimUiState.Done -> ClaimDoneScreen(state, onComplete = onBackClick)
         is QbtcClaimUiState.Failed ->
             ClaimErrorScreen(error = state.error, onRetry = onRetry, onBack = onBackClick)
+        is QbtcClaimUiState.Blocked ->
+            ClaimBlockedScreen(reason = state.reason, onRetry = onRetry, onBack = onBackClick)
         else ->
             V3Scaffold(
                 title = null,
@@ -137,7 +139,6 @@ internal fun QbtcClaimScreen(
                 when (state) {
                     QbtcClaimUiState.Loading ->
                         CenteredProgress(stringResource(R.string.qbtc_claim_loading))
-                    is QbtcClaimUiState.Blocked -> BlockedContent(state.reason)
                     is QbtcClaimUiState.Selecting -> SelectingContent(state, onToggle)
                     is QbtcClaimUiState.Pairing -> PairingContent(state)
                     is QbtcClaimUiState.Signing ->
@@ -146,7 +147,8 @@ internal fun QbtcClaimScreen(
                             logoRes = R.drawable.qbtc,
                         )
                     is QbtcClaimUiState.Done,
-                    is QbtcClaimUiState.Failed -> Unit
+                    is QbtcClaimUiState.Failed,
+                    is QbtcClaimUiState.Blocked -> Unit
                 }
             }
     }
@@ -390,7 +392,11 @@ private fun ClaimedAmountCard(totalSats: Long) {
 }
 
 @Composable
-private fun BlockedContent(reason: QbtcClaimBlockedReason) {
+private fun ClaimBlockedScreen(
+    reason: QbtcClaimBlockedReason,
+    onRetry: () -> Unit,
+    onBack: () -> Unit,
+) {
     val title =
         when (reason) {
             QbtcClaimBlockedReason.KillSwitchClosed ->
@@ -409,7 +415,12 @@ private fun BlockedContent(reason: QbtcClaimBlockedReason) {
             is QbtcClaimBlockedReason.UtxoFetchFailed -> reason.message
             QbtcClaimBlockedReason.NoUtxos -> stringResource(R.string.qbtc_claim_no_utxos_detail)
         }
-    CenteredMessage(title = title, detail = detail)
+    // Only a transient fetch failure is worth a retry; the rest are terminal for this session.
+    val retryButton =
+        (reason as? QbtcClaimBlockedReason.UtxoFetchFailed)?.let {
+            ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = onRetry)
+        }
+    ErrorView(title = title, description = detail, buttonUiModel = retryButton, onBack = onBack)
 }
 
 @Composable
@@ -432,30 +443,6 @@ private fun ClaimErrorScreen(error: QbtcClaimError, onRetry: () -> Unit, onBack:
             ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = onRetry),
         onBack = onBack,
     )
-}
-
-@Composable
-private fun CenteredMessage(title: String, detail: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(24.dp),
-        ) {
-            Text(
-                text = title,
-                style = Theme.brockmann.body.m.medium,
-                color = Theme.v2.colors.text.primary,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = detail,
-                style = Theme.brockmann.body.s.regular,
-                color = Theme.v2.colors.text.tertiary,
-                textAlign = TextAlign.Center,
-            )
-        }
-    }
 }
 
 @Composable
