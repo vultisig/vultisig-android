@@ -12,6 +12,7 @@ import io.ktor.http.contentType
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -122,6 +123,35 @@ class PolkadotApiTest {
         // 1 getBlockHash + 3 getBlock (blocks 100, 99, 98); must not scan below fromBlock.
         assertEquals(4, requests)
     }
+
+    @Test
+    fun `isExtrinsicInBlockRange throws on a null block mid-window instead of reporting a miss`() =
+        runTest {
+            var requests = 0
+            val api =
+                polkadotApi(
+                    MockEngine {
+                        requests++
+                        // getBlockHash succeeds, the first getBlock has no match, and the second
+                        // returns a null result (RPC error envelope) partway through the window.
+                        val body =
+                            when (requests) {
+                                1 -> hashResponse(HEAD_HASH)
+                                2 -> blockResponse(parentHash = PARENT, extrinsics = emptyList())
+                                else -> nullResultResponse()
+                            }
+                        respond(content = body, status = HttpStatusCode.OK, headers = jsonHeaders)
+                    }
+                )
+
+            // An incomplete scan must not be reported as a genuine miss (which the caller would
+            // terminally Fail); it propagates so the tx stays Pending for a retry.
+            assertFailsWith<IllegalStateException> {
+                api.isExtrinsicInBlockRange(EXT_HASH, fromBlock = 98, toBlock = 100)
+            }
+        }
+
+    private fun nullResultResponse(): String = """{"jsonrpc":"2.0","id":1,"result":null}"""
 
     private fun hashResponse(hash: String): String = """{"jsonrpc":"2.0","id":1,"result":"$hash"}"""
 

@@ -239,10 +239,21 @@ internal class PolkadotApiImp @Inject constructor(private val httpClient: HttpCl
         // Anchor at the top of the window and descend via parentHash. Block numbers are sequential
         // in Substrate, so the parent of block N is N-1 — we count down instead of re-reading the
         // header number each hop.
-        var blockHash: String? = getBlockHashByNumber(toBlock) ?: return false
+        //
+        // A null hash/block mid-walk means the RPC returned an error envelope (postRpc reads a
+        // nullable result), not that the extrinsic is absent. Returning false here would be
+        // indistinguishable from a genuine miss, so checkByInclusionWindow could terminally Fail a
+        // confirmed transfer once the head passes the window. Instead we throw on an incomplete
+        // scan so it propagates to checkStatus and the tx stays Pending for a later retry; false is
+        // returned only after the full window was traversed without a match.
+        var blockHash: String =
+            getBlockHashByNumber(toBlock)
+                ?: error("Polkadot block hash unavailable for $toBlock; inclusion scan incomplete")
         var current = toBlock
         while (current >= fromBlock) {
-            val block = getBlock(blockHash)?.block ?: break
+            val block =
+                getBlock(blockHash)?.block
+                    ?: error("Polkadot block $current unavailable; inclusion scan incomplete")
             if (block.extrinsics.any { extrinsicHash(it) == target }) {
                 return true
             }
