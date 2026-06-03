@@ -15,7 +15,10 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.IsVaultHasFastSignByIdUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
+import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
+import com.vultisig.wallet.ui.navigation.back
 import com.vultisig.wallet.ui.navigation.util.LaunchKeysignUseCase
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
@@ -27,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -68,6 +72,7 @@ constructor(
     private val vaultPasswordRepository: VaultPasswordRepository,
     private val isVaultHasFastSignById: IsVaultHasFastSignByIdUseCase,
     private val launchKeysign: LaunchKeysignUseCase,
+    private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -234,6 +239,10 @@ constructor(
 
     fun dismissError() {
         _state.update { it.copy(errorText = null) }
+    }
+
+    fun back() {
+        viewModelScope.launch { navigator.back() }
     }
 
     private fun keysign(initType: KeysignInitType) {

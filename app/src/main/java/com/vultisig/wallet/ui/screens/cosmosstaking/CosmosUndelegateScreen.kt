@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -28,6 +30,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosUndelegateViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import java.math.BigDecimal
 
 /**
  * Undelegate input form for LUNA / LUNC. Same shape as the iOS `CosmosUndelegateTransactionScreen`
@@ -43,7 +46,8 @@ internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltV
             stringResource(
                 R.string.cosmos_staking_undelegate_title,
                 state.ticker.ifEmpty { stringResource(R.string.cosmos_staking_token_fallback) },
-            )
+            ),
+        onBackClick = viewModel::back,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -151,5 +155,37 @@ internal fun UnbondingLockNotice(message: String) {
             style = Theme.brockmann.supplementary.caption,
             color = Theme.v2.colors.text.primary,
         )
+    }
+}
+
+@Preview
+@Composable
+private fun CosmosUndelegateScreenPreview() {
+    V2Scaffold(title = "Unstake LUNA", onBackClick = {}) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                ValidatorReadonlyBlock(moniker = "Allnodes", address = "terravaloper1allnodes78wk")
+                StakingAmountCard(
+                    ticker = "LUNA",
+                    amountFieldState = rememberTextFieldState("2.5"),
+                    available = BigDecimal("2.5"),
+                    percentageSelected = 100,
+                    onPercentage = {},
+                )
+                UnbondingLockNotice(
+                    message = "Funds are locked for 21 days. Available on Jul 24, 2026."
+                )
+            }
+            VsButton(
+                label = "Continue",
+                variant = VsButtonVariant.CTA,
+                state = VsButtonState.Enabled,
+                onClick = {},
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
+            )
+        }
     }
 }
