@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.api.models.calculateResourceStats
 import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.ethereum.CircleDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.maya.MayaDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.model.DeFiBalance
@@ -143,6 +144,7 @@ constructor(
     private val circleDeFiBalanceService: CircleDeFiBalanceService,
     private val mayaDeFiBalanceService: MayaDeFiBalanceService,
     private val tronDeFiBalanceService: TronDeFiBalanceService,
+    private val cosmosStakingDeFiBalanceService: CosmosStakingDeFiBalanceService,
 ) : BalanceRepository {
 
     private val defiBalanceCache = SimpleCache<String, List<DeFiBalance>>(12 * 1000)
@@ -178,7 +180,9 @@ constructor(
             ThorChain,
             Ethereum -> address
             MayaChain,
-            Chain.Tron -> "${chain.id}:$vaultId:$address"
+            Chain.Tron,
+            Chain.Terra,
+            Chain.TerraClassic -> "${chain.id}:$vaultId:$address"
             else -> null
         }
 
@@ -223,6 +227,9 @@ constructor(
                 Ethereum -> circleDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 MayaChain -> mayaDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Chain.Tron -> tronDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
+                Chain.Terra,
+                Chain.TerraClassic ->
+                    cosmosStakingDeFiBalanceService.getCacheDeFiBalance(coin.chain, vaultId)
 
                 else -> error("Not Supported ${coin.chain}")
             }
@@ -371,24 +378,33 @@ constructor(
     ): List<DeFiBalance> {
         val cacheKey =
             deFiCacheKey(address, coin.chain, vaultId) ?: error("Not supported ${coin.chain}")
-        val service =
-            when (coin.chain) {
-                ThorChain -> thorchainDeFiBalanceService
-                Ethereum -> circleDeFiBalanceService
-                MayaChain -> mayaDeFiBalanceService
-                Chain.Tron -> tronDeFiBalanceService
-                else -> error("Not supported ${coin.chain}")
-            }
         val mutex = lockFor(cacheKey)
         return mutex.withLock {
             defiBalanceCache.get(cacheKey)
                 ?: run {
-                    val remote = service.getRemoteDeFiBalance(address, vaultId)
+                    val remote = fetchRemoteDeFiBalance(address, coin.chain, vaultId)
                     defiBalanceCache.put(cacheKey, remote)
                     remote
                 }
         }
     }
+
+    private suspend fun fetchRemoteDeFiBalance(
+        address: String,
+        chain: Chain,
+        vaultId: String,
+    ): List<DeFiBalance> =
+        when (chain) {
+            ThorChain -> thorchainDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+            Ethereum -> circleDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+            MayaChain -> mayaDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+            Chain.Tron -> tronDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
+            // Terra / TerraClassic share the same address, so the chain is passed explicitly.
+            Chain.Terra,
+            Chain.TerraClassic ->
+                cosmosStakingDeFiBalanceService.getRemoteDeFiBalance(chain, address, vaultId)
+            else -> error("Not supported $chain")
+        }
 
     private suspend fun getCachedTokenValue(address: String, coin: Coin): TokenValue? =
         tokenValueDao

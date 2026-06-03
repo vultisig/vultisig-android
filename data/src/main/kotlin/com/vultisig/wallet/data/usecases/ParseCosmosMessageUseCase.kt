@@ -118,6 +118,14 @@ internal class ParseCosmosMessageUseCaseImpl(
                             }
                             .toRendered()
                     )
+                "/cosmos.staking.v1beta1.MsgDelegate" ->
+                    JSON.encodeToJsonElement(decodeChecked<MsgDelegateBody>(value))
+                "/cosmos.staking.v1beta1.MsgUndelegate" ->
+                    JSON.encodeToJsonElement(decodeChecked<MsgUndelegateBody>(value))
+                "/cosmos.staking.v1beta1.MsgBeginRedelegate" ->
+                    JSON.encodeToJsonElement(decodeChecked<MsgBeginRedelegateBody>(value))
+                "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" ->
+                    JSON.encodeToJsonElement(decodeChecked<MsgWithdrawDelegatorRewardBody>(value))
                 "/cosmwasm.wasm.v1.MsgExecuteContract" ->
                     JSON.encodeToJsonElement(
                         decodeChecked<MsgExecuteContractBody>(value).toRendered()
@@ -184,6 +192,38 @@ internal data class MsgSendBody(
     @ProtoNumber(1) val fromAddress: String = "",
     @ProtoNumber(2) val toAddress: String = "",
     @ProtoNumber(3) val amount: List<Coin> = emptyList(),
+)
+
+// Cosmos-SDK x/staking + x/distribution message bodies. Addresses are bech32 strings on the wire
+// (terra1… delegator, terravaloper… validator), so they decode directly — no byte re-encoding like
+// the THORChain variants. Decoding these makes the joining device's verify card render the
+// validator + amount + operation instead of an opaque base64 blob.
+@Serializable
+internal data class MsgDelegateBody(
+    @ProtoNumber(1) val delegatorAddress: String = "",
+    @ProtoNumber(2) val validatorAddress: String = "",
+    @ProtoNumber(3) val amount: Coin? = null,
+)
+
+@Serializable
+internal data class MsgUndelegateBody(
+    @ProtoNumber(1) val delegatorAddress: String = "",
+    @ProtoNumber(2) val validatorAddress: String = "",
+    @ProtoNumber(3) val amount: Coin? = null,
+)
+
+@Serializable
+internal data class MsgBeginRedelegateBody(
+    @ProtoNumber(1) val delegatorAddress: String = "",
+    @ProtoNumber(2) val validatorSrcAddress: String = "",
+    @ProtoNumber(3) val validatorDstAddress: String = "",
+    @ProtoNumber(4) val amount: Coin? = null,
+)
+
+@Serializable
+internal data class MsgWithdrawDelegatorRewardBody(
+    @ProtoNumber(1) val delegatorAddress: String = "",
+    @ProtoNumber(2) val validatorAddress: String = "",
 )
 
 @Serializable

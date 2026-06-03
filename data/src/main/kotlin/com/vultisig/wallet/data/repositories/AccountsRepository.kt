@@ -340,6 +340,8 @@ constructor(
                     Chain.Ethereum to Coins.Ethereum.ETH,
                     Chain.MayaChain to Coins.MayaChain.CACAO,
                     Chain.Tron to Coins.Tron.TRX,
+                    Chain.Terra to Coins.Terra.LUNA,
+                    Chain.TerraClassic to Coins.TerraClassic.LUNC,
                 )
 
             val addressesByChain = addresses.associateBy { it.chain }
@@ -498,6 +500,11 @@ constructor(
             Chain.Ethereum -> true
             Chain.MayaChain -> true
             Chain.Tron -> true
+            // LUNA / LUNC surface a staking DeFi position; without these the chains are selectable
+            // in the "Select DeFi chains" sheet (isDeFiSupported) but never appear in the Portfolio
+            // DeFi list because their coins are filtered out of the candidate set here.
+            Chain.Terra -> true
+            Chain.TerraClassic -> true
             else -> false
         }
     }

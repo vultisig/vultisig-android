@@ -395,6 +395,17 @@ constructor(
                                     route = ChainDashboardRoute.PositionTron(vaultId = vaultId)
                                 )
                             )
+                        account.chainName.equals(Chain.Terra.raw, true) ||
+                            account.chainName.equals(Chain.TerraClassic.raw, true) ->
+                            navigator.route(
+                                Route.ChainDashboard(
+                                    route =
+                                        ChainDashboardRoute.PositionCosmosStaking(
+                                            vaultId = vaultId,
+                                            chainId = chainId,
+                                        )
+                                )
+                            )
                         else ->
                             navigator.route(
                                 Route.ChainDashboard(
