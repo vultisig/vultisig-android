@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -33,6 +34,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosWithdrawRewardsViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import java.math.BigDecimal
 
 /**
  * Selection-driven claim-rewards screen for LUNA / LUNC. Per-validator pending reward list with a
@@ -46,7 +48,10 @@ internal fun CosmosWithdrawRewardsScreen(
     viewModel: CosmosWithdrawRewardsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
-    V2Scaffold(title = stringResource(R.string.cosmos_staking_claim_rewards_title)) {
+    V2Scaffold(
+        title = stringResource(R.string.cosmos_staking_claim_rewards_title),
+        onBackClick = viewModel::back,
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 HeaderRow(
@@ -279,5 +284,38 @@ private fun androidx.compose.foundation.layout.BoxScope.FooterSummary(
             onClick = onSubmit,
             modifier = Modifier.fillMaxWidth(),
         )
+    }
+}
+
+@Preview
+@Composable
+private fun CosmosWithdrawRewardsScreenPreview() {
+    V2Scaffold(title = "Claim Rewards", onBackClick = {}) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                HeaderRow(maxBatchSize = 8, onSelectAll = {})
+                UiSpacer(size = 12.dp)
+                CandidateRow(
+                    candidate =
+                        CosmosWithdrawRewardsCandidate(
+                            validatorAddress = "terravaloper1allnodes78wk",
+                            validatorMoniker = "Allnodes",
+                            pendingReward = BigDecimal("0.000001"),
+                        ),
+                    isSelected = true,
+                    ticker = "LUNA",
+                    onToggle = {},
+                )
+            }
+            FooterSummary(
+                ticker = "LUNA",
+                totalSelectedReward = "0.000001",
+                estimatedFee = "0.01",
+                hasSufficientBalanceForFee = true,
+                isSubmitting = false,
+                isValidForm = true,
+                onSubmit = {},
+            )
+        }
     }
 }

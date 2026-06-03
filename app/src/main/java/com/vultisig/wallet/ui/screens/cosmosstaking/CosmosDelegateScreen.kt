@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -64,7 +66,11 @@ internal fun CosmosDelegateScreen(viewModel: CosmosDelegateViewModel = hiltViewM
 
     V2Scaffold(
         title =
-            stringResource(R.string.cosmos_staking_delegate_title, state.ticker.ifEmpty { "Token" })
+            stringResource(
+                R.string.cosmos_staking_delegate_title,
+                state.ticker.ifEmpty { "Token" },
+            ),
+        onBackClick = viewModel::back,
     ) {
         DelegateContent(
             state = state,
@@ -443,4 +449,32 @@ private fun formatVotingPower(votingPowerBaseUnits: BigDecimal): String {
     // Terra (LUNA) and Terra Classic (LUNC) both use 6 base-unit decimals.
     val whole = votingPowerBaseUnits.movePointLeft(6).toBigInteger()
     return "%,d".format(whole)
+}
+
+@Preview
+@Composable
+private fun CosmosDelegateScreenPreview() {
+    V2Scaffold(title = "Stake LUNA", onBackClick = {}) {
+        DelegateContent(
+            state =
+                CosmosDelegateUiState(
+                    ticker = "LUNA",
+                    stakeableBalance = BigDecimal("12.482"),
+                    percentageSelected = 50,
+                    selectedValidator =
+                        CosmosValidator(
+                            operatorAddress = "terravaloper1allnodes78wk",
+                            moniker = "Allnodes",
+                            commission = BigDecimal("0.05"),
+                            jailed = false,
+                            status = CosmosValidator.Status.Bonded,
+                            votingPower = BigDecimal.ZERO,
+                        ),
+                ),
+            amountFieldState = rememberTextFieldState("6.24"),
+            onPercentage = {},
+            onPickValidator = {},
+            onSubmit = {},
+        )
+    }
 }
