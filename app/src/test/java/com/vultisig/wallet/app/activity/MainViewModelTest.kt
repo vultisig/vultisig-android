@@ -16,17 +16,18 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.SnackbarFlow
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -96,8 +97,8 @@ internal class MainViewModelTest {
             val vm = createViewModel()
             advanceUntilIdle()
 
-            assertTrue(vm.startDestination.value is Route.Home)
-            assertFalse(vm.isLoading.value)
+            vm.startDestination.value.shouldBeInstanceOf<Route.Home>()
+            vm.isLoading.value.shouldBeFalse()
         }
 
     @Test
@@ -108,8 +109,8 @@ internal class MainViewModelTest {
             val vm = createViewModel()
             advanceUntilIdle()
 
-            assertEquals(Route.AddVault, vm.startDestination.value)
-            assertFalse(vm.isLoading.value)
+            vm.startDestination.value shouldBe Route.AddVault
+            vm.isLoading.value.shouldBeFalse()
         }
 
     @Test
@@ -122,8 +123,8 @@ internal class MainViewModelTest {
             advanceTimeBy(6.seconds)
             advanceUntilIdle()
 
-            assertEquals(Route.AddVault, vm.startDestination.value)
-            assertFalse(vm.isLoading.value)
+            vm.startDestination.value shouldBe Route.AddVault
+            vm.isLoading.value.shouldBeFalse()
         }
 
     @Test
@@ -134,8 +135,8 @@ internal class MainViewModelTest {
             val vm = createViewModel()
             advanceUntilIdle()
 
-            assertEquals(Route.AddVault, vm.startDestination.value)
-            assertFalse(vm.isLoading.value)
+            vm.startDestination.value shouldBe Route.AddVault
+            vm.isLoading.value.shouldBeFalse()
         }
 
     @Test
@@ -146,7 +147,7 @@ internal class MainViewModelTest {
             val vm = createViewModel()
             // no advance — init coroutine has not executed yet
 
-            assertTrue(vm.isLoading.value)
+            vm.isLoading.value.shouldBeTrue()
         }
 
     @Test
@@ -162,11 +163,11 @@ internal class MainViewModelTest {
             vm.onForegroundPushReceived("vultisig://qr-payload")
             advanceUntilIdle()
 
-            assertNotNull(vm.foregroundNotification.value)
+            vm.foregroundNotification.value.shouldNotBeNull()
 
             vm.clearForegroundNotification()
 
-            assertNull(vm.foregroundNotification.value)
+            vm.foregroundNotification.value.shouldBeNull()
         }
 
     @Test
@@ -185,7 +186,7 @@ internal class MainViewModelTest {
 
             vm.onForegroundPushReceived("vultisig://join?vault=ecdsa-key")
             advanceUntilIdle()
-            assertNotNull(vm.foregroundNotification.value)
+            vm.foregroundNotification.value.shouldNotBeNull()
 
             vm.onForegroundBannerTapped()
             advanceUntilIdle()
@@ -203,7 +204,7 @@ internal class MainViewModelTest {
             // The ViewModel must NOT clear the banner itself for a Join route. The route-change
             // observer in MainActivityContent clears it once the destination is actually reached,
             // so the request stays actionable even if navigation is deferred inside a nested flow.
-            assertNotNull(vm.foregroundNotification.value)
+            vm.foregroundNotification.value.shouldNotBeNull()
         }
 
     @Test
@@ -232,7 +233,7 @@ internal class MainViewModelTest {
                     NavigationOptions(popUpToRoute = Route.Keygen.Join::class, inclusive = true),
                 )
             }
-            assertNotNull(vm.foregroundNotification.value)
+            vm.foregroundNotification.value.shouldNotBeNull()
         }
 
     @Test
@@ -258,7 +259,7 @@ internal class MainViewModelTest {
             advanceUntilIdle()
 
             coVerify { navigator.route(ofType(Route.Send::class)) }
-            assertNull(vm.foregroundNotification.value)
+            vm.foregroundNotification.value.shouldBeNull()
         }
 
     @Test
@@ -277,12 +278,12 @@ internal class MainViewModelTest {
             // leaving it stranded on screen.
             vm.onForegroundPushReceived("vultisig://qr-payload")
             advanceUntilIdle()
-            assertNotNull(vm.foregroundNotification.value)
+            vm.foregroundNotification.value.shouldNotBeNull()
 
             vm.onForegroundBannerTapped()
             advanceUntilIdle()
 
-            assertNull(vm.foregroundNotification.value)
+            vm.foregroundNotification.value.shouldBeNull()
             coVerify(exactly = 0) { navigator.route(any()) }
         }
 }
