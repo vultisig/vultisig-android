@@ -76,7 +76,11 @@ internal fun CosmosStakingVerifyScreen(viewModel: CosmosStakingVerifyViewModel =
 
     V2Scaffold(
         title = stringResource(R.string.verify_deposit_function_overview),
-        onBackClick = viewModel::back,
+        // Figma "Overview" uses a close (✕) button top-right rather than a back caret — it still
+        // pops the verify entry, matching the design while keeping the screen exitable.
+        onBackClick = null,
+        rightIcon = R.drawable.big_close,
+        onRightIconClick = viewModel::back,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -212,7 +216,12 @@ private fun truncatedMiddle(value: String): String =
 @Preview
 @Composable
 private fun CosmosStakingVerifyScreenPreview() {
-    V2Scaffold(title = "Overview", onBackClick = {}) {
+    V2Scaffold(
+        title = "Overview",
+        onBackClick = null,
+        rightIcon = R.drawable.big_close,
+        onRightIconClick = {},
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier =
