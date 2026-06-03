@@ -47,25 +47,15 @@ data class PolkadotQueryInfoResponseJson(val result: QueryInfoPayload?) {
 }
 
 @Serializable
-data class PolkadotExtrinsicResponseJson(
-    @SerialName("code") val code: Int,
-    @SerialName("message") val message: String,
-    @SerialName("generated_at") val generatedAt: Long,
-    @SerialName("data") val data: PolkadotExtrinsicDataJson? = null,
+data class PolkadotGetBlockJson(@SerialName("result") val result: PolkadotBlockResultJson? = null)
+
+@Serializable data class PolkadotBlockResultJson(@SerialName("block") val block: PolkadotBlockJson)
+
+@Serializable
+data class PolkadotBlockJson(
+    @SerialName("header") val header: PolkadotBlockHeaderWithParentJson,
+    @SerialName("extrinsics") val extrinsics: List<String> = emptyList(),
 )
 
 @Serializable
-data class PolkadotExtrinsicDataJson(
-    @SerialName("error") val polkadotErrorData: PolkadotErrorData? = null,
-    @SerialName("extrinsic_hash") val extrinsicHash: String?,
-)
-
-@Serializable
-data class PolkadotErrorData(
-    @SerialName("batch_index") val batchIndex: Int,
-    @SerialName("doc") val doc: String,
-    @SerialName("module") val module: String,
-    @SerialName("name") val name: String,
-    @SerialName("value") val value: String,
-    @SerialName("version") val version: Int,
-)
+data class PolkadotBlockHeaderWithParentJson(@SerialName("parentHash") val parentHash: String)
