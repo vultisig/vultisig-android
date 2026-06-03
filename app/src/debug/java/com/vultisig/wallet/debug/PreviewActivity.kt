@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
@@ -176,6 +177,8 @@ class PreviewActivity : ComponentActivity() {
                     "universal_router_verify_after" ->
                         VerifyUniversalRouterPreview(expanded = true, useUrRows = true)
                     "qbtc_claim" -> QbtcClaimSelectingPreview()
+                    "qbtc_claim_done" -> QbtcClaimDonePreview()
+                    "qbtc_claim_error" -> QbtcClaimErrorPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     else -> SwapConfirmPreview()
@@ -1508,6 +1511,38 @@ private fun QbtcClaimSelectingPreview() {
         )
     QbtcClaimScreen(
         state = state,
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
+}
+
+@Composable
+private fun QbtcClaimDonePreview() {
+    QbtcClaimScreen(
+        state =
+            QbtcClaimUiState.Done(
+                txHash = "774365959AC251DA340851945A053D508A5F2F6CE98861556F83783C72E9CAFC",
+                totalSats = 5607L,
+                explorerUrl =
+                    "https://explorer.qbtc.network/tx/774365959AC251DA340851945A053D508A5F2F6CE98861556F83783C72E9CAFC",
+            ),
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
+}
+
+@Composable
+private fun QbtcClaimErrorPreview() {
+    QbtcClaimScreen(
+        state = QbtcClaimUiState.Failed(error = QbtcClaimError.BROADCAST_UNAVAILABLE),
         isFastVault = true,
         onBackClick = {},
         onToggle = {},

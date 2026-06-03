@@ -37,7 +37,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -52,21 +51,25 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimAmountFormatter
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
-import com.vultisig.wallet.ui.components.CopyIcon
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
+import com.vultisig.wallet.ui.components.errors.ErrorView
+import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.components.inputs.VsTextInputField
 import com.vultisig.wallet.ui.components.inputs.VsTextInputFieldType
 import com.vultisig.wallet.ui.components.loader.VsSigningProgressIndicator
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
+import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimViewModel
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
+import com.vultisig.wallet.ui.screens.transaction.TransactionStatusRow
+import com.vultisig.wallet.ui.screens.transaction.TxDoneScaffold
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
@@ -105,35 +108,47 @@ internal fun QbtcClaimScreen(
         )
     }
 
-    V3Scaffold(
-        title = null,
-        onBackClick = onBackClick,
-        applyGradientBackground = false,
-        bottomBar = {
-            if (state is QbtcClaimUiState.Selecting) {
-                VsButton(
-                    label = ctaLabel(state),
-                    state = if (state.canConfirm) VsButtonState.Enabled else VsButtonState.Disabled,
-                    onClick = { if (isFastVault) passwordPrompt = true else onStartSecureVault() },
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
-                )
+    when (state) {
+        is QbtcClaimUiState.Done -> ClaimDoneScreen(state, onComplete = onBackClick)
+        is QbtcClaimUiState.Failed ->
+            ClaimErrorScreen(error = state.error, onRetry = onRetry, onBack = onBackClick)
+        else ->
+            V3Scaffold(
+                title = null,
+                onBackClick = onBackClick,
+                applyGradientBackground = false,
+                bottomBar = {
+                    if (state is QbtcClaimUiState.Selecting) {
+                        VsButton(
+                            label = ctaLabel(state),
+                            state =
+                                if (state.canConfirm) VsButtonState.Enabled
+                                else VsButtonState.Disabled,
+                            onClick = {
+                                if (isFastVault) passwordPrompt = true else onStartSecureVault()
+                            },
+                            modifier =
+                                Modifier.fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                        )
+                    }
+                },
+            ) {
+                when (state) {
+                    QbtcClaimUiState.Loading ->
+                        CenteredProgress(stringResource(R.string.qbtc_claim_loading))
+                    is QbtcClaimUiState.Blocked -> BlockedContent(state.reason)
+                    is QbtcClaimUiState.Selecting -> SelectingContent(state, onToggle)
+                    is QbtcClaimUiState.Pairing -> PairingContent(state)
+                    is QbtcClaimUiState.Signing ->
+                        ClaimSigningProgress(
+                            label = stringResource(R.string.qbtc_claim_proving),
+                            logoRes = R.drawable.qbtc,
+                        )
+                    is QbtcClaimUiState.Done,
+                    is QbtcClaimUiState.Failed -> Unit
+                }
             }
-        },
-    ) {
-        when (state) {
-            QbtcClaimUiState.Loading ->
-                CenteredProgress(stringResource(R.string.qbtc_claim_loading))
-            is QbtcClaimUiState.Blocked -> BlockedContent(state.reason)
-            is QbtcClaimUiState.Selecting -> SelectingContent(state, onToggle)
-            is QbtcClaimUiState.Pairing -> PairingContent(state)
-            is QbtcClaimUiState.Signing ->
-                ClaimSigningProgress(
-                    label = stringResource(R.string.qbtc_claim_proving),
-                    logoRes = R.drawable.qbtc,
-                )
-            is QbtcClaimUiState.Done -> DoneContent(state)
-            is QbtcClaimUiState.Failed -> FailedContent(state.error, onRetry)
-        }
     }
 }
 
@@ -330,44 +345,49 @@ private fun QbtcClaimUtxoRow(
 }
 
 @Composable
-private fun DoneContent(state: QbtcClaimUiState.Done) {
-    val uriHandler = LocalUriHandler.current
+private fun ClaimDoneScreen(state: QbtcClaimUiState.Done, onComplete: () -> Unit) {
+    var detailsVisible by remember { mutableStateOf(false) }
+    TxDoneScaffold(
+        transactionHash = state.txHash,
+        transactionLink = state.explorerUrl,
+        transactionStatus = TransactionStatus.Confirmed,
+        isTransactionDetailVisible = detailsVisible,
+        onTransactionDetailVisibleChange = { detailsVisible = it },
+        onBack = onComplete,
+        tokenContent = { ClaimedAmountCard(state.totalSats) },
+        detailContent = { TransactionStatusRow(TransactionStatus.Confirmed) },
+        bottomBarContent = {
+            VsButton(
+                label = stringResource(R.string.transaction_done_complete),
+                onClick = onComplete,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 24.dp),
+            )
+        },
+    )
+}
+
+@Composable
+private fun ClaimedAmountCard(totalSats: Long) {
+    val shape = RoundedCornerShape(24.dp)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxSize().padding(top = 48.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(color = Theme.v2.colors.backgrounds.secondary, shape = shape)
+                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
+                .padding(horizontal = 16.dp, vertical = 24.dp),
     ) {
+        Image(
+            painter = painterResource(R.drawable.qbtc),
+            contentDescription = null,
+            modifier = Modifier.size(48.dp),
+        )
         Text(
-            text = stringResource(R.string.qbtc_claim_success_title),
-            style = Theme.brockmann.headings.title2,
+            text = QbtcClaimAmountFormatter.formatQbtc(totalSats),
+            style = Theme.satoshi.price.title1,
             color = Theme.v2.colors.text.primary,
         )
-        Text(
-            text = QbtcClaimAmountFormatter.formatQbtc(state.totalSats),
-            style = Theme.satoshi.price.title1,
-            color = Theme.v2.colors.primary.accent4,
-        )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(horizontal = 16.dp),
-        ) {
-            Text(
-                text = state.txHash,
-                style = Theme.brockmann.body.s.regular,
-                color = Theme.v2.colors.text.secondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f, fill = false),
-            )
-            CopyIcon(textToCopy = state.explorerUrl.ifEmpty { state.txHash })
-        }
-        if (state.explorerUrl.isNotEmpty()) {
-            VsButton(
-                label = stringResource(R.string.transaction_history_view_on_explorer),
-                onClick = { uriHandler.openUri(state.explorerUrl) },
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-        }
     }
 }
 
@@ -395,7 +415,7 @@ private fun BlockedContent(reason: QbtcClaimBlockedReason) {
 }
 
 @Composable
-private fun FailedContent(error: QbtcClaimError, onRetry: () -> Unit) {
+private fun ClaimErrorScreen(error: QbtcClaimError, onRetry: () -> Unit, onBack: () -> Unit) {
     val message =
         when (error) {
             QbtcClaimError.INVALID_BTC_PUBLIC_KEY ->
@@ -408,25 +428,12 @@ private fun FailedContent(error: QbtcClaimError, onRetry: () -> Unit) {
                 stringResource(R.string.qbtc_claim_error_pairing_timeout)
             QbtcClaimError.GENERIC -> stringResource(R.string.qbtc_claim_failed)
         }
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-    ) {
-        UiSpacer(weight = 1f)
-        Text(
-            text = message,
-            style = Theme.brockmann.body.m.medium,
-            color = Theme.v2.colors.text.primary,
-            textAlign = TextAlign.Center,
-        )
-        UiSpacer(weight = 1f)
-        VsButton(
-            label = stringResource(R.string.try_again),
-            onClick = onRetry,
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
+    ErrorView(
+        title = message,
+        buttonUiModel =
+            ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = onRetry),
+        onBack = onBack,
+    )
 }
 
 @Composable

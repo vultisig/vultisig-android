@@ -13,6 +13,12 @@ fun String.toHexBytes(): ByteArray {
     return Numeric.hexStringToByteArray(this)
 }
 
+/** Parses an even-length hex string into bytes, returning null on odd length or invalid hex. */
+fun String.hexToByteArrayOrNull(): ByteArray? {
+    if (length % 2 != 0) return null
+    return runCatching { chunked(2).map { it.toInt(16).toByte() }.toByteArray() }.getOrNull()
+}
+
 fun String.toHexByteArray(): ByteArray {
     return Numeric.hexStringToByteArray(this)
 }
