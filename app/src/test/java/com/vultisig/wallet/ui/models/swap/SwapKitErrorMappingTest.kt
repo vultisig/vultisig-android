@@ -18,6 +18,7 @@ internal class SwapKitErrorMappingTest {
         SwapQuoteManager(
             swapQuoteRepository = mockk(relaxed = true),
             tokenRepository = mockk(relaxed = true),
+            tokenPriceRepository = mockk(relaxed = true),
             convertTokenValueToFiat = mockk(relaxed = true),
             mapTokenValueToDecimalUiString = mockk(relaxed = true),
             fiatValueToString = mockk(relaxed = true),
