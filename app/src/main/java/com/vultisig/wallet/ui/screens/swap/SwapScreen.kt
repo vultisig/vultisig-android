@@ -358,9 +358,15 @@ internal fun SwapScreen(
                                 }
                             }
 
+                            // Keep the last (or indicative) destination value on screen while a new
+                            // quote loads; only fall back to the skeleton when there is nothing to
+                            // show yet — the first quote for a pair (#4712).
+                            val dstHasValue =
+                                state.estimatedDstTokenValue.isNotBlank() &&
+                                    state.estimatedDstTokenValue != "0"
                             TokenInput(
                                 title = stringResource(R.string.swap_form_dst_token_title),
-                                isLoading = state.isLoading,
+                                isLoading = state.isLoading && !dstHasValue,
                                 selectedToken = state.selectedDstToken,
                                 fiatValue = state.estimatedDstFiatValue,
                                 onSelectNetworkClick = onSelectDstNetworkClick,
@@ -384,7 +390,11 @@ internal fun SwapScreen(
                                     Text(
                                         text = state.estimatedDstTokenValue,
                                         style = Theme.brockmann.headings.title2,
-                                        color = Theme.v2.colors.text.secondary,
+                                        // Grey the value while it is only an indicative spot-price
+                                        // estimate; firm quotes render in the brighter secondary.
+                                        color =
+                                            if (state.isDstEstimated) Theme.v2.colors.text.tertiary
+                                            else Theme.v2.colors.text.secondary,
                                         textAlign = TextAlign.End,
                                         maxLines = 1,
                                     )
@@ -1016,6 +1026,28 @@ internal fun SwapFormScreenPreview2() {
                 expiredAt = Clock.System.now(),
             ),
         srcAmountTextFieldState = TextFieldState(),
+    )
+}
+
+// Mid-load snapshot for #4712: amount entered, firm quote still resolving. Before the change the
+// destination blanked to a skeleton here; after, it shows a greyed indicative estimate.
+@Preview
+@Composable
+internal fun SwapFormQuoteLoadingPreview() {
+    SwapScreen(
+        state =
+            SwapFormUiModel(
+                selectedSrcToken = longTokenInput,
+                selectedDstToken = tokenInput,
+                srcFiatValue = "5.25",
+                estimatedDstTokenValue = "12.80",
+                estimatedDstFiatValue = "$5.24",
+                isDstEstimated = true,
+                provider = UiText.Empty,
+                isLoading = true,
+                isSwapDisabled = true,
+            ),
+        srcAmountTextFieldState = TextFieldState("2.5"),
     )
 }
 
