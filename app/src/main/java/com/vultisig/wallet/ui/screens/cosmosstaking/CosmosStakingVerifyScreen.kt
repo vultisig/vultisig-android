@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -37,6 +38,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
+import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyViewModel
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.asString
@@ -72,7 +74,10 @@ internal fun CosmosStakingVerifyScreen(viewModel: CosmosStakingVerifyViewModel =
         )
     }
 
-    V2Scaffold(title = stringResource(R.string.verify_deposit_function_overview)) {
+    V2Scaffold(
+        title = stringResource(R.string.verify_deposit_function_overview),
+        onBackClick = viewModel::back,
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier =
@@ -203,3 +208,47 @@ private fun SummaryRow(label: String, value: String, secondary: String? = null) 
 private fun truncatedMiddle(value: String): String =
     if (value.length > 14) "${value.substring(0, 8)}…${value.substring(value.length - 4)}"
     else value
+
+@Preview
+@Composable
+private fun CosmosStakingVerifyScreenPreview() {
+    V2Scaffold(title = "Overview", onBackClick = {}) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp)
+                        .padding(bottom = 96.dp)
+            ) {
+                SummaryCard(
+                    state =
+                        CosmosStakingVerifyUiState(
+                            headlineRes = R.string.cosmos_staking_youre_claiming,
+                            amount = "0.000001",
+                            ticker = "LUNA",
+                            vaultName = "Main Vault",
+                            fromAddress = "terra1delegatorxxxxxxxxxxxxxxxxxxxxxxxxxx78wk",
+                            validatorRows =
+                                listOf(
+                                    CosmosStakingVerifyValidatorRow(
+                                        labelRes = R.string.cosmos_staking_validator_picker,
+                                        value = "Allnodes (5% commission)",
+                                    )
+                                ),
+                            networkName = "Terra",
+                            feeCrypto = "0.01 LUNA",
+                            isLoading = false,
+                        )
+                )
+            }
+            VsButton(
+                label = stringResource(R.string.cosmos_staking_verify_sign),
+                variant = VsButtonVariant.CTA,
+                state = VsButtonState.Enabled,
+                onClick = {},
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
+            )
+        }
+    }
+}

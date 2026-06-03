@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
@@ -29,6 +31,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosRedelegateViewModel
 import com.vultisig.wallet.ui.theme.Theme
+import java.math.BigDecimal
 
 /**
  * Redelegate input form for LUNA / LUNC. Amount first, then destination picker via a modal-bottom-
@@ -45,7 +48,8 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
             stringResource(
                 R.string.cosmos_staking_redelegate_title,
                 state.ticker.ifEmpty { "Token" },
-            )
+            ),
+        onBackClick = viewModel::back,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -172,5 +176,40 @@ private fun DstValidatorPickerRow(selected: CosmosValidator?, onClick: () -> Uni
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.secondary,
         )
+    }
+}
+
+@Preview
+@Composable
+private fun CosmosRedelegateScreenPreview() {
+    V2Scaffold(title = "Redelegate LUNA", onBackClick = {}) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                ValidatorReadonlyBlock(moniker = "Allnodes", address = "terravaloper1allnodes78wk")
+                StakingAmountCard(
+                    ticker = "LUNA",
+                    amountFieldState = rememberTextFieldState("1.0"),
+                    available = BigDecimal("2.5"),
+                    percentageSelected = 50,
+                    onPercentage = {},
+                )
+                Text(
+                    text = stringResource(R.string.cosmos_staking_redelegate_source),
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.primary,
+                )
+                DstValidatorPickerRow(selected = null, onClick = {})
+            }
+            VsButton(
+                label = "Continue",
+                variant = VsButtonVariant.CTA,
+                state = VsButtonState.Enabled,
+                onClick = {},
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
+            )
+        }
     }
 }
