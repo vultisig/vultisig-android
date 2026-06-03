@@ -182,11 +182,12 @@ private fun SelectingContent(state: QbtcClaimUiState.Selecting, onToggle: (Strin
 
 @Composable
 private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
+    val shape = RoundedCornerShape(16.dp)
     Box(
         modifier =
             Modifier.fillMaxWidth()
                 .height(118.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(shape)
                 .background(
                     Brush.verticalGradient(
                         listOf(
@@ -195,11 +196,7 @@ private fun QbtcClaimHeroCard(totalEligibleSats: Long) {
                         )
                     )
                 )
-                .border(
-                    1.dp,
-                    Theme.v2.colors.primary.accent4.copy(alpha = 0.17f),
-                    RoundedCornerShape(16.dp),
-                )
+                .border(1.dp, Theme.v2.colors.primary.accent4.copy(alpha = 0.17f), shape)
     ) {
         Image(
             painter = painterResource(R.drawable.qbtc_claim_hero),
@@ -354,6 +351,7 @@ private fun ClaimDoneScreen(state: QbtcClaimUiState.Done, onComplete: () -> Unit
         isTransactionDetailVisible = detailsVisible,
         onTransactionDetailVisibleChange = { detailsVisible = it },
         onBack = onComplete,
+        successTitle = stringResource(R.string.qbtc_claim_successful),
         tokenContent = { ClaimedAmountCard(state.totalSats) },
         detailContent = { TransactionStatusRow(TransactionStatus.Confirmed) },
         bottomBarContent = {

@@ -1234,6 +1234,7 @@
     <string name="qbtc_claim_cta_partial">Reclamar %1$d de %2$d</string>
     <string name="qbtc_claim_proving">Generando prueba y transmitiendo…</string>
     <string name="qbtc_claim_success_title">QBTC reclamado</string>
+    <string name="qbtc_claim_successful">QBTC reclamado correctamente</string>
     <string name="qbtc_claim_password_title">Introduce la contraseña de la bóveda</string>
     <string name="qbtc_claim_pair_instruction">Escanea esto con tu otro dispositivo para firmar la reclamación de forma conjunta</string>
     <string name="qbtc_claim_failed">Reclamación fallida</string>

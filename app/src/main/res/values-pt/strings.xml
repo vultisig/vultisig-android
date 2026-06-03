@@ -1232,6 +1232,7 @@
     <string name="qbtc_claim_cta_partial">Resgatar %1$d de %2$d</string>
     <string name="qbtc_claim_proving">A gerar prova e a transmitir…</string>
     <string name="qbtc_claim_success_title">QBTC resgatado</string>
+    <string name="qbtc_claim_successful">QBTC resgatado com sucesso</string>
     <string name="qbtc_claim_password_title">Introduza a palavra-passe do cofre</string>
     <string name="qbtc_claim_pair_instruction">Leia isto com o seu outro dispositivo para assinar o resgate em conjunto</string>
     <string name="qbtc_claim_failed">Resgate falhou</string>

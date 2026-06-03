@@ -189,19 +189,14 @@ constructor(
 
     /** Fast Vault: sign with the server co-signer using the entered vault password. */
     fun confirm(fastVaultPassword: String) {
-        if (claimJob?.isActive == true) return
-        if (!canConfirm()) return
-        val vault = vault ?: return
-        val btcCoin = btcCoin ?: return
-        val qbtcCoin = qbtcCoin ?: return
-        val selected = selectedUtxos()
+        val claim = readyClaim() ?: return
         claimJob =
             viewModelScope.safeLaunch {
                 runOrchestrator(
-                    vault,
-                    btcCoin,
-                    qbtcCoin,
-                    selected,
+                    claim.vault,
+                    claim.btcCoin,
+                    claim.qbtcCoin,
+                    claim.selected,
                     fastVaultPassword,
                     fastVaultRoundRunner,
                     pusher = null,
@@ -211,30 +206,38 @@ constructor(
 
     /** Secure Vault: pair with the co-signing device over a QR, then run the claim. */
     fun startSecureVaultClaim() {
-        if (claimJob?.isActive == true) return
-        if (!canConfirm()) return
-        val vault = vault ?: return
-        val btcCoin = btcCoin ?: return
-        val qbtcCoin = qbtcCoin ?: return
-        val selected = selectedUtxos()
-
+        val claim = readyClaim() ?: return
         claimJob =
             viewModelScope.safeLaunch {
-                val session = pairAndKickoff(vault, btcCoin)
+                val session = pairAndKickoff(claim.vault, claim.btcCoin)
                 if (session == null) {
                     uiState.value = QbtcClaimUiState.Failed(QbtcClaimError.PAIRING_TIMEOUT)
                     return@safeLaunch
                 }
                 runOrchestrator(
-                    vault,
-                    btcCoin,
-                    qbtcCoin,
-                    selected,
+                    claim.vault,
+                    claim.btcCoin,
+                    claim.qbtcCoin,
+                    claim.selected,
                     fastVaultPassword = "",
                     runner = QbtcClaimSecureVaultRoundRunner(session, sessionApi, encryption),
                     pusher = QbtcClaimRelayResultPusher(session, sessionApi, encryption, json),
                 )
             }
+    }
+
+    /**
+     * Resolves the inputs needed to start a claim, or null when a claim is already running, the
+     * selection is invalid, or the vault/coins haven't loaded yet — each of which aborts the
+     * action.
+     */
+    private fun readyClaim(): ReadyClaim? {
+        if (claimJob?.isActive == true) return null
+        if (!canConfirm()) return null
+        val vault = vault ?: return null
+        val btcCoin = btcCoin ?: return null
+        val qbtcCoin = qbtcCoin ?: return null
+        return ReadyClaim(vault, btcCoin, qbtcCoin, selectedUtxos())
     }
 
     fun retry() = load()
@@ -408,6 +411,13 @@ constructor(
 
     private fun ClaimableUtxo.shortTxid(): String =
         if (txid.length <= 14) "$txid:$vout" else "${txid.take(4)}…${txid.takeLast(4)}:$vout"
+
+    private data class ReadyClaim(
+        val vault: Vault,
+        val btcCoin: Coin,
+        val qbtcCoin: Coin,
+        val selected: List<ClaimableUtxo>,
+    )
 
     private companion object {
         val PEER_DISCOVERY_TIMEOUT = 300.seconds

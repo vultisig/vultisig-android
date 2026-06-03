@@ -85,7 +85,7 @@ internal fun ClaimQbtcPromoBanner(onClaim: () -> Unit, modifier: Modifier = Modi
                 style = Theme.brockmann.button.semibold.medium,
                 color = Theme.v2.colors.text.primary,
                 modifier =
-                    Modifier.clip(RoundedCornerShape(99.dp))
+                    Modifier.clip(PillShape)
                         .background(Theme.v2.colors.buttons.ctaPrimary)
                         .clickable(onClick = onClaim)
                         .padding(horizontal = 24.dp, vertical = 12.dp),
@@ -97,11 +97,46 @@ internal fun ClaimQbtcPromoBanner(onClaim: () -> Unit, modifier: Modifier = Modi
 @Composable
 private fun QbtcCoinDecorations() {
     Box(modifier = Modifier.fillMaxSize()) {
-        QbtcCoin(40.dp, 45.dp, -26.5f, Alignment.CenterStart, 7.dp, (-55).dp)
-        QbtcCoin(90.dp, 100.dp, 13f, Alignment.CenterStart, (-30).dp, 11.dp)
-        QbtcCoin(50.dp, 55.dp, 8.5f, Alignment.CenterStart, 10.dp, 72.dp)
-        QbtcCoin(87.dp, 98.dp, 0f, Alignment.CenterEnd, 17.dp, (-50).dp)
-        QbtcCoin(50.dp, 55.dp, -6.84f, Alignment.CenterEnd, (-10).dp, 45.dp)
+        QbtcCoin(
+            width = 40.dp,
+            height = 45.dp,
+            rotation = -26.5f,
+            alignment = Alignment.CenterStart,
+            offsetX = 7.dp,
+            offsetY = (-55).dp,
+        )
+        QbtcCoin(
+            width = 90.dp,
+            height = 100.dp,
+            rotation = 13f,
+            alignment = Alignment.CenterStart,
+            offsetX = (-30).dp,
+            offsetY = 11.dp,
+        )
+        QbtcCoin(
+            width = 50.dp,
+            height = 55.dp,
+            rotation = 8.5f,
+            alignment = Alignment.CenterStart,
+            offsetX = 10.dp,
+            offsetY = 72.dp,
+        )
+        QbtcCoin(
+            width = 87.dp,
+            height = 98.dp,
+            rotation = 0f,
+            alignment = Alignment.CenterEnd,
+            offsetX = 17.dp,
+            offsetY = (-50).dp,
+        )
+        QbtcCoin(
+            width = 50.dp,
+            height = 55.dp,
+            rotation = -6.84f,
+            alignment = Alignment.CenterEnd,
+            offsetX = (-10).dp,
+            offsetY = 45.dp,
+        )
     }
 }
 
@@ -150,7 +185,7 @@ internal fun ClaimQbtcBottomCta(onClaim: () -> Unit, modifier: Modifier = Modifi
             modifier =
                 Modifier.fillMaxWidth()
                     .padding(horizontal = 24.dp, vertical = 16.dp)
-                    .clip(RoundedCornerShape(99.dp))
+                    .clip(PillShape)
                     .background(Theme.v2.colors.buttons.ctaPrimary)
                     .clickable(onClick = onClaim)
                     .padding(horizontal = 24.dp, vertical = 12.dp),
@@ -159,3 +194,4 @@ internal fun ClaimQbtcBottomCta(onClaim: () -> Unit, modifier: Modifier = Modifi
 }
 
 private val QbtcBannerGlow = Color(0xFF0538C7)
+private val PillShape = RoundedCornerShape(99.dp)

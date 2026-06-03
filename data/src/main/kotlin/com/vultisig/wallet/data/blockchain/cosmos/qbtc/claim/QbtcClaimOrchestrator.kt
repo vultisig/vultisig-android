@@ -137,15 +137,7 @@ class QbtcClaimOrchestrator(
                 )
             )
 
-        // The service recomputes and broadcasts on our behalf; a drift in the
-        // echoed hashes means it acted on data we didn't authorize — fail loudly.
-        if (
-            !proof.messageHash.equals(messageHashHex, ignoreCase = true) ||
-                !proof.addressHash.equals(hashes.addressHash.toHex(), ignoreCase = true) ||
-                !proof.qbtcAddressHash.equals(hashes.qbtcAddressHash.toHex(), ignoreCase = true)
-        ) {
-            throw QbtcClaimException(QbtcClaimError.PROOF_HASH_MISMATCH)
-        }
+        verifyEchoedHashes(proof, messageHashHex, hashes)
 
         val txHash = proof.txHash
         if (txHash.isNullOrEmpty()) {
@@ -155,18 +147,39 @@ class QbtcClaimOrchestrator(
         val totalSats = input.utxos.sumOf { it.amount }
         val uppercasedTxHash = txHash.uppercase()
 
-        // Best-effort: a failure to notify the peer must not fail the claim.
-        peerResultPusher?.let { pusher ->
-            try {
-                pusher.push(uppercasedTxHash, totalSats)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.w(e, "Failed to push claim result to peer")
-            }
-        }
+        notifyPeer(uppercasedTxHash, totalSats)
 
         _phase.value = QbtcClaimPhase.Done(QbtcClaimRunResult(uppercasedTxHash, totalSats))
+    }
+
+    /**
+     * The service recomputes and broadcasts on our behalf; a drift in the echoed hashes means it
+     * acted on data we didn't authorize — fail loudly.
+     */
+    private fun verifyEchoedHashes(
+        proof: ClaimProofResponse,
+        messageHashHex: String,
+        hashes: QbtcClaimHashes,
+    ) {
+        if (
+            !proof.messageHash.equals(messageHashHex, ignoreCase = true) ||
+                !proof.addressHash.equals(hashes.addressHash.toHex(), ignoreCase = true) ||
+                !proof.qbtcAddressHash.equals(hashes.qbtcAddressHash.toHex(), ignoreCase = true)
+        ) {
+            throw QbtcClaimException(QbtcClaimError.PROOF_HASH_MISMATCH)
+        }
+    }
+
+    /** Best-effort: a failure to notify the peer must not fail the claim. */
+    private suspend fun notifyPeer(txHashHex: String, totalSats: Long) {
+        val pusher = peerResultPusher ?: return
+        try {
+            pusher.push(txHashHex, totalSats)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to push claim result to peer")
+        }
     }
 }
 

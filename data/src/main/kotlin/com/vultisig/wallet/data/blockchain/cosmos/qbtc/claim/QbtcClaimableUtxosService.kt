@@ -21,22 +21,23 @@ constructor(private val blockChairApi: BlockChairApi) : QbtcClaimableUtxosServic
     override suspend fun fetchClaimableCandidates(btcAddress: String): List<ClaimableUtxo> {
         val info = blockChairApi.getAddressInfo(Chain.Bitcoin, btcAddress)
         val currentBlockHeight = info?.currentBlockHeight
-        return info?.utxos.orEmpty().mapNotNull { utxo ->
-            if (utxo.transactionHash.isEmpty() || utxo.index < 0 || utxo.value < 0) {
-                return@mapNotNull null
+        return info
+            ?.utxos
+            .orEmpty()
+            .filter { it.transactionHash.isNotEmpty() && it.index >= 0 && it.value >= 0 }
+            .map { utxo ->
+                val blockId = utxo.blockId.takeIf { it > 0 }?.toLong()
+                ClaimableUtxo(
+                    txid = utxo.transactionHash,
+                    vout = utxo.index,
+                    amount = utxo.value,
+                    confirmations =
+                        if (blockId != null && currentBlockHeight != null) {
+                            (currentBlockHeight - blockId + 1).coerceAtLeast(0)
+                        } else {
+                            null
+                        },
+                )
             }
-            val blockId = utxo.blockId.takeIf { it > 0 }?.toLong()
-            ClaimableUtxo(
-                txid = utxo.transactionHash,
-                vout = utxo.index,
-                amount = utxo.value,
-                confirmations =
-                    if (blockId != null && currentBlockHeight != null) {
-                        (currentBlockHeight - blockId + 1).coerceAtLeast(0)
-                    } else {
-                        null
-                    },
-            )
-        }
     }
 }
