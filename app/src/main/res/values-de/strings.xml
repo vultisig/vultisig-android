@@ -1222,6 +1222,37 @@
     <string name="decoded_function_min_amount_out">Min. Ausgangsbetrag</string>
     <string name="decoded_function_amount_out">Ausgangsbetrag</string>
     <string name="decoded_function_swap_title">Tausch</string>
+    <!-- QBTC Claim -->
+    <string name="qbtc_claim_title">QBTC abrufen</string>
+    <string name="qbtc_claim_loading">Berechtigung wird geprüft…</string>
+    <string name="qbtc_claim_hero_title">Abrufbares QBTC</string>
+    <string name="qbtc_claim_tab">Abrufen</string>
+    <string name="qbtc_claim_description">QBTC ist eine quantenresistente Version von BTC. Ihre vorhandenen BTC-UTXOs können im Verhältnis 1:1 als QBTC abgerufen werden. Wählen Sie unten aus, welche UTXOs Sie abrufen möchten.</string>
+    <string name="qbtc_claim_description_emphasis">quantenresistente</string>
+    <string name="qbtc_claim_eligible_header">Berechtigte UTXOs</string>
+    <string name="qbtc_claim_utxo_block_format">Bestätigt · vor %1$d Blöcken</string>
+    <string name="qbtc_claim_utxo_pending">Ausstehend</string>
+    <string name="qbtc_claim_cta_all">Alle abrufen</string>
+    <string name="qbtc_claim_cta_partial">%1$d von %2$d abrufen</string>
+    <string name="qbtc_claim_proving">Nachweis wird erstellt und gesendet…</string>
+    <string name="qbtc_claim_success_title">QBTC abgerufen</string>
+    <string name="qbtc_claim_successful">QBTC erfolgreich abgerufen</string>
+    <string name="qbtc_claim_password_title">Tresorpasswort eingeben</string>
+    <string name="qbtc_claim_pair_instruction">Scannen Sie dies mit Ihrem anderen Gerät, um den Abruf gemeinsam zu signieren</string>
+    <string name="qbtc_claim_failed">Abruf fehlgeschlagen</string>
+    <string name="qbtc_claim_unavailable_title">Abrufen ist deaktiviert</string>
+    <string name="qbtc_claim_unavailable_detail">Das Abrufen von QBTC ist im Netzwerk vorübergehend deaktiviert. Bitte versuchen Sie es später erneut.</string>
+    <string name="qbtc_claim_unsupported_address_title">Adresse nicht unterstützt</string>
+    <string name="qbtc_claim_failed_to_load_title">Abrufbare UTXOs konnten nicht geladen werden</string>
+    <string name="qbtc_claim_no_utxos_title">Nichts zum Abrufen</string>
+    <string name="qbtc_claim_no_utxos_detail">Sie haben keine Bitcoin-UTXOs, die als QBTC abgerufen werden können.</string>
+    <string name="qbtc_claim_error_invalid_btc_key">Ungültiger öffentlicher Bitcoin-Schlüssel.</string>
+    <string name="qbtc_claim_error_proof_mismatch">Der Nachweisdienst hat nicht übereinstimmende Daten zurückgegeben. Der Abruf wurde nicht übermittelt.</string>
+    <string name="qbtc_claim_error_broadcast_unavailable">Der Abruf konnte nicht gesendet werden. Bitte versuchen Sie es später erneut.</string>
+    <string name="qbtc_claim_error_pairing_timeout">Das andere Gerät ist nicht rechtzeitig beigetreten. Stellen Sie sicher, dass beide Geräte verbunden sind, und versuchen Sie es erneut.</string>
+    <string name="qbtc_claim_banner_subtitle">Dasselbe Bitcoin. Quantensicher.</string>
+    <string name="qbtc_claim_banner_title">Rufen Sie Ihr QBTC ab</string>
+    <string name="qbtc_claim_banner_cta">Jetzt abrufen</string>
     <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
     <string name="cosmos_staking_action_claim">Einfordern</string>
     <string name="cosmos_staking_action_delegate">Staken</string>

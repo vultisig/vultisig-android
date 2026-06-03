@@ -71,6 +71,8 @@ internal data class ChainTokensUiModel(
     val searchTextFieldState: TextFieldState = TextFieldState(),
     val scanQrUiModel: ScanQrUiModel = ScanQrUiModel(),
     val tronResourceStats: ResourceUsage? = null,
+    val showQbtcClaimBanner: Boolean = false,
+    val showClaimQbtcButton: Boolean = false,
 )
 
 @Immutable
@@ -157,6 +159,28 @@ constructor(
         }
     }
 
+    fun onClaimQbtc() {
+        viewModelScope.launch {
+            val vaultId = vaultId ?: return@launch
+            navigator.route(Route.QbtcClaim(vaultId = vaultId))
+        }
+    }
+
+    // Instant in-memory eligibility (MLDSA key + BTC address); the claim screen does the real
+    // check.
+    private fun checkQbtcClaimEligibility(chain: Chain) {
+        val vault = currentVault
+        val btcAddress = vault?.coins?.firstOrNull { it.chain == Chain.Bitcoin }?.address
+        val isEligible =
+            vault != null && vault.pubKeyMLDSA.isNotEmpty() && !btcAddress.isNullOrEmpty()
+        uiState.update {
+            it.copy(
+                showQbtcClaimBanner = isEligible && chain == Chain.Bitcoin,
+                showClaimQbtcButton = isEligible && chain == Chain.Qbtc,
+            )
+        }
+    }
+
     fun buy() {
         viewModelScope.launch {
             val vaultId = vaultId ?: return@launch
@@ -226,6 +250,7 @@ constructor(
 
                 currentVault = vaultRepository.get(vaultId) ?: error("No vault with $vaultId")
                 collectTronResourceStats(chain)
+                checkQbtcClaimEligibility(chain)
                 addressDataSource
                     .onEach {
                         if (isRefresh) {

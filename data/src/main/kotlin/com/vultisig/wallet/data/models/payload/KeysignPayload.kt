@@ -40,6 +40,8 @@ data class KeysignPayload(
     val tronTriggerSmartContractPayload: TronTriggerSmartContractPayload? = null,
     val tronTransferAssetContractPayload: TronTransferAssetContractPayload? = null,
     val skipBroadcast: Boolean = false,
+    /** Marks a QBTC claim BTC-ownership keysign so a peer routes to the claim co-sign path. */
+    val isQbtcClaim: Boolean = false,
     val defiAction: DeFiAction = DeFiAction.NONE,
     /**
      * Identity of the dApp that originated this keysign request (name, URL, icon), if the request

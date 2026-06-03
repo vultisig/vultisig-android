@@ -269,6 +269,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     )
                 } else null,
             skipBroadcast = keysignPayload.skipBroadcast,
+            isQbtcClaim = keysignPayload.isQbtcClaim,
             tronTransferContractPayload = keysignPayload.tronTransferContractPayload,
             tronTransferAssetContractPayload = keysignPayload.tronTransferAssetContractPayload,
             tronTriggerSmartContractPayload = keysignPayload.tronTriggerSmartContractPayload,

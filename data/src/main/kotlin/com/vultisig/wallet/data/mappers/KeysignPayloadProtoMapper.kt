@@ -47,6 +47,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                 },
             wasmExecuteContractPayload = from.wasmExecuteContractPayload,
             skipBroadcast = from.skipBroadcast ?: false,
+            isQbtcClaim = from.isQbtcClaim,
             signAmino = from.signAmino,
             signDirect = from.signDirect,
             signSolana = from.signSolana,
