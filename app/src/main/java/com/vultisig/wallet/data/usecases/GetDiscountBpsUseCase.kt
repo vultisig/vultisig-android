@@ -26,6 +26,9 @@ import wallet.core.jni.CoinType
  */
 interface GetDiscountBpsUseCase {
     suspend operator fun invoke(vaultId: String, swapProvider: SwapProvider): Int
+
+    /** True when the vault holds at least the Silver-tier VULT amount (>= 3000 VULT). */
+    suspend fun hasReachedSilverTier(vaultId: String): Boolean
 }
 
 internal class GetDiscountBpsUseCaseImpl
@@ -52,6 +55,11 @@ constructor(
         } else {
             discount.getNextDiscount()
         }
+    }
+
+    override suspend fun hasReachedSilverTier(vaultId: String): Boolean {
+        val balance = getVultBalance(vaultId) ?: return false
+        return balance >= SILVER_TIER_THRESHOLD
     }
 
     suspend fun getVultBalance(vaultId: String): BigInteger? {
