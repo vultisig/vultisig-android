@@ -255,24 +255,50 @@ private fun UnstakePercentSlider(percent: Float, onPercentChanged: (Float) -> Un
     }
 }
 
+/**
+ * Read-only validator row for the unstake / redelegate-source slot. Styled like the Stake screen's
+ * "Validator" picker button (bordered row, "Validator" label + avatar + moniker), but without the
+ * picker affordance since the validator is fixed by the caller.
+ */
 @Composable
 internal fun ValidatorReadonlyBlock(moniker: String, address: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
             text = stringResource(R.string.cosmos_staking_validator_picker),
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
         )
-        Text(
-            text = moniker.ifEmpty { address },
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.primary,
-        )
-        Text(
-            text = address,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.secondary,
-        )
+        Row(
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ValidatorAvatar(
+                avatarUrl = null,
+                monogram = moniker.ifEmpty { address }.take(1).uppercase(),
+                size = 24.dp,
+                colorKey = address,
+            )
+            UiSpacer(size = 8.dp)
+            Text(
+                text = moniker.ifEmpty { truncated(address) },
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.secondary,
+                maxLines = 1,
+            )
+        }
     }
 }
 
