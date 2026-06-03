@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.keysign
 
 import androidx.compose.runtime.Immutable
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.repositories.AbiParam
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
@@ -60,6 +61,10 @@ internal data class DecodedFunctionParam(
  *   Router, Permit2, etc.), or null when unknown.
  * - [isUnlimitedApproval] flips the amount row into the warning style and uses an `Unlimited`
  *   label, matching the existing unlimited-approval banner.
+ * - [abiParams] are the parameter names recovered from the contract's verified ABI (Sourcify), used
+ *   only by the generic fallback to label rows `tokenId` / `trait.name` instead of `#1` / `#3.1`.
+ *   Null (the common case — unverified contract, no semantic handler attempted resolution) keeps
+ *   the positional labelling. Names never reorder or reinterpret values; they are display-only.
  *
  * Returns null when [signature] or [inputsJson] is blank or unparseable — callers should hide the
  * rich-parameter UI in that case.
@@ -72,6 +77,7 @@ internal fun decodedFunctionParams(
     tokenDecimals: Int? = null,
     contractLabel: (String) -> String? = { null },
     isUnlimitedApproval: Boolean = false,
+    abiParams: List<AbiParam>? = null,
 ): List<DecodedFunctionParam>? {
     if (signature.isNullOrBlank() || inputsJson.isNullOrBlank()) return null
     val parsed = parseFunctionSignature(signature) ?: return null
@@ -94,7 +100,18 @@ internal fun decodedFunctionParams(
                 return it
             }
     }
-    return genericParams(parsed.types, inputs, contractLabel)
+    return genericParams(parsed.types, inputs, abiParams, contractLabel)
+}
+
+/**
+ * True when [signature]'s function name has a dedicated semantic handler (approve, transfer, …).
+ * Callers use this to skip the cost of a verified-ABI name lookup for calls that already render
+ * with curated labels — only the generic positional fallback benefits from recovered names.
+ */
+internal fun hasSemanticHandler(signature: String?): Boolean {
+    if (signature.isNullOrBlank()) return false
+    val parsed = parseFunctionSignature(signature) ?: return false
+    return PARAM_HANDLERS.containsKey(parsed.name.lowercase(Locale.ROOT))
 }
 
 private data class ParsedSignature(val name: String, val types: List<String>)
@@ -226,34 +243,143 @@ private fun setApprovalForAllRows(ctx: HandlerContext): List<DecodedFunctionPara
     )
 }
 
+/**
+ * Positional fallback for calls with no semantic handler. Walks the signature's type tree alongside
+ * the decoded value tree and (when available) the verified-ABI name tree, emitting one flat row per
+ * leaf:
+ * - **Tuples expand.** Each inner field becomes its own row rather than collapsing the whole struct
+ *   to one `...` line. Nested tuples recurse.
+ * - **Names when known.** A leaf renders its dotted ABI name (`trait.value`) when [abiParams]
+ *   resolved one for it and every ancestor; otherwise it falls back to the positional path with a
+ *   type tag (`#3.2 (string)`).
+ * - **Type-aware values.** `address` resolves through [contractLabel] and stays copyable; `bytes`
+ *   stays full-hex-and-copyable so the middle-ellipsised row can still be copied in full; `bool`
+ *   renders `true` / `false` (already normalised upstream).
+ *
+ * Depth and row count are capped so a hostile signature (the calldata is attacker-controlled) can't
+ * force unbounded recursion or a runaway row list on the signing screen.
+ */
 private fun genericParams(
     types: List<String>,
     inputs: List<JsonElement>,
+    abiParams: List<AbiParam>?,
     contractLabel: (String) -> String?,
 ): List<DecodedFunctionParam> {
-    val rowCount = maxOf(types.size, inputs.size)
-    return (0 until rowCount).map { index ->
-        val type = types.getOrNull(index)?.takeIf { it.isNotBlank() }
-        val element = inputs.getOrNull(index)
-        val value = element?.flatString().orEmpty()
-        val labelText = buildString {
-            append('#')
-            append(index + 1)
-            if (type != null) {
-                append(" (")
-                append(type)
-                append(')')
-            }
-        }
-        val isAddress = type != null && type.equals("address", ignoreCase = true)
-        DecodedFunctionParam(
-            label = UiText.DynamicString(labelText),
-            value = UiText.DynamicString(value),
-            copyableValue = if (isAddress) value.takeIf { it.isNotBlank() } else null,
-            secondary = if (isAddress) contractLabel(value) else null,
+    val out = mutableListOf<DecodedFunctionParam>()
+    val count = maxOf(types.size, inputs.size)
+    for (index in 0 until count) {
+        if (out.size >= MAX_PARAM_ROWS) break
+        val abi = abiParams?.getOrNull(index)
+        expandParam(
+            type = types.getOrNull(index)?.takeIf { it.isNotBlank() },
+            element = inputs.getOrNull(index),
+            abi = abi,
+            positionalPath = "#${index + 1}",
+            namePath = sanitizedName(abi),
+            depth = 0,
+            contractLabel = contractLabel,
+            out = out,
         )
     }
+    return out
 }
+
+private fun expandParam(
+    type: String?,
+    element: JsonElement?,
+    abi: AbiParam?,
+    positionalPath: String,
+    namePath: String?,
+    depth: Int,
+    contractLabel: (String) -> String?,
+    out: MutableList<DecodedFunctionParam>,
+) {
+    if (out.size >= MAX_PARAM_ROWS) return
+    val normalized = type?.trim()
+    if (depth < MAX_PARAM_DEPTH && normalized != null && isPlainTuple(normalized)) {
+        val innerTypes = splitTopLevelParamTypes(normalized.substring(1, normalized.length - 1))
+        val innerValues = (element as? JsonArray)?.toList().orEmpty()
+        val innerAbis = abi?.components
+        val childCount = maxOf(innerTypes.size, innerValues.size)
+        for (j in 0 until childCount) {
+            if (out.size >= MAX_PARAM_ROWS) return
+            val childAbi = innerAbis?.getOrNull(j)
+            expandParam(
+                type = innerTypes.getOrNull(j),
+                element = innerValues.getOrNull(j),
+                abi = childAbi,
+                positionalPath = "$positionalPath.${j + 1}",
+                namePath = joinNamePath(namePath, sanitizedName(childAbi)),
+                depth = depth + 1,
+                contractLabel = contractLabel,
+                out = out,
+            )
+        }
+        return
+    }
+    out += leafRow(normalized, element, positionalPath, namePath, contractLabel)
+}
+
+private fun leafRow(
+    type: String?,
+    element: JsonElement?,
+    positionalPath: String,
+    namePath: String?,
+    contractLabel: (String) -> String?,
+): DecodedFunctionParam {
+    val value = element?.flatString().orEmpty()
+    val isScalar = type != null && !type.endsWith("[]")
+    val isAddress = isScalar && type.equals("address", ignoreCase = true)
+    val isBytes = isScalar && type!!.startsWith("bytes", ignoreCase = true)
+    val label =
+        if (namePath != null) {
+            UiText.DynamicString(namePath)
+        } else {
+            UiText.DynamicString(
+                buildString {
+                    append(positionalPath)
+                    if (type != null) {
+                        append(" (")
+                        append(type)
+                        append(')')
+                    }
+                }
+            )
+        }
+    return DecodedFunctionParam(
+        label = label,
+        value = UiText.DynamicString(value),
+        // Addresses and bytes are middle-ellipsised by the renderer; keep the full value copyable
+        // so
+        // nothing the user is signing is hidden behind the truncation.
+        copyableValue = if (isAddress || isBytes) value.takeIf { it.isNotBlank() } else null,
+        secondary = if (isAddress) contractLabel(value) else null,
+    )
+}
+
+/** A plain tuple `(…)` — not a tuple array `(…)[]`, which renders as a single compact leaf row. */
+private fun isPlainTuple(type: String): Boolean = type.startsWith("(") && type.endsWith(")")
+
+/**
+ * Accepts an ABI-provided parameter name only when it is a plain solidity identifier of reasonable
+ * length. The ABI is attacker-influenceable (a contract author controls their own source), and the
+ * name is rendered verbatim into the signing screen, so anything with whitespace, control
+ * characters, lookalike Unicode, or excessive length is rejected back to the positional label.
+ */
+private fun sanitizedName(abi: AbiParam?): String? =
+    abi?.name?.takeIf { it.length in 1..MAX_PARAM_NAME_LENGTH && it.matches(SOLIDITY_IDENTIFIER) }
+
+private fun joinNamePath(parent: String?, child: String?): String? =
+    when {
+        child == null -> null
+        parent == null -> child
+        else -> "$parent.$child"
+    }
+
+private val SOLIDITY_IDENTIFIER = Regex("[A-Za-z_][A-Za-z0-9_]*")
+private const val MAX_PARAM_NAME_LENGTH = 40
+private const val MAX_PARAM_DEPTH = 8
+private const val MAX_PARAM_ROWS = 64
 
 private fun addressRow(
     label: UiText,

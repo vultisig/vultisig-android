@@ -60,6 +60,8 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindFourByteApi(impl: FourByteApiImpl): FourByteApi
 
+    @Binds @Singleton fun bindSourcifyApi(impl: SourcifyApiImpl): SourcifyApi
+
     @Binds @Singleton fun bindLiQuestApi(impl: LiQuestApiImpl): LiQuestApi
 
     @Binds @Singleton fun bindJupiterApi(impl: JupiterApiImpl): JupiterApi

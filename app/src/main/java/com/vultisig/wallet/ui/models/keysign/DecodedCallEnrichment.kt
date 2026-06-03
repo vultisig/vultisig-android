@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.keysign
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.AbiParam
 import com.vultisig.wallet.data.repositories.KnownEvmContracts
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
 import com.vultisig.wallet.data.repositories.UniversalRouterDecoder
@@ -57,6 +58,7 @@ internal suspend fun enrichDecodedCall(
     json: Json,
     tokenMetadataResolver: TokenMetadataResolver,
     nativeTokenLookup: suspend (Chain) -> Coin? = { null },
+    resolveAbiParams: suspend (Chain, String, String) -> List<AbiParam>? = { _, _, _ -> null },
 ): DecodedCallExtras {
     if (functionInfo == null) return EMPTY
 
@@ -94,6 +96,14 @@ internal suspend fun enrichDecodedCall(
             )
         } else null
 
+    // Only the positional fallback benefits from recovered names, so skip the verified-ABI lookup
+    // entirely for swap intents and for calls a semantic handler already labels (approve,
+    // transfer…).
+    val abiParams =
+        if (urRows == null && !hasSemanticHandler(signature)) {
+            resolveAbiParams(chain, dstAddress, signature)
+        } else null
+
     val rows =
         urRows
             ?: decodedFunctionParams(
@@ -104,6 +114,7 @@ internal suspend fun enrichDecodedCall(
                 tokenDecimals = approvalToken?.decimals,
                 contractLabel = { address -> KnownEvmContracts.lookup(chain, address) },
                 isUnlimitedApproval = isUnlimitedApproval,
+                abiParams = abiParams,
             )
 
     return DecodedCallExtras(
