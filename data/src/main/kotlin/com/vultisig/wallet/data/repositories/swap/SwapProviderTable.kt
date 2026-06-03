@@ -73,8 +73,11 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
         val ticker = coin.ticker.uppercase()
         return when (coin.chain) {
             Chain.MayaChain,
-            Chain.Dash,
             Chain.Kujira -> setOf(SwapProvider.MAYA)
+
+            // SwapKit DASH routes are signed by SwapKitLegacyP2PKHSigner (legacy P2PKH PSBT via
+            // CoinType.DASH). Mirrors iOS' `.dash → [.mayachain, .swapkit]`.
+            Chain.Dash -> setOf(SwapProvider.MAYA, SwapProvider.SWAPKIT)
 
             Chain.Ethereum -> ethereumProviders(ticker)
 
@@ -99,12 +102,19 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             Chain.ThorChain -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA)
             Chain.Bitcoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.MAYA, SwapProvider.SWAPKIT)
 
-            Chain.Dogecoin,
-            Chain.BitcoinCash,
-            Chain.Litecoin,
             Chain.GaiaChain -> setOf(SwapProvider.THORCHAIN)
 
-            Chain.Zcash -> setOf(SwapProvider.MAYA)
+            // SwapKit DOGE/BCH/LTC routes: DOGE/BCH are legacy P2PKH (SwapKitLegacyP2PKHSigner,
+            // with
+            // BCH's SIGHASH_FORKID), LTC is segwit PSBT (SwapKitBtcSigner). Mirrors iOS'
+            // `.dogecoin/.bitcoinCash/.litecoin → [.thorchain, .swapkit]`.
+            Chain.Dogecoin,
+            Chain.BitcoinCash,
+            Chain.Litecoin -> setOf(SwapProvider.THORCHAIN, SwapProvider.SWAPKIT)
+
+            // SwapKit ZEC routes are signed by SwapKitZcashSigner (Sapling-v4 transparent PSBT,
+            // ZIP-243 sighash). Mirrors iOS' `.zcash → [.mayachain, .swapkit]`.
+            Chain.Zcash -> setOf(SwapProvider.MAYA, SwapProvider.SWAPKIT)
 
             Chain.Arbitrum ->
                 if (ticker in mayaArbTokens)

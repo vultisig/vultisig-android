@@ -270,6 +270,54 @@ class SwapKitBtcSignerTest {
     }
 
     @Test
+    fun `getPreSignedImageHash - Litecoin route binds against the LTC vault + recipient`() {
+        try {
+            // LTC reuses the segwit signer with CoinType.LITECOIN: the vault address, lock script
+            // and change binding all flow through the coinType, so a valid LTC PSBT must produce
+            // one
+            // sighash without tripping the (now BTC-or-LTC) co-signing guard in UtxoHelper.
+            val vaultAddress = addressForCoin(vaultPubKeyHex, CoinType.LITECOIN)
+            val recipient = addressForCoin(recipientPubKeyHex, CoinType.LITECOIN)
+            val signer = SwapKitBtcSigner(vaultPubKeyHex, "", CoinType.LITECOIN)
+            val psbt =
+                encodePsbt(
+                    inputs =
+                        listOf(
+                            TestIn(
+                                prevTxIdDisplay =
+                                    "0000000000000000000000000000000000000000000000000000000000000001",
+                                vout = 0,
+                                sequence = 0xFFFFFFFFL,
+                                amount = 100_000,
+                                scriptHex = scriptHexForCoin(vaultAddress, CoinType.LITECOIN),
+                            )
+                        ),
+                    outputs =
+                        listOf(
+                            TestOut(
+                                amount = 60_000,
+                                scriptHex = scriptHexForCoin(recipient, CoinType.LITECOIN),
+                            ),
+                            TestOut(
+                                amount = 39_500,
+                                scriptHex = scriptHexForCoin(vaultAddress, CoinType.LITECOIN),
+                            ),
+                        ),
+                )
+
+            val hashes =
+                signer.getPreSignedImageHash(
+                    psbtBytes = psbt,
+                    targetAddress = recipient,
+                    fromAmount = BigInteger.valueOf(60_000L),
+                )
+            assertEquals(1, hashes.size)
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
     fun `getPreSignedImageHash - rejects when deposit amount diverges from fromAmount`() {
         try {
             val vaultAddress = addressFor(vaultPubKeyHex)
@@ -480,15 +528,17 @@ class SwapKitBtcSignerTest {
             else -> byteArrayOf(0xFEu.toByte()) + le32(v)
         }
 
-    private fun addressFor(pubKeyHex: String): String =
-        CoinType.BITCOIN.deriveAddressFromPublicKey(
+    private fun addressFor(pubKeyHex: String): String = addressForCoin(pubKeyHex, CoinType.BITCOIN)
+
+    private fun scriptHexFor(address: String): String = scriptHexForCoin(address, CoinType.BITCOIN)
+
+    private fun addressForCoin(pubKeyHex: String, coin: CoinType): String =
+        coin.deriveAddressFromPublicKey(
             PublicKey(Numeric.hexStringToByteArray(pubKeyHex), PublicKeyType.SECP256K1)
         )
 
-    private fun scriptHexFor(address: String): String =
-        Numeric.toHexStringNoPrefix(
-            BitcoinScript.lockScriptForAddress(address, CoinType.BITCOIN).data()
-        )
+    private fun scriptHexForCoin(address: String, coin: CoinType): String =
+        Numeric.toHexStringNoPrefix(BitcoinScript.lockScriptForAddress(address, coin).data())
 
     private fun skipIfJniUnavailable(e: Throwable) {
         if (

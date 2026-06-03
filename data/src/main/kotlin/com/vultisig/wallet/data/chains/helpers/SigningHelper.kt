@@ -107,8 +107,29 @@ object SigningHelper {
                 is SwapPayload.SwapKit -> {
                     messages +=
                         when (swapPayload.data.txType) {
+                            // Segwit PSBT (BTC + LTC). CoinType is picked from the source chain;
+                            // the BIP-143 sighash + segwit serialization are otherwise identical.
                             SwapKitSwapPayloadJson.TX_TYPE_PSBT ->
-                                SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
+                                SwapKitBtcSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
+                                    .getPreSignedImageHash(
+                                        psbtBytes = swapPayload.data.txPayload,
+                                        targetAddress = swapPayload.data.targetAddress,
+                                        fromAmount = swapPayload.data.fromAmount,
+                                    )
+                            // Legacy P2PKH UTXO chains (DOGE / BCH / DASH). DOGE/DASH use classic
+                            // ECDSA sighashing; BCH adds SIGHASH_FORKID via its CoinType.
+                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_DOGE,
+                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_BCH,
+                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_DASH ->
+                                SwapKitLegacyP2PKHSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
+                                    .getPreSignedImageHash(
+                                        psbtBytes = swapPayload.data.txPayload,
+                                        targetAddress = swapPayload.data.targetAddress,
+                                        fromAmount = swapPayload.data.fromAmount,
+                                    )
+                            // Transparent ZEC (Sapling-v4 body, ZIP-243 sighash).
+                            SwapKitSwapPayloadJson.TX_TYPE_PSBT_ZEC ->
+                                SwapKitZcashSigner(ecdsaKey, ecdsaChainCode)
                                     .getPreSignedImageHash(
                                         psbtBytes = swapPayload.data.txPayload,
                                         targetAddress = swapPayload.data.targetAddress,
@@ -344,8 +365,26 @@ object SigningHelper {
                 is SwapPayload.SwapKit -> {
                     return when (swapPayload.data.txType) {
                         SwapKitSwapPayloadJson.TX_TYPE_PSBT ->
-                            SwapKitBtcSigner(ecdsaKey, ecdsaChainCode)
+                            SwapKitBtcSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
                                 .getSignedTransaction(swapPayload.data.txPayload, signatures)
+                        SwapKitSwapPayloadJson.TX_TYPE_PSBT_DOGE,
+                        SwapKitSwapPayloadJson.TX_TYPE_PSBT_BCH,
+                        SwapKitSwapPayloadJson.TX_TYPE_PSBT_DASH ->
+                            SwapKitLegacyP2PKHSigner(ecdsaKey, ecdsaChainCode, chain.coinType)
+                                .getSignedTransaction(
+                                    psbtBytes = swapPayload.data.txPayload,
+                                    targetAddress = swapPayload.data.targetAddress,
+                                    fromAmount = swapPayload.data.fromAmount,
+                                    signatures = signatures,
+                                )
+                        SwapKitSwapPayloadJson.TX_TYPE_PSBT_ZEC ->
+                            SwapKitZcashSigner(ecdsaKey, ecdsaChainCode)
+                                .getSignedTransaction(
+                                    psbtBytes = swapPayload.data.txPayload,
+                                    targetAddress = swapPayload.data.targetAddress,
+                                    fromAmount = swapPayload.data.fromAmount,
+                                    signatures = signatures,
+                                )
                         SwapKitSwapPayloadJson.TX_TYPE_TRON ->
                             SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
                                 .getSignedTransaction(swapPayload.data.txPayload, signatures)
