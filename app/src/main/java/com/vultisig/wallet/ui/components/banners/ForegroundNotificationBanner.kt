@@ -121,11 +121,19 @@ internal fun ForegroundNotificationBanner(
                                         else -size.width.toFloat()
                                     offsetX.animateTo(target)
                                     onDismiss()
+                                    // Reset the retained offset: when the same signing session
+                                    // re-broadcasts, MainActivityContent reuses this subtree
+                                    // (keyed by qrCodeData), so LaunchedEffect(qrCodeData) won't
+                                    // re-fire and the banner would otherwise reappear off-screen.
+                                    offsetX.snapTo(0f)
                                 } else {
                                     offsetX.animateTo(0f)
                                 }
                             }
                         },
+                        // A drag interrupted by a second pointer or an arena steal runs neither
+                        // onDragEnd branch; without this the banner freezes at its partial offset.
+                        onDragCancel = { scope.launch { offsetX.animateTo(0f) } },
                     )
                 }
                 .clip(shape)

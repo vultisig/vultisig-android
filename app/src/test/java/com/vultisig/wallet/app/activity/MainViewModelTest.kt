@@ -2,7 +2,9 @@
 
 package com.vultisig.wallet.app.activity
 
+import android.net.Uri
 import com.google.android.play.core.appupdate.AppUpdateManager
+import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.GetDirectionByQrCodeUseCase
 import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
@@ -14,8 +16,11 @@ import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
 import com.vultisig.wallet.ui.utils.SnackbarFlow
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -57,11 +62,16 @@ internal class MainViewModelTest {
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         every { networkUtils.observeConnectivityAsFlow() } returns emptyFlow()
+        // DeepLinkHelper decodes query params via android.net.Uri, which is unavailable in
+        // plain JVM unit tests; pass values through unchanged.
+        mockkStatic(Uri::class)
+        every { Uri.decode(any()) } answers { firstArg() }
     }
 
     @AfterEach
     fun tearDown() {
         Dispatchers.resetMain()
+        unmockkStatic(Uri::class)
     }
 
     private fun createViewModel() =
@@ -159,24 +169,57 @@ internal class MainViewModelTest {
         }
 
     @Test
-    fun `onForegroundBannerTapped keeps banner visible until navigation lands`() =
+    fun `onForegroundBannerTapped navigates to Join and keeps banner until observer clears it`() =
+        runTest(dispatcher) {
+            val vault: Vault = mockk(relaxed = true)
+            coEvery { vaultRepository.hasVaults() } returns true
+            coEvery { vaultRepository.getByEcdsa(any()) } returns vault
+            coEvery { getKeysignTransactionSummary.invoke(any()) } returns null
+            coEvery { getDirectionByQrCodeUseCase(any(), any()) } returns
+                Route.Keysign.Join(vaultId = "vault-id", qr = "qr")
+
+            val vm = createViewModel()
+            vm.onNavigationReady()
+            advanceUntilIdle()
+
+            vm.onForegroundPushReceived("vultisig://join?vault=ecdsa-key")
+            advanceUntilIdle()
+            assertNotNull(vm.foregroundNotification.value)
+
+            vm.onForegroundBannerTapped()
+            advanceUntilIdle()
+
+            // Navigation to the Join screen is dispatched...
+            coVerify { navigator.route(ofType(Route.Keysign.Join::class)) }
+            // ...but the ViewModel must NOT clear the banner itself for a Join route. The
+            // route-change observer in MainActivityContent clears it once the destination is
+            // actually reached, so the request stays actionable even if navigation is deferred
+            // inside a nested flow (issue #4623).
+            assertNotNull(vm.foregroundNotification.value)
+        }
+
+    @Test
+    fun `onForegroundBannerTapped with missing vault clears banner and does not navigate`() =
         runTest(dispatcher) {
             coEvery { vaultRepository.hasVaults() } returns true
             coEvery { vaultRepository.getByEcdsa(any()) } returns null
             coEvery { getKeysignTransactionSummary.invoke(any()) } returns null
 
             val vm = createViewModel()
+            vm.onNavigationReady()
             advanceUntilIdle()
 
+            // No "vault" param -> vault lookup yields null. The route observer never fires for
+            // this dead-end branch, so the ViewModel must clear the banner itself instead of
+            // leaving it stranded on screen.
             vm.onForegroundPushReceived("vultisig://qr-payload")
             advanceUntilIdle()
             assertNotNull(vm.foregroundNotification.value)
 
-            // Tapping must NOT clear the banner synchronously — the route observer clears it
-            // only once Keysign.Join / Keygen.Join is reached, so the request stays actionable
-            // even if navigation is dropped while inside a nested flow (issue #4623).
             vm.onForegroundBannerTapped()
+            advanceUntilIdle()
 
-            assertNotNull(vm.foregroundNotification.value)
+            assertNull(vm.foregroundNotification.value)
+            coVerify(exactly = 0) { navigator.route(any()) }
         }
 }

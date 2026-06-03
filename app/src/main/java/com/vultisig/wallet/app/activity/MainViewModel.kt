@@ -171,23 +171,43 @@ constructor(
 
     fun clearForegroundNotification() {
         foregroundPushJob?.cancel()
+        // Cancel any in-flight navigation a banner tap may have launched, so swiping the
+        // banner away (or any other dismissal) does not still land the user on the Join
+        // screen they tried to dismiss while the lookup was still suspended.
+        navigationJob?.cancel()
         _foregroundNotification.value = null
     }
 
+    private var navigationJob: kotlinx.coroutines.Job? = null
+
     fun onPushNotificationReceived(qrCodeData: String) {
-        viewModelScope.safeLaunch {
-            _navigationReady.await()
-            val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
-            val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
-            if (vault == null) {
-                snackbarFlow.showMessage(
-                    UiText.StringResource(R.string.push_notification_vault_not_found),
-                    SnackbarType.Error,
-                )
-                return@safeLaunch
+        navigationJob?.cancel()
+        navigationJob =
+            viewModelScope.safeLaunch {
+                _navigationReady.await()
+                val pubKeyEcdsa = DeepLinkHelper(qrCodeData).getParameter("vault")
+                val vault = pubKeyEcdsa?.let { vaultRepository.getByEcdsa(it) }
+                if (vault == null) {
+                    snackbarFlow.showMessage(
+                        UiText.StringResource(R.string.push_notification_vault_not_found),
+                        SnackbarType.Error,
+                    )
+                    // No navigation happens on this branch, so the route-change observer will
+                    // never clear the banner — clear it here so it doesn't linger forever.
+                    _foregroundNotification.value = null
+                    return@safeLaunch
+                }
+                val direction = getDirectionByQrCodeUseCase(qrCodeData, vault.id)
+                navigator.route(direction)
+                // Join routes are cleared by the route-change observer in MainActivityContent
+                // once the destination is actually reached. That deferral protects the banner
+                // when the user is inside a nested flow and navigation may not land immediately.
+                // Destinations that never reach that observer (Send, ScanError) are cleared here
+                // so the banner doesn't stay stuck after a successful dispatch.
+                if (direction !is Route.Keysign.Join && direction !is Route.Keygen.Join) {
+                    _foregroundNotification.value = null
+                }
             }
-            navigator.route(getDirectionByQrCodeUseCase(qrCodeData, vault.id))
-        }
     }
 
     fun openUri(uri: Uri) {
