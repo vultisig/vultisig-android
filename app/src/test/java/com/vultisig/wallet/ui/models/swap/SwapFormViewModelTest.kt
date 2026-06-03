@@ -1010,6 +1010,20 @@ internal class SwapFormViewModelTest {
             assertNotNull(state.formError)
         }
 
+    @Test
+    fun `calculateFees with empty amount on entry shows no error`() =
+        runTest(mainDispatcher) {
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            // No amount entered yet — the field is empty as it is right after opening the screen.
+            // The pair is selected, so the quote flow runs, but an empty field must not flash
+            // the "Invalid amount" form error (PR #4721 review).
+            val state = vm.uiState.value
+            assertTrue(state.isSwapDisabled)
+            assertNull(state.formError)
+        }
+
     // endregion
 
     // region calculateFees — THORChain provider

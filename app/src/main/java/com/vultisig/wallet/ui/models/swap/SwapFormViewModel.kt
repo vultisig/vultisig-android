@@ -997,6 +997,17 @@ constructor(
                     val srcTokenValue =
                         amount?.movePointRight(src.account.token.decimal)?.toBigInteger()
 
+                    // An empty field (the initial state on entry, or a cleared field) is not an
+                    // error. The empty-input filter was removed so clearing the field clears the
+                    // stale quote (#4712); without this guard that same empty emission would throw
+                    // AmountCannotBeZero and flash "Invalid amount" the moment the screen opens.
+                    // Clear the quote silently and wait for a real amount instead. An explicitly
+                    // entered zero still falls through to the AmountCannotBeZero error below.
+                    if (srcAmountState.text.isEmpty()) {
+                        resetQuoteState(error = null, cause = null, tag = null)
+                        return@collectLatest
+                    }
+
                     try {
                         if (srcTokenValue == null || srcTokenValue <= BigInteger.ZERO) {
                             throw SwapException.AmountCannotBeZero("Amount must be positive")
