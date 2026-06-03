@@ -52,16 +52,19 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.Clock
@@ -73,6 +76,11 @@ internal class SwapFormViewModelTest {
 
     private val scheduler = TestCoroutineScheduler()
     private val mainDispatcher = UnconfinedTestDispatcher(scheduler)
+    // Backs the refresh-quote timer for tests that don't exercise it. Its scheduler is never
+    // advanced, so the periodic timer's delay never fires — matching the production Dispatchers.IO
+    // behaviour where a ~1min wall-clock delay never elapses during a test (and keeping the
+    // self-re-arming timer off the main scheduler so advanceUntilIdle() can't loop on it).
+    private val inertIoDispatcher = StandardTestDispatcher()
     private val createdViewModels = mutableListOf<SwapFormViewModel>()
 
     private lateinit var savedStateHandle: SavedStateHandle
@@ -183,7 +191,7 @@ internal class SwapFormViewModelTest {
         unmockkStatic("androidx.navigation.SavedStateHandleKt")
     }
 
-    private fun createViewModel() =
+    private fun createViewModel(ioDispatcher: CoroutineDispatcher = inertIoDispatcher) =
         SwapFormViewModel(
                 savedStateHandle = savedStateHandle,
                 navigator = navigator,
@@ -200,6 +208,7 @@ internal class SwapFormViewModelTest {
                 swapGasCalculator = swapGasCalculator,
                 swapTokenSelector = swapTokenSelector,
                 swapQuoteManager = swapQuoteManager,
+                ioDispatcher = ioDispatcher,
             )
             .also { createdViewModels += it }
 
@@ -207,6 +216,7 @@ internal class SwapFormViewModelTest {
         addresses: List<Address> = listOf(ethAddress(), btcAddress()),
         srcTokenId: String? = null,
         dstTokenId: String? = null,
+        ioDispatcher: CoroutineDispatcher = inertIoDispatcher,
     ): SwapFormViewModel {
         if (srcTokenId != null || dstTokenId != null) {
             every { any<SavedStateHandle>().toRoute<Route.Swap>() } returns
@@ -217,7 +227,7 @@ internal class SwapFormViewModelTest {
                 )
         }
         coEvery { tokenSelectorAccountsRepository.loadAddresses(any()) } returns flowOf(addresses)
-        return createViewModel()
+        return createViewModel(ioDispatcher = ioDispatcher)
     }
 
     // region Initial State
@@ -735,8 +745,6 @@ internal class SwapFormViewModelTest {
 
     // endregion
 
-    // region calculateFees — instant quote UX (#4712)
-
     @Test
     fun `selectSrcPercentage fetches a quote immediately, bypassing the typing debounce`() =
         runTest(mainDispatcher) {
@@ -896,27 +904,49 @@ internal class SwapFormViewModelTest {
                 )
             } returns createDefaultQuoteFetchResult()
 
-            val vm = createViewModelWithSwapTokens()
+            // Run the refresh timer on the test scheduler so its expiry-triggered delay is driven
+            // by virtual time (the default inert dispatcher never fires it).
+            val vm = createViewModelWithSwapTokens(ioDispatcher = mainDispatcher)
             advanceUntilIdle()
 
             vm.srcAmountState.setTextAndPlaceCursorAtEnd("1")
             Snapshot.sendApplyNotifications()
+            // Settle the initial firm quote (300ms typing debounce); this also arms the ~1min
+            // refresh timer. Bounded advances only — advanceUntilIdle() would loop forever once the
+            // timer is armed, because each refresh re-arms it into a periodic timer.
             advanceTimeBy(500)
-            advanceUntilIdle()
+            runCurrent()
             assertEquals("95.0", vm.uiState.value.estimatedDstTokenValue)
             assertFalse(vm.uiState.value.isLoading)
 
-            // Drive the expiry-triggered refresh (quote lives ~1 minute). The refresh is downstream
-            // of the loading/indicative side effects, so it must not flash the spinner or blank the
-            // previously shown destination value.
+            // Drive the expiry-triggered refresh (quote lives ~1 minute) exactly once. The refresh
+            // is downstream of the loading/indicative side effects, so it must neither flash the
+            // spinner nor blank the previously shown destination value.
             advanceTimeBy(61_000)
+            runCurrent()
             assertFalse(vm.uiState.value.isLoading)
             assertEquals("95.0", vm.uiState.value.estimatedDstTokenValue)
-            advanceUntilIdle()
-            assertEquals("95.0", vm.uiState.value.estimatedDstTokenValue)
-        }
+            // The refresh actually re-fetched a quote (initial fetch + one silent refresh), proving
+            // the timer fired rather than the assertions passing because nothing ran.
+            coVerify(atLeast = 2) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
 
-    // endregion
+            // The refresh re-arms itself into a periodic timer. Cancel the VM now so runTest's
+            // cleanup (which drains the scheduler) doesn't spin that timer forever and OOM the
+            // worker.
+            vm.viewModelScope.cancel()
+        }
 
     // region calculateFees — error handling
 
@@ -2406,12 +2436,14 @@ internal class SwapFormViewModelTest {
      * tests that need two distinct tokens.
      */
     private fun createViewModelWithSwapTokens(
-        ethBalance: BigInteger = BigInteger("1000000000000000000")
+        ethBalance: BigInteger = BigInteger("1000000000000000000"),
+        ioDispatcher: CoroutineDispatcher = inertIoDispatcher,
     ): SwapFormViewModel =
         createViewModelWithAddresses(
             addresses = listOf(ethAddressWithBalance(ethBalance), btcAddress()),
             srcTokenId = ETH_COIN.id,
             dstTokenId = BTC_COIN.id,
+            ioDispatcher = ioDispatcher,
         )
 
     private fun btcAddress(): Address =

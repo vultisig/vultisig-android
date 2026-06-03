@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
@@ -56,7 +57,7 @@ import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -69,7 +70,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
@@ -131,6 +131,7 @@ constructor(
     private val swapGasCalculator: SwapGasCalculator,
     private val swapTokenSelector: SwapTokenSelector,
     private val swapQuoteManager: SwapQuoteManager,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
@@ -947,14 +948,19 @@ constructor(
                     .textAsFlow()
                     .map { it.toString() }
                     .map { text ->
-                        // A multi-character jump is a paste; length is tracked across empties
-                        // (before the notEmpty filter) so a clear-then-paste is still detected.
+                        // A multi-character jump is a paste; length is tracked across empties so a
+                        // clear-then-paste is still detected.
                         val isPaste = text.length - lastSrcAmountLength > 1
                         lastSrcAmountLength = text.length
                         text to isPaste
                     }
-                    .filter { (text, _) -> text.isNotEmpty() }
-                    .map { (_, isPaste) ->
+                    .map { (text, isPaste) ->
+                        // Empty input (field cleared) must still flow through so collectLatest hits
+                        // the zero-amount branch and resetQuoteState() clears the stale quote —
+                        // dropping it here would leave the previous quote on screen. It rides the
+                        // normal (non-immediate) path; there is nothing to fetch, so we also leave
+                        // fetchQuoteImmediately for the next real amount (#4712).
+                        if (text.isEmpty()) return@map false
                         val immediate = fetchQuoteImmediately || isPaste
                         fetchQuoteImmediately = false
                         immediate
@@ -964,6 +970,13 @@ constructor(
                     src to dst
                 }
                 .distinctUntilChanged()
+                .onEach {
+                    // A freshly selected pair has no quote yet, and a token switch never clears the
+                    // previous pair's destination value. Reset it so the skeleton shows while the
+                    // new quote loads instead of the stale amount reading as a firm quote for the
+                    // new pair (#4712 review).
+                    uiState.update { it.copy(estimatedDstTokenValue = "0", isDstEstimated = false) }
+                }
                 .combine(amountChanges) { address, immediate ->
                     QuoteInput(address = address, amount = srcAmount, immediate = immediate)
                 }
@@ -1298,29 +1311,45 @@ constructor(
      * overwrites this with [SwapFormUiModel.isDstEstimated] = false.
      */
     private suspend fun showIndicativeRate(input: QuoteInput) {
-        val (src, dst) = input.address
-        val srcToken = src.account.token
-        val dstToken = dst.account.token
-        val amount = input.amount ?: return
-        if (amount <= BigDecimal.ZERO || srcToken == dstToken) return
+        // This runs in an onEach upstream of (and outside) the collectLatest try/catch, so any
+        // throw from the suspending price read would escape into safeLaunch and end the whole quote
+        // collection while isLoading stays stuck true. Contain it here (#4712 review).
+        try {
+            val (src, dst) = input.address
+            val srcToken = src.account.token
+            val dstToken = dst.account.token
+            val amount = input.amount ?: return
+            if (amount <= BigDecimal.ZERO || srcToken == dstToken) return
 
-        val currency = appCurrencyRepository.currency.first()
-        val indicative =
-            swapQuoteManager.computeIndicativeQuote(srcToken, dstToken, amount, currency) ?: return
+            // Skip pairs we can't actually quote: showing an indicative estimate for an
+            // unsupported pair only to wipe it back to "0" once the firm fetch fails flashes a
+            // receivable amount, which is jumpier than a steady "0" (#4712 review).
+            // getEligibleProviders is a local table lookup, so this stays instant.
+            if (swapQuoteRepository.getEligibleProviders(srcToken, dstToken).isEmpty()) return
 
-        uiState.update {
-            it.copy(
-                estimatedDstTokenValue = indicative.estimatedDstTokenValue,
-                estimatedDstFiatValue = indicative.estimatedDstFiatValue,
-                isDstEstimated = true,
-            )
+            val currency = appCurrencyRepository.currency.first()
+            val indicative =
+                swapQuoteManager.computeIndicativeQuote(srcToken, dstToken, amount, currency)
+                    ?: return
+
+            uiState.update {
+                it.copy(
+                    estimatedDstTokenValue = indicative.estimatedDstTokenValue,
+                    estimatedDstFiatValue = indicative.estimatedDstFiatValue,
+                    isDstEstimated = true,
+                )
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "showIndicativeRate")
         }
     }
 
     private fun launchRefreshQuoteTimer(expiredAt: Instant) {
         refreshQuoteJob?.cancel()
         refreshQuoteJob =
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(ioDispatcher) {
                 delay(expiredAt - Clock.System.now())
                 refreshQuoteState.value++
             }
