@@ -196,7 +196,12 @@ private fun UnstakePercentSlider(percent: Float, onPercentChanged: (Float) -> Un
             Spacer(modifier = Modifier.height(4.dp))
             Slider(
                 value = sliderValue,
-                onValueChange = { sliderValue = it },
+                // Push the live value while dragging so the amount + "{percent}%" subline track the
+                // thumb; snap to the nearest quarter on release.
+                onValueChange = {
+                    sliderValue = it
+                    onPercentChanged(it)
+                },
                 onValueChangeFinished = {
                     val snapped = (sliderValue * 4).roundToInt() / 4f
                     sliderValue = snapped

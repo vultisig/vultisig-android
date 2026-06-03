@@ -457,7 +457,9 @@ private fun ValidatorPickerRow(
                 .clip(RoundedCornerShape(12.dp))
                 .background(Theme.v2.colors.backgrounds.secondary)
                 .border(
-                    width = if (isSelected) 1.5.dp else 1.dp,
+                    // Keep a 1.dp border in both states (1px Figma parity); the accent colour +
+                    // green check already distinguish the selected row.
+                    width = 1.dp,
                     color =
                         if (isSelected) Theme.v2.colors.primary.accent4
                         else Theme.v2.colors.border.normal,
