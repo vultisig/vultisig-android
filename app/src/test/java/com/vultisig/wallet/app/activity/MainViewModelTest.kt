@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.usecases.GetKeysignTransactionSummaryUseCase
 import com.vultisig.wallet.data.usecases.InitializeThorChainNetworkIdUseCase
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
+import com.vultisig.wallet.ui.navigation.NavigationOptions
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
@@ -189,13 +190,75 @@ internal class MainViewModelTest {
             vm.onForegroundBannerTapped()
             advanceUntilIdle()
 
-            // Navigation to the Join screen is dispatched...
-            coVerify { navigator.route(ofType(Route.Keysign.Join::class)) }
-            // ...but the ViewModel must NOT clear the banner itself for a Join route. The
-            // route-change observer in MainActivityContent clears it once the destination is
-            // actually reached, so the request stays actionable even if navigation is deferred
-            // inside a nested flow (issue #4623).
+            // Navigation to the Join screen must force a FRESH entry by popping any prior
+            // Keysign.Join entry inclusive. launchSingleTop = true would otherwise reuse a
+            // stale (e.g. finished/polling) join entry and its ViewModel, so the new request
+            // would never start — exactly the reported failure (issue #4623).
+            coVerify {
+                navigator.route(
+                    ofType(Route.Keysign.Join::class),
+                    NavigationOptions(popUpToRoute = Route.Keysign.Join::class, inclusive = true),
+                )
+            }
+            // The ViewModel must NOT clear the banner itself for a Join route. The route-change
+            // observer in MainActivityContent clears it once the destination is actually reached,
+            // so the request stays actionable even if navigation is deferred inside a nested flow.
             assertNotNull(vm.foregroundNotification.value)
+        }
+
+    @Test
+    fun `onForegroundBannerTapped to Keygen Join pops prior join entry inclusive`() =
+        runTest(dispatcher) {
+            val vault: Vault = mockk(relaxed = true)
+            coEvery { vaultRepository.hasVaults() } returns true
+            coEvery { vaultRepository.getByEcdsa(any()) } returns vault
+            coEvery { getKeysignTransactionSummary.invoke(any()) } returns null
+            coEvery { getDirectionByQrCodeUseCase(any(), any()) } returns
+                Route.Keygen.Join(qr = "qr")
+
+            val vm = createViewModel()
+            vm.onNavigationReady()
+            advanceUntilIdle()
+
+            vm.onForegroundPushReceived("vultisig://join?vault=ecdsa-key")
+            advanceUntilIdle()
+
+            vm.onForegroundBannerTapped()
+            advanceUntilIdle()
+
+            coVerify {
+                navigator.route(
+                    ofType(Route.Keygen.Join::class),
+                    NavigationOptions(popUpToRoute = Route.Keygen.Join::class, inclusive = true),
+                )
+            }
+            assertNotNull(vm.foregroundNotification.value)
+        }
+
+    @Test
+    fun `onForegroundBannerTapped to a non-join route navigates once and clears banner`() =
+        runTest(dispatcher) {
+            val vault: Vault = mockk(relaxed = true)
+            coEvery { vaultRepository.hasVaults() } returns true
+            coEvery { vaultRepository.getByEcdsa(any()) } returns vault
+            coEvery { getKeysignTransactionSummary.invoke(any()) } returns null
+            // Send never reaches the route-change observer, so the ViewModel clears the banner
+            // itself and routes without pop options.
+            coEvery { getDirectionByQrCodeUseCase(any(), any()) } returns
+                Route.Send(vaultId = "vault-id", address = "addr")
+
+            val vm = createViewModel()
+            vm.onNavigationReady()
+            advanceUntilIdle()
+
+            vm.onForegroundPushReceived("vultisig://join?vault=ecdsa-key")
+            advanceUntilIdle()
+
+            vm.onForegroundBannerTapped()
+            advanceUntilIdle()
+
+            coVerify { navigator.route(ofType(Route.Send::class)) }
+            assertNull(vm.foregroundNotification.value)
         }
 
     @Test
