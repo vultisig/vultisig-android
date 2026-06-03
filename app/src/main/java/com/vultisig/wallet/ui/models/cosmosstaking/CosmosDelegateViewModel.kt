@@ -171,6 +171,9 @@ constructor(
                     v.moniker.lowercase().contains(query) ||
                         v.operatorAddress.lowercase().contains(query)
             }
+            // The picker LazyColumn keys on operatorAddress, so the list must not contain a
+            // duplicate operator (a repeated LCD entry would otherwise crash the list).
+            .distinctBy { it.operatorAddress }
             .sortedByDescending { it.votingPower }
             .toList()
     }

@@ -53,7 +53,7 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier.fillMaxSize().padding(16.dp).padding(bottom = 80.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 if (state.cooldownState is CosmosRedelegationCooldownState.Blocked) {
@@ -76,6 +76,7 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
                         available = state.stakedBalance,
                         percentageSelected = state.percentageSelected,
                         onPercentage = viewModel::onPercentageChange,
+                        modifier = Modifier.weight(1f),
                     )
 
                     Text(
@@ -185,7 +186,7 @@ private fun CosmosRedelegateScreenPreview() {
     V2Scaffold(title = "Redelegate LUNA", onBackClick = {}) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier.fillMaxSize().padding(16.dp).padding(bottom = 80.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ValidatorReadonlyBlock(moniker = "Allnodes", address = "terravaloper1allnodes78wk")
@@ -195,6 +196,7 @@ private fun CosmosRedelegateScreenPreview() {
                     available = BigDecimal("2.5"),
                     percentageSelected = 50,
                     onPercentage = {},
+                    modifier = Modifier.weight(1f),
                 )
                 Text(
                     text = stringResource(R.string.cosmos_staking_redelegate_source),
