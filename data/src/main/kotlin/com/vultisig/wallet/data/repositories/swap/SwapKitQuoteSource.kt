@@ -275,7 +275,13 @@ constructor(
             Chain.Solana,
             Chain.Sui,
             Chain.Ton -> 9
-            Chain.Bitcoin -> 8
+            // All UTXO source chains are denominated in their base unit at 8 decimals.
+            Chain.Bitcoin,
+            Chain.Litecoin,
+            Chain.Dogecoin,
+            Chain.BitcoinCash,
+            Chain.Dash,
+            Chain.Zcash -> 8
             Chain.Tron -> 6
             // ADA is denominated in lovelace (1 ADA = 1e6 lovelace).
             Chain.Cardano -> 6
@@ -446,7 +452,7 @@ constructor(
                 // presence into deposit-only vs pre-built), so persisting `meta.txType` verbatim
                 // would make the signing-side gate reject those routes. Mirrors iOS, which
                 // normalises the payload txType in its buildSwapKit*Payload builders.
-                txType = canonicalTxType(response),
+                txType = canonicalTxType(response, srcToken.chain),
                 txPayload = encodeNativeTxPayload(response),
                 targetAddress = targetAddress,
                 memo = memo,
@@ -555,9 +561,14 @@ constructor(
      * side dispatches on — independent of the raw `meta.txType` casing/aliasing (e.g. SwapKit's
      * `XRP` vs `RIPPLE`). Only the native (non-EVM/Solana) kinds reach [buildSwapKitNativeQuote].
      */
-    private fun canonicalTxType(response: SwapKitSwapResponseJson): String =
+    private fun canonicalTxType(response: SwapKitSwapResponseJson, srcChain: Chain): String =
         when (txTypeOf(response)) {
-            TxKind.PSBT -> SwapKitSwapPayloadJson.TX_TYPE_PSBT
+            // SwapKit ships a single `psbt` wire type for every UTXO source, but the signing path
+            // differs: BTC/LTC are segwit (BIP-143), DOGE/BCH/DASH are legacy P2PKH, ZEC is
+            // Sapling-v4 (ZIP-243). Split by the source chain into the per-chain discriminators the
+            // dispatcher routes on — matching iOS, which derives the same `PSBT_*` strings from the
+            // sell asset.
+            TxKind.PSBT -> psbtTxTypeForChain(srcChain)
             TxKind.TRON -> SwapKitSwapPayloadJson.TX_TYPE_TRON
             TxKind.SUI -> SwapKitSwapPayloadJson.TX_TYPE_SUI
             TxKind.TON -> SwapKitSwapPayloadJson.TX_TYPE_TON
@@ -571,6 +582,20 @@ constructor(
             // to the raw value so an unexpected kind still surfaces a descriptive
             // UnsupportedTxType.
             else -> response.meta.txType
+        }
+
+    /**
+     * Map a UTXO source chain onto the per-chain PSBT txType discriminator. BTC/LTC share the
+     * segwit `PSBT`; DOGE/BCH/DASH/ZEC get their own legacy / Sapling discriminators. An unmapped
+     * chain (shouldn't happen — [chainPrefix] gates the route) falls back to the segwit `PSBT`.
+     */
+    private fun psbtTxTypeForChain(chain: Chain): String =
+        when (chain) {
+            Chain.Dogecoin -> SwapKitSwapPayloadJson.TX_TYPE_PSBT_DOGE
+            Chain.BitcoinCash -> SwapKitSwapPayloadJson.TX_TYPE_PSBT_BCH
+            Chain.Dash -> SwapKitSwapPayloadJson.TX_TYPE_PSBT_DASH
+            Chain.Zcash -> SwapKitSwapPayloadJson.TX_TYPE_PSBT_ZEC
+            else -> SwapKitSwapPayloadJson.TX_TYPE_PSBT
         }
 
     /**
@@ -796,6 +821,11 @@ constructor(
             Chain.Polygon -> "POL"
             Chain.Solana -> "SOL"
             Chain.Bitcoin -> "BTC"
+            Chain.Litecoin -> "LTC"
+            Chain.Dogecoin -> "DOGE"
+            Chain.BitcoinCash -> "BCH"
+            Chain.Dash -> "DASH"
+            Chain.Zcash -> "ZEC"
             Chain.Tron -> "TRON"
             Chain.Sui -> "SUI"
             Chain.Cardano -> "ADA"

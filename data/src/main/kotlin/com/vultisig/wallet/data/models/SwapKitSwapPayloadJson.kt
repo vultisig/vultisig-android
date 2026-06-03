@@ -62,8 +62,49 @@ data class SwapKitSwapPayloadJson(
     }
 
     companion object {
-        /** `meta.txType` discriminator for the Bitcoin PSBT signing path. */
+        /**
+         * `meta.txType` discriminator for the **segwit** PSBT signing path. Covers Bitcoin and
+         * Litecoin — both native-segwit (P2WPKH / P2SH-P2WPKH) UTXO chains whose BIP-143 sighashes
+         * are computed by [com.vultisig.wallet.data.chains.helpers.SwapKitBtcSigner]. The signing
+         * dispatcher picks the [CoinType] from the source chain. Mirrors iOS, where BTC and LTC
+         * both decode to the `"PSBT"` case routed through `SwapKitBTCSigner`.
+         */
         const val TX_TYPE_PSBT = "PSBT"
+
+        /**
+         * `meta.txType` discriminator for the **legacy P2PKH** Dogecoin signing path. DOGE never
+         * had segwit, so its UTXOs are classic P2PKH and need legacy (non-BIP-143) sighashing —
+         * handled by [com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSigner] via
+         * `CoinType.DOGECOIN`. Distinct from [TX_TYPE_PSBT] so a cosigning peer (incl. iOS, which
+         * emits the same `"PSBT_DOGE"`) routes to the legacy compiler rather than the segwit path.
+         */
+        const val TX_TYPE_PSBT_DOGE = "PSBT_DOGE"
+
+        /**
+         * `meta.txType` discriminator for the **legacy P2PKH** Bitcoin Cash signing path. BCH uses
+         * a BIP-143-style preimage with `SIGHASH_FORKID` over a legacy `scriptCode`; WalletCore's
+         * `CoinType.BITCOINCASH` injects the right hash type, so it rides the same
+         * [com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSigner] as DOGE/DASH. Mirrors
+         * iOS' `"PSBT_BCH"`.
+         */
+        const val TX_TYPE_PSBT_BCH = "PSBT_BCH"
+
+        /**
+         * `meta.txType` discriminator for the **legacy P2PKH** Dash signing path. DASH forked from
+         * Bitcoin pre-0.12.x and has no segwit, so it uses legacy sighashing via `CoinType.DASH`
+         * through [com.vultisig.wallet.data.chains.helpers.SwapKitLegacyP2PKHSigner]. Mirrors iOS'
+         * `"PSBT_DASH"`.
+         */
+        const val TX_TYPE_PSBT_DASH = "PSBT_DASH"
+
+        /**
+         * `meta.txType` discriminator for the **transparent Zcash** signing path. The unsigned tx
+         * is wrapped in a BIP-174 envelope but the body is Sapling-v4 (extra version-group id,
+         * expiry height, value-balance, shielded counts) and the sighash is ZIP-243; handled by
+         * [com.vultisig.wallet.data.chains.helpers.SwapKitZcashSigner] via `CoinType.ZCASH` with
+         * the native branch id. Mirrors iOS' `"PSBT_ZEC"`.
+         */
+        const val TX_TYPE_PSBT_ZEC = "PSBT_ZEC"
 
         /**
          * `meta.txType` discriminator for the TRON signing path. SwapKit returns a TronWeb-shaped
@@ -125,5 +166,35 @@ data class SwapKitSwapPayloadJson(
          * [memo]. Mirrors iOS' `"XRP"`.
          */
         const val TX_TYPE_XRP = "XRP"
+
+        /**
+         * Every `txType` the signing pipeline can actually handle — each has a branch in
+         * `SigningHelper`'s SwapKit dispatch (a per-chain signer or a native-helper fall-through).
+         * The single source of truth for "is this route signable", so the pre-flight gate in
+         * `SwapFormViewModel` cannot drift from what the dispatcher accepts: a new chain that
+         * reaches signing must be added here, and anything not listed is rejected before keysign
+         * instead of surfacing an `error(...)` mid-sign. [TX_TYPE_CBOR] is deliberately absent — it
+         * is a wire alias normalised onto the Cardano discriminators upstream and never a keysign
+         * txType.
+         */
+        val SIGNABLE_TX_TYPES: Set<String> =
+            setOf(
+                TX_TYPE_PSBT,
+                TX_TYPE_PSBT_DOGE,
+                TX_TYPE_PSBT_BCH,
+                TX_TYPE_PSBT_DASH,
+                TX_TYPE_PSBT_ZEC,
+                TX_TYPE_TRON,
+                TX_TYPE_SUI,
+                TX_TYPE_TON,
+                TX_TYPE_XRP,
+                TX_TYPE_CARDANO,
+                TX_TYPE_CARDANO_PREBUILT,
+            )
+
+        /**
+         * True when [txType] has a wired signing path in `SigningHelper`. See [SIGNABLE_TX_TYPES].
+         */
+        fun isSignableTxType(txType: String): Boolean = txType in SIGNABLE_TX_TYPES
     }
 }
