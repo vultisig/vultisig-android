@@ -30,7 +30,13 @@ internal class CryptoConnectionTypeRepositoryImpl @Inject constructor() :
         when (chain) {
             Chain.ThorChain,
             Chain.MayaChain,
-            Chain.Tron -> true
+            Chain.Tron,
+            // Terra / TerraClassic surface a staking positions screen (delegate / undelegate /
+            // redelegate / claim). Without these branches they're selectable in the "Select DeFi
+            // chains" sheet (isDeFiSupported) but get filtered out of the DeFi portfolio list, so
+            // the user never reaches the LUNA/LUNC staking view.
+            Chain.Terra,
+            Chain.TerraClassic -> true
             else -> false
         }
 }
