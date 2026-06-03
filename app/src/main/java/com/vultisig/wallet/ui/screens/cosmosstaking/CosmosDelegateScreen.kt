@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,6 +42,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
 import com.vultisig.wallet.ui.components.PercentageChip
 import com.vultisig.wallet.ui.components.TokenAmountInput
+import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -107,7 +109,9 @@ private fun DelegateContent(
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            // fillMaxSize + the weighted amount card make the form fill the screen (Figma); the
+            // bottom reservation keeps the validator row clear of the pinned Continue button.
+            modifier = Modifier.fillMaxSize().padding(16.dp).padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             StakingAmountCard(
@@ -116,6 +120,7 @@ private fun DelegateContent(
                 available = state.stakeableBalance,
                 percentageSelected = state.percentageSelected,
                 onPercentage = onPercentage,
+                modifier = Modifier.weight(1f),
             )
 
             ValidatorPickerField(selected = state.selectedValidator, onClick = onPickValidator)
@@ -141,9 +146,11 @@ private fun DelegateContent(
 }
 
 /**
- * Centered amount input + 25/50/75/Max chips + balance-available row, in a bordered card. Shared by
- * the delegate / undelegate / redelegate forms — `available` is the stakeable balance (delegate) or
- * the staked balance at the source validator (undelegate / redelegate).
+ * Centered amount input + 25/50/75/Max chips + balance-available row, in a bordered card that fills
+ * the available height (Figma "Stake LUNA"): the "Amount" label pins to the top, the amount is
+ * vertically centered in the slack, and the chips + balance pill pin to the bottom — mirroring the
+ * SendFormScreen amount section. Shared by the delegate / redelegate forms. Pass
+ * `Modifier.weight(1f)` so the card expands to fill the screen.
  */
 @Composable
 internal fun StakingAmountCard(
@@ -152,11 +159,13 @@ internal fun StakingAmountCard(
     available: BigDecimal,
     percentageSelected: Int,
     onPercentage: (Int) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val percentages = listOf(25, 50, 75, 100)
     Column(
         modifier =
-            Modifier.fillMaxWidth()
+            modifier
+                .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
                 .border(
                     width = 1.dp,
@@ -171,13 +180,16 @@ internal fun StakingAmountCard(
             style = Theme.brockmann.body.s.medium,
             color = Theme.v2.colors.text.primary,
         )
-        TokenAmountInput(
-            primaryFieldState = amountFieldState,
-            primaryLabel = ticker.ifEmpty { "Token" },
-            secondaryText = "",
-            maxBalance = available.takeIf { it > BigDecimal.ZERO },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-        )
+        // Amount vertically centered in the card's slack (SendFormScreen pattern).
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            TokenAmountInput(
+                primaryFieldState = amountFieldState,
+                primaryLabel = ticker.ifEmpty { "Token" },
+                secondaryText = "",
+                maxBalance = available.takeIf { it > BigDecimal.ZERO },
+                modifier = Modifier.fillMaxWidth().align(Alignment.Center),
+            )
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -191,22 +203,43 @@ internal fun StakingAmountCard(
                 )
             }
         }
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(
-                text = stringResource(R.string.send_form_balance_available),
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.secondary,
-            )
-            Text(
-                text = "${available.stripTrailingZeros().toPlainString()} $ticker",
-                style = Theme.brockmann.body.s.medium,
-                color = Theme.v2.colors.text.primary,
-            )
-        }
+        BalanceAvailableRow(ticker = ticker, available = available)
     }
 }
 
-/** "Validator >" picker opener row — shows the selected validator's moniker when picked. */
+/** Filled "Balance available …" pill, matching the SendFormScreen amount section. */
+@Composable
+internal fun BalanceAvailableRow(ticker: String, available: BigDecimal) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .background(
+                    color = Theme.v2.colors.backgrounds.secondary,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .padding(all = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.send_form_balance_available),
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.primary,
+        )
+        Text(
+            text = "${available.stripTrailingZeros().toPlainString()} $ticker",
+            style = Theme.brockmann.body.s.medium,
+            color = Theme.v2.colors.text.secondary,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+/**
+ * "Validator" picker opener row. Once a validator is picked it shows the avatar + moniker on the
+ * left and a confirmed-check + edit affordance on the right (Figma "Stake LUNA"); before selection
+ * it shows the "Validator" label and a chevron. The whole row re-opens the picker.
+ */
 @Composable
 internal fun ValidatorPickerField(selected: CosmosValidator?, onClick: () -> Unit) {
     Row(
@@ -223,20 +256,52 @@ internal fun ValidatorPickerField(selected: CosmosValidator?, onClick: () -> Uni
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text =
-                selected?.moniker?.ifEmpty { selected.operatorAddress }
-                    ?: stringResource(R.string.cosmos_staking_validator_picker),
-            style = Theme.brockmann.body.s.medium,
-            color =
-                if (selected != null) Theme.v2.colors.text.primary
-                else Theme.v2.colors.text.secondary,
-        )
-        Text(
-            text = "›",
-            style = Theme.brockmann.body.s.medium,
-            color = Theme.v2.colors.text.secondary,
-        )
+        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.cosmos_staking_validator_picker),
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.primary,
+            )
+            if (selected != null) {
+                UiSpacer(size = 12.dp)
+                ValidatorAvatar(
+                    avatarUrl = null,
+                    monogram =
+                        selected.moniker.ifEmpty { selected.operatorAddress }.take(1).uppercase(),
+                    size = 24.dp,
+                    colorKey = selected.operatorAddress,
+                )
+                UiSpacer(size = 8.dp)
+                Text(
+                    text = selected.moniker.ifEmpty { truncated(selected.operatorAddress) },
+                    style = Theme.brockmann.body.s.medium,
+                    color = Theme.v2.colors.text.secondary,
+                    maxLines = 1,
+                )
+            }
+        }
+        if (selected != null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                UiIcon(
+                    drawableResId = R.drawable.check,
+                    size = 20.dp,
+                    tint = Theme.v2.colors.alerts.success,
+                )
+                UiSpacer(size = 12.dp)
+                UiIcon(
+                    drawableResId = R.drawable.ic_edit_pencil,
+                    size = 18.dp,
+                    tint = Theme.v2.colors.text.secondary,
+                    onClick = onClick,
+                )
+            }
+        } else {
+            Text(
+                text = "›",
+                style = Theme.brockmann.body.s.medium,
+                color = Theme.v2.colors.text.secondary,
+            )
+        }
     }
 }
 
@@ -344,26 +409,31 @@ internal fun ValidatorPickerSheet(
  */
 @Composable
 private fun ValidatorPickerHeader(title: String, onClose: () -> Unit, onConfirm: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        VsCircleButton(
-            drawableResId = R.drawable.big_close,
-            onClick = onClose,
-            type = VsCircleButtonType.Tertiary,
-            size = VsCircleButtonSize.Small,
-        )
+    // Figma: ✕ / ✓ on one row, then the large title left-aligned on its own line beneath them.
+    Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            VsCircleButton(
+                drawableResId = R.drawable.big_close,
+                onClick = onClose,
+                type = VsCircleButtonType.Tertiary,
+                size = VsCircleButtonSize.Small,
+            )
+            VsCircleButton(
+                drawableResId = R.drawable.big_tick,
+                onClick = onConfirm,
+                size = VsCircleButtonSize.Small,
+            )
+        }
+        UiSpacer(size = 16.dp)
         Text(
             text = title,
             style = Theme.brockmann.headings.title3,
             color = Theme.v2.colors.text.primary,
-        )
-        VsCircleButton(
-            drawableResId = R.drawable.big_tick,
-            onClick = onConfirm,
-            size = VsCircleButtonSize.Small,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -385,8 +455,11 @@ private fun ValidatorPickerRow(
             Modifier.fillMaxWidth()
                 .padding(vertical = 4.dp)
                 .clip(RoundedCornerShape(12.dp))
+                .background(Theme.v2.colors.backgrounds.secondary)
                 .border(
-                    width = if (isSelected) 2.dp else 1.dp,
+                    // Keep a 1.dp border in both states (1px Figma parity); the accent colour +
+                    // green check already distinguish the selected row.
+                    width = 1.dp,
                     color =
                         if (isSelected) Theme.v2.colors.primary.accent4
                         else Theme.v2.colors.border.normal,
@@ -419,6 +492,15 @@ private fun ValidatorPickerRow(
             )
         }
         UiSpacer(size = 8.dp)
+        // Selected row carries a green confirmed-check to the left of the commission (Figma).
+        if (isSelected) {
+            UiIcon(
+                drawableResId = R.drawable.check,
+                size = 18.dp,
+                tint = Theme.v2.colors.alerts.success,
+            )
+            UiSpacer(size = 8.dp)
+        }
         Text(
             text = "${formatCommissionPercent(validator.commission)}%",
             style = Theme.brockmann.body.s.medium,

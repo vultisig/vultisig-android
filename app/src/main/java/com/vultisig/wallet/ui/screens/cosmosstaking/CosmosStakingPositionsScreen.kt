@@ -178,7 +178,14 @@ internal fun CosmosStakingPositionsScreen(
                                     color = Theme.v2.colors.text.secondary,
                                 )
                             }
-                            items(state.positions, key = { it.validatorAddress }) { position ->
+                            items(
+                                state.positions,
+                                // Prefix the key: a validator can appear in BOTH this list and the
+                                // pending-unbondings list below (partial unstake keeps the rest
+                                // delegated), and LazyColumn keys must be unique across the whole
+                                // list — a bare validatorAddress would collide and crash on scroll.
+                                key = { "position-${it.validatorAddress}" },
+                            ) { position ->
                                 PositionRow(
                                     position = position,
                                     ticker = state.ticker,
@@ -221,8 +228,10 @@ internal fun CosmosStakingPositionsScreen(
                                     color = Theme.v2.colors.text.primary,
                                 )
                             }
-                            items(state.pendingUnbondings, key = { it.validatorAddress }) {
-                                unbonding ->
+                            items(
+                                state.pendingUnbondings,
+                                key = { "unbonding-${it.validatorAddress}" },
+                            ) { unbonding ->
                                 UnbondingCard(unbonding = unbonding)
                             }
                         }
