@@ -52,7 +52,12 @@ internal class CosmosStakingServiceImpl @Inject constructor(private val httpClie
     override suspend fun fetchDelegations(chain: Chain, address: String): List<CosmosDelegation> {
         val baseUrl = baseUrlFor(chain)
         return httpClient
-            .get("$baseUrl/cosmos/staking/v1beta1/delegations/$address")
+            .get("$baseUrl/cosmos/staking/v1beta1/delegations/$address") {
+                // Without an explicit limit the LCD pages at 100, so a delegator with more than
+                // 100 positions silently loses the rest from the staked total, the positions list
+                // and the claim candidates. Mirror fetchValidators' single-page-with-headroom cap.
+                parameter("pagination.limit", DELEGATOR_PAGE_LIMIT)
+            }
             .bodyOrThrow<CosmosDelegationResponse>()
             .toDelegations()
     }
@@ -63,7 +68,9 @@ internal class CosmosStakingServiceImpl @Inject constructor(private val httpClie
     ): List<CosmosUnbondingDelegation> {
         val baseUrl = baseUrlFor(chain)
         return httpClient
-            .get("$baseUrl/cosmos/staking/v1beta1/delegators/$address/unbonding_delegations")
+            .get("$baseUrl/cosmos/staking/v1beta1/delegators/$address/unbonding_delegations") {
+                parameter("pagination.limit", DELEGATOR_PAGE_LIMIT)
+            }
             .bodyOrThrow<CosmosUnbondingDelegationResponse>()
             .toUnbondingDelegations()
     }
@@ -74,7 +81,9 @@ internal class CosmosStakingServiceImpl @Inject constructor(private val httpClie
     ): CosmosDelegatorRewards {
         val baseUrl = baseUrlFor(chain)
         return httpClient
-            .get("$baseUrl/cosmos/distribution/v1beta1/delegators/$address/rewards")
+            .get("$baseUrl/cosmos/distribution/v1beta1/delegators/$address/rewards") {
+                parameter("pagination.limit", DELEGATOR_PAGE_LIMIT)
+            }
             .bodyOrThrow<CosmosDelegatorRewardsResponse>()
             .toRewards()
     }
@@ -99,7 +108,9 @@ internal class CosmosStakingServiceImpl @Inject constructor(private val httpClie
     ): List<CosmosRedelegationEntry> {
         val baseUrl = baseUrlFor(chain)
         return httpClient
-            .get("$baseUrl/cosmos/staking/v1beta1/delegators/$address/redelegations")
+            .get("$baseUrl/cosmos/staking/v1beta1/delegators/$address/redelegations") {
+                parameter("pagination.limit", DELEGATOR_PAGE_LIMIT)
+            }
             .bodyOrThrow<CosmosRedelegationResponse>()
             .toRedelegations()
     }
@@ -140,6 +151,15 @@ internal class CosmosStakingServiceImpl @Inject constructor(private val httpClie
 
     companion object {
         private const val VALIDATOR_PAGE_LIMIT = 300
+
+        /**
+         * Single-page cap for per-delegator reads (delegations, unbondings, rewards,
+         * redelegations). The LCD default page size is 100; a delegator past that silently loses
+         * positions from the staked total and the claim list. 1000 keeps a single round-trip with
+         * ample headroom — a delegator with >1000 distinct validators is not a realistic shape, and
+         * full `pagination.next_key` cursoring is left as a follow-up if one ever appears.
+         */
+        private const val DELEGATOR_PAGE_LIMIT = 1000
 
         /**
          * LCD hosts mirror the values already defined in [com.vultisig.wallet.data.api.CosmosApi]

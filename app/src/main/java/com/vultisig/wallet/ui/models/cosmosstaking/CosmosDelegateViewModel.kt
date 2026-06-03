@@ -240,7 +240,6 @@ constructor(
             val payload =
                 CosmosStakingPayload.Delegate(
                     validatorAddress = validator.operatorAddress,
-                    denom = entry.bondDenom,
                     amount = amountBaseUnits,
                 )
 
@@ -277,10 +276,7 @@ constructor(
 
             navigator.route(
                 Route.CosmosStakingVerify(vaultId = route.vaultId, transactionId = depositTx.id),
-                NavigationOptions(
-                    popUpToRoute = Route.CosmosStakingVerify::class,
-                    inclusive = true,
-                ),
+                NavigationOptions(popUpToRoute = Route.CosmosStakingVerify::class, inclusive = true),
             )
             _state.update { it.copy(isSubmitting = false) }
         }
@@ -318,19 +314,7 @@ constructor(
             val entry = CosmosStakingConfig.entryFor(chain)
             val feeReservation = BigDecimal(entry.feeAmount).movePointLeft(nativeCoin.decimal)
             val total =
-                withContext(ioDispatcher) {
-                    runCatching {
-                            val pair =
-                                balanceRepository.getCachedTokenBalanceAndPrice(
-                                    nativeCoin.address,
-                                    nativeCoin,
-                                )
-                            pair.tokenBalance.tokenValue?.let {
-                                BigDecimal(it.value).movePointLeft(nativeCoin.decimal)
-                            } ?: BigDecimal.ZERO
-                        }
-                        .getOrDefault(BigDecimal.ZERO)
-                }
+                withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }
             val stakeable = (total - feeReservation).coerceAtLeast(BigDecimal.ZERO)
 
             _state.update { it.copy(ticker = nativeCoin.ticker, stakeableBalance = stakeable) }

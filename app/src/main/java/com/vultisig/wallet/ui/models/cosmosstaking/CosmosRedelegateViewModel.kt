@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.blockchain.cosmos.staking.BuildCosmosStakingKeysignPayloadUseCase
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosRedelegationCooldownGate
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosRedelegationCooldownState
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosRedelegationEntry
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingAmountFormatter
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingConfig
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingPayload
@@ -71,12 +72,21 @@ internal data class CosmosRedelegateUiState(
      * rejects with `code:11 insufficient fees`.
      */
     val hasSufficientBalanceForFee: Boolean = true,
+    /**
+     * True when the selected `(src, dst)` pair already has [CosmosStakingConfig.MAX_ENTRIES] active
+     * redelegation entries — the chain would reject a further `MsgBeginRedelegate` with
+     * `ErrMaxRedelegationEntries`. Distinct from the transitive [cooldownState] gate (keyed on src
+     * alone); this one needs the chosen destination, so it is evaluated on validator selection.
+     */
+    val selectedDstMaxEntriesReached: Boolean = false,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
 ) {
     val validForm: Boolean
         get() =
-            cooldownState is CosmosRedelegationCooldownState.Available && hasSufficientBalanceForFee
+            cooldownState is CosmosRedelegationCooldownState.Available &&
+                hasSufficientBalanceForFee &&
+                !selectedDstMaxEntriesReached
 }
 
 /**
@@ -127,6 +137,13 @@ constructor(
 
     private var coin: Coin? = null
 
+    /**
+     * The delegator's outstanding redelegations, fetched once by [loadCooldown]. Retained so the
+     * per-`(src, dst)` MaxEntries preflight can run the moment a destination is picked, without a
+     * second LCD round-trip.
+     */
+    private var redelegations: List<CosmosRedelegationEntry> = emptyList()
+
     init {
         // loadValidators() is chain-only and safe to run in parallel. loadCooldown() reads
         // `coin.address`, so it must NOT launch here alongside loadCoinAndStakedBalance(): coin is
@@ -146,8 +163,28 @@ constructor(
     }
 
     fun selectDstValidator(validator: CosmosValidator) {
+        // Preflight cosmos-sdk's per-(src,dst) MaxEntries cap now that the destination is known, so
+        // Continue can be disabled before the user burns an MPC ceremony on an
+        // ErrMaxRedelegationEntries rejection.
+        val maxEntriesReached =
+            CosmosRedelegationCooldownGate.hasReachedMaxEntries(
+                sourceValidator = route.validatorSrcAddress,
+                destinationValidator = validator.operatorAddress,
+                redelegations = redelegations,
+            )
         _state.update {
-            it.copy(selectedDstValidator = validator, isShowingPicker = false, errorMessage = null)
+            it.copy(
+                selectedDstValidator = validator,
+                isShowingPicker = false,
+                selectedDstMaxEntriesReached = maxEntriesReached,
+                errorMessage =
+                    if (maxEntriesReached)
+                        context.getString(
+                            R.string.cosmos_staking_max_entries_reached,
+                            CosmosStakingConfig.MAX_ENTRIES,
+                        )
+                    else null,
+            )
         }
     }
 
@@ -193,6 +230,18 @@ constructor(
         val dstValidator =
             currentState.selectedDstValidator
                 ?: return setError("Pick a destination validator before continuing")
+
+        // Defense-in-depth MaxEntries preflight — also gated on the form via validForm. The chain
+        // rejects a further redelegation between this exact (src, dst) pair once 7 entries are
+        // pending; block here so a scripted/stale-snapshot submit can't burn an MPC ceremony.
+        if (currentState.selectedDstMaxEntriesReached) {
+            return setError(
+                context.getString(
+                    R.string.cosmos_staking_max_entries_reached,
+                    CosmosStakingConfig.MAX_ENTRIES,
+                )
+            )
+        }
 
         val amountText = amountFieldState.text.toString().trim()
         val amountDecimal = amountText.toBigDecimalOrNull()
@@ -258,7 +307,6 @@ constructor(
                 CosmosStakingPayload.Redelegate(
                     validatorSrcAddress = route.validatorSrcAddress,
                     validatorDstAddress = dstValidator.operatorAddress,
-                    denom = entry.bondDenom,
                     amount = amountBaseUnits,
                 )
 
@@ -292,10 +340,7 @@ constructor(
 
             navigator.route(
                 Route.CosmosStakingVerify(vaultId = route.vaultId, transactionId = depositTx.id),
-                NavigationOptions(
-                    popUpToRoute = Route.CosmosStakingVerify::class,
-                    inclusive = true,
-                ),
+                NavigationOptions(popUpToRoute = Route.CosmosStakingVerify::class, inclusive = true),
             )
             _state.update { it.copy(isSubmitting = false) }
         }
@@ -343,7 +388,8 @@ constructor(
                 replace(0, length, stakedBalance.stripTrailingZeros().toPlainString())
             }
 
-            val spendableBalance = withContext(ioDispatcher) { fetchSpendableBalance(nativeCoin) }
+            val spendableBalance =
+                withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }
             val estimatedFee = BigDecimal(entry.feeAmount).movePointLeft(nativeCoin.decimal)
             val hasSufficientBalanceForFee = spendableBalance >= estimatedFee
 
@@ -360,18 +406,6 @@ constructor(
             // `coin` is now resolved — evaluate the redelegation cooldown gate.
             loadCooldown()
         }
-    }
-
-    private suspend fun fetchSpendableBalance(coin: Coin): BigDecimal {
-        // Cached native-coin balance via BalanceRepository (same path the send-form uses). Falls
-        // back to zero on cache miss — conservatively trips the insufficient-fee warning until the
-        // next refresh, preferring a false-positive block over a false-negative MPC burn.
-        return runCatching {
-                val pair = balanceRepository.getCachedTokenBalanceAndPrice(coin.address, coin)
-                val tokenValue = pair.tokenBalance.tokenValue ?: return@runCatching BigDecimal.ZERO
-                BigDecimal(tokenValue.value).movePointLeft(coin.decimal)
-            }
-            .getOrDefault(BigDecimal.ZERO)
     }
 
     private fun loadValidators() {
@@ -425,14 +459,16 @@ constructor(
                     ?: return@safeLaunch
             val coin = coin ?: return@safeLaunch
             _state.update { it.copy(isLoadingCooldown = true) }
-            val redelegations =
+            val fetched =
                 withContext(ioDispatcher) {
                     cosmosStakingService.fetchRedelegations(chain, coin.address)
                 }
+            // Retain for the per-(src,dst) MaxEntries preflight that runs on destination selection.
+            redelegations = fetched
             val cooldown =
                 CosmosRedelegationCooldownGate.evaluate(
                     sourceValidator = route.validatorSrcAddress,
-                    redelegations = redelegations,
+                    redelegations = fetched,
                 )
             val message =
                 when (cooldown) {

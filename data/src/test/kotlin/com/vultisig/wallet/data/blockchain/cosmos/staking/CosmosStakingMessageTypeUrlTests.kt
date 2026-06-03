@@ -48,11 +48,7 @@ class CosmosStakingMessageTypeUrlTests {
     fun `delegate encodes a MsgDelegate, never a bank MsgSend`() {
         val urls =
             typeUrls(
-                CosmosStakingPayload.Delegate(
-                    validatorAddress = VALIDATOR_A,
-                    denom = "uluna",
-                    amount = "1000000",
-                )
+                CosmosStakingPayload.Delegate(validatorAddress = VALIDATOR_A, amount = "1000000")
             )
         assertEquals(listOf(CosmosStakingHelper.MSG_DELEGATE_TYPE_URL), urls)
         assertFalse(urls.contains(MSG_SEND_TYPE_URL))
@@ -62,11 +58,7 @@ class CosmosStakingMessageTypeUrlTests {
     fun `undelegate encodes a MsgUndelegate`() {
         val urls =
             typeUrls(
-                CosmosStakingPayload.Undelegate(
-                    validatorAddress = VALIDATOR_A,
-                    denom = "uluna",
-                    amount = "500000",
-                )
+                CosmosStakingPayload.Undelegate(validatorAddress = VALIDATOR_A, amount = "500000")
             )
         assertEquals(listOf(CosmosStakingHelper.MSG_UNDELEGATE_TYPE_URL), urls)
         assertFalse(urls.contains(MSG_SEND_TYPE_URL))
@@ -79,7 +71,6 @@ class CosmosStakingMessageTypeUrlTests {
                 CosmosStakingPayload.Redelegate(
                     validatorSrcAddress = VALIDATOR_A,
                     validatorDstAddress = VALIDATOR_B,
-                    denom = "uluna",
                     amount = "100000",
                 )
             )
@@ -91,10 +82,7 @@ class CosmosStakingMessageTypeUrlTests {
     fun `withdrawRewards encodes one MsgWithdrawDelegatorReward per validator`() {
         val urls =
             typeUrls(
-                CosmosStakingPayload.WithdrawRewards(
-                    validators = listOf(VALIDATOR_A, VALIDATOR_B),
-                    denom = "uluna",
-                )
+                CosmosStakingPayload.WithdrawRewards(validators = listOf(VALIDATOR_A, VALIDATOR_B))
             )
         assertEquals(
             listOf(

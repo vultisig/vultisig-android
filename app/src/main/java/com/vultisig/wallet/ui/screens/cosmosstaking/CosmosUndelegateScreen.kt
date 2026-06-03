@@ -20,6 +20,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingConfig
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
@@ -67,6 +68,19 @@ internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltV
                     UnbondingLockNotice(message = unbondingMsg)
                 }
 
+                // At cosmos-sdk's MaxEntries cap a further undelegate is rejected on-chain —
+                // surface
+                // it inline and disable Continue so the user isn't sent into a doomed MPC ceremony.
+                if (state.maxUnbondingEntriesReached) {
+                    UnbondingLockNotice(
+                        message =
+                            stringResource(
+                                R.string.cosmos_staking_max_entries_reached,
+                                CosmosStakingConfig.MAX_ENTRIES,
+                            )
+                    )
+                }
+
                 val errorMessage = state.errorMessage
                 if (errorMessage != null) {
                     Text(
@@ -80,7 +94,10 @@ internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltV
             VsButton(
                 label = stringResource(R.string.cosmos_staking_continue),
                 variant = VsButtonVariant.CTA,
-                state = if (state.isSubmitting) VsButtonState.Disabled else VsButtonState.Enabled,
+                state =
+                    if (state.isSubmitting || state.maxUnbondingEntriesReached)
+                        VsButtonState.Disabled
+                    else VsButtonState.Enabled,
                 onClick = viewModel::submit,
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
             )

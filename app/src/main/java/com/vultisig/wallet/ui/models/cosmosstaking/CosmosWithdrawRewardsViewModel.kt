@@ -207,11 +207,7 @@ constructor(
                     )
                 }
 
-            val payload =
-                CosmosStakingPayload.WithdrawRewards(
-                    validators = orderedValidators,
-                    denom = entry.bondDenom,
-                )
+            val payload = CosmosStakingPayload.WithdrawRewards(validators = orderedValidators)
 
             val keysignPayload =
                 buildCosmosStakingKeysignPayload(
@@ -243,10 +239,7 @@ constructor(
 
             navigator.route(
                 Route.CosmosStakingVerify(vaultId = route.vaultId, transactionId = depositTx.id),
-                NavigationOptions(
-                    popUpToRoute = Route.CosmosStakingVerify::class,
-                    inclusive = true,
-                ),
+                NavigationOptions(popUpToRoute = Route.CosmosStakingVerify::class, inclusive = true),
             )
             _state.update { it.copy(isSubmitting = false) }
         }
@@ -303,7 +296,8 @@ constructor(
                     runCatching { cosmosStakingService.fetchValidators(chain) }
                         .getOrDefault(emptyList())
                 }
-            val spendableBalance = withContext(ioDispatcher) { fetchSpendableBalance(nativeCoin) }
+            val spendableBalance =
+                withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }
 
             val monikerByAddress = validators.associateBy({ it.operatorAddress }, { it.moniker })
             val candidates =
@@ -337,18 +331,6 @@ constructor(
                 )
             _state.update { recomputeTotals(initialState) }
         }
-    }
-
-    private suspend fun fetchSpendableBalance(coin: Coin): BigDecimal {
-        // Use the cached balance pair off the BalanceRepository. Native-coin spendable balance for
-        // the bond-denom — the same path the send-form path uses. Falls back to zero on cache
-        // miss, which conservatively trips the insufficient-fee warning until the next refresh.
-        return runCatching {
-                val pair = balanceRepository.getCachedTokenBalanceAndPrice(coin.address, coin)
-                val tokenValue = pair.tokenBalance.tokenValue ?: return@runCatching BigDecimal.ZERO
-                BigDecimal(tokenValue.value).movePointLeft(coin.decimal)
-            }
-            .getOrDefault(BigDecimal.ZERO)
     }
 
     private fun recomputeTotals(s: CosmosWithdrawRewardsUiState): CosmosWithdrawRewardsUiState {

@@ -9,8 +9,8 @@ import java.time.Instant
  * `CosmosUnbondingDelegation`. The row carries everything the per-validator card needs to render:
  * staked amount, pending reward, validator status badge (active / churned out), per-validator APY,
  * Keybase avatar, and the earliest non-expired unbonding-completion timestamp (when set, Move is
- * disabled and the row footers an "Unlocks {date}" microcopy; Unstake remains available so the
- * user can always exit a position).
+ * disabled and the row footers an "Unlocks {date}" microcopy; Unstake remains available so the user
+ * can always exit a position).
  *
  * Mirrors iOS `CosmosStakePositionRow` (vultisig-ios PR #4432).
  */
@@ -47,11 +47,26 @@ data class CosmosStakePositionRow(
     val validatorStatus: ValidatorStatus,
     /**
      * Earliest non-expired unbonding completion timestamp for the validator, or `null` when there
-     * are no pending unbondings. When non-null, the row disables Undelegate + Redelegate and
-     * renders an "Unlocks {date}" footer beneath the action buttons.
+     * are no pending unbondings. When non-null, the row renders an "Unlocks {date}" footer beneath
+     * the action buttons.
      */
     val pendingUnbondingUnlockDate: Instant?,
+    /**
+     * Count of non-expired unbonding entries for this validator. cosmos-sdk allows up to
+     * [CosmosStakingConfig.MAX_ENTRIES] concurrent unbonding entries per (delegator, validator)
+     * pair, so a partial unstake is legal until that cap is hit — Unstake gates on
+     * [maxUnbondingEntriesReached], NOT on the mere presence of a pending unbonding.
+     */
+    val pendingUnbondingEntryCount: Int = 0,
 ) {
+    /**
+     * True once the validator has [CosmosStakingConfig.MAX_ENTRIES] active unbonding entries — the
+     * chain would reject a further `MsgUndelegate` with `ErrMaxUnbondingDelegationEntries`, so the
+     * UI blocks Unstake at this point only (not while any single unbonding is merely pending).
+     */
+    val maxUnbondingEntriesReached: Boolean
+        get() = pendingUnbondingEntryCount >= CosmosStakingConfig.MAX_ENTRIES
+
     enum class ValidatorStatus {
         Active,
         ChurnedOut,

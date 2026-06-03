@@ -329,12 +329,13 @@ constructor(
 
     /**
      * Forces any prior backstack entry of the SAME staking destination class to be popped before
-     * the new one lands. Required because `NavController.buildOptions` sets `launchSingleTop = true`
-     * — without `popUpTo` the navigator reuses the existing entry (and its Hilt-scoped ViewModel,
-     * whose `route` field was set once at init via `savedStateHandle.toRoute()`). Symptom (mainnet
-     * tx 6E4615C1…B379D): tapping Claim from the TerraClassic positions screen rebroadcast against
-     * the PRIOR phoenix-1 chain context when the user had visited the LUNA claim earlier in the
-     * session. Forcing a fresh entry resets the savedStateHandle to the new chain's args.
+     * the new one lands. Required because `NavController.buildOptions` sets `launchSingleTop =
+     * true` — without `popUpTo` the navigator reuses the existing entry (and its Hilt-scoped
+     * ViewModel, whose `route` field was set once at init via `savedStateHandle.toRoute()`).
+     * Symptom (mainnet tx 6E4615C1…B379D): tapping Claim from the TerraClassic positions screen
+     * rebroadcast against the PRIOR phoenix-1 chain context when the user had visited the LUNA
+     * claim earlier in the session. Forcing a fresh entry resets the savedStateHandle to the new
+     * chain's args.
      */
     private fun popOptionsForStaking(routeClass: Class<*>): NavigationOptions =
         NavigationOptions(popUpToRoute = routeClass.kotlin, inclusive = true)
@@ -368,19 +369,21 @@ constructor(
                 else -> CosmosStakePositionRow.ValidatorStatus.ChurnedOut
             }
 
-        val pendingUnlock =
-            unbondings
-                .flatMap { it.entries }
-                .filter { it.completionTime.isAfter(now) }
-                .minByOrNull { it.completionTime }
-                ?.completionTime
+        val activeUnbondingEntries =
+            unbondings.flatMap { it.entries }.filter { it.completionTime.isAfter(now) }
+        val pendingUnlock = activeUnbondingEntries.minByOrNull { it.completionTime }?.completionTime
 
         // iOS computeAPY: if chainApy is available compute it; otherwise drop to baseline (LUNA
-        // only); both paths require validator metadata to apply commission.
+        // only). Both paths require validator metadata — a churned-out validator (validator ==
+        // null)
+        // is absent from the bonded set and earns nothing, so it must fall through to a null APY
+        // rather than rendering the full uncut chain rate (commission defaults to 0) beneath its
+        // own
+        // "Churned Out" badge.
         val commission = validator?.commission ?: BigDecimal.ZERO
         val apyPercent =
             when {
-                chainApy != null ->
+                chainApy != null && validator != null ->
                     CosmosStakingAPYResolver.computeValidatorAPY(chainApy, commission)
                 validator != null -> {
                     val baseline = apyResolver.baselineFallback(chain)
@@ -404,6 +407,7 @@ constructor(
             validatorAvatarUrl = null,
             validatorStatus = status,
             pendingUnbondingUnlockDate = pendingUnlock,
+            pendingUnbondingEntryCount = activeUnbondingEntries.size,
         )
     }
 
@@ -444,15 +448,17 @@ constructor(
             }
     }
 
-    // A churned-out validator (jailed / unbonded) can no longer accept stake, but the user must
-    // still be able to exit the position — so Unstake only requires the absence of a pending
-    // unbonding, while Move/Stake stay gated on the validator being Active.
+    // Unstake is legal until the validator hits cosmos-sdk's MAX_ENTRIES (7) concurrent unbonding
+    // entries — a partial unstake with fewer than 7 pending entries must NOT be blocked, otherwise
+    // the remaining bonded stake is trapped for 21 days after a single partial unbond.
     private fun canUnstake(position: CosmosStakePositionRow): Boolean =
-        position.pendingUnbondingUnlockDate == null
+        !position.maxUnbondingEntriesReached
 
+    // Redelegating AWAY from a validator places no bonded-status requirement on the source
+    // (cosmos-sdk MsgBeginRedelegate). So Move must stay enabled for a churned-out (jailed/slashed)
+    // validator — it is the only instant escape, since undelegate forces the 21-day unbonding wait.
     private fun canMove(position: CosmosStakePositionRow): Boolean =
-        position.validatorStatus == CosmosStakePositionRow.ValidatorStatus.Active &&
-            position.pendingUnbondingUnlockDate == null
+        position.pendingUnbondingUnlockDate == null
 
     private fun loadCoin() {
         val vaultId = vaultId ?: return

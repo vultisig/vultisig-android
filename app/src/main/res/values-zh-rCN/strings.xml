@@ -1600,4 +1600,5 @@
     <string name="cosmos_staking_redelegate_cooldown_message">Source validator is under a %1$d-day redelegation cooldown - unlocks %2$s</string>
     <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
     <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
+    <string name="cosmos_staking_max_entries_reached">您对该验证人的待处理请求已达到上限 %1$d 个。请等待其中一个完成后再继续。</string>
 </resources>

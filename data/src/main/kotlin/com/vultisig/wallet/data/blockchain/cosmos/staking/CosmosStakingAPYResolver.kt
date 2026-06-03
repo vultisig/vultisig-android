@@ -116,7 +116,8 @@ constructor(private val cosmosStakingService: CosmosStakingService) : CosmosStak
                 try {
                     fanOut(chain, stakingDenom)
                 } catch (e: CancellationException) {
-                    // Don't swallow cancellation — it must propagate so structured concurrency stays
+                    // Don't swallow cancellation — it must propagate so structured concurrency
+                    // stays
                     // intact. Drop the in-flight slot first so a later caller can retry, then
                     // unblock coalesced waiters with a benign null before re-throwing.
                     withContext(NonCancellable) { mutex.withLock { inFlight.remove(chain) } }

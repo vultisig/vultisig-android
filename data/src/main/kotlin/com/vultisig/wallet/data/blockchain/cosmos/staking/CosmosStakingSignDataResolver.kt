@@ -12,9 +12,9 @@ import java.util.Base64
  *
  * Port of iOS `CosmosStakingSignDataResolver.swift` (vultisig-ios PR #4432).
  *
- * Each [CosmosStakingOpType] dispatches to the matching [CosmosStakingHelper] encoder, packs the
- * `Any`-wrapped message(s) into a TxBody, and pairs them with an AuthInfo derived from the chain's
- * [CosmosStakingConfig] entry. Gas + fee scale linearly with the message count for the
+ * Each [CosmosStakingPayload] subtype dispatches to the matching [CosmosStakingHelper] encoder,
+ * packs the `Any`-wrapped message(s) into a TxBody, and pairs them with an AuthInfo derived from
+ * the chain's [CosmosStakingConfig] entry. Gas + fee scale linearly with the message count for the
  * batched-claim path; single-msg flows collapse to N=1.
  *
  * Validator preflight (bech32 / HRP / 20-byte payload) runs HERE before any SignDoc bytes are
@@ -52,6 +52,11 @@ object CosmosStakingSignDataResolver {
 
         class ValidatorPreflightFailed(val reason: String) :
             ResolverException("Validator preflight failed: $reason")
+
+        object SelfRedelegation :
+            ResolverException(
+                "Source and destination validators must differ (ErrSelfRedelegation)"
+            )
 
         object NoValidatorsToClaim : ResolverException("No validators selected for reward claim")
 
@@ -166,6 +171,12 @@ object CosmosStakingSignDataResolver {
     ): ByteArray {
         require(payload.validatorSrcAddress) { "validatorSrcAddress" }
         require(payload.validatorDstAddress) { "validatorDstAddress" }
+        // cosmos-sdk rejects a same-validator redelegate with ErrSelfRedelegation. The picker
+        // excludes the source, but a scripted/programmatic payload can wire equal validators —
+        // fail closed here so it never burns an MPC ceremony on a chain-rejected tx.
+        if (payload.validatorSrcAddress == payload.validatorDstAddress) {
+            throw ResolverException.SelfRedelegation
+        }
         requirePositiveAmount(payload.amount) { "amount" }
         preflight(payload.validatorSrcAddress, chain)
         preflight(payload.validatorDstAddress, chain)

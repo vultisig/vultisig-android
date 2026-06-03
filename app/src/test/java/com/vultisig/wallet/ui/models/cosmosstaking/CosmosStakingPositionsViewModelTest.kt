@@ -33,6 +33,7 @@ import java.time.Instant
 import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -167,11 +168,10 @@ internal class CosmosStakingPositionsViewModelTest {
         val active = model.state.value.positions.first { it.validatorAddress == activeVal }
         val churned = model.state.value.positions.first { it.validatorAddress == churnedVal }
         assertNotNull(active.apyPercent)
-        // Churned-out has no validator metadata → no commission → still computes from chainApy with
-        // zero commission; but iOS treats missing-validator as churned. The row is built with
-        // validator=null so APY uses chainApy with commission 0 → non-null. We assert the Active
-        // one specifically carries APY; churned status is the load-bearing UI signal.
-        assertNotNull(churned) // row preserved (not dropped) under churned status
+        // A churned-out validator is absent from the bonded set (validator == null) and earns
+        // nothing — the APY branch must be gated on validator metadata so it does NOT render the
+        // full uncut chain rate (commission defaults to 0) under its own "Churned Out" badge.
+        assertNull(churned.apyPercent)
     }
 
     @Test
@@ -192,12 +192,14 @@ internal class CosmosStakingPositionsViewModelTest {
     }
 
     @Test
-    fun `move on a churned-out validator is a no-op`() = runTest {
+    fun `move on a churned-out validator navigates to the redelegate route`() = runTest {
         val model = vm()
         val churned = model.state.value.positions.first { it.validatorAddress == churnedVal }
         model.move(churned)
-        // Redelegation requires an Active source validator — churned-out can only be unstaked.
-        coVerify(exactly = 0) { navigator.route(any<Route.CosmosStakingRedelegate>(), any()) }
+        // cosmos-sdk MsgBeginRedelegate places no bonded-status requirement on the source, so
+        // redelegating AWAY from a churned-out (jailed/slashed) validator must stay available — it
+        // is the only instant escape, since undelegate forces the 21-day unbonding wait.
+        coVerify { navigator.route(any<Route.CosmosStakingRedelegate>(), any()) }
     }
 
     @Test

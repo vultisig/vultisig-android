@@ -341,12 +341,12 @@ private fun PositionRow(
 ) {
     val isChurnedOut = position.validatorStatus == CosmosStakePositionRow.ValidatorStatus.ChurnedOut
     val isUnbonding = position.pendingUnbondingUnlockDate != null
-    // Unstake must remain available for churned-out validators so the user can exit a position
-    // whose
-    // validator got slashed/kicked. Only `isUnbonding` blocks Unstake. Move/Redelegate requires the
-    // dst slot to be Active per CosmosStakingPositionsViewModel.canMove.
-    val isUnstakeLocked = isUnbonding
-    val isMoveLocked = isChurnedOut || isUnbonding
+    // Unstake is blocked ONLY once the validator hits cosmos-sdk's MAX_ENTRIES (7) concurrent
+    // unbonding entries — a partial unstake with headroom must stay enabled (matches canUnstake).
+    // Move/Redelegate is blocked only while an unbonding is pending; a churned-out (jailed/slashed)
+    // validator must remain movable since that is the only instant escape (matches canMove).
+    val isUnstakeLocked = position.maxUnbondingEntriesReached
+    val isMoveLocked = isUnbonding
 
     Column(
         modifier =
@@ -481,9 +481,9 @@ private fun PositionRow(
             )
         }
 
-        // Action buttons — Unstake only blocked while unbonding (churned-out validators must remain
-        // exitable). Move blocked while either unbonding or churned-out (chain rejects stake into a
-        // non-bonded validator).
+        // Action buttons — Unstake blocked only at the MAX_ENTRIES unbonding cap (churned-out
+        // validators must remain exitable). Move blocked only while an unbonding is pending; it
+        // stays enabled for a churned-out source so the user can escape a jailed/slashed validator.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp),

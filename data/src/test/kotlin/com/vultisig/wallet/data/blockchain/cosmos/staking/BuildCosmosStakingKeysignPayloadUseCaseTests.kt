@@ -52,11 +52,7 @@ class BuildCosmosStakingKeysignPayloadUseCaseTests {
     @Test
     fun `delegate produces KeysignPayload with signDirect populated`() {
         val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = validatorA,
-                denom = "uluna",
-                amount = "1000000",
-            )
+            CosmosStakingPayload.Delegate(validatorAddress = validatorA, amount = "1000000")
         val result =
             useCase(
                 coin = coin(),
@@ -96,11 +92,7 @@ class BuildCosmosStakingKeysignPayloadUseCaseTests {
     @Test
     fun `undelegate sets toAddress to validator and toAmount to amount`() {
         val payload =
-            CosmosStakingPayload.Undelegate(
-                validatorAddress = validatorA,
-                denom = "uluna",
-                amount = "500000",
-            )
+            CosmosStakingPayload.Undelegate(validatorAddress = validatorA, amount = "500000")
         val result =
             useCase(
                 coin = coin(),
@@ -120,7 +112,6 @@ class BuildCosmosStakingKeysignPayloadUseCaseTests {
             CosmosStakingPayload.Redelegate(
                 validatorSrcAddress = validatorA,
                 validatorDstAddress = validatorB,
-                denom = "uluna",
                 amount = "100000",
             )
         val result =
@@ -143,10 +134,7 @@ class BuildCosmosStakingKeysignPayloadUseCaseTests {
         // a best-effort display value for the verify screen; the SignDirect bytes encode the full
         // list.
         val payload =
-            CosmosStakingPayload.WithdrawRewards(
-                validators = listOf(validatorA, validatorB),
-                denom = "uluna",
-            )
+            CosmosStakingPayload.WithdrawRewards(validators = listOf(validatorA, validatorB))
         val result =
             useCase(
                 coin = coin(),
@@ -163,11 +151,7 @@ class BuildCosmosStakingKeysignPayloadUseCaseTests {
     @Test
     fun `LUNC coin produces columbus-5 chainId in signDirect`() {
         val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = validatorA,
-                denom = "uluna",
-                amount = "1000000",
-            )
+            CosmosStakingPayload.Delegate(validatorAddress = validatorA, amount = "1000000")
         val result =
             useCase(
                 coin = coin(Chain.TerraClassic),

@@ -2,7 +2,9 @@ package com.vultisig.wallet.data.blockchain.cosmos.staking
 
 import java.time.Instant
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -113,5 +115,44 @@ class CosmosRedelegationCooldownGateTests {
                 now = now,
             )
         assertIs<CosmosRedelegationCooldownState.Available>(state)
+    }
+
+    @Test
+    fun `hasReachedMaxEntries true once the pair hits the cap`() {
+        // MAX_ENTRIES active entries for the SAME (src, dst) pair → chain rejects a further
+        // MsgBeginRedelegate with ErrMaxRedelegationEntries.
+        val entries =
+            List(CosmosStakingConfig.MAX_ENTRIES) {
+                CosmosRedelegationEntry(srcA, dstA, fiveDaysFromNow)
+            }
+        assertTrue(
+            CosmosRedelegationCooldownGate.hasReachedMaxEntries(
+                sourceValidator = srcA,
+                destinationValidator = dstA,
+                redelegations = entries,
+                now = now,
+            )
+        )
+    }
+
+    @Test
+    fun `hasReachedMaxEntries counts only the matching pair and ignores expired`() {
+        val entries = buildList {
+            // Below the cap for (srcA, dstA): cap-1 active + 1 expired (ignored).
+            repeat(CosmosStakingConfig.MAX_ENTRIES - 1) {
+                add(CosmosRedelegationEntry(srcA, dstA, fiveDaysFromNow))
+            }
+            add(CosmosRedelegationEntry(srcA, dstA, tenDaysAgo))
+            // A different dst should not count toward (srcA, dstA).
+            add(CosmosRedelegationEntry(srcA, dstB, fiveDaysFromNow))
+        }
+        assertFalse(
+            CosmosRedelegationCooldownGate.hasReachedMaxEntries(
+                sourceValidator = srcA,
+                destinationValidator = dstA,
+                redelegations = entries,
+                now = now,
+            )
+        )
     }
 }

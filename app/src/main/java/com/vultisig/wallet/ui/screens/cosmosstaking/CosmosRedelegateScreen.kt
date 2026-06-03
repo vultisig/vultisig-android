@@ -83,6 +83,18 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
                         selected = state.selectedDstValidator,
                         onClick = viewModel::openValidatorPicker,
                     )
+
+                    // Explain the disabled Continue when the liquid balance can't cover the fee —
+                    // otherwise the button looks inert with no reason (validForm gates on this).
+                    if (!state.hasSufficientBalanceForFee) {
+                        UnbondingLockNotice(
+                            message =
+                                stringResource(
+                                    R.string.cosmos_staking_insufficient_fee_balance,
+                                    state.ticker,
+                                )
+                        )
+                    }
                 }
 
                 val errorMessage = state.errorMessage
@@ -98,11 +110,14 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
             VsButton(
                 label = stringResource(R.string.cosmos_staking_continue),
                 variant = VsButtonVariant.CTA,
+                // Disable while the async cooldown fetch is still in flight — cooldownState
+                // defaults
+                // to Available, so without the isLoadingCooldown guard a fast submit would bypass
+                // the gate and burn a ceremony when the source is actually under cooldown.
+                // validForm
+                // additionally covers the fee preflight and the per-(src,dst) MaxEntries cap.
                 state =
-                    if (
-                        state.isSubmitting ||
-                            state.cooldownState is CosmosRedelegationCooldownState.Blocked
-                    )
+                    if (state.isSubmitting || state.isLoadingCooldown || !state.validForm)
                         VsButtonState.Disabled
                     else VsButtonState.Enabled,
                 onClick = viewModel::submit,

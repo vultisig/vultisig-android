@@ -90,6 +90,7 @@ internal class CosmosUndelegateViewModelTest {
                     votingPower = BigDecimal("100"),
                 )
             )
+        coEvery { cosmosStakingService.fetchUnbondingDelegations(any(), any()) } returns emptyList()
     }
 
     @AfterEach

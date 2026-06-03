@@ -56,11 +56,7 @@ class CosmosStakingSignDataResolverTests {
     @Test
     fun `delegate produces SignDoc artefacts with Terra chain config baked in`() {
         val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = FX.VALIDATOR_A,
-                denom = "uluna",
-                amount = "1000000",
-            )
+            CosmosStakingPayload.Delegate(validatorAddress = FX.VALIDATOR_A, amount = "1000000")
         val result =
             CosmosStakingSignDataResolver.resolve(
                 payload = payload,
@@ -90,11 +86,7 @@ class CosmosStakingSignDataResolverTests {
     @Test
     fun `delegate is deterministic across repeated calls`() {
         val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = FX.VALIDATOR_A,
-                denom = "uluna",
-                amount = "1000000",
-            )
+            CosmosStakingPayload.Delegate(validatorAddress = FX.VALIDATOR_A, amount = "1000000")
         val a = resolve(payload)
         val b = resolve(payload)
         assertEquals(a, b)
@@ -102,12 +94,7 @@ class CosmosStakingSignDataResolverTests {
 
     @Test
     fun `delegate rejects empty validator`() {
-        val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = "",
-                denom = "uluna",
-                amount = "1000000",
-            )
+        val payload = CosmosStakingPayload.Delegate(validatorAddress = "", amount = "1000000")
         val ex =
             assertFailsWith<CosmosStakingSignDataResolver.ResolverException.MissingPayloadField> {
                 resolve(payload)
@@ -117,12 +104,7 @@ class CosmosStakingSignDataResolverTests {
 
     @Test
     fun `delegate rejects empty amount`() {
-        val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = FX.VALIDATOR_A,
-                denom = "uluna",
-                amount = "",
-            )
+        val payload = CosmosStakingPayload.Delegate(validatorAddress = FX.VALIDATOR_A, amount = "")
         val ex =
             assertFailsWith<CosmosStakingSignDataResolver.ResolverException.InvalidAmount> {
                 resolve(payload)
@@ -134,11 +116,7 @@ class CosmosStakingSignDataResolverTests {
     fun `delegate rejects non-positive and malformed amounts`() {
         listOf("0", "-1", " ", "abc", "1.5", "01").forEach { bad ->
             val payload =
-                CosmosStakingPayload.Delegate(
-                    validatorAddress = FX.VALIDATOR_A,
-                    denom = "uluna",
-                    amount = bad,
-                )
+                CosmosStakingPayload.Delegate(validatorAddress = FX.VALIDATOR_A, amount = bad)
             val ex =
                 assertFailsWith<CosmosStakingSignDataResolver.ResolverException.InvalidAmount>(
                     "amount '$bad' should be rejected"
@@ -154,7 +132,6 @@ class CosmosStakingSignDataResolverTests {
         val payload =
             CosmosStakingPayload.Delegate(
                 validatorAddress = "not-a-valid-bech32",
-                denom = "uluna",
                 amount = "1000000",
             )
         assertFailsWith<CosmosStakingSignDataResolver.ResolverException.ValidatorPreflightFailed> {
@@ -167,11 +144,7 @@ class CosmosStakingSignDataResolverTests {
         // Cosmoshub valoper has the right structural shape but wrong HRP for Terra.
         val cosmoshub = Bech32TestEncoder.encode("cosmosvaloper", ByteArray(20) { it.toByte() })
         val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = cosmoshub,
-                denom = "uluna",
-                amount = "1000000",
-            )
+            CosmosStakingPayload.Delegate(validatorAddress = cosmoshub, amount = "1000000")
         assertFailsWith<CosmosStakingSignDataResolver.ResolverException.ValidatorPreflightFailed> {
             resolve(payload)
         }
@@ -182,11 +155,7 @@ class CosmosStakingSignDataResolverTests {
     @Test
     fun `undelegate uses MsgUndelegate typeURL but same Terra config`() {
         val payload =
-            CosmosStakingPayload.Undelegate(
-                validatorAddress = FX.VALIDATOR_A,
-                denom = "uluna",
-                amount = "500000",
-            )
+            CosmosStakingPayload.Undelegate(validatorAddress = FX.VALIDATOR_A, amount = "500000")
         val result = resolve(payload)
         assertEquals("phoenix-1", result.chainId)
         val expectedBody =
@@ -212,10 +181,25 @@ class CosmosStakingSignDataResolverTests {
             CosmosStakingPayload.Redelegate(
                 validatorSrcAddress = FX.VALIDATOR_A,
                 validatorDstAddress = "not-bech32",
-                denom = "uluna",
                 amount = "100000",
             )
         assertFailsWith<CosmosStakingSignDataResolver.ResolverException.ValidatorPreflightFailed> {
+            resolve(payload)
+        }
+    }
+
+    @Test
+    fun `redelegate with identical src and dst is rejected as self-redelegation`() {
+        // cosmos-sdk rejects MsgBeginRedelegate with ErrSelfRedelegation when src == dst. The
+        // picker
+        // excludes the source, but a scripted payload can wire equal validators — fail closed here.
+        val payload =
+            CosmosStakingPayload.Redelegate(
+                validatorSrcAddress = FX.VALIDATOR_A,
+                validatorDstAddress = FX.VALIDATOR_A,
+                amount = "100000",
+            )
+        assertFailsWith<CosmosStakingSignDataResolver.ResolverException.SelfRedelegation> {
             resolve(payload)
         }
     }
@@ -226,7 +210,6 @@ class CosmosStakingSignDataResolverTests {
             CosmosStakingPayload.Redelegate(
                 validatorSrcAddress = FX.VALIDATOR_A,
                 validatorDstAddress = FX.VALIDATOR_B,
-                denom = "uluna",
                 amount = "100000",
             )
         val a = resolve(payload)
@@ -235,7 +218,6 @@ class CosmosStakingSignDataResolverTests {
                 CosmosStakingPayload.Redelegate(
                     validatorSrcAddress = FX.VALIDATOR_B,
                     validatorDstAddress = FX.VALIDATOR_A,
-                    denom = "uluna",
                     amount = "100000",
                 )
             )
@@ -248,8 +230,7 @@ class CosmosStakingSignDataResolverTests {
 
     @Test
     fun `withdrawRewards rejects empty validator list`() {
-        val payload =
-            CosmosStakingPayload.WithdrawRewards(validators = emptyList(), denom = "uluna")
+        val payload = CosmosStakingPayload.WithdrawRewards(validators = emptyList())
         assertFailsWith<CosmosStakingSignDataResolver.ResolverException.NoValidatorsToClaim> {
             resolve(payload)
         }
@@ -257,11 +238,7 @@ class CosmosStakingSignDataResolverTests {
 
     @Test
     fun `withdrawRewards single-validator collapses to one msg in TxBody`() {
-        val payload =
-            CosmosStakingPayload.WithdrawRewards(
-                validators = listOf(FX.VALIDATOR_A),
-                denom = "uluna",
-            )
+        val payload = CosmosStakingPayload.WithdrawRewards(validators = listOf(FX.VALIDATOR_A))
         val result = resolve(payload)
         val expected =
             CosmosStakingHelper.buildTxBodyMulti(
@@ -279,8 +256,7 @@ class CosmosStakingSignDataResolverTests {
     fun `withdrawRewards N-validator batch packs N msgs in TxBody`() {
         val payload =
             CosmosStakingPayload.WithdrawRewards(
-                validators = listOf(FX.VALIDATOR_A, FX.VALIDATOR_B, FX.VALIDATOR_C),
-                denom = "uluna",
+                validators = listOf(FX.VALIDATOR_A, FX.VALIDATOR_B, FX.VALIDATOR_C)
             )
         val result = resolve(payload)
         val expected =
@@ -302,7 +278,7 @@ class CosmosStakingSignDataResolverTests {
             (0 until 9).map { i ->
                 Bech32TestEncoder.encode("terravaloper", ByteArray(20) { (i * 10 + it).toByte() })
             }
-        val payload = CosmosStakingPayload.WithdrawRewards(validators = nine, denom = "uluna")
+        val payload = CosmosStakingPayload.WithdrawRewards(validators = nine)
         val ex =
             assertFailsWith<
                 CosmosStakingSignDataResolver.ResolverException.TooManyValidatorsToClaim
@@ -319,7 +295,7 @@ class CosmosStakingSignDataResolverTests {
             (0 until 8).map { i ->
                 Bech32TestEncoder.encode("terravaloper", ByteArray(20) { (i * 10 + it).toByte() })
             }
-        val payload = CosmosStakingPayload.WithdrawRewards(validators = eight, denom = "uluna")
+        val payload = CosmosStakingPayload.WithdrawRewards(validators = eight)
         // Must not throw.
         resolve(payload)
     }
@@ -330,11 +306,7 @@ class CosmosStakingSignDataResolverTests {
     fun `single-msg flow uses base Terra gas + fee`() {
         // Sanity: by re-encoding AuthInfo with the same base values, the bytes should match.
         val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = FX.VALIDATOR_A,
-                denom = "uluna",
-                amount = "1000000",
-            )
+            CosmosStakingPayload.Delegate(validatorAddress = FX.VALIDATOR_A, amount = "1000000")
         val result = resolve(payload)
         val expectedAuth =
             CosmosStakingHelper.buildAuthInfo(
@@ -352,11 +324,7 @@ class CosmosStakingSignDataResolverTests {
     @Test
     fun `LUNC config produces columbus-5 chainId and LUNC gas`() {
         val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = FX.VALIDATOR_A,
-                denom = "uluna",
-                amount = "1000000",
-            )
+            CosmosStakingPayload.Delegate(validatorAddress = FX.VALIDATOR_A, amount = "1000000")
         val result =
             CosmosStakingSignDataResolver.resolve(
                 payload = payload,
@@ -383,8 +351,7 @@ class CosmosStakingSignDataResolverTests {
     fun `batched claim scales gas + fee linearly with validator count`() {
         val payload =
             CosmosStakingPayload.WithdrawRewards(
-                validators = listOf(FX.VALIDATOR_A, FX.VALIDATOR_B, FX.VALIDATOR_C),
-                denom = "uluna",
+                validators = listOf(FX.VALIDATOR_A, FX.VALIDATOR_B, FX.VALIDATOR_C)
             )
         val result = resolve(payload)
         val expectedAuth =
@@ -407,11 +374,7 @@ class CosmosStakingSignDataResolverTests {
         val ethereumSpecific =
             BlockChainSpecific.UTXO(byteFee = BigInteger.valueOf(10), sendMaxAmount = false)
         val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = FX.VALIDATOR_A,
-                denom = "uluna",
-                amount = "1000000",
-            )
+            CosmosStakingPayload.Delegate(validatorAddress = FX.VALIDATOR_A, amount = "1000000")
         assertFailsWith<CosmosStakingSignDataResolver.ResolverException.MissingChainSpecific> {
             CosmosStakingSignDataResolver.resolve(
                 payload = payload,
@@ -428,11 +391,7 @@ class CosmosStakingSignDataResolverTests {
         // 65-byte uncompressed key (0x04 prefix) — must be rejected.
         val uncompressed = "04" + "00".repeat(64)
         val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = FX.VALIDATOR_A,
-                denom = "uluna",
-                amount = "1000000",
-            )
+            CosmosStakingPayload.Delegate(validatorAddress = FX.VALIDATOR_A, amount = "1000000")
         assertFailsWith<CosmosStakingSignDataResolver.ResolverException.InvalidPublicKey> {
             CosmosStakingSignDataResolver.resolve(
                 payload = payload,
@@ -447,11 +406,7 @@ class CosmosStakingSignDataResolverTests {
     @Test
     fun `rejects malformed hex pubkey`() {
         val payload =
-            CosmosStakingPayload.Delegate(
-                validatorAddress = FX.VALIDATOR_A,
-                denom = "uluna",
-                amount = "1000000",
-            )
+            CosmosStakingPayload.Delegate(validatorAddress = FX.VALIDATOR_A, amount = "1000000")
         assertFailsWith<CosmosStakingSignDataResolver.ResolverException.InvalidPublicKey> {
             CosmosStakingSignDataResolver.resolve(
                 payload = payload,

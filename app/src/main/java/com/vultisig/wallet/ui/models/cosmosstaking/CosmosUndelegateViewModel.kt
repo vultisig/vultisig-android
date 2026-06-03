@@ -35,6 +35,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,12 +75,21 @@ internal data class CosmosUndelegateUiState(
      * MPC signing round on a tx the chain immediately rejects.
      */
     val hasSufficientBalanceForFee: Boolean = true,
+    /**
+     * Count of non-expired unbonding entries already pending at this validator. cosmos-sdk caps
+     * concurrent entries at [CosmosStakingConfig.MAX_ENTRIES]; submitting past the cap is rejected
+     * on-chain with `ErrMaxUnbondingDelegationEntries`, so we preflight it.
+     */
+    val unbondingEntryCount: Int = 0,
     val isLoading: Boolean = true,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
 ) {
+    val maxUnbondingEntriesReached: Boolean
+        get() = unbondingEntryCount >= CosmosStakingConfig.MAX_ENTRIES
+
     val validForm: Boolean
-        get() = hasSufficientBalanceForFee
+        get() = hasSufficientBalanceForFee && !maxUnbondingEntriesReached
 }
 
 /**
@@ -140,6 +150,17 @@ constructor(
         if (amountDecimal > currentState.stakedBalance) {
             return setError("Amount exceeds your staked balance at this validator")
         }
+        // Preflight cosmos-sdk's MaxEntries cap: a 100%-bonded user who already has 7 pending
+        // unbondings at this validator would burn an MPC ceremony on a guaranteed
+        // ErrMaxUnbondingDelegationEntries rejection. Also gated on the form via validForm.
+        if (currentState.maxUnbondingEntriesReached) {
+            return setError(
+                context.getString(
+                    R.string.cosmos_staking_max_entries_reached,
+                    CosmosStakingConfig.MAX_ENTRIES,
+                )
+            )
+        }
         // Defense-in-depth: the form also gates on validForm, but a scripted/programmatic submit
         // path (or a stale snapshot from a state race) could still slip through. The check is
         // cheap.
@@ -194,7 +215,6 @@ constructor(
             val payload =
                 CosmosStakingPayload.Undelegate(
                     validatorAddress = route.validatorAddress,
-                    denom = entry.bondDenom,
                     amount = amountBaseUnits,
                 )
 
@@ -228,10 +248,7 @@ constructor(
 
             navigator.route(
                 Route.CosmosStakingVerify(vaultId = route.vaultId, transactionId = depositTx.id),
-                NavigationOptions(
-                    popUpToRoute = Route.CosmosStakingVerify::class,
-                    inclusive = true,
-                ),
+                NavigationOptions(popUpToRoute = Route.CosmosStakingVerify::class, inclusive = true),
             )
             _state.update { it.copy(isSubmitting = false) }
         }
@@ -282,9 +299,19 @@ constructor(
 
             val unbondingMsg = buildUnbondingLockMessage(chain)
 
-            val spendableBalance = withContext(ioDispatcher) { fetchSpendableBalance(nativeCoin) }
+            val spendableBalance =
+                withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }
             val estimatedFee = BigDecimal(entry.feeAmount).movePointLeft(nativeCoin.decimal)
             val hasSufficientBalanceForFee = spendableBalance >= estimatedFee
+
+            // Count this validator's already-pending unbonding entries so submit can be gated on
+            // the
+            // MAX_ENTRIES cap before signing. A fetch failure degrades to zero (no block) — the
+            // chain remains the final arbiter, matching the cooldown gate's fail-open posture.
+            val unbondingEntryCount =
+                withContext(ioDispatcher) {
+                    activeUnbondingEntryCount(chain, nativeCoin.address, route.validatorAddress)
+                }
 
             // Default to 100% selected (iOS pattern) — pre-fill the amount field so the user can
             // confirm with one tap if they want to unstake everything.
@@ -302,23 +329,37 @@ constructor(
                     spendableBalance = spendableBalance,
                     estimatedFee = estimatedFee,
                     hasSufficientBalanceForFee = hasSufficientBalanceForFee,
+                    unbondingEntryCount = unbondingEntryCount,
                     isLoading = false,
                 )
             }
         }
     }
 
-    private suspend fun fetchSpendableBalance(coin: Coin): BigDecimal {
-        // Cached native-coin balance via BalanceRepository (same path the send-form uses). Falls
-        // back to zero on cache miss, which conservatively trips the insufficient-fee warning until
-        // the next refresh — preferring a false-positive block over a false-negative MPC burn.
-        return runCatching {
-                val pair = balanceRepository.getCachedTokenBalanceAndPrice(coin.address, coin)
-                val tokenValue = pair.tokenBalance.tokenValue ?: return@runCatching BigDecimal.ZERO
-                BigDecimal(tokenValue.value).movePointLeft(coin.decimal)
-            }
-            .getOrDefault(BigDecimal.ZERO)
-    }
+    /**
+     * Counts the delegator's non-expired unbonding entries at [validatorAddress]. Used to preflight
+     * cosmos-sdk's `MaxEntries` cap so an undelegate that the chain would reject with
+     * `ErrMaxUnbondingDelegationEntries` never reaches the MPC ceremony. A fetch failure returns 0
+     * (fail-open) — the chain stays the final arbiter.
+     */
+    private suspend fun activeUnbondingEntryCount(
+        chain: Chain,
+        delegatorAddress: String,
+        validatorAddress: String,
+    ): Int =
+        try {
+            val now = Instant.now()
+            cosmosStakingService
+                .fetchUnbondingDelegations(chain, delegatorAddress)
+                .filter { it.validatorAddress == validatorAddress }
+                .flatMap { it.entries }
+                .count { it.completionTime.isAfter(now) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Unbonding-entry count fetch failed for %s", validatorAddress)
+            0
+        }
 
     private suspend fun validatorMonikerAndIdentity(
         chain: Chain,

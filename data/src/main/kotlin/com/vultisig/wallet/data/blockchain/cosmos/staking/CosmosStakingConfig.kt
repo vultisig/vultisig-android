@@ -19,6 +19,16 @@ import com.vultisig.wallet.data.models.Chain
  */
 object CosmosStakingConfig {
 
+    /**
+     * cosmos-sdk x/staking `MaxEntries` — the cap on concurrent unbonding entries per (delegator,
+     * validator) pair AND on concurrent redelegation entries per (delegator, src, dst) triple. Both
+     * Terra (phoenix-1) and TerraClassic (columbus-5) run the SDK default of 7. Once the cap is
+     * reached the chain rejects further `MsgUndelegate` / `MsgBeginRedelegate` with
+     * `ErrMaxUnbondingDelegationEntries` / `ErrMaxRedelegationEntries` — so the UI preflights it to
+     * avoid burning an MPC ceremony on a guaranteed-reject tx.
+     */
+    const val MAX_ENTRIES = 7
+
     data class Entry(
         val chainId: String,
         val bondDenom: String,
