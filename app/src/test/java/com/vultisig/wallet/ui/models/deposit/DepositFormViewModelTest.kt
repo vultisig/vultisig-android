@@ -498,9 +498,6 @@ internal class DepositFormViewModelTest {
         assertTrue(vm.state.value.availableSecuredAssets.isEmpty())
     }
 
-    // --- selectDepositOption default-token mapping
-    // ------------------------------------------------
-
     @Test
     fun `selectDepositOption Unbond on ThorChain sets RUNE as selected token`() = runTest {
         val vm = buildViewModel()
@@ -536,8 +533,6 @@ internal class DepositFormViewModelTest {
 
         assertEquals(Coins.ThorChain.RUNE, vm.state.value.selectedToken)
     }
-
-    // --- loadData per-chain deposit-option scoping -----------------------------------------------
 
     @Test
     fun `loadData for ThorChain exposes bond unbond leave custom merge unmerge and withdraw`() =
@@ -586,8 +581,6 @@ internal class DepositFormViewModelTest {
             vm.state.value.depositOptions,
         )
     }
-
-    // --- provider / operator-address validation --------------------------------------------------
 
     @Test
     fun `validateProvider with blank provider sets providerError`() = runTest {
@@ -645,8 +638,6 @@ internal class DepositFormViewModelTest {
         assertEquals(R.string.send_error_no_address, (error as UiText.StringResource).resId)
     }
 
-    // --- operator-fee basis-points validation ----------------------------------------------------
-
     @Test
     fun `validateOperatorFee with zero sets operatorFeeError`() = runTest {
         val vm = buildViewModel()
@@ -695,15 +686,11 @@ internal class DepositFormViewModelTest {
             val priorError = vm.state.value.operatorFeeError
             assertNotNull(priorError)
 
-            // Blank input is intentionally not validated, so it must neither clear nor replace the
-            // existing error (unlike the slippage/provider validators which error on blank).
             vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("")
             vm.validateOperatorFee()
 
             assertEquals(priorError, vm.state.value.operatorFeeError)
         }
-
-    // --- slippage validation ---------------------------------------------------------------------
 
     @Test
     fun `validateSlippage with blank sets required error`() = runTest {
@@ -753,8 +740,6 @@ internal class DepositFormViewModelTest {
 
         assertEquals(null, vm.state.value.slippageError)
     }
-
-    // --- assets / LP-units character validation --------------------------------------------------
 
     @Test
     fun `validateAssets with invalid characters sets assetsError`() = runTest {
@@ -806,16 +791,12 @@ internal class DepositFormViewModelTest {
         assertEquals(null, vm.state.value.lpUnitsError)
     }
 
-    // --- thor-address validation is scoped to the Switch sub-form
-    // ---------------------------------
-
     @Test
     fun `validateThorAddress is a no-op outside the Switch flow`() = runTest {
         val vm = buildViewModel()
         vm.loadData("vault1", Chain.ThorChain.raw, null, null)
         advanceUntilIdle()
 
-        // Default option after loading ThorChain is Bond, not Switch.
         vm.thorAddressFieldState.setTextAndPlaceCursorAtEnd("garbage-not-an-address")
         vm.validateThorAddress()
 

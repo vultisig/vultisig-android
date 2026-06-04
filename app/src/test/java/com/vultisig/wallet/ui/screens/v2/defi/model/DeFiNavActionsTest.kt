@@ -6,11 +6,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import org.junit.jupiter.api.Test
 
-/**
- * Covers every [DeFiNavActions] path: the wire-string parser [parseDepositType] and the
- * coin-to-action mappers [getStakeDeFiNavAction] / [getUnstakeDeFiNavAction]. A wrong mapping here
- * routes a deposit/stake deeplink to the wrong on-chain flow, so each assertion pins an exact enum.
- */
 internal class DeFiNavActionsTest {
 
     @Test
@@ -55,8 +50,6 @@ internal class DeFiNavActionsTest {
 
     @Test
     fun `parseDepositType folds case for both the when-arm and valueOf-fallback paths`() {
-        // Deeplink args arrive with unguaranteed case; the parser lowercases before matching and
-        // the catch-all routes via valueOf(uppercase). Both paths must tolerate mixed case.
         assertEquals(DeFiNavActions.BOND, parseDepositType("BOND"))
         assertEquals(DeFiNavActions.STAKE_RUJI, parseDepositType("Stake_Ruji"))
         assertEquals(DeFiNavActions.DEPOSIT_USDC_CIRCLE, parseDepositType("Deposit_USDC_Circle"))
@@ -64,10 +57,8 @@ internal class DeFiNavActionsTest {
 
     @Test
     fun `parseDepositType resolves the underscored USDC circle wire strings via the valueOf fallback`() {
-        // The literal when-arms for these two still contain underscores, which the separator-
-        // stripping normalization can never produce, so they resolve only through the valueOf
-        // fallback on the original string. Their separator-free spelling therefore does NOT parse —
-        // this pins that asymmetry so a regression in either path is caught.
+        // The underscored when-arms are unreachable (input is separator-stripped first), so these
+        // resolve only via the valueOf fallback and their separator-free spelling returns null.
         assertEquals(DeFiNavActions.DEPOSIT_USDC_CIRCLE, parseDepositType("deposit_usdc_circle"))
         assertEquals(DeFiNavActions.WITHDRAW_USDC_CIRCLE, parseDepositType("withdraw_usdc_circle"))
         assertNull(parseDepositType("depositusdccircle"))
