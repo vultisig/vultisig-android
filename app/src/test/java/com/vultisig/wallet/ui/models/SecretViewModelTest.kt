@@ -2,7 +2,6 @@
 
 package com.vultisig.wallet.ui.models
 
-import com.vultisig.wallet.data.repositories.SecretSettingsRepository
 import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -27,7 +26,6 @@ internal class SecretViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
-    private lateinit var secretSettingsRepository: SecretSettingsRepository
     private lateinit var swapKitConfig: SwapKitConfig
     private lateinit var navigator: Navigator<Destination>
 
@@ -35,8 +33,6 @@ internal class SecretViewModelTest {
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        secretSettingsRepository =
-            mockk(relaxed = true) { every { isDklsEnabled } returns flowOf(false) }
         swapKitConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
         navigator = mockk(relaxed = true)
     }
@@ -48,11 +44,7 @@ internal class SecretViewModelTest {
     }
 
     private fun createViewModel() =
-        SecretViewModel(
-            secretSettingsRepository = secretSettingsRepository,
-            swapKitConfig = swapKitConfig,
-            navigator = navigator,
-        )
+        SecretViewModel(swapKitConfig = swapKitConfig, navigator = navigator)
 
     /** Verifies toggleSwapKit persists the new feature flag value. */
     @Test

@@ -847,7 +847,6 @@
     <string name="enter_email_screen_hint">E-Mail</string>
     <string name="swap_screen_invalid_specific_and_utxo">Berechnung fehlgeschlagen.</string>
     <string name="verify_sign_message_message_field_signature">Signatur</string>
-    <string name="secret_enable_dkls">DKLS aktivieren</string>
     <string name="fast_vault_password_hint_screen_desc">Diese wird angezeigt, falls Sie Ihr Passwort vergessen.</string>
     <string name="fast_vault_password_hint_skip">Überspringen</string>
     <string name="fast_vault_password_hint_next">Weiter</string>
