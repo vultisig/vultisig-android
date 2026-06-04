@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.settings
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -69,6 +70,7 @@ fun SettingsScreen() {
         onDismissReferral = viewModel::onDismissReferralBottomSheet,
         onShareVaultQrClick = viewModel::onShareVaultQrClick,
         onDismissShareLink = viewModel::onDismissShareLinkBottomSheet,
+        onVersionClick = viewModel::onVersionClick,
     )
 }
 
@@ -81,6 +83,7 @@ private fun SettingsScreen(
     onContinueReferral: () -> Unit,
     onDismissReferral: () -> Unit,
     onDismissShareLink: () -> Unit,
+    onVersionClick: () -> Unit,
 ) {
     V2Scaffold(
         title = stringResource(R.string.settings_screen_title),
@@ -109,7 +112,7 @@ private fun SettingsScreen(
 
             UiSpacer(size = 15.dp)
 
-            AppVersionText()
+            AppVersionText(modifier = Modifier.clickable(onClick = onVersionClick))
         }
 
         if (state.hasToShowReferralCodeSheet) {
@@ -286,6 +289,7 @@ internal fun SettingsScreenPreview() {
         onDismissReferral = {},
         onShareVaultQrClick = {},
         onDismissShareLink = {},
+        onVersionClick = {},
     )
 }
 

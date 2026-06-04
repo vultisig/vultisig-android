@@ -437,7 +437,7 @@ internal sealed class Route {
 
     @Serializable data object AddVault
 
-    @Serializable data class VaultSettings(val vaultId: String, val openAdvanced: Boolean = false)
+    @Serializable data class VaultSettings(val vaultId: String)
 
     @Serializable data class Details(val vaultId: String)
 
