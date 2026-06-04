@@ -1073,8 +1073,13 @@
     <string name="choose_device_count_a11y_description">Quanti dispositivi hai? Selezione attuale: %1$s. Tocca per sceglierne un altro.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Messaggi</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Trasferimento Jetton</string>
+    <string name="ton_op_nft_transfer">Trasferimento NFT</string>
+    <string name="ton_op_excess_gas_refund">Rimborso del gas in eccesso</string>
+    <string name="ton_op_transfer">Trasferimento</string>
+    <string name="ton_forward_ton_amount">Quantità di TON inoltrata</string>
+    <string name="ton_raw_payload">Payload grezzo</string>
 
     <string name="welcome_tip">Suggerimento: Puoi usare un browser come dispositivo</string>
     <string name="vault_setup_your_vault_setup">La configurazione del tuo vault</string>

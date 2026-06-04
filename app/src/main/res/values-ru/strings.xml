@@ -1083,8 +1083,13 @@
     <string name="choose_device_count_a11y_description">Сколько у вас устройств? Выбрано: %1$s. Нажмите, чтобы выбрать другое.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Сообщения</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Перевод Jetton</string>
+    <string name="ton_op_nft_transfer">Перевод NFT</string>
+    <string name="ton_op_excess_gas_refund">Возврат излишка газа</string>
+    <string name="ton_op_transfer">Перевод</string>
+    <string name="ton_forward_ton_amount">Пересылаемая сумма TON</string>
+    <string name="ton_raw_payload">Необработанный payload</string>
 
     <string name="welcome_tip">Совет: Вы можете использовать браузер как устройство</string>
     <string name="vault_setup_your_vault_setup">Настройка вашего хранилища</string>

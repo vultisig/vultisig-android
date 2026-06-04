@@ -49,6 +49,16 @@ data class JettonWalletsJson(
         val jettonAddress = jettonWallets.firstOrNull()?.address ?: return null
         return addressBook[jettonAddress]?.userFriendly
     }
+
+    /**
+     * Resolve the jetton master address (in user-friendly form when the address book provides it)
+     * for the first returned wallet. Used to map a jetton wallet back to the token it holds when
+     * decoding a dApp transfer.
+     */
+    fun getMasterAddress(): String? {
+        val master = jettonWallets.firstOrNull()?.jetton ?: return null
+        return addressBook[master]?.userFriendly ?: master
+    }
 }
 
 @Serializable

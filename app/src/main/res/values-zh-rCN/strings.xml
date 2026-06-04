@@ -1399,8 +1399,13 @@
     <string name="choose_device_count_a11y_description">您有多少台设备？当前选择：%1$s。点击以选择其他。</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">消息</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Jetton 转账</string>
+    <string name="ton_op_nft_transfer">NFT 转账</string>
+    <string name="ton_op_excess_gas_refund">超额燃料退款</string>
+    <string name="ton_op_transfer">转账</string>
+    <string name="ton_forward_ton_amount">转发的 TON 金额</string>
+    <string name="ton_raw_payload">原始 Payload</string>
 
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>
     <string name="vault_setup_your_vault_setup">您的保险库设置</string>

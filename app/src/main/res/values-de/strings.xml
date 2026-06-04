@@ -1072,8 +1072,13 @@
     <string name="choose_device_count_a11y_description">Wie viele Geräte haben Sie? %1$s ausgewählt. Tippen, um eine andere Auswahl zu treffen.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Nachrichten</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Jetton-Überweisung</string>
+    <string name="ton_op_nft_transfer">NFT-Überweisung</string>
+    <string name="ton_op_excess_gas_refund">Erstattung überschüssiger Gasgebühren</string>
+    <string name="ton_op_transfer">Überweisung</string>
+    <string name="ton_forward_ton_amount">Weitergeleiteter TON-Betrag</string>
+    <string name="ton_raw_payload">Rohes Payload</string>
 
     <string name="welcome_tip">Tipp: Sie können einen Browser als Gerät verwenden</string>
     <string name="vault_setup_your_vault_setup">Ihre Tresor-Einrichtung</string>

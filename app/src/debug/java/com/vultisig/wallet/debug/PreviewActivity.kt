@@ -65,6 +65,8 @@ import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
 import com.vultisig.wallet.ui.models.keygen.VerifyPinState
 import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
+import com.vultisig.wallet.ui.models.keysign.TonMessageOperation
+import com.vultisig.wallet.ui.models.keysign.TonMessageUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
@@ -107,8 +109,6 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
-import vultisig.keysign.v1.SignTon
-import vultisig.keysign.v1.TonMessage
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -142,6 +142,8 @@ class PreviewActivity : ComponentActivity() {
                     "solana_display" -> SolanaDisplayPreview()
                     "ton_display_single" -> TonDisplayPreview(messageCount = 1)
                     "ton_display_multi" -> TonDisplayPreview(messageCount = 4)
+                    "verify_ton_jetton_before" -> VerifyTonJettonPreview(decoded = false)
+                    "verify_ton_jetton_after" -> VerifyTonJettonPreview(decoded = true)
                     "swap_error_before" -> SwapErrorBeforePreview()
                     "swap_error" -> SwapErrorPreview()
                     "swap_quote_loading" -> SwapFormQuoteLoadingPreview()
@@ -407,34 +409,30 @@ private fun SolanaInstructionMock(
 private fun TonDisplayPreview(messageCount: Int) {
     val messages =
         when (messageCount) {
-            1 ->
-                listOf(
-                    TonMessage(
-                        to = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        amount = "1500000000",
-                    )
-                )
+            1 -> listOf(TON_JETTON_MESSAGE)
             else ->
                 listOf(
-                    TonMessage(
-                        to = "EQAB1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        amount = "1500000000",
-                        payload = "te6ccgEBAQEABgAACAA=",
+                    TON_JETTON_MESSAGE,
+                    TonMessageUiModel(
+                        operation = TonMessageOperation.Transfer,
+                        recipient = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "0.25 TON",
+                        rawPayload = null,
+                        hasStateInit = true,
                     ),
-                    TonMessage(
-                        to = "EQAB0000000000ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        amount = "250000000",
-                        payload = "te6ccgEBAQEABgAACAA=",
-                        stateInit = "te6ccgEBAQEABwAA",
+                    TonMessageUiModel(
+                        operation = TonMessageOperation.ExcessGasRefund,
+                        recipient = null,
+                        amount = null,
+                        rawPayload = "te6cckEBAQEADgAAGNUydtsAAAAAAAAABxylUgg=",
+                        hasStateInit = false,
                     ),
-                    TonMessage(
-                        to = "EQAB9999999999ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        amount = "100000",
-                    ),
-                    TonMessage(
-                        to = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
-                        amount = "5000000000",
-                        stateInit = "te6ccgEBAQEABwAA",
+                    TonMessageUiModel(
+                        operation = TonMessageOperation.NftTransfer,
+                        recipient = "EQAB7777777777ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij",
+                        amount = "0.1 TON",
+                        rawPayload = "te6cckEBAQEAVAAAo1/MPRQ...",
+                        hasStateInit = false,
                     ),
                 )
         }
@@ -445,8 +443,100 @@ private fun TonDisplayPreview(messageCount: Int) {
                 .background(Theme.v2.colors.backgrounds.primary)
                 .padding(16.dp)
     ) {
-        SignTonDisplayView(signTon = SignTon(tonMessages = messages))
+        SignTonDisplayView(messages = messages, initiallyExpanded = true)
     }
+}
+
+private val TON_JETTON_MESSAGE =
+    TonMessageUiModel(
+        operation = TonMessageOperation.JettonTransfer,
+        recipient = "EQDrLq9I7m6lvP6zUGZqJ8r4y0sP3pQ1n2vWk5tXcB9aZ7eF",
+        amount = "0.05 TON",
+        rawPayload =
+            "te6cckEBAQEAWQAArg+KfqUAAAAAAAAwOUBfXhAIAf//////////////////" +
+                "////////////////////////AAvDfWFG0oYX19jwNDNBBL1rKNT9XfaGP9HyTb5" +
+                "nb2Emhh6EgOvlFRU=",
+        hasStateInit = false,
+    )
+
+/**
+ * Full-screen keysign verify for a TonConnect jetton transfer. [decoded] = true shows the resolved
+ * jetton hero (100 USDT) + decoded message rows; false is the pre-decode state (the outer gas value
+ * as the hero, opaque transfer rows).
+ */
+@Composable
+private fun VerifyTonJettonPreview(decoded: Boolean) {
+    VerifySendScreen(
+        state = tonJettonSendState(decoded),
+        isConsentsEnabled = false,
+        confirmTitle = "Sign",
+        onFastSignClick = {},
+        onConfirm = {},
+        onConsentAddress = {},
+        onConsentAmount = {},
+        onBackClick = {},
+        onConfirmScanning = {},
+        onDismissScanning = {},
+        hasToolbar = true,
+        initiallyExpandedDetails = true,
+    )
+}
+
+private fun tonJettonSendState(decoded: Boolean): VerifyTransactionUiModel {
+    val senderJettonWallet = "EQByz1234senderJettonWallet5678abcdEFGHijklMNOpqRsT"
+    val recipient = "EQDrLq9I7m6lvP6zUGZqJ8r4y0sP3pQ1n2vWk5tXcB9aZ7eF"
+    val tx =
+        TransactionDetailsUiModel(
+            // The outer message value is the forwarded gas, not the jetton amount.
+            token = ValuedToken(token = Coins.Ton.TON, value = "0.32", fiatValue = "$1.79"),
+            srcAddress = "UQAowner1234567890abcdefVaultTonAddress0987654321xY",
+            srcVaultName = "Main Vault",
+            dstAddress = senderJettonWallet,
+            networkFeeFiatValue = "$0.04",
+            networkFeeTokenValue = "0.0066 TON",
+            heroContent =
+                if (decoded) {
+                    HeroContent.Send(
+                        title = null,
+                        coin =
+                            HeroCoinAmount(
+                                amount = "100",
+                                ticker = "USDT",
+                                logo = Coins.Ton.USDT.logo,
+                            ),
+                    )
+                } else {
+                    null
+                },
+            tonMessages =
+                if (decoded) {
+                    listOf(
+                        TonMessageUiModel(
+                            operation = TonMessageOperation.JettonTransfer,
+                            recipient = recipient,
+                            amount = "0.05 TON",
+                            rawPayload = TON_JETTON_MESSAGE.rawPayload,
+                            hasStateInit = false,
+                        )
+                    )
+                } else {
+                    listOf(
+                        TonMessageUiModel(
+                            operation = TonMessageOperation.Transfer,
+                            recipient = senderJettonWallet,
+                            amount = "0.32 TON",
+                            rawPayload = TON_JETTON_MESSAGE.rawPayload,
+                            hasStateInit = false,
+                        )
+                    )
+                },
+        )
+    return VerifyTransactionUiModel(
+        transaction = tx,
+        consentAddress = false,
+        consentAmount = false,
+        hasFastSign = false,
+    )
 }
 
 @Composable

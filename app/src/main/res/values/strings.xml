@@ -1144,8 +1144,13 @@
     <string name="choose_device_count_a11y_description">How many devices do you have? %1$s selected. Tap to choose another.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Messages</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Jetton Transfer</string>
+    <string name="ton_op_nft_transfer">NFT Transfer</string>
+    <string name="ton_op_excess_gas_refund">Excess Gas Refund</string>
+    <string name="ton_op_transfer">Transfer</string>
+    <string name="ton_forward_ton_amount">Forward TON Amount</string>
+    <string name="ton_raw_payload">Raw Payload</string>
     <string name="key_import_error_title">Key Import Failed</string>
     <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
     <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>
