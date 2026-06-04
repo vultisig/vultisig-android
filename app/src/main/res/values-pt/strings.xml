@@ -482,7 +482,6 @@
     <string name="verify_deposit_function_overview">Visão geral da função</string>
     <string name="verify_deposit_sending">Você está a enviar</string>
     <string name="verify_deposit_network">Rede</string>
-    <string name="verify_deposit_sign_transaction">Assinar transação</string>
     <string name="referral_invite_sheet_description">Compartilhe seu código de referência exclusivo para convidar amigos. Eles recebem um desconto e, quanto mais eles negociarem, mais você ganha — entregue diretamente para o seu cofre.</string>
     <string name="referral_create_referral">Criar indicação</string>
     <string name="referral_invite_onboarding_3">Poupe em taxas.</string>

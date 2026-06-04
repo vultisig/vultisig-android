@@ -483,7 +483,6 @@
     <string name="verify_deposit_function_overview">Обзор функций</string>
     <string name="verify_deposit_sending">Вы отправляете</string>
     <string name="verify_deposit_network">Сеть</string>
-    <string name="verify_deposit_sign_transaction">Подписать транзакцию</string>
     <string name="referral_invite_sheet_description">Поделитесь своим уникальным реферальным кодом, чтобы пригласить друзей. Они получат скидку, а чем больше они торгуют, тем больше вы зарабатываете — напрямую в вашем хранилище.</string>
     <string name="referral_create_referral">Создать реферала</string>
     <string name="referral_invite_onboarding_3">Экономьте на комиссиях.</string>

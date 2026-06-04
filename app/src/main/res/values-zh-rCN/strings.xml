@@ -728,7 +728,6 @@
     <string name="verify_deposit_function_overview">功能概览</string>
     <string name="verify_deposit_sending">您正在发送</string>
     <string name="verify_deposit_network">网络</string>
-    <string name="verify_deposit_sign_transaction">签署交易</string>
 
     <!-- Referral -->
     <string name="referral_invite_sheet_description">分享您的独特推荐代码邀请朋友。他们获得折扣，他们交易越多，您赚得越多 - 直接发送到您的保险库</string>
