@@ -38,9 +38,9 @@ import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.dapp.DappRequestBanner
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
@@ -314,17 +314,11 @@ internal fun VerifyDepositScreen(
                         .padding(horizontal = if (hasToolbar) 24.dp else 8.dp, vertical = 12.dp),
             ) {
                 if (state.hasFastSign) {
-                    Text(
-                        text = stringResource(R.string.verify_deposit_hold_paired),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.tertiary,
-                        textAlign = TextAlign.Center,
-                    )
-                    VsHoldableButton(
-                        label = stringResource(R.string.verify_deposit_sign_transaction),
-                        onLongClick = onConfirm,
-                        onClick = onFastSignClick,
-                        modifier = Modifier.fillMaxWidth(),
+                    FastSignPairedButtons(
+                        onFastSignClick = onFastSignClick,
+                        onPairedSignClick = onConfirm,
+                        state =
+                            if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
                     )
                 } else {
                     VsButton(

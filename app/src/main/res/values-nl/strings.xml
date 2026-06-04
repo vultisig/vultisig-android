@@ -272,6 +272,7 @@
     <string name="signing_error_broadcast_rejected">Transactie geweigerd door het netwerk.</string>
     <string name="signing_error_broadcast_rejected_s">Transactie geweigerd door het netwerk: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Snel teken</string>
+    <string name="verify_transaction_paired_btn_title">Gekoppeld</string>
     <string name="keysign_sign_transaction">Transactie ondertekenen</string>
     <string name="sign_transaction">Transactie ondertekenen</string>
     <string name="keysign_password_title">Wachtwoord</string>
@@ -480,8 +481,6 @@
     <string name="verify_deposit_function_overview">Functieoverzicht</string>
     <string name="verify_deposit_sending">Je verstuurt</string>
     <string name="verify_deposit_network">Netwerk</string>
-    <string name="verify_deposit_hold_paired">Lang ingedrukt houden voor gekoppelde ondertekening</string>
-    <string name="verify_deposit_sign_transaction">Transactie ondertekenen</string>
     <string name="referral_invite_sheet_description">Deel je unieke verwijzingscode om vrienden uit te nodigen. Zij krijgen een korting en hoe meer ze handelen, hoe meer jij verdient - direct geleverd in je kluis.</string>
     <string name="referral_create_referral">Verwijzing maken</string>
     <string name="referral_invite_onboarding_3">Bespaar op kosten.</string>
