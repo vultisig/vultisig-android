@@ -3,7 +3,6 @@
 package com.vultisig.wallet.data.crypto.ton
 
 import java.util.Base64
-import java.util.zip.CRC32C
 
 /**
  * Minimal TON BOC (Bag Of Cells) parser. Converts a base64 (or hex) payload to the root cell of its
@@ -14,6 +13,9 @@ import java.util.zip.CRC32C
 internal object TonBocParser {
 
     private val HEX_BOC_MAGIC_PREFIXES = listOf("b5ee9c72", "68ff65f3", "acc3a728")
+
+    // CRC-32C (Castagnoli) reflected polynomial.
+    private val CRC32C_POLYNOMIAL = 0x82F63B78.toInt()
 
     /**
      * Convert a hex-encoded BOC to base64 when it carries a recognised magic prefix; otherwise
@@ -182,14 +184,12 @@ internal object TonBocParser {
         if (hasCrc32c) {
             // CRC-32C (Castagnoli) over every byte before the little-endian
             // 4-byte trailer.
-            val crc = CRC32C()
-            crc.update(bytes, 0, cellsEnd)
             val stored =
                 u(bytes, cellsEnd) or
                     (u(bytes, cellsEnd + 1) shl 8) or
                     (u(bytes, cellsEnd + 2) shl 16) or
                     (u(bytes, cellsEnd + 3) shl 24)
-            if (stored != crc.value.toInt()) throw TonCellException("invalid cell header")
+            if (stored != crc32c(bytes, cellsEnd)) throw TonCellException("invalid cell header")
         }
 
         return resolved[rootIndex.toInt()] ?: throw TonCellException("truncated BOC")
@@ -200,6 +200,20 @@ internal object TonBocParser {
         if (!payload.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) return false
         val lower = payload.lowercase()
         return HEX_BOC_MAGIC_PREFIXES.any { lower.startsWith(it) }
+    }
+
+    /**
+     * CRC-32C (Castagnoli) over the first [length] bytes, init/xor-out `0xFFFFFFFF`. Hand-rolled
+     * rather than `java.util.zip.CRC32C`, which is only available from API 34 (this module's min is
+     * 26).
+     */
+    private fun crc32c(bytes: ByteArray, length: Int): Int {
+        var crc = -1 // 0xFFFFFFFF
+        for (i in 0 until length) {
+            crc = crc xor (bytes[i].toInt() and 0xFF)
+            repeat(8) { crc = (crc ushr 1) xor (if (crc and 1 != 0) CRC32C_POLYNOMIAL else 0) }
+        }
+        return crc.inv()
     }
 
     private fun readBigEndian(bytes: ByteArray, offset: Int, length: Int): Long {
