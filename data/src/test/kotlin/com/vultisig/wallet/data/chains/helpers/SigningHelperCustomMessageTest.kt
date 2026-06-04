@@ -28,8 +28,8 @@ class SigningHelperCustomMessageTest {
     }
 
     @Test
-    fun `hex-encoded message is decoded then keccak256-hashed for ECDSA chain`() {
-        val hexMessage = "56756c7469736967"
+    fun `0x-prefixed hex message is decoded then keccak256-hashed for ECDSA chain`() {
+        val hexMessage = "0x56756c7469736967"
         val payload =
             CustomMessagePayload(method = "personal_sign", message = hexMessage, chain = "Ethereum")
 
@@ -40,8 +40,22 @@ class SigningHelperCustomMessageTest {
     }
 
     @Test
+    fun `hex-looking message without 0x prefix is treated as UTF-8 for ECDSA chain`() {
+        // "56756c7469736967" is all hex characters but has no 0x prefix, so it must be hashed as
+        // UTF-8 text to match iOS/Windows; decoding it as hex would diverge cross-platform.
+        val message = "56756c7469736967"
+        val payload =
+            CustomMessagePayload(method = "personal_sign", message = message, chain = "Ethereum")
+
+        val messages = SigningHelper.getKeysignMessages(payload)
+
+        val expected = message.toByteArray().toKeccak256ByteArray().toHexString()
+        messages shouldBe listOf(expected)
+    }
+
+    @Test
     fun `EdDSA chain message skips keccak256 and passes bytes through directly`() {
-        val hexMessage = "abcdef0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d"
+        val hexMessage = "0xabcdef0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d"
         val payload = CustomMessagePayload(method = "sign", message = hexMessage, chain = "Solana")
 
         val messages = SigningHelper.getKeysignMessages(payload)
@@ -52,7 +66,7 @@ class SigningHelperCustomMessageTest {
 
     @Test
     fun `ECDSA and EdDSA produce different keysign messages for the same hex input`() {
-        val hexMessage = "abcdef0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d"
+        val hexMessage = "0xabcdef0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d"
 
         val ecdsaMessages =
             SigningHelper.getKeysignMessages(
