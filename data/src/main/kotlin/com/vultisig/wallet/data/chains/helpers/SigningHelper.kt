@@ -3,7 +3,6 @@
 package com.vultisig.wallet.data.chains.helpers
 
 import com.vultisig.wallet.data.api.swapAggregators.OneInchSwap
-import com.vultisig.wallet.data.common.isHex
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.common.toKeccak256ByteArray
 import com.vultisig.wallet.data.crypto.SuiHelper
@@ -41,8 +40,13 @@ object SigningHelper {
             return getKeysignMessagesForTypedData(messagePayload.message, typedDataHasher)
         }
 
+        // Only a `0x`-prefixed message is treated as hex; everything else is UTF-8. iOS
+        // (CustomMessagePayload.keysignMessages) and Windows (getCustomMessageHex.ts) both gate
+        // hex decoding on the `0x` prefix, so a plain-text message made only of hex characters
+        // (e.g. "Vultisig") must be hashed as UTF-8 — otherwise the digest, and the md5 message-ID
+        // derived from it, diverges and cross-platform co-signing can't locate the setup message.
         val processedBytes =
-            if (messagePayload.message.isHex()) {
+            if (messagePayload.message.startsWith("0x")) {
                 messagePayload.message.toHexBytes()
             } else {
                 messagePayload.message.toByteArray()
