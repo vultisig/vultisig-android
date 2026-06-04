@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 internal data class SecretUiModel(
     val isDklsEnabled: Boolean = false,
-    val isSwapKitEnabled: Boolean = false,
+    val isSwapKitEnabled: Boolean = true,
 )
 
 @HiltViewModel
