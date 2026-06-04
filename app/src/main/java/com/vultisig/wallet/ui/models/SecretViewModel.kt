@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.back
@@ -34,7 +35,7 @@ constructor(
 
     /** Persists the SwapKit aggregator feature flag from the hidden Vault Settings toggle. */
     fun toggleSwapKit(state: Boolean) {
-        viewModelScope.launch { swapKitConfig.setFeatureEnabled(state) }
+        viewModelScope.safeLaunch { swapKitConfig.setFeatureEnabled(state) }
     }
 
     fun back() {
