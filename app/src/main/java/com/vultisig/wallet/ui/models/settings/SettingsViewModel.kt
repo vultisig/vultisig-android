@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.repositories.AppLocaleRepository
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
+import com.vultisig.wallet.ui.models.settings.SettingsItem.Advanced
 import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Currency
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Discord
@@ -66,6 +67,18 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
             SettingsItemUiModel(
                 title = UiText.StringResource(R.string.vault_settings_discounts),
                 leadingIcon = R.drawable.coins_tier,
+                trailingIcon = R.drawable.ic_small_caret_right,
+            )
+        )
+
+    /**
+     * Entry point that opens the vault's Advanced Settings directly from the main settings list.
+     */
+    data object Advanced :
+        SettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.vault_settings_advanced_title),
+                leadingIcon = R.drawable.advanced,
                 trailingIcon = R.drawable.ic_small_caret_right,
             )
         )
@@ -247,7 +260,7 @@ constructor(
                 listOf(
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.vault),
-                        items = listOf(VaultSetting, DiscountTiers),
+                        items = listOf(VaultSetting, DiscountTiers, Advanced),
                     ),
                     SettingsGroupUiModel(
                         title = UiText.StringResource(R.string.general),
@@ -314,6 +327,12 @@ constructor(
             Twitter -> sendEvent(SettingsUiEvent.OpenLink(VsAuxiliaryLinks.TWITTER))
             VaultSetting -> {
                 viewModelScope.launch { navigator.route(Route.VaultSettings(vaultId)) }
+            }
+
+            Advanced -> {
+                viewModelScope.launch {
+                    navigator.route(Route.VaultSettings(vaultId, openAdvanced = true))
+                }
             }
 
             DiscountTiers -> {

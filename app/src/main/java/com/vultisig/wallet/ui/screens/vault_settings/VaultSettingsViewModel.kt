@@ -275,11 +275,17 @@ constructor(
 
     val passwordTextFieldState = TextFieldState()
 
-    private val vaultId: String = savedStateHandle.toRoute<Route.VaultSettings>().vaultId
+    private val route: Route.VaultSettings = savedStateHandle.toRoute<Route.VaultSettings>()
+
+    private val vaultId: String = route.vaultId
 
     private var hasFastSign: Boolean = false
 
     init {
+        if (route.openAdvanced) {
+            uiModel.update { it.copy(isAdvanceSetting = true) }
+        }
+
         viewModelScope.launch {
             val vault = vaultRepository.get(vaultId)
             val hasMigration = vault?.libType == SigningLibType.GG20
