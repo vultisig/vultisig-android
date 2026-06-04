@@ -24,6 +24,7 @@ import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.DiscoveringSession
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.Error
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.JoinKeysign
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.Keysign
+import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.QbtcClaim
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignState.WaitingForKeysignStart
 import com.vultisig.wallet.ui.models.keysign.JoinKeysignViewModel
 import com.vultisig.wallet.ui.models.keysign.KeysignState
@@ -144,6 +145,15 @@ internal fun JoinKeysignView() {
             }
 
             JoinKeysign -> Unit // handled above, before the JoinKeysignScreen wrapper
+
+            is QbtcClaim -> {
+                val claim = state as QbtcClaim
+                KeysignLoadingScreen(
+                    text =
+                        if (claim.txHash == null) stringResource(R.string.qbtc_claim_proving)
+                        else stringResource(R.string.qbtc_claim_success_title)
+                )
+            }
 
             Keysign -> {
                 val wrapperViewModel =

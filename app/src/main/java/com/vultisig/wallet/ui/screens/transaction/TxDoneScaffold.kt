@@ -64,6 +64,7 @@ internal fun TxDoneScaffold(
     onTransactionDetailVisibleChange: (Boolean) -> Unit,
     onBack: () -> Unit = {},
     dappMetadata: DAppMetadata? = null,
+    successTitle: String? = null,
     tokenContent: @Composable () -> Unit,
     detailContent: @Composable () -> Unit,
     bottomBarContent: @Composable () -> Unit,
@@ -98,6 +99,7 @@ internal fun TxDoneScaffold(
                 context = context,
                 detailContent = detailContent,
                 dappMetadata = dappMetadata,
+                successTitle = successTitle,
                 isTransactionDetailVisible = isTransactionDetailVisible,
                 onTransactionDetailVisibleChange = onTransactionDetailVisibleChange,
             )
@@ -120,6 +122,7 @@ private fun SuccessTransaction(
     isTransactionDetailVisible: Boolean,
     onTransactionDetailVisibleChange: (Boolean) -> Unit,
     dappMetadata: DAppMetadata? = null,
+    successTitle: String? = null,
 ) {
 
     Column(
@@ -154,18 +157,23 @@ private fun SuccessTransaction(
                 }
                 Text(
                     text =
-                        stringResource(
-                            when {
-                                isTransactionPending -> R.string.transaction_status_pending
-                                isTransactionRefunded -> R.string.transaction_status_refunded
-                                isTransactionFailed -> R.string.transaction_failed
-                                // PSBT co-signing flow: wallet signed, dApp broadcasts. Avoid
-                                // "Transaction successful" copy that would imply the tx is
-                                // already on-chain.
-                                isTransactionSigned -> R.string.transaction_status_signed_label
-                                else -> R.string.tx_transaction_successful_screen_title
-                            }
-                        ),
+                        when {
+                            isTransactionPending ->
+                                stringResource(R.string.transaction_status_pending)
+                            isTransactionRefunded ->
+                                stringResource(R.string.transaction_status_refunded)
+                            isTransactionFailed -> stringResource(R.string.transaction_failed)
+                            // PSBT co-signing flow: wallet signed, dApp broadcasts. Avoid
+                            // "Transaction successful" copy that would imply the tx is
+                            // already on-chain.
+                            isTransactionSigned ->
+                                stringResource(R.string.transaction_status_signed_label)
+                            else ->
+                                successTitle
+                                    ?: stringResource(
+                                        R.string.tx_transaction_successful_screen_title
+                                    )
+                        },
                     textAlign = TextAlign.Center,
                     style =
                         Theme.brockmann.body.l.medium.copy(

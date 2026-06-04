@@ -8,11 +8,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -24,9 +27,12 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
@@ -42,19 +48,27 @@ import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.hero.HeroCoinAmount
 import com.vultisig.wallet.ui.components.hero.HeroContent
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetContent
+import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetStyle
 import com.vultisig.wallet.ui.components.v2.fastselection.SelectPopupUiModel
 import com.vultisig.wallet.ui.components.v2.fastselection.components.ChainSelectorPickerItem
 import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectPopup
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
+import com.vultisig.wallet.ui.models.ChainTokenUiModel
+import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
+import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
 import com.vultisig.wallet.ui.models.keygen.VerifyPinState
+import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
+import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
@@ -65,6 +79,7 @@ import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
+import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
 import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
 import com.vultisig.wallet.ui.screens.send.VerifySendScreen
@@ -78,6 +93,7 @@ import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
+import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
@@ -163,6 +179,12 @@ class PreviewActivity : ComponentActivity() {
                         VerifyUniversalRouterPreview(expanded = true, useUrRows = false)
                     "universal_router_verify_after" ->
                         VerifyUniversalRouterPreview(expanded = true, useUrRows = true)
+                    "qbtc_claim" -> QbtcClaimSelectingPreview()
+                    "qbtc_claim_done" -> QbtcClaimDonePreview()
+                    "qbtc_claim_error" -> QbtcClaimErrorPreview()
+                    "qbtc_claim_blocked" -> QbtcClaimBlockedPreview()
+                    "btc_detail_claim" -> BtcDetailClaimPreview()
+                    "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     else -> SwapConfirmPreview()
                 }
             }
@@ -279,25 +301,23 @@ private fun BondFormMayaPreview() {
 
 @Composable
 private fun SolanaDisplayPreview() {
-    // Mock the expanded instruction view directly to show Program ID overflow behavior
-    androidx.compose.foundation.layout.Column(
+    Column(
         modifier =
             Modifier.padding(24.dp)
                 .fillMaxSize()
                 .background(
-                    color = com.vultisig.wallet.ui.theme.Theme.v2.colors.variables.bordersLight,
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    color = Theme.v2.colors.variables.bordersLight,
+                    shape = RoundedCornerShape(12.dp),
                 )
                 .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        androidx.compose.material3.Text(
+        Text(
             text = "Transaction Instructions Summary",
-            style = com.vultisig.wallet.ui.theme.Theme.brockmann.button.medium.regular,
-            color = com.vultisig.wallet.ui.theme.Theme.v2.colors.text.primary,
+            style = Theme.brockmann.button.medium.regular,
+            color = Theme.v2.colors.text.primary,
             fontSize = 13.sp,
         )
-        // Instruction 1 - System Program (short ID)
         SolanaInstructionMock(
             index = 1,
             type = "Transfer",
@@ -306,7 +326,6 @@ private fun SolanaDisplayPreview() {
             accounts = 3,
             dataLength = 12,
         )
-        // Instruction 2 - Jupiter aggregator (long program name + ID)
         SolanaInstructionMock(
             index = 2,
             type = "Transfer Checked",
@@ -315,7 +334,6 @@ private fun SolanaDisplayPreview() {
             accounts = 5,
             dataLength = 32,
         )
-        // Instruction 3 - DeFi program with very long ID
         SolanaInstructionMock(
             index = 3,
             type = "Create Associated Token Account",
@@ -336,50 +354,50 @@ private fun SolanaInstructionMock(
     accounts: Int,
     dataLength: Int,
 ) {
-    androidx.compose.foundation.layout.Column(
+    Column(
         modifier =
             Modifier.fillMaxWidth()
                 .background(
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-                    color = com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.dark,
+                    shape = RoundedCornerShape(8.dp),
+                    color = Theme.v2.colors.backgrounds.dark,
                 )
                 .padding(6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            androidx.compose.material3.Text(
+            Text(
                 text = "Instruction $index",
-                style = com.vultisig.wallet.ui.theme.Theme.brockmann.button.medium.regular,
-                color = com.vultisig.wallet.ui.theme.Theme.v2.colors.text.primary,
+                style = Theme.brockmann.button.medium.regular,
+                color = Theme.v2.colors.text.primary,
                 fontSize = 10.sp,
             )
-            androidx.compose.material3.Text(
+            Text(
                 text = ": $type",
-                style = com.vultisig.wallet.ui.theme.Theme.brockmann.button.medium.medium,
-                color = com.vultisig.wallet.ui.theme.Theme.v2.colors.text.primary,
+                style = Theme.brockmann.button.medium.medium,
+                color = Theme.v2.colors.text.primary,
                 fontSize = 10.sp,
             )
         }
-        androidx.compose.material3.Text(
+        Text(
             text = "Program: $programName",
-            style = com.vultisig.wallet.ui.theme.Theme.brockmann.button.medium.medium,
-            color = com.vultisig.wallet.ui.theme.Theme.v2.colors.neutrals.n100,
+            style = Theme.brockmann.button.medium.medium,
+            color = Theme.v2.colors.neutrals.n100,
             fontSize = 10.sp,
             maxLines = 1,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            overflow = TextOverflow.Ellipsis,
         )
-        androidx.compose.material3.Text(
+        Text(
             text = "Program ID: $programId",
-            color = com.vultisig.wallet.ui.theme.Theme.v2.colors.neutrals.n100,
-            style = com.vultisig.wallet.ui.theme.Theme.brockmann.button.medium.medium,
+            color = Theme.v2.colors.neutrals.n100,
+            style = Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,
             maxLines = 1,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            overflow = TextOverflow.Ellipsis,
         )
-        androidx.compose.material3.Text(
+        Text(
             text = "Accounts: $accounts | Data length: $dataLength bytes",
-            color = com.vultisig.wallet.ui.theme.Theme.v2.colors.neutrals.n100,
-            style = com.vultisig.wallet.ui.theme.Theme.brockmann.button.medium.medium,
+            color = Theme.v2.colors.neutrals.n100,
+            style = Theme.brockmann.button.medium.medium,
             fontSize = 10.sp,
         )
     }
@@ -420,7 +438,7 @@ private fun TonDisplayPreview(messageCount: Int) {
                     ),
                 )
         }
-    androidx.compose.foundation.layout.Column(
+    Column(
         modifier =
             Modifier.padding(24.dp)
                 .fillMaxSize()
@@ -461,28 +479,22 @@ private fun SendTxDonePreview() {
 
 @Composable
 private fun ContentRowPreview() {
-    androidx.compose.foundation.layout.Column(
-        modifier = Modifier.padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        ContentRow(text = "ABCD-1234") {
-            UiIcon(drawableResId = com.vultisig.wallet.R.drawable.ic_copy, size = 18.dp)
-        }
+    Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ContentRow(text = "ABCD-1234") { UiIcon(drawableResId = R.drawable.ic_copy, size = 18.dp) }
         ContentRow(
             text =
                 "https://vultisig.com/referral/very-long-referral-code-that-would-definitely-overflow-the-container-width"
         ) {
-            UiIcon(drawableResId = com.vultisig.wallet.R.drawable.ic_copy, size = 18.dp)
+            UiIcon(drawableResId = R.drawable.ic_copy, size = 18.dp)
         }
     }
 }
 
 @Composable
 private fun TierBottomSheetFullPreview() {
-    androidx.compose.foundation.layout.Box(
-        modifier =
-            Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color(0xFF1A2335)),
-        contentAlignment = androidx.compose.ui.Alignment.BottomCenter,
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color(0xFF1A2335)),
+        contentAlignment = Alignment.BottomCenter,
     ) {
         TierDiscountBottomSheetContent(tier = TierType.BRONZE, onContinue = {})
     }
@@ -516,11 +528,7 @@ private fun SwapErrorPreview() {
 @Composable
 private fun ImportSeedphrasePreview() {
     ImportSeedphraseContent(
-        state =
-            com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel(
-                wordCount = 0,
-                expectedWordCount = 12,
-            ),
+        state = ImportSeedphraseUiModel(wordCount = 0, expectedWordCount = 12),
         mnemonicFieldState = TextFieldState(),
         onBackClick = {},
         onImportClick = {},
@@ -568,17 +576,17 @@ private fun DeFiAccountListPreview() {
             ),
         )
 
-    androidx.compose.foundation.layout.Box(
+    Box(
         modifier =
             Modifier.fillMaxSize()
-                .background(com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.primary)
+                .background(Theme.v2.colors.backgrounds.primary)
                 .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
-        androidx.compose.foundation.layout.Column(
+        Column(
             modifier =
                 Modifier.background(
-                    color = com.vultisig.wallet.ui.theme.Theme.v2.colors.backgrounds.secondary,
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    color = Theme.v2.colors.backgrounds.secondary,
+                    shape = RoundedCornerShape(12.dp),
                 )
         ) {
             AccountList(
@@ -662,16 +670,9 @@ private fun ShareQrKeygenPreview() {
     )
 }
 
-// -------------------------------------------------------------------------
-// Blockaid hero previews — issue #4095
-//
-// Each preview renders a full screen (verify or done) with mocked vault state
-// but the same `HeroContent` shape produced by the real flow. Token logos /
-// fiat balances are mocked; the hero shape (transfer / swap / unverified)
-// matches what the production parser produces from a real Blockaid response.
-// Used to capture screenshots for the PR before/after comparison.
-// -------------------------------------------------------------------------
-
+// Token logos and fiat balances are mocked, but the HeroContent shape
+// (transfer / swap / unverified) matches what the production parser produces
+// from a real Blockaid response.
 @Composable
 private fun BlockaidHeroVerifySendPreview() {
     VerifySendScreen(
@@ -801,7 +802,7 @@ private fun BlockaidPopupHighRiskPreview() {
         title = "High risk transaction detected",
         description =
             "This transaction involves a malicious address. Interacting with it may compromise your assets. Proceed only if you are certain.",
-        iconRes = com.vultisig.wallet.R.drawable.ic_triangle_alert,
+        iconRes = R.drawable.ic_triangle_alert,
         iconColor = Theme.v2.colors.alerts.error,
     )
 }
@@ -812,7 +813,7 @@ private fun BlockaidPopupMediumRiskPreview() {
         title = "Medium risk transaction detected",
         description =
             "This transaction involves a malicious address. Interacting with it may compromise your assets. Proceed only if you are certain.",
-        iconRes = com.vultisig.wallet.R.drawable.alert,
+        iconRes = R.drawable.alert,
         iconColor = Theme.v2.colors.alerts.warning,
     )
 }
@@ -820,20 +821,17 @@ private fun BlockaidPopupMediumRiskPreview() {
 /**
  * Renders the security scanner popup the way users actually see it: a modal sheet docked to the
  * bottom of the screen, sitting on top of a scrim that partially obscures the verify screen behind.
- * Mirrors Figma node 39852:64136 (high-risk variant) and 39852:64319 (medium-risk variant) where
- * the sheet occupies only the bottom portion of the screen with the dApp transaction card still
- * visible (and dimmed) above.
+ * Hand-assembled here because the real popup is a [androidx.compose.material3.ModalBottomSheet]
+ * that can't be captured statically.
  */
 @Composable
 private fun BlockaidPopupOverlay(
     title: String,
     description: String,
     iconRes: Int,
-    iconColor: androidx.compose.ui.graphics.Color,
+    iconColor: Color,
 ) {
-    androidx.compose.foundation.layout.Box(
-        modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.background)
-    ) {
+    Box(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.background)) {
         // Stand-in for the verify screen visible behind the modal.
         VerifySendScreen(
             state = blockaidHeroSendState(),
@@ -850,34 +848,26 @@ private fun BlockaidPopupOverlay(
         )
 
         // Scrim — Material's bottom-sheet scrim is black @ ~32% alpha.
-        androidx.compose.foundation.layout.Box(
-            modifier =
-                Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color(0x99000000))
-        )
+        Box(modifier = Modifier.fillMaxSize().background(Color(0x99000000)))
 
         // Sheet docked at the bottom with rounded top corners.
-        androidx.compose.foundation.layout.Box(
+        Box(
             modifier =
                 Modifier.fillMaxWidth()
-                    .align(androidx.compose.ui.Alignment.BottomCenter)
+                    .align(Alignment.BottomCenter)
                     .background(
                         color = Theme.v2.colors.backgrounds.background,
-                        shape =
-                            androidx.compose.foundation.shape.RoundedCornerShape(
-                                topStart = 38.dp,
-                                topEnd = 38.dp,
-                            ),
+                        shape = RoundedCornerShape(topStart = 38.dp, topEnd = 38.dp),
                     )
         ) {
-            com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetContent(
+            SecurityScannerBottomSheetContent(
                 contentStyle =
-                    com.vultisig.wallet.ui.components.securityscanner
-                        .SecurityScannerBottomSheetStyle(
-                            title = title,
-                            description = description,
-                            image = iconRes,
-                            imageColor = iconColor,
-                        ),
+                    SecurityScannerBottomSheetStyle(
+                        title = title,
+                        description = description,
+                        image = iconRes,
+                        imageColor = iconColor,
+                    ),
                 securityScannerProvider = "blockaid",
                 onDismissRequest = {},
                 onContinueAnyway = {},
@@ -1136,12 +1126,9 @@ private fun SelectChainPopupPreview() {
 }
 
 /**
- * Full-screen [VerifySendScreen] preview wired for #4058 PR screenshots. Renders the real verify
- * card with a mocked decoded `approve(USDC, ∞)` call and toggles the Transaction Details section
- * between collapsed and expanded variants. The `useRichRows` switch lets the capture script show
- * the BEFORE state (raw JSON) by stripping the decoded rows, then re-launch with the AFTER state
- * (labelled rows + copy icons) — both renders are otherwise identical so the PR comparison is
- * apples-to-apples.
+ * Renders the real verify card with a mocked decoded `approve(USDC, ∞)` call. `useRichRows = false`
+ * strips the decoded rows so the raw-JSON variant renders; `useRichRows = true` shows the labelled
+ * rows with copy icons. Both variants are otherwise identical.
  */
 @Composable
 private fun VerifyDecodedSendPreview(expanded: Boolean = false, useRichRows: Boolean = true) {
@@ -1161,39 +1148,31 @@ private fun VerifyDecodedSendPreview(expanded: Boolean = false, useRichRows: Boo
     )
 }
 
-private fun decodedApproveSendState(
-    useRichRows: Boolean
-): com.vultisig.wallet.ui.models.VerifyTransactionUiModel {
+private fun decodedApproveSendState(useRichRows: Boolean): VerifyTransactionUiModel {
     val ethCoin = Coins.Ethereum.ETH
     val spender = "0x7a250d5630b4cf539739df2c5dacb4c659f2488d"
     val rawArgs =
         "[\"$spender\",\"115792089237316195423570985008687907853269984665640564039457584007913129639935\"]"
     val richRows =
         listOf(
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label =
-                    com.vultisig.wallet.ui.utils.UiText.StringResource(
-                        com.vultisig.wallet.R.string.erc20_approval_spender
-                    ),
-                value = com.vultisig.wallet.ui.utils.UiText.DynamicString(spender),
+            DecodedFunctionParam(
+                label = UiText.StringResource(R.string.erc20_approval_spender),
+                value = UiText.DynamicString(spender),
                 copyableValue = spender,
                 secondary = "Uniswap V2 Router",
             ),
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label =
-                    com.vultisig.wallet.ui.utils.UiText.StringResource(
-                        com.vultisig.wallet.R.string.decoded_function_amount
-                    ),
+            DecodedFunctionParam(
+                label = UiText.StringResource(R.string.decoded_function_amount),
                 value =
-                    com.vultisig.wallet.ui.utils.UiText.FormattedText(
-                        com.vultisig.wallet.R.string.decoded_function_unlimited_amount,
+                    UiText.FormattedText(
+                        R.string.decoded_function_unlimited_amount,
                         listOf("USDC"),
                     ),
                 isWarning = true,
             ),
         )
     val tx =
-        com.vultisig.wallet.ui.models.TransactionDetailsUiModel(
+        TransactionDetailsUiModel(
             token = ValuedToken(token = ethCoin, value = "0", fiatValue = "$0.00"),
             srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
             srcVaultName = "Honeypot Vault DKLS",
@@ -1214,27 +1193,27 @@ private fun decodedApproveSendState(
             networkFeeFiatValue = "$1.84",
             networkFeeTokenValue = "0.000482 ETH",
             heroContent =
-                com.vultisig.wallet.ui.components.hero.HeroContent.Send(
+                HeroContent.Send(
                     title = "Approve",
                     coin =
-                        com.vultisig.wallet.ui.components.hero.HeroCoinAmount(
+                        HeroCoinAmount(
                             amount = "Unlimited",
                             ticker = "USDC",
                             logo = "https://assets.coingecko.com/coins/images/6319/large/usdc.png",
                         ),
                 ),
         )
-    return com.vultisig.wallet.ui.models.VerifyTransactionUiModel(
+    return VerifyTransactionUiModel(
         transaction = tx,
         consentAddress = false,
         consentAmount = false,
         hasFastSign = false,
         txScanStatus =
-            com.vultisig.wallet.ui.models.TransactionScanStatus.Scanned(
-                com.vultisig.wallet.data.securityscanner.SecurityScannerResult(
+            TransactionScanStatus.Scanned(
+                SecurityScannerResult(
                     provider = "blockaid",
                     isSecure = true,
-                    riskLevel = com.vultisig.wallet.data.securityscanner.SecurityRiskLevel.NONE,
+                    riskLevel = SecurityRiskLevel.NONE,
                     warnings = emptyList(),
                     description = "Transaction is safe",
                     recommendations = "",
@@ -1244,12 +1223,9 @@ private fun decodedApproveSendState(
 }
 
 /**
- * Full-screen [VerifySendScreen] preview wired for #4059 PR screenshots. Renders the real verify
- * card with a mocked decoded Uniswap Universal Router `execute(...)` call (V3_SWAP_EXACT_IN USDC →
- * DAI). `useUrRows = false` reproduces the BEFORE state — the same call passed through Phase-2A's
- * generic positional decoder that can't see inside `bytes[]`. `useUrRows = true` shows the AFTER
- * state with the four labelled swap rows. Both renders share device, layout, and mock data so the
- * PR diff is apples-to-apples.
+ * Renders the real verify card with a mocked decoded Uniswap Universal Router `execute(...)` call
+ * (V3_SWAP_EXACT_IN USDC → DAI). `useUrRows = false` shows the generic positional decoder that
+ * can't see inside `bytes[]`; `useUrRows = true` shows the four labelled swap rows.
  */
 @Composable
 private fun VerifyUniversalRouterPreview(expanded: Boolean = true, useUrRows: Boolean = true) {
@@ -1269,9 +1245,7 @@ private fun VerifyUniversalRouterPreview(expanded: Boolean = true, useUrRows: Bo
     )
 }
 
-private fun decodedUniversalRouterSendState(
-    useUrRows: Boolean
-): com.vultisig.wallet.ui.models.VerifyTransactionUiModel {
+private fun decodedUniversalRouterSendState(useUrRows: Boolean): VerifyTransactionUiModel {
     val ethCoin = Coins.Ethereum.ETH
     val urAddress = "0x66a9893cc07d91d95644aedd05d03f95e1dba8af"
     val usdc = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
@@ -1291,59 +1265,44 @@ private fun decodedUniversalRouterSendState(
     val rawArgs = """["0x08",["$v3SwapInput"],"0"]"""
     val urRows =
         listOf(
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label =
-                    com.vultisig.wallet.ui.utils.UiText.StringResource(
-                        com.vultisig.wallet.R.string.decoded_function_from_token
-                    ),
-                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("USDC"),
+            DecodedFunctionParam(
+                label = UiText.StringResource(R.string.decoded_function_from_token),
+                value = UiText.DynamicString("USDC"),
                 copyableValue = usdc,
                 secondary = usdc,
             ),
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label =
-                    com.vultisig.wallet.ui.utils.UiText.StringResource(
-                        com.vultisig.wallet.R.string.decoded_function_amount_in
-                    ),
-                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("1 USDC"),
+            DecodedFunctionParam(
+                label = UiText.StringResource(R.string.decoded_function_amount_in),
+                value = UiText.DynamicString("1 USDC"),
             ),
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label =
-                    com.vultisig.wallet.ui.utils.UiText.StringResource(
-                        com.vultisig.wallet.R.string.decoded_function_to_token
-                    ),
-                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("DAI"),
+            DecodedFunctionParam(
+                label = UiText.StringResource(R.string.decoded_function_to_token),
+                value = UiText.DynamicString("DAI"),
                 copyableValue = dai,
                 secondary = dai,
             ),
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label =
-                    com.vultisig.wallet.ui.utils.UiText.StringResource(
-                        com.vultisig.wallet.R.string.decoded_function_min_amount_out
-                    ),
-                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("0.99 DAI"),
+            DecodedFunctionParam(
+                label = UiText.StringResource(R.string.decoded_function_min_amount_out),
+                value = UiText.DynamicString("0.99 DAI"),
             ),
         )
     val genericRows =
         listOf(
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label = com.vultisig.wallet.ui.utils.UiText.DynamicString("#1 (bytes)"),
-                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("0x08"),
+            DecodedFunctionParam(
+                label = UiText.DynamicString("#1 (bytes)"),
+                value = UiText.DynamicString("0x08"),
             ),
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label = com.vultisig.wallet.ui.utils.UiText.DynamicString("#2 (bytes[])"),
-                value =
-                    com.vultisig.wallet.ui.utils.UiText.DynamicString(
-                        "[$v3SwapInput]".take(64) + "…"
-                    ),
+            DecodedFunctionParam(
+                label = UiText.DynamicString("#2 (bytes[])"),
+                value = UiText.DynamicString("[$v3SwapInput]".take(64) + "…"),
             ),
-            com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam(
-                label = com.vultisig.wallet.ui.utils.UiText.DynamicString("#3 (uint256)"),
-                value = com.vultisig.wallet.ui.utils.UiText.DynamicString("0"),
+            DecodedFunctionParam(
+                label = UiText.DynamicString("#3 (uint256)"),
+                value = UiText.DynamicString("0"),
             ),
         )
     val tx =
-        com.vultisig.wallet.ui.models.TransactionDetailsUiModel(
+        TransactionDetailsUiModel(
             token = ValuedToken(token = ethCoin, value = "0", fiatValue = "$0.00"),
             srcAddress = "0xAbCdEf1234567890AbCdEf1234567890AbCdEf12",
             srcVaultName = "Honeypot Vault DKLS",
@@ -1357,12 +1316,12 @@ private fun decodedUniversalRouterSendState(
             networkFeeFiatValue = "$2.41",
             networkFeeTokenValue = "0.000632 ETH",
         )
-    return com.vultisig.wallet.ui.models.VerifyTransactionUiModel(
+    return VerifyTransactionUiModel(
         transaction = tx,
         consentAddress = false,
         consentAmount = false,
         hasFastSign = false,
-        txScanStatus = com.vultisig.wallet.ui.models.TransactionScanStatus.NotStarted,
+        txScanStatus = TransactionScanStatus.NotStarted,
     )
 }
 
@@ -1399,4 +1358,213 @@ private fun ShareQrPreview(info: QrShareInfo) {
             modifier = Modifier.fillMaxWidth(),
         )
     }
+}
+
+/**
+ * The "Claim your QBTC" promo banner on the Bitcoin chain-detail screen, surfaced via
+ * `showQbtcClaimBanner = true`.
+ */
+@Composable
+private fun BtcDetailClaimPreview() {
+    ChainTokensScreen(
+        uiModel =
+            ChainTokensUiModel(
+                chainName = "Bitcoin",
+                chainAddress = "btc1qPgm5x8d3f4a2b9c0e1f2g3h4i5j6k97b454",
+                totalBalance = "$31,010.77",
+                chainLogo = R.drawable.bitcoin,
+                explorerURL = "https://mempool.space/",
+                showQbtcClaimBanner = true,
+                tokens =
+                    listOf(
+                        ChainTokenUiModel(
+                            id = "btc-1",
+                            name = "BTC",
+                            balance = "0.4372 BTC",
+                            fiatBalance = "$31,010.77",
+                            price = "$76,694.00",
+                            tokenLogo = R.drawable.bitcoin,
+                            chainLogo = R.drawable.bitcoin,
+                        )
+                    ),
+            ),
+        onBackClick = {},
+        onRefresh = {},
+        onShowSearchBar = {},
+        onHideSearchBar = {},
+        onSend = {},
+        onSwap = {},
+        onBuy = {},
+        onDeposit = {},
+        onReceive = {},
+        onHistory = {},
+        onSelectTokens = {},
+        onTokenClick = {},
+        onShowReviewPopUp = {},
+        onClaimQbtc = {},
+    )
+}
+
+/**
+ * The bottom "Claim QBTC" CTA on the QBTC chain-detail screen, surfaced via `showClaimQbtcButton =
+ * true`.
+ */
+@Composable
+private fun QbtcDetailClaimPreview() {
+    ChainTokensScreen(
+        uiModel =
+            ChainTokensUiModel(
+                chainName = "Quantum Bitcoin",
+                chainAddress = "btc1qPgm5x8d3f4a2b9c0e1f2g3h4i5j6k97b454",
+                totalBalance = "$31,010.77",
+                chainLogo = R.drawable.qbtc,
+                explorerURL = "https://mempool.space/",
+                showClaimQbtcButton = true,
+                tokens =
+                    listOf(
+                        ChainTokenUiModel(
+                            id = "qbtc-1",
+                            name = "QBTC",
+                            balance = "0.4372 QBTC",
+                            fiatBalance = "$31,010.77",
+                            price = "$76,694.00",
+                            tokenLogo = R.drawable.qbtc,
+                            chainLogo = R.drawable.qbtc,
+                        )
+                    ),
+            ),
+        onBackClick = {},
+        onRefresh = {},
+        onShowSearchBar = {},
+        onHideSearchBar = {},
+        onSend = {},
+        onSwap = {},
+        onBuy = {},
+        onDeposit = {},
+        onReceive = {},
+        onHistory = {},
+        onSelectTokens = {},
+        onTokenClick = {},
+        onShowReviewPopUp = {},
+        onClaimQbtc = {},
+    )
+}
+
+@Composable
+private fun QbtcClaimSelectingPreview() {
+    val utxos =
+        listOf(
+            QbtcClaimUtxoUiModel(
+                key = "a3f1:0",
+                shortId = "a3f1…8d2c:0",
+                subtitleConfirmations = 142,
+                qbtcAmount = "0.75 QBTC",
+                btcAmount = "0.75 BTC",
+            ),
+            QbtcClaimUtxoUiModel(
+                key = "b7c4:2",
+                shortId = "b7c4…1e9f:2",
+                subtitleConfirmations = 38,
+                qbtcAmount = "0.25 QBTC",
+                btcAmount = "0.25 BTC",
+            ),
+            QbtcClaimUtxoUiModel(
+                key = "d9e2:1",
+                shortId = "d9e2…4a7b:1",
+                subtitleConfirmations = 7,
+                qbtcAmount = "0.10 QBTC",
+                btcAmount = "0.10 BTC",
+            ),
+            QbtcClaimUtxoUiModel(
+                key = "f0a1:0",
+                shortId = "f0a1…22c5:0",
+                subtitleConfirmations = 91,
+                qbtcAmount = "0.20 QBTC",
+                btcAmount = "0.20 BTC",
+            ),
+            QbtcClaimUtxoUiModel(
+                key = "9b6e:3",
+                shortId = "9b6e…77fa:3",
+                subtitleConfirmations = 256,
+                qbtcAmount = "0.15 QBTC",
+                btcAmount = "0.15 BTC",
+            ),
+            QbtcClaimUtxoUiModel(
+                key = "4c2d:0",
+                shortId = "4c2d…be10:0",
+                subtitleConfirmations = 12,
+                qbtcAmount = "0.05 QBTC",
+                btcAmount = "0.05 BTC",
+            ),
+            QbtcClaimUtxoUiModel(
+                key = "e8f7:1",
+                shortId = "e8f7…3d44:1",
+                subtitleConfirmations = 504,
+                qbtcAmount = "0.00 QBTC",
+                btcAmount = "0.00 BTC",
+            ),
+        )
+    val state =
+        QbtcClaimUiState.Selecting(
+            utxos = utxos,
+            selectedKeys = utxos.take(5).map { it.key }.toSet(),
+            totalSelectedSats = 125_000_000L,
+            totalEligibleSats = 150_000_000L,
+            canConfirm = true,
+            isAllSelected = false,
+        )
+    QbtcClaimScreen(
+        state = state,
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
+}
+
+@Composable
+private fun QbtcClaimDonePreview() {
+    QbtcClaimScreen(
+        state =
+            QbtcClaimUiState.Done(
+                txHash = "774365959AC251DA340851945A053D508A5F2F6CE98861556F83783C72E9CAFC",
+                totalSats = 5607L,
+                explorerUrl =
+                    "https://explorer.qbtc.network/tx/774365959AC251DA340851945A053D508A5F2F6CE98861556F83783C72E9CAFC",
+            ),
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
+}
+
+@Composable
+private fun QbtcClaimErrorPreview() {
+    QbtcClaimScreen(
+        state = QbtcClaimUiState.Failed(error = QbtcClaimError.BROADCAST_UNAVAILABLE),
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
+}
+
+@Composable
+private fun QbtcClaimBlockedPreview() {
+    QbtcClaimScreen(
+        state = QbtcClaimUiState.Blocked(reason = QbtcClaimBlockedReason.NoUtxos),
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
 }

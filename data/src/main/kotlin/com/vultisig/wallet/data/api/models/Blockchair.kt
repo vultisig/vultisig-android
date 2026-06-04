@@ -4,8 +4,13 @@ import java.math.BigInteger
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 
-@Serializable data class BlockChairInfoJson(val data: Map<String, BlockChairInfo>)
+@Serializable
+data class BlockChairInfoJson(
+    val data: Map<String, BlockChairInfo>,
+    @SerialName("context") val context: ContextData? = null,
+)
 
 @Serializable
 data class BlockChairAddress(
@@ -25,6 +30,10 @@ data class BlockChairUtxoInfo(
 data class BlockChairInfo(
     @SerialName("address") val address: BlockChairAddress,
     @SerialName("utxo") val utxos: List<BlockChairUtxoInfo>,
+    // Absent from the per-address JSON object — carried from the response-level `context.state`
+    // (the current chain tip) by [BlockChairApi.getAddressInfo] so callers can derive
+    // confirmations.
+    @Transient val currentBlockHeight: Long? = null,
 )
 
 @Serializable

@@ -65,7 +65,9 @@ constructor(
                 }
             val responseData = response.bodyOrThrow<BlockChairInfoJson>()
             Timber.d("response data: $responseData")
-            return responseData.data[address]
+            return responseData.data[address]?.copy(
+                currentBlockHeight = responseData.context?.state?.toLong()
+            )
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.e("fail to get address info from blockchair: ${e.message}")
