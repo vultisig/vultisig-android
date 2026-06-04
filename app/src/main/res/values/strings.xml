@@ -370,6 +370,7 @@
     <string name="signing_error_broadcast_rejected">Transaction rejected by the network.</string>
     <string name="signing_error_broadcast_rejected_s">Transaction rejected by the network: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Fast Sign</string>
+    <string name="verify_transaction_paired_btn_title">Paired</string>
     <string name="keysign_sign_transaction">Sign transaction</string>
     <string name="sign_transaction">Sign Transaction</string>
     <string name="keysign_password_title">Password</string>
@@ -656,8 +657,6 @@
     <string name="verify_deposit_function_overview">Function overview</string>
     <string name="verify_deposit_sending">You\'re sending</string>
     <string name="verify_deposit_network">Network</string>
-    <string name="verify_deposit_hold_paired">Hold for paired sign</string>
-    <string name="verify_deposit_sign_transaction">Sign transaction</string>
 
     <string name="referral_invite_sheet_description">Share your unique referral code to invite friends. They get a discount and the more they trade, the more you earn — directly delivered to your vault</string>
     <string name="referral_invite_next">Next</string>
@@ -1145,8 +1144,13 @@
     <string name="choose_device_count_a11y_description">How many devices do you have? %1$s selected. Tap to choose another.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Messages</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Jetton Transfer</string>
+    <string name="ton_op_nft_transfer">NFT Transfer</string>
+    <string name="ton_op_excess_gas_refund">Excess Gas Refund</string>
+    <string name="ton_op_transfer">Transfer</string>
+    <string name="ton_forward_ton_amount">Forward TON Amount</string>
+    <string name="ton_raw_payload">Raw Payload</string>
     <string name="key_import_error_title">Key Import Failed</string>
     <string name="key_import_error_description">Unable to import vault from seed phrase. Please check your seed phrase and try again.</string>
     <string name="key_import_error_no_mnemonic_description">No seed phrase found. Please re-enter your seed phrase and try again.</string>

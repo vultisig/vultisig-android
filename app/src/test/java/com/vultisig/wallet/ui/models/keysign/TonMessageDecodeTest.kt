@@ -1,0 +1,167 @@
+package com.vultisig.wallet.ui.models.keysign
+
+import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Test
+import vultisig.keysign.v1.SignTon
+import vultisig.keysign.v1.TonMessage
+
+internal class TonMessageDecodeTest {
+
+    // Jetton transfer of 100000000 base units, forward_ton_amount = 1000000 nanoton.
+    private val jettonTransfer =
+        "te6cckEBAQEAWQAArg+KfqUAAAAAAAAwOUBfXhAIAf//////////////////////////////////////////AAvDfWFG0oYX19jwNDNBBL1rKNT9XfaGP9HyTb5nb2Emhh6EgOvlFRU="
+    private val excessesBody = "te6cckEBAQEADgAAGNUydtsAAAAAAAAABxylUgg="
+    private val recipient = "0:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+
+    private fun jettonCoin() =
+        Coin(
+            chain = Chain.Ton,
+            ticker = "USDT",
+            logo = "usdt",
+            address = "EQowner",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "tether",
+            contractAddress = "EQmaster",
+            isNativeToken = false,
+        )
+
+    @Test
+    fun `maps a jetton transfer to a labelled row with the real recipient and forward amount`() {
+        val row =
+            mapTonMessages(
+                    SignTon(
+                        tonMessages =
+                            listOf(
+                                TonMessage(
+                                    to = "EQwallet",
+                                    amount = "50000000",
+                                    payload = jettonTransfer,
+                                )
+                            )
+                    ),
+                    formatAddress = { it },
+                )
+                .single()
+        assertEquals(TonMessageOperation.JettonTransfer, row.operation)
+        assertEquals(recipient, row.recipient)
+        assertEquals("0.001 TON", row.amount)
+        assertEquals(jettonTransfer, row.rawPayload)
+    }
+
+    @Test
+    fun `maps an excesses body to an excess gas refund row with no recipient or amount`() {
+        val row =
+            mapTonMessages(
+                    SignTon(
+                        tonMessages =
+                            listOf(
+                                TonMessage(to = "EQwallet", amount = "0", payload = excessesBody)
+                            )
+                    ),
+                    formatAddress = { it },
+                )
+                .single()
+        assertEquals(TonMessageOperation.ExcessGasRefund, row.operation)
+        assertNull(row.recipient)
+        assertNull(row.amount)
+    }
+
+    @Test
+    fun `maps an undecodable body to a plain transfer showing the outer destination as-is`() {
+        val row =
+            mapTonMessages(
+                    SignTon(tonMessages = listOf(TonMessage(to = "EQabc", amount = "1500000000"))),
+                    formatAddress = { error("plain transfer must not reformat the outer address") },
+                )
+                .single()
+        assertEquals(TonMessageOperation.Transfer, row.operation)
+        assertEquals("EQabc", row.recipient)
+        assertEquals("1.5 TON", row.amount)
+        assertNull(row.rawPayload)
+    }
+
+    @Test
+    fun `resolves the jetton hero against a held vault coin`() = runTest {
+        val hero =
+            resolveTonJettonHero(
+                messages =
+                    listOf(
+                        TonMessage(to = "EQwallet", amount = "50000000", payload = jettonTransfer)
+                    ),
+                vaultCoins = listOf(jettonCoin()),
+                resolveJettonMaster = { "EQmaster" },
+            )
+        assertEquals("100", hero?.amount)
+        assertEquals("USDT", hero?.ticker)
+        assertEquals("usdt", hero?.logo)
+    }
+
+    @Test
+    fun `returns no hero when the jetton is not held in the vault`() = runTest {
+        val hero =
+            resolveTonJettonHero(
+                messages =
+                    listOf(TonMessage(to = "EQwallet", amount = "1", payload = jettonTransfer)),
+                vaultCoins = emptyList(),
+                resolveJettonMaster = { "EQmaster" },
+            )
+        assertNull(hero)
+    }
+
+    @Test
+    fun `returns no hero when the wallet does not resolve to a master`() = runTest {
+        val hero =
+            resolveTonJettonHero(
+                messages =
+                    listOf(TonMessage(to = "EQwallet", amount = "1", payload = jettonTransfer)),
+                vaultCoins = listOf(jettonCoin()),
+                resolveJettonMaster = { null },
+            )
+        assertNull(hero)
+    }
+
+    @Test
+    fun `skips an excesses message and resolves the following jetton transfer`() = runTest {
+        val hero =
+            resolveTonJettonHero(
+                messages =
+                    listOf(
+                        TonMessage(to = "EQwallet", amount = "0", payload = excessesBody),
+                        TonMessage(to = "EQwallet", amount = "50000000", payload = jettonTransfer),
+                    ),
+                vaultCoins = listOf(jettonCoin()),
+                resolveJettonMaster = { "EQmaster" },
+            )
+        assertEquals("USDT", hero?.ticker)
+    }
+
+    @Test
+    fun `returns no hero when the resolved master case differs from the vault coin`() = runTest {
+        // TON addresses are case-sensitive, so a different-case master must not match.
+        val hero =
+            resolveTonJettonHero(
+                messages =
+                    listOf(TonMessage(to = "EQwallet", amount = "1", payload = jettonTransfer)),
+                vaultCoins = listOf(jettonCoin()),
+                resolveJettonMaster = { "eqmaster" },
+            )
+        assertNull(hero)
+    }
+
+    @Test
+    fun `maps a plain transfer with a negative amount to no amount`() {
+        val row =
+            mapTonMessages(
+                    SignTon(tonMessages = listOf(TonMessage(to = "EQabc", amount = "-5"))),
+                    formatAddress = { it },
+                )
+                .single()
+        assertEquals(TonMessageOperation.Transfer, row.operation)
+        assertNull(row.amount)
+    }
+}

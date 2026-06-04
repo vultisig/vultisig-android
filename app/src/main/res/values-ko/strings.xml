@@ -362,6 +362,7 @@
     <string name="signing_error_broadcast_rejected">네트워크가 거래를 거부했습니다.</string>
     <string name="signing_error_broadcast_rejected_s">네트워크가 거래를 거부했습니다: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">빠른 서명</string>
+    <string name="verify_transaction_paired_btn_title">페어링</string>
     <string name="keysign_sign_transaction">거래 서명</string>
     <string name="sign_transaction">거래 서명</string>
     <string name="keysign_password_title">비밀번호</string>
@@ -647,8 +648,6 @@
     <string name="verify_deposit_function_overview">함수 개요</string>
     <string name="verify_deposit_sending">보내는 중</string>
     <string name="verify_deposit_network">네트워크</string>
-    <string name="verify_deposit_hold_paired">페어링된 기기로 서명하려면 길게 누르세요</string>
-    <string name="verify_deposit_sign_transaction">거래 서명</string>
 
     <string name="referral_invite_sheet_description">고유한 추천 코드를 공유하여 친구를 초대하세요. 친구는 할인을 받고 거래할수록 더 많은 보상을 받습니다 — 볼트로 직접 전달됩니다</string>
     <string name="referral_invite_next">다음</string>
@@ -1097,8 +1096,13 @@
     <string name="choose_device_count_a11y_description">기기를 몇 대 가지고 계신가요? 현재 선택: %1$s. 탭하여 다른 옵션을 선택하세요.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">메시지</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Jetton 전송</string>
+    <string name="ton_op_nft_transfer">NFT 전송</string>
+    <string name="ton_op_excess_gas_refund">초과 가스 환불</string>
+    <string name="ton_op_transfer">전송</string>
+    <string name="ton_forward_ton_amount">전달된 TON 금액</string>
+    <string name="ton_raw_payload">원시 Payload</string>
 
     <string name="review_vault_devices_title">볼트 기기 확인</string>
     <string name="review_vault_devices_description">추가한 기기가 올바른지 확인하세요:</string>

@@ -512,6 +512,7 @@
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_fast_sign_btn_title">快速签名</string>
+    <string name="verify_transaction_paired_btn_title">配对</string>
 
     <!-- Keysign -->
     <string name="keysign_sign_transaction">签署交易</string>
@@ -727,8 +728,6 @@
     <string name="verify_deposit_function_overview">功能概览</string>
     <string name="verify_deposit_sending">您正在发送</string>
     <string name="verify_deposit_network">网络</string>
-    <string name="verify_deposit_hold_paired">保持配对签名</string>
-    <string name="verify_deposit_sign_transaction">签署交易</string>
 
     <!-- Referral -->
     <string name="referral_invite_sheet_description">分享您的独特推荐代码邀请朋友。他们获得折扣，他们交易越多，您赚得越多 - 直接发送到您的保险库</string>
@@ -1400,8 +1399,13 @@
     <string name="choose_device_count_a11y_description">您有多少台设备？当前选择：%1$s。点击以选择其他。</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">消息</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Jetton 转账</string>
+    <string name="ton_op_nft_transfer">NFT 转账</string>
+    <string name="ton_op_excess_gas_refund">超额燃料退款</string>
+    <string name="ton_op_transfer">转账</string>
+    <string name="ton_forward_ton_amount">转发的 TON 金额</string>
+    <string name="ton_raw_payload">原始 Payload</string>
 
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>
     <string name="vault_setup_your_vault_setup">您的保险库设置</string>

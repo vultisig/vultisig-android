@@ -24,6 +24,13 @@ interface TonApi {
 
     suspend fun getJettonWallet(address: String, contract: String): JettonWalletsJson
 
+    /**
+     * Resolve the jetton master address for a given jetton wallet contract. Returns `null` when the
+     * wallet is unknown to the indexer. Used to map a dApp transfer's destination wallet back to a
+     * vault token.
+     */
+    suspend fun getJettonMasterAddress(jettonWalletAddress: String): String?
+
     suspend fun estimateFee(address: String, serializedBoc: String): BigInteger
 
     suspend fun getTsStatus(txHash: String): TonStatusResult
@@ -89,6 +96,15 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
                 parameter("jetton_master_address", contract)
             }
             .bodyOrThrow<JettonWalletsJson>()
+
+    override suspend fun getJettonMasterAddress(jettonWalletAddress: String): String? =
+        http
+            .get("$BASE_URL/v3/jetton/wallets") {
+                parameter("address", jettonWalletAddress)
+                parameter("limit", 1)
+            }
+            .bodyOrThrow<JettonWalletsJson>()
+            .getMasterAddress()
 
     override suspend fun estimateFee(address: String, serializedBoc: String): BigInteger {
         val feeResponse =

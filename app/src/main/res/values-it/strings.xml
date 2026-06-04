@@ -273,6 +273,7 @@
     <string name="signing_error_broadcast_rejected">Transazione rifiutata dalla rete.</string>
     <string name="signing_error_broadcast_rejected_s">Transazione rifiutata dalla rete: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Segnale veloce</string>
+    <string name="verify_transaction_paired_btn_title">Abbinato</string>
     <string name="keysign_sign_transaction">Firma transazione</string>
     <string name="sign_transaction">Firma transazione</string>
     <string name="keysign_password_title">Password</string>
@@ -483,8 +484,6 @@
     <string name="verify_deposit_function_overview">Panoramica delle funzioni</string>
     <string name="verify_deposit_sending">Stai inviando</string>
     <string name="verify_deposit_network">Rete</string>
-    <string name="verify_deposit_hold_paired">Tieni premuto per firmare in coppia</string>
-    <string name="verify_deposit_sign_transaction">Firma la transazione</string>
     <string name="referral_invite_sheet_description">Condividi il tuo codice di riferimento unico per invitare i tuoi amici. Loro riceveranno uno sconto e più operano, più guadagni tu, direttamente nel tuo deposito.</string>
     <string name="referral_create_referral">Crea referral</string>
     <string name="referral_invite_onboarding_3">Risparmia sulle commissioni.</string>
@@ -1074,8 +1073,13 @@
     <string name="choose_device_count_a11y_description">Quanti dispositivi hai? Selezione attuale: %1$s. Tocca per sceglierne un altro.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Messaggi</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Trasferimento Jetton</string>
+    <string name="ton_op_nft_transfer">Trasferimento NFT</string>
+    <string name="ton_op_excess_gas_refund">Rimborso del gas in eccesso</string>
+    <string name="ton_op_transfer">Trasferimento</string>
+    <string name="ton_forward_ton_amount">Quantità di TON inoltrata</string>
+    <string name="ton_raw_payload">Payload grezzo</string>
 
     <string name="welcome_tip">Suggerimento: Puoi usare un browser come dispositivo</string>
     <string name="vault_setup_your_vault_setup">La configurazione del tuo vault</string>

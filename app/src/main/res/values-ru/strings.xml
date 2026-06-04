@@ -272,6 +272,7 @@
     <string name="signing_error_broadcast_rejected">Транзакция отклонена сетью.</string>
     <string name="signing_error_broadcast_rejected_s">Транзакция отклонена сетью: %s</string>
     <string name="verify_transaction_fast_sign_btn_title">Быстрая подпись</string>
+    <string name="verify_transaction_paired_btn_title">Парное</string>
     <string name="keysign_sign_transaction">Подписать транзакцию</string>
     <string name="sign_transaction">Подписать транзакцию</string>
     <string name="keysign_password_title">Пароль</string>
@@ -482,8 +483,6 @@
     <string name="verify_deposit_function_overview">Обзор функций</string>
     <string name="verify_deposit_sending">Вы отправляете</string>
     <string name="verify_deposit_network">Сеть</string>
-    <string name="verify_deposit_hold_paired">Удерживайте для парной подписи</string>
-    <string name="verify_deposit_sign_transaction">Подписать транзакцию</string>
     <string name="referral_invite_sheet_description">Поделитесь своим уникальным реферальным кодом, чтобы пригласить друзей. Они получат скидку, а чем больше они торгуют, тем больше вы зарабатываете — напрямую в вашем хранилище.</string>
     <string name="referral_create_referral">Создать реферала</string>
     <string name="referral_invite_onboarding_3">Экономьте на комиссиях.</string>
@@ -1084,8 +1083,13 @@
     <string name="choose_device_count_a11y_description">Сколько у вас устройств? Выбрано: %1$s. Нажмите, чтобы выбрать другое.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Сообщения</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Перевод Jetton</string>
+    <string name="ton_op_nft_transfer">Перевод NFT</string>
+    <string name="ton_op_excess_gas_refund">Возврат излишка газа</string>
+    <string name="ton_op_transfer">Перевод</string>
+    <string name="ton_forward_ton_amount">Пересылаемая сумма TON</string>
+    <string name="ton_raw_payload">Необработанный payload</string>
 
     <string name="welcome_tip">Совет: Вы можете использовать браузер как устройство</string>
     <string name="vault_setup_your_vault_setup">Настройка вашего хранилища</string>
