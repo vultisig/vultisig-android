@@ -285,6 +285,10 @@ constructor(
     private var hasUsedReferral = false
     private val multipleClicksDetector = MultipleClicksDetector()
 
+    /**
+     * Opens the hidden secret settings screen once a rapid multi-tap on the version text is
+     * detected.
+     */
     fun onVersionClick() {
         if (multipleClicksDetector.clickAndCheckIfDetected()) {
             viewModelScope.launch { navigator.route(Route.Secret) }
