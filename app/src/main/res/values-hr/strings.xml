@@ -1080,8 +1080,13 @@
     <string name="choose_device_count_a11y_description">Koliko uređaja imate? %1$s odabrano. Dodirnite za drugi odabir.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Poruke</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Jetton prijenos</string>
+    <string name="ton_op_nft_transfer">NFT prijenos</string>
+    <string name="ton_op_excess_gas_refund">Povrat viška plina</string>
+    <string name="ton_op_transfer">Prijenos</string>
+    <string name="ton_forward_ton_amount">Proslijeđeni iznos TON-a</string>
+    <string name="ton_raw_payload">Neobrađeni payload</string>
 
     <string name="welcome_tip">Savjet: Možete koristiti preglednik kao uređaj</string>
     <string name="vault_setup_your_vault_setup">Postavljanje vašeg trezora</string>

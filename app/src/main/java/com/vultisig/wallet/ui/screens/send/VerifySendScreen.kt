@@ -314,12 +314,15 @@ internal fun VerifySendScreen(
                             )
                         }
 
-                    tx.signTon
-                        ?.takeIf { it.tonMessages.isNotEmpty() }
-                        ?.let { signTon ->
+                    tx.tonMessages
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { tonMessages ->
                             VerifyCardDivider(0.dp)
 
-                            SignTonDisplayView(signTon = signTon)
+                            SignTonDisplayView(
+                                messages = tonMessages,
+                                initiallyExpanded = initiallyExpandedDetails,
+                            )
                         }
 
                     if (tx.isUnlimitedApproval) {

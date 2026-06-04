@@ -1097,8 +1097,13 @@
     <string name="choose_device_count_a11y_description">기기를 몇 대 가지고 계신가요? 현재 선택: %1$s. 탭하여 다른 옵션을 선택하세요.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">메시지</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Jetton 전송</string>
+    <string name="ton_op_nft_transfer">NFT 전송</string>
+    <string name="ton_op_excess_gas_refund">초과 가스 환불</string>
+    <string name="ton_op_transfer">전송</string>
+    <string name="ton_forward_ton_amount">전달된 TON 금액</string>
+    <string name="ton_raw_payload">원시 Payload</string>
 
     <string name="review_vault_devices_title">볼트 기기 확인</string>
     <string name="review_vault_devices_description">추가한 기기가 올바른지 확인하세요:</string>

@@ -1068,8 +1068,13 @@
     <string name="choose_device_count_a11y_description">Hoeveel apparaten hebt u? %1$s geselecteerd. Tik om een andere te kiezen.</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Berichten</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Jetton-overdracht</string>
+    <string name="ton_op_nft_transfer">NFT-overdracht</string>
+    <string name="ton_op_excess_gas_refund">Terugbetaling overtollig gas</string>
+    <string name="ton_op_transfer">Overdracht</string>
+    <string name="ton_forward_ton_amount">Doorgestuurd TON-bedrag</string>
+    <string name="ton_raw_payload">Ruwe payload</string>
 
     <string name="welcome_tip">Tip: U kunt een browser gebruiken als apparaat</string>
     <string name="vault_setup_your_vault_setup">Uw kluis-instelling</string>

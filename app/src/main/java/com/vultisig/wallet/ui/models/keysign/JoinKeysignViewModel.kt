@@ -11,6 +11,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
@@ -75,6 +76,7 @@ import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import com.vultisig.wallet.data.usecases.ThorchainMemoParser
 import com.vultisig.wallet.data.utils.safeLaunch
+import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
 import com.vultisig.wallet.ui.models.deposit.VerifyDepositUiModel
@@ -134,6 +136,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
 import vultisig.keysign.v1.KeysignMessage
+import wallet.core.jni.TONAddressConverter
 import wallet.core.jni.proto.Common.SigningError
 
 sealed class JoinKeysignError(val message: UiText) {
@@ -230,6 +233,7 @@ constructor(
     private val routerApi: RouterApi,
     private val fourByteRepository: FourByteRepository,
     private val tokenMetadataResolver: TokenMetadataResolver,
+    private val tonApi: TonApi,
     private val securityScannerService: SecurityScannerContract,
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
@@ -279,6 +283,7 @@ constructor(
 
     private var _jobWaitingForKeysignStart: Job? = null
     private var blockaidSimulationJob: Job? = null
+    private var tonJettonHeroJob: Job? = null
     private val isJoiningKeysign = AtomicBoolean(false)
     private var isNavigateToHome: Boolean = false
 
@@ -1108,7 +1113,6 @@ constructor(
                             ?: ""
 
                     val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
-                    val signTon = payload.signTon
                     val transaction =
                         Transaction(
                             id = UUID.randomUUID().toString(),
@@ -1127,7 +1131,6 @@ constructor(
                             signAmino = normalizedSignAmino,
                             signDirect = signDirect,
                             signSolana = signSolana,
-                            signTon = signTon,
                         )
 
                     val transactionToUiModel = mapTransactionToUiModel(transaction)
@@ -1191,6 +1194,11 @@ constructor(
                             nativeTokenLookup = { c -> nativeTokenOrNull(c.id) },
                         )
 
+                    val tonMessages =
+                        mapTonMessages(payload.signTon) { rawAddress ->
+                            TONAddressConverter.toUserFriendly(rawAddress, true, false)
+                                ?: rawAddress
+                        }
                     val namedTransactionUiModel =
                         transactionToUiModel.copy(
                             srcVaultName = srcVaultName,
@@ -1205,6 +1213,7 @@ constructor(
                             dstContractLabel = decodedExtras.dstContractLabel,
                             decodedFunctionParams = decodedExtras.decodedFunctionParams,
                             isUniversalRouterSwap = decodedExtras.isUniversalRouterSwap,
+                            tonMessages = tonMessages,
                         )
                     transactionTypeUiModel = TransactionTypeUiModel.Send(namedTransactionUiModel)
                     transactionHistoryData = mapTransactionHistoryData(namedTransactionUiModel)
@@ -1214,12 +1223,18 @@ constructor(
                         )
                     val uiModel = verifyUiModel.value
                     if (uiModel is VerifyUiModel.Send) {
-                        // Kick off the Blockaid simulation in parallel with the
+                        // Kick off the hero resolution in parallel with the
                         // existing security scan; the hero refresh and the badge
                         // refresh happen independently so neither blocks the
                         // other and the UI doesn't go through an "all loading
-                        // at once" state.
-                        loadBlockaidSimulation(payload, functionInfo?.functionName)
+                        // at once" state. Blockaid doesn't cover TON, so a
+                        // TonConnect request resolves its jetton hero from the
+                        // decoded BOC instead.
+                        if (chain == Chain.Ton && payload.signTon != null) {
+                            loadTonJettonHero(payload, vault.coins)
+                        } else {
+                            loadBlockaidSimulation(payload, functionInfo?.functionName)
+                        }
                         scanTransaction(transaction)
                     }
                 }
@@ -1315,6 +1330,41 @@ constructor(
                 // done screen's `KeysignViewModel` carries the same content forward
                 // — the cache covers the same lookup, but updating in place avoids
                 // a per-screen re-fetch and a flash of "loading" state on done.
+                (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
+                    transactionTypeUiModel =
+                        TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))
+                }
+            }
+    }
+
+    /**
+     * Resolve the jetton hero for a TonConnect request from the decoded message bodies. Surfaces
+     * the first vault-held jetton transfer's real amount + ticker + logo in place of the misleading
+     * gas value. Best-effort: on a network failure or an unrecognised jetton the verify screen
+     * keeps its existing display. Mirrors [loadBlockaidSimulation] — Blockaid doesn't cover TON, so
+     * this is the TON hero path. Cancels any prior run (NSD can re-fire) and pushes the hero into
+     * both the verify model and [transactionTypeUiModel] so the done screen carries it forward.
+     */
+    private fun loadTonJettonHero(payload: KeysignPayload, vaultCoins: List<Coin>) {
+        val messages = payload.signTon?.tonMessages?.filterNotNull().orEmpty()
+        if (messages.isEmpty()) return
+        tonJettonHeroJob?.cancel()
+        tonJettonHeroJob =
+            viewModelScope.safeLaunch(
+                onError = { Timber.w(it, "TON jetton hero resolution failed during dApp signing") }
+            ) {
+                val coin =
+                    withContext(Dispatchers.IO) {
+                        resolveTonJettonHero(messages, vaultCoins) { wallet ->
+                            tonApi.getJettonMasterAddress(wallet)
+                        }
+                    } ?: return@safeLaunch
+                val hero = HeroContent.Send(title = null, coin = coin)
+                updateSendUiModel(verifyUiModel) { current ->
+                    current.copy(transaction = current.transaction.copy(heroContent = hero))
+                }
+                // Mirror the resolved hero into [transactionTypeUiModel] so the
+                // done screen's `KeysignViewModel` carries the same content forward.
                 (transactionTypeUiModel as? TransactionTypeUiModel.Send)?.let { send ->
                     transactionTypeUiModel =
                         TransactionTypeUiModel.Send(send.tx.copy(heroContent = hero))

@@ -28,6 +28,7 @@ import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
 import com.vultisig.wallet.ui.models.keysign.FunctionInfo
 import com.vultisig.wallet.ui.models.keysign.KeysignInitType
+import com.vultisig.wallet.ui.models.keysign.TonMessageUiModel
 import com.vultisig.wallet.ui.models.keysign.approvalSpenderArgIndex
 import com.vultisig.wallet.ui.models.keysign.enrichDecodedCall
 import com.vultisig.wallet.ui.models.keysign.isUnlimitedApproval
@@ -58,7 +59,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
-import vultisig.keysign.v1.SignTon
 
 @Immutable
 internal data class TransactionDetailsUiModel(
@@ -75,7 +75,12 @@ internal data class TransactionDetailsUiModel(
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,
-    val signTon: SignTon? = null,
+    /**
+     * Per-message rows for a TonConnect signing request, each decoded from its BOC body into an
+     * operation label, real recipient, forward amount, and the raw payload. Empty for non-TON or
+     * undecodable requests. Built in [com.vultisig.wallet.ui.models.keysign.mapTonMessages].
+     */
+    val tonMessages: List<TonMessageUiModel> = emptyList(),
     val functionSignature: String? = null,
     val functionInputs: String? = null,
     val functionName: String? = null,
