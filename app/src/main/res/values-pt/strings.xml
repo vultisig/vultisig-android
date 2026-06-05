@@ -843,7 +843,6 @@
     <string name="enter_email_screen_hint">E-mail</string>
     <string name="swap_screen_invalid_specific_and_utxo">Falha no cálculo específico</string>
     <string name="verify_sign_message_message_field_signature">Assinatura</string>
-    <string name="secret_enable_dkls">Ativar DKLS</string>
     <string name="fast_vault_password_hint_screen_desc">Isto será exibido caso se esqueça da sua senha.</string>
     <string name="fast_vault_password_hint_skip">Pular</string>
     <string name="fast_vault_password_hint_next">Próximo</string>

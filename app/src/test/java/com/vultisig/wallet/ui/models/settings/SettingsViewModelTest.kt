@@ -195,6 +195,27 @@ internal class SettingsViewModelTest {
             event shouldBe SettingsUiEvent.OpenLink(VsAuxiliaryLinks.DISCORD)
         }
 
+    /** Verifies three rapid version taps route to the hidden Secret screen. */
+    @Test
+    fun `three onVersionClick taps route to Secret`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onVersionClick()
+            vm.onVersionClick()
+            vm.onVersionClick()
+            coVerify { navigator.route(Route.Secret) }
+        }
+
+    /** Verifies fewer than three version taps do not route to the Secret screen. */
+    @Test
+    fun `two onVersionClick taps do not route to Secret`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onVersionClick()
+            vm.onVersionClick()
+            coVerify(exactly = 0) { navigator.route(Route.Secret) }
+        }
+
     private companion object {
         const val VAULT_ID = "vault-1"
     }

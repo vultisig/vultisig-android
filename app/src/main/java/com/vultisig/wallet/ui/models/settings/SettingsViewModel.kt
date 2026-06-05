@@ -33,6 +33,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.navigation.back
+import com.vultisig.wallet.ui.utils.MultipleClicksDetector
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -282,6 +283,17 @@ constructor(
     val state = MutableStateFlow(settingsMenu)
     val vaultId = savedStateHandle.toRoute<Route.Settings>().vaultId
     private var hasUsedReferral = false
+    private val multipleClicksDetector = MultipleClicksDetector()
+
+    /**
+     * Opens the hidden secret settings screen once a rapid multi-tap on the version text is
+     * detected.
+     */
+    fun onVersionClick() {
+        if (multipleClicksDetector.clickAndCheckIfDetected()) {
+            viewModelScope.launch { navigator.route(Route.Secret) }
+        }
+    }
 
     fun onSettingsItemClick(item: SettingsItem) {
         when (item) {
