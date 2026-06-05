@@ -4,15 +4,18 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.isSwapSupported
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
  * Pins the SWAPKIT slice of [SwapProviderTableImpl]'s eligibility matrix — the most fan-out-prone
- * part of the integration. A regression that drops SWAPKIT from an EVM/Solana branch, or that adds
- * it to [SwapProviderTableImpl.sameChainOnly] (which would silently kill cross-chain SwapKit
- * quoting), must fail CI rather than ship a quietly-degraded provider list.
+ * part of the integration — plus the KyberSwap-on-Optimism/Polygon parity with iOS. A regression
+ * that drops SWAPKIT from an EVM/Solana branch, that adds it to
+ * [SwapProviderTableImpl.sameChainOnly] (which would silently kill cross-chain SwapKit quoting), or
+ * that drops KyberSwap from Optimism or Polygon must fail CI rather than ship a quietly-degraded
+ * provider list.
  */
 internal class SwapProviderTableTest {
 
@@ -84,6 +87,36 @@ internal class SwapProviderTableTest {
                 "Did not expect SWAPKIT for ${c.chain}/${c.ticker} but got ${table.providersFor(c)}",
             )
         }
+    }
+
+    @Test
+    fun `KyberSwap is offered alongside the EVM aggregators on Optimism and Polygon`() {
+        // Pins iOS parity: Optimism/Polygon route the full evmAggregators set, incl. KyberSwap.
+        val expected =
+            setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER, SwapProvider.SWAPKIT)
+
+        listOf(Chain.Optimism, Chain.Polygon).forEach { chain ->
+            assertEquals(
+                expected,
+                table.providersFor(coin(chain, "ZZZ", isNative = false)),
+                "Expected the full evmAggregators set (incl. KYBER) on $chain",
+            )
+        }
+    }
+
+    @Test
+    fun `KyberSwap is dropped on a cross-chain Optimism to Polygon pair`() {
+        // Cross-chain drops the sameChainOnly aggregators (now incl. KYBER); LIFI/SWAPKIT stay.
+        val eligible =
+            table.eligibleProvidersFor(
+                srcToken = coin(Chain.Optimism, "ZZZ", isNative = false),
+                dstToken = coin(Chain.Polygon, "YYY", isNative = false),
+            )
+
+        assertTrue(SwapProvider.SWAPKIT in eligible, "SWAPKIT dropped on cross-chain: $eligible")
+        assertTrue(SwapProvider.LIFI in eligible, "LIFI dropped on cross-chain: $eligible")
+        assertFalse(SwapProvider.KYBER in eligible, "KYBER (sameChainOnly) leaked: $eligible")
+        assertFalse(SwapProvider.ONEINCH in eligible, "ONEINCH (sameChainOnly) leaked: $eligible")
     }
 
     @Test

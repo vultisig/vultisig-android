@@ -93,7 +93,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                 else setOf(SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
             Chain.Optimism,
-            Chain.Polygon -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.SWAPKIT)
+            Chain.Polygon -> evmAggregators
 
             Chain.ZkSync -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
