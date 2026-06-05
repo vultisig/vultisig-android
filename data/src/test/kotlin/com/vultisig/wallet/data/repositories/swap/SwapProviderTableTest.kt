@@ -4,6 +4,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.isSwapSupported
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -84,6 +85,59 @@ internal class SwapProviderTableTest {
                 "Did not expect SWAPKIT for ${c.chain}/${c.ticker} but got ${table.providersFor(c)}",
             )
         }
+    }
+
+    @Test
+    fun `KyberSwap is offered alongside the EVM aggregators on Optimism and Polygon`() {
+        val expected =
+            setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.KYBER, SwapProvider.SWAPKIT)
+
+        listOf(Chain.Optimism, Chain.Polygon).forEach { chain ->
+            assertEquals(
+                expected,
+                table.providersFor(coin(chain, "ZZZ", isNative = false)),
+                "Expected the full evmAggregators set (incl. KYBER) on $chain",
+            )
+        }
+    }
+
+    @Test
+    fun `KyberSwap is dropped on a cross-chain Optimism to Polygon pair`() {
+        val eligible =
+            table.eligibleProvidersFor(
+                srcToken = coin(Chain.Optimism, "ZZZ", isNative = false),
+                dstToken = coin(Chain.Polygon, "YYY", isNative = false),
+            )
+
+        assertTrue(SwapProvider.SWAPKIT in eligible, "SWAPKIT dropped on cross-chain: $eligible")
+        assertTrue(SwapProvider.LIFI in eligible, "LIFI dropped on cross-chain: $eligible")
+        assertFalse(SwapProvider.KYBER in eligible, "KYBER (sameChainOnly) leaked: $eligible")
+        assertFalse(SwapProvider.ONEINCH in eligible, "ONEINCH (sameChainOnly) leaked: $eligible")
+    }
+
+    @Test
+    fun `Arbitrum offers 1inch and KyberSwap, keeping Maya for Maya-routable tokens`() {
+        assertEquals(
+            setOf(
+                SwapProvider.MAYA,
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI,
+                SwapProvider.KYBER,
+                SwapProvider.SWAPKIT,
+            ),
+            table.providersFor(coin(Chain.Arbitrum, "ARB", isNative = false)),
+            "Maya-routable Arbitrum token should keep MAYA and gain the EVM aggregators",
+        )
+        assertEquals(
+            setOf(
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI,
+                SwapProvider.KYBER,
+                SwapProvider.SWAPKIT,
+            ),
+            table.providersFor(coin(Chain.Arbitrum, "ZZZ", isNative = false)),
+            "Generic Arbitrum token should get the full evmAggregators set",
+        )
     }
 
     @Test
