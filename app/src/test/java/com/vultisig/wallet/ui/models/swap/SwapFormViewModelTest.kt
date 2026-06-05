@@ -198,7 +198,6 @@ internal class SwapFormViewModelTest {
                 fiatValueToString = fiatValueToString,
                 convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
                 swapQuoteRepository = swapQuoteRepository,
-                allowanceRepository = allowanceRepository,
                 appCurrencyRepository = appCurrencyRepository,
                 swapTransactionRepository = swapTransactionRepository,
                 getDiscountBpsUseCase = getDiscountBpsUseCase,
@@ -208,6 +207,8 @@ internal class SwapFormViewModelTest {
                 swapGasCalculator = swapGasCalculator,
                 swapTokenSelector = swapTokenSelector,
                 swapQuoteManager = swapQuoteManager,
+                swapTransactionBuilder =
+                    SwapTransactionBuilder(swapGasCalculator, allowanceRepository),
                 ioDispatcher = ioDispatcher,
             )
             .also { createdViewModels += it }
