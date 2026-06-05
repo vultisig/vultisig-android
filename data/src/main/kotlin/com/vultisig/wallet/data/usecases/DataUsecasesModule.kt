@@ -92,6 +92,10 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindHasCircleAccountUseCase(impl: HasCircleAccountUseCaseImpl): HasCircleAccountUseCase
+
+    @Binds
+    @Singleton
     fun bindSearchSolTokenUseCase(impl: SearchSolTokenUseCaseImpl): SearchSolTokenUseCase
 
     @Binds

@@ -28,6 +28,7 @@ import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.AccountUiModel
@@ -90,6 +91,7 @@ internal class VaultAccountsViewModelTest {
     private lateinit var getDiscountBpsUseCase: GetDiscountBpsUseCase
     private lateinit var cryptoConnectionTypeRepository: CryptoConnectionTypeRepository
     private lateinit var defaultDeFiChainsRepository: DefaultDeFiChainsRepository
+    private lateinit var hasCircleAccount: HasCircleAccountUseCase
     private lateinit var tiersNFTRepository: TiersNFTRepository
     private lateinit var remoteNFTService: TierRemoteNFTService
     private lateinit var pushNotificationManager: PushNotificationManager
@@ -117,6 +119,7 @@ internal class VaultAccountsViewModelTest {
         getDiscountBpsUseCase = mockk(relaxed = true)
         cryptoConnectionTypeRepository = mockk(relaxed = true)
         defaultDeFiChainsRepository = mockk(relaxed = true)
+        hasCircleAccount = mockk(relaxed = true)
         tiersNFTRepository = mockk(relaxed = true)
         remoteNFTService = mockk(relaxed = true)
         pushNotificationManager = mockk(relaxed = true)
@@ -158,6 +161,7 @@ internal class VaultAccountsViewModelTest {
             getDiscountBpsUseCase = getDiscountBpsUseCase,
             cryptoConnectionTypeRepository = cryptoConnectionTypeRepository,
             defaultDeFiChainsRepository = defaultDeFiChainsRepository,
+            hasCircleAccount = hasCircleAccount,
             tiersNFTRepository = tiersNFTRepository,
             remoteNFTService = remoteNFTService,
             pushNotificationManager = pushNotificationManager,

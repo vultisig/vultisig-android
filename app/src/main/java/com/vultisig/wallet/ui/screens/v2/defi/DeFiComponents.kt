@@ -544,6 +544,7 @@ internal fun HeaderDeFiWidget(
     totalPrice: String = "",
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
+    buttonState: VsButtonState = VsButtonState.Enabled,
 ) {
     Column(
         modifier =
@@ -611,7 +612,7 @@ internal fun HeaderDeFiWidget(
             label = buttonText,
             modifier = Modifier.fillMaxWidth(),
             onClick = onClickAction,
-            state = VsButtonState.Enabled,
+            state = buttonState,
         )
     }
 }
@@ -694,6 +695,7 @@ internal fun HeaderDeFiWidget(
     totalPrice: String = "",
     isLoading: Boolean = false,
     isBalanceVisible: Boolean = true,
+    isSecondActionEnabled: Boolean = true,
 ) {
     Column(
         modifier =
@@ -780,6 +782,7 @@ internal fun HeaderDeFiWidget(
                 contentColor = Theme.v2.colors.text.primary,
                 iconCircleColor = Color.White.copy(alpha = 0.12f),
                 modifier = Modifier.weight(1f),
+                enabled = isSecondActionEnabled,
                 onClick = onClickSecondAction,
             )
         }

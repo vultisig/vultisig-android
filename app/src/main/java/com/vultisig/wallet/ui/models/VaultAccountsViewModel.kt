@@ -35,6 +35,7 @@ import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -62,6 +63,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -141,6 +144,7 @@ constructor(
     private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
     private val cryptoConnectionTypeRepository: CryptoConnectionTypeRepository,
     private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
+    private val hasCircleAccount: HasCircleAccountUseCase,
     private val tiersNFTRepository: TiersNFTRepository,
     private val remoteNFTService: TierRemoteNFTService,
     private val pushNotificationManager: PushNotificationManager,
@@ -491,7 +495,8 @@ constructor(
                             },
                         uiState.value.searchTextFieldState.textAsFlow(),
                         defaultDeFiChainsRepository.getDefaultChains(vaultId),
-                    ) { accounts, searchQuery, selectedDeFiChains ->
+                        flow { emit(hasCircleAccount(vaultId)) }.flowOn(ioDispatcher),
+                    ) { accounts, searchQuery, selectedDeFiChains, hasCircleAccount ->
                         Timber.d(
                             "DeFi Accounts Loaded for vault $vaultId: ${accounts.size} accounts, selected chains: ${selectedDeFiChains.map { it.raw }}"
                         )
@@ -499,8 +504,13 @@ constructor(
                         val filteredAccounts =
                             accounts.filter { address ->
                                 val isSelected = selectedDeFiChains.contains(address.chain)
+                                // New Circle (USDC yield) deposits are disabled: only surface the
+                                // Circle (Ethereum DeFi) row for vaults that already opened an
+                                // account, so they can still withdraw.
+                                val isCircleAllowed =
+                                    address.chain != Chain.Ethereum || hasCircleAccount
                                 Timber.d("Chain ${address.chain.raw} is selected: $isSelected")
-                                isSelected
+                                isSelected && isCircleAllowed
                             }
 
                         Timber.d("Filtered DeFi accounts: ${filteredAccounts.size} accounts")
