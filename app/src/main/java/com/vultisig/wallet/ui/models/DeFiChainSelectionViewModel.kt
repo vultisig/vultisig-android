@@ -6,10 +6,12 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.DefiChainUiModel
 import com.vultisig.wallet.data.models.isDeFiSupported
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
 import com.vultisig.wallet.ui.models.mappers.ChainToDefiChainUiMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -42,6 +44,7 @@ constructor(
     savedStateHandle: SavedStateHandle,
     private val vaultRepository: VaultRepository,
     private val defaultDeFiChainsRepository: DefaultDeFiChainsRepository,
+    private val hasCircleAccount: HasCircleAccountUseCase,
     private val mapChainDefi: ChainToDefiChainUiMapper,
     private val navigator: Navigator<Destination>,
 ) : ViewModel() {
@@ -71,8 +74,14 @@ constructor(
                 return@launch
             }
 
+            // New Circle (USDC yield) deposits are disabled: only offer the Circle (Ethereum
+            // DeFi) entry to vaults that already opened an account, so they can still withdraw.
+            val hasCircle = hasCircleAccount(vaultId)
             val availableChains =
-                vault.coins.map { it.chain }.distinct().filter { it.isDeFiSupported }
+                vault.coins
+                    .map { it.chain }
+                    .distinct()
+                    .filter { it.isDeFiSupported && (it != Chain.Ethereum || hasCircle) }
 
             val savedDeFiChains = defaultDeFiChainsRepository.getDefaultChains(vaultId).first()
 

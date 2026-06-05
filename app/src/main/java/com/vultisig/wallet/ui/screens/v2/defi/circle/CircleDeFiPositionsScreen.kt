@@ -10,6 +10,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.VaultId
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.screens.v2.defi.BaseDeFiPositionsScreenContent
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiTab
 import com.vultisig.wallet.ui.screens.v2.defi.DeFiWarningBanner
@@ -118,6 +119,8 @@ private fun CircleContentDepositTab(
             totalPrice = state.totalDepositCurrency,
             isLoading = state.isLoading,
             isBalanceVisible = isBalanceVisible,
+            // New Circle deposits are disabled; existing positions can still be withdrawn.
+            isSecondActionEnabled = false,
         )
     } else {
         HeaderDeFiWidget(
@@ -134,6 +137,8 @@ private fun CircleContentDepositTab(
             totalPrice = state.totalDepositCurrency,
             isLoading = state.isLoading,
             isBalanceVisible = isBalanceVisible,
+            // New Circle deposits are disabled; this single CTA is deposit/open-account only.
+            buttonState = VsButtonState.Disabled,
         )
     }
 }
