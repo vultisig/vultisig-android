@@ -39,6 +39,7 @@ import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.SendDst
 import com.vultisig.wallet.ui.utils.UiText
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -495,5 +496,310 @@ internal class DepositFormViewModelTest {
 
         assertTrue(vm.state.value.securedAssetsLoaded)
         assertTrue(vm.state.value.availableSecuredAssets.isEmpty())
+    }
+
+    @Test
+    fun `selectDepositOption Unbond on ThorChain sets RUNE as selected token`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+        advanceUntilIdle()
+
+        vm.selectDepositOption(DepositOption.Unbond)
+        advanceUntilIdle()
+
+        assertEquals(Coins.ThorChain.RUNE, vm.state.value.selectedToken)
+    }
+
+    @Test
+    fun `selectDepositOption Leave on ThorChain sets RUNE as selected token`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+        advanceUntilIdle()
+
+        vm.selectDepositOption(DepositOption.Leave)
+        advanceUntilIdle()
+
+        assertEquals(Coins.ThorChain.RUNE, vm.state.value.selectedToken)
+    }
+
+    @Test
+    fun `selectDepositOption AddLiquidity on ThorChain sets RUNE as selected token`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+        advanceUntilIdle()
+
+        vm.selectDepositOption(DepositOption.AddLiquidity)
+        advanceUntilIdle()
+
+        assertEquals(Coins.ThorChain.RUNE, vm.state.value.selectedToken)
+    }
+
+    @Test
+    fun `loadData for ThorChain exposes bond unbond leave custom merge unmerge and withdraw`() =
+        runTest {
+            val vm = buildViewModel()
+
+            vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf(
+                    DepositOption.Bond,
+                    DepositOption.Unbond,
+                    DepositOption.Leave,
+                    DepositOption.Custom,
+                    DepositOption.Merge,
+                    DepositOption.UnMerge,
+                    DepositOption.WithdrawSecuredAsset,
+                ),
+                vm.state.value.depositOptions,
+            )
+        }
+
+    @Test
+    fun `loadData for GaiaChain exposes only IBC transfer and switch`() = runTest {
+        val vm = buildViewModel()
+
+        vm.loadData("vault1", Chain.GaiaChain.raw, null, null)
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(DepositOption.TransferIbc, DepositOption.Switch),
+            vm.state.value.depositOptions,
+        )
+    }
+
+    @Test
+    fun `loadData for Ton exposes only stake and unstake`() = runTest {
+        val vm = buildViewModel()
+
+        vm.loadData("vault1", Chain.Ton.raw, null, null)
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(DepositOption.Stake, DepositOption.Unstake),
+            vm.state.value.depositOptions,
+        )
+    }
+
+    @Test
+    fun `validateProvider with blank provider sets providerError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+        advanceUntilIdle()
+
+        vm.validateProvider()
+
+        val error = vm.state.value.providerError
+        assertNotNull(error)
+        assertTrue(error is UiText.StringResource)
+        assertEquals(R.string.send_error_no_address, (error as UiText.StringResource).resId)
+    }
+
+    @Test
+    fun `validateProvider with invalid address sets providerError`() = runTest {
+        val vm = buildViewModel()
+        every { chainAccountAddressRepository.isValid(Chain.ThorChain, "not-an-address") } returns
+            false
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+        advanceUntilIdle()
+
+        vm.providerFieldState.setTextAndPlaceCursorAtEnd("not-an-address")
+        vm.validateProvider()
+
+        val error = vm.state.value.providerError
+        assertNotNull(error)
+        assertEquals(R.string.send_error_no_address, (error as UiText.StringResource).resId)
+    }
+
+    @Test
+    fun `validateProvider with valid address clears providerError`() = runTest {
+        val vm = buildViewModel()
+        every { chainAccountAddressRepository.isValid(Chain.ThorChain, "thor1valid") } returns true
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+        advanceUntilIdle()
+
+        vm.providerFieldState.setTextAndPlaceCursorAtEnd("thor1valid")
+        vm.validateProvider()
+
+        assertEquals(null, vm.state.value.providerError)
+    }
+
+    @Test
+    fun `validateNodeAddress with blank address sets nodeAddressError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+        advanceUntilIdle()
+
+        vm.validateNodeAddress()
+
+        val error = vm.state.value.nodeAddressError
+        assertNotNull(error)
+        assertEquals(R.string.send_error_no_address, (error as UiText.StringResource).resId)
+    }
+
+    @Test
+    fun `validateOperatorFee with zero sets operatorFeeError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("0")
+        vm.validateOperatorFee()
+
+        val error = vm.state.value.operatorFeeError
+        assertNotNull(error)
+        assertEquals(R.string.send_from_invalid_amount, (error as UiText.StringResource).resId)
+    }
+
+    @Test
+    fun `validateOperatorFee above one hundred sets operatorFeeError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("150")
+        vm.validateOperatorFee()
+
+        val error = vm.state.value.operatorFeeError
+        assertNotNull(error)
+        assertEquals(R.string.send_from_invalid_amount, (error as UiText.StringResource).resId)
+    }
+
+    @Test
+    fun `validateOperatorFee within range clears operatorFeeError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("5")
+        vm.validateOperatorFee()
+
+        assertEquals(null, vm.state.value.operatorFeeError)
+    }
+
+    @Test
+    fun `validateOperatorFee with blank input is a no-op and leaves a prior error in place`() =
+        runTest {
+            val vm = buildViewModel()
+            vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+            vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("0")
+            vm.validateOperatorFee()
+            val priorError = vm.state.value.operatorFeeError
+            assertNotNull(priorError)
+
+            vm.operatorFeeFieldState.setTextAndPlaceCursorAtEnd("")
+            vm.validateOperatorFee()
+
+            assertEquals(priorError, vm.state.value.operatorFeeError)
+        }
+
+    @Test
+    fun `validateSlippage with blank sets required error`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.validateSlippage()
+
+        val error = vm.state.value.slippageError
+        assertNotNull(error)
+        assertEquals(R.string.slippage_required_error, (error as UiText.StringResource).resId)
+    }
+
+    @Test
+    fun `validateSlippage above one hundred sets invalid error`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.slippageFieldState.setTextAndPlaceCursorAtEnd("150")
+        vm.validateSlippage()
+
+        val error = vm.state.value.slippageError
+        assertNotNull(error)
+        assertEquals(R.string.slippage_invalid_error, (error as UiText.StringResource).resId)
+    }
+
+    @Test
+    fun `validateSlippage with non-numeric sets format error`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.slippageFieldState.setTextAndPlaceCursorAtEnd("abc")
+        vm.validateSlippage()
+
+        val error = vm.state.value.slippageError
+        assertNotNull(error)
+        assertEquals(R.string.slippage_format_error, (error as UiText.StringResource).resId)
+    }
+
+    @Test
+    fun `validateSlippage within range clears slippageError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.slippageFieldState.setTextAndPlaceCursorAtEnd("50")
+        vm.validateSlippage()
+
+        assertEquals(null, vm.state.value.slippageError)
+    }
+
+    @Test
+    fun `validateAssets with invalid characters sets assetsError`() = runTest {
+        val vm = buildViewModel()
+        every { isAssetCharsValid.invoke(any()) } returns false
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.assetsFieldState.setTextAndPlaceCursorAtEnd("!!bad!!")
+        vm.validateAssets()
+
+        val error = vm.state.value.assetsError
+        assertNotNull(error)
+        assertEquals(R.string.deposit_error_invalid_assets, (error as UiText.StringResource).resId)
+    }
+
+    @Test
+    fun `validateAssets with valid characters clears assetsError`() = runTest {
+        val vm = buildViewModel()
+        every { isAssetCharsValid.invoke(any()) } returns true
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.assetsFieldState.setTextAndPlaceCursorAtEnd("MAYA.CACAO")
+        vm.validateAssets()
+
+        assertEquals(null, vm.state.value.assetsError)
+    }
+
+    @Test
+    fun `validateLpUnits with non-digits sets lpUnitsError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.lpUnitsFieldState.setTextAndPlaceCursorAtEnd("abc")
+        vm.validateLpUnits()
+
+        val error = vm.state.value.lpUnitsError
+        assertNotNull(error)
+        assertEquals(R.string.deposit_error_invalid_lpunits, (error as UiText.StringResource).resId)
+    }
+
+    @Test
+    fun `validateLpUnits with positive integer clears lpUnitsError`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+
+        vm.lpUnitsFieldState.setTextAndPlaceCursorAtEnd("1000")
+        vm.validateLpUnits()
+
+        assertEquals(null, vm.state.value.lpUnitsError)
+    }
+
+    @Test
+    fun `validateThorAddress is a no-op outside the Switch flow`() = runTest {
+        val vm = buildViewModel()
+        vm.loadData("vault1", Chain.ThorChain.raw, null, null)
+        advanceUntilIdle()
+
+        vm.thorAddressFieldState.setTextAndPlaceCursorAtEnd("garbage-not-an-address")
+        vm.validateThorAddress()
+
+        assertEquals(null, vm.state.value.thorAddressError)
     }
 }
