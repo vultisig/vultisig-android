@@ -116,6 +116,31 @@ internal class SwapProviderTableTest {
     }
 
     @Test
+    fun `Arbitrum offers 1inch and KyberSwap, keeping Maya for Maya-routable tokens`() {
+        assertEquals(
+            setOf(
+                SwapProvider.MAYA,
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI,
+                SwapProvider.KYBER,
+                SwapProvider.SWAPKIT,
+            ),
+            table.providersFor(coin(Chain.Arbitrum, "ARB", isNative = false)),
+            "Maya-routable Arbitrum token should keep MAYA and gain the EVM aggregators",
+        )
+        assertEquals(
+            setOf(
+                SwapProvider.ONEINCH,
+                SwapProvider.LIFI,
+                SwapProvider.KYBER,
+                SwapProvider.SWAPKIT,
+            ),
+            table.providersFor(coin(Chain.Arbitrum, "ZZZ", isNative = false)),
+            "Generic Arbitrum token should get the full evmAggregators set",
+        )
+    }
+
+    @Test
     fun `SwapKit-wired chains are marked swap-supported so the Swap action button shows`() {
         // ChainTokensViewModel.canSwap reads Chain.isSwapSupported to show the Swap button on the
         // account screen. A chain can offer SWAPKIT in the provider table yet stay invisible to the
