@@ -27,6 +27,8 @@ import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.repositories.vault.VaultMetadataRepo
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.usecases.EnableTokenUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
+import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
 import com.vultisig.wallet.data.usecases.IsGlobalBackupReminderRequiredUseCase
 import com.vultisig.wallet.data.usecases.NeverShowGlobalBackupReminderUseCase
 import com.vultisig.wallet.ui.models.AccountUiModel
@@ -86,8 +88,10 @@ internal class VaultAccountsViewModelTest {
     private lateinit var setNeverShowGlobalBackupReminder: NeverShowGlobalBackupReminderUseCase
     private lateinit var lastOpenedVaultRepository: LastOpenedVaultRepository
     private lateinit var enableTokenUseCase: EnableTokenUseCase
+    private lateinit var getDiscountBpsUseCase: GetDiscountBpsUseCase
     private lateinit var cryptoConnectionTypeRepository: CryptoConnectionTypeRepository
     private lateinit var defaultDeFiChainsRepository: DefaultDeFiChainsRepository
+    private lateinit var hasCircleAccount: HasCircleAccountUseCase
     private lateinit var tiersNFTRepository: TiersNFTRepository
     private lateinit var remoteNFTService: TierRemoteNFTService
     private lateinit var pushNotificationManager: PushNotificationManager
@@ -112,8 +116,10 @@ internal class VaultAccountsViewModelTest {
         setNeverShowGlobalBackupReminder = mockk(relaxed = true)
         lastOpenedVaultRepository = mockk(relaxed = true)
         enableTokenUseCase = mockk(relaxed = true)
+        getDiscountBpsUseCase = mockk(relaxed = true)
         cryptoConnectionTypeRepository = mockk(relaxed = true)
         defaultDeFiChainsRepository = mockk(relaxed = true)
+        hasCircleAccount = mockk(relaxed = true)
         tiersNFTRepository = mockk(relaxed = true)
         remoteNFTService = mockk(relaxed = true)
         pushNotificationManager = mockk(relaxed = true)
@@ -121,7 +127,8 @@ internal class VaultAccountsViewModelTest {
         every { cryptoConnectionTypeRepository.activeCryptoConnectionFlow } returns
             MutableStateFlow(CryptoConnectionType.Wallet)
         every { lastOpenedVaultRepository.lastOpenedVaultId } returns emptyFlow()
-        every { vaultDataStoreRepository.readBuyVultBannerDismissed() } returns flowOf(true)
+        every { vaultDataStoreRepository.readBuyVultBannerDismissed(any()) } returns flowOf(true)
+        coEvery { getDiscountBpsUseCase.hasReachedSilverTier(any()) } returns false
         // Function-type-interface mocks need explicit return-type stubs; relaxed mode auto-stubs
         // to a generic Object that fails the implicit cast at the VM call site.
         coEvery { isGlobalBackupReminderRequired() } returns false
@@ -151,8 +158,10 @@ internal class VaultAccountsViewModelTest {
             setNeverShowGlobalBackupReminder = setNeverShowGlobalBackupReminder,
             lastOpenedVaultRepository = lastOpenedVaultRepository,
             enableTokenUseCase = enableTokenUseCase,
+            getDiscountBpsUseCase = getDiscountBpsUseCase,
             cryptoConnectionTypeRepository = cryptoConnectionTypeRepository,
             defaultDeFiChainsRepository = defaultDeFiChainsRepository,
+            hasCircleAccount = hasCircleAccount,
             tiersNFTRepository = tiersNFTRepository,
             remoteNFTService = remoteNFTService,
             pushNotificationManager = pushNotificationManager,
@@ -378,21 +387,56 @@ internal class VaultAccountsViewModelTest {
             verify(atLeast = 1) { accountsRepository.loadAddressBalances("vault-1") }
         }
 
-    /** Verifies dismissBuyVultBanner persists the dismissed flag. */
+    /**
+     * Verifies dismissBuyVultBanner persists the dismissed flag once the vault reaches Silver tier.
+     */
     @Test
-    fun `dismissBuyVultBanner persists dismissed flag`() =
+    fun `dismissBuyVultBanner persists dismissed flag at Silver tier`() =
         runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            coEvery { getDiscountBpsUseCase.hasReachedSilverTier("vault-1") } returns true
             val vm = createViewModel()
+            advanceUntilIdle()
+
             vm.dismissBuyVultBanner()
             advanceUntilIdle()
-            coVerify { vaultDataStoreRepository.setBuyVultBannerDismissed(true) }
+
+            coVerify { vaultDataStoreRepository.setBuyVultBannerDismissed("vault-1", true) }
+        }
+
+    /**
+     * Verifies that below Silver tier, dismiss hides the banner for the visit without persisting.
+     */
+    @Test
+    fun `dismissBuyVultBanner below Silver tier hides for visit without persisting`() =
+        runTest(testDispatcher) {
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            coEvery { getDiscountBpsUseCase.hasReachedSilverTier("vault-1") } returns false
+            every { vaultDataStoreRepository.readBuyVultBannerDismissed("vault-1") } returns
+                flowOf(false)
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.showBuyVultBanner.shouldBeTrue()
+
+            vm.dismissBuyVultBanner()
+            advanceUntilIdle()
+
+            vm.uiState.value.showBuyVultBanner.shouldBeFalse()
+            coVerify(exactly = 0) {
+                vaultDataStoreRepository.setBuyVultBannerDismissed(any(), any())
+            }
         }
 
     /** Verifies showBuyVultBanner reflects the persisted dismissed flag (dismissed=false). */
     @Test
     fun `showBuyVultBanner is true when dismissed flag is false`() =
         runTest(testDispatcher) {
-            every { vaultDataStoreRepository.readBuyVultBannerDismissed() } returns flowOf(false)
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { vaultDataStoreRepository.readBuyVultBannerDismissed("vault-1") } returns
+                flowOf(false)
             val vm = createViewModel()
             advanceUntilIdle()
             vm.uiState.value.showBuyVultBanner.shouldBeTrue()
@@ -402,7 +446,10 @@ internal class VaultAccountsViewModelTest {
     @Test
     fun `showBuyVultBanner is false when dismissed flag is true`() =
         runTest(testDispatcher) {
-            every { vaultDataStoreRepository.readBuyVultBannerDismissed() } returns flowOf(true)
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { vaultDataStoreRepository.readBuyVultBannerDismissed("vault-1") } returns
+                flowOf(true)
             val vm = createViewModel()
             advanceUntilIdle()
             vm.uiState.value.showBuyVultBanner.shouldBeFalse()

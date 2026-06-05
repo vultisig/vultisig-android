@@ -218,7 +218,10 @@ class UtxoHelper(
 
         val plan =
             if (coinType == CoinType.ZCASH) {
-                initialPlan.toBuilder().setBranchId(ByteString.fromHex("f04dec4d")).build()
+                initialPlan
+                    .toBuilder()
+                    .setBranchId(ByteString.fromHex(ZCASH_ZIP243_BRANCH_ID_HEX))
+                    .build()
             } else initialPlan
 
         signingInput.setPlan(plan)

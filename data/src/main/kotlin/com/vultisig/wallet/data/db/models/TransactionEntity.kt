@@ -67,4 +67,12 @@ data class TransactionHistoryEntity(
      * [RefreshPendingTransactionsUseCase].
      */
     @ColumnInfo("retryCount", defaultValue = "0") val retryCount: Int = 0,
+    /**
+     * Chain head block number captured when the transaction was signed/broadcast. Currently only
+     * populated for Polkadot, where status is confirmed by scanning the absolute inclusion window
+     * `[broadcastBlockNumber, broadcastBlockNumber + mortal era]` rather than a head-relative
+     * window that drifts out of reach once the head advances. Null for chains that don't need it
+     * and for rows recorded before this column existed.
+     */
+    @ColumnInfo("broadcastBlockNumber") val broadcastBlockNumber: Long? = null,
 )

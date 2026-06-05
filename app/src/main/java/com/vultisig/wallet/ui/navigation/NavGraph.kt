@@ -93,6 +93,7 @@ import com.vultisig.wallet.ui.screens.onboarding.OnboardingSummaryScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupOnboardingScreen
 import com.vultisig.wallet.ui.screens.onboarding.VaultBackupSummaryScreen
 import com.vultisig.wallet.ui.screens.peer.KeygenPeerDiscoveryScreen
+import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralCreateScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditExternalScreen
 import com.vultisig.wallet.ui.screens.referral.ReferralEditVaultScreen
@@ -195,6 +196,26 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
                 bondAddress = args.bondAddress,
                 poolId = args.poolId,
             )
+        }
+
+        composable<Route.CosmosStakingDelegate> {
+            com.vultisig.wallet.ui.screens.cosmosstaking.CosmosDelegateScreen()
+        }
+
+        composable<Route.CosmosStakingUndelegate> {
+            com.vultisig.wallet.ui.screens.cosmosstaking.CosmosUndelegateScreen()
+        }
+
+        composable<Route.CosmosStakingRedelegate> {
+            com.vultisig.wallet.ui.screens.cosmosstaking.CosmosRedelegateScreen()
+        }
+
+        composable<Route.CosmosStakingWithdrawRewards> {
+            com.vultisig.wallet.ui.screens.cosmosstaking.CosmosWithdrawRewardsScreen()
+        }
+
+        composable<Route.CosmosStakingVerify> {
+            com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyScreen()
         }
 
         composable<Route.BondForm> { entry ->
@@ -340,6 +361,8 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
             val args = entry.toRoute<Keysign.Keysign>()
             KeysignScreen(txType = args.txType)
         }
+
+        composable<Route.QbtcClaim> { QbtcClaimScreen() }
 
         // migration
 

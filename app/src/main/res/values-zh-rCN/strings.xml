@@ -512,6 +512,7 @@
 
     <!-- Verify Transaction -->
     <string name="verify_transaction_fast_sign_btn_title">快速签名</string>
+    <string name="verify_transaction_paired_btn_title">配对</string>
 
     <!-- Keysign -->
     <string name="keysign_sign_transaction">签署交易</string>
@@ -727,8 +728,6 @@
     <string name="verify_deposit_function_overview">功能概览</string>
     <string name="verify_deposit_sending">您正在发送</string>
     <string name="verify_deposit_network">网络</string>
-    <string name="verify_deposit_hold_paired">保持配对签名</string>
-    <string name="verify_deposit_sign_transaction">签署交易</string>
 
     <!-- Referral -->
     <string name="referral_invite_sheet_description">分享您的独特推荐代码邀请朋友。他们获得折扣，他们交易越多，您赚得越多 - 直接发送到您的保险库</string>
@@ -1176,7 +1175,6 @@
     <string name="enter_email_screen_hint">邮箱</string>
     <string name="swap_screen_invalid_specific_and_utxo">特定计算失败</string>
     <string name="verify_sign_message_message_field_signature">签名</string>
-    <string name="secret_enable_dkls">启用 DKLS</string>
     <string name="fast_vault_password_hint_screen_desc">如果您忘记密码，将显示此信息。</string>
     <string name="fast_vault_password_hint_skip">跳过</string>
     <string name="fast_vault_password_hint_next">下一步</string>
@@ -1400,8 +1398,13 @@
     <string name="choose_device_count_a11y_description">您有多少台设备？当前选择：%1$s。点击以选择其他。</string>
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">消息</string>
-    <string name="sign_ton_payload">Payload</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_jetton_transfer">Jetton 转账</string>
+    <string name="ton_op_nft_transfer">NFT 转账</string>
+    <string name="ton_op_excess_gas_refund">超额燃料退款</string>
+    <string name="ton_op_transfer">转账</string>
+    <string name="ton_forward_ton_amount">转发的 TON 金额</string>
+    <string name="ton_raw_payload">原始 Payload</string>
 
     <string name="welcome_tip">提示：您可以将浏览器用作设备</string>
     <string name="vault_setup_your_vault_setup">您的保险库设置</string>
@@ -1545,4 +1548,91 @@
     <string name="decoded_function_min_amount_out">最小转出金额</string>
     <string name="decoded_function_amount_out">转出金额</string>
     <string name="decoded_function_swap_title">交换</string>
+    <!-- QBTC Claim -->
+    <string name="qbtc_claim_title">提取 QBTC</string>
+    <string name="qbtc_claim_loading">正在检查资格…</string>
+    <string name="qbtc_claim_hero_title">可提取的 QBTC</string>
+    <string name="qbtc_claim_tab">提取</string>
+    <string name="qbtc_claim_description">QBTC 是抗量子的 BTC 版本。您现有的 BTC UTXO 可按 1:1 的比例提取为 QBTC。请在下方选择要提取的 UTXO。</string>
+    <string name="qbtc_claim_description_emphasis">抗量子的</string>
+    <string name="qbtc_claim_eligible_header">符合条件的 UTXO</string>
+    <string name="qbtc_claim_utxo_block_format">已确认 · %1$d 个区块前</string>
+    <string name="qbtc_claim_utxo_pending">待处理</string>
+    <string name="qbtc_claim_cta_all">全部提取</string>
+    <string name="qbtc_claim_cta_partial">提取 %2$d 个中的 %1$d 个</string>
+    <string name="qbtc_claim_proving">正在生成证明并广播…</string>
+    <string name="qbtc_claim_success_title">QBTC 已提取</string>
+    <string name="qbtc_claim_successful">QBTC 提取成功</string>
+    <string name="qbtc_claim_password_title">输入保险库密码</string>
+    <string name="qbtc_claim_pair_instruction">用您的另一台设备扫描此二维码以共同签署提取</string>
+    <string name="qbtc_claim_failed">提取失败</string>
+    <string name="qbtc_claim_unavailable_title">提取已禁用</string>
+    <string name="qbtc_claim_unavailable_detail">QBTC 提取已在网络上暂时禁用。请稍后重试。</string>
+    <string name="qbtc_claim_unsupported_address_title">不支持的地址</string>
+    <string name="qbtc_claim_failed_to_load_title">无法加载可提取的 UTXO</string>
+    <string name="qbtc_claim_no_utxos_title">无可提取项</string>
+    <string name="qbtc_claim_no_utxos_detail">您没有符合条件可提取为 QBTC 的 Bitcoin UTXO。</string>
+    <string name="qbtc_claim_error_invalid_btc_key">无效的 Bitcoin 公钥。</string>
+    <string name="qbtc_claim_error_proof_mismatch">证明服务返回了不匹配的数据。提取未提交。</string>
+    <string name="qbtc_claim_error_broadcast_unavailable">无法广播提取。请稍后重试。</string>
+    <string name="qbtc_claim_error_pairing_timeout">另一台设备未及时加入。请确保两台设备均已连接，然后重试。</string>
+    <string name="qbtc_claim_banner_subtitle">同样的 Bitcoin。抗量子。</string>
+    <string name="qbtc_claim_banner_title">提取您的 QBTC</string>
+    <string name="qbtc_claim_banner_cta">立即提取</string>
+    <!-- Cosmos staking (LUNA / LUNC) — issue #4499 -->
+    <string name="cosmos_staking_action_claim">领取</string>
+    <string name="cosmos_staking_action_delegate">质押</string>
+    <string name="cosmos_staking_action_redelegate">移动</string>
+    <string name="cosmos_staking_action_undelegate">取消质押</string>
+    <string name="cosmos_staking_token_fallback">代币</string>
+    <string name="cosmos_staking_active_delegations">当前委托</string>
+    <string name="cosmos_staking_apy">APY</string>
+    <string name="cosmos_staking_claim_rewards_cap_message">每次最多领取 %1$d 个验证者 — 请拆分更大的集合</string>
+    <string name="cosmos_staking_claim_rewards_estimated_fee">预估手续费</string>
+    <string name="cosmos_staking_claim_rewards_select_all">全选</string>
+    <string name="cosmos_staking_claim_rewards_select_validators">选择要领取奖励的验证者</string>
+    <string name="cosmos_staking_claim_rewards_title">领取奖励</string>
+    <string name="cosmos_staking_claim_rewards_total_rewards">总奖励</string>
+    <string name="cosmos_staking_delegate_new_validator">委托给新验证人</string>
+    <string name="cosmos_staking_delegate_title">质押 %1$s</string>
+    <string name="cosmos_staking_insufficient_gas">%1$s 不足以支付手续费 — 请减少验证者数量</string>
+    <string name="cosmos_staking_next_award">下次奖励</string>
+    <string name="cosmos_staking_no_validators_found">未找到验证人</string>
+    <string name="cosmos_staking_pending_unbondings">解绑中</string>
+    <string name="cosmos_staking_redelegate_source">源验证者</string>
+    <string name="cosmos_staking_redelegate_title">重新委托 %1$s</string>
+    <string name="cosmos_staking_select_validator">选择验证人</string>
+    <string name="cosmos_staking_staked_row_amount">已质押: %1$s %2$s</string>
+    <string name="cosmos_staking_total_staked">总质押 %1$s</string>
+    <string name="cosmos_staking_unbonding_lock_notice">%1$d 天锁定 — 将于 %2$s 解锁</string>
+    <string name="cosmos_staking_unbonding_entry_format">%1$s 基本单位 · 将于 %2$s 解锁</string>
+    <string name="cosmos_staking_undelegate_title">取消质押 %1$s</string>
+    <string name="cosmos_staking_validator_active">活跃</string>
+    <string name="cosmos_staking_validator_churned_out">已退出</string>
+    <string name="cosmos_staking_validator_picker">验证人</string>
+    <string name="cosmos_staking_validators">验证人</string>
+    <string name="cosmos_staking_pick_destination">选择目标</string>
+    <string name="cosmos_staking_pick_destination_validator">选择目标验证人</string>
+    <string name="cosmos_staking_continue">继续</string>
+    <string name="cosmos_staking_amount">金额</string>
+    <string name="cosmos_staking_loading_validators">正在加载验证人…</string>
+    <string name="cosmos_staking_loading_positions">正在加载仓位…</string>
+    <string name="cosmos_staking_loading_rewards">正在加载奖励…</string>
+    <string name="cosmos_staking_no_rewards">此链上没有可领取的奖励</string>
+    <string name="cosmos_staking_empty_positions">您还没有活跃的 %1$s 仓位</string>
+    <!-- Cosmos staking verify summary — issue #4499 -->
+    <string name="cosmos_staking_youre_staking">您正在质押</string>
+    <string name="cosmos_staking_youre_unstaking">您正在解除质押</string>
+    <string name="cosmos_staking_youre_moving">您正在移动</string>
+    <string name="cosmos_staking_youre_claiming">您正在领取</string>
+    <string name="cosmos_staking_verify_from">来自</string>
+    <string name="cosmos_staking_verify_network">网络</string>
+    <string name="cosmos_staking_verify_est_fee">预计网络费用</string>
+    <string name="cosmos_staking_verify_sign">签署交易</string>
+    <string name="cosmos_staking_source_validator">来源验证人</string>
+    <string name="cosmos_staking_destination_validator">目标验证人</string>
+    <string name="cosmos_staking_redelegate_cooldown_message">Source validator is under a %1$d-day redelegation cooldown - unlocks %2$s</string>
+    <string name="cosmos_staking_redelegate_cooldown_fallback">Source validator is under a redelegation cooldown</string>
+    <string name="cosmos_staking_insufficient_fee_balance">Not enough liquid %1$s to cover the network fee. Claim rewards first or top up.</string>
+    <string name="cosmos_staking_max_entries_reached">您对该验证人的待处理请求已达到上限 %1$d 个。请等待其中一个完成后再继续。</string>
 </resources>

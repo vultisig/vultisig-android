@@ -30,6 +30,7 @@ import com.vultisig.wallet.ui.models.ChainDashboardUiModel
 import com.vultisig.wallet.ui.models.ChainDashboardViewModel
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
 import com.vultisig.wallet.ui.models.ChainTokensUiModel
+import com.vultisig.wallet.ui.navigation.ChainDashboardRoute
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionCircle
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionMaya
 import com.vultisig.wallet.ui.navigation.ChainDashboardRoute.PositionTokens
@@ -59,6 +60,11 @@ internal fun ChainDashboardScreen(viewModel: ChainDashboardViewModel = hiltViewM
                 is PositionMaya ->
                     MayachainDefiPositionsScreen(vaultId = (uiModel.route as PositionMaya).vaultId)
                 is PositionTron -> TronDeFiPositionsScreen(vaultId = route.vaultId)
+                is ChainDashboardRoute.PositionCosmosStaking ->
+                    com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsScreen(
+                        vaultId = route.vaultId,
+                        chainId = route.chainId,
+                    )
                 is Wallet ->
                     ChainTokensScreen(
                         vaultId = route.vaultId,

@@ -162,6 +162,9 @@ internal sealed class Route {
 
     @Serializable data class VerifyDeposit(val vaultId: VaultId, val transactionId: TransactionId)
 
+    // qbtc claim
+    @Serializable data class QbtcClaim(val vaultId: VaultId)
+
     // keysign
 
     data object Keysign {
@@ -451,6 +454,47 @@ internal sealed class Route {
         val poolId: String? = null,
     )
 
+    /**
+     * LUNA / LUNC delegate entry point. Opens
+     * [com.vultisig.wallet.ui.screens.cosmosstaking .CosmosDelegateScreen], which collects amount +
+     * validator and routes through the existing verify-deposit / keysign pipeline. Other staking
+     * actions (undelegate, redelegate, claim) follow this same shape in later sessions.
+     */
+    @Serializable data class CosmosStakingDelegate(val vaultId: String, val chainId: String)
+
+    /** Undelegate flow — validator address comes from the active-delegation card. */
+    @Serializable
+    data class CosmosStakingUndelegate(
+        val vaultId: String,
+        val chainId: String,
+        val validatorAddress: String,
+    )
+
+    /**
+     * Redelegate flow — src is fixed (the current delegation), dst is picked. The 21-day cooldown
+     * gate runs at submit-time inside the VM.
+     */
+    @Serializable
+    data class CosmosStakingRedelegate(
+        val vaultId: String,
+        val chainId: String,
+        val validatorSrcAddress: String,
+    )
+
+    /**
+     * Withdraw rewards flow — single or batched (up to 8 validators per LUNC gas math). The payload
+     * accepts a list; UI multi-select enforces the cap.
+     */
+    @Serializable data class CosmosStakingWithdrawRewards(val vaultId: String, val chainId: String)
+
+    /**
+     * Staking-specific verify summary for LUNA / LUNC (delegate / undelegate / redelegate / claim).
+     * Loads the persisted [com.vultisig.wallet.data.models.DepositTransaction] by id and renders
+     * the iOS-style "You're staking / unstaking / moving / claiming" summary before keysign.
+     */
+    @Serializable
+    data class CosmosStakingVerify(val vaultId: String, val transactionId: TransactionId)
+
     @Serializable data class BondForm(val vaultId: String, val chainId: String)
 
     @Serializable data class Settings(val vaultId: String)
@@ -548,6 +592,14 @@ sealed interface ChainDashboardRoute {
     @Serializable data class PositionMaya(val vaultId: String) : ChainDashboardRoute
 
     @Serializable data class PositionTron(val vaultId: String) : ChainDashboardRoute
+
+    /**
+     * LUNA / LUNC staking positions. Carries `chainId` because both Terra chains share the same
+     * positions screen (separate validator sets, identical UI).
+     */
+    @Serializable
+    data class PositionCosmosStaking(val vaultId: String, val chainId: String) :
+        ChainDashboardRoute
 }
 
 internal val BackupTypeNavType = createNavType<BackupType>()

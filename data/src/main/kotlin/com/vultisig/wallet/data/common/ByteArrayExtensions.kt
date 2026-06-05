@@ -16,3 +16,6 @@ fun ByteArray.toKeccak256ByteArray(): ByteArray {
 fun ByteArray.toByteString(): ByteString {
     return ByteString.copyFrom(this)
 }
+
+/** Lowercase hex string of the bytes, with no `0x` prefix. */
+fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }

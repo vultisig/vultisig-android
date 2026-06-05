@@ -92,6 +92,10 @@ internal interface DataUsecasesModule {
 
     @Binds
     @Singleton
+    fun bindHasCircleAccountUseCase(impl: HasCircleAccountUseCaseImpl): HasCircleAccountUseCase
+
+    @Binds
+    @Singleton
     fun bindSearchSolTokenUseCase(impl: SearchSolTokenUseCaseImpl): SearchSolTokenUseCase
 
     @Binds
@@ -273,4 +277,11 @@ internal interface DataUsecasesModule {
     @Binds
     @Singleton
     fun bindUriFileReaderUseCase(impl: UriFileReaderUseCaseImpl): UriFileReaderUseCase
+
+    @Binds
+    @Singleton
+    fun bindBuildCosmosStakingKeysignPayloadUseCase(
+        impl:
+            com.vultisig.wallet.data.blockchain.cosmos.staking.BuildCosmosStakingKeysignPayloadUseCaseImpl
+    ): com.vultisig.wallet.data.blockchain.cosmos.staking.BuildCosmosStakingKeysignPayloadUseCase
 }

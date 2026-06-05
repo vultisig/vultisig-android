@@ -10,6 +10,12 @@ import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.api.swapAggregators.OneInchApiImpl
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApi
 import com.vultisig.wallet.data.api.swapAggregators.SwapKitApiImpl
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingAPYResolver
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingAPYResolverImpl
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingServiceImpl
+import com.vultisig.wallet.data.blockchain.cosmos.staking.KeybaseAvatarService
+import com.vultisig.wallet.data.blockchain.cosmos.staking.KeybaseAvatarServiceImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -77,4 +83,16 @@ internal interface ApiModule {
     @Binds @Singleton fun circleApi(impl: CircleApiImpl): CircleApi
 
     @Binds @Singleton fun bindNotificationApi(impl: NotificationApiImpl): NotificationApi
+
+    @Binds
+    @Singleton
+    fun bindCosmosStakingService(impl: CosmosStakingServiceImpl): CosmosStakingService
+
+    @Binds
+    @Singleton
+    fun bindCosmosStakingAPYResolver(impl: CosmosStakingAPYResolverImpl): CosmosStakingAPYResolver
+
+    @Binds
+    @Singleton
+    fun bindKeybaseAvatarService(impl: KeybaseAvatarServiceImpl): KeybaseAvatarService
 }

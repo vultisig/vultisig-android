@@ -26,7 +26,7 @@ internal class SwapKitZcashSignerException(message: String) : Exception(message)
  *
  * Sighash: WalletCore's ZEC signer implements ZIP-243 (the Sapling signature digest with the
  * personalised Blake2b-256). It reads the branch id from the plan — the existing native ZEC send
- * uses [ZCASH_BRANCH_ID_HEX] `f04dec4d`, and we match that so the digest is identical to a manually
+ * uses [ZCASH_BRANCH_ID_HEX] `30f33754`, and we match that so the digest is identical to a manually
  * sent ZEC transaction. (Deviating to the Sapling-v4 spec id `0x76b809bb` would produce a different
  * digest the chain rejects.)
  *
@@ -443,8 +443,9 @@ internal class SwapKitZcashSigner(
         /**
          * Branch id matching the existing native ZEC send. WalletCore reads it as the ZIP-243
          * personalised-Blake2b branch identifier; diverging to the Sapling-v4-spec `0x76b809bb`
-         * would produce a digest the network rejects.
+         * would produce a digest the network rejects. Sourced from [ZCASH_ZIP243_BRANCH_ID_HEX] so
+         * both signing paths stay locked together.
          */
-        private const val ZCASH_BRANCH_ID_HEX = "f04dec4d"
+        private const val ZCASH_BRANCH_ID_HEX = ZCASH_ZIP243_BRANCH_ID_HEX
     }
 }

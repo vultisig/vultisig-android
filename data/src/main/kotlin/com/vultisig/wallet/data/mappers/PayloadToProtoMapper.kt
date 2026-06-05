@@ -251,6 +251,16 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     )
                 } else null,
             wasmExecuteContractPayload = keysignPayload.wasmExecuteContractPayload,
+            // Cosmos SignDoc artefacts MUST round-trip to peer devices. Without these, a relayed
+            // payload arrives with `signDirect`/`signAmino == null` on the peer, which then
+            // rebuilds
+            // a default (bank-send) signing input — its message hash diverges from the initiator's,
+            // so the DKLS setup message (keyed by md5(hash)) 404s and keysign never completes. The
+            // inbound [KeysignPayloadProtoMapper] already reads both fields; this makes the mapping
+            // symmetric. Required for the LUNA / LUNC staking flows (signDirect = MsgDelegate / …
+            // ).
+            signAmino = keysignPayload.signAmino,
+            signDirect = keysignPayload.signDirect,
             erc20ApprovePayload =
                 if (approvePayload is ERC20ApprovePayload) {
                     Erc20ApprovePayload(
@@ -259,6 +269,7 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                     )
                 } else null,
             skipBroadcast = keysignPayload.skipBroadcast,
+            isQbtcClaim = keysignPayload.isQbtcClaim,
             tronTransferContractPayload = keysignPayload.tronTransferContractPayload,
             tronTransferAssetContractPayload = keysignPayload.tronTransferAssetContractPayload,
             tronTriggerSmartContractPayload = keysignPayload.tronTriggerSmartContractPayload,

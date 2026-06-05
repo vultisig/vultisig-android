@@ -45,9 +45,9 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.VerifyCardJsonDetails
 import com.vultisig.wallet.ui.components.VsCheckField
 import com.vultisig.wallet.ui.components.VsOverviewToken
+import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
-import com.vultisig.wallet.ui.components.buttons.VsHoldableButton
 import com.vultisig.wallet.ui.components.dapp.DappRequestBanner
 import com.vultisig.wallet.ui.components.hero.TransactionHero
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
@@ -164,18 +164,10 @@ internal fun VerifySendScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
             ) {
                 if (state.hasFastSign) {
-                    Text(
-                        text = stringResource(R.string.verify_deposit_hold_paired),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.tertiary,
-                        textAlign = TextAlign.Center,
-                    )
-                    VsHoldableButton(
-                        label = stringResource(R.string.verify_swap_sign_button),
-                        onLongClick = onConfirm,
-                        onClick = onFastSignClick,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = buttonState,
+                    FastSignPairedButtons(
+                        onFastSignClick = onFastSignClick,
+                        onPairedSignClick = onConfirm,
+                        state = buttonState,
                     )
                 } else {
                     VsButton(
@@ -314,12 +306,15 @@ internal fun VerifySendScreen(
                             )
                         }
 
-                    tx.signTon
-                        ?.takeIf { it.tonMessages.isNotEmpty() }
-                        ?.let { signTon ->
+                    tx.tonMessages
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { tonMessages ->
                             VerifyCardDivider(0.dp)
 
-                            SignTonDisplayView(signTon = signTon)
+                            SignTonDisplayView(
+                                messages = tonMessages,
+                                initiallyExpanded = initiallyExpandedDetails,
+                            )
                         }
 
                     if (tx.isUnlimitedApproval) {

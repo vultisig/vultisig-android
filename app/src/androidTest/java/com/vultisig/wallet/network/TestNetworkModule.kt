@@ -1,5 +1,6 @@
 package com.vultisig.wallet.network
 
+import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcProofHttpClient
 import com.vultisig.wallet.data.di.NetworkModule
 import com.vultisig.wallet.data.networkutils.HttpClientConfigurator
 import dagger.Module
@@ -27,4 +28,10 @@ object TestNetworkModule {
 
             engine { config { addInterceptor(faultyInterceptor) } }
         }
+
+    @Provides
+    @Singleton
+    @QbtcProofHttpClient
+    fun provideQbtcProofHttpClient(baseConfig: HttpClientConfigurator): HttpClient =
+        HttpClient(OkHttp) { baseConfig.configure(this) }
 }
