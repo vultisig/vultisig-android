@@ -443,8 +443,9 @@ internal class SwapKitZcashSigner(
         /**
          * Branch id matching the existing native ZEC send. WalletCore reads it as the ZIP-243
          * personalised-Blake2b branch identifier; diverging to the Sapling-v4-spec `0x76b809bb`
-         * would produce a digest the network rejects.
+         * would produce a digest the network rejects. Sourced from [ZCASH_ZIP243_BRANCH_ID_HEX] so
+         * both signing paths stay locked together.
          */
-        private const val ZCASH_BRANCH_ID_HEX = "30f33754"
+        private const val ZCASH_BRANCH_ID_HEX = ZCASH_ZIP243_BRANCH_ID_HEX
     }
 }
