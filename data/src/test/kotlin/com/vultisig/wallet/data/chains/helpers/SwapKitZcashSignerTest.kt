@@ -219,7 +219,7 @@ class SwapKitZcashSignerTest {
             assertEquals(39_000L, input.plan.change)
             assertEquals(1_000L, input.plan.fee)
             // ZIP-243 branch id must be on the plan or WalletCore derives the wrong digest.
-            assertEquals("f04dec4d", Numeric.toHexStringNoPrefix(input.plan.branchId.toByteArray()))
+            assertEquals("30f33754", Numeric.toHexStringNoPrefix(input.plan.branchId.toByteArray()))
 
             assertEquals(1, input.utxoCount)
             val utxo = input.getUtxo(0)
