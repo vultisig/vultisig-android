@@ -5,16 +5,19 @@ package com.vultisig.wallet.ui.models.swap
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.repositories.AllowanceRepository
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.math.BigDecimal
@@ -101,7 +104,13 @@ internal class SwapTransactionBuilderTest {
         assertEquals(estimatedNetworkFee, tx.gasFees)
         assertEquals(estimatedNetworkFeeFiat, tx.gasFeeFiatValue)
         assertFalse(tx.isApprovalRequired)
-        assertIs<SwapPayload.ThorChain>(tx.payload)
+        val payload = assertIs<SwapPayload.ThorChain>(tx.payload)
+        // ThorChain streams in single-block intervals; MayaChain uses "3".
+        assertEquals("1", payload.data.streamingInterval)
+        assertEquals("0", payload.data.toAmountLimit)
+        assertTrue(payload.data.isAffiliate)
+        // Expiration is stamped ~15 minutes ahead, so it must be in the future.
+        assertTrue(payload.data.expirationTime > (System.currentTimeMillis() / 1000).toULong())
     }
 
     @Test
@@ -142,7 +151,116 @@ internal class SwapTransactionBuilderTest {
         assertEquals(TokenValue(BigInteger.valueOf(4), srcToken), tx.gasFees)
         assertEquals(FiatValue(BigDecimal("0.10"), "USD"), tx.gasFeeFiatValue)
         assertFalse(tx.isApprovalRequired)
-        assertIs<SwapPayload.MayaChain>(tx.payload)
+        val payload = assertIs<SwapPayload.MayaChain>(tx.payload)
+        // MayaChain streams in 3-block intervals; ThorChain uses "1".
+        assertEquals("3", payload.data.streamingInterval)
+        assertEquals("0", payload.data.toAmountLimit)
+        assertTrue(payload.data.isAffiliate)
+        // Expiration is stamped ~15 minutes ahead, so it must be in the future.
+        assertTrue(payload.data.expirationTime > (System.currentTimeMillis() / 1000).toULong())
+    }
+
+    @Test
+    fun `builds ThorChain swap routing an EVM token deposit through the router`() = runTest {
+        val srcToken =
+            coin(Chain.Ethereum, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+        val dstToken = coin(Chain.Bitcoin, "BTC", "bc1qdst", 8, isNative = true)
+        val data =
+            mockk<THORChainSwapQuote>(relaxed = true).apply {
+                every { router } returns "0xrouter"
+                every { inboundAddress } returns "thor-inbound"
+                every { memo } returns "=:BTC.BTC:bc1qdst"
+            }
+        val quote =
+            SwapQuote.ThorChain(
+                expectedDstValue = TokenValue(BigInteger.valueOf(100), dstToken),
+                fees = TokenValue(BigInteger.valueOf(7), srcToken),
+                expiredAt = Clock.System.now(),
+                recommendedMinTokenValue = TokenValue(BigInteger.ZERO, srcToken),
+                data = data,
+            )
+        val srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken)
+        val gasFee = TokenValue(BigInteger.valueOf(5), srcToken)
+
+        val tx =
+            builder.build(
+                vaultId = "vault-1",
+                srcToken = srcToken,
+                dstToken = dstToken,
+                srcAddress = "0xsrc",
+                srcTokenValue = srcTokenValue,
+                quote = quote,
+                gasFee = gasFee,
+                gasFeeFiatValue = FiatValue(BigDecimal("0.99"), "USD"),
+                estimatedNetworkFeeTokenValue = null,
+                estimatedNetworkFeeFiatValue = null,
+            )
+
+        // router takes precedence over inboundAddress for the dst address.
+        assertEquals("0xrouter", tx.dstAddress)
+        // EVM non-native source is a router deposit, so dstAddress/memo/amount are forwarded.
+        coVerify {
+            swapGasCalculator.getSpecificAndUtxo(
+                srcToken = srcToken,
+                srcAddress = "0xsrc",
+                gasFee = gasFee,
+                isThorchainRouterDeposit = true,
+                dstAddress = "0xrouter",
+                memo = "=:BTC.BTC:bc1qdst",
+                tokenAmountValue = srcTokenValue.value,
+            )
+        }
+    }
+
+    @Test
+    fun `builds MayaChain swap resolving the EVM source dst address from the router`() = runTest {
+        val srcToken =
+            coin(Chain.Ethereum, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+        val dstToken = coin(Chain.Bitcoin, "BTC", "bc1qdst", 8, isNative = true)
+        val data =
+            mockk<THORChainSwapQuote>(relaxed = true).apply {
+                every { router } returns "0xrouter"
+                every { inboundAddress } returns "maya-inbound"
+                every { memo } returns "=:BTC.BTC:bc1qdst"
+            }
+        val quote =
+            SwapQuote.MayaChain(
+                expectedDstValue = TokenValue(BigInteger.valueOf(200), dstToken),
+                fees = TokenValue(BigInteger.valueOf(3), srcToken),
+                expiredAt = Clock.System.now(),
+                recommendedMinTokenValue = TokenValue(BigInteger.ZERO, srcToken),
+                data = data,
+            )
+        val srcTokenValue = TokenValue(BigInteger.valueOf(500), srcToken)
+        val gasFee = TokenValue(BigInteger.valueOf(4), srcToken)
+
+        val tx =
+            builder.build(
+                vaultId = "vault-2",
+                srcToken = srcToken,
+                dstToken = dstToken,
+                srcAddress = "0xsrc",
+                srcTokenValue = srcTokenValue,
+                quote = quote,
+                gasFee = gasFee,
+                gasFeeFiatValue = FiatValue(BigDecimal("0.10"), "USD"),
+                estimatedNetworkFeeTokenValue = null,
+                estimatedNetworkFeeFiatValue = null,
+            )
+
+        // EVM source resolves the router before the inbound address.
+        assertEquals("0xrouter", tx.dstAddress)
+        coVerify {
+            swapGasCalculator.getSpecificAndUtxo(
+                srcToken = srcToken,
+                srcAddress = "0xsrc",
+                gasFee = gasFee,
+                isThorchainRouterDeposit = true,
+                dstAddress = "0xrouter",
+                memo = "=:BTC.BTC:bc1qdst",
+                tokenAmountValue = srcTokenValue.value,
+            )
+        }
     }
 
     @Test
@@ -232,7 +350,7 @@ internal class SwapTransactionBuilderTest {
                 coin(Chain.Ethereum, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
             val dstToken = coin(Chain.Ethereum, "ETH", "0xdst", 18, isNative = true)
             coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
-                specificAndUtxo
+                ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(99))
             // Allowance below the swap amount -> approval required.
             coEvery { allowanceRepository.getAllowance(any(), any(), any(), any()) } returns
                 BigInteger.ZERO
@@ -277,8 +395,71 @@ internal class SwapTransactionBuilderTest {
             assertEquals(FiatValue(BigDecimal("2.00"), "USD"), tx.gasFeeFiatValue)
             // gasFees still falls back to gasFee when no estimated network fee is available.
             assertEquals(TokenValue(BigInteger.valueOf(8), srcToken), tx.gasFees)
-            assertIs<SwapPayload.EVM>(tx.payload)
+            val payload = assertIs<SwapPayload.EVM>(tx.payload)
+            // On an Ethereum plan the tx gas price is patched with the plan's maxFeePerGas.
+            assertEquals("99", payload.data.quote.tx.gasPrice)
+            // Non-Mantle chains keep the quote's original gas limit.
+            assertEquals(21_000L, payload.data.quote.tx.gas)
         }
+
+    @Test
+    fun `builds OneInch swap overriding the gas limit on Mantle`() = runTest {
+        val srcToken =
+            coin(Chain.Mantle, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+        val dstToken = coin(Chain.Mantle, "MNT", "0xdst", 18, isNative = true)
+        coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+            ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(7))
+        val tx0 =
+            OneInchSwapTxJson(
+                from = "0xsrc",
+                to = "0xrouter",
+                allowanceTarget = "0xproxy",
+                gas = 21_000,
+                data = "0xdata",
+                value = "0",
+                gasPrice = "1",
+            )
+        val quote =
+            SwapQuote.OneInch(
+                expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                fees = TokenValue(BigInteger.valueOf(9), dstToken),
+                expiredAt = Clock.System.now(),
+                data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                provider = "1inch",
+            )
+
+        val tx =
+            builder.build(
+                vaultId = "vault-5",
+                srcToken = srcToken,
+                dstToken = dstToken,
+                srcAddress = "0xsrc",
+                srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                quote = quote,
+                gasFee = TokenValue(BigInteger.valueOf(8), srcToken),
+                gasFeeFiatValue = FiatValue(BigDecimal("2.00"), "USD"),
+                estimatedNetworkFeeTokenValue = null,
+                estimatedNetworkFeeFiatValue = null,
+            )
+
+        val payload = assertIs<SwapPayload.EVM>(tx.payload)
+        // Mantle overrides the quote's gas limit with the dedicated swap limit.
+        assertEquals(DEFAULT_MANTLE_SWAP_LIMIT.toLong(), payload.data.quote.tx.gas)
+        // The gas price is still patched from the EVM plan.
+        assertEquals("7", payload.data.quote.tx.gasPrice)
+    }
+
+    /** Plan fixture whose [BlockChainSpecific] is a real [BlockChainSpecific.Ethereum]. */
+    private fun ethereumSpecificAndUtxo(maxFeePerGasWei: BigInteger) =
+        BlockChainSpecificAndUtxo(
+            blockChainSpecific =
+                BlockChainSpecific.Ethereum(
+                    maxFeePerGasWei = maxFeePerGasWei,
+                    priorityFeeWei = BigInteger.ONE,
+                    nonce = BigInteger.ZERO,
+                    gasLimit = BigInteger.valueOf(21_000),
+                )
+        )
 
     private fun coin(
         chain: Chain,
