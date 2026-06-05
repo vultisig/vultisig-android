@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.models.isDeFiSupported
 import com.vultisig.wallet.data.repositories.DefaultDeFiChainsRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.HasCircleAccountUseCase
+import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.ChainToDefiChainUiMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -64,14 +65,14 @@ constructor(
     }
 
     private fun loadChains() {
-        viewModelScope.launch {
+        viewModelScope.safeLaunch {
             val vault = vaultRepository.get(vaultId)
 
             _uiState.update { it.copy(isLoading = true) }
 
             if (vault == null) {
                 _uiState.update { it.copy(defiChains = emptyList(), isLoading = false) }
-                return@launch
+                return@safeLaunch
             }
 
             // New Circle (USDC yield) deposits are disabled: only offer the Circle (Ethereum

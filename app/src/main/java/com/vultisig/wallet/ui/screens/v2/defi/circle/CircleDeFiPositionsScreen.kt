@@ -107,7 +107,9 @@ private fun CircleContentDepositTab(
         )
     }
 
-    if (state.hasActiveDeposit()) {
+    // Drive the actions off account ownership, not the parsed balance: an open account whose
+    // balance read fails or is unparseable must still expose Withdraw so a funded user can exit.
+    if (state.isAccountOpen) {
         HeaderDeFiWidget(
             title = stringResource(R.string.usdc_deposit_title),
             iconRes = R.drawable.usdc,
@@ -126,18 +128,13 @@ private fun CircleContentDepositTab(
         HeaderDeFiWidget(
             title = stringResource(R.string.usdc_deposit_title),
             iconRes = R.drawable.usdc,
-            buttonText =
-                if (state.isAccountOpen) {
-                    stringResource(R.string.deposit_usdc_button)
-                } else {
-                    stringResource(R.string.open_account_button)
-                },
+            buttonText = stringResource(R.string.open_account_button),
             onClickAction = onClickDepositOrCreateAccount,
             totalAmount = state.totalDeposit,
             totalPrice = state.totalDepositCurrency,
             isLoading = state.isLoading,
             isBalanceVisible = isBalanceVisible,
-            // New Circle deposits are disabled; this single CTA is deposit/open-account only.
+            // New Circle deposits are disabled, so opening a new account is also gated off.
             buttonState = VsButtonState.Disabled,
         )
     }

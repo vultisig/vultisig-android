@@ -2,7 +2,6 @@ package com.vultisig.wallet.ui.screens.v2.defi.model
 
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.models.defi.ThorchainDefiPositionsViewModel
-import java.math.BigDecimal
 
 data class DefiUiModel(
     // Global screen parameters
@@ -23,11 +22,5 @@ data class DefiUiModel(
         val closeWarning: Boolean = false,
         val totalDeposit: String = "0 USDC",
         val totalDepositCurrency: String = "$0",
-    ) {
-        fun hasActiveDeposit(): Boolean {
-            return totalDeposit.trim().split(" ").firstOrNull()?.toBigDecimalOrNull()?.let {
-                it > BigDecimal.ZERO
-            } ?: false
-        }
-    }
+    )
 }
