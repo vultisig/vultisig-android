@@ -22,5 +22,6 @@ internal class SwapTransactionToHistoryDataMapperImpl @Inject constructor() :
             toTokenLogo = from.dst.token.logo,
             provider = from.provider,
             fiatValue = from.src.fiatValue,
+            swapId = from.swapId,
         )
 }

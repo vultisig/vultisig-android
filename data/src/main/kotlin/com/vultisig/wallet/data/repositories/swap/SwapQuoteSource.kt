@@ -33,9 +33,15 @@ sealed class SwapQuoteResult {
 
     /**
      * EVM-shaped envelope. [subProvider] disambiguates SwapKit's downstream protocol (Chainflip /
-     * NEAR / Garden); `null` for direct aggregators (1inch, Kyber, LiFi, Jupiter).
+     * NEAR / Garden); `null` for direct aggregators (1inch, Kyber, LiFi, Jupiter). [swapId] is the
+     * SwapKit `/v3/swap` swap id, carried through so the resulting transaction can be gated on the
+     * destination-leg `/track` settlement; `null` for direct aggregators.
      */
-    data class Evm(val data: EVMSwapQuoteJson, val subProvider: String? = null) : SwapQuoteResult()
+    data class Evm(
+        val data: EVMSwapQuoteJson,
+        val subProvider: String? = null,
+        val swapId: String? = null,
+    ) : SwapQuoteResult()
 
     // A future SwapKit non-EVM route (BTC / TON / ADA / TRON / SUI / ZEC) rides Native, since
     // SwapQuote.SwapKit is itself a SwapQuote — no dedicated result variant is needed.
