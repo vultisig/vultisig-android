@@ -40,6 +40,10 @@ data class SwapKitSwapResponseJson(
     // refreshed /v3/swap reply stays fresh. Mirrors iOS' SwapKitSwapResponse.fees.
     @SerialName("fees") val fees: List<SwapKitFee> = emptyList(),
     @SerialName("providers") val providers: List<String> = emptyList(),
+    // ERC20 approval transaction for EVM routes that need an allowance. The spender is encoded in
+    // [SwapKitApprovalTx.data] (`approve(spender, amount)` calldata), NOT [SwapKitApprovalTx.to]
+    // (the asset contract). Used only as a fallback when [SwapKitTxMeta.approvalAddress] is absent.
+    @SerialName("approvalTx") val approvalTx: SwapKitApprovalTx? = null,
     // XRP destination tag. SwapKit surfaces it (rarely) as a numeric or string-encoded value at the
     // top level; kept as a raw [JsonElement] and parsed defensively so a number-vs-string wire flip
     // doesn't break decoding. Resolution order (highest first): top-level → [SwapKitTxMeta] →
@@ -48,6 +52,20 @@ data class SwapKitSwapResponseJson(
     @SerialName("destinationTag") val destinationTag: JsonElement? = null,
     @SerialName("error") val error: String? = null,
     @SerialName("message") val message: String? = null,
+)
+
+/**
+ * ERC20 approval transaction sibling of [SwapKitSwapResponseJson.tx]. [to] is the sell-token asset
+ * contract (the `approve` is sent there); the actual spender lives in the `approve(spender,
+ * amount)` calldata in [data]. Used only to recover the spender when
+ * [SwapKitTxMeta.approvalAddress] is missing.
+ */
+@Serializable
+data class SwapKitApprovalTx(
+    @SerialName("to") val to: String? = null,
+    @SerialName("from") val from: String? = null,
+    @SerialName("value") val value: String? = null,
+    @SerialName("data") val data: String? = null,
 )
 
 /** Discriminator metadata sitting alongside [SwapKitSwapResponseJson.tx]. */

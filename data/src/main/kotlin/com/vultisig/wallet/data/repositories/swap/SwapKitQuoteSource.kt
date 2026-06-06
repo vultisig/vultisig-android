@@ -133,6 +133,13 @@ constructor(
 
         val best = pickBestRoute(quoteResponse.routes) ?: throw SwapKitError.RouteFiltered
 
+        // Defense-in-depth: independently reject a route whose expected buy amount has slipped
+        // below
+        // its own max-slippage floor, even if a buggy/compromised proxy skips the server-side
+        // `outputAmountDeviationTooHigh` check. A well-formed route always has expectedBuyAmount >=
+        // expectedBuyAmountMaxSlippage, so this only fires on inconsistent/manipulated data.
+        assertWithinDeviationTolerance(best)
+
         val routeId =
             best.routeId
                 ?: throw SwapKitError.NoRoutes(
@@ -226,6 +233,26 @@ constructor(
             }
             .maxByOrNull { it.second }
             ?.first
+    }
+
+    /**
+     * Client-side output-deviation guard. Rejects [route] with [SwapKitError.QuoteDeviation] when
+     * its `expectedBuyAmount` has drifted below `expectedBuyAmountMaxSlippage * (1 - tolerance)`,
+     * complementing the server-only `outputAmountDeviationTooHigh` enforcement. No-op when either
+     * amount is missing/unparseable — the deviation can't be evaluated without both.
+     */
+    private fun assertWithinDeviationTolerance(route: SwapKitRoute) {
+        val buyAmount =
+            route.expectedBuyAmount?.let { runCatching { BigDecimal(it) }.getOrNull() } ?: return
+        val maxSlippage =
+            route.expectedBuyAmountMaxSlippage?.let { runCatching { BigDecimal(it) }.getOrNull() }
+                ?: return
+        val floor = maxSlippage.multiply(BigDecimal.ONE - OUTPUT_DEVIATION_TOLERANCE)
+        if (buyAmount < floor) {
+            throw SwapKitError.QuoteDeviation(
+                "SwapKit buy amount $buyAmount below max-slippage floor $floor"
+            )
+        }
     }
 
     /**
@@ -352,8 +379,14 @@ constructor(
                             // spender
                             // is derived from it downstream instead of from `to`. Matches iOS,
                             // which
-                            // derives the spender as `meta.approvalAddress`.
-                            allowanceTarget = response.meta.approvalAddress,
+                            // derives the spender as `meta.approvalAddress`. Falls back to the
+                            // spender decoded from `approvalTx.data` (`approve(spender, amount)`
+                            // calldata) when `meta.approvalAddress` is absent — never
+                            // `approvalTx.to`,
+                            // which is the asset contract, not the spender.
+                            allowanceTarget =
+                                response.meta.approvalAddress
+                                    ?: decodeApprovalSpender(response.approvalTx?.data),
                             data = evm.data,
                             gas = gas,
                             // Refuse a malformed native amount rather than coercing to 0: on a
@@ -852,6 +885,25 @@ constructor(
             .getOrNull()
     }
 
+    /**
+     * Decode the ERC20 `approve` spender from [data] (`approve(spender, amount)` calldata): the
+     * 4-byte selector `095ea7b3`, a 32-byte left-padded spender word, then a 32-byte amount.
+     * Returns the `0x`-prefixed 20-byte spender, or null when the calldata is absent, has the wrong
+     * selector, is too short, or decodes to the zero address. Never returns `approvalTx.to` — that
+     * is the asset contract, not the spender.
+     */
+    private fun decodeApprovalSpender(data: String?): String? {
+        val hex = data?.trim()?.removePrefix("0x")?.removePrefix("0X") ?: return null
+        // 8 hex selector + 64 hex spender word required; amount word may follow.
+        if (hex.length < APPROVE_SELECTOR.length + 64) return null
+        if (!hex.startsWith(APPROVE_SELECTOR, ignoreCase = true)) return null
+        val spender =
+            hex.substring(APPROVE_SELECTOR.length, APPROVE_SELECTOR.length + 64).takeLast(40)
+        if (!spender.all { it.isDigit() || it in 'a'..'f' || it in 'A'..'F' }) return null
+        if (spender.all { it == '0' }) return null
+        return "0x$spender"
+    }
+
     private inline fun <reified T> decode(element: JsonElement?, label: String): T {
         val el = element ?: throw SwapKitError.Decoding("SwapKit $label tx payload is missing")
         return try {
@@ -865,6 +917,17 @@ constructor(
     }
 
     private companion object {
+        /**
+         * Tolerance for the client-side output-deviation guard ([assertWithinDeviationTolerance]).
+         * A well-formed route has `expectedBuyAmount >= expectedBuyAmountMaxSlippage`, so this
+         * small buffer below the max-slippage floor only rejects inconsistent/manipulated data
+         * while tolerating benign rounding.
+         */
+        private val OUTPUT_DEVIATION_TOLERANCE: BigDecimal = BigDecimal("0.01")
+
+        /** ERC20 `approve(address,uint256)` 4-byte function selector (hex, no `0x`). */
+        private const val APPROVE_SELECTOR = "095ea7b3"
+
         /**
          * Sub-provider ids (lower-cased, underscored — matches the wire format of SwapKit's
          * `/providers` and `route.providers[]` entries: `THORCHAIN`, `THORCHAIN_STREAMING`,

@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -52,6 +53,22 @@ constructor(
 
         val quotesFeesFiat = convertTokenValueToFiat(tokenValue, from.estimatedFees, currency)
 
+        // SwapKit collapses every sub-provider onto the canonical `"SwapKit"` id, so render the
+        // persisted sub-provider (Chainflip / NEAR / Garden) for the done/history label instead —
+        // matching the live form/verify label. Other providers keep their specific id.
+        val providerLabel =
+            if (provider == SwapProvider.SWAPKIT) {
+                val subProvider =
+                    when (val payload = from.payload) {
+                        is SwapPayload.EVM -> payload.data.subProvider
+                        is SwapPayload.SwapKit -> payload.data.subProvider
+                        else -> null
+                    }
+                formatSwapKitProviderLabel(subProvider)
+            } else {
+                provider.getSwapProviderId()
+            }
+
         return SwapTransactionUiModel(
             src =
                 ValuedToken(
@@ -91,7 +108,7 @@ constructor(
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue, asFee = true),
-            provider = provider.getSwapProviderId(),
+            provider = providerLabel,
         )
     }
 }

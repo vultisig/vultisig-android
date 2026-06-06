@@ -283,6 +283,7 @@ constructor(
                                 toAmountDecimal = dstTokenValue.decimal,
                                 quote = quoteData,
                                 provider = quote.provider,
+                                subProvider = quote.subProvider,
                             )
                         ),
                 )
