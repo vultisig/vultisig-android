@@ -800,6 +800,8 @@ constructor(
                     // keep it as the canonical id. The sub-provider drives the UI label below.
                     provider = SwapProvider.SWAPKIT.getSwapProviderId(),
                     subProvider = evmResult.subProvider,
+                    // Correlation key for `/track` settlement gating of this cross-chain swap.
+                    swapId = evmResult.swapId,
                 )
             }
         // Read the sub-provider off the returned quote (not a hoisted var): a cache HIT skips the

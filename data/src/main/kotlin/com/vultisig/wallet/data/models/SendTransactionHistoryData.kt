@@ -57,6 +57,15 @@ data class SwapTransactionHistoryData(
     val toTokenLogo: String,
     val provider: String,
     val fiatValue: String,
+    /**
+     * SwapKit `/v3/swap` swap id, persisted as the `/track` correlation key so a cross-chain
+     * SwapKit swap's Success is gated on the destination-leg settlement rather than the
+     * source-chain deposit (see
+     * [com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase]). Null for non-SwapKit
+     * providers and for legacy rows recorded before this field existed (serialized as JSON into the
+     * `payload` column, so a default keeps old rows readable — no Room migration).
+     */
+    val swapId: String? = null,
 ) : TransactionHistoryData
 
 internal fun TransactionHistoryData.toEntity(

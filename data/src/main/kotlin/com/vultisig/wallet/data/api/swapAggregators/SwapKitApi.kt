@@ -6,6 +6,8 @@ import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteResponseJson
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitSwapResponseJson
+import com.vultisig.wallet.data.api.models.quotes.SwapKitTrackRequest
+import com.vultisig.wallet.data.api.models.quotes.SwapKitTrackResponseJson
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.accept
@@ -36,6 +38,7 @@ import kotlinx.serialization.json.JsonPrimitive
  * - [quote] — POST /v3/quote: candidate routes
  * - [swap] — POST /v3/swap: unsigned tx for the winning route
  * - [providers] — GET /providers: per-provider chain enablement (cached upstream, 24h TTL)
+ * - [track] — POST /track: destination-leg settlement status for a broadcast swap
  */
 interface SwapKitApi {
 
@@ -47,6 +50,13 @@ interface SwapKitApi {
 
     /** Returns the set of chains each sub-provider currently routes on. */
     suspend fun providers(): SwapKitProvidersResponseJson
+
+    /**
+     * Settlement status for a broadcast swap, keyed off the on-chain broadcast hash + source
+     * chainId. Used to gate cross-chain Success on the destination leg rather than the source-chain
+     * deposit. Lives off the bare proxy root (`/track`), not under `/v3` — same as `/providers`.
+     */
+    suspend fun track(request: SwapKitTrackRequest): SwapKitTrackResponseJson
 }
 
 /** Ktor-backed [SwapKitApi] hitting the Vultisig SwapKit proxy with a 30s per-request timeout. */
@@ -66,6 +76,15 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
     override suspend fun swap(request: SwapKitSwapRequest): SwapKitSwapResponseJson =
         execute(SWAP_URL) {
             httpClient.post(SWAP_URL) {
+                headers { accept(ContentType.Application.Json) }
+                contentType(ContentType.Application.Json)
+                setBody(json.encodeToString(request))
+            }
+        }
+
+    override suspend fun track(request: SwapKitTrackRequest): SwapKitTrackResponseJson =
+        execute(TRACK_URL) {
+            httpClient.post(TRACK_URL) {
                 headers { accept(ContentType.Application.Json) }
                 contentType(ContentType.Application.Json)
                 setBody(json.encodeToString(request))
@@ -163,6 +182,8 @@ constructor(private val httpClient: HttpClient, private val json: Json) : SwapKi
         private const val QUOTE_URL = "$BASE_URL/v3/quote"
         private const val SWAP_URL = "$BASE_URL/v3/swap"
         private const val PROVIDERS_URL = "$BASE_URL/providers"
+        // `/track` (like `/providers`) is unversioned — it sits off the bare proxy root, not /v3.
+        private const val TRACK_URL = "$BASE_URL/track"
         private const val REQUEST_TIMEOUT_MS = 30_000L
     }
 }

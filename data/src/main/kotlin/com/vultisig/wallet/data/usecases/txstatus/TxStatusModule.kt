@@ -8,6 +8,8 @@ import com.vultisig.wallet.data.api.txstatus.PolkadotStatusProvider
 import com.vultisig.wallet.data.api.txstatus.RippleStatusProvider
 import com.vultisig.wallet.data.api.txstatus.SolanaStatusProvider
 import com.vultisig.wallet.data.api.txstatus.SuiStatusProvider
+import com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService
+import com.vultisig.wallet.data.api.txstatus.SwapKitTrackingServiceImpl
 import com.vultisig.wallet.data.api.txstatus.ThorMayaChainStatusProvider
 import com.vultisig.wallet.data.api.txstatus.TonStatusProvider
 import com.vultisig.wallet.data.api.txstatus.TronStatusProvider
@@ -98,6 +100,10 @@ internal interface TxStatusModule {
     @Binds
     @Singleton
     fun bindPollingTxStatusUseCase(impl: PollingTxStatusUseCaseImpl): PollingTxStatusUseCase
+
+    @Binds
+    @Singleton
+    fun bindSwapKitTrackingService(impl: SwapKitTrackingServiceImpl): SwapKitTrackingService
 }
 
 @Qualifier @Retention(AnnotationRetention.BINARY) annotation class EvmTxStatus

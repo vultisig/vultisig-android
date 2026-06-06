@@ -122,6 +122,7 @@ internal class KeysignViewModelBroadcastRecoveryTest {
             transactionHistoryRepository = mockk(relaxed = true),
             balanceRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),
+            swapKitTrackingService = mockk(relaxed = true),
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
 }

@@ -1,8 +1,12 @@
 package com.vultisig.wallet.data.usecases
 
 import com.vultisig.wallet.data.IoDispatcher
+import com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService
 import com.vultisig.wallet.data.db.models.TransactionHistoryEntity
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.SwapProvider
+import com.vultisig.wallet.data.models.SwapTransactionHistoryData
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TransactionStatusRepository
@@ -28,6 +32,7 @@ class RefreshPendingTransactionsUseCaseImpl
 constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val transactionStatusRepository: TransactionStatusRepository,
+    private val swapKitTrackingService: SwapKitTrackingService,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : RefreshPendingTransactionsUseCase {
 
@@ -54,7 +59,7 @@ constructor(
                 }
 
         try {
-            val result = transactionStatusRepository.checkTransactionStatus(tx.txHash, chain)
+            val result = checkStatus(tx, chain)
             transactionHistoryRepository.updateTransactionStatus(tx.chain, tx.txHash, result)
         } catch (e: CancellationException) {
             throw e
@@ -63,6 +68,25 @@ constructor(
             runSafeCatching {
                 transactionHistoryRepository.incrementRetryCount(tx.chain, tx.txHash)
             }
+        }
+    }
+
+    /**
+     * Resolve the settlement status for [tx]. A SwapKit-routed swap on a `/track`-capable source
+     * chain is gated on the destination-leg settlement (`/track`) — the same way THORChain/Maya
+     * swaps are gated through `ThorMayaChainStatusProvider` — so a cross-chain swap (e.g. ETH→SOL)
+     * isn't marked Success the instant its source-chain deposit confirms. Every other transaction
+     * (sends, same-chain non-SwapKit swaps, SwapKit on a chain `/track` can't address) keeps the
+     * existing source-chain-by-tx-hash check unchanged.
+     */
+    private suspend fun checkStatus(tx: TransactionHistoryEntity, chain: Chain): TransactionResult {
+        val isSwapKitSwap =
+            (tx.payload as? SwapTransactionHistoryData)?.provider ==
+                SwapProvider.SWAPKIT.getSwapProviderId()
+        return if (isSwapKitSwap && swapKitTrackingService.canTrack(chain)) {
+            swapKitTrackingService.checkSettlementStatus(tx.txHash, chain)
+        } else {
+            transactionStatusRepository.checkTransactionStatus(tx.txHash, chain)
         }
     }
 
