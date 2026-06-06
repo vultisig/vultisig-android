@@ -296,6 +296,111 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
+    fun `fetchBestQuote prefers higher-priority provider on a near-tie within the 1pct band`() =
+        runTest {
+            // THORChain (priority 0) prices the dst slightly lower than SwapKit (priority 2), but
+            // within the 1% band (99.5 vs 100, floor = 99). Both are in-band, so the banded layer
+            // tilts to the higher-priority THORChain instead of the marginally larger raw output.
+            val best = rankTwoProviders(thorFiat = "99.5", swapKitFiat = "100")
+
+            assertEquals(SwapProvider.THORCHAIN, best.candidate.provider)
+            assertEquals(BigDecimal("99.5"), best.result.estimatedDstFiat.value)
+        }
+
+    @Test
+    fun `fetchBestQuote keeps the materially-better quote when it is outside the 1pct band`() =
+        runTest {
+            // THORChain prices 2% below SwapKit (98 vs 100, floor = 99). THORChain falls outside
+            // the
+            // band, so the priority preference does not apply and the better-rate SwapKit wins.
+            val best = rankTwoProviders(thorFiat = "98", swapKitFiat = "100")
+
+            assertEquals(SwapProvider.SWAPKIT, best.candidate.provider)
+            assertEquals(BigDecimal("100"), best.result.estimatedDstFiat.value)
+        }
+
+    /**
+     * Runs [SwapQuoteManager.fetchBestQuote] over a THORChain + SwapKit candidate pair on a
+     * BTC->ETH pair, where each provider's dst is converted to [thorFiat] / [swapKitFiat]
+     * respectively. The raw dst token amounts are arbitrary; ranking is driven purely by the mocked
+     * fiat values.
+     */
+    private suspend fun rankTwoProviders(thorFiat: String, swapKitFiat: String): BestQuote {
+        val btc = coin(Chain.Bitcoin, "BTC", address = "bc1qsrc", decimals = 8)
+        val eth = coin(Chain.Ethereum, "ETH", address = "0xdst", decimals = 18)
+
+        val thorDst = TokenValue(BigInteger.valueOf(100), eth)
+        val swapKitDst = TokenValue(BigInteger.valueOf(200), eth)
+
+        val thorQuote =
+            SwapQuote.ThorChain(
+                expectedDstValue = thorDst,
+                fees = TokenValue(BigInteger.ZERO, eth),
+                expiredAt = Clock.System.now().plus(5.minutes),
+                recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
+                data =
+                    THORChainSwapQuote(
+                        dustThreshold = null,
+                        expectedAmountOut = "100",
+                        expiry = BigInteger.ZERO,
+                        fees = Fees(affiliate = "0", asset = "0", outbound = "0", total = "0"),
+                        inboundAddress = "thorinbound",
+                        inboundConfirmationBlocks = null,
+                        inboundConfirmationSeconds = null,
+                        maxStreamingQuantity = 0,
+                        memo = "memo",
+                        notes = "",
+                        outboundDelayBlocks = BigInteger.ZERO,
+                        outboundDelaySeconds = BigInteger.ZERO,
+                        recommendedMinAmountIn = "0",
+                        streamingSwapBlocks = BigInteger.ZERO,
+                        totalSwapSeconds = 0L,
+                        warning = "",
+                        router = null,
+                        error = null,
+                    ),
+            )
+        val swapKitQuote =
+            SwapQuote.SwapKit(
+                expectedDstValue = swapKitDst,
+                fees = TokenValue(BigInteger.valueOf(400), btc),
+                expiredAt = Clock.System.now().plus(5.minutes),
+                data = mockk(relaxed = true),
+                subProvider = null,
+            )
+
+        coEvery { tokenRepository.getNativeToken(any()) } returns btc
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        coEvery { convertTokenValueToFiat(any(), thorDst, any()) } returns
+            FiatValue(BigDecimal(thorFiat), "USD")
+        coEvery { convertTokenValueToFiat(any(), swapKitDst, any()) } returns
+            FiatValue(BigDecimal(swapKitFiat), "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } returns
+            SwapQuoteResult.Native(thorQuote)
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, any()) } returns
+            SwapQuoteResult.Native(swapKitQuote)
+
+        return createManager()
+            .fetchBestQuote(
+                candidates =
+                    listOf(
+                        QuoteCandidate(SwapProvider.THORCHAIN, null, null),
+                        QuoteCandidate(SwapProvider.SWAPKIT, null, null),
+                    ),
+                src = mockk(relaxed = true),
+                dst = mockk(relaxed = true),
+                srcToken = btc,
+                dstToken = eth,
+                srcTokenValue = BigInteger.ONE,
+                tokenValue = TokenValue(BigInteger.ONE, btc),
+                currency = AppCurrency.USD,
+                amount = BigDecimal.ONE,
+            )
+    }
+
+    @Test
     fun `computeIndicativeQuote derives dst from cached spot prices`() = runTest {
         val src = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
         val dst = coin(Chain.Bitcoin, "BTC", "btc", 8)
