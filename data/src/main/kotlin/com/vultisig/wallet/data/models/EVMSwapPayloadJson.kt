@@ -12,9 +12,17 @@ data class EVMSwapPayloadJson(
     val quote: EVMSwapQuoteJson,
     val provider: String,
     /**
-     * SwapKit sub-provider (Chainflip / NEAR / Garden) carried on the persisted payload so the done
-     * screen and history render `SwapKit (<sub-provider>)` instead of the collapsed canonical
-     * [provider] `"SwapKit"`. Null for 1inch / Kyber / LI.FI, whose [provider] is already specific.
+     * SwapKit sub-provider (Chainflip / NEAR / Garden) used so the done screen renders `SwapKit
+     * (<sub-provider>)` instead of the collapsed canonical [provider] `"SwapKit"`. Null for 1inch /
+     * Kyber / LI.FI, whose [provider] is already specific.
+     *
+     * In-memory only for EVM/Solana SwapKit routes: these ride on the `OneInchSwapPayload` proto,
+     * which has no `sub_provider` field, so the value is NOT round-tripped through the keysign
+     * proto. Peer devices in a multi-device keysign reconstruct it as `null` (their done screen
+     * shows plain `SwapKit`), and any reload from the persisted proto loses it too. Native
+     * (non-EVM) SwapKit routes persist correctly via `swapkit_swap_payload.proto`'s `sub_provider`
+     * field. Full EVM parity needs a `sub_provider` field on `OneInchSwapPayload` (a commondata
+     * proto change).
      */
     val subProvider: String? = null,
 )

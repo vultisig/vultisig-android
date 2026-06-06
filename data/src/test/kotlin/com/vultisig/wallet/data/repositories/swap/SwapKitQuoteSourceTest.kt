@@ -1,6 +1,7 @@
 package com.vultisig.wallet.data.repositories.swap
 
 import com.vultisig.wallet.data.api.errors.SwapKitError
+import com.vultisig.wallet.data.api.models.quotes.SwapKitApprovalTx
 import com.vultisig.wallet.data.api.models.quotes.SwapKitFee
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteRequest
 import com.vultisig.wallet.data.api.models.quotes.SwapKitQuoteResponseJson
@@ -53,6 +54,12 @@ internal class SwapKitQuoteSourceTest {
     private val api: SwapKitApi = mockk()
     private val config: SwapKitConfig = mockk()
     private val json = Json { ignoreUnknownKeys = true }
+
+    // ERC20 approve(address,uint256) calldata fragments for the approval-spender decode tests.
+    private val SPENDER_HEX = "6c0ad82f9721a6dc986381d19338601a2e6370e5"
+    private val SPENDER_WORD = "0".repeat(24) + SPENDER_HEX // 32-byte left-padded spender word
+    private val MAX_AMOUNT_WORD = "f".repeat(64) // 32-byte amount word
+    private val APPROVE_SELECTOR = "095ea7b3"
 
     private fun source(): SwapKitQuoteSource = SwapKitQuoteSource(api, config, json)
 
@@ -1460,6 +1467,211 @@ internal class SwapKitQuoteSourceTest {
         assertThrows<SwapKitError.Decoding> { source().fetch(request(srcToken = tonCoin())) }
     }
 
+    @Test
+    fun `fetch throws QuoteDeviation when the buy amount is just below the max-slippage floor`() =
+        runTest {
+            // A well-formed route has expectedBuyAmount >= expectedBuyAmountMaxSlippage, so a buy
+            // amount under the 0.99 * maxSlippage floor signals inconsistent/manipulated data — the
+            // client-side guard rejects it even if the server-only outputAmountDeviationTooHigh
+            // check was skipped, before the /v3/swap call is made.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r",
+                                providers = listOf("CHAINFLIP"),
+                                expectedBuy = "98",
+                                maxSlippage = "100",
+                            )
+                        )
+                )
+
+            // floor = 100 * (1 - 0.01) = 99; 98 < 99 → rejected.
+            assertThrows<SwapKitError.QuoteDeviation> { source().fetch(request()) }
+        }
+
+    @Test
+    fun `fetch accepts a route whose buy amount sits exactly at the max-slippage floor`() =
+        runTest {
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r",
+                                providers = listOf("CHAINFLIP"),
+                                expectedBuy = "99",
+                                maxSlippage = "100",
+                            )
+                        )
+                )
+            coEvery { api.swap(any()) } returns evmSwapResponse()
+
+            // floor = 99; 99 < 99 is false → the guard passes and the route is mapped.
+            assertTrue(source().fetch(request()) is SwapQuoteResult.Evm)
+        }
+
+    @Test
+    fun `fetch no-ops the deviation guard when max-slippage is missing or unparseable`() = runTest {
+        // The deviation can't be evaluated without a parseable maxSlippage, so the guard is a no-op
+        // and the route proceeds rather than being rejected.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.swap(any()) } returns evmSwapResponse()
+
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(
+                        route(
+                            routeId = "r",
+                            providers = listOf("CHAINFLIP"),
+                            expectedBuy = "1",
+                            maxSlippage = null,
+                        )
+                    )
+            )
+        assertTrue(source().fetch(request()) is SwapQuoteResult.Evm)
+
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(
+                        route(
+                            routeId = "r",
+                            providers = listOf("CHAINFLIP"),
+                            expectedBuy = "1",
+                            maxSlippage = "not-a-number",
+                        )
+                    )
+            )
+        assertTrue(source().fetch(request()) is SwapQuoteResult.Evm)
+    }
+
+    @Test
+    fun `fetch decodes the approval spender from approvalTx data when meta approvalAddress is absent`() =
+        runTest {
+            // Fallback path: when SwapKit omits meta.approvalAddress, the ERC20 allowance spender
+            // is
+            // recovered from the approve(spender, amount) calldata — NOT approvalTx.to (the asset
+            // contract). Approving the wrong address reverts with ERC20InsufficientAllowance.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1")
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                evmSwapResponse(
+                    approvalAddress = null,
+                    approvalTx =
+                        SwapKitApprovalTx(
+                            to = "0xa0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // asset contract
+                            data = "0x$APPROVE_SELECTOR$SPENDER_WORD$MAX_AMOUNT_WORD",
+                        ),
+                )
+
+            val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+            assertEquals("0x$SPENDER_HEX", result.data.tx.allowanceTarget)
+        }
+
+    @Test
+    fun `fetch decodes the approval spender even when the calldata lacks a 0x prefix`() = runTest {
+        // The decoder strips an optional 0x prefix, so a bare-hex approvalTx.data still resolves.
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            evmSwapResponse(
+                approvalAddress = null,
+                approvalTx =
+                    SwapKitApprovalTx(data = "$APPROVE_SELECTOR$SPENDER_WORD$MAX_AMOUNT_WORD"),
+            )
+
+        val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+        assertEquals("0x$SPENDER_HEX", result.data.tx.allowanceTarget)
+    }
+
+    @Test
+    fun `fetch leaves allowanceTarget null when the approval calldata has the wrong selector`() =
+        runTest {
+            // A non-approve selector is not allowance calldata → decode returns null and, with no
+            // meta.approvalAddress, allowanceTarget stays null (callers fall back to tx.to).
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1")
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                evmSwapResponse(
+                    approvalAddress = null,
+                    approvalTx = SwapKitApprovalTx(data = "0xdeadbeef$SPENDER_WORD$MAX_AMOUNT_WORD"),
+                )
+
+            val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+            assertNull(result.data.tx.allowanceTarget)
+        }
+
+    @Test
+    fun `fetch leaves allowanceTarget null when the approval calldata is too short`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(true)
+        coEvery { api.quote(any()) } returns
+            SwapKitQuoteResponseJson(
+                routes =
+                    listOf(route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1"))
+            )
+        coEvery { api.swap(any()) } returns
+            evmSwapResponse(
+                approvalAddress = null,
+                // Selector present but the spender word is truncated.
+                approvalTx = SwapKitApprovalTx(data = "0x${APPROVE_SELECTOR}00"),
+            )
+
+        val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+        assertNull(result.data.tx.allowanceTarget)
+    }
+
+    @Test
+    fun `fetch leaves allowanceTarget null when the approval calldata decodes to the zero address`() =
+        runTest {
+            // A zero-address spender is meaningless for an allowance → reject it rather than emit a
+            // bogus 0x000… target.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(routeId = "r", providers = listOf("ONEINCH"), expectedBuy = "1")
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                evmSwapResponse(
+                    approvalAddress = null,
+                    approvalTx =
+                        SwapKitApprovalTx(
+                            data = "0x$APPROVE_SELECTOR${"0".repeat(64)}$MAX_AMOUNT_WORD"
+                        ),
+                )
+
+            val result = source().fetch(request()) as SwapQuoteResult.Evm
+
+            assertNull(result.data.tx.allowanceTarget)
+        }
+
     // ---- helpers ----
 
     private fun request(
@@ -1482,11 +1694,13 @@ internal class SwapKitQuoteSourceTest {
         providers: List<String>,
         expectedBuy: String? = "1",
         fees: List<SwapKitFee> = emptyList(),
+        maxSlippage: String? = null,
     ) =
         SwapKitRoute(
             routeId = routeId,
             providers = providers,
             expectedBuyAmount = expectedBuy,
+            expectedBuyAmountMaxSlippage = maxSlippage,
             fees = fees,
         )
 
@@ -1501,6 +1715,7 @@ internal class SwapKitQuoteSourceTest {
         providers: List<String> = listOf("CHAINFLIP"),
         metaSubProvider: String? = null,
         approvalAddress: String? = null,
+        approvalTx: SwapKitApprovalTx? = null,
         fees: List<SwapKitFee> = emptyList(),
     ) =
         SwapKitSwapResponseJson(
@@ -1521,6 +1736,7 @@ internal class SwapKitQuoteSourceTest {
                     approvalAddress = approvalAddress,
                 ),
             expectedBuyAmount = expectedBuy,
+            approvalTx = approvalTx,
             fees = fees,
             providers = providers,
         )
