@@ -286,30 +286,39 @@ fun ActionButton(
                 }
             },
         shape = RoundedCornerShape(50),
-        contentPadding = PaddingValues(start = 4.dp, top = 6.dp, end = 16.dp, bottom = 6.dp),
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
         modifier = modifier.height(42.dp).actionButtonInnerBevel(enabled = enabled),
     ) {
-        if (icon != null) {
-            Box(
-                modifier =
-                    Modifier.size(30.dp)
-                        .background(
-                            if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
-                            RoundedCornerShape(50),
-                        ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(id = icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp),
-                    tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
-                )
+        // Figma docks the icon to the button's leading edge while the label stays centered across
+        // the full width, so the icon is absolutely positioned and the text is centered on top.
+        Box(modifier = Modifier.fillMaxWidth()) {
+            if (icon != null) {
+                Box(
+                    modifier =
+                        Modifier.align(Alignment.CenterStart)
+                            .size(30.dp)
+                            .background(
+                                if (enabled) iconCircleColor
+                                else iconCircleColor.copy(alpha = 0.5f),
+                                RoundedCornerShape(50),
+                            ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
+                    )
+                }
             }
-            UiSpacer(5.dp)
-        }
 
-        Text(text = title, style = Theme.brockmann.button.medium.medium)
+            Text(
+                text = title,
+                style = Theme.brockmann.button.medium.medium,
+                modifier = Modifier.align(Alignment.Center),
+            )
+        }
     }
 }
 
