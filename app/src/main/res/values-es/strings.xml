@@ -2,7 +2,6 @@
 <resources>
     <string name="keysign">Signo de clave</string>
     <string name="signing_error_please_try_again_s">Error al Firmar. Por favor intenta de nuevo. %s</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos.\nAsegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
     <string name="try_again">Intentar de Nuevo</string>
     <string name="vault_settings_title">Configuración de la Bóveda</string>
     <string name="vault_settings_details_title">Detalles</string>
