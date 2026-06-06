@@ -377,8 +377,38 @@ constructor(
         // for THOR/MAYA (their expectedAmountOut is already net of protocol fees)
         // and mix apples-to-oranges since swapFeeFiat is gas for 1inch/Kyber but
         // an integrator fee for LI.FI.
-        return successes.maxBy { it.result.estimatedDstFiat.value }
+        //
+        // On top of that metric a banded provider-preference layer applies: among
+        // quotes within PROVIDER_PREFERENCE_BAND (1%) of the best output, the
+        // highest-priority provider wins instead of the raw maximum. This keeps
+        // near-tie routes on the more trusted/integrated provider without ever
+        // trading away a materially better rate (anything outside the band loses
+        // on output). iOS is the cross-platform anchor for this rule; the canonical
+        // spec lives in vultisig-sdk and other platforms mirror this implementation.
+        val best = successes.maxBy { it.result.estimatedDstFiat.value }
+        val floor = best.result.estimatedDstFiat.value * (BigDecimal.ONE - PROVIDER_PREFERENCE_BAND)
+        val inBand = successes.filter { it.result.estimatedDstFiat.value >= floor }
+        return inBand.minWithOrNull(
+            compareBy<BestQuote> { providerPriority(it.candidate.provider) }
+                .thenByDescending { it.result.estimatedDstFiat.value }
+        ) ?: best
     }
+
+    /**
+     * Provider preference order for the banded selection. Lower index = preferred. THORChain is
+     * most preferred, then MayaChain, SwapKit, KyberSwap, 1inch, LI.FI; Jupiter (Solana-only,
+     * rarely competing in the same candidate set) ranks last.
+     */
+    private fun providerPriority(provider: SwapProvider): Int =
+        when (provider) {
+            SwapProvider.THORCHAIN -> 0
+            SwapProvider.MAYA -> 1
+            SwapProvider.SWAPKIT -> 2
+            SwapProvider.KYBER -> 3
+            SwapProvider.ONEINCH -> 4
+            SwapProvider.LIFI -> 5
+            SwapProvider.JUPITER -> 6
+        }
 
     /**
      * Ranks a failed-quote [error] so the most actionable failure is surfaced when every provider
@@ -991,6 +1021,12 @@ constructor(
          * Matches the firm quote's UI formatter cap so the indicative value never out-renders it.
          */
         private const val MAX_INDICATIVE_DECIMALS = 8
+        /**
+         * Width of the priority band, as a fraction of the best output. Quotes whose output lands
+         * within this band of the best are treated as effectively tied on rate, so the
+         * higher-priority provider is preferred over a marginally larger raw output. 1%.
+         */
+        private val PROVIDER_PREFERENCE_BAND = BigDecimal("0.01")
     }
 }
 
