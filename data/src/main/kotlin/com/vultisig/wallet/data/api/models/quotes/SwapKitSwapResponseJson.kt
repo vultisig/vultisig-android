@@ -35,6 +35,11 @@ data class SwapKitSwapResponseJson(
     @SerialName("meta") val meta: SwapKitTxMeta,
     @SerialName("targetAddress") val targetAddress: String? = null,
     @SerialName("expectedBuyAmount") val expectedBuyAmount: String? = null,
+    // Max-slippage floor on the executed `/v3/swap` route. Decoded here (mirrors iOS' swap reply)
+    // so the client output-deviation guard can be re-run against the SIGNED amount — a proxy that
+    // degrades only the swap reply (leaving the `/v3/quote` route clean) would otherwise bypass the
+    // guard, since the signed amount is scaled from this reply, not the quote route.
+    @SerialName("expectedBuyAmountMaxSlippage") val expectedBuyAmountMaxSlippage: String? = null,
     // Source-chain fee breakdown on the executed route. The `type == "inbound"` entry is the
     // canonical deposit cost; read it from here (not the /v3/quote route) so a repriced fee on the
     // refreshed /v3/swap reply stays fresh. Mirrors iOS' SwapKitSwapResponse.fees.
@@ -63,8 +68,6 @@ data class SwapKitSwapResponseJson(
 @Serializable
 data class SwapKitApprovalTx(
     @SerialName("to") val to: String? = null,
-    @SerialName("from") val from: String? = null,
-    @SerialName("value") val value: String? = null,
     @SerialName("data") val data: String? = null,
 )
 

@@ -163,6 +163,17 @@ constructor(
         //  specific quote. The DTO already carries it; the persistence wiring lands with the
         //  tx-history Phase D work.
 
+        // Re-run the deviation guard against the SIGNED amount: the buy amount that ends up in the
+        // payload is scaled from this `/v3/swap` reply, not the `/v3/quote` route checked above. A
+        // proxy that degrades only the swap reply (leaving the quote route clean) would otherwise
+        // slip past the guard. No-op when the reply omits either amount.
+        assertWithinDeviationTolerance(
+            best.copy(
+                expectedBuyAmount = swapResponse.expectedBuyAmount,
+                expectedBuyAmountMaxSlippage = swapResponse.expectedBuyAmountMaxSlippage,
+            )
+        )
+
         // Sub-provider tag (Chainflip / NEAR Intents / Garden / Flashnet) — surfaced on the verify
         // screen so the user can reason about ETA and debug routing. Prefer
         // `swapResponse.providers[0]`

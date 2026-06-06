@@ -1551,6 +1551,57 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetch throws QuoteDeviation when the swap reply buy amount slips below its own floor`() =
+        runTest {
+            // The signed amount is scaled from the /v3/swap reply, not the /v3/quote route. A proxy
+            // that degrades only the swap reply (leaving the quote route clean) must still be
+            // caught
+            // by re-running the deviation guard against the swap reply's amounts.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r",
+                                providers = listOf("CHAINFLIP"),
+                                expectedBuy = "100",
+                                maxSlippage = "100",
+                            )
+                        )
+                )
+            // Quote route is clean (100 >= floor 99), but the swap reply degrades to 98 < floor 99.
+            coEvery { api.swap(any()) } returns
+                evmSwapResponse(expectedBuy = "98", expectedBuyMaxSlippage = "100")
+
+            assertThrows<SwapKitError.QuoteDeviation> { source().fetch(request()) }
+        }
+
+    @Test
+    fun `fetch no-ops the swap-reply deviation guard when the reply omits the max-slippage floor`() =
+        runTest {
+            // The swap reply commonly omits expectedBuyAmountMaxSlippage; the re-check is a no-op
+            // then and the route proceeds (the /v3/quote route guard already passed above).
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "r",
+                                providers = listOf("CHAINFLIP"),
+                                expectedBuy = "100",
+                                maxSlippage = "100",
+                            )
+                        )
+                )
+            coEvery { api.swap(any()) } returns
+                evmSwapResponse(expectedBuy = "98", expectedBuyMaxSlippage = null)
+
+            assertTrue(source().fetch(request()) is SwapQuoteResult.Evm)
+        }
+
+    @Test
     fun `fetch decodes the approval spender from approvalTx data when meta approvalAddress is absent`() =
         runTest {
             // Fallback path: when SwapKit omits meta.approvalAddress, the ERC20 allowance spender
@@ -1712,6 +1763,7 @@ internal class SwapKitQuoteSourceTest {
         data: String = "0xdata",
         value: String = "0",
         expectedBuy: String? = "1",
+        expectedBuyMaxSlippage: String? = null,
         providers: List<String> = listOf("CHAINFLIP"),
         metaSubProvider: String? = null,
         approvalAddress: String? = null,
@@ -1736,6 +1788,7 @@ internal class SwapKitQuoteSourceTest {
                     approvalAddress = approvalAddress,
                 ),
             expectedBuyAmount = expectedBuy,
+            expectedBuyAmountMaxSlippage = expectedBuyMaxSlippage,
             approvalTx = approvalTx,
             fees = fees,
             providers = providers,
