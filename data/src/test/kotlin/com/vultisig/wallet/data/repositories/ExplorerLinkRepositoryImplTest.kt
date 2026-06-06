@@ -1,6 +1,17 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.EVMSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapKitSwapPayloadJson
+import com.vultisig.wallet.data.models.SwapProvider
+import com.vultisig.wallet.data.models.getSwapProviderId
+import com.vultisig.wallet.data.models.payload.SwapPayload
+import java.math.BigDecimal
+import java.math.BigInteger
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -65,6 +76,51 @@ class ExplorerLinkRepositoryImplTest {
     }
 
     @Test
+    fun `SwapKit native route Track link points to SwapKit tracker with slug chainId`() {
+        val hash = "abc123bitcoinhash"
+        val link = repository.getSwapProgressLink(hash, swapKitNativePayload(Chain.Bitcoin))
+        assertEquals("https://track.swapkit.dev/?hash=$hash&chainId=bitcoin", link)
+    }
+
+    @Test
+    fun `SwapKit-routed EVM Track link uses decimal chainId and keeps 0x hash`() {
+        val hash = "0x0ae1d2cacbc01f3f1326e8affaddc8dc9718e8cd3e9ca2770f9cbeae5635f90b"
+        val link =
+            repository.getSwapProgressLink(
+                hash,
+                evmPayload(Chain.Ethereum, SwapProvider.SWAPKIT.getSwapProviderId()),
+            )
+        assertEquals("https://track.swapkit.dev/?hash=$hash&chainId=1", link)
+    }
+
+    @Test
+    fun `non-SwapKit EVM route Track link is unchanged`() {
+        val hash = "0xdeadbeef"
+        val link =
+            repository.getSwapProgressLink(
+                hash,
+                evmPayload(Chain.Ethereum, SwapProvider.LIFI.getSwapProviderId()),
+            )
+        assertEquals("https://scan.li.fi/tx/$hash", link)
+    }
+
+    @Test
+    fun `SwapKit-routed EVM on untrackable source chain falls back to source-chain path`() {
+        // Hyperliquid is EVM-shaped but outside SwapKit's /track catalogue, so the SwapKit branch
+        // is skipped and the existing EVM source-chain logic applies (empty swapFee -> null).
+        val link =
+            repository.getSwapProgressLink(
+                "0xabc",
+                evmPayload(
+                    Chain.Hyperliquid,
+                    SwapProvider.SWAPKIT.getSwapProviderId(),
+                    swapFee = "",
+                ),
+            )
+        assertEquals(null, link)
+    }
+
+    @Test
     fun `all chains produce address links without throwing`() {
         for (chain in Chain.entries) {
             val link = repository.getAddressLink(chain, "test_address")
@@ -73,4 +129,44 @@ class ExplorerLinkRepositoryImplTest {
             }
         }
     }
+
+    private fun coin(chain: Chain) = Coin.EMPTY.copy(chain = chain)
+
+    private fun swapKitNativePayload(srcChain: Chain) =
+        SwapPayload.SwapKit(
+            SwapKitSwapPayloadJson(
+                fromCoin = coin(srcChain),
+                toCoin = coin(Chain.Ethereum),
+                fromAmount = BigInteger.ONE,
+                toAmountDecimal = BigDecimal.ONE,
+                txType = SwapKitSwapPayloadJson.TX_TYPE_PSBT,
+                txPayload = ByteArray(0),
+                targetAddress = "addr",
+            )
+        )
+
+    private fun evmPayload(srcChain: Chain, provider: String, swapFee: String = "0") =
+        SwapPayload.EVM(
+            EVMSwapPayloadJson(
+                fromCoin = coin(srcChain),
+                toCoin = coin(Chain.Solana),
+                fromAmount = BigInteger.ONE,
+                toAmountDecimal = BigDecimal.ONE,
+                quote =
+                    EVMSwapQuoteJson(
+                        dstAmount = "1",
+                        tx =
+                            OneInchSwapTxJson(
+                                from = "from",
+                                to = "to",
+                                gas = 0,
+                                data = "0x",
+                                value = "0",
+                                gasPrice = "0",
+                                swapFee = swapFee,
+                            ),
+                    ),
+                provider = provider,
+            )
+        )
 }
