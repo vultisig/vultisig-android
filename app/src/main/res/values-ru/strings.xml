@@ -1283,7 +1283,7 @@
     <string name="cosmos_staking_delegate_new_validator">Делегировать новому валидатору</string>
     <string name="cosmos_staking_delegate_title">Стейк %1$s</string>
     <string name="cosmos_staking_insufficient_gas">Недостаточно %1$s для газа — получите с меньшего числа валидаторов</string>
-    <string name="cosmos_staking_next_award">Следующая награда</string>
+    <string name="cosmos_staking_next_award">Доступные награды</string>
     <string name="cosmos_staking_no_validators_found">Валидаторы не найдены</string>
     <string name="cosmos_staking_pending_unbondings">Ожидающие отвязки</string>
     <string name="cosmos_staking_redelegate_source">От валидатора</string>

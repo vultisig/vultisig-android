@@ -1265,7 +1265,7 @@
     <string name="cosmos_staking_delegate_new_validator">Delegeren aan nieuwe validator</string>
     <string name="cosmos_staking_delegate_title">%1$s staken</string>
     <string name="cosmos_staking_insufficient_gas">Onvoldoende %1$s voor gas — claim van minder validators</string>
-    <string name="cosmos_staking_next_award">Volgende beloning</string>
+    <string name="cosmos_staking_next_award">Opvraagbare beloningen</string>
     <string name="cosmos_staking_no_validators_found">Geen validators gevonden</string>
     <string name="cosmos_staking_pending_unbondings">Lopende ontbindingen</string>
     <string name="cosmos_staking_redelegate_source">Van validator</string>

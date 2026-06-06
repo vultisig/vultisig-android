@@ -1281,7 +1281,7 @@
     <string name="cosmos_staking_delegate_new_validator">Delegiraj na novi validator</string>
     <string name="cosmos_staking_delegate_title">Stake %1$s</string>
     <string name="cosmos_staking_insufficient_gas">Nedovoljno %1$s za gas — preuzmi od manje validatora</string>
-    <string name="cosmos_staking_next_award">Sljedeća nagrada</string>
+    <string name="cosmos_staking_next_award">Nagrade za preuzimanje</string>
     <string name="cosmos_staking_no_validators_found">Nije pronađen nijedan validator</string>
     <string name="cosmos_staking_pending_unbondings">Razdvajanja na čekanju</string>
     <string name="cosmos_staking_redelegate_source">Od validatora</string>
