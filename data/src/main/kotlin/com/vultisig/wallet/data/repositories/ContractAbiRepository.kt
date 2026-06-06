@@ -1,9 +1,11 @@
 package com.vultisig.wallet.data.repositories
 
+import androidx.annotation.VisibleForTesting
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.api.SourcifyApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
+import com.vultisig.wallet.data.models.oneInchChainId
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration
@@ -60,11 +62,30 @@ constructor(
     private var clock: () -> Long = { System.currentTimeMillis() }
     private var ttl: Duration = DEFAULT_TTL
 
+    /** Test-only seam for the [clock]/[ttl] expiry path, mirroring `TokenMetadataResolver`. */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal constructor(
+        sourcifyApi: SourcifyApi,
+        ioDispatcher: CoroutineDispatcher,
+        clock: () -> Long,
+        ttl: Duration,
+    ) : this(sourcifyApi, ioDispatcher) {
+        this.clock = clock
+        this.ttl = ttl
+    }
+
     private val mutex = Mutex()
     // Cache is keyed per contract and holds the whole parsed ABI as canonical-signature -> params.
     // An empty map is a valid, cacheable result: it means "verified-or-not, nothing here we can
     // match" and stops us re-hitting Sourcify for the same contract every time a row renders.
-    private val cache = mutableMapOf<String, CacheEntry>()
+    // Bounded LRU (access-order) so a long session over many dApp contracts can't grow it without
+    // bound; every access already happens under [mutex], so the non-thread-safe map is safe here.
+    private val cache =
+        object : LinkedHashMap<String, CacheEntry>(16, 0.75f, true) {
+            override fun removeEldestEntry(
+                eldest: MutableMap.MutableEntry<String, CacheEntry>
+            ): Boolean = size > MAX_CACHE_ENTRIES
+        }
     private val inFlight = mutableMapOf<String, CompletableDeferred<Map<String, List<AbiParam>>>>()
 
     override suspend fun resolveParams(
@@ -128,8 +149,11 @@ constructor(
             owned.complete(abi)
             return abi
         } catch (e: CancellationException) {
+            // Only this fetch was cancelled — coalesced followers awaiting [owned] were not, so
+            // complete them with the same "nothing to add" empty map rather than cancelling the
+            // shared deferred and throwing CancellationException at them.
             mutex.withLock { inFlight.remove(key) }
-            owned.cancel(e)
+            owned.complete(emptyMap())
             throw e
         } catch (e: Exception) {
             // Transport failure: complete followers with an empty map (same "nothing to add"
@@ -165,26 +189,17 @@ constructor(
     }
 
     /**
-     * Maps an EVM [Chain] to its decimal chain id for Sourcify's path. Doubles as a support
-     * allowlist: chains absent here are simply not queried. Unlisted-but-EVM chains return null
-     * rather than guessing, and an id Sourcify doesn't index just yields a graceful 404.
+     * Maps an EVM [Chain] to its decimal chain id for Sourcify's path by reusing the shared
+     * [oneInchChainId] source, so this can no longer drift from it. [Chain.Sei] is the one EVM
+     * chain Sourcify indexes that 1inch doesn't route (adding it to [oneInchChainId] would wrongly
+     * signal swap support), so it stays the sole documented exception; every other chain tracks the
+     * shared map. Unsupported chains return null (not queried) and an id Sourcify doesn't index
+     * just yields a graceful 404.
      */
     private fun evmChainId(chain: Chain): String? =
         when (chain) {
-            Chain.Ethereum -> "1"
-            Chain.Optimism -> "10"
-            Chain.CronosChain -> "25"
-            Chain.BscChain -> "56"
-            Chain.Polygon -> "137"
-            Chain.ZkSync -> "324"
-            Chain.Hyperliquid -> "999"
             Chain.Sei -> "1329"
-            Chain.Mantle -> "5000"
-            Chain.Base -> "8453"
-            Chain.Arbitrum -> "42161"
-            Chain.Avalanche -> "43114"
-            Chain.Blast -> "81457"
-            else -> null
+            else -> runCatching { chain.oneInchChainId().toString() }.getOrNull()
         }
 
     private data class CacheEntry(val abi: Map<String, List<AbiParam>>, val fetchedAt: Long)
@@ -201,6 +216,10 @@ constructor(
 
     companion object {
         val DEFAULT_TTL: Duration = 24.hours
+
+        // Caps the per-contract ABI cache on this @Singleton so a long multi-dApp session can't
+        // grow it without bound; least-recently-used entries are evicted past this size.
+        private const val MAX_CACHE_ENTRIES = 64
 
         /**
          * Expands an [AbiParam]'s type into its canonical form so it matches a 4byte text signature

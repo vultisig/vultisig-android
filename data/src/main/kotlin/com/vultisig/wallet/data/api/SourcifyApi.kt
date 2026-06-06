@@ -8,6 +8,8 @@ import javax.inject.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Thin client over Sourcify's verified-contract repository. Used by
@@ -23,7 +25,9 @@ internal interface SourcifyApi {
      * Returns the verified ABI for [contractAddress] on the EVM chain [chainId] (decimal string,
      * e.g. `"1"` for Ethereum mainnet) as a raw JSON array, or `null` when the contract is not
      * verified on Sourcify. [contractAddress] may be lower-case — Sourcify's v2 endpoint normalises
-     * it.
+     * it. For an upgradeable proxy, returns the resolved implementation's ABI (via Sourcify's
+     * `proxyResolution`) so the proxied functions are labelled rather than the proxy's own
+     * `upgradeTo` / `implementation` / `admin` surface.
      *
      * Throws on transport failures so the caller can distinguish a definitive "not verified" (null)
      * from a transient outage (exception) and avoid caching the latter.
@@ -34,13 +38,49 @@ internal interface SourcifyApi {
 internal class SourcifyApiImpl @Inject constructor(private val httpClient: HttpClient) :
     SourcifyApi {
     override suspend fun fetchAbi(chainId: String, contractAddress: String): JsonArray? {
-        val response = httpClient.get("$BASE_URL/v2/contract/$chainId/$contractAddress?fields=abi")
+        val root =
+            fetchContract(chainId, contractAddress, withProxyResolution = true) ?: return null
+        // For an upgradeable proxy, `fields=abi` returns only the proxy's own ABI (upgradeTo /
+        // implementation / admin), never the proxied function we want to label, so resolve the
+        // implementation address and fetch its ABI instead. Fall back to the proxy ABI when the
+        // implementation can't be fetched.
+        proxyImplementationAddress(root)?.let { implementation ->
+            fetchContract(chainId, implementation, withProxyResolution = false)
+                ?.let { it["abi"] as? JsonArray }
+                ?.let {
+                    return it
+                }
+        }
+        return root["abi"] as? JsonArray
+    }
+
+    private suspend fun fetchContract(
+        chainId: String,
+        contractAddress: String,
+        withProxyResolution: Boolean,
+    ): JsonObject? {
+        val fields = if (withProxyResolution) "abi,proxyResolution" else "abi"
+        val response =
+            httpClient.get("$BASE_URL/v2/contract/$chainId/$contractAddress?fields=$fields")
         // A 404 means "no verified contract here" — a definitive answer the caller may cache. Any
         // other non-2xx is treated the same (best-effort enrichment), but a thrown transport error
         // still propagates so transient failures are not cached as "unverified".
         if (response.status != HttpStatusCode.OK) return null
-        val root = parser.parseToJsonElement(response.bodyAsText()) as? JsonObject ?: return null
-        return root["abi"] as? JsonArray
+        return parser.parseToJsonElement(response.bodyAsText()) as? JsonObject
+    }
+
+    /**
+     * Returns the implementation address from [root]'s `proxyResolution` block when the contract is
+     * an upgradeable proxy, or null when it isn't a proxy (or no implementation is listed).
+     */
+    private fun proxyImplementationAddress(root: JsonObject): String? {
+        val proxyResolution = root["proxyResolution"] as? JsonObject ?: return null
+        if (proxyResolution["isProxy"]?.jsonPrimitive?.booleanOrNull != true) return null
+        val implementations = proxyResolution["implementations"] as? JsonArray ?: return null
+        return implementations
+            .asSequence()
+            .mapNotNull { (it as? JsonObject)?.get("address")?.jsonPrimitive?.content }
+            .firstOrNull { it.isNotBlank() }
     }
 
     private companion object {

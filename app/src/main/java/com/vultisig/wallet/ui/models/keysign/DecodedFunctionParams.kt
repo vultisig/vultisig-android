@@ -317,6 +317,30 @@ private fun expandParam(
         }
         return
     }
+    val tupleElementType =
+        if (depth < MAX_PARAM_DEPTH && normalized != null) tupleArrayElementType(normalized)
+        else null
+    if (tupleElementType != null) {
+        // A tuple array like `(address,bytes)[]` — expand one entry per element (recursing into the
+        // element tuple) instead of collapsing the whole array into one bracketed leaf, honouring
+        // the per-field expansion the KDoc promises. The element's ABI components are unchanged, so
+        // the same [abi] carries through.
+        val elements = (element as? JsonArray)?.toList().orEmpty()
+        for (k in elements.indices) {
+            if (out.size >= MAX_PARAM_ROWS) return
+            expandParam(
+                type = tupleElementType,
+                element = elements[k],
+                abi = abi,
+                positionalPath = "$positionalPath[$k]",
+                namePath = namePath?.let { "$it[$k]" },
+                depth = depth + 1,
+                contractLabel = contractLabel,
+                out = out,
+            )
+        }
+        return
+    }
     out += leafRow(normalized, element, positionalPath, namePath, contractLabel)
 }
 
@@ -330,7 +354,7 @@ private fun leafRow(
     val value = element?.flatString().orEmpty()
     val isScalar = type != null && !type.endsWith("[]")
     val isAddress = isScalar && type.equals("address", ignoreCase = true)
-    val isBytes = isScalar && type!!.startsWith("bytes", ignoreCase = true)
+    val isBytes = isScalar && type?.startsWith("bytes", ignoreCase = true) == true
     val label =
         if (namePath != null) {
             UiText.DynamicString(namePath)
@@ -348,7 +372,10 @@ private fun leafRow(
         }
     return DecodedFunctionParam(
         label = label,
-        value = UiText.DynamicString(value),
+        // The value is attacker-controlled calldata (e.g. a `string` param), rendered verbatim, so
+        // strip control/bidi codepoints and cap its length the same way [sanitizedName] guards
+        // names. The copyable value below stays full so addresses/bytes can still be copied whole.
+        value = UiText.DynamicString(sanitizedValue(value)),
         // Addresses and bytes are middle-ellipsised by the renderer; keep the full value copyable
         // so
         // nothing the user is signing is hidden behind the truncation.
@@ -357,8 +384,35 @@ private fun leafRow(
     )
 }
 
-/** A plain tuple `(…)` — not a tuple array `(…)[]`, which renders as a single compact leaf row. */
+/** A plain tuple `(…)` — not a tuple array `(…)[]`, which is expanded per element instead. */
 private fun isPlainTuple(type: String): Boolean = type.startsWith("(") && type.endsWith(")")
+
+/**
+ * For a tuple array like `(address,bytes)[]` or `(uint256)[3]` returns the element tuple
+ * `(address,bytes)`; returns null for plain tuples and non-tuple types. Lets the positional
+ * fallback expand each array element rather than flattening the whole array into one leaf row.
+ */
+private fun tupleArrayElementType(type: String): String? {
+    if (!type.startsWith("(") || !type.endsWith("]")) return null
+    var depth = 0
+    var closeIndex = -1
+    for (i in type.indices) {
+        when (type[i]) {
+            '(' -> depth++
+            ')' -> {
+                depth--
+                if (depth == 0) {
+                    closeIndex = i
+                    break
+                }
+            }
+        }
+    }
+    if (closeIndex < 0) return null
+    val suffix = type.substring(closeIndex + 1)
+    if (!suffix.startsWith("[") || !suffix.endsWith("]")) return null
+    return type.substring(0, closeIndex + 1)
+}
 
 /**
  * Accepts an ABI-provided parameter name only when it is a plain solidity identifier of reasonable
@@ -369,15 +423,33 @@ private fun isPlainTuple(type: String): Boolean = type.startsWith("(") && type.e
 private fun sanitizedName(abi: AbiParam?): String? =
     abi?.name?.takeIf { it.length in 1..MAX_PARAM_NAME_LENGTH && it.matches(SOLIDITY_IDENTIFIER) }
 
+/**
+ * Strips control/bidi codepoints (reusing [sanitizeDisplayString]) and caps the length of an
+ * attacker-controlled leaf [raw] value before it is rendered, mirroring the guard [sanitizedName]
+ * already applies to names so a hostile `string` param can't smuggle reordering, invisible content,
+ * or an unbounded blob onto the signing screen.
+ */
+private fun sanitizedValue(raw: String): String {
+    val stripped = sanitizeDisplayString(raw)
+    return if (stripped.length > MAX_PARAM_VALUE_LENGTH) {
+        stripped.take(MAX_PARAM_VALUE_LENGTH) + "…"
+    } else {
+        stripped
+    }
+}
+
 private fun joinNamePath(parent: String?, child: String?): String? =
     when {
-        child == null -> null
-        parent == null -> child
+        // Gate the child on the parent having a name: an anonymous outer tuple with named inner
+        // fields must not render a leaf as a bare `amount` with no `#1.1` anchor — fall back to the
+        // positional path instead, which is less ambiguous than a context-free name.
+        parent == null || child == null -> null
         else -> "$parent.$child"
     }
 
 private val SOLIDITY_IDENTIFIER = Regex("[A-Za-z_][A-Za-z0-9_]*")
 private const val MAX_PARAM_NAME_LENGTH = 40
+private const val MAX_PARAM_VALUE_LENGTH = 256
 private const val MAX_PARAM_DEPTH = 8
 private const val MAX_PARAM_ROWS = 64
 
