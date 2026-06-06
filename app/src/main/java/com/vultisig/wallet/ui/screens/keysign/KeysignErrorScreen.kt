@@ -62,7 +62,7 @@ internal fun KeysignErrorScreen(
         else -> {
             errorLabel =
                 stringResource(R.string.signing_error_please_try_again_s, errorMessageString)
-            infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen)
+            infoText = null
         }
     }
 
@@ -87,7 +87,7 @@ private const val BROADCAST_DETAIL_MAX_LENGTH = 120
 private fun PreviewKeysignError() {
     ErrorView(
         title = stringResource(R.string.signing_error_please_try_again_s, "some errors"),
-        description = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
+        description = null,
         buttonUiModel =
             ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
     )

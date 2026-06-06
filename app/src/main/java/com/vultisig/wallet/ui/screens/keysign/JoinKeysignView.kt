@@ -208,7 +208,7 @@ internal fun JoinKeysignView() {
                                 error.errorType.message.asString(),
                             )
                         buttonText = stringResource(R.string.try_again)
-                        infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen)
+                        infoText = null
                     }
                 }
                 ErrorView(
