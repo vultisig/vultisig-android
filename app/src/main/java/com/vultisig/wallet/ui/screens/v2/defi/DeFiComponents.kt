@@ -47,6 +47,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -316,7 +317,14 @@ fun ActionButton(
             Text(
                 text = title,
                 style = Theme.brockmann.button.medium.medium,
-                modifier = Modifier.align(Alignment.Center),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                // Reserve the icon lane symmetrically so a long (translated) label can never paint
+                // over the docked icon, while keeping the label centered on the button's true
+                // center.
+                modifier =
+                    Modifier.align(Alignment.Center)
+                        .padding(horizontal = if (icon != null) 30.dp else 0.dp),
             )
         }
     }
