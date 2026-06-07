@@ -1,6 +1,9 @@
 package com.vultisig.wallet.data.repositories
 
+import com.vultisig.wallet.data.api.txstatus.SwapKitChainIdentifier
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.SwapProvider
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import javax.inject.Inject
 
@@ -31,8 +34,17 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
         return "${chain.blockExplorerUrl}$address"
     }
 
-    override fun getSwapProgressLink(tx: String, payload: SwapPayload?): String? =
-        when (payload) {
+    override fun getSwapProgressLink(tx: String, payload: SwapPayload?): String? {
+        // SwapKit-routed cross-chain swaps settle on a destination leg the source-chain explorer
+        // can't show. Point "Track" at SwapKit's own tracker (both legs) when the source chain is
+        // in SwapKit's route catalogue; otherwise fall through to the source-chain link below.
+        if (payload != null && payload.isSwapKitRouted()) {
+            val chainId = SwapKitChainIdentifier.chainId(payload.srcToken.chain)
+            if (chainId != null) {
+                return "https://track.swapkit.dev/?hash=$tx&chainId=$chainId"
+            }
+        }
+        return when (payload) {
             is SwapPayload.ThorChain -> "https://runescan.io/tx/${tx.removePrefix("0x")}"
             is SwapPayload.MayaChain ->
                 "https://www.explorer.mayachain.info/tx/${tx.removePrefix("0x")}"
@@ -50,6 +62,16 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
             }
 
             else -> null
+        }
+    }
+
+    // EVM/Solana SwapKit routes ride [SwapPayload.EVM] tagged `provider = "SwapKit"`; BTC/TON/ADA/
+    // TRON/SUI/ZEC routes use [SwapPayload.SwapKit], which is SwapKit by construction.
+    private fun SwapPayload.isSwapKitRouted(): Boolean =
+        when (this) {
+            is SwapPayload.SwapKit -> true
+            is SwapPayload.EVM -> data.provider == SwapProvider.SWAPKIT.getSwapProviderId()
+            else -> false
         }
 
     private val Chain.transactionExplorerUrl: String

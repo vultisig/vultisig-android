@@ -21,6 +21,9 @@ sealed class SwapQuote {
         // not a transient local var — so the "via <sub-provider>" label survives a quote cache hit
         // instead of collapsing back to the generic "SwapKit". Null for 1inch / Kyber / LiFi.
         val subProvider: String? = null,
+        // SwapKit `/v3/swap` swap id, carried onto the persisted swap so its tx-history Success can
+        // be gated on the destination-leg `/track` settlement. Null for 1inch / Kyber / LiFi.
+        val swapId: String? = null,
     ) : SwapQuote()
 
     data class ThorChain(

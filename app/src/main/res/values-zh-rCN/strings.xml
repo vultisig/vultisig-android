@@ -1596,7 +1596,7 @@
     <string name="cosmos_staking_delegate_new_validator">委托给新验证人</string>
     <string name="cosmos_staking_delegate_title">质押 %1$s</string>
     <string name="cosmos_staking_insufficient_gas">%1$s 不足以支付手续费 — 请减少验证者数量</string>
-    <string name="cosmos_staking_next_award">下次奖励</string>
+    <string name="cosmos_staking_next_award">可领取奖励</string>
     <string name="cosmos_staking_no_validators_found">未找到验证人</string>
     <string name="cosmos_staking_pending_unbondings">解绑中</string>
     <string name="cosmos_staking_redelegate_source">源验证者</string>

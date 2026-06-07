@@ -11,6 +11,10 @@ data class EVMSwapPayloadJson(
     val toAmountDecimal: BigDecimal,
     val quote: EVMSwapQuoteJson,
     val provider: String,
+    // SwapKit `/v3/swap` swap id for EVM/Solana routes — persisted on the tx-history row so a
+    // cross-chain swap's Success is gated on the destination-leg `/track` settlement. Null for
+    // direct EVM aggregators (1inch / Kyber / LiFi), which settle on the source chain.
+    val swapId: String? = null,
     /**
      * SwapKit sub-provider (Chainflip / NEAR / Garden) used so the done screen renders `SwapKit
      * (<sub-provider>)` instead of the collapsed canonical [provider] `"SwapKit"`. Null for 1inch /

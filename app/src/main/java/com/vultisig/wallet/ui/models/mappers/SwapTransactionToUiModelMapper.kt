@@ -38,6 +38,16 @@ constructor(
                 is SwapPayload.SwapKit -> SwapProvider.SWAPKIT
             }
 
+        // SwapKit `/track` correlation key, threaded onto the tx-history row. EVM/Solana SwapKit
+        // routes carry it on the EVM payload; native routes (PSBT/TON/…) on the SwapKit payload.
+        val swapId: String? =
+            when (val payload = from.payload) {
+                is SwapPayload.EVM -> payload.data.swapId?.takeIf { it.isNotBlank() }
+                is SwapPayload.SwapKit -> payload.data.swapId.takeIf { it.isNotBlank() }
+                is SwapPayload.ThorChain,
+                is SwapPayload.MayaChain -> null
+            }
+
         val tokenValue =
             when (provider) {
                 SwapProvider.THORCHAIN,
@@ -109,6 +119,7 @@ constructor(
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue, asFee = true),
             provider = providerLabel,
+            swapId = swapId,
         )
     }
 }
