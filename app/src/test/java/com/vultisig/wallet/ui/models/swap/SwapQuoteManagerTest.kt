@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.swap
 
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.Fees
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
