@@ -892,8 +892,31 @@ constructor(
                     }
 
                     is SwapPayload.SwapKit -> {
-                        // Zero provider fee — the initiator's per-leg `fees[]` isn't re-fetched
-                        // at join time; the network gas estimate carries the cost.
+                        // Re-fetch a live SwapKit quote at join time so the co-signer sees the
+                        // same non-zero swap fee as the initiator (mirrors the Thor/Maya branches).
+                        // Display-only: the signing bytes come from the payload and are never
+                        // touched. The quote may reprice slightly between fetches (approximate
+                        // parity, the same trade-off Thor/Maya accept); a fetch failure degrades to
+                        // a zero fee rather than stalling the verify screen.
+                        val swapKitProviderFee =
+                            try {
+                                swapQuoteRepository
+                                    .getQuote(
+                                        SwapProvider.SWAPKIT,
+                                        SwapQuoteRequest(
+                                            srcToken = srcToken,
+                                            dstToken = dstToken,
+                                            tokenValue = srcTokenValue,
+                                            dstAddress = dstToken.address,
+                                        ),
+                                    )
+                                    .expectNative(SwapProvider.SWAPKIT)
+                                    .fees
+                            } catch (e: Exception) {
+                                if (e is CancellationException) throw e
+                                Timber.w(e, "SwapKit join fee re-fetch failed; showing zero fee")
+                                TokenValue(value = BigInteger.ZERO, token = srcToken)
+                            }
                         val swapTransactionUiModel =
                             buildSwapUiModel(
                                 srcToken = srcToken,
@@ -902,7 +925,7 @@ constructor(
                                 dstTokenValue = dstTokenValue,
                                 estimatedNetworkGasFee = estimatedNetworkGasFee,
                                 provider = provider,
-                                providerFee = TokenValue(value = BigInteger.ZERO, token = srcToken),
+                                providerFee = swapKitProviderFee,
                                 providerFeeToken = srcToken,
                                 currency = currency,
                             )

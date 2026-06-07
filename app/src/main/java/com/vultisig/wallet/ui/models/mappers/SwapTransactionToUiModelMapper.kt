@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -35,6 +36,15 @@ constructor(
                     SwapProvider.entries.find { it.getSwapProviderId() == payload.data.provider }
                         ?: error("Unknown EVM provider: ${payload.data.provider}")
                 is SwapPayload.SwapKit -> SwapProvider.SWAPKIT
+            }
+
+        // Render the SwapKit sub-provider (`SwapKit (NEAR)`) on the initiator too, matching what
+        // the joined device produces via `formatSwapKitProviderLabel`; all other providers keep
+        // their plain id.
+        val providerLabel: String =
+            when (val payload = from.payload) {
+                is SwapPayload.SwapKit -> formatSwapKitProviderLabel(payload.data.subProvider)
+                else -> provider.getSwapProviderId()
             }
 
         // SwapKit `/track` correlation key, threaded onto the tx-history row. EVM/Solana SwapKit
@@ -101,7 +111,7 @@ constructor(
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue, asFee = true),
-            provider = provider.getSwapProviderId(),
+            provider = providerLabel,
             swapId = swapId,
         )
     }
