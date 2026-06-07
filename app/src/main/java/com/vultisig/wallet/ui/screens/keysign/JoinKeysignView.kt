@@ -189,7 +189,6 @@ internal fun JoinKeysignView() {
                 val error = state as Error
                 val errorLabel: String
                 val buttonText: String
-                val infoText: String?
                 when (error.errorType) {
                     is JoinKeysignError.WrongVaultShare,
                     is JoinKeysignError.WrongVault -> {
@@ -198,7 +197,6 @@ internal fun JoinKeysignView() {
                             stringResource(
                                 R.string.join_keysign_error_wrong_vault_share_try_again_button
                             )
-                        infoText = null
                     }
 
                     else -> {
@@ -208,12 +206,11 @@ internal fun JoinKeysignView() {
                                 error.errorType.message.asString(),
                             )
                         buttonText = stringResource(R.string.try_again)
-                        infoText = null
                     }
                 }
                 ErrorView(
                     title = errorLabel,
-                    description = infoText,
+                    description = null,
                     buttonUiModel =
                         ErrorViewButtonUiModel(text = buttonText, onClick = viewModel::tryAgain),
                 )
