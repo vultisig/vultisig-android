@@ -57,6 +57,8 @@ internal class SwapTransactionToUiModelMapperSwapKitProviderTest {
     fun `native SwapKit keeps canonical provider id while label carries the sub-provider`() =
         runTest {
             every { appCurrencyRepository.currency } returns flowOf(AppCurrency.USD)
+            // Relaxed mock of a generic Function1 (MapperFunc) yields a child mock, not a String.
+            every { mapTokenValueToDecimalUiString(any()) } returns "0"
             coEvery { tokenRepository.getNativeToken(any()) } returns trx
             coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
                 FiatValue(BigDecimal.ZERO, "USD")
