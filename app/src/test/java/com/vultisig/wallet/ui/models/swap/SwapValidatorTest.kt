@@ -125,6 +125,54 @@ internal class SwapValidatorTest {
         assertNull(error)
     }
 
+    @Test
+    fun `validateBalanceForSwap returns null when the source balance is unknown`() {
+        val src = tokenSendSrc(balance = null, nativeBalance = BigInteger("1000"))
+
+        val validation =
+            validator.validateBalanceForSwap(
+                src = src,
+                srcAmountValue = BigInteger("500"),
+                estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), nativeCoin()),
+            )
+
+        assertNull(validation)
+    }
+
+    @Test
+    fun `validateBalanceForSwap reports no native token when the gas account is missing`() {
+        val src = tokenSendSrc(balance = BigInteger("1000"), nativeBalance = null)
+
+        val validation =
+            validator.validateBalanceForSwap(
+                src = src,
+                srcAmountValue = BigInteger("500"),
+                estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), nativeCoin()),
+            )
+
+        assertEquals(UiText.StringResource(R.string.send_error_no_token), validation?.formError)
+    }
+
+    @Test
+    fun `validateBalanceForSwap flags insufficient native balance for gas fees`() {
+        val src = tokenSendSrc(balance = BigInteger("1000"), nativeBalance = BigInteger("50"))
+
+        val validation =
+            validator.validateBalanceForSwap(
+                src = src,
+                srcAmountValue = BigInteger("500"),
+                estimatedNetworkFeeTokenValue = TokenValue(BigInteger("100"), nativeCoin()),
+            )
+
+        assertEquals(
+            UiText.FormattedText(
+                R.string.swap_error_insufficient_gas_fees,
+                listOf("${nativeCoin().ticker} (${nativeCoin().chain.raw})"),
+            ),
+            validation?.formError,
+        )
+    }
+
     private fun nativeCoin(): Coin =
         Coin(
             chain = Chain.Ethereum,
@@ -159,11 +207,16 @@ internal class SwapValidatorTest {
         return SendSrc(address, account)
     }
 
-    private fun tokenSendSrc(balance: BigInteger, nativeBalance: BigInteger?): SendSrc {
+    private fun tokenSendSrc(balance: BigInteger?, nativeBalance: BigInteger?): SendSrc {
         val token = tokenCoin()
         val native = nativeCoin()
         val tokenAccount =
-            Account(token = token, tokenValue = TokenValue(balance, token), null, null)
+            Account(
+                token = token,
+                tokenValue = balance?.let { TokenValue(it, token) },
+                fiatValue = null,
+                price = null,
+            )
         val nativeAccount =
             Account(
                 token = native,
