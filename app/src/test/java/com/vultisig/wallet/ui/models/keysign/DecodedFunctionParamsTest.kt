@@ -476,6 +476,45 @@ internal class DecodedFunctionParamsTest {
     }
 
     @Test
+    fun `tuple array expands one row per element field`() {
+        val rows =
+            decodedFunctionParams(
+                signature = "aggregate((address,bytes)[])",
+                inputsJson = """[ [ ["0xaaa", "0xbb"], ["0xccc", "0xdd"] ] ]""",
+                json = json,
+            )
+
+        assertNotNull(rows)
+        assertEquals(4, rows.size)
+        assertEquals("#1[0].1 (address)", (rows[0].label as UiText.DynamicString).text)
+        assertEquals("0xaaa", (rows[0].value as UiText.DynamicString).text)
+        assertEquals("#1[0].2 (bytes)", (rows[1].label as UiText.DynamicString).text)
+        assertEquals("#1[1].1 (address)", (rows[2].label as UiText.DynamicString).text)
+        assertEquals("0xccc", (rows[2].value as UiText.DynamicString).text)
+        assertEquals("#1[1].2 (bytes)", (rows[3].label as UiText.DynamicString).text)
+    }
+
+    @Test
+    fun `nested tuple array peels one dimension per recursion keeping rows aligned`() {
+        val rows =
+            decodedFunctionParams(
+                signature = "f((address,bytes)[][])",
+                inputsJson = """[ [ [ ["0xaaa", "0xbb"] ], [ ["0xccc", "0xdd"] ] ] ]""",
+                json = json,
+            )
+
+        assertNotNull(rows)
+        assertEquals(4, rows.size)
+        assertEquals("#1[0][0].1 (address)", (rows[0].label as UiText.DynamicString).text)
+        assertEquals("0xaaa", (rows[0].value as UiText.DynamicString).text)
+        assertEquals("#1[0][0].2 (bytes)", (rows[1].label as UiText.DynamicString).text)
+        assertEquals("0xbb", rows[1].copyableValue)
+        assertEquals("#1[1][0].1 (address)", (rows[2].label as UiText.DynamicString).text)
+        assertEquals("0xccc", (rows[2].value as UiText.DynamicString).text)
+        assertEquals("#1[1][0].2 (bytes)", (rows[3].label as UiText.DynamicString).text)
+    }
+
+    @Test
     fun `malformed abi names fall back to positional labels`() {
         val rows =
             decodedFunctionParams(

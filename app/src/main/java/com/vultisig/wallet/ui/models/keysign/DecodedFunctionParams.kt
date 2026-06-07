@@ -388,9 +388,12 @@ private fun leafRow(
 private fun isPlainTuple(type: String): Boolean = type.startsWith("(") && type.endsWith(")")
 
 /**
- * For a tuple array like `(address,bytes)[]` or `(uint256)[3]` returns the element tuple
- * `(address,bytes)`; returns null for plain tuples and non-tuple types. Lets the positional
- * fallback expand each array element rather than flattening the whole array into one leaf row.
+ * For a tuple array returns the element type one array dimension shallower, so each recursion peels
+ * exactly one level: `(address,bytes)[]` -> `(address,bytes)`, and a nested `(address,bytes)[][]`
+ * -> `(address,bytes)[]` (which the next recursion reduces again). Returns null for plain tuples
+ * and non-tuple types. Stripping only the outermost (rightmost) dimension keeps rows/values aligned
+ * — dropping every `[]` at once would treat a nested array element as a bare tuple and misalign the
+ * signing screen.
  */
 private fun tupleArrayElementType(type: String): String? {
     if (!type.startsWith("(") || !type.endsWith("]")) return null
@@ -411,7 +414,10 @@ private fun tupleArrayElementType(type: String): String? {
     if (closeIndex < 0) return null
     val suffix = type.substring(closeIndex + 1)
     if (!suffix.startsWith("[") || !suffix.endsWith("]")) return null
-    return type.substring(0, closeIndex + 1)
+    // Peel only the outermost (rightmost) array dimension, preserving any inner ones.
+    val lastDimStart = suffix.dropLast(1).lastIndexOf('[')
+    val remainingSuffix = if (lastDimStart > 0) suffix.substring(0, lastDimStart) else ""
+    return type.substring(0, closeIndex + 1) + remainingSuffix
 }
 
 /**
