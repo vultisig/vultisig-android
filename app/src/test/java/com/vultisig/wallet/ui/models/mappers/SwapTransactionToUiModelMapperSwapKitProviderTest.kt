@@ -28,12 +28,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * Pins the canonical-id / display-label split for native SwapKit swaps. [SwapTransactionUiModel.provider]
- * is a behavioral key — it is copied onto the tx-history row and matched against
- * `SwapProvider.SWAPKIT.getSwapProviderId()` to gate SwapKit `/track` settlement (#4757). If the
- * mapper ever puts the human label (`SwapKit (NEAR)`) back into `provider`, native SwapKit swaps
- * stop matching the gate and flip to Success on the source-chain deposit. This drives the gate field
- * off the real mapper output rather than a hardcoded `"SwapKit"`.
+ * Pins the canonical-id / display-label split for native SwapKit swaps.
+ * [SwapTransactionUiModel.provider] is a behavioral key — it is copied onto the tx-history row and
+ * matched against `SwapProvider.SWAPKIT.getSwapProviderId()` to gate SwapKit `/track` settlement
+ * (#4757). If the mapper ever puts the human label (`SwapKit (NEAR)`) back into `provider`, native
+ * SwapKit swaps stop matching the gate and flip to Success on the source-chain deposit. This drives
+ * the gate field off the real mapper output rather than a hardcoded `"SwapKit"`.
  */
 internal class SwapTransactionToUiModelMapperSwapKitProviderTest {
 
