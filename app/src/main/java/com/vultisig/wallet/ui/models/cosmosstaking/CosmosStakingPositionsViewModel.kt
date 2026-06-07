@@ -16,6 +16,8 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.CosmosStakingSnapshot
+import com.vultisig.wallet.data.repositories.CosmosStakingSnapshotCache
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -101,6 +103,7 @@ constructor(
     private val keybaseAvatarService: KeybaseAvatarService,
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
+    private val snapshotCache: CosmosStakingSnapshotCache,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -139,12 +142,33 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "Failed to load staking positions")
-                _state.update { it.copy(isLoading = false) }
-                setError("Failed to load staking positions")
+                onRefreshFailed("Failed to load staking positions")
             }
         ) {
             val coin = coin ?: return@safeLaunch
-            _state.update { it.copy(isLoading = true, errorMessage = null) }
+            val cacheKey = snapshotKey(chain, coin.address)
+
+            // Seed from the last-known snapshot so reopening renders immediately instead of
+            // flashing the empty/zero state; only show the loading state when nothing is cached
+            // (issue #4764). The live fan-out below refreshes in the background and overwrites it.
+            val cached = snapshotCache.read(cacheKey)
+            if (cached != null) {
+                _state.update {
+                    it.copy(
+                        positions = cached.positions,
+                        pendingUnbondings = cached.pendingUnbondings,
+                        totalStaked = cached.totalStaked,
+                        totalStakedFiat = cached.totalStakedFiat,
+                        totalAmountPrice = cached.totalAmountPrice,
+                        isLoading = false,
+                        errorMessage = null,
+                    )
+                }
+                // Re-resolve avatars for the cached rows so monograms upgrade while we refresh.
+                resolveAvatarsAsync(cached.positions)
+            } else {
+                _state.update { it.copy(isLoading = true, errorMessage = null) }
+            }
 
             // Parallel fan-out — same shape as iOS `refresh(address:decimals:)`. Delegations is the
             // load-bearing read and keeps its [Result] so a failure surfaces an error banner (iOS
@@ -190,8 +214,7 @@ constructor(
             // the error so the user sees a retry instead of a silent "no positions".
             val delegations =
                 delegationsResult.getOrElse {
-                    _state.update { it.copy(isLoading = false) }
-                    return@safeLaunch setError("Failed to load staking positions")
+                    return@safeLaunch onRefreshFailed("Failed to load staking positions")
                 }
 
             val entry = CosmosStakingConfig.entryFor(chain)
@@ -262,8 +285,22 @@ constructor(
                     totalStakedFiat = totalStakedFiat,
                     totalAmountPrice = totalStakedFiat,
                     isLoading = false,
+                    errorMessage = null,
                 )
             }
+
+            // Cache the display-ready result so the next open within this session renders
+            // instantly.
+            snapshotCache.write(
+                cacheKey,
+                CosmosStakingSnapshot(
+                    positions = positions,
+                    pendingUnbondings = unbondings,
+                    totalStaked = totalStaked,
+                    totalStakedFiat = totalStakedFiat,
+                    totalAmountPrice = totalStakedFiat,
+                ),
+            )
 
             // Fire-and-forget avatar resolution — each emission updates the row in-place. Published
             // after the list is in `_state` so a cache-hit patch can't land on an empty `positions`
@@ -550,6 +587,22 @@ constructor(
     private fun setError(message: String) {
         _state.update { it.copy(errorMessage = message, isLoading = false) }
     }
+
+    /**
+     * A background refresh failed. If positions are already on screen (seeded from cache or a prior
+     * load), keep showing them rather than wiping the view with an error — a transient LCD blip
+     * shouldn't blank a screen the user can already read. Only surface the error when nothing is
+     * rendered yet.
+     */
+    private fun onRefreshFailed(message: String) {
+        _state.update { current ->
+            if (current.positions.isNotEmpty()) current.copy(isLoading = false)
+            else current.copy(errorMessage = message, isLoading = false)
+        }
+    }
+
+    /** Per-address, per-chain cache key so LUNA and LUNC snapshots never collide. */
+    private fun snapshotKey(chain: Chain, address: String): String = "${chain.raw}:$address"
 
     private data class Quad<A, B, C, D>(val a: A, val b: B, val c: C, val d: D)
 }
