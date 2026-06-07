@@ -2057,8 +2057,16 @@ internal class SwapFormViewModelTest {
                     chain = Chain.Bitcoin,
                 )
             coEvery {
-                swapGasCalculator.computeUtxoPlanFeeResult(any(), any(), any(), any(), any(), any())
-            } throws InsufficientUtxosException()
+                swapGasCalculator.resolveUtxoPlanFee(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns UtxoPlanFeeResult.InsufficientUtxos
             every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
                 listOf(SwapProvider.THORCHAIN)
             coEvery {
@@ -2577,18 +2585,16 @@ internal class SwapFormViewModelTest {
                 chain = Chain.Bitcoin,
             )
         coEvery {
-            swapGasCalculator.computeUtxoPlanFeeResult(any(), any(), any(), any(), any(), any())
+            swapGasCalculator.resolveUtxoPlanFee(any(), any(), any(), any(), any(), any(), any())
         } returns
-            GasCalculationResult(
-                gasFee = TokenValue(value = BigInteger("816"), token = BTC_COIN),
+            UtxoPlanFeeResult.Success(
                 estimated =
                     EstimatedGasFee(
                         formattedTokenValue = "0.00000816 BTC",
                         formattedFiatValue = "$0.00",
                         tokenValue = TokenValue(value = BigInteger("816"), token = BTC_COIN),
                         fiatValue = FiatValue(BigDecimal("0.00"), "USD"),
-                    ),
-                chain = Chain.Bitcoin,
+                    )
             )
         every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns listOf(provider)
         coEvery {
