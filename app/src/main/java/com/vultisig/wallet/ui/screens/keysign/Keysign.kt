@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.screens.keysign
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import androidx.annotation.DrawableRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.graphics.createBitmap
 import androidx.core.graphics.drawable.toBitmap
 import app.rive.Fit
 import app.rive.ImageAsset
@@ -215,30 +217,85 @@ private fun KeysignRiveProgress(progress: Float, @DrawableRes coinLogoRes: Int?)
 /**
  * Rasterizes a (vector or raster) drawable resource to PNG bytes for Rive ImageAsset binding.
  *
- * The rasterized size is bounded by [RIVE_TO_TOKEN_IMAGE_MAX_PX] (aspect ratio preserved) so the
- * image we hand to Rive can never produce an oversized decode allocation — see the constant for why
- * an unbounded size crashes the process.
+ * The logo is drawn — aspect ratio preserved — centered onto a square canvas (see
+ * [squareLogoLayout]) so Rive's square "toToken" image slot renders every coin at the same
+ * proportion. Handing Rive a non-square PNG makes the slot stretch/fill it differently and the logo
+ * renders oversized / distorted (issue #4755). The canvas side is bounded by
+ * [RIVE_TO_TOKEN_IMAGE_MAX_PX] so the image we hand to Rive can never produce an oversized decode
+ * allocation — see the constant for why an unbounded size crashes the process.
  */
 private fun encodeDrawableAsPng(context: Context, @DrawableRes resId: Int): ByteArray? {
     val drawable = AppCompatResources.getDrawable(context, resId) ?: return null
-    val (width, height) = boundedLogoSize(drawable.intrinsicWidth, drawable.intrinsicHeight)
+    val layout = squareLogoLayout(drawable.intrinsicWidth, drawable.intrinsicHeight)
     return try {
-        val bitmap =
-            drawable.toBitmap(width = width, height = height, config = Bitmap.Config.ARGB_8888)
+        val logo =
+            drawable.toBitmap(
+                width = layout.logoWidth,
+                height = layout.logoHeight,
+                config = Bitmap.Config.ARGB_8888,
+            )
+        // An already-square logo needs no padding — skip the extra allocation and copy.
+        val square =
+            if (layout.isSquare) {
+                logo
+            } else {
+                createBitmap(layout.canvasSize, layout.canvasSize).also { canvas ->
+                    Canvas(canvas)
+                        .drawBitmap(logo, layout.left.toFloat(), layout.top.toFloat(), null)
+                }
+            }
         try {
             ByteArrayOutputStream().use { stream ->
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                square.compress(Bitmap.CompressFormat.PNG, 100, stream)
                 stream.toByteArray()
             }
         } finally {
-            bitmap.recycle()
+            if (square !== logo) square.recycle()
+            logo.recycle()
         }
     } catch (e: Exception) {
-        // toBitmap()/compress()/toByteArray() can throw; the caller treats null as "no logo" and
-        // logs it. Never let this escape into the LaunchedEffect coroutine and crash the screen.
+        // toBitmap()/createBitmap()/compress()/toByteArray() can throw; the caller treats null as
+        // "no logo" and logs it. Never let this escape into the LaunchedEffect coroutine and crash
+        // the screen.
         Timber.e(e, "Failed to encode coin logo res %d as PNG", resId)
         null
     }
+}
+
+/**
+ * Placement of an aspect-preserved coin logo on a square canvas. The canvas is square so Rive's
+ * square "toToken" slot renders the logo without distortion; the logo is centered within it
+ * ([left], [top]) and the canvas side equals the logo's larger dimension, so a square logo gets no
+ * padding while a non-square one is letterboxed with transparency.
+ */
+@VisibleForTesting
+internal data class SquareLogoLayout(
+    val canvasSize: Int,
+    val logoWidth: Int,
+    val logoHeight: Int,
+    val left: Int,
+    val top: Int,
+) {
+    val isSquare: Boolean
+        get() = logoWidth == logoHeight
+}
+
+/**
+ * Computes the [SquareLogoLayout] for a drawable's intrinsic bounds. The logo dimensions come from
+ * [boundedLogoSize] (clamped to [RIVE_TO_TOKEN_IMAGE_MAX_PX], aspect preserved); the canvas side is
+ * their max so the logo always fits centered with transparent padding.
+ */
+@VisibleForTesting
+internal fun squareLogoLayout(intrinsicWidth: Int, intrinsicHeight: Int): SquareLogoLayout {
+    val (width, height) = boundedLogoSize(intrinsicWidth, intrinsicHeight)
+    val side = maxOf(width, height)
+    return SquareLogoLayout(
+        canvasSize = side,
+        logoWidth = width,
+        logoHeight = height,
+        left = (side - width) / 2,
+        top = (side - height) / 2,
+    )
 }
 
 /**
