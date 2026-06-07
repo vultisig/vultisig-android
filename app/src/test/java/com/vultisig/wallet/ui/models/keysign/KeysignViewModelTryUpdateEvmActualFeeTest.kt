@@ -144,6 +144,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             transactionHistoryRepository = mockk(relaxed = true),
             balanceRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
+            swapKitTrackingService = mockk(relaxed = true),
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
 

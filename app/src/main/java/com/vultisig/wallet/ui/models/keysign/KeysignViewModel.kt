@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
+import com.vultisig.wallet.data.api.txstatus.SwapKitTrackingService
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
@@ -25,6 +26,7 @@ import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.SigningLibType
+import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -34,6 +36,7 @@ import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.models.payload.KeysignPayload
@@ -86,6 +89,7 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -97,6 +101,12 @@ import vultisig.keysign.v1.CustomMessagePayload
 private const val DEFAULT_ETHEREUM_DERIVATION_PATH = "m/44'/60'/0'/0/0"
 private const val MAX_EVM_RECEIPT_RETRIES = 5
 private const val EVM_RECEIPT_RETRY_DELAY_MS = 2_000L
+
+/**
+ * Foreground SwapKit `/track` poll budget on the done screen. After this the row is left in-flight
+ * and handed off to the background tx-history poller, mirroring iOS' 30-minute give-up window.
+ */
+private const val SWAPKIT_FOREGROUND_TIMEOUT_MS = 30 * 60 * 1000L
 
 /** UI state for an in-progress or completed keysign session. */
 internal sealed class KeysignState {
@@ -235,6 +245,7 @@ constructor(
     private val transactionHistoryRepository: TransactionHistoryRepository,
     private val balanceRepository: BalanceRepository,
     private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
+    private val swapKitTrackingService: SwapKitTrackingService,
 ) : ViewModel() {
 
     /** Creates [KeysignViewModel] with runtime-provided assisted parameters. */
@@ -886,6 +897,18 @@ constructor(
     }
 
     private fun startForegroundPolling(txHash: String, chain: Chain) {
+        // A SwapKit-routed swap settles on its destination leg, which the source-chain status
+        // service can't see — gate Success on `/track` instead (parity with the tx-history poller
+        // in RefreshPendingTransactionsUseCase) so a cross-chain swap (e.g. ETH→SOL) doesn't flip
+        // to Success the instant its source-chain deposit confirms.
+        val isSwapKitSwap =
+            (transactionHistoryData as? SwapTransactionHistoryData)?.provider ==
+                SwapProvider.SWAPKIT.getSwapProviderId()
+        if (isSwapKitSwap && swapKitTrackingService.canTrack(chain)) {
+            startSwapKitForegroundPolling(txHash, chain)
+            return
+        }
+
         pollingTxStatusJob?.cancel()
 
         transactionStatusServiceManager.startPolling(txHash, chain)
@@ -923,6 +946,69 @@ constructor(
                         }
 
                         else -> Unit
+                    }
+                }
+            }
+    }
+
+    /**
+     * SwapKit settlement poll for the done screen — calls `/track` on the source [chain]'s
+     * broadcast hash and gates Success on the destination-leg status. Runs in [viewModelScope] (no
+     * foreground service): when the user leaves the screen the job is cancelled and the tx-history
+     * poller ([com.vultisig.wallet.data.usecases.RefreshPendingTransactionsUseCase]) takes over. On
+     * the timeout the row is left in-flight (handed off to that poller) rather than marked
+     * terminal.
+     */
+    private fun startSwapKitForegroundPolling(txHash: String, chain: Chain) {
+        pollingTxStatusJob?.cancel()
+        pollingTxStatusJob =
+            viewModelScope.launch {
+                currentState.value =
+                    KeysignState.KeysignFinished(transactionStatus = TransactionStatus.Pending)
+                val pollInterval =
+                    txStatusConfigurationProvider
+                        .getConfigurationForChain(chain)
+                        .pollIntervalSeconds
+                        .seconds
+                val startTime = System.currentTimeMillis()
+                while (isActive) {
+                    if (System.currentTimeMillis() - startTime >= SWAPKIT_FOREGROUND_TIMEOUT_MS) {
+                        // Hand off to the background tx-history poller; leave the row pending.
+                        currentState.value =
+                            KeysignState.KeysignFinished(
+                                transactionStatus = TransactionStatus.Pending
+                            )
+                        return@launch
+                    }
+
+                    val statusResult = swapKitTrackingService.checkSettlementStatus(txHash, chain)
+                    runCatching {
+                            transactionHistoryRepository.updateTransactionStatus(
+                                chain = chain.raw,
+                                txHash = txHash,
+                                result = statusResult,
+                            )
+                        }
+                        .onFailure {
+                            Timber.w(
+                                it,
+                                "Failed to update SwapKit tx history status for %s",
+                                txHash,
+                            )
+                        }
+                    currentState.value =
+                        KeysignState.KeysignFinished(
+                            transactionStatus = statusResult.toTransactionStatus()
+                        )
+                    when (statusResult) {
+                        TransactionResult.Confirmed,
+                        is TransactionResult.Failed,
+                        is TransactionResult.Refunded -> {
+                            tryUpdateEvmActualFee(txHash, chain)
+                            return@launch
+                        }
+
+                        else -> delay(pollInterval)
                     }
                 }
             }

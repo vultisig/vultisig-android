@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test
 import vultisig.keysign.v1.BitcoinInput
 import vultisig.keysign.v1.BitcoinOutput
 import vultisig.keysign.v1.SignBitcoin
+import wallet.core.jni.Base58
 import wallet.core.jni.BitcoinScript
 import wallet.core.jni.CoinType
 import wallet.core.jni.PublicKey
@@ -78,6 +79,47 @@ class UtxoHelperTest {
             wasmExecuteContractPayload = null,
         )
 
+    private fun zcashPayload(
+        address: String,
+        utxoAmounts: List<Long>,
+        toAmount: BigInteger,
+    ): KeysignPayload =
+        KeysignPayload(
+            coin =
+                Coin(
+                    chain = Chain.Zcash,
+                    ticker = "ZEC",
+                    logo = "",
+                    address = address,
+                    decimal = 8,
+                    hexPublicKey = "",
+                    priceProviderID = "",
+                    contractAddress = "",
+                    isNativeToken = true,
+                ),
+            toAddress = address,
+            toAmount = toAmount,
+            blockChainSpecific =
+                BlockChainSpecific.UTXO(
+                    byteFee = BigInteger.valueOf(1_000L),
+                    sendMaxAmount = false,
+                ),
+            utxos =
+                utxoAmounts.mapIndexed { i, amount ->
+                    UtxoInfo(
+                        hash = "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda3$i$i",
+                        amount = amount,
+                        index = i.toUInt(),
+                    )
+                },
+            memo = null,
+            swapPayload = null,
+            vaultPublicKeyECDSA = "",
+            vaultLocalPartyID = "",
+            libType = SigningLibType.GG20,
+            wasmExecuteContractPayload = null,
+        )
+
     // Dust threshold tests — pure Kotlin when-expression, no native calls required
 
     @Test
@@ -114,6 +156,48 @@ class UtxoHelperTest {
         try {
             val plan = helper.getBitcoinTransactionPlan(payload)
             assertTrue(plan.fee > 0L, "Expected positive fee, got ${plan.fee}")
+        } catch (e: Throwable) {
+            skipIfJniUnavailable(e)
+        }
+    }
+
+    @Test
+    fun `getBitcoinTransactionPlan - Zcash applies ZIP-317 fee that scales with logical actions`() {
+        // ZIP-317 conventional fee = 5000 * max(2 grace actions, max(inputs, outputs)). WalletCore
+        // only computes this when zip_0317 is set on the signing input; without it the Zcash fee
+        // does not scale with input count, so multi-UTXO sends pay below the conventional fee and
+        // the node rejects them with "tx unpaid action limit exceeds limit of 0".
+        val helper = UtxoHelper(CoinType.ZCASH, "", "")
+
+        try {
+            // t1 transparent address (P2PKH, prefix 0x1CB8) built with a Base58Check checksum.
+            val zcashAddress =
+                Base58.encode(byteArrayOf(0x1C, 0xB8.toByte()) + ByteArray(20) { it.toByte() })
+
+            // Single input + recipient + change => 2 logical actions => grace floor => 5000 * 2.
+            val singleInputPlan =
+                helper.getBitcoinTransactionPlan(
+                    zcashPayload(
+                        address = zcashAddress,
+                        utxoAmounts = listOf(100_000L),
+                        toAmount = BigInteger.valueOf(50_000L),
+                    )
+                )
+            assertEquals(SigningError.OK, singleInputPlan.error)
+            assertEquals(10_000L, singleInputPlan.fee)
+
+            // Three inputs are required to fund the send => 3 logical actions => 5000 * 3.
+            val multiInputPlan =
+                helper.getBitcoinTransactionPlan(
+                    zcashPayload(
+                        address = zcashAddress,
+                        utxoAmounts = listOf(40_000L, 40_000L, 40_000L),
+                        toAmount = BigInteger.valueOf(100_000L),
+                    )
+                )
+            assertEquals(SigningError.OK, multiInputPlan.error)
+            assertEquals(3, multiInputPlan.utxosList.size)
+            assertEquals(15_000L, multiInputPlan.fee)
         } catch (e: Throwable) {
             skipIfJniUnavailable(e)
         }

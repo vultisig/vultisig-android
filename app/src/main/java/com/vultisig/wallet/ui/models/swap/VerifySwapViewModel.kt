@@ -49,6 +49,10 @@ internal data class SwapTransactionUiModel(
     val providerFeeFormatted: String = "",
     val hasConsentAllowance: Boolean = false,
     val provider: String = "",
+    // SwapKit `/v3/swap` swap id — correlation key persisted on the tx-history row so a cross-chain
+    // SwapKit swap's Success can be gated on the destination-leg `/track` settlement. Null for
+    // non-SwapKit providers and for SwapKit rows rebuilt on a cosigning peer without it.
+    val swapId: String? = null,
 )
 
 internal data class ValuedToken(

@@ -65,6 +65,14 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             SwapProvider.KYBER,
             SwapProvider.SWAPKIT,
         )
+    private val mayaPlusEvmAggregators =
+        setOf(
+            SwapProvider.MAYA,
+            SwapProvider.ONEINCH,
+            SwapProvider.LIFI,
+            SwapProvider.KYBER,
+            SwapProvider.SWAPKIT,
+        )
 
     /** Providers that only quote same-chain swaps; filtered out for cross-chain pairs. */
     private val sameChainOnly = setOf(SwapProvider.ONEINCH, SwapProvider.KYBER)
@@ -93,7 +101,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
                 else setOf(SwapProvider.LIFI, SwapProvider.SWAPKIT)
 
             Chain.Optimism,
-            Chain.Polygon -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI, SwapProvider.SWAPKIT)
+            Chain.Polygon -> evmAggregators
 
             Chain.ZkSync -> setOf(SwapProvider.ONEINCH, SwapProvider.LIFI)
 
@@ -117,9 +125,7 @@ internal class SwapProviderTableImpl @Inject constructor() : SwapProviderTable {
             Chain.Zcash -> setOf(SwapProvider.MAYA, SwapProvider.SWAPKIT)
 
             Chain.Arbitrum ->
-                if (ticker in mayaArbTokens)
-                    setOf(SwapProvider.LIFI, SwapProvider.MAYA, SwapProvider.SWAPKIT)
-                else setOf(SwapProvider.LIFI, SwapProvider.SWAPKIT)
+                if (ticker in mayaArbTokens) mayaPlusEvmAggregators else evmAggregators
 
             Chain.Blast,
             Chain.CronosChain -> setOf(SwapProvider.LIFI)

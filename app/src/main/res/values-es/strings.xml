@@ -1271,7 +1271,7 @@
     <string name="cosmos_staking_delegate_new_validator">Delegar a un nuevo validador</string>
     <string name="cosmos_staking_delegate_title">Stake %1$s</string>
     <string name="cosmos_staking_insufficient_gas">Insuficiente %1$s para gas — reclama de menos validadores</string>
-    <string name="cosmos_staking_next_award">Próxima recompensa</string>
+    <string name="cosmos_staking_next_award">Recompensas reclamables</string>
     <string name="cosmos_staking_no_validators_found">No se encontraron validadores</string>
     <string name="cosmos_staking_pending_unbondings">Desvinculaciones pendientes</string>
     <string name="cosmos_staking_redelegate_source">Del validador</string>

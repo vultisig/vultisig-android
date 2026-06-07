@@ -97,6 +97,7 @@ class UtxoHelper(
             .setHashType(BitcoinScript.hashTypeForCoin(coinType))
             .setUseMaxAmount(utxo.sendMaxAmount)
             .setByteFee(utxo.byteFee.toLong())
+            .setZip0317(coinType == CoinType.ZCASH)
             .setFixedDustThreshold(coinType.getDustThreshold)
         for (item in keysignPayload.utxos) {
             val lockScript =
@@ -160,6 +161,7 @@ class UtxoHelper(
                 .setToAddress(keysignPayload.toAddress)
                 .setChangeAddress(keysignPayload.coin.address)
                 .setByteFee(utxo.byteFee.toLong())
+                .setZip0317(coinType == CoinType.ZCASH)
                 .setCoinType(coinType.value())
                 .setFixedDustThreshold(coinType.getDustThreshold)
         keysignPayload.memo?.let { input.setOutputOpReturn(ByteString.copyFromUtf8(it)) }

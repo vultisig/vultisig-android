@@ -151,10 +151,11 @@ constructor(
                     destinationAddress = request.dstAddress.ifBlank { request.dstToken.address },
                 )
             )
-        // TODO(swapkit /track polling, later task): persist swapResponse.swapId on the resulting
-        //  SwapTransaction so /track lookups can correlate cross-chain settlement back to this
-        //  specific quote. The DTO already carries it; the persistence wiring lands with the
-        //  tx-history Phase D work.
+        // SwapKit `/v3/swap` swap id, carried onto the resulting transaction (EVM/Solana ride the
+        // EVMSwapQuoteJson envelope, which has no slot for it, so it's threaded out-of-band on
+        // SwapQuoteResult.Evm). Persisted on the tx-history row so a cross-chain swap's Success is
+        // gated on the destination-leg `/track` settlement rather than the source-chain deposit.
+        val swapId = swapResponse.swapId?.takeIf { it.isNotBlank() }
 
         // Sub-provider tag (Chainflip / NEAR Intents / Garden / Flashnet) — surfaced on the verify
         // screen so the user can reason about ETA and debug routing. Prefer
@@ -181,6 +182,7 @@ constructor(
                             best.fees,
                         ),
                     subProvider = subProvider,
+                    swapId = swapId,
                 )
             TxKind.PSBT,
             TxKind.TRON,
@@ -457,7 +459,7 @@ constructor(
                 targetAddress = targetAddress,
                 memo = memo,
                 subProvider = subProvider.orEmpty(),
-                swapId = response.swapId.orEmpty(),
+                swapId = response.swapId?.takeIf { it.isNotBlank() }.orEmpty(),
             )
         return SwapQuote.SwapKit(
             expectedDstValue =
