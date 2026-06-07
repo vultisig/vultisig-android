@@ -22,7 +22,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -182,6 +184,7 @@ class PreviewActivity : ComponentActivity() {
                     "universal_router_verify_after" ->
                         VerifyUniversalRouterPreview(expanded = true, useUrRows = true)
                     "qbtc_claim" -> QbtcClaimSelectingPreview()
+                    "qbtc_claim_pairing" -> QbtcClaimPairingPreview()
                     "qbtc_claim_done" -> QbtcClaimDonePreview()
                     "qbtc_claim_error" -> QbtcClaimErrorPreview()
                     "qbtc_claim_blocked" -> QbtcClaimBlockedPreview()
@@ -1605,6 +1608,44 @@ private fun QbtcClaimSelectingPreview() {
         )
     QbtcClaimScreen(
         state = state,
+        isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
+}
+
+/**
+ * The QBTC claim co-sign pairing screen ("Scan this with your other device to co-sign the claim").
+ * The QR is built exactly like
+ * [com.vultisig.wallet.ui.models.qbtc.QbtcClaimViewModel.renderPairingQr] — black-on-white, no logo
+ * — so the painter's intrinsic size matches production and the rendering is a faithful repro.
+ */
+@Composable
+private fun QbtcClaimPairingPreview() {
+    val context = LocalContext.current
+    val qr = remember {
+        val entry =
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                ShareQrPreviewEntryPoint::class.java,
+            )
+        // A representative-length pairing deep link so the QR version (module count) matches a
+        // real claim payload rather than a tiny low-version code.
+        val deepLink =
+            "https://vultisig.com?type=SignTransaction&resharePrefix=0&vault=03a1b2c3" +
+                "&jsonData=" +
+                "H4sIAAAAAAAA_y2OQQ6CMBBF7zJrFy1Q2rIzkRhciAvdGBfYTrCJgGlL1Bju" +
+                "biTu5r2X-fMnsK7vIIPe9Q5KZIxnPGM5zxjnGUtZyhJWZJxJkQqRZpKkUmRS" +
+                "ZHLPF_kRbEpyqLclNtyV-7LQ3ko9-Wxqo7VqTpX5-pSXatbdatu1b16VI_qW" +
+                "T2rV_WuPtSn-lJf62v9rb_1r_42IIAdwAEcwRm8wAd8wQ_8AQ"
+        val bitmap = entry.generateQrBitmap().invoke(deepLink, Color.Black, Color.White, null)
+        BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
+    }
+    QbtcClaimScreen(
+        state = QbtcClaimUiState.Pairing(qr = qr, joinedDevices = listOf("iPhone 15 Pro")),
         isFastVault = true,
         onBackClick = {},
         onToggle = {},

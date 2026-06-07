@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -501,15 +502,25 @@ private fun PairingContent(state: QbtcClaimUiState.Pairing) {
         )
         val qr = state.qr
         if (qr != null) {
-            Image(
-                painter = qr,
-                contentDescription = null,
+            // Force a square white card and let the QR fill it. The pairing QR bitmap is generated
+            // without a logo, so its intrinsic size is the raw QR-matrix pixel count (~tens of px);
+            // without aspectRatio(1f) the Image collapses to that tiny height inside a full-width
+            // box, leaving a small QR in a wide white strip. This mirrors QrContainer / the keysign
+            // peer-discovery co-sign QR.
+            Box(
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = 48.dp)
+                        .aspectRatio(1f)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Theme.v2.colors.text.primary),
-            )
+                        .background(Theme.v2.colors.text.primary)
+            ) {
+                Image(
+                    painter = qr,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                )
+            }
         } else {
             VsSigningProgressIndicator(text = stringResource(R.string.qbtc_claim_title))
         }
