@@ -40,6 +40,11 @@ internal data class DiscountInfo(
     val referralBpsDiscountFiatValue: String? = null,
 )
 
+/**
+ * Aggregated swap-form state, grouping the quote, fee, and discount details into their respective
+ * sub-models ([quoteDisplay], [feeBreakdown], [discountInfo]) alongside the selected tokens,
+ * errors, and loading/enablement flags rendered by the swap screen.
+ */
 internal data class SwapFormUiModel(
     val selectedSrcToken: TokenBalanceUiModel? = null,
     val selectedDstToken: TokenBalanceUiModel? = null,
