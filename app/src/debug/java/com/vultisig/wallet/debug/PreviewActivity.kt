@@ -126,6 +126,7 @@ class PreviewActivity : ComponentActivity() {
             OnBoardingComposeTheme {
                 when (screen) {
                     "swap_confirm" -> SwapConfirmPreview()
+                    "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
                     "asset_action_button" -> AssetActionButtonPreview()
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
@@ -210,7 +211,7 @@ private fun BannerPreview() {
 }
 
 @Composable
-private fun SwapConfirmPreview() {
+private fun SwapConfirmPreview(allConsents: Boolean = true) {
     val ethCoin = Coins.Ethereum.ETH
     val btcCoin = Coins.Bitcoin.BTC
 
@@ -230,8 +231,8 @@ private fun SwapConfirmPreview() {
         state =
             VerifySwapUiModel(
                 tx = tx,
-                consentAmount = true,
-                consentReceiveAmount = true,
+                consentAmount = allConsents,
+                consentReceiveAmount = allConsents,
                 consentAllowance = false,
                 hasFastSign = true,
                 txScanStatus =
