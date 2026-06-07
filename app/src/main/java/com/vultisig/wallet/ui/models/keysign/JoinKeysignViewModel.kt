@@ -642,8 +642,17 @@ constructor(
                         is SwapPayload.EVM ->
                             swapProviderFromWireId(swapPayload.data.provider)?.getSwapProviderId()
                                 ?: swapPayload.data.provider
+                        is SwapPayload.SwapKit -> SwapProvider.SWAPKIT.getSwapProviderId()
+                    }
+
+                // Display-only label. `provider` above stays the canonical id (the behavioral key
+                // that gates SwapKit `/track` settlement); native SwapKit routes render their
+                // sub-provider (`SwapKit (NEAR)`). All other providers reuse the canonical id.
+                val providerLabel =
+                    when (swapPayload) {
                         is SwapPayload.SwapKit ->
                             formatSwapKitProviderLabel(swapPayload.data.subProvider)
+                        else -> provider
                     }
 
                 when (swapPayload) {
@@ -897,7 +906,10 @@ constructor(
                         // Display-only: the signing bytes come from the payload and are never
                         // touched. The quote may reprice slightly between fetches (approximate
                         // parity, the same trade-off Thor/Maya accept); a fetch failure degrades to
-                        // a zero fee rather than stalling the verify screen.
+                        // a zero fee rather than stalling the verify screen. The initiator's
+                        // `affiliateBps` / `srcAddress` are intentionally omitted — the inbound fee
+                        // doesn't depend on the affiliate fee and the join device can't know the
+                        // initiator's `vultBPSDiscount`, so approximate parity holds.
                         val swapKitProviderFee =
                             try {
                                 swapQuoteRepository
@@ -928,6 +940,7 @@ constructor(
                                 providerFee = swapKitProviderFee,
                                 providerFeeToken = srcToken,
                                 currency = currency,
+                                providerLabel = providerLabel,
                             )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
@@ -1275,6 +1288,7 @@ constructor(
         providerFee: TokenValue,
         providerFeeToken: Coin,
         currency: AppCurrency,
+        providerLabel: String = provider,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
         return SwapTransactionUiModel(
@@ -1318,6 +1332,7 @@ constructor(
                     asFee = true,
                 ),
             provider = provider,
+            providerLabel = providerLabel,
         )
     }
 

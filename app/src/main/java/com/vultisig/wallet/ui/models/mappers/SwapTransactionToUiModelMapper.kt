@@ -38,9 +38,10 @@ constructor(
                 is SwapPayload.SwapKit -> SwapProvider.SWAPKIT
             }
 
-        // Render the SwapKit sub-provider (`SwapKit (NEAR)`) on the initiator too, matching what
-        // the joined device produces via `formatSwapKitProviderLabel`; all other providers keep
-        // their plain id.
+        // Display-only label. `provider` below stays the canonical id (the behavioral key that
+        // gates SwapKit `/track` settlement); this renders the SwapKit sub-provider
+        // (`SwapKit (NEAR)`) on the initiator, matching what the joined device produces via
+        // `formatSwapKitProviderLabel`. All other providers reuse their plain id.
         val providerLabel: String =
             when (val payload = from.payload) {
                 is SwapPayload.SwapKit -> formatSwapKitProviderLabel(payload.data.subProvider)
@@ -111,7 +112,8 @@ constructor(
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue, asFee = true),
-            provider = providerLabel,
+            provider = provider.getSwapProviderId(),
+            providerLabel = providerLabel,
             swapId = swapId,
         )
     }
