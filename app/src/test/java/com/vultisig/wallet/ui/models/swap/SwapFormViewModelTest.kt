@@ -43,6 +43,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.spyk
 import io.mockk.unmockkStatic
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -177,7 +178,24 @@ internal class SwapFormViewModelTest {
             )
         tokenSelectorAccountsRepository = accountsRepository
 
-        swapQuoteManager = mockk(relaxed = true)
+        // A spy (not a full mock) so the VM exercises the real quote pipeline — paste detection,
+        // immediate-fetch flag, and debounce timing now live in SwapQuoteManager — while individual
+        // methods (fetchBestQuote, computeIndicativeQuote, mapSwapExceptionToFormError) are still
+        // stubbed per test. resolveBestQuote delegates to the real (spied) fetchBestQuote, so the
+        // existing fetchBestQuote stubs/verifies keep working unchanged.
+        swapQuoteManager =
+            spyk(
+                SwapQuoteManager(
+                    swapQuoteRepository = swapQuoteRepository,
+                    tokenRepository = mockk(relaxed = true),
+                    tokenPriceRepository = mockk(relaxed = true),
+                    convertTokenValueToFiat = mockk(relaxed = true),
+                    mapTokenValueToDecimalUiString = mockk(relaxed = true),
+                    fiatValueToString = fiatValueToString,
+                    searchToken = mockk(relaxed = true),
+                    convertTokenToTokenUseCase = mockk(relaxed = true),
+                )
+            )
     }
 
     @AfterEach

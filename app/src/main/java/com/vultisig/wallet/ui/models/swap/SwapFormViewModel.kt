@@ -159,16 +159,6 @@ constructor(
 
     private var refreshQuoteJob: Job? = null
 
-    // Set true right before a programmatic amount change (percentage / Max) so the next amount
-    // emission skips the typing debounce and fetches a quote immediately (#4712). Reset as soon as
-    // it is consumed by the quote flow so it never leaks into subsequent free typing. Only ever
-    // touched on the main thread (UI callbacks + the Main-dispatched quote flow).
-    private var fetchQuoteImmediately = false
-
-    // Length of the previous source-amount text, used to distinguish a paste (multi-character jump)
-    // from free typing so a paste also fetches immediately (#4712).
-    private var lastSrcAmountLength = 0
-
     private data class PreFlipState(
         val srcAmount: String,
         val srcTokenId: String,
@@ -557,9 +547,9 @@ constructor(
                 .formatFlippedAmount(srcTokenValue.decimals)
 
         // A percentage / Max tap is an explicit, deliberate amount — fetch the quote immediately
-        // instead of waiting out the typing debounce (#4712). Set the flag before mutating the text
-        // so the resulting emission is already marked immediate.
-        fetchQuoteImmediately = true
+        // instead of waiting out the typing debounce (#4712). Mark before mutating the text so the
+        // resulting emission is already marked immediate.
+        swapQuoteManager.markImmediateFetch()
         srcAmountState.setTextAndPlaceCursorAtEnd(amount)
     }
 
@@ -673,28 +663,9 @@ constructor(
         viewModelScope.safeLaunch {
             // Emits once per source-amount change carrying whether the quote should fetch
             // immediately (percentage / Max / paste) instead of waiting out the typing debounce.
-            val amountChanges =
-                srcAmountState
-                    .textAsFlow()
-                    .map { it.toString() }
-                    .map { text ->
-                        // A multi-character jump is a paste; length is tracked across empties so a
-                        // clear-then-paste is still detected.
-                        val isPaste = text.length - lastSrcAmountLength > 1
-                        lastSrcAmountLength = text.length
-                        text to isPaste
-                    }
-                    .map { (text, isPaste) ->
-                        // Empty input (field cleared) must still flow through so collectLatest hits
-                        // the zero-amount branch and resetQuoteState() clears the stale quote —
-                        // dropping it here would leave the previous quote on screen. It rides the
-                        // normal (non-immediate) path; there is nothing to fetch, so we also leave
-                        // fetchQuoteImmediately for the next real amount (#4712).
-                        if (text.isEmpty()) return@map false
-                        val immediate = fetchQuoteImmediately || isPaste
-                        fetchQuoteImmediately = false
-                        immediate
-                    }
+            // Empty input still flows through so collectLatest hits the zero-amount branch and
+            // resetQuoteState() clears the stale quote (#4712).
+            val amountChanges = swapQuoteManager.amountChanges(srcAmountState.textAsFlow())
 
             combine(selectedSrc.filterNotNull(), selectedDst.filterNotNull()) { src, dst ->
                     src to dst
@@ -722,7 +693,7 @@ constructor(
                 .combine(refreshQuoteState) { input, _ -> input }
                 // Percentage / Max / paste skip the debounce (0ms); free typing still coalesces at
                 // 300ms so rapid edits fire a single quote fetch.
-                .debounce { input -> if (input.immediate) 0L else QUOTE_DEBOUNCE_MS }
+                .debounce { input -> swapQuoteManager.quoteDebounceMillis(input.immediate) }
                 // collectLatest so newer input cancels an in-flight fetch instead of letting a
                 // stale fetch write isLoading = false after the user has already typed again.
                 .collectLatest { input ->
@@ -790,8 +761,8 @@ constructor(
                                 .awaitAll()
                         }
 
-                        val bestQuote =
-                            swapQuoteManager.fetchBestQuote(
+                        val resolution =
+                            swapQuoteManager.resolveBestQuote(
                                 candidates = candidates,
                                 src = src,
                                 dst = dst,
@@ -801,7 +772,22 @@ constructor(
                                 tokenValue = tokenValue,
                                 currency = currency,
                                 amount = amount,
+                                selectedSrcTokenTitle = uiState.value.selectedSrcToken?.title,
                             )
+                        // Map the sealed result: a typed fetch failure resets the quote state with
+                        // its already-mapped error; only a Success continues into fee processing.
+                        val bestQuote =
+                            when (resolution) {
+                                is QuoteResolution.Failure -> {
+                                    resetQuoteState(
+                                        error = resolution.formError,
+                                        cause = resolution.cause,
+                                        tag = resolution.tag,
+                                    )
+                                    return@collectLatest
+                                }
+                                is QuoteResolution.Success -> resolution.best
+                            }
 
                         val quoteResult = bestQuote.result
                         val provider = quoteResult.provider
@@ -1150,9 +1136,6 @@ constructor(
     companion object {
         const val ETH_GAS_LIMIT: Long = SwapGasCalculator.ETH_GAS_LIMIT
         const val ARB_GAS_LIMIT: Long = SwapGasCalculator.ARB_GAS_LIMIT
-        // Coalesces rapid free typing into a single quote fetch; bypassed (0ms) for
-        // percentage / Max / paste.
-        private const val QUOTE_DEBOUNCE_MS = 300L
     }
 }
 
