@@ -70,35 +70,54 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import timber.log.Timber
 
-internal data class SwapFormUiModel(
-    val selectedSrcToken: TokenBalanceUiModel? = null,
-    val selectedDstToken: TokenBalanceUiModel? = null,
-    val srcFiatValue: String = "0",
+/**
+ * Destination-side quote display values, shown while a quote loads and after it resolves.
+ *
+ * @property isDstEstimated True while the shown destination value is an indicative spot-price
+ *   estimate (rendered greyed) rather than a firm provider quote. Display-only — never gates
+ *   Continue (#4712).
+ */
+internal data class QuoteDisplay(
+    val provider: UiText = UiText.Empty,
     val estimatedDstTokenValue: String = "0",
     val estimatedDstFiatValue: String = "0",
-    // True while the shown destination value is an indicative spot-price estimate (rendered greyed)
-    // rather than a firm provider quote. Display-only — never gates Continue (#4712).
     val isDstEstimated: Boolean = false,
-    val provider: UiText = UiText.Empty,
+    val hasQuote: Boolean = false,
+    val expiredAt: Instant? = null,
+)
+
+/** Network and swap fee breakdown rendered in the fee-details panel. */
+internal data class FeeBreakdown(
     val networkFee: String = "",
     val networkFeeFiat: String = "",
     val totalFee: String = "0",
     val fee: String = "",
+    val outboundFee: String? = null,
+    val swapFeePercent: String? = null,
+)
+
+/** VULT-tier and referral discount info rendered in the fee-details panel. */
+internal data class DiscountInfo(
+    val tierType: TierType? = null,
+    val vultBpsDiscount: Int? = null,
+    val vultBpsDiscountFiatValue: String? = null,
+    val referralBpsDiscount: Int? = null,
+    val referralBpsDiscountFiatValue: String? = null,
+)
+
+internal data class SwapFormUiModel(
+    val selectedSrcToken: TokenBalanceUiModel? = null,
+    val selectedDstToken: TokenBalanceUiModel? = null,
+    val srcFiatValue: String = "0",
+    val quoteDisplay: QuoteDisplay = QuoteDisplay(),
+    val feeBreakdown: FeeBreakdown = FeeBreakdown(),
+    val discountInfo: DiscountInfo = DiscountInfo(),
     val error: UiText? = null,
     val formError: UiText? = null,
     val isSwapDisabled: Boolean = true,
     val isLoading: Boolean = false,
     val isLoadingNextScreen: Boolean = false,
     val enableMaxAmount: Boolean = false,
-    val hasQuote: Boolean = false,
-    val expiredAt: Instant? = null,
-    val tierType: TierType? = null,
-    val vultBpsDiscount: Int? = null,
-    val vultBpsDiscountFiatValue: String? = null,
-    val referralBpsDiscount: Int? = null,
-    val referralBpsDiscountFiatValue: String? = null,
-    val outboundFee: String? = null,
-    val swapFeePercent: String? = null,
 )
 
 @HiltViewModel
@@ -132,9 +151,7 @@ constructor(
     private var vaultId: String? = null
     private val chain = MutableStateFlow<Chain?>(null)
 
-    private var quote: SwapQuote? = null
-
-    private var provider: SwapProvider? = null
+    private val quoteState = QuoteStateHolder()
 
     private val srcAmount: BigDecimal?
         get() = srcAmountState.text.toString().toBigDecimalOrNull()
@@ -173,7 +190,19 @@ constructor(
         val immediate: Boolean,
     )
 
-    private var preFlipState: PreFlipState? = null
+    /**
+     * Mutable swap-quote state confined to the main thread.
+     *
+     * Every read/write happens from Main.immediate-dispatched code (the quote pipeline, the flip
+     * gesture, and the reset paths), so these plain `var`s need no synchronization. Grouping them
+     * here keeps that threading invariant explicit in one place instead of scattering it across
+     * fields.
+     */
+    private class QuoteStateHolder {
+        var quote: SwapQuote? = null
+        var provider: SwapProvider? = null
+        var preFlipState: PreFlipState? = null
+    }
 
     private var isLoading: Boolean
         get() = uiState.value.isLoading
@@ -272,7 +301,7 @@ constructor(
             val srcTokenValue = convertTokenAndValueToTokenValue(srcToken, srcAmountInt)
 
             val quote =
-                quote
+                quoteState.quote
                     ?: throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
                     )
@@ -312,7 +341,7 @@ constructor(
                     isLoadingNextScreen = false
                     showError(e.text)
                 } catch (e: Exception) {
-                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    if (e is CancellationException) throw e
                     isLoadingNextScreen = false
                     Timber.e(e)
                     showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
@@ -410,7 +439,7 @@ constructor(
         val currentDstTokenId = selectedDst.value?.account?.token?.id
 
         val restoredAmount =
-            preFlipState
+            quoteState.preFlipState
                 ?.takeIf { state ->
                     state.srcTokenId == currentDstTokenId &&
                         state.dstTokenId == currentSrcTokenId &&
@@ -420,7 +449,7 @@ constructor(
 
         val newSrcAmount =
             restoredAmount
-                ?: quote
+                ?: quoteState.quote
                     ?.expectedDstValue
                     ?.decimal
                     ?.formatFlippedAmount(selectedDst.value?.account?.token?.decimal)
@@ -446,7 +475,7 @@ constructor(
             srcAmountState.setTextAndPlaceCursorAtEnd(newSrcAmount)
         }
 
-        preFlipState =
+        quoteState.preFlipState =
             if (currentSrcTokenId != null && currentDstTokenId != null) {
                 PreFlipState(
                     srcAmount = currentSrcText,
@@ -458,8 +487,8 @@ constructor(
     }
 
     private fun cacheCurrentQuote() {
-        val currentQuote = quote ?: return
-        val currentProvider = provider ?: return
+        val currentQuote = quoteState.quote ?: return
+        val currentProvider = quoteState.provider ?: return
         val srcToken = selectedSrc.value?.account?.token ?: return
         val dstToken = selectedDst.value?.account?.token ?: return
         val currentAmount = srcAmount?.movePointRight(srcToken.decimal)?.toBigInteger() ?: return
@@ -485,7 +514,9 @@ constructor(
 
         val srcToken = selectedSrcAccount.token
 
-        val swapFee = quote?.fees?.value.takeIf { provider == SwapProvider.LIFI } ?: BigInteger.ZERO
+        val swapFee =
+            quoteState.quote?.fees?.value.takeIf { quoteState.provider == SwapProvider.LIFI }
+                ?: BigInteger.ZERO
 
         val maxUsableTokenAmount =
             srcTokenValue.value -
@@ -579,12 +610,15 @@ constructor(
 
                             uiState.update {
                                 it.copy(
-                                    networkFee = result.estimated.formattedTokenValue,
-                                    networkFeeFiat = result.estimated.formattedFiatValue,
+                                    feeBreakdown =
+                                        it.feeBreakdown.copy(
+                                            networkFee = result.estimated.formattedTokenValue,
+                                            networkFeeFiat = result.estimated.formattedFiatValue,
+                                        )
                                 )
                             }
                         } catch (e: Exception) {
-                            if (e is kotlinx.coroutines.CancellationException) throw e
+                            if (e is CancellationException) throw e
                             Timber.e(e)
                             showError(
                                 UiText.StringResource(
@@ -600,7 +634,12 @@ constructor(
                         // can compute the correct UTXO plan fee.
                         estimatedNetworkFeeTokenValue.value = null
                         estimatedNetworkFeeFiatValue.value = null
-                        uiState.update { it.copy(networkFee = "", networkFeeFiat = "") }
+                        uiState.update {
+                            it.copy(
+                                feeBreakdown =
+                                    it.feeBreakdown.copy(networkFee = "", networkFeeFiat = "")
+                            )
+                        }
                         // The plan-fee block in calculateFees() may have already run
                         // with a stale or null gasFeeChain and skipped via its chain guard,
                         // leaving the form fee blank; re-fire so it can compute with the byte
@@ -618,7 +657,14 @@ constructor(
                 gasFeeFiat + swapFeeFiat
             }
             .onEach { totalFee ->
-                uiState.update { it.copy(totalFee = fiatValueToString(totalFee, asFee = true)) }
+                uiState.update {
+                    it.copy(
+                        feeBreakdown =
+                            it.feeBreakdown.copy(
+                                totalFee = fiatValueToString(totalFee, asFee = true)
+                            )
+                    )
+                }
             }
             .launchIn(viewModelScope)
     }
@@ -641,7 +687,15 @@ constructor(
                     // previous pair's destination value. Reset it so the skeleton shows while the
                     // new quote loads instead of the stale amount reading as a firm quote for the
                     // new pair (#4712 review).
-                    uiState.update { it.copy(estimatedDstTokenValue = "0", isDstEstimated = false) }
+                    uiState.update {
+                        it.copy(
+                            quoteDisplay =
+                                it.quoteDisplay.copy(
+                                    estimatedDstTokenValue = "0",
+                                    isDstEstimated = false,
+                                )
+                        )
+                    }
                 }
                 .combine(amountChanges) { address, immediate ->
                     QuoteInput(address = address, amount = srcAmount, immediate = immediate)
@@ -756,7 +810,7 @@ constructor(
 
                         val quoteResult = bestQuote.result
                         val provider = quoteResult.provider
-                        this@SwapFormViewModel.provider = provider
+                        quoteState.provider = provider
 
                         val vultBPSDiscount = bestQuote.candidate.vultBPSDiscount
                         val referral = bestQuote.candidate.referral
@@ -774,17 +828,23 @@ constructor(
                                 result.referralCode?.let { rc -> referralCode.update { rc } }
                                 uiState.update {
                                     it.copy(
-                                        referralBpsDiscount = result.referralBpsDiscount,
-                                        referralBpsDiscountFiatValue =
-                                            result.referralBpsDiscountFiatValue,
+                                        discountInfo =
+                                            it.discountInfo.copy(
+                                                referralBpsDiscount = result.referralBpsDiscount,
+                                                referralBpsDiscountFiatValue =
+                                                    result.referralBpsDiscountFiatValue,
+                                            )
                                     )
                                 }
                             }
                         } else {
                             uiState.update {
                                 it.copy(
-                                    referralBpsDiscount = null,
-                                    referralBpsDiscountFiatValue = null,
+                                    discountInfo =
+                                        it.discountInfo.copy(
+                                            referralBpsDiscount = null,
+                                            referralBpsDiscountFiatValue = null,
+                                        )
                                 )
                             }
                         }
@@ -797,13 +857,17 @@ constructor(
                             )
                         uiState.update {
                             it.copy(
-                                vultBpsDiscount = vultResult.vultBpsDiscount,
-                                vultBpsDiscountFiatValue = vultResult.vultBpsDiscountFiatValue,
-                                tierType = vultResult.tierType,
+                                discountInfo =
+                                    it.discountInfo.copy(
+                                        vultBpsDiscount = vultResult.vultBpsDiscount,
+                                        vultBpsDiscountFiatValue =
+                                            vultResult.vultBpsDiscountFiatValue,
+                                        tierType = vultResult.tierType,
+                                    )
                             )
                         }
 
-                        this@SwapFormViewModel.quote = quoteResult.quote
+                        quoteState.quote = quoteResult.quote
                         // SwapKit BTC settles by broadcasting the provider's PSBT, whose miner fee
                         // is the only network cost — and it is already surfaced as the UTXO plan
                         // network fee below. SwapKit reports that same deposit cost as its inbound
@@ -855,19 +919,25 @@ constructor(
                         // with sats/byte as the total fee.
                         uiState.update {
                             it.copy(
-                                provider = quoteResult.providerUiText,
                                 srcFiatValue = quoteResult.srcFiatValueText,
-                                estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
-                                estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
-                                isDstEstimated = false,
-                                fee = feeText,
-                                outboundFee = quoteResult.outboundFeeText,
-                                swapFeePercent = quoteResult.swapFeePercent,
+                                quoteDisplay =
+                                    it.quoteDisplay.copy(
+                                        provider = quoteResult.providerUiText,
+                                        estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
+                                        estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
+                                        isDstEstimated = false,
+                                        hasQuote = true,
+                                        expiredAt = quoteState.quote?.expiredAt,
+                                    ),
+                                feeBreakdown =
+                                    it.feeBreakdown.copy(
+                                        fee = feeText,
+                                        outboundFee = quoteResult.outboundFeeText,
+                                        swapFeePercent = quoteResult.swapFeePercent,
+                                    ),
                                 formError = null,
                                 isSwapDisabled = isUtxoSwap,
                                 isLoading = false,
-                                hasQuote = true,
-                                expiredAt = this@SwapFormViewModel.quote?.expiredAt,
                             )
                         }
 
@@ -896,9 +966,13 @@ constructor(
                                             planFee.estimated.tokenValue
                                         uiState.update {
                                             it.copy(
-                                                networkFee = planFee.estimated.formattedTokenValue,
-                                                networkFeeFiat =
-                                                    planFee.estimated.formattedFiatValue,
+                                                feeBreakdown =
+                                                    it.feeBreakdown.copy(
+                                                        networkFee =
+                                                            planFee.estimated.formattedTokenValue,
+                                                        networkFeeFiat =
+                                                            planFee.estimated.formattedFiatValue,
+                                                    ),
                                                 isSwapDisabled = false,
                                             )
                                         }
@@ -920,8 +994,11 @@ constructor(
                                         uiState.update {
                                             it.copy(
                                                 isSwapDisabled = true,
-                                                networkFee = "",
-                                                networkFeeFiat = "",
+                                                feeBreakdown =
+                                                    it.feeBreakdown.copy(
+                                                        networkFee = "",
+                                                        networkFeeFiat = "",
+                                                    ),
                                             )
                                         }
                                     }
@@ -931,7 +1008,15 @@ constructor(
                                 // clear any stale fee from the previous chain.
                                 estimatedNetworkFeeTokenValue.value = null
                                 estimatedNetworkFeeFiatValue.value = null
-                                uiState.update { it.copy(networkFee = "", networkFeeFiat = "") }
+                                uiState.update {
+                                    it.copy(
+                                        feeBreakdown =
+                                            it.feeBreakdown.copy(
+                                                networkFee = "",
+                                                networkFeeFiat = "",
+                                            )
+                                    )
+                                }
                             }
                         }
 
@@ -973,7 +1058,7 @@ constructor(
                         )
                     }
 
-                    this@SwapFormViewModel.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
+                    quoteState.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
                 }
         }
     }
@@ -1008,9 +1093,12 @@ constructor(
 
             uiState.update {
                 it.copy(
-                    estimatedDstTokenValue = indicative.estimatedDstTokenValue,
-                    estimatedDstFiatValue = indicative.estimatedDstFiatValue,
-                    isDstEstimated = true,
+                    quoteDisplay =
+                        it.quoteDisplay.copy(
+                            estimatedDstTokenValue = indicative.estimatedDstTokenValue,
+                            estimatedDstFiatValue = indicative.estimatedDstFiatValue,
+                            isDstEstimated = true,
+                        )
                 )
             }
         } catch (e: CancellationException) {
@@ -1034,8 +1122,8 @@ constructor(
         // calculateFees against the same invalid amount, briefly re-exposing the fee block.
         refreshQuoteJob?.cancel()
         refreshQuoteJob = null
-        this@SwapFormViewModel.quote = null
-        this@SwapFormViewModel.provider = null
+        quoteState.quote = null
+        quoteState.provider = null
         // collectTotalFee() combines this with estimatedNetworkFeeFiatValue. Resetting it
         // to null lets filterNotNull() short-circuit so a later calculateGas() update can't
         // write a (newGas + staleSwap) combination back into state.totalFee — the same race
@@ -1046,25 +1134,19 @@ constructor(
         // them empty until selectedSrc changes again.
         uiState.update {
             it.copy(
-                provider = UiText.Empty,
                 srcFiatValue = "0",
-                estimatedDstTokenValue = "0",
-                estimatedDstFiatValue = "0",
-                isDstEstimated = false,
-                fee = "0",
-                totalFee = "0",
-                vultBpsDiscount = null,
-                vultBpsDiscountFiatValue = null,
-                referralBpsDiscount = null,
-                referralBpsDiscountFiatValue = null,
-                outboundFee = null,
-                swapFeePercent = null,
-                tierType = null,
+                quoteDisplay = QuoteDisplay(),
+                feeBreakdown =
+                    it.feeBreakdown.copy(
+                        fee = "0",
+                        totalFee = "0",
+                        outboundFee = null,
+                        swapFeePercent = null,
+                    ),
+                discountInfo = DiscountInfo(),
                 isSwapDisabled = true,
-                hasQuote = false,
                 formError = error,
                 isLoading = false,
-                expiredAt = null,
             )
         }
         if (cause != null) {

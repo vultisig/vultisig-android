@@ -260,22 +260,22 @@ internal class SwapFormViewModelTest {
             assertNull(state.selectedSrcToken)
             assertNull(state.selectedDstToken)
             assertEquals("0", state.srcFiatValue)
-            assertEquals("0", state.estimatedDstTokenValue)
-            assertEquals("0", state.estimatedDstFiatValue)
-            assertEquals("", state.networkFee)
-            assertEquals("", state.networkFeeFiat)
-            assertEquals("0", state.totalFee)
-            assertEquals("", state.fee)
+            assertEquals("0", state.quoteDisplay.estimatedDstTokenValue)
+            assertEquals("0", state.quoteDisplay.estimatedDstFiatValue)
+            assertEquals("", state.feeBreakdown.networkFee)
+            assertEquals("", state.feeBreakdown.networkFeeFiat)
+            assertEquals("0", state.feeBreakdown.totalFee)
+            assertEquals("", state.feeBreakdown.fee)
             assertNull(state.error)
             assertNull(state.formError)
             assertTrue(state.isSwapDisabled)
             assertFalse(state.isLoadingNextScreen)
-            assertNull(state.expiredAt)
-            assertNull(state.tierType)
-            assertNull(state.vultBpsDiscount)
-            assertNull(state.vultBpsDiscountFiatValue)
-            assertNull(state.referralBpsDiscount)
-            assertNull(state.referralBpsDiscountFiatValue)
+            assertNull(state.quoteDisplay.expiredAt)
+            assertNull(state.discountInfo.tierType)
+            assertNull(state.discountInfo.vultBpsDiscount)
+            assertNull(state.discountInfo.vultBpsDiscountFiatValue)
+            assertNull(state.discountInfo.referralBpsDiscount)
+            assertNull(state.discountInfo.referralBpsDiscountFiatValue)
         }
 
     @Test
@@ -687,14 +687,14 @@ internal class SwapFormViewModelTest {
             vm.flipSelectedTokens()
 
             val state = vm.uiState.value
-            assertEquals("0", state.estimatedDstTokenValue)
-            assertEquals("0", state.estimatedDstFiatValue)
+            assertEquals("0", state.quoteDisplay.estimatedDstTokenValue)
+            assertEquals("0", state.quoteDisplay.estimatedDstFiatValue)
             assertEquals("0", state.srcFiatValue)
             assertNull(state.formError)
             // hasQuote must drop on flip, otherwise the fee block stays on screen during the
             // 300ms debounce while collectTotalFee can still combine the new pair's gas with
             // the prior pair's swapFeeFiat.
-            assertFalse(state.hasQuote)
+            assertFalse(state.quoteDisplay.hasQuote)
         }
 
     // endregion
@@ -892,16 +892,16 @@ internal class SwapFormViewModelTest {
             // Before the debounce/firm quote: the greyed indicative estimate is already shown.
             advanceTimeBy(50)
             val indicative = vm.uiState.value
-            assertEquals("1.23", indicative.estimatedDstTokenValue)
-            assertEquals("$4.56", indicative.estimatedDstFiatValue)
-            assertTrue(indicative.isDstEstimated)
+            assertEquals("1.23", indicative.quoteDisplay.estimatedDstTokenValue)
+            assertEquals("$4.56", indicative.quoteDisplay.estimatedDstFiatValue)
+            assertTrue(indicative.quoteDisplay.isDstEstimated)
 
             // Once the firm quote resolves it replaces the indicative value (no longer greyed).
             advanceTimeBy(300)
             advanceUntilIdle()
             val firm = vm.uiState.value
-            assertEquals("95.0", firm.estimatedDstTokenValue)
-            assertFalse(firm.isDstEstimated)
+            assertEquals("95.0", firm.quoteDisplay.estimatedDstTokenValue)
+            assertFalse(firm.quoteDisplay.isDstEstimated)
         }
 
     @Test
@@ -935,7 +935,7 @@ internal class SwapFormViewModelTest {
             // timer is armed, because each refresh re-arms it into a periodic timer.
             advanceTimeBy(500)
             runCurrent()
-            assertEquals("95.0", vm.uiState.value.estimatedDstTokenValue)
+            assertEquals("95.0", vm.uiState.value.quoteDisplay.estimatedDstTokenValue)
             assertFalse(vm.uiState.value.isLoading)
 
             // Drive the expiry-triggered refresh (quote lives ~1 minute) exactly once. The refresh
@@ -944,7 +944,7 @@ internal class SwapFormViewModelTest {
             advanceTimeBy(61_000)
             runCurrent()
             assertFalse(vm.uiState.value.isLoading)
-            assertEquals("95.0", vm.uiState.value.estimatedDstTokenValue)
+            assertEquals("95.0", vm.uiState.value.quoteDisplay.estimatedDstTokenValue)
             // The refresh actually re-fetched a quote (initial fetch + one silent refresh), proving
             // the timer fired rather than the assertions passing because nothing ran.
             coVerify(atLeast = 2) {
@@ -1117,7 +1117,7 @@ internal class SwapFormViewModelTest {
 
             assertEquals(
                 UiText.StringResource(R.string.swap_form_provider_thorchain),
-                vm.uiState.value.provider,
+                vm.uiState.value.quoteDisplay.provider,
             )
         }
 
@@ -1159,7 +1159,7 @@ internal class SwapFormViewModelTest {
 
             assertEquals(
                 UiText.StringResource(R.string.swap_form_provider_mayachain),
-                vm.uiState.value.provider,
+                vm.uiState.value.quoteDisplay.provider,
             )
         }
 
@@ -1196,8 +1196,8 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             val state = vm.uiState.value
-            assertEquals("$1.50", state.outboundFee)
-            assertEquals("0.30%", state.swapFeePercent)
+            assertEquals("$1.50", state.feeBreakdown.outboundFee)
+            assertEquals("0.30%", state.feeBreakdown.swapFeePercent)
         }
 
     @Test
@@ -1228,8 +1228,8 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             val state = vm.uiState.value
-            assertNull(state.outboundFee)
-            assertNull(state.swapFeePercent)
+            assertNull(state.feeBreakdown.outboundFee)
+            assertNull(state.feeBreakdown.swapFeePercent)
         }
 
     @Test
@@ -1268,8 +1268,8 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             // Sanity-check: the successful quote populated both fields.
-            assertEquals("$1.50", vm.uiState.value.outboundFee)
-            assertEquals("0.30%", vm.uiState.value.swapFeePercent)
+            assertEquals("$1.50", vm.uiState.value.feeBreakdown.outboundFee)
+            assertEquals("0.30%", vm.uiState.value.feeBreakdown.swapFeePercent)
 
             // Re-trigger; this time the mock throws and the reset block must clear them.
             vm.srcAmountState.setTextAndPlaceCursorAtEnd("2")
@@ -1278,8 +1278,8 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             val state = vm.uiState.value
-            assertNull(state.outboundFee)
-            assertNull(state.swapFeePercent)
+            assertNull(state.feeBreakdown.outboundFee)
+            assertNull(state.feeBreakdown.swapFeePercent)
         }
 
     // endregion
@@ -1477,26 +1477,26 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             val state = vm.uiState.value
-            assertEquals(UiText.Empty, state.provider)
+            assertEquals(UiText.Empty, state.quoteDisplay.provider)
             assertEquals("0", state.srcFiatValue)
-            assertEquals("0", state.estimatedDstTokenValue)
-            assertEquals("0", state.estimatedDstFiatValue)
-            assertEquals("0", state.fee)
-            assertEquals("0", state.totalFee)
-            assertNull(state.vultBpsDiscount)
-            assertNull(state.vultBpsDiscountFiatValue)
-            assertNull(state.referralBpsDiscount)
-            assertNull(state.referralBpsDiscountFiatValue)
-            assertNull(state.tierType)
+            assertEquals("0", state.quoteDisplay.estimatedDstTokenValue)
+            assertEquals("0", state.quoteDisplay.estimatedDstFiatValue)
+            assertEquals("0", state.feeBreakdown.fee)
+            assertEquals("0", state.feeBreakdown.totalFee)
+            assertNull(state.discountInfo.vultBpsDiscount)
+            assertNull(state.discountInfo.vultBpsDiscountFiatValue)
+            assertNull(state.discountInfo.referralBpsDiscount)
+            assertNull(state.discountInfo.referralBpsDiscountFiatValue)
+            assertNull(state.discountInfo.tierType)
             assertTrue(state.isSwapDisabled)
             assertFalse(state.isLoading)
-            assertFalse(state.hasQuote)
-            assertNull(state.expiredAt)
+            assertFalse(state.quoteDisplay.hasQuote)
+            assertNull(state.quoteDisplay.expiredAt)
             // Gas fields are tied to the source token (calculateGas), not the quote, so they
             // must survive a quote exception — clearing them would leave the row empty until
             // selectedSrc changes again.
-            assertEquals("0.001 ETH", state.networkFee)
-            assertEquals("$2.00", state.networkFeeFiat)
+            assertEquals("0.001 ETH", state.feeBreakdown.networkFee)
+            assertEquals("$2.00", state.feeBreakdown.networkFeeFiat)
         }
 
     @Test
@@ -1528,7 +1528,7 @@ internal class SwapFormViewModelTest {
             advanceTimeBy(500)
             advanceUntilIdle()
 
-            assertFalse(vm.uiState.value.hasQuote)
+            assertFalse(vm.uiState.value.quoteDisplay.hasQuote)
             assertNotNull(vm.uiState.value.formError)
 
             // Trigger the recovery path.
@@ -1538,16 +1538,16 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             val state = vm.uiState.value
-            assertTrue(state.hasQuote)
+            assertTrue(state.quoteDisplay.hasQuote)
             assertNull(state.formError)
             assertFalse(state.isSwapDisabled)
             assertFalse(state.isLoading)
-            assertNotNull(state.expiredAt)
+            assertNotNull(state.quoteDisplay.expiredAt)
             // Gas fields are populated by calculateGas (selectedSrc-scoped) and are not
             // touched by the SwapException catch nor repopulated by the success path. A
             // regression that re-introduces clearing in resetQuoteState would surface here.
-            assertEquals("0.001 ETH", state.networkFee)
-            assertEquals("$2.00", state.networkFeeFiat)
+            assertEquals("0.001 ETH", state.feeBreakdown.networkFee)
+            assertEquals("$2.00", state.feeBreakdown.networkFeeFiat)
         }
 
     @Test
@@ -1577,9 +1577,9 @@ internal class SwapFormViewModelTest {
 
             val state = vm.uiState.value
             assertEquals(UiText.StringResource(R.string.swap_error_quote_failed), state.formError)
-            assertFalse(state.hasQuote)
-            assertEquals(UiText.Empty, state.provider)
-            assertEquals("0", state.totalFee)
+            assertFalse(state.quoteDisplay.hasQuote)
+            assertEquals(UiText.Empty, state.quoteDisplay.provider)
+            assertEquals("0", state.feeBreakdown.totalFee)
             assertTrue(state.isSwapDisabled)
             assertFalse(state.isLoading)
         }
@@ -1753,8 +1753,8 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             val state = vm.uiState.value
-            assertEquals(50, state.vultBpsDiscount)
-            assertEquals("$5.00", state.vultBpsDiscountFiatValue)
+            assertEquals(50, state.discountInfo.vultBpsDiscount)
+            assertEquals("$5.00", state.discountInfo.vultBpsDiscountFiatValue)
         }
 
     @Test
@@ -1786,8 +1786,8 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             val state = vm.uiState.value
-            assertNull(state.vultBpsDiscount)
-            assertNull(state.vultBpsDiscountFiatValue)
+            assertNull(state.discountInfo.vultBpsDiscount)
+            assertNull(state.discountInfo.vultBpsDiscountFiatValue)
         }
 
     // endregion
@@ -1821,7 +1821,7 @@ internal class SwapFormViewModelTest {
             advanceTimeBy(500)
             advanceUntilIdle()
 
-            assertNotNull(vm.uiState.value.expiredAt)
+            assertNotNull(vm.uiState.value.quoteDisplay.expiredAt)
         }
 
     // endregion
@@ -2018,7 +2018,7 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             assertFalse(vm.uiState.value.isSwapDisabled)
-            assertEquals("0.00000816 BTC", vm.uiState.value.networkFee)
+            assertEquals("0.00000816 BTC", vm.uiState.value.feeBreakdown.networkFee)
         }
 
     @Test
@@ -2038,7 +2038,7 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             assertFalse(vm.uiState.value.isSwapDisabled)
-            assertEquals("0.00000816 BTC", vm.uiState.value.networkFee)
+            assertEquals("0.00000816 BTC", vm.uiState.value.feeBreakdown.networkFee)
         }
 
     @Test
@@ -2159,7 +2159,7 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             assertTrue(vm.uiState.value.isSwapDisabled)
-            assertEquals("", vm.uiState.value.networkFee)
+            assertEquals("", vm.uiState.value.feeBreakdown.networkFee)
         }
 
     @Test
@@ -2197,7 +2197,7 @@ internal class SwapFormViewModelTest {
             advanceUntilIdle()
 
             assertTrue(vm.uiState.value.isSwapDisabled)
-            assertEquals("", vm.uiState.value.networkFee)
+            assertEquals("", vm.uiState.value.feeBreakdown.networkFee)
         }
 
     // endregion

@@ -114,6 +114,9 @@ import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.utils.toPx
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
+import com.vultisig.wallet.ui.models.swap.DiscountInfo
+import com.vultisig.wallet.ui.models.swap.FeeBreakdown
+import com.vultisig.wallet.ui.models.swap.QuoteDisplay
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.navigation.Route
@@ -211,8 +214,8 @@ internal fun SwapScreen(
         title = stringResource(R.string.chain_account_view_swap),
         onBackClick = onBackClick,
         actions = {
-            if (state.expiredAt != null) {
-                QuoteTimer(expiredAt = state.expiredAt)
+            if (state.quoteDisplay.expiredAt != null) {
+                QuoteTimer(expiredAt = state.quoteDisplay.expiredAt)
             }
         },
         content = {
@@ -362,13 +365,13 @@ internal fun SwapScreen(
                             // quote loads; only fall back to the skeleton when there is nothing to
                             // show yet — the first quote for a pair (#4712).
                             val dstHasValue =
-                                state.estimatedDstTokenValue.isNotBlank() &&
-                                    state.estimatedDstTokenValue != "0"
+                                state.quoteDisplay.estimatedDstTokenValue.isNotBlank() &&
+                                    state.quoteDisplay.estimatedDstTokenValue != "0"
                             TokenInput(
                                 title = stringResource(R.string.swap_form_dst_token_title),
                                 isLoading = state.isLoading && !dstHasValue,
                                 selectedToken = state.selectedDstToken,
-                                fiatValue = state.estimatedDstFiatValue,
+                                fiatValue = state.quoteDisplay.estimatedDstFiatValue,
                                 onSelectNetworkClick = onSelectDstNetworkClick,
                                 onSelectTokenClick = onSelectDstToken,
                                 chainTestTag = "SwapFormScreen.toChain",
@@ -388,12 +391,13 @@ internal fun SwapScreen(
                                 focused = false,
                                 textFieldContent = {
                                     Text(
-                                        text = state.estimatedDstTokenValue,
+                                        text = state.quoteDisplay.estimatedDstTokenValue,
                                         style = Theme.brockmann.headings.title2,
                                         // Grey the value while it is only an indicative spot-price
                                         // estimate; firm quotes render in the brighter secondary.
                                         color =
-                                            if (state.isDstEstimated) Theme.v2.colors.text.tertiary
+                                            if (state.quoteDisplay.isDstEstimated)
+                                                Theme.v2.colors.text.tertiary
                                             else Theme.v2.colors.text.secondary,
                                         textAlign = TextAlign.End,
                                         maxLines = 1,
@@ -403,7 +407,7 @@ internal fun SwapScreen(
                         }
                     }
 
-                    AnimatedVisibility(visible = state.isLoading || state.hasQuote) {
+                    AnimatedVisibility(visible = state.isLoading || state.quoteDisplay.hasQuote) {
                         Column(
                             verticalArrangement = Arrangement.spacedBy(10.dp),
                             modifier = Modifier.padding(horizontal = 8.dp),
@@ -411,7 +415,7 @@ internal fun SwapScreen(
                             val placeHolderModifier = Modifier.height(16.dp).width(80.dp)
                             FormDetails2(
                                 title = stringResource(R.string.swap_screen_provider_title),
-                                value = state.provider.asString(),
+                                value = state.quoteDisplay.provider.asString(),
                                 placeholder =
                                     if (state.isLoading) {
                                         { UiPlaceholderLoader(placeHolderModifier) }
@@ -431,7 +435,7 @@ internal fun SwapScreen(
                                         {
                                             Row {
                                                 Text(
-                                                    text = state.totalFee,
+                                                    text = state.feeBreakdown.totalFee,
                                                     color = Theme.v2.colors.text.secondary,
                                                     style = Theme.brockmann.supplementary.caption,
                                                     textAlign = TextAlign.End,
@@ -483,7 +487,7 @@ internal fun SwapScreen(
                                                                     Theme.v2.colors.neutrals.n100
                                                             )
                                                     ) {
-                                                        append(state.networkFee)
+                                                        append(state.feeBreakdown.networkFee)
                                                     }
                                                     append(" ")
                                                     withStyle(
@@ -494,8 +498,11 @@ internal fun SwapScreen(
                                                             )
                                                     ) {
                                                         append(
-                                                            if (state.networkFeeFiat.isNotEmpty())
-                                                                "(~${state.networkFeeFiat})"
+                                                            if (
+                                                                state.feeBreakdown.networkFeeFiat
+                                                                    .isNotEmpty()
+                                                            )
+                                                                "(~${state.feeBreakdown.networkFeeFiat})"
                                                             else ""
                                                         )
                                                     }
@@ -507,7 +514,7 @@ internal fun SwapScreen(
                                         )
 
                                         val feeTitle =
-                                            state.swapFeePercent?.let {
+                                            state.feeBreakdown.swapFeePercent?.let {
                                                 stringResource(
                                                     R.string
                                                         .swap_form_estimated_fees_with_percent_title,
@@ -519,42 +526,44 @@ internal fun SwapScreen(
                                                 )
                                         FormDetails2(
                                             title = feeTitle,
-                                            value = state.fee,
+                                            value = state.feeBreakdown.fee,
                                             placeholder =
                                                 if (state.isLoading) {
                                                     { UiPlaceholderLoader(placeHolderModifier) }
                                                 } else null,
                                         )
 
-                                        if (state.outboundFee != null) {
+                                        if (state.feeBreakdown.outboundFee != null) {
                                             FormDetails2(
                                                 title =
                                                     stringResource(
                                                         R.string.swap_form_outbound_fee_title
                                                     ),
-                                                value = state.outboundFee,
+                                                value = state.feeBreakdown.outboundFee,
                                             )
                                         }
 
-                                        if (state.vultBpsDiscount != null) {
+                                        if (state.discountInfo.vultBpsDiscount != null) {
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.SpaceBetween,
                                             ) {
                                                 VultDiscountTier(
-                                                    vultBpsDiscount = state.vultBpsDiscount,
-                                                    tierType = state.tierType,
+                                                    vultBpsDiscount =
+                                                        state.discountInfo.vultBpsDiscount,
+                                                    tierType = state.discountInfo.tierType,
                                                 )
 
                                                 Text(
-                                                    text = "-${state.vultBpsDiscountFiatValue}",
+                                                    text =
+                                                        "-${state.discountInfo.vultBpsDiscountFiatValue}",
                                                     color = Theme.v2.colors.text.secondary,
                                                     style = Theme.brockmann.supplementary.caption,
                                                 )
                                             }
                                         }
 
-                                        if (state.referralBpsDiscount != null) {
+                                        if (state.discountInfo.referralBpsDiscount != null) {
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 verticalAlignment = Alignment.CenterVertically,
@@ -571,7 +580,7 @@ internal fun SwapScreen(
                                                         stringResource(
                                                             R.string
                                                                 .swap_form_referral_discount_bps,
-                                                            state.referralBpsDiscount,
+                                                            state.discountInfo.referralBpsDiscount,
                                                         ),
                                                     color = Theme.v2.colors.text.tertiary,
                                                     style = Theme.brockmann.supplementary.caption,
@@ -580,7 +589,8 @@ internal fun SwapScreen(
                                                 UiSpacer(weight = 1f)
 
                                                 Text(
-                                                    text = "-${state.referralBpsDiscountFiatValue}",
+                                                    text =
+                                                        "-${state.discountInfo.referralBpsDiscountFiatValue}",
                                                     color = Theme.v2.colors.text.secondary,
                                                     style = Theme.brockmann.supplementary.caption,
                                                 )
@@ -997,7 +1007,7 @@ private fun formatDurationAsMinutesSeconds(duration: Duration): String {
 @Composable
 internal fun SwapFormScreenPreview() {
     SwapScreen(
-        state = SwapFormUiModel(estimatedDstTokenValue = "0"),
+        state = SwapFormUiModel(quoteDisplay = QuoteDisplay(estimatedDstTokenValue = "0")),
         srcAmountTextFieldState = TextFieldState(),
     )
 }
@@ -1011,19 +1021,25 @@ internal fun SwapFormScreenPreview2() {
                 selectedSrcToken = longTokenInput,
                 selectedDstToken = tokenInput,
                 srcFiatValue = "5.25",
-                estimatedDstTokenValue = "12.80",
-                estimatedDstFiatValue = "5.24",
-                provider = UiText.DynamicString("ThorSwap"),
-                networkFee = "0.02 RUNE",
-                networkFeeFiat = "0.004 USD",
-                totalFee = "0.024 USD",
-                fee = "0.02 RUNE",
+                quoteDisplay =
+                    QuoteDisplay(
+                        provider = UiText.DynamicString("ThorSwap"),
+                        estimatedDstTokenValue = "12.80",
+                        estimatedDstFiatValue = "5.24",
+                        expiredAt = Clock.System.now(),
+                    ),
+                feeBreakdown =
+                    FeeBreakdown(
+                        networkFee = "0.02 RUNE",
+                        networkFeeFiat = "0.004 USD",
+                        totalFee = "0.024 USD",
+                        fee = "0.02 RUNE",
+                    ),
                 error = null,
                 formError = null,
                 isSwapDisabled = false,
                 isLoading = false,
                 isLoadingNextScreen = false,
-                expiredAt = Clock.System.now(),
             ),
         srcAmountTextFieldState = TextFieldState(),
     )
@@ -1040,10 +1056,13 @@ internal fun SwapFormQuoteLoadingPreview() {
                 selectedSrcToken = longTokenInput,
                 selectedDstToken = tokenInput,
                 srcFiatValue = "5.25",
-                estimatedDstTokenValue = "12.80",
-                estimatedDstFiatValue = "$5.24",
-                isDstEstimated = true,
-                provider = UiText.Empty,
+                quoteDisplay =
+                    QuoteDisplay(
+                        provider = UiText.Empty,
+                        estimatedDstTokenValue = "12.80",
+                        estimatedDstFiatValue = "$5.24",
+                        isDstEstimated = true,
+                    ),
                 isLoading = true,
                 isSwapDisabled = true,
             ),
@@ -1061,19 +1080,25 @@ internal fun SwapFormScreenPreview3() {
                 selectedSrcToken = tokenInput,
                 selectedDstToken = longTokenInput,
                 srcFiatValue = "5.25",
-                estimatedDstTokenValue = "12.80",
-                estimatedDstFiatValue = "5.24",
-                provider = UiText.DynamicString("ThorSwap"),
-                networkFee = "0.02 RUNE",
-                networkFeeFiat = "0.004 USD",
-                totalFee = "0.024 USD",
-                fee = "0.02 RUNE",
+                quoteDisplay =
+                    QuoteDisplay(
+                        provider = UiText.DynamicString("ThorSwap"),
+                        estimatedDstTokenValue = "12.80",
+                        estimatedDstFiatValue = "5.24",
+                        expiredAt = Clock.System.now(),
+                    ),
+                feeBreakdown =
+                    FeeBreakdown(
+                        networkFee = "0.02 RUNE",
+                        networkFeeFiat = "0.004 USD",
+                        totalFee = "0.024 USD",
+                        fee = "0.02 RUNE",
+                    ),
                 error = null,
                 formError = null,
                 isSwapDisabled = false,
                 isLoading = false,
                 isLoadingNextScreen = false,
-                expiredAt = Clock.System.now(),
             ),
         srcAmountTextFieldState = TextFieldState(),
     )
@@ -1089,24 +1114,33 @@ internal fun SwapFormScreenPreview4() {
                 selectedSrcToken = longTokenInput,
                 selectedDstToken = longTokenInput,
                 srcFiatValue = "5.25",
-                estimatedDstTokenValue = "12.80",
-                estimatedDstFiatValue = "5.24",
-                provider = UiText.DynamicString("ThorSwap"),
-                networkFee = "0.02 RUNE",
-                networkFeeFiat = "0.004 USD",
-                totalFee = "0.024 USD",
-                fee = "0.02 RUNE",
+                quoteDisplay =
+                    QuoteDisplay(
+                        provider = UiText.DynamicString("ThorSwap"),
+                        estimatedDstTokenValue = "12.80",
+                        estimatedDstFiatValue = "5.24",
+                        expiredAt = Clock.System.now(),
+                    ),
+                feeBreakdown =
+                    FeeBreakdown(
+                        networkFee = "0.02 RUNE",
+                        networkFeeFiat = "0.004 USD",
+                        totalFee = "0.024 USD",
+                        fee = "0.02 RUNE",
+                    ),
+                discountInfo =
+                    DiscountInfo(
+                        referralBpsDiscount = 10,
+                        referralBpsDiscountFiatValue = "0.001 USD",
+                        vultBpsDiscount = 30,
+                        vultBpsDiscountFiatValue = "0.003 USD",
+                        tierType = TierType.GOLD,
+                    ),
                 error = null,
                 formError = null,
                 isSwapDisabled = false,
                 isLoading = false,
                 isLoadingNextScreen = false,
-                expiredAt = Clock.System.now(),
-                referralBpsDiscount = 10,
-                referralBpsDiscountFiatValue = "0.001 USD",
-                vultBpsDiscount = 30,
-                vultBpsDiscountFiatValue = "0.003 USD",
-                tierType = TierType.GOLD,
             ),
         srcAmountTextFieldState = TextFieldState(),
     )
