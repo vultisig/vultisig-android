@@ -22,6 +22,56 @@ internal class SwapValidator @Inject constructor() {
         return null
     }
 
+    /**
+     * Pre-flight balance/gas validation run inside `swap()` before building the transaction.
+     * Mirrors the source-balance and native-gas checks for native vs. non-native source tokens and
+     * returns the form error to surface (wrapped in `InvalidTransactionDataException`), or `null`
+     * when the swap may proceed.
+     *
+     * @param selectedSrcBalance the source account balance, already resolved and non-null by the
+     *   caller.
+     * @return the error [UiText] to raise, or `null` if pre-flight validation passes.
+     */
+    fun validateSwapPreflight(
+        selectedSrc: SendSrc,
+        srcAmountValue: BigInteger,
+        selectedSrcBalance: BigInteger,
+        estimatedNetworkFeeTokenValue: TokenValue?,
+    ): UiText? {
+        val srcToken = selectedSrc.account.token
+        if (srcToken.isNativeToken) {
+            if (
+                srcAmountValue + (estimatedNetworkFeeTokenValue?.value ?: BigInteger.ZERO) >
+                    selectedSrcBalance
+            ) {
+                return UiText.FormattedText(
+                    R.string.swap_error_insufficient_balance_and_fees,
+                    listOf(srcToken.ticker),
+                )
+            }
+        } else {
+            val nativeTokenAccount = selectedSrc.address.accounts.find { it.token.isNativeToken }
+            val nativeTokenValue =
+                nativeTokenAccount?.tokenValue?.value
+                    ?: return UiText.StringResource(R.string.send_error_no_token)
+            if (selectedSrcBalance < srcAmountValue) {
+                return UiText.FormattedText(
+                    R.string.swap_error_insufficient_source_token,
+                    listOf(srcToken.ticker),
+                )
+            }
+            if (nativeTokenValue < (estimatedNetworkFeeTokenValue?.value ?: BigInteger.ZERO)) {
+                return UiText.FormattedText(
+                    R.string.swap_error_insufficient_gas_fees,
+                    listOf(
+                        "${nativeTokenAccount.token.ticker} (${nativeTokenAccount.token.chain.raw})"
+                    ),
+                )
+            }
+        }
+        return null
+    }
+
     fun validateBalanceForSwap(
         src: SendSrc,
         srcAmountValue: BigInteger,

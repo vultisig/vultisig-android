@@ -277,49 +277,14 @@ constructor(
                         UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
                     )
 
-            if (srcToken.isNativeToken) {
-                if (
-                    srcAmountInt + (estimatedNetworkFeeTokenValue.value?.value ?: BigInteger.ZERO) >
-                        selectedSrcBalance
-                ) {
-                    throw InvalidTransactionDataException(
-                        UiText.FormattedText(
-                            R.string.swap_error_insufficient_balance_and_fees,
-                            listOf(srcToken.ticker),
-                        )
-                    )
-                }
-            } else {
-                val nativeTokenAccount =
-                    selectedSrc.address.accounts.find { it.token.isNativeToken }
-                val nativeTokenValue =
-                    nativeTokenAccount?.tokenValue?.value
-                        ?: throw InvalidTransactionDataException(
-                            UiText.StringResource(R.string.send_error_no_token)
-                        )
-
-                if (selectedSrcBalance < srcAmountInt) {
-                    throw InvalidTransactionDataException(
-                        UiText.FormattedText(
-                            R.string.swap_error_insufficient_source_token,
-                            listOf(srcToken.ticker),
-                        )
-                    )
-                }
-                if (
-                    nativeTokenValue <
-                        (estimatedNetworkFeeTokenValue.value?.value ?: BigInteger.ZERO)
-                ) {
-                    throw InvalidTransactionDataException(
-                        UiText.FormattedText(
-                            R.string.swap_error_insufficient_gas_fees,
-                            listOf(
-                                "${nativeTokenAccount.token.ticker} (${nativeTokenAccount.token.chain.raw})"
-                            ),
-                        )
-                    )
-                }
-            }
+            swapValidator
+                .validateSwapPreflight(
+                    selectedSrc = selectedSrc,
+                    srcAmountValue = srcAmountInt,
+                    selectedSrcBalance = selectedSrcBalance,
+                    estimatedNetworkFeeTokenValue = estimatedNetworkFeeTokenValue.value,
+                )
+                ?.let { throw InvalidTransactionDataException(it) }
 
             viewModelScope.launch {
                 try {
@@ -912,51 +877,33 @@ constructor(
                             val currentVaultId = vaultId
                             if (currentGasFee != null && currentVaultId != null) {
                                 val (utxoDstAddress, utxoMemo) = utxoFeeData!!
-                                try {
-                                    val specificAndUtxo =
-                                        swapGasCalculator.getSpecificAndUtxo(
-                                            srcToken,
-                                            src.address.address,
-                                            currentGasFee,
-                                        )
-                                    val planFeeResult =
-                                        swapGasCalculator.computeUtxoPlanFeeResult(
+                                when (
+                                    val planFee =
+                                        swapGasCalculator.resolveUtxoPlanFee(
                                             vaultId = currentVaultId,
                                             srcToken = srcToken,
+                                            srcAddress = src.address.address,
                                             dstAddress = utxoDstAddress,
-                                            tokenAmountInt = srcTokenValue,
-                                            specificAndUtxo = specificAndUtxo,
                                             memo = utxoMemo,
+                                            tokenAmountInt = srcTokenValue,
+                                            gasFee = currentGasFee,
                                         )
-                                    if (planFeeResult != null) {
+                                ) {
+                                    is UtxoPlanFeeResult.Success -> {
                                         estimatedNetworkFeeFiatValue.value =
-                                            planFeeResult.estimated.fiatValue
+                                            planFee.estimated.fiatValue
                                         estimatedNetworkFeeTokenValue.value =
-                                            planFeeResult.estimated.tokenValue
+                                            planFee.estimated.tokenValue
                                         uiState.update {
                                             it.copy(
-                                                networkFee =
-                                                    planFeeResult.estimated.formattedTokenValue,
+                                                networkFee = planFee.estimated.formattedTokenValue,
                                                 networkFeeFiat =
-                                                    planFeeResult.estimated.formattedFiatValue,
+                                                    planFee.estimated.formattedFiatValue,
                                                 isSwapDisabled = false,
                                             )
                                         }
-                                    } else {
-                                        estimatedNetworkFeeTokenValue.value = null
-                                        estimatedNetworkFeeFiatValue.value = null
-                                        uiState.update {
-                                            it.copy(
-                                                isSwapDisabled = true,
-                                                networkFee = "",
-                                                networkFeeFiat = "",
-                                            )
-                                        }
                                     }
-                                } catch (e: Exception) {
-                                    if (e is kotlin.coroutines.cancellation.CancellationException)
-                                        throw e
-                                    if (e is InsufficientUtxosException) {
+                                    UtxoPlanFeeResult.InsufficientUtxos -> {
                                         uiState.update {
                                             it.copy(
                                                 isSwapDisabled = true,
@@ -966,7 +913,8 @@ constructor(
                                                     ),
                                             )
                                         }
-                                    } else {
+                                    }
+                                    UtxoPlanFeeResult.Unavailable -> {
                                         estimatedNetworkFeeTokenValue.value = null
                                         estimatedNetworkFeeFiatValue.value = null
                                         uiState.update {
@@ -977,7 +925,6 @@ constructor(
                                             )
                                         }
                                     }
-                                    Timber.e(e, "utxoPlanFee")
                                 }
                             } else {
                                 // gasFeeChain lags srcToken.chain after a token switch:
