@@ -543,7 +543,10 @@ internal fun SwapScreen(
                                             )
                                         }
 
-                                        if (state.discountInfo.vultBpsDiscount != null) {
+                                        if (
+                                            state.discountInfo.vultBpsDiscount != null &&
+                                                state.discountInfo.vultBpsDiscountFiatValue != null
+                                        ) {
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -563,7 +566,11 @@ internal fun SwapScreen(
                                             }
                                         }
 
-                                        if (state.discountInfo.referralBpsDiscount != null) {
+                                        if (
+                                            state.discountInfo.referralBpsDiscount != null &&
+                                                state.discountInfo.referralBpsDiscountFiatValue !=
+                                                    null
+                                        ) {
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(),
                                                 verticalAlignment = Alignment.CenterVertically,
