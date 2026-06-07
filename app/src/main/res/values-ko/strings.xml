@@ -91,7 +91,6 @@
     <string name="tokens">토큰</string>
     <string name="keysign">서명</string>
     <string name="signing_error_please_try_again_s">서명 오류. 다시 시도해 주세요. %s</string>
-    <string name="bottom_warning_msg_keygen_error_screen">기기를 같은 WiFi 네트워크에 연결하고, 올바른 볼트를 선택한 후 기기를 페어링하세요.\n다른 기기에서 Vultisig가 실행 중이지 않은지 확인하세요.</string>
     <string name="try_again">다시 시도</string>
     <string name="vault_settings_title">볼트 설정</string>
     <string name="vault_settings_details_title">상세 정보</string>
