@@ -55,3 +55,16 @@ enum class DeFiAction {
     NONE,
     CIRCLE_USDC_WITHDRAW,
 }
+
+/**
+ * True when the payload carries a pre-encoded Cosmos transaction supplied by an external dApp —
+ * either a protobuf SignDoc ([signDirect]) or legacy amino JSON ([signAmino]). Keplr-style dApps
+ * (e.g. cosmosrescue.com Terra delegations) sign LUNC via amino, LUNA via either.
+ *
+ * Such payloads must be signed verbatim by CosmosHelper, which understands both modes. Chain
+ * helpers like TerraHelper only know native bank/CW20 sends and would rebuild the message as a
+ * `MsgSend` to the `terravaloper…` validator — the chain rejects that with "invalid to address: hrp
+ * does not match bech32 prefix".
+ */
+internal val KeysignPayload.carriesDappCosmosTx: Boolean
+    get() = signDirect != null || signAmino != null
