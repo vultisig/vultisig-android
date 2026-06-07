@@ -24,7 +24,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.graphics.createBitmap
-import androidx.core.graphics.drawable.toBitmap
 import app.rive.Fit
 import app.rive.ImageAsset
 import app.rive.Result
@@ -228,35 +227,28 @@ private fun encodeDrawableAsPng(context: Context, @DrawableRes resId: Int): Byte
     val drawable = AppCompatResources.getDrawable(context, resId) ?: return null
     val layout = squareLogoLayout(drawable.intrinsicWidth, drawable.intrinsicHeight)
     return try {
-        val logo =
-            drawable.toBitmap(
-                width = layout.logoWidth,
-                height = layout.logoHeight,
-                config = Bitmap.Config.ARGB_8888,
-            )
-        // An already-square logo needs no padding — skip the extra allocation and copy.
-        val square =
-            if (layout.isSquare) {
-                logo
-            } else {
-                createBitmap(layout.canvasSize, layout.canvasSize).also { canvas ->
-                    Canvas(canvas)
-                        .drawBitmap(logo, layout.left.toFloat(), layout.top.toFloat(), null)
-                }
-            }
+        // Draw the aspect-preserved logo straight onto a transparent square canvas — a single
+        // bitmap, no intermediate copy — so Rive's square "toToken" slot renders it without
+        // distortion.
+        val square = createBitmap(layout.canvasSize, layout.canvasSize)
         try {
+            drawable.setBounds(
+                layout.left,
+                layout.top,
+                layout.left + layout.logoWidth,
+                layout.top + layout.logoHeight,
+            )
+            drawable.draw(Canvas(square))
             ByteArrayOutputStream().use { stream ->
                 square.compress(Bitmap.CompressFormat.PNG, 100, stream)
                 stream.toByteArray()
             }
         } finally {
-            if (square !== logo) square.recycle()
-            logo.recycle()
+            square.recycle()
         }
     } catch (e: Exception) {
-        // toBitmap()/createBitmap()/compress()/toByteArray() can throw; the caller treats null as
-        // "no logo" and logs it. Never let this escape into the LaunchedEffect coroutine and crash
-        // the screen.
+        // Any step here can throw; the caller treats null as "no logo" and logs it. Never let this
+        // escape into the LaunchedEffect coroutine and crash the screen.
         Timber.e(e, "Failed to encode coin logo res %d as PNG", resId)
         null
     }
