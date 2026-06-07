@@ -65,6 +65,7 @@ import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
 import com.vultisig.wallet.ui.models.keygen.VerifyPinState
 import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
+import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.TonMessageOperation
 import com.vultisig.wallet.ui.models.keysign.TonMessageUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
@@ -81,6 +82,7 @@ import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
+import com.vultisig.wallet.ui.screens.keysign.KeysignView
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
 import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
@@ -186,6 +188,7 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_claim_done" -> QbtcClaimDonePreview()
                     "qbtc_claim_error" -> QbtcClaimErrorPreview()
                     "qbtc_claim_blocked" -> QbtcClaimBlockedPreview()
+                    "keysign_signing_lunc" -> KeysignSigningLuncPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     else -> SwapConfirmPreview()
@@ -1657,5 +1660,25 @@ private fun QbtcClaimBlockedPreview() {
         onConfirm = {},
         onStartSecureVault = {},
         onRetry = {},
+    )
+}
+
+// Renders the real keysign "Signing" Rive animation with the non-square LUNC logo injected into the
+// "toToken" slot — the repro for issue #4755.
+@Composable
+private fun KeysignSigningLuncPreview() {
+    KeysignView(
+        state = KeysignState.KeysignECDSA,
+        txHash = "",
+        approveTransactionHash = "",
+        transactionLink = "",
+        approveTransactionLink = "",
+        onComplete = {},
+        onAddToAddressBook = {},
+        progressLink = null,
+        transactionTypeUiModel = null,
+        hasBackClick = false,
+        showSaveToAddressBook = false,
+        coinLogoRes = R.drawable.lunc,
     )
 }
