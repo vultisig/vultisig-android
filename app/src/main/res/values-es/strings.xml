@@ -2,7 +2,6 @@
 <resources>
     <string name="keysign">Signo de clave</string>
     <string name="signing_error_please_try_again_s">Error al Firmar. Por favor intenta de nuevo. %s</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Mantenga los dispositivos en la misma red WiFi, corrija el almacenamiento y empareje los dispositivos.\nAsegúrese de que ningún otro dispositivo esté ejecutando Vultisig.</string>
     <string name="try_again">Intentar de Nuevo</string>
     <string name="vault_settings_title">Configuración de la Bóveda</string>
     <string name="vault_settings_details_title">Detalles</string>
@@ -690,7 +689,6 @@
     <string name="invite_to_x_banner_desc">Síguenos en X</string>
     <string name="invite_to_x_banner_button">Sigue a %s</string>
     <string name="buy_vult_banner_desc">Y ahorra en comisiones de intercambio</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Listo para usar un nuevo estándar de billetera.</string>
     <string name="vault_detail_vault_info">Información de la bóveda</string>
     <string name="vault_details_keys">Claves</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Habilitar la firma rápida biométrica</string>
@@ -702,7 +700,6 @@
     <string name="tx_done_transaction_details_expand">Expandir</string>
     <string name="tx_done_transaction_details_collapse">Contraer</string>
     <string name="vault_confirmation_vault_upgraded">Bóveda mejorada</string>
-    <string name="vault_confirmation_well_done">¡Bien hecho!</string>
     <string name="this_amount_would_leave_too_little_change">Con este importe, quedaría muy poco cambio. 💡 Prueba \"Enviar Máximo\" (%1$s ADA) para evitar este problema.</string>
     <string name="swap_form_native">Nativo</string>
     <string name="swap_transaction_overview_approval_tx_hash">Hash de transacción de aprobación</string>

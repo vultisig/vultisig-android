@@ -65,10 +65,13 @@ import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
 import com.vultisig.wallet.ui.models.keygen.VerifyPinState
 import com.vultisig.wallet.ui.models.keysign.DecodedFunctionParam
+import com.vultisig.wallet.ui.models.keysign.KeysignState
 import com.vultisig.wallet.ui.models.keysign.TonMessageOperation
 import com.vultisig.wallet.ui.models.keysign.TonMessageUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.peer.NetworkOption
+import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
@@ -81,6 +84,8 @@ import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
+import com.vultisig.wallet.ui.screens.keysign.KeysignView
+import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
 import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
@@ -126,6 +131,7 @@ class PreviewActivity : ComponentActivity() {
             OnBoardingComposeTheme {
                 when (screen) {
                     "swap_confirm" -> SwapConfirmPreview()
+                    "swap_confirm_disabled" -> SwapConfirmPreview(allConsents = false)
                     "asset_action_button" -> AssetActionButtonPreview()
                     "camera_button" -> CameraButton(onClick = {})
                     "banner" -> BannerPreview()
@@ -185,8 +191,11 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_claim_done" -> QbtcClaimDonePreview()
                     "qbtc_claim_error" -> QbtcClaimErrorPreview()
                     "qbtc_claim_blocked" -> QbtcClaimBlockedPreview()
+                    "keysign_signing_lunc" -> KeysignSigningLuncPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
+                    "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
+                    "keysign_devices_plus_after" -> KeysignDevicesCountPreview(allowsMore = false)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -209,8 +218,39 @@ private fun BannerPreview() {
     HomePagePagerContainer { UpgradeBanner {} }
 }
 
+/**
+ * Keysign peer-discovery for a 2-of-3 vault. [allowsMore] = true reproduces the old "Devices
+ * (1/2+)" (before #4769); false shows the corrected plain "Devices (1/2)" — keysign only ever needs
+ * exactly the threshold, so the "+" was misleading.
+ */
 @Composable
-private fun SwapConfirmPreview() {
+private fun KeysignDevicesCountPreview(allowsMore: Boolean) {
+    PeerDiscoveryScreen(
+        state =
+            PeerDiscoveryUiModel(
+                localPartyId = "iPhone-A1B",
+                network = NetworkOption.Local,
+                devices = emptyList(),
+                selectedDevices = emptyList(),
+                minimumDevices = 2,
+                minimumDevicesDisplayed = 2,
+                allowsMoreDevices = allowsMore,
+                enableNotification = true,
+            ),
+        onResendNotification = {},
+        onBackClick = {},
+        onHelpClick = {},
+        onShareQrClick = {},
+        onSwitchModeClick = {},
+        onDeviceClick = {},
+        onNextClick = {},
+        onDismissQrHelpModal = {},
+        showHelp = false,
+    )
+}
+
+@Composable
+private fun SwapConfirmPreview(allConsents: Boolean = true) {
     val ethCoin = Coins.Ethereum.ETH
     val btcCoin = Coins.Bitcoin.BTC
 
@@ -230,8 +270,8 @@ private fun SwapConfirmPreview() {
         state =
             VerifySwapUiModel(
                 tx = tx,
-                consentAmount = true,
-                consentReceiveAmount = true,
+                consentAmount = allConsents,
+                consentReceiveAmount = allConsents,
                 consentAllowance = false,
                 hasFastSign = true,
                 txScanStatus =
@@ -1656,5 +1696,25 @@ private fun QbtcClaimBlockedPreview() {
         onConfirm = {},
         onStartSecureVault = {},
         onRetry = {},
+    )
+}
+
+// Renders the real keysign "Signing" Rive animation with the non-square LUNC logo injected into the
+// "toToken" slot — the repro for issue #4755.
+@Composable
+private fun KeysignSigningLuncPreview() {
+    KeysignView(
+        state = KeysignState.KeysignECDSA,
+        txHash = "",
+        approveTransactionHash = "",
+        transactionLink = "",
+        approveTransactionLink = "",
+        onComplete = {},
+        onAddToAddressBook = {},
+        progressLink = null,
+        transactionTypeUiModel = null,
+        hasBackClick = false,
+        showSaveToAddressBook = false,
+        coinLogoRes = R.drawable.lunc,
     )
 }
