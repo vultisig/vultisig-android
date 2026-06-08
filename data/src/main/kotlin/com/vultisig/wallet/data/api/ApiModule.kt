@@ -32,6 +32,8 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindEvmApi(impl: EvmApiFactoryImp): EvmApiFactory
 
+    @Binds @Singleton fun bindRpcHealthProbe(impl: RpcHealthProbeImpl): RpcHealthProbe
+
     @Binds @Singleton fun bindPolkadotApi(impl: PolkadotApiImp): PolkadotApi
 
     @Binds @Singleton fun bindBittensorApi(impl: BittensorApiImp): BittensorApi

@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
+import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.ui.navigation.Destination
@@ -23,6 +24,7 @@ import io.mockk.unmockkStatic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -42,6 +44,7 @@ internal class SettingsViewModelTest {
     private lateinit var appLocaleRepository: AppLocaleRepository
     private lateinit var referralRepository: ReferralCodeSettingsRepositoryContract
     private lateinit var preventScreenshotsRepository: PreventScreenshotsRepository
+    private lateinit var customRpcConfig: CustomRpcConfig
 
     /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
@@ -55,6 +58,7 @@ internal class SettingsViewModelTest {
         appLocaleRepository = mockk(relaxed = true)
         referralRepository = mockk(relaxed = true)
         preventScreenshotsRepository = mockk(relaxed = true)
+        customRpcConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
     }
 
     /** Cleans up mocks and resets test dispatcher after each test. */
@@ -71,6 +75,7 @@ internal class SettingsViewModelTest {
             appLocaleRepository = appLocaleRepository,
             referralRepository = referralRepository,
             preventScreenshotsRepository = preventScreenshotsRepository,
+            customRpcConfig = customRpcConfig,
             savedStateHandle = SavedStateHandle(),
         )
 

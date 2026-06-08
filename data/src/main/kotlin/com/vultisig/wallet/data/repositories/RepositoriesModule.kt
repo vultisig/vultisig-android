@@ -314,6 +314,12 @@ internal interface RepositoriesModule {
         impl: PreventScreenshotsRepositoryImpl
     ): PreventScreenshotsRepository
 
+    @Binds
+    @Singleton
+    fun bindCustomRpcRepository(impl: CustomRpcRepositoryImpl): CustomRpcRepository
+
+    @Binds @Singleton fun bindCustomRpcConfig(impl: CustomRpcConfigImpl): CustomRpcConfig
+
     @Binds @Singleton fun bindSwapKitConfig(impl: SwapKitConfigImpl): SwapKitConfig
 
     // Phase 2 scaffolding. The cache is fully implemented and bound, but is intentionally NOT yet

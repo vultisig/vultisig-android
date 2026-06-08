@@ -23,7 +23,12 @@ import com.vultisig.wallet.ui.models.SecretViewModel
 internal fun SecretScreen(model: SecretViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
-    SecretScreen(state = state, onBackClick = model::back, onToggleSwapKit = model::toggleSwapKit)
+    SecretScreen(
+        state = state,
+        onBackClick = model::back,
+        onToggleSwapKit = model::toggleSwapKit,
+        onToggleCustomRpc = model::toggleCustomRpc,
+    )
 }
 
 @Composable
@@ -31,6 +36,7 @@ private fun SecretScreen(
     state: SecretUiModel,
     onBackClick: () -> Unit,
     onToggleSwapKit: (Boolean) -> Unit,
+    onToggleCustomRpc: (Boolean) -> Unit,
 ) {
 
     V2Scaffold(title = stringResource(R.string.vault_settings_title), onBackClick = onBackClick) {
@@ -43,6 +49,11 @@ private fun SecretScreen(
                 isChecked = state.isSwapKitEnabled,
                 onCheckedChange = onToggleSwapKit,
             )
+            SelectionItem(
+                title = stringResource(R.string.settings_advanced_custom_rpc_toggle),
+                isChecked = state.isCustomRpcEnabled,
+                onCheckedChange = onToggleCustomRpc,
+            )
         }
     }
 }
@@ -50,5 +61,10 @@ private fun SecretScreen(
 @Preview
 @Composable
 private fun SecretScreenPreview() {
-    SecretScreen(state = SecretUiModel(), onBackClick = {}, onToggleSwapKit = {})
+    SecretScreen(
+        state = SecretUiModel(),
+        onBackClick = {},
+        onToggleSwapKit = {},
+        onToggleCustomRpc = {},
+    )
 }

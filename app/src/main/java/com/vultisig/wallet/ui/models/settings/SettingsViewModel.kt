@@ -10,11 +10,13 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.settings.AppLanguage
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
+import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
 import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
 import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Currency
+import com.vultisig.wallet.ui.models.settings.SettingsItem.CustomRpc
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Discord
 import com.vultisig.wallet.ui.models.settings.SettingsItem.DiscountTiers
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Faq
@@ -209,6 +211,15 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 trailingSwitch = isEnabled,
             )
         )
+
+    data object CustomRpc :
+        SettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.custom_rpc_title),
+                leadingIcon = R.drawable.settings_globe,
+                trailingIcon = R.drawable.ic_small_caret_right,
+            )
+        )
 }
 
 internal data class SettingsItemUiModel(
@@ -237,6 +248,7 @@ constructor(
     private val appLocaleRepository: AppLocaleRepository,
     private val referralRepository: ReferralCodeSettingsRepositoryContract,
     private val preventScreenshotsRepository: PreventScreenshotsRepository,
+    private val customRpcConfig: CustomRpcConfig,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _uiEvents = Channel<SettingsUiEvent>()
@@ -332,6 +344,10 @@ constructor(
                 viewModelScope.launch { navigator.route(Route.DiscountTiers(vaultId)) }
             }
 
+            CustomRpc -> {
+                viewModelScope.launch { navigator.route(Route.CustomRpcList(vaultId)) }
+            }
+
             Notifications -> {
                 viewModelScope.launch { navigator.route(Route.NotificationSettings) }
             }
@@ -357,6 +373,33 @@ constructor(
             loadAppLocale()
             loadPreventScreenshots()
             loadWasReferralUsed()
+            loadCustomRpcFlag()
+        }
+    }
+
+    /**
+     * The Custom RPC row (#4787) is hidden behind the Advanced Settings → Custom RPC feature flag.
+     * When enabled, it is inserted into the General group; when disabled, it is removed.
+     */
+    private fun loadCustomRpcFlag() {
+        viewModelScope.launch {
+            customRpcConfig.isFeatureEnabled.collect { enabled ->
+                state.update { current ->
+                    current.copy(
+                        items =
+                            current.items.map { group ->
+                                if (group.title != UiText.StringResource(R.string.general)) {
+                                    group
+                                } else {
+                                    val withoutRpc = group.items.filterNot { it is CustomRpc }
+                                    group.copy(
+                                        items = if (enabled) withoutRpc + CustomRpc else withoutRpc
+                                    )
+                                }
+                            }
+                    )
+                }
+            }
         }
     }
 
