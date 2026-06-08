@@ -1285,6 +1285,7 @@
     <string name="cosmos_staking_validator_active">Attivo</string>
     <string name="cosmos_staking_validator_churned_out">Escluso</string>
     <string name="cosmos_staking_validator_picker">Validatore</string>
+    <string name="cosmos_staking_validator_commission">Commissione</string>
     <string name="cosmos_staking_validators">Validatori</string>
     <string name="cosmos_staking_pick_destination">Scegli destinazione</string>
     <string name="cosmos_staking_pick_destination_validator">Scegli un validatore di destinazione</string>
