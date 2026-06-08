@@ -9,12 +9,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -27,6 +30,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,8 +48,12 @@ import com.vultisig.wallet.data.usecases.GenerateQrBitmap
 import com.vultisig.wallet.data.usecases.MakeQrCodeBitmapShareFormat
 import com.vultisig.wallet.data.usecases.QrShareField
 import com.vultisig.wallet.data.usecases.QrShareInfo
+import com.vultisig.wallet.ui.components.SignMessageCard
 import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
+import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
+import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.hero.HeroCoinAmount
 import com.vultisig.wallet.ui.components.hero.HeroContent
 import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSheetContent
@@ -60,6 +68,8 @@ import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
+import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
+import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
 import com.vultisig.wallet.ui.models.keygen.ImportSeedphraseUiModel
 import com.vultisig.wallet.ui.models.keygen.VaultBackupState
@@ -80,6 +90,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
+import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
@@ -196,6 +207,10 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
                     "keysign_devices_plus_after" -> KeysignDevicesCountPreview(allowsMore = false)
+                    "staking_verify_before" -> CosmosStakingVerifyCtaPreview(newButtons = false)
+                    "staking_verify_after" -> CosmosStakingVerifyCtaPreview(newButtons = true)
+                    "sign_message_before" -> VerifySignMessageCtaPreview(newButtons = false)
+                    "sign_message_after" -> VerifySignMessageCtaPreview(newButtons = true)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -1717,4 +1732,91 @@ private fun KeysignSigningLuncPreview() {
         showSaveToAddressBook = false,
         coinLogoRes = R.drawable.lunc,
     )
+}
+
+@Composable
+private fun CosmosStakingVerifyCtaPreview(newButtons: Boolean) {
+    val state =
+        CosmosStakingVerifyUiState(
+            headlineRes = R.string.cosmos_staking_youre_staking,
+            amount = "12.5",
+            ticker = "LUNA",
+            vaultName = "Main Vault",
+            fromAddress = "terra1delegatorxxxxxxxxxxxxxxxxxxxxxxxxxx78wk",
+            validatorRows =
+                listOf(
+                    CosmosStakingVerifyValidatorRow(
+                        labelRes = R.string.cosmos_staking_validator_picker,
+                        value = "Allnodes (5% commission)",
+                    )
+                ),
+            networkName = "Terra",
+            feeCrypto = "0.01 LUNA",
+            feeFiat = "$0.02",
+            hasFastSign = true,
+            isLoading = false,
+        )
+    CosmosStakingVerifyContent(state = state, onClose = {}) {
+        val ctaModifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp)
+        if (newButtons) {
+            FastSignPairedButtons(
+                onFastSignClick = {},
+                onPairedSignClick = {},
+                modifier = ctaModifier,
+            )
+        } else {
+            VsButton(
+                label = stringResource(R.string.cosmos_staking_verify_sign),
+                variant = VsButtonVariant.CTA,
+                onClick = {},
+                modifier = ctaModifier,
+            )
+        }
+    }
+}
+
+@Composable
+private fun VerifySignMessageCtaPreview(newButtons: Boolean) {
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            Column(modifier = Modifier.fillMaxWidth().padding(all = 16.dp)) {
+                VerifySignMessageCta(newButtons = newButtons)
+            }
+        },
+    ) { padding ->
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(padding).padding(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            SignMessageCard(
+                title = stringResource(R.string.verify_sign_message_signing_method),
+                value = "personal_sign",
+            )
+            SignMessageCard(
+                title = stringResource(R.string.verify_sign_message_message_sign),
+                value = "Sign in to Uniswap",
+            )
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.VerifySignMessageCta(newButtons: Boolean) {
+    if (newButtons) {
+        FastSignPairedButtons(onFastSignClick = {}, onPairedSignClick = {})
+    } else {
+        VsButton(
+            label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
+            onClick = {},
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(modifier = Modifier.padding(top = 16.dp))
+        VsButton(
+            label = stringResource(R.string.verify_swap_sign_button),
+            onClick = {},
+            variant = VsButtonVariant.Secondary,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
 }

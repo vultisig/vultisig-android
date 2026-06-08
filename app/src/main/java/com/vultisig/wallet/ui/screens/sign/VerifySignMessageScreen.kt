@@ -21,9 +21,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.ui.components.SignMessageCard
 import com.vultisig.wallet.ui.components.UiAlertDialog
-import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
-import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.launchBiometricPrompt
 import com.vultisig.wallet.ui.components.topbar.VsTopAppBar
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
@@ -116,19 +115,9 @@ private fun VerifySignMessageScreen(
         bottomBar = {
             Column(modifier = Modifier.fillMaxWidth().padding(all = 16.dp)) {
                 if (hasFastSign) {
-                    VsButton(
-                        label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
-                        onClick = onFastSignClick,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-
-                    UiSpacer(size = 16.dp)
-
-                    VsButton(
-                        label = confirmTitle,
-                        onClick = onConfirm,
-                        variant = VsButtonVariant.Secondary,
-                        modifier = Modifier.fillMaxWidth(),
+                    FastSignPairedButtons(
+                        onFastSignClick = onFastSignClick,
+                        onPairedSignClick = onConfirm,
                     )
                 } else {
                     VsButton(
