@@ -7,7 +7,10 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.proto.v1.SignAminoProto
+import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import java.math.BigInteger
+import java.util.Base64
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -70,6 +73,8 @@ class QBTCTransactionHelperTest {
         toAmount: BigInteger = BigInteger("1000000"),
         memo: String? = null,
         blockChainSpecific: BlockChainSpecific = cosmosSpecific(),
+        signDirect: SignDirectProto? = null,
+        signAmino: SignAminoProto? = null,
     ) =
         KeysignPayload(
             coin = coin,
@@ -81,6 +86,24 @@ class QBTCTransactionHelperTest {
             vaultLocalPartyID = "party1",
             libType = SigningLibType.DKLS,
             wasmExecuteContractPayload = null,
+            signDirect = signDirect,
+            signAmino = signAmino,
+        )
+
+    // Opaque, deterministic SignDoc artefacts standing in for what `CosmosStakingSignDataResolver`
+    // builds for a QBTC delegate / undelegate / redelegate / claim. The bytes are arbitrary — QBTC
+    // forwards them verbatim, it never re-parses them.
+    private fun signDirect(
+        body: ByteArray = byteArrayOf(1, 2, 3, 4, 5),
+        authInfo: ByteArray = byteArrayOf(9, 8, 7),
+        chainId: String = "qbtc-testnet",
+        accountNumber: String = "42",
+    ) =
+        SignDirectProto(
+            bodyBytes = Base64.getEncoder().encodeToString(body),
+            authInfoBytes = Base64.getEncoder().encodeToString(authInfo),
+            chainId = chainId,
+            accountNumber = accountNumber,
         )
 
     @Test
@@ -375,5 +398,66 @@ class QBTCTransactionHelperTest {
                 )[0]
 
         assertEquals(3, setOf(sendHash, ibcHash, voteHash).size)
+    }
+
+    // MARK: - signDirect consumption (staking co-sign path)
+
+    @Test
+    fun `signDirect drives the presign hash and ignores the MsgSend fields`() {
+        val sd = signDirect()
+        val base = helper.getPreSignedImageHash(payload(signDirect = sd))
+        // With signDirect present the MsgSend path is bypassed, so toAddress / toAmount no longer
+        // affect the hash — both co-signing devices must reach the same SignDoc from the relayed
+        // bytes alone.
+        assertEquals(
+            base,
+            helper.getPreSignedImageHash(
+                payload(signDirect = sd, toAddress = "qbtc1other", toAmount = BigInteger("999"))
+            ),
+        )
+        // ...and the staking hash differs from the default MsgSend-derived hash.
+        assertNotEquals(base, helper.getPreSignedImageHash(payload()))
+    }
+
+    @Test
+    fun `presign hash changes with every signDirect SignDoc input`() {
+        val base = helper.getPreSignedImageHash(payload(signDirect = signDirect()))
+        assertNotEquals(
+            base,
+            helper.getPreSignedImageHash(payload(signDirect = signDirect(body = byteArrayOf(9, 9)))),
+        )
+        assertNotEquals(
+            base,
+            helper.getPreSignedImageHash(
+                payload(signDirect = signDirect(authInfo = byteArrayOf(4, 4)))
+            ),
+        )
+        assertNotEquals(
+            base,
+            helper.getPreSignedImageHash(payload(signDirect = signDirect(chainId = "qbtc-mainnet"))),
+        )
+        assertNotEquals(
+            base,
+            helper.getPreSignedImageHash(payload(signDirect = signDirect(accountNumber = "7"))),
+        )
+    }
+
+    @Test
+    fun `rejects a dApp signAmino payload since ML-DSA has no amino sign mode`() {
+        // A dApp amino-JSON staking request (signAmino, no signDirect) must NOT be rebuilt as a
+        // MsgSend to the validator — it has to fail loudly. QBTC only signs SIGN_MODE_DIRECT.
+        assertThrows<IllegalStateException> {
+            helper.getPreSignedImageHash(payload(signAmino = SignAminoProto()))
+        }
+    }
+
+    @Test
+    fun `signDirect takes priority when a payload carries both signDirect and signAmino`() {
+        // Defensive: signDirect is the valid QBTC form, so it wins and amino is never reached.
+        val sd = signDirect()
+        assertEquals(
+            helper.getPreSignedImageHash(payload(signDirect = sd)),
+            helper.getPreSignedImageHash(payload(signDirect = sd, signAmino = SignAminoProto())),
+        )
     }
 }

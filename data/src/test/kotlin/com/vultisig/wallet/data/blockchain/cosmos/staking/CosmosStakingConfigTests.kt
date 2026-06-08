@@ -45,9 +45,28 @@ class CosmosStakingConfigTests {
     }
 
     @Test
-    fun `isStakingSupported returns true for Terra family only`() {
+    fun `QBTC entry matches pinned values`() {
+        val entry = CosmosStakingConfig.entryFor(Chain.Qbtc)
+        assertEquals("qbtc-testnet", entry.chainId)
+        // `qbtc` is lowercase and NOT a micro-denom (8 decimals) — verified on the live
+        // qbtc-testnet LCD `staking/params.bond_denom`.
+        assertEquals("qbtc", entry.bondDenom)
+        assertEquals("qbtc", entry.feeDenom)
+        assertEquals("qbtcvaloper", entry.valoperHrp)
+        // 400_000 matches Terra's post-OoG floor (live MsgDelegate simulate burned 278_759;
+        // redelegate is heavier). feeAmount 800 is the qbtc-testnet `min_tx_fee` floor; since
+        // `min_gas_price` is 0 the higher gas budget does not raise the fee. Mirrors iOS #4481.
+        assertEquals(400_000L, entry.gasLimit)
+        assertEquals(800L, entry.feeAmount)
+        // Live LCD `unbonding_time` = 1814400s = 21 days.
+        assertEquals(21, entry.unbondingDays)
+    }
+
+    @Test
+    fun `isStakingSupported returns true for the staking chains`() {
         assertTrue(CosmosStakingConfig.isStakingSupported(Chain.Terra))
         assertTrue(CosmosStakingConfig.isStakingSupported(Chain.TerraClassic))
+        assertTrue(CosmosStakingConfig.isStakingSupported(Chain.Qbtc))
     }
 
     @Test

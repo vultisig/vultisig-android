@@ -301,6 +301,30 @@ class CosmosStakingHelperTests {
         assertEquals(FX.GAS_LIMIT, ProtoParser.varint(2, fee))
     }
 
+    @Test
+    fun `AuthInfo stamps the provided pubKey type URL for ML-DSA`() {
+        // QBTC reuses this encoder with the ML-DSA pubkey URL and its ~1312-byte post-quantum key.
+        val mldsaPubKey = ByteArray(1312) { 0xAB.toByte() }
+        val authInfo =
+            CosmosStakingHelper.buildAuthInfo(
+                pubKey = mldsaPubKey,
+                sequence = FX.SEQUENCE,
+                gasLimit = FX.GAS_LIMIT,
+                feeDenom = FX.DENOM,
+                feeAmount = FX.FEE_AMOUNT,
+                pubKeyTypeUrl = "/cosmos.crypto.mldsa.PubKey",
+            )
+        val signerInfo =
+            ProtoParser.parseFields(ProtoParser.bytes(1, ProtoParser.parseFields(authInfo)))
+        val pubKeyAny = ProtoParser.parseFields(ProtoParser.bytes(1, signerInfo))
+        assertEquals("/cosmos.crypto.mldsa.PubKey", ProtoParser.string(1, pubKeyAny))
+        // The full ML-DSA key bytes survive intact in the inner PubKey `{ key(1, bytes) }`.
+        assertContentEquals(
+            mldsaPubKey,
+            ProtoParser.bytes(1, ProtoParser.parseFields(ProtoParser.bytes(2, pubKeyAny))),
+        )
+    }
+
     // MARK: - Proto wire-format parser (test-only)
 
     /**

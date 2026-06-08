@@ -20,7 +20,9 @@ class QBTCTransactionHelper {
         private const val DENOM = "qbtc"
         // Higher than typical Cosmos chains — ML-DSA-44 signatures are ~2.4 KB
         internal const val GAS_LIMIT = 300_000L
-        private const val PUB_KEY_TYPE_URL = "/cosmos.crypto.mldsa.PubKey"
+        // Internal so the shared Cosmos staking resolver stamps the same ML-DSA pubkey `Any` URL
+        // into the AuthInfo it builds for QBTC delegate / undelegate / redelegate / claim.
+        internal const val PUB_KEY_TYPE_URL = "/cosmos.crypto.mldsa.PubKey"
         private const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
         private const val MSG_IBC_TRANSFER_TYPE_URL = "/ibc.applications.transfer.v1.MsgTransfer"
         private const val MSG_VOTE_TYPE_URL = "/cosmos.gov.v1beta1.MsgVote"
@@ -41,8 +43,7 @@ class QBTCTransactionHelper {
         val sig = signatures[hash] ?: error("Missing MLDSA signature for hash $hash")
         val signatureBytes = sig.derSignature.hexToByteArray()
 
-        val bodyBytes = buildTxBody(keysignPayload)
-        val authInfoBytes = buildAuthInfo(keysignPayload)
+        val (bodyBytes, authInfoBytes) = buildTxComponents(keysignPayload)
         val txRaw = buildTxRaw(bodyBytes, authInfoBytes, signatureBytes)
         val broadcastJson = buildBroadcastJson(txRaw)
         val txHash = sha256(txRaw).toHexString().uppercase()
@@ -50,20 +51,65 @@ class QBTCTransactionHelper {
         return SignedTransactionResult(broadcastJson, txHash)
     }
 
+    /**
+     * Resolves the TxBody + AuthInfo bytes for the SignDoc.
+     *
+     * Staking carries a fully-formed TxBody + AuthInfo on [KeysignPayload.signDirect] — built
+     * either in-app by `CosmosStakingSignDataResolver` (DeFi tab) or by the browser extension (dApp
+     * co-sign), both with the ML-DSA pubkey type URL. Those bytes round-trip through the relay
+     * proto, so every co-signing device reconstructs the identical SignDoc hash — consume them
+     * verbatim, never rebuild, to keep the signed bytes byte-exact.
+     *
+     * QBTC signs only in SIGN_MODE_DIRECT; ML-DSA has no legacy amino mode (the browser extension
+     * and the chain both reject amino for QBTC), so a dApp [KeysignPayload.signAmino] payload is
+     * invalid — fail loudly instead of silently rebuilding it as a `MsgSend` to the `qbtcvaloper…`
+     * validator, which the chain would reject as an invalid `to` address (cf. the Terra dApp-amino
+     * fix #4781). Send / IBC / vote carry neither field and fall back to the per-message builders.
+     */
+    private fun buildTxComponents(keysignPayload: KeysignPayload): Pair<ByteArray, ByteArray> {
+        keysignPayload.signDirect?.let { signDirect ->
+            return decodeBase64(signDirect.bodyBytes, "bodyBytes") to
+                decodeBase64(signDirect.authInfoBytes, "authInfoBytes")
+        }
+        check(keysignPayload.signAmino == null) {
+            "QBTC dApp signing requires SIGN_MODE_DIRECT; amino (signAmino) is unsupported for ML-DSA"
+        }
+        return buildTxBody(keysignPayload) to buildAuthInfo(keysignPayload)
+    }
+
     private fun buildSignDoc(keysignPayload: KeysignPayload): ByteArray {
-        val cosmosSpecific =
-            keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
-                ?: error("Invalid blockChainSpecific for QBTC")
-        val bodyBytes = buildTxBody(keysignPayload)
-        val authInfoBytes = buildAuthInfo(keysignPayload)
+        val (bodyBytes, authInfoBytes) = buildTxComponents(keysignPayload)
+
+        // For staking, `chain_id` + `account_number` come from the round-tripped `signDirect` so
+        // the SignDoc is reconstructed byte-for-byte on both devices, independent of any per-device
+        // chainSpecific drift. The send / IBC / vote path reads them from chainSpecific as before.
+        val signDirect = keysignPayload.signDirect
+        val chainId: String
+        val accountNumber: Long
+        if (signDirect != null) {
+            chainId = signDirect.chainId
+            accountNumber =
+                signDirect.accountNumber.toLongOrNull()
+                    ?: error("QBTC: invalid account number in signDirect")
+        } else {
+            val cosmosSpecific =
+                keysignPayload.blockChainSpecific as? BlockChainSpecific.Cosmos
+                    ?: error("Invalid blockChainSpecific for QBTC")
+            chainId = CHAIN_ID
+            accountNumber = cosmosSpecific.accountNumber.toLong()
+        }
 
         val result = mutableListOf<Byte>()
         result.addAll(protoBytes(1, bodyBytes))
         result.addAll(protoBytes(2, authInfoBytes))
-        result.addAll(protoString(3, CHAIN_ID))
-        result.addAll(protoVarint(4, cosmosSpecific.accountNumber.toLong()))
+        result.addAll(protoString(3, chainId))
+        result.addAll(protoVarint(4, accountNumber))
         return result.toByteArray()
     }
+
+    private fun decodeBase64(value: String, field: String): ByteArray =
+        runCatching { java.util.Base64.getDecoder().decode(value) }
+            .getOrElse { error("QBTC: invalid signDirect base64 in $field") }
 
     private fun buildTxBody(keysignPayload: KeysignPayload): ByteArray {
         val cosmosSpecific =

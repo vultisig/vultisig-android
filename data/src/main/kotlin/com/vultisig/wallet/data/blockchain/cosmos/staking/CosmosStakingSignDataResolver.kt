@@ -1,6 +1,9 @@
 package com.vultisig.wallet.data.blockchain.cosmos.staking
 
+import com.vultisig.wallet.data.chains.helpers.QBTCTransactionHelper
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.TssKeyType
+import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.proto.v1.SignDirectProto
 import java.util.Base64
@@ -66,8 +69,12 @@ object CosmosStakingSignDataResolver {
 
     /**
      * Resolves the SignDoc artefacts for a staking payload. Caller passes the immutable [payload],
-     * the [coin] being staked (provides chain, delegator address, public key), and the Cosmos
+     * the chain + delegator address + hex public key of the coin being staked, and the Cosmos
      * chain-specific (already populated upstream — sequence + account number).
+     *
+     * The signing scheme is derived from the chain: secp256k1 for the Terra family, ML-DSA
+     * (post-quantum) for QBTC — see [decodePubKeyAndType]. The staking msg bodies and gas/fee are
+     * scheme-independent, so only the pubkey decode + AuthInfo type URL differ.
      *
      * Returns a [SignDirectProto] ready to drop into
      * [com.vultisig.wallet.data.models.payload.KeysignPayload.signDirect].
@@ -82,8 +89,53 @@ object CosmosStakingSignDataResolver {
         if (chainSpecific !is BlockChainSpecific.Cosmos)
             throw ResolverException.MissingChainSpecific
 
-        val pubKey = decodePubKey(hexPublicKey) ?: throw ResolverException.InvalidPublicKey
+        val (pubKey, pubKeyTypeUrl) = decodePubKeyAndType(chain, hexPublicKey)
 
+        return buildSignDirect(
+            payload = payload,
+            chain = chain,
+            delegatorAddress = delegatorAddress,
+            pubKey = pubKey,
+            pubKeyTypeUrl = pubKeyTypeUrl,
+            chainSpecific = chainSpecific,
+        )
+    }
+
+    /**
+     * Decodes the signer pubkey and its Cosmos `Any` type URL for the chain's signing scheme.
+     *
+     * QBTC signs with ML-DSA (post-quantum), so its ~1312-byte pubkey can't pass the compressed-
+     * secp256k1 33-byte guard and its AuthInfo must carry `/cosmos.crypto.mldsa.PubKey`. The
+     * resulting `signDirect` bytes round-trip through the relay proto so the co-signing peer
+     * rebuilds the identical SignDoc hash;
+     * [com.vultisig.wallet.data.chains.helpers.QBTCTransactionHelper] consumes them directly
+     * instead of the secp256k1 / WalletCore path the Terra family feeds. Every other staking chain
+     * keeps the strict secp256k1 guard + URL.
+     */
+    private fun decodePubKeyAndType(chain: Chain, hexPublicKey: String): Pair<ByteArray, String> =
+        when (chain.TssKeysignType) {
+            TssKeyType.MLDSA ->
+                (hexPublicKey.hexToByteArrayOrNull()?.takeIf { it.isNotEmpty() }
+                    ?: throw ResolverException.InvalidPublicKey) to
+                    QBTCTransactionHelper.PUB_KEY_TYPE_URL
+            else ->
+                (decodePubKey(hexPublicKey) ?: throw ResolverException.InvalidPublicKey) to
+                    CosmosStakingHelper.PUBKEY_TYPE_URL
+        }
+
+    /**
+     * Shared SignDoc assembly for both signing schemes. The validator preflight, encoder dispatch
+     * and gas/fee scaling are pubkey-independent — only the AuthInfo's pubkey `Any` URL differs, so
+     * the scheme reaches here via [pubKeyTypeUrl].
+     */
+    private fun buildSignDirect(
+        payload: CosmosStakingPayload,
+        chain: Chain,
+        delegatorAddress: String,
+        pubKey: ByteArray,
+        pubKeyTypeUrl: String,
+        chainSpecific: BlockChainSpecific.Cosmos,
+    ): SignDirectProto {
         val entry = CosmosStakingConfig.entryFor(chain)
 
         val msgsAny = encodeMessages(payload, chain, delegatorAddress, entry.bondDenom)
@@ -102,6 +154,7 @@ object CosmosStakingSignDataResolver {
                 gasLimit = gasLimit,
                 feeDenom = entry.feeDenom,
                 feeAmount = feeAmount,
+                pubKeyTypeUrl = pubKeyTypeUrl,
             )
 
         return SignDirectProto(

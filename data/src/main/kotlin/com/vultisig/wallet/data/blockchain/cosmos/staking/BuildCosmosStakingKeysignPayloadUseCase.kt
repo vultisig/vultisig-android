@@ -51,6 +51,9 @@ internal class BuildCosmosStakingKeysignPayloadUseCaseImpl @Inject constructor()
         vaultLocalPartyID: String,
         libType: SigningLibType?,
     ): KeysignPayload {
+        // The resolver derives the signing scheme from the chain — secp256k1 for the Terra family,
+        // ML-DSA for QBTC — so this single call serves both. The signed bytes round-trip via
+        // `signDirect` regardless of scheme.
         val signDirect =
             CosmosStakingSignDataResolver.resolve(
                 payload = payload,

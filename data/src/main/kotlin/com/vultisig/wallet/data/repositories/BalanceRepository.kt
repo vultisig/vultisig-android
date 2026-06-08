@@ -182,7 +182,8 @@ constructor(
             MayaChain,
             Chain.Tron,
             Chain.Terra,
-            Chain.TerraClassic -> "${chain.id}:$vaultId:$address"
+            Chain.TerraClassic,
+            Chain.Qbtc -> "${chain.id}:$vaultId:$address"
             else -> null
         }
 
@@ -228,7 +229,8 @@ constructor(
                 MayaChain -> mayaDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Chain.Tron -> tronDeFiBalanceService.getCacheDeFiBalance(address, vaultId)
                 Chain.Terra,
-                Chain.TerraClassic ->
+                Chain.TerraClassic,
+                Chain.Qbtc ->
                     cosmosStakingDeFiBalanceService.getCacheDeFiBalance(coin.chain, vaultId)
 
                 else -> error("Not Supported ${coin.chain}")
@@ -399,9 +401,11 @@ constructor(
             Ethereum -> circleDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
             MayaChain -> mayaDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
             Chain.Tron -> tronDeFiBalanceService.getRemoteDeFiBalance(address, vaultId)
-            // Terra / TerraClassic share the same address, so the chain is passed explicitly.
+            // Each staking chain has its own LCD (Terra / TerraClassic even share an address), so
+            // the chain is passed explicitly.
             Chain.Terra,
-            Chain.TerraClassic ->
+            Chain.TerraClassic,
+            Chain.Qbtc ->
                 cosmosStakingDeFiBalanceService.getRemoteDeFiBalance(chain, address, vaultId)
             else -> error("Not supported $chain")
         }

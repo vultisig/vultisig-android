@@ -294,10 +294,11 @@ val Chain.isDeFiSupported: Boolean
             Chain.MayaChain,
             Chain.Ethereum,
             Chain.Tron,
-            // Terra family surfaces a DeFi (staking) positions view — delegate / undelegate /
+            // Terra family + QBTC surface a DeFi (staking) positions view — delegate / undelegate /
             // redelegate / claim. Matches Windows `supportedDefiChains` + iOS DeFi-tab `.stake`.
             Chain.Terra,
-            Chain.TerraClassic -> true
+            Chain.TerraClassic,
+            Chain.Qbtc -> true
             else -> false
         }
 

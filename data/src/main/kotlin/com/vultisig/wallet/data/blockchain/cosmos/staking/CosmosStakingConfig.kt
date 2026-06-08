@@ -69,6 +69,25 @@ object CosmosStakingConfig {
                     feeAmount = 133_333_334L,
                     unbondingDays = 21,
                 ),
+            Chain.Qbtc to
+                Entry(
+                    // Live on-chain id (the network launched under it). All values verified against
+                    // the qbtc-testnet LCD; mirrors iOS PR vultisig-ios#4481.
+                    chainId = "qbtc-testnet",
+                    // `qbtc` is lowercase and NOT a micro-denom — QBTC has 8 decimals and the
+                    // staking bond_denom is the bare `qbtc` (live LCD `staking/params.bond_denom`).
+                    bondDenom = "qbtc",
+                    feeDenom = "qbtc",
+                    valoperHrp = "qbtcvaloper",
+                    // Matches Terra's post-OoG floor — a live MsgDelegate simulate burned 278_759;
+                    // redelegate (dual-record write + ~2.4 KB ML-DSA sig) is heavier.
+                    gasLimit = 400_000L,
+                    // The qbtc-testnet `min_tx_fee` floor; `min_gas_price` is 0, so the larger gas
+                    // budget does not raise the fee (unlike the QBTC send path's flat 7_500).
+                    feeAmount = 800L,
+                    // Live LCD `unbonding_time` = 1814400s = 21 days.
+                    unbondingDays = 21,
+                ),
         )
 
     fun entryFor(chain: Chain): Entry = table[chain] ?: throw CosmosStakingConfigException(chain)
