@@ -73,7 +73,7 @@ data class KyberSwapBuildRequest(
     val routeSummary: KyberSwapRouteResponse.RouteSummary,
     val sender: String,
     val recipient: String,
-    val slippageTolerance: Double,
+    val slippageTolerance: Int,
     val deadline: Int,
     val enableGasEstimation: Boolean,
     val source: String,
