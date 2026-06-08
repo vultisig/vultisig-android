@@ -504,9 +504,6 @@ private fun ClaimPairingScreen(state: QbtcClaimUiState.Pairing, onBackClick: () 
                 selectedDevices = state.joinedDevices,
                 minimumDevices = state.minimumDevices,
                 minimumDevicesDisplayed = state.minimumDevices,
-                // deviceCount <= 3 hides the "Next" button: the claim auto-advances once the peer
-                // threshold is met, just like 2/2 & 3/3 keygen.
-                deviceCount = state.minimumDevices,
                 allowsMoreDevices = false,
                 enableNotification = false,
             ),
@@ -521,6 +518,8 @@ private fun ClaimPairingScreen(state: QbtcClaimUiState.Pairing, onBackClick: () 
         showHelp = false,
         showShare = false,
         showNetworkSwitch = false,
+        // The claim always auto-advances once the peer threshold is met, so there is no Next step.
+        showNext = false,
     )
 }
 
