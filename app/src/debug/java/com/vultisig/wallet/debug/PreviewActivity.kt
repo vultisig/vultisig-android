@@ -112,6 +112,7 @@ import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
+import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
@@ -203,6 +204,7 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_claim_error" -> QbtcClaimErrorPreview()
                     "qbtc_claim_blocked" -> QbtcClaimBlockedPreview()
                     "keysign_signing_lunc" -> KeysignSigningLuncPreview()
+                    "circle_usdc_widget" -> CircleUsdcWidgetPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
@@ -262,6 +264,25 @@ private fun KeysignDevicesCountPreview(allowsMore: Boolean) {
         onDismissQrHelpModal = {},
         showHelp = false,
     )
+}
+
+@Composable
+private fun CircleUsdcWidgetPreview() {
+    Box(
+        modifier =
+            Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary).padding(16.dp)
+    ) {
+        HeaderDeFiWidget(
+            title = "USDC deposited",
+            iconRes = R.drawable.usdc,
+            buttonFirstActionText = "Withdraw",
+            buttonSecondActionText = "Deposit",
+            onClickFirstAction = {},
+            onClickSecondAction = {},
+            totalAmount = "1500 USDC",
+            totalPrice = "$1,500.34",
+        )
+    }
 }
 
 @Composable

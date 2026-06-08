@@ -47,6 +47,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -286,30 +287,46 @@ fun ActionButton(
                 }
             },
         shape = RoundedCornerShape(50),
-        contentPadding = PaddingValues(start = 4.dp, top = 6.dp, end = 16.dp, bottom = 6.dp),
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
         modifier = modifier.height(42.dp).actionButtonInnerBevel(enabled = enabled),
     ) {
-        if (icon != null) {
-            Box(
-                modifier =
-                    Modifier.size(30.dp)
-                        .background(
-                            if (enabled) iconCircleColor else iconCircleColor.copy(alpha = 0.5f),
-                            RoundedCornerShape(50),
-                        ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(id = icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp),
-                    tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
-                )
+        // Figma docks the icon to the button's leading edge while the label stays centered across
+        // the full width, so the icon is absolutely positioned and the text is centered on top.
+        Box(modifier = Modifier.fillMaxWidth()) {
+            if (icon != null) {
+                Box(
+                    modifier =
+                        Modifier.align(Alignment.CenterStart)
+                            .size(30.dp)
+                            .background(
+                                if (enabled) iconCircleColor
+                                else iconCircleColor.copy(alpha = 0.5f),
+                                RoundedCornerShape(50),
+                            ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
+                    )
+                }
             }
-            UiSpacer(5.dp)
-        }
 
-        Text(text = title, style = Theme.brockmann.button.medium.medium)
+            Text(
+                text = title,
+                style = Theme.brockmann.button.medium.medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                // Reserve the icon lane symmetrically so a long (translated) label can never paint
+                // over the docked icon, while keeping the label centered on the button's true
+                // center.
+                modifier =
+                    Modifier.align(Alignment.Center)
+                        .padding(horizontal = if (icon != null) 30.dp else 0.dp),
+            )
+        }
     }
 }
 
