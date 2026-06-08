@@ -345,6 +345,7 @@
     <string name="swap_error_high_price_impact">Die Preisauswirkung ist zu hoch. Versuchen Sie einen kleineren Betrag oder ein anderes Token-Paar.</string>
     <string name="swap_error_quote_failed">Swap-Angebot fehlgeschlagen. Bitte versuchen Sie es erneut oder passen Sie den Betrag an.</string>
     <string name="swap_error_rate_limit">Zu viele Anfragen. Bitte versuchen Sie es später erneut.</string>
+    <string name="swap_error_trading_halted">Der Handel mit diesem Asset ist vorübergehend ausgesetzt. Bitte versuchen Sie es später erneut.</string>
     <string name="swap_screen_invalid_no_vault">Kein Tresor ausgewählt</string>
     <string name="swap_screen_invalid_no_src_error">Kein Quelltoken ausgewählt</string>
     <string name="swap_screen_invalid_selected_no_dst">Kein Ziel-Token ausgewählt</string>
