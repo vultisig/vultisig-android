@@ -600,6 +600,9 @@ constructor(
     }
 
     private fun List<Account>.retainMissing(previous: List<Account>): List<Account> {
+        // A progressive snapshot can re-emit an address with no accounts; fall back to the cached
+        // ones rather than blanking the row for that cycle (#4768).
+        if (isEmpty()) return previous
         val previousByToken = previous.associateBy { it.token.id }
         return map { account ->
             val last = previousByToken[account.token.id] ?: return@map account

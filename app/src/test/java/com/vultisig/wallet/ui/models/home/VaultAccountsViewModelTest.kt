@@ -706,6 +706,39 @@ internal class VaultAccountsViewModelTest {
             vm.uiState.value.accounts.none { it.fiatAmount == "$10" }.shouldBeTrue()
         }
 
+    /**
+     * Regression for #4768: a progressive snapshot can re-emit an address with no accounts. Retain
+     * must fall back to the cached accounts for that cycle rather than blanking the row/total.
+     */
+    @Test
+    fun `row keeps cached value when an address re-emits with empty accounts`() =
+        runTest(testDispatcher) {
+            val ethResolved = buildTestAddress(Chain.Ethereum, "0xeth", fiat = BigDecimal("10"))
+            val ethEmpty =
+                Address(chain = Chain.Ethereum, address = "0xeth", accounts = emptyList())
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddressBalances("vault-1") } returnsMany
+                listOf(
+                    flowOf(AddressBalancesUpdate(listOf(ethResolved), isComplete = true)),
+                    flowOf(AddressBalancesUpdate(listOf(ethEmpty), isComplete = true)),
+                )
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.totalFiatValue shouldBe "$10"
+
+            vm.refreshData()
+            advanceUntilIdle()
+
+            // The empty re-emission must not blank the row or the total.
+            vm.uiState.value.accounts.first { it.model.chain == Chain.Ethereum }.fiatAmount shouldBe
+                "$10"
+            vm.uiState.value.totalFiatValue shouldBe "$10"
+        }
+
     private fun VaultAccountsViewModel.solanaRow(): AccountUiModel =
         uiState.value.accounts.first { it.model.chain == Chain.Solana }
 
