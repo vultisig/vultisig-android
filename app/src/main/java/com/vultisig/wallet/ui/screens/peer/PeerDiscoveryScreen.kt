@@ -171,6 +171,8 @@ internal fun PeerDiscoveryScreen(
     onNextClick: () -> Unit,
     onDismissQrHelpModal: () -> Unit,
     showHelp: Boolean = true,
+    showShare: Boolean = true,
+    showNetworkSwitch: Boolean = true,
 ) {
     val selectedDevicesSize = state.selectedDevices.size + 1 // we always have our device
     val devicesSize = state.devices.size + 1
@@ -192,7 +194,9 @@ internal fun PeerDiscoveryScreen(
                 UiSpacer(size = 8.dp)
             }
 
-            VsTopAppBarAction(icon = R.drawable.ic_share, onClick = onShareQrClick)
+            if (showShare) {
+                VsTopAppBarAction(icon = R.drawable.ic_share, onClick = onShareQrClick)
+            }
         },
         bottomBar = {
             Column(
@@ -217,16 +221,18 @@ internal fun PeerDiscoveryScreen(
                     )
                 }
 
-                Text(
-                    text =
-                        buildNetworkModeText(
-                            network = state.network,
-                            onSwitchModeClick = onSwitchModeClick,
-                        ),
-                    color = Theme.v2.colors.text.tertiary,
-                    style = Theme.brockmann.supplementary.caption,
-                    textAlign = TextAlign.Center,
-                )
+                if (showNetworkSwitch) {
+                    Text(
+                        text =
+                            buildNetworkModeText(
+                                network = state.network,
+                                onSwitchModeClick = onSwitchModeClick,
+                            ),
+                        color = Theme.v2.colors.text.tertiary,
+                        style = Theme.brockmann.supplementary.caption,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         },
         content = {

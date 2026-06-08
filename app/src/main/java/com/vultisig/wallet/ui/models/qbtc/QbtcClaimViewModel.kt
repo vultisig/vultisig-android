@@ -95,8 +95,13 @@ internal sealed interface QbtcClaimUiState {
         val isAllSelected: Boolean,
     ) : QbtcClaimUiState
 
-    /** Secure Vault: showing the pairing QR and waiting for the co-signing device to join. */
-    data class Pairing(val qr: BitmapPainter?, val joinedDevices: List<String>) : QbtcClaimUiState
+    /** Secure Vault: showing the pairing QR and waiting for the co-signing device(s) to join. */
+    data class Pairing(
+        val qr: BitmapPainter?,
+        val joinedDevices: List<String>,
+        val localPartyId: String,
+        val minimumDevices: Int,
+    ) : QbtcClaimUiState
 
     data class Signing(val phase: QbtcClaimPhase) : QbtcClaimUiState
 
@@ -287,17 +292,26 @@ constructor(
         val encryptionKeyHex = Utils.encryptionKeyHex
         val serverUrl = Endpoints.VULTISIG_RELAY_URL
         val localPartyId = vault.localPartyID
+        val threshold = Utils.getThreshold(vault.signers.size)
 
-        uiState.value = QbtcClaimUiState.Pairing(qr = null, joinedDevices = emptyList())
+        fun pairing(qr: BitmapPainter?, devices: List<String>) =
+            QbtcClaimUiState.Pairing(
+                qr = qr,
+                joinedDevices = devices,
+                localPartyId = localPartyId,
+                minimumDevices = threshold,
+            )
+
+        uiState.value = pairing(qr = null, devices = emptyList())
         val qr =
             withContext(Dispatchers.IO) {
                 renderPairingQr(vault, btcCoin, sessionId, encryptionKeyHex)
             }
-        uiState.value = QbtcClaimUiState.Pairing(qr = qr, joinedDevices = emptyList())
+        uiState.value = pairing(qr = qr, devices = emptyList())
 
         sessionApi.startSession(serverUrl, sessionId, listOf(localPartyId))
 
-        val peersNeeded = (Utils.getThreshold(vault.signers.size) - 1).coerceAtLeast(1)
+        val peersNeeded = (threshold - 1).coerceAtLeast(1)
         // Bounded by a generous, human-paced timeout — pairing means picking up a second device and
         // scanning, so it allows far longer than the Fast Vault runner's 60s server-response wait.
         // withTimeoutOrNull (not withTimeout) avoids a TimeoutCancellationException that safeLaunch
@@ -305,9 +319,7 @@ constructor(
         val peers =
             withTimeoutOrNull(PEER_DISCOVERY_TIMEOUT) {
                 discoverParticipants(serverUrl, sessionId, localPartyId)
-                    .onEach { devices ->
-                        uiState.value = QbtcClaimUiState.Pairing(qr = qr, joinedDevices = devices)
-                    }
+                    .onEach { devices -> uiState.value = pairing(qr = qr, devices = devices) }
                     .first { it.size >= peersNeeded }
             } ?: return null
 

@@ -1249,7 +1249,6 @@
     <string name="qbtc_claim_success_title">QBTC preuzet</string>
     <string name="qbtc_claim_successful">QBTC uspješno preuzet</string>
     <string name="qbtc_claim_password_title">Unesite lozinku trezora</string>
-    <string name="qbtc_claim_pair_instruction">Skenirajte ovo svojim drugim uređajem kako biste zajednički potpisali preuzimanje</string>
     <string name="qbtc_claim_failed">Preuzimanje nije uspjelo</string>
     <string name="qbtc_claim_unavailable_title">Preuzimanje je onemogućeno</string>
     <string name="qbtc_claim_unavailable_detail">Preuzimanje QBTC-a privremeno je onemogućeno na mreži. Molimo pokušajte ponovno kasnije.</string>
