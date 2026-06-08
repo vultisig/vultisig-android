@@ -38,16 +38,6 @@ constructor(
                 is SwapPayload.SwapKit -> SwapProvider.SWAPKIT
             }
 
-        // Display-only label. `provider` below stays the canonical id (the behavioral key that
-        // gates SwapKit `/track` settlement); this renders the SwapKit sub-provider
-        // (`SwapKit (NEAR)`) on the initiator, matching what the joined device produces via
-        // `formatSwapKitProviderLabel`. All other providers reuse their plain id.
-        val providerLabel: String =
-            when (val payload = from.payload) {
-                is SwapPayload.SwapKit -> formatSwapKitProviderLabel(payload.data.subProvider)
-                else -> provider.getSwapProviderId()
-            }
-
         // SwapKit `/track` correlation key, threaded onto the tx-history row. EVM/Solana SwapKit
         // routes carry it on the EVM payload; native routes (PSBT/TON/…) on the SwapKit payload.
         val swapId: String? =
@@ -72,6 +62,24 @@ constructor(
             }
 
         val quotesFeesFiat = convertTokenValueToFiat(tokenValue, from.estimatedFees, currency)
+
+        // Display-only label. `provider` below stays the canonical id (the behavioral key that
+        // gates SwapKit `/track` settlement); SwapKit collapses every sub-provider onto the
+        // canonical `"SwapKit"` id, so render the persisted sub-provider (Chainflip / NEAR / Garden)
+        // for the display label instead — matching what the joined device produces via
+        // `formatSwapKitProviderLabel`. Other providers reuse their specific id.
+        val providerLabel =
+            if (provider == SwapProvider.SWAPKIT) {
+                val subProvider =
+                    when (val payload = from.payload) {
+                        is SwapPayload.EVM -> payload.data.subProvider
+                        is SwapPayload.SwapKit -> payload.data.subProvider
+                        else -> null
+                    }
+                formatSwapKitProviderLabel(subProvider)
+            } else {
+                provider.getSwapProviderId()
+            }
 
         return SwapTransactionUiModel(
             src =

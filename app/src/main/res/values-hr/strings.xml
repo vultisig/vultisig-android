@@ -166,7 +166,6 @@
     <string name="feature_item_learn_more">Saznajte više</string>
     <string name="keysign">Keysign</string>
     <string name="generating_key_screen_keygen_failed">Keygen nije uspio</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Držite uređaje na istoj WiFi mreži, ispravite trezor i uparite uređaje.\nUvjerite se da nijedan drugi uređaj ne pokreće Vultisig.</string>
     <string name="naming_vault_screen_invalid_name">Nevažeći naziv</string>
     <string name="rename_vault_invalid_name">Nevažeći naziv</string>
     <string name="vault_name_too_long_error">Naziv trezora je predug</string>
@@ -693,7 +692,6 @@
     <string name="invite_to_x_banner_desc">Pratite nas na X</string>
     <string name="invite_to_x_banner_button">Pratite %s</string>
     <string name="buy_vult_banner_desc">I uštedi na naknadama za zamjenu</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Spremni ste za korištenje novog standarda novčanika.</string>
     <string name="vault_detail_vault_info">Informacije o trezoru</string>
     <string name="vault_details_keys">ključevi</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Omogući brzo biometrijsko potpisivanje</string>
@@ -705,7 +703,6 @@
     <string name="tx_done_transaction_details_expand">Proširi</string>
     <string name="tx_done_transaction_details_collapse">Sažmi</string>
     <string name="vault_confirmation_vault_upgraded">Trezor nadograđen</string>
-    <string name="vault_confirmation_well_done">Odlično.</string>
     <string name="this_amount_would_leave_too_little_change">Ovaj iznos bi ostavio premalo kusura. 💡 Pokušajte s \'Pošalji maksimum\' (%1$s ADA) kako biste izbjegli ovaj problem.</string>
     <string name="swap_form_native">Izvorno</string>
     <string name="swap_transaction_overview_approval_tx_hash">Odobrenje Tx Hash</string>

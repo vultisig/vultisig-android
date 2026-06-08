@@ -35,11 +35,20 @@ data class SwapKitSwapResponseJson(
     @SerialName("meta") val meta: SwapKitTxMeta,
     @SerialName("targetAddress") val targetAddress: String? = null,
     @SerialName("expectedBuyAmount") val expectedBuyAmount: String? = null,
+    // Max-slippage floor on the executed `/v3/swap` route. Decoded here (mirrors iOS' swap reply)
+    // so the client output-deviation guard can be re-run against the SIGNED amount — a proxy that
+    // degrades only the swap reply (leaving the `/v3/quote` route clean) would otherwise bypass the
+    // guard, since the signed amount is scaled from this reply, not the quote route.
+    @SerialName("expectedBuyAmountMaxSlippage") val expectedBuyAmountMaxSlippage: String? = null,
     // Source-chain fee breakdown on the executed route. The `type == "inbound"` entry is the
     // canonical deposit cost; read it from here (not the /v3/quote route) so a repriced fee on the
     // refreshed /v3/swap reply stays fresh. Mirrors iOS' SwapKitSwapResponse.fees.
     @SerialName("fees") val fees: List<SwapKitFee> = emptyList(),
     @SerialName("providers") val providers: List<String> = emptyList(),
+    // ERC20 approval transaction for EVM routes that need an allowance. The spender is encoded in
+    // [SwapKitApprovalTx.data] (`approve(spender, amount)` calldata), NOT [SwapKitApprovalTx.to]
+    // (the asset contract). Used only as a fallback when [SwapKitTxMeta.approvalAddress] is absent.
+    @SerialName("approvalTx") val approvalTx: SwapKitApprovalTx? = null,
     // XRP destination tag. SwapKit surfaces it (rarely) as a numeric or string-encoded value at the
     // top level; kept as a raw [JsonElement] and parsed defensively so a number-vs-string wire flip
     // doesn't break decoding. Resolution order (highest first): top-level → [SwapKitTxMeta] →
@@ -48,6 +57,18 @@ data class SwapKitSwapResponseJson(
     @SerialName("destinationTag") val destinationTag: JsonElement? = null,
     @SerialName("error") val error: String? = null,
     @SerialName("message") val message: String? = null,
+)
+
+/**
+ * ERC20 approval transaction sibling of [SwapKitSwapResponseJson.tx]. [to] is the sell-token asset
+ * contract (the `approve` is sent there); the actual spender lives in the `approve(spender,
+ * amount)` calldata in [data]. Used only to recover the spender when
+ * [SwapKitTxMeta.approvalAddress] is missing.
+ */
+@Serializable
+data class SwapKitApprovalTx(
+    @SerialName("to") val to: String? = null,
+    @SerialName("data") val data: String? = null,
 )
 
 /** Discriminator metadata sitting alongside [SwapKitSwapResponseJson.tx]. */
