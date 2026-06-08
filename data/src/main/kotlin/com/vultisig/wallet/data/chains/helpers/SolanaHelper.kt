@@ -48,6 +48,11 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
         if (keysignPayload.coin.chain != Chain.Solana) {
             error("Chain is not Solana")
         }
+        if (
+            !keysignPayload.coin.isNativeToken && solanaSpecific.fromAddressPubKey.isNullOrEmpty()
+        ) {
+            error("$SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX${keysignPayload.coin.ticker}")
+        }
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
 
         val input =
@@ -86,10 +91,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
 
             return input.setTransferTransaction(transfer.build()).build().toByteArray()
         } else {
-            if (
-                !solanaSpecific.fromAddressPubKey.isNullOrEmpty() &&
-                    !solanaSpecific.toAddressPubKey.isNullOrEmpty()
-            ) {
+            if (!solanaSpecific.toAddressPubKey.isNullOrEmpty()) {
                 val transfer =
                     Solana.TokenTransfer.newBuilder()
                         .setTokenMintAddress(keysignPayload.coin.contractAddress)
@@ -101,7 +103,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                 keysignPayload.memo?.let { transfer.setMemo(it) }
 
                 return input.setTokenTransferTransaction(transfer.build()).build().toByteArray()
-            } else if (!solanaSpecific.fromAddressPubKey.isNullOrEmpty()) {
+            } else {
                 val receiverAddress = SolanaAddress(toAddress.description())
                 val generatedRecipientAssociatedAddress =
                     if (solanaSpecific.programId == true) {
@@ -124,8 +126,6 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                     .setCreateAndTransferTokenTransaction(transferTokenMessage.build())
                     .build()
                     .toByteArray()
-            } else {
-                error("$SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX${keysignPayload.coin.ticker}")
             }
         }
     }
