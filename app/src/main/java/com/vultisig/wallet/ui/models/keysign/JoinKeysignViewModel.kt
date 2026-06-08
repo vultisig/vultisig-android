@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ComputeQbtcClaimMessageHashUseCase
@@ -926,8 +927,13 @@ constructor(
                                         dstAddress = dstToken.address,
                                     )
                                 )
-                            } catch (e: Exception) {
-                                if (e is CancellationException) throw e
+                            } catch (e: SwapKitError) {
+                                // The SwapKit API layer wraps network/timeout/decoding failures
+                                // into
+                                // SwapKitError and rethrows CancellationException un-wrapped, so
+                                // this
+                                // narrow catch degrades quote failures to a zero fee while letting
+                                // cancellation (and any genuinely unexpected exception) propagate.
                                 Timber.w(e, "SwapKit join fee re-fetch failed; showing zero fee")
                                 TokenValue(value = BigInteger.ZERO, token = srcToken)
                             }
