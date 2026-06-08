@@ -41,6 +41,27 @@ internal data class GasCalculationResult(
 /** Thrown when a UTXO transaction plan fails due to insufficient UTXOs. */
 internal class InsufficientUtxosException : Exception("Error_not_enough_utxos")
 
+/** Outcome of resolving the network fee for a UTXO swap from its signed transaction plan. */
+internal sealed interface UtxoPlanFeeResult {
+    /**
+     * Plan fee resolved successfully; [estimated] carries the fee and fiat for display and balance
+     * checks, and the swap may be enabled.
+     */
+    data class Success(val estimated: EstimatedGasFee) : UtxoPlanFeeResult
+
+    /**
+     * Not enough UTXOs to build the plan; surface the insufficient-UTXOs error and keep the swap
+     * disabled without clearing the displayed fee.
+     */
+    data object InsufficientUtxos : UtxoPlanFeeResult
+
+    /**
+     * Plan could not be resolved (null plan or a generic failure); clear the stale fee and keep the
+     * swap disabled.
+     */
+    data object Unavailable : UtxoPlanFeeResult
+}
+
 internal class SwapGasCalculator
 @Inject
 constructor(
@@ -222,6 +243,50 @@ constructor(
             )
         return GasCalculationResult(gasFee = planFee, estimated = estimated, chain = srcToken.chain)
     }
+
+    /**
+     * Resolves the UTXO swap network fee by fetching the chain-specific data and computing the
+     * signed transaction plan fee, returning a [UtxoPlanFeeResult] the caller maps to UI state.
+     * Cancellation propagates; an [InsufficientUtxosException] maps to
+     * [UtxoPlanFeeResult.InsufficientUtxos] and any other failure (including a null plan) maps to
+     * [UtxoPlanFeeResult.Unavailable].
+     *
+     * @param gasFee the per-byte gas fee for [srcToken]'s chain.
+     */
+    internal suspend fun resolveUtxoPlanFee(
+        vaultId: String,
+        srcToken: Coin,
+        srcAddress: String,
+        dstAddress: String,
+        memo: String?,
+        tokenAmountInt: BigInteger,
+        gasFee: TokenValue,
+    ): UtxoPlanFeeResult =
+        try {
+            val specificAndUtxo = getSpecificAndUtxo(srcToken, srcAddress, gasFee)
+            val planFeeResult =
+                computeUtxoPlanFeeResult(
+                    vaultId = vaultId,
+                    srcToken = srcToken,
+                    dstAddress = dstAddress,
+                    tokenAmountInt = tokenAmountInt,
+                    specificAndUtxo = specificAndUtxo,
+                    memo = memo,
+                )
+            if (planFeeResult != null) {
+                UtxoPlanFeeResult.Success(planFeeResult.estimated)
+            } else {
+                UtxoPlanFeeResult.Unavailable
+            }
+        } catch (e: Exception) {
+            if (e is kotlin.coroutines.cancellation.CancellationException) throw e
+            Timber.e(e, "utxoPlanFee")
+            if (e is InsufficientUtxosException) {
+                UtxoPlanFeeResult.InsufficientUtxos
+            } else {
+                UtxoPlanFeeResult.Unavailable
+            }
+        }
 
     private fun getGasLimit(token: Coin): BigInteger? {
         val isEVMSwap = token.isNativeToken && token.chain in listOf(Chain.Ethereum, Chain.Arbitrum)

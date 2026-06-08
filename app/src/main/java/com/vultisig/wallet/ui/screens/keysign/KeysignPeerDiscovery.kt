@@ -155,7 +155,7 @@ internal fun KeysignPeerDiscovery(
                     selectedDevices = selectionState.filter { it != vault.localPartyID },
                     minimumDevices = minimumDevices,
                     minimumDevicesDisplayed = minimumDevices,
-                    allowsMoreDevices = vault.signers.size > minimumDevices,
+                    allowsMoreDevices = false,
                     showQrHelpModal = false,
                     connectingToServer = null,
                     error = null,

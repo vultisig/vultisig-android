@@ -166,7 +166,6 @@
     <string name="feature_item_learn_more">Saperne di più</string>
     <string name="keysign">Segno chiave</string>
     <string name="generating_key_screen_keygen_failed">Keygen non riuscito</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Mantieni i dispositivi sulla stessa rete WiFi, correggi il vault e associa i dispositivi.\nAssicurati che nessun altro dispositivo stia eseguendo Vultisig.</string>
     <string name="naming_vault_screen_invalid_name">Nome non valido</string>
     <string name="rename_vault_invalid_name">Nome non valido</string>
     <string name="vault_name_too_long_error">Il nome del caveau è troppo lungo</string>
@@ -690,7 +689,6 @@
     <string name="invite_to_x_banner_desc">Seguici su X</string>
     <string name="invite_to_x_banner_button">Segui %s</string>
     <string name="buy_vult_banner_desc">E risparmia sulle commissioni di swap</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Sei pronto a utilizzare un nuovo standard di portafoglio.</string>
     <string name="vault_detail_vault_info">Informazioni sul Vault</string>
     <string name="vault_details_keys">Chiavi</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Abilita Firma Rapida Biometrica</string>
@@ -702,7 +700,6 @@
     <string name="tx_done_transaction_details_expand">Espandi</string>
     <string name="tx_done_transaction_details_collapse">Riduci</string>
     <string name="vault_confirmation_vault_upgraded">Vault aggiornato</string>
-    <string name="vault_confirmation_well_done">Ben fatto.</string>
     <string name="this_amount_would_leave_too_little_change">Questo importo lascerebbe troppo poco resto. 💡 Prova \"Invia Massimo\" (%1$s ADA) per evitare questo problema.</string>
     <string name="swap_form_native">Nativo</string>
     <string name="swap_transaction_overview_approval_tx_hash">Hash di approvazione</string>
@@ -1287,6 +1284,7 @@
     <string name="cosmos_staking_validator_active">Attivo</string>
     <string name="cosmos_staking_validator_churned_out">Escluso</string>
     <string name="cosmos_staking_validator_picker">Validatore</string>
+    <string name="cosmos_staking_validator_commission">Commissione</string>
     <string name="cosmos_staking_validators">Validatori</string>
     <string name="cosmos_staking_pick_destination">Scegli destinazione</string>
     <string name="cosmos_staking_pick_destination_validator">Scegli un validatore di destinazione</string>

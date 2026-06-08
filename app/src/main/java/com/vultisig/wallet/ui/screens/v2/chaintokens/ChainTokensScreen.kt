@@ -155,7 +155,7 @@ internal fun ChainTokensScreen(
                         VsCircleButton(
                             onClick = onHistory,
                             size = VsCircleButtonSize.Small,
-                            icon = R.drawable.calendar_clock,
+                            icon = R.drawable.clock_arrow_circlepath,
                             type = VsCircleButtonType.Secondary,
                             designType = DesignType.Shined,
                         )

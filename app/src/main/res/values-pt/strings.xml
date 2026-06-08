@@ -166,7 +166,6 @@
     <string name="feature_item_learn_more">Saber mais</string>
     <string name="keysign">Sinal de chave</string>
     <string name="generating_key_screen_keygen_failed">Falha na geração de chaves</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Mantenha os dispositivos na mesma rede WiFi, corrija o cofre e pareie os dispositivos.\nCertifique-se de que nenhum outro dispositivo esteja executando o Vultisig.</string>
     <string name="naming_vault_screen_invalid_name">Nome inválido</string>
     <string name="rename_vault_invalid_name">Nome inválido</string>
     <string name="vault_name_too_long_error">O nome do cofre é muito longo</string>
@@ -689,7 +688,6 @@
     <string name="invite_to_x_banner_desc">Siga-nos no X</string>
     <string name="invite_to_x_banner_button">Siga %s</string>
     <string name="buy_vult_banner_desc">E poupe nas taxas de troca</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Está pronto para usar um novo padrão de carteira.</string>
     <string name="vault_detail_vault_info">Informações do Cofre</string>
     <string name="vault_details_keys">Chaves</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Ativar Assinatura Rápida por Biometria</string>
@@ -701,7 +699,6 @@
     <string name="tx_done_transaction_details_expand">Expandir</string>
     <string name="tx_done_transaction_details_collapse">Recolher</string>
     <string name="vault_confirmation_vault_upgraded">Cofre atualizado</string>
-    <string name="vault_confirmation_well_done">Muito bem.</string>
     <string name="this_amount_would_leave_too_little_change">Este valor deixaria muito pouco troco. 💡 Experimente \"Enviar Máximo\" (%1$s ADA) para evitar este problema.</string>
     <string name="swap_form_native">Nativo</string>
     <string name="swap_transaction_overview_approval_tx_hash">Hash de Transação de Aprovação</string>
@@ -1282,6 +1279,7 @@
     <string name="cosmos_staking_validator_active">Ativo</string>
     <string name="cosmos_staking_validator_churned_out">Excluído</string>
     <string name="cosmos_staking_validator_picker">Validador</string>
+    <string name="cosmos_staking_validator_commission">Comissão</string>
     <string name="cosmos_staking_validators">Validadores</string>
     <string name="cosmos_staking_pick_destination">Escolher destino</string>
     <string name="cosmos_staking_pick_destination_validator">Escolha um validador de destino</string>
