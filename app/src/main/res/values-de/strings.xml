@@ -691,7 +691,6 @@
     <string name="invite_to_x_banner_desc">Folgen Sie uns auf X</string>
     <string name="invite_to_x_banner_button">Folgen Sie %s</string>
     <string name="buy_vult_banner_desc">Und sparen Sie Swap-Gebühren</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Sie sind bereit für den neuen Wallet-Standard.</string>
     <string name="vault_detail_vault_info">Tresorinformationen</string>
     <string name="vault_details_keys">Schlüssel</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Biometrische Schnellsignatur aktivieren</string>
@@ -703,7 +702,6 @@
     <string name="tx_done_transaction_details_expand">Erweitern</string>
     <string name="tx_done_transaction_details_collapse">Reduzieren</string>
     <string name="vault_confirmation_vault_upgraded">Tresor aktualisiert</string>
-    <string name="vault_confirmation_well_done">Gut gemacht!</string>
     <string name="this_amount_would_leave_too_little_change">Bei diesem Betrag bleibt zu wenig Wechselgeld übrig. 💡 Versuchen Sie „Max. senden“ (%1$s ADA), um dieses Problem zu vermeiden.</string>
     <string name="swap_form_native">Native</string>
     <string name="swap_transaction_overview_approval_tx_hash">Genehmigungs-Tx-Hash</string>

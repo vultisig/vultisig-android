@@ -954,8 +954,6 @@
     <string name="tx_done_transaction_details_expand">Expand</string>
     <string name="tx_done_transaction_details_collapse">Collapse</string>
     <string name="vault_confirmation_vault_upgraded">"Vault upgraded"</string>
-    <string name="vault_confirmation_well_done">Well done.</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">You’re ready to use a new wallet standard.</string>
     <string name="vault_detail_vault_info">Vault Info</string>
     <string name="vault_details_keys">Keys</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>

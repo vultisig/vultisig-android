@@ -931,8 +931,6 @@
     <string name="tx_done_transaction_details_expand">펼치기</string>
     <string name="tx_done_transaction_details_collapse">접기</string>
     <string name="vault_confirmation_vault_upgraded">"볼트가 업그레이드되었습니다 "</string>
-    <string name="vault_confirmation_well_done">잘 하셨습니다.</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">새로운 지갑 표준을 사용할 준비가 되었습니다.</string>
     <string name="vault_detail_vault_info">볼트 정보</string>
     <string name="vault_details_keys">키</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">생체 인증 빠른 서명 활성화</string>

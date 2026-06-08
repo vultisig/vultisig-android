@@ -686,7 +686,6 @@
     <string name="invite_to_x_banner_desc">Volg ons op X</string>
     <string name="invite_to_x_banner_button">Volg %s</string>
     <string name="buy_vult_banner_desc">En bespaar op wisselkosten</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Je bent klaar om een ​​nieuwe walletstandaard te gebruiken.</string>
     <string name="vault_detail_vault_info">Kluisinfo</string>
     <string name="vault_details_keys">Sleutels</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Snelle ondertekening met biometrie inschakelen</string>
@@ -698,7 +697,6 @@
     <string name="tx_done_transaction_details_expand">Uitvouwen</string>
     <string name="tx_done_transaction_details_collapse">Samenvouwen</string>
     <string name="vault_confirmation_vault_upgraded">Vault geüpgraded</string>
-    <string name="vault_confirmation_well_done">Goed gedaan.</string>
     <string name="this_amount_would_leave_too_little_change">Dit bedrag zou te weinig wisselgeld opleveren. 💡 Probeer \'Send Max\' (%1$s ADA) om dit probleem te voorkomen.</string>
     <string name="swap_form_native">Native</string>
     <string name="swap_transaction_overview_approval_tx_hash">Goedkeuring Tx Hash</string>
