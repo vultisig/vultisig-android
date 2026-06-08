@@ -11,7 +11,6 @@ import com.vultisig.wallet.data.models.TokenBalanceAndPrice
 import com.vultisig.wallet.data.models.TokenBalanceWrapped
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.usecases.cosmos.CosmosStakedBalanceUseCase
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.every
@@ -39,7 +38,6 @@ internal class AccountsRepositoryImplTest {
     private lateinit var balanceRepository: BalanceRepository
     private lateinit var tokenPriceRepository: TokenPriceRepository
     private lateinit var splTokenRepository: SplTokenRepository
-    private lateinit var cosmosStakedBalance: CosmosStakedBalanceUseCase
     private lateinit var repository: AccountsRepositoryImpl
 
     @BeforeEach
@@ -48,9 +46,6 @@ internal class AccountsRepositoryImplTest {
         balanceRepository = mockk()
         tokenPriceRepository = mockk()
         splTokenRepository = mockk(relaxed = true)
-        cosmosStakedBalance = mockk()
-        coEvery { cosmosStakedBalance(any(), any()) } returns BigInteger.ZERO
-        every { cosmosStakedBalance.cached(any(), any()) } returns BigInteger.ZERO
         repository =
             AccountsRepositoryImpl(
                 vaultRepository = vaultRepository,
@@ -58,7 +53,6 @@ internal class AccountsRepositoryImplTest {
                 tokenPriceRepository = tokenPriceRepository,
                 chainAndTokensToAddressMapper = ChainAndTokensToAddressMapperImpl(),
                 splTokenRepository = splTokenRepository,
-                cosmosStakedBalance = cosmosStakedBalance,
             )
     }
 

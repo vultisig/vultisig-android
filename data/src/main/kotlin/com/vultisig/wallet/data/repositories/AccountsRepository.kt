@@ -16,7 +16,6 @@ import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isDeFiSupported
 import com.vultisig.wallet.data.models.settings.AppCurrency
-import com.vultisig.wallet.data.usecases.cosmos.CosmosStakedBalanceUseCase
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
@@ -78,7 +77,6 @@ constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val chainAndTokensToAddressMapper: ChainAndTokensToAddressMapper,
     private val splTokenRepository: SplTokenRepository,
-    private val cosmosStakedBalance: CosmosStakedBalanceUseCase,
 ) : AccountsRepository {
 
     private suspend fun getVault(vaultId: String): Vault =
@@ -394,9 +392,7 @@ constructor(
                             }
                         val canBeDeFiProvider = address.chain.isDeFiSupported
 
-                        address
-                            .copy(accounts = updatedAccounts, isDefiProvider = canBeDeFiProvider)
-                            .foldInCosmosStakedBalance(live = false)
+                        address.copy(accounts = updatedAccounts, isDefiProvider = canBeDeFiProvider)
                     }
 
                 send(cachedAddresses)
@@ -438,9 +434,7 @@ constructor(
                                     .awaitAll()
                             val canBeDeFiProvider = account.chain.isDeFiSupported
 
-                            account
-                                .copy(accounts = newAccounts, isDefiProvider = canBeDeFiProvider)
-                                .foldInCosmosStakedBalance(live = true)
+                            account.copy(accounts = newAccounts, isDefiProvider = canBeDeFiProvider)
                         } catch (e: Exception) {
                             if (e is kotlinx.coroutines.CancellationException) throw e
                             Timber.e(e)
@@ -484,54 +478,6 @@ constructor(
             balanceRepository.getTokenBalanceAndPrice(finalAccount.address, updatedToken).first()
 
         accountToUpdate.applyBalance(balance.tokenBalance, balance.price)
-    }
-
-    /**
-     * For Cosmos staking chains (Terra / TerraClassic) the DeFi tab represents the staking
-     * position, but the row only carries the (≈0) liquid balance — so an active delegation shows as
-     * $0.00 (issue #4763). Fold the staked total (delegated + claimable rewards) into the native
-     * account's token + fiat value so both the row and the DeFi total reflect it. iOS does the same
-     * via `DefiBalanceService.cosmosStakingTotalBalance`.
-     *
-     * No-op for non-staking chains or when nothing is staked, and the underlying read already
-     * degrades to zero on failure, so a transient LCD blip leaves the liquid value untouched rather
-     * than erroring the load.
-     */
-    private suspend fun Address.foldInCosmosStakedBalance(live: Boolean): Address {
-        if (chain != Chain.Terra && chain != Chain.TerraClassic) return this
-        // Cached emit reads the last-known snapshot (no network) so the staked allocation renders
-        // immediately on reopen; only the background refresh hits the LCD and updates the snapshot.
-        val stakedBaseUnits =
-            if (live) cosmosStakedBalance(chain, address)
-            else cosmosStakedBalance.cached(chain, address)
-        if (stakedBaseUnits <= BigInteger.ZERO) return this
-
-        val updatedAccounts =
-            accounts.map { account ->
-                if (!account.token.isNativeToken) return@map account
-                val mergedTokenValue =
-                    TokenValue(
-                        value = (account.tokenValue?.value ?: BigInteger.ZERO) + stakedBaseUnits,
-                        unit = account.token.ticker,
-                        decimals = account.token.decimal,
-                    )
-                // Re-price the merged amount from the unit price the liquid balance resolved; if
-                // the
-                // price never loaded, keep the existing fiat rather than zeroing it.
-                val unitPrice = account.price?.value
-                val mergedFiatValue =
-                    if (unitPrice != null) {
-                        FiatValue(
-                            value = mergedTokenValue.decimal.multiply(unitPrice),
-                            currency = account.fiatValue?.currency ?: AppCurrency.USD.ticker,
-                        )
-                    } else {
-                        account.fiatValue
-                    }
-                account.copy(tokenValue = mergedTokenValue, fiatValue = mergedFiatValue)
-            }
-
-        return copy(accounts = updatedAccounts)
     }
 
     private fun Account.applyBalance(balance: TokenBalance): Account =
