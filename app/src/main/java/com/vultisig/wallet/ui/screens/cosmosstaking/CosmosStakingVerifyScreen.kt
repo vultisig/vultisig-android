@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.screens.cosmosstaking
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,6 +33,7 @@ import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
 import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
 import com.vultisig.wallet.ui.components.UiSpacer
+import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
@@ -74,13 +76,42 @@ internal fun CosmosStakingVerifyScreen(viewModel: CosmosStakingVerifyViewModel =
         )
     }
 
+    CosmosStakingVerifyContent(state = state, onClose = viewModel::back) {
+        val signState = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled
+        val bottomModifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp)
+
+        if (state.hasFastSign) {
+            FastSignPairedButtons(
+                onFastSignClick = { if (!viewModel.tryToFastSignWithPassword()) authorize() },
+                onPairedSignClick = viewModel::confirm,
+                state = signState,
+                modifier = bottomModifier,
+            )
+        } else {
+            VsButton(
+                label = stringResource(R.string.cosmos_staking_verify_sign),
+                variant = VsButtonVariant.CTA,
+                state = signState,
+                onClick = viewModel::confirm,
+                modifier = bottomModifier,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun CosmosStakingVerifyContent(
+    state: CosmosStakingVerifyUiState,
+    onClose: () -> Unit,
+    cta: @Composable BoxScope.() -> Unit,
+) {
     V2Scaffold(
         title = stringResource(R.string.verify_deposit_function_overview),
         // Figma "Overview" uses a close (✕) button top-right rather than a back caret — it still
         // pops the verify entry, matching the design while keeping the screen exitable.
         onBackClick = null,
         rightIcon = R.drawable.big_close,
-        onRightIconClick = viewModel::back,
+        onRightIconClick = onClose,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -92,20 +123,7 @@ internal fun CosmosStakingVerifyScreen(viewModel: CosmosStakingVerifyViewModel =
             ) {
                 SummaryCard(state = state)
             }
-
-            VsButton(
-                label = stringResource(R.string.cosmos_staking_verify_sign),
-                variant = VsButtonVariant.CTA,
-                state = if (state.isLoading) VsButtonState.Disabled else VsButtonState.Enabled,
-                onClick = {
-                    if (state.hasFastSign) {
-                        if (!viewModel.tryToFastSignWithPassword()) authorize()
-                    } else {
-                        viewModel.confirm()
-                    }
-                },
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
-            )
+            cta()
         }
     }
 }
@@ -216,48 +234,32 @@ private fun truncatedMiddle(value: String): String =
 @Preview
 @Composable
 private fun CosmosStakingVerifyScreenPreview() {
-    V2Scaffold(
-        title = "Overview",
-        onBackClick = null,
-        rightIcon = R.drawable.big_close,
-        onRightIconClick = {},
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier =
-                    Modifier.fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp)
-                        .padding(bottom = 96.dp)
-            ) {
-                SummaryCard(
-                    state =
-                        CosmosStakingVerifyUiState(
-                            headlineRes = R.string.cosmos_staking_youre_claiming,
-                            amount = "0.000001",
-                            ticker = "LUNA",
-                            vaultName = "Main Vault",
-                            fromAddress = "terra1delegatorxxxxxxxxxxxxxxxxxxxxxxxxxx78wk",
-                            validatorRows =
-                                listOf(
-                                    CosmosStakingVerifyValidatorRow(
-                                        labelRes = R.string.cosmos_staking_validator_picker,
-                                        value = "Allnodes (5% commission)",
-                                    )
-                                ),
-                            networkName = "Terra",
-                            feeCrypto = "0.01 LUNA",
-                            isLoading = false,
+    CosmosStakingVerifyContent(
+        state =
+            CosmosStakingVerifyUiState(
+                headlineRes = R.string.cosmos_staking_youre_claiming,
+                amount = "0.000001",
+                ticker = "LUNA",
+                vaultName = "Main Vault",
+                fromAddress = "terra1delegatorxxxxxxxxxxxxxxxxxxxxxxxxxx78wk",
+                validatorRows =
+                    listOf(
+                        CosmosStakingVerifyValidatorRow(
+                            labelRes = R.string.cosmos_staking_validator_picker,
+                            value = "Allnodes (5% commission)",
                         )
-                )
-            }
-            VsButton(
-                label = stringResource(R.string.cosmos_staking_verify_sign),
-                variant = VsButtonVariant.CTA,
-                state = VsButtonState.Enabled,
-                onClick = {},
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
-            )
-        }
+                    ),
+                networkName = "Terra",
+                feeCrypto = "0.01 LUNA",
+                hasFastSign = true,
+                isLoading = false,
+            ),
+        onClose = {},
+    ) {
+        FastSignPairedButtons(
+            onFastSignClick = {},
+            onPairedSignClick = {},
+            modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
+        )
     }
 }
