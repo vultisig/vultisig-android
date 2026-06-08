@@ -266,6 +266,7 @@
     <string name="keygen_email_continue_button">Doorgaan</string>
     <string name="password_should_not_be_empty">Wachtwoord mag niet leeg zijn</string>
     <string name="signing_error_insufficient_funds">Er is niet genoeg gas om de transactiekosten te dekken.\nSchakel geld in de wallet.</string>
+    <string name="signing_error_token_account_not_found">Dit token is niet gevonden in je wallet.\nZorg ervoor dat je het bezit voordat je verzendt.</string>
     <string name="signing_error_mixed_reshare">Gemengde Reshare-ondertekening.\nGebruik kluisshares van dezelfde Reshare-cyclus.</string>
     <string name="signing_error_sequence_mismatch">De accountvolgorde is gewijzigd — probeer het opnieuw.</string>
     <string name="signing_error_broadcast_rejected">Transactie geweigerd door het netwerk.</string>

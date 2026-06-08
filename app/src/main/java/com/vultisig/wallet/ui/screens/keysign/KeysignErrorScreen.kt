@@ -23,6 +23,8 @@ internal fun KeysignErrorScreen(
             errorLabel = stringResource(R.string.signing_error_transaction_timeout)
         errorMessageString.contains("insufficient funds") ->
             errorLabel = stringResource(R.string.signing_error_insufficient_funds)
+        errorMessageString.contains("sender's associated token account not found") ->
+            errorLabel = stringResource(R.string.signing_error_token_account_not_found)
         errorMessageString.contains("failed to calculate bob mid and bob_mic_mc") ->
             errorLabel = stringResource(R.string.signing_error_mixed_reshare)
         errorMessageString.contains(CosmosBroadcastException.BROADCAST_FAILURE_MARKER) -> {

@@ -93,7 +93,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                 keysignPayload.memo?.let { transfer.setMemo(it) }
 
                 return input.setTokenTransferTransaction(transfer.build()).build().toByteArray()
-            } else {
+            } else if (!solanaSpecific.fromAddressPubKey.isNullOrEmpty()) {
                 val receiverAddress = SolanaAddress(toAddress.description())
                 val generatedRecipientAssociatedAddress =
                     if (solanaSpecific.programId == true) {
@@ -116,6 +116,11 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                     .setCreateAndTransferTokenTransaction(transferTokenMessage.build())
                     .build()
                     .toByteArray()
+            } else {
+                error(
+                    "SPL token transfer failed: sender's associated token account not found. " +
+                        "Please ensure you have this token in your wallet."
+                )
             }
         }
     }
