@@ -57,4 +57,48 @@ class KeysignLogoSizeTest {
         width shouldBe RIVE_TO_TOKEN_IMAGE_MAX_PX
         height shouldBe 1 // coerced up from 0
     }
+
+    @Test
+    fun `square logo gets a square canvas with no padding`() {
+        val layout = squareLogoLayout(96, 96)
+        layout.canvasSize shouldBe 96
+        layout.logoWidth shouldBe 96
+        layout.logoHeight shouldBe 96
+        layout.left shouldBe 0
+        layout.top shouldBe 0
+        layout.isSquare shouldBe true
+    }
+
+    @Test
+    fun `wide logo is centered vertically on a square canvas`() {
+        // 1024x512 -> clamped to 256x128 -> square side 256, padded top/bottom by (256-128)/2.
+        val layout = squareLogoLayout(1024, 512)
+        layout.canvasSize shouldBe 256
+        layout.logoWidth shouldBe 256
+        layout.logoHeight shouldBe 128
+        layout.left shouldBe 0
+        layout.top shouldBe 64
+        layout.isSquare shouldBe false
+    }
+
+    @Test
+    fun `tall logo is centered horizontally on a square canvas`() {
+        // 512x1024 -> clamped to 128x256 -> square side 256, padded left/right by (256-128)/2.
+        val layout = squareLogoLayout(512, 1024)
+        layout.canvasSize shouldBe 256
+        layout.logoWidth shouldBe 128
+        layout.logoHeight shouldBe 256
+        layout.left shouldBe 64
+        layout.top shouldBe 0
+        layout.isSquare shouldBe false
+    }
+
+    @Test
+    fun `missing intrinsic bounds yield a square max-size canvas`() {
+        val layout = squareLogoLayout(-1, -1)
+        layout.canvasSize shouldBe RIVE_TO_TOKEN_IMAGE_MAX_PX
+        layout.left shouldBe 0
+        layout.top shouldBe 0
+        layout.isSquare shouldBe true
+    }
 }
