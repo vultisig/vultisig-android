@@ -32,6 +32,7 @@ import io.mockk.verify
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -399,6 +400,153 @@ internal class SwapGasCalculatorTest {
 
         assertNull(result)
         verify(exactly = 0) { UtxoHelper.getHelper(any(), any()) }
+    }
+
+    // resolveUtxoPlanFee tests
+
+    @Test
+    fun `resolveUtxoPlanFee returns Success with estimated fee when the plan succeeds`() = runTest {
+        val planFee = 3936L
+        val nativeCoin = nativeCoinFor(Chain.Bitcoin)
+        stubGetSpecific()
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault()
+        coEvery { tokenRepository.getNativeToken(Chain.Bitcoin.id) } returns nativeCoin
+
+        val utxoHelper = mockk<UtxoHelper>()
+        every { UtxoHelper.getHelper(any(), any()) } returns utxoHelper
+        every { utxoHelper.getBitcoinTransactionPlan(any()) } returns
+            Bitcoin.TransactionPlan.newBuilder().setFee(planFee).setError(SigningError.OK).build()
+
+        val expected = estimatedFee(nativeCoin, BigInteger.valueOf(planFee))
+        coEvery { gasFeeToEstimatedFee(any()) } returns expected
+
+        val result =
+            calculator.resolveUtxoPlanFee(
+                vaultId = VAULT_ID,
+                srcToken = nativeCoin,
+                srcAddress = nativeCoin.address,
+                dstAddress = "dstAddr",
+                memo = "SWAP:ETH.ETH",
+                tokenAmountInt = BigInteger("100000"),
+                gasFee = TokenValue(BigInteger("15"), nativeCoin),
+            )
+
+        val success = assertIs<UtxoPlanFeeResult.Success>(result)
+        assertEquals(expected, success.estimated)
+    }
+
+    @Test
+    fun `resolveUtxoPlanFee returns InsufficientUtxos when the plan has not enough utxos`() =
+        runTest {
+            val nativeCoin = nativeCoinFor(Chain.Bitcoin)
+            stubGetSpecific()
+            coEvery { vaultRepository.get(VAULT_ID) } returns vault()
+
+            val utxoHelper = mockk<UtxoHelper>()
+            every { UtxoHelper.getHelper(any(), any()) } returns utxoHelper
+            every { utxoHelper.getBitcoinTransactionPlan(any()) } returns
+                Bitcoin.TransactionPlan.newBuilder()
+                    .setFee(0L)
+                    .setError(SigningError.Error_not_enough_utxos)
+                    .build()
+
+            val result =
+                calculator.resolveUtxoPlanFee(
+                    vaultId = VAULT_ID,
+                    srcToken = nativeCoin,
+                    srcAddress = nativeCoin.address,
+                    dstAddress = "dstAddr",
+                    memo = null,
+                    tokenAmountInt = BigInteger("100000"),
+                    gasFee = TokenValue(BigInteger("15"), nativeCoin),
+                )
+
+            assertEquals(UtxoPlanFeeResult.InsufficientUtxos, result)
+        }
+
+    @Test
+    fun `resolveUtxoPlanFee returns Unavailable on a generic plan error`() = runTest {
+        val nativeCoin = nativeCoinFor(Chain.Bitcoin)
+        stubGetSpecific()
+        coEvery { vaultRepository.get(VAULT_ID) } returns vault()
+
+        val utxoHelper = mockk<UtxoHelper>()
+        every { UtxoHelper.getHelper(any(), any()) } returns utxoHelper
+        every { utxoHelper.getBitcoinTransactionPlan(any()) } returns
+            Bitcoin.TransactionPlan.newBuilder()
+                .setFee(0L)
+                .setError(SigningError.Error_general)
+                .build()
+
+        val result =
+            calculator.resolveUtxoPlanFee(
+                vaultId = VAULT_ID,
+                srcToken = nativeCoin,
+                srcAddress = nativeCoin.address,
+                dstAddress = "dstAddr",
+                memo = null,
+                tokenAmountInt = BigInteger("100000"),
+                gasFee = TokenValue(BigInteger("15"), nativeCoin),
+            )
+
+        assertEquals(UtxoPlanFeeResult.Unavailable, result)
+    }
+
+    @Test
+    fun `resolveUtxoPlanFee returns Unavailable when fetching chain-specific data fails`() =
+        runTest {
+            val nativeCoin = nativeCoinFor(Chain.Bitcoin)
+            coEvery {
+                blockChainSpecificRepository.getSpecific(
+                    chain = any(),
+                    address = any(),
+                    token = any(),
+                    gasFee = any(),
+                    isSwap = any(),
+                    isMaxAmountEnabled = any(),
+                    isDeposit = any(),
+                    gasLimit = any(),
+                    dstAddress = any(),
+                    tokenAmountValue = any(),
+                    memo = any(),
+                    transactionType = any(),
+                    isThorchainRouterDeposit = any(),
+                )
+            } throws RuntimeException("boom")
+
+            val result =
+                calculator.resolveUtxoPlanFee(
+                    vaultId = VAULT_ID,
+                    srcToken = nativeCoin,
+                    srcAddress = nativeCoin.address,
+                    dstAddress = "dstAddr",
+                    memo = null,
+                    tokenAmountInt = BigInteger("100000"),
+                    gasFee = TokenValue(BigInteger("15"), nativeCoin),
+                )
+
+            assertEquals(UtxoPlanFeeResult.Unavailable, result)
+            verify(exactly = 0) { UtxoHelper.getHelper(any(), any()) }
+        }
+
+    private fun stubGetSpecific() {
+        coEvery {
+            blockChainSpecificRepository.getSpecific(
+                chain = any(),
+                address = any(),
+                token = any(),
+                gasFee = any(),
+                isSwap = any(),
+                isMaxAmountEnabled = any(),
+                isDeposit = any(),
+                gasLimit = any(),
+                dstAddress = any(),
+                tokenAmountValue = any(),
+                memo = any(),
+                transactionType = any(),
+                isThorchainRouterDeposit = any(),
+            )
+        } returns utxoSpecific()
     }
 
     private fun utxoSpecific() =

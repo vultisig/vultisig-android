@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.swap
 
+import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.models.quotes.Fees
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
@@ -36,6 +37,8 @@ import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -459,6 +462,129 @@ internal class SwapQuoteManagerTest {
                 manager.computeIndicativeQuote(src, src, BigDecimal("2"), AppCurrency.USD),
             )
         }
+
+    @Test
+    fun `amountChanges flags a multi-character paste as immediate but typing as not`() = runTest {
+        // "" (empty, non-immediate), "1" (single-char type, 0->1 = not a paste),
+        // "1000" (1->4 jump = paste -> immediate).
+        val result = createManager().amountChanges(flowOf("", "1", "1000")).toList()
+
+        assertEquals(listOf(false, false, true), result)
+    }
+
+    @Test
+    fun `markImmediateFetch makes the next non-empty change immediate then resets`() = runTest {
+        val manager = createManager()
+        manager.markImmediateFetch()
+
+        // First non-empty emission consumes the flag (immediate), the next free-typed one does not.
+        val result = manager.amountChanges(flowOf("5", "50")).toList()
+
+        assertEquals(listOf(true, false), result)
+    }
+
+    @Test
+    fun `amountChanges keeps the pending immediate flag across an empty field`() = runTest {
+        val manager = createManager()
+        manager.markImmediateFetch()
+
+        // The empty emission rides the normal path and must NOT consume the pending immediate flag,
+        // so the next real amount still fetches immediately (#4712).
+        val result = manager.amountChanges(flowOf("", "9")).toList()
+
+        assertEquals(listOf(false, true), result)
+    }
+
+    @Test
+    fun `quoteDebounceMillis bypasses the debounce only for immediate changes`() {
+        val manager = createManager()
+
+        assertEquals(0L, manager.quoteDebounceMillis(true))
+        assertEquals(300L, manager.quoteDebounceMillis(false))
+    }
+
+    @Test
+    fun `resolveBestQuote maps a typed swap failure to a Failure result`() = runTest {
+        // Empty candidates makes fetchBestQuote throw SwapException.SwapIsNotSupported, which must
+        // surface as a Failure carrying the mapped form error and the "swapError" tag.
+        val result =
+            createManager()
+                .resolveBestQuote(
+                    candidates = emptyList(),
+                    src = mockk(relaxed = true),
+                    dst = mockk(relaxed = true),
+                    srcToken = coin(Chain.Ethereum, "ETH", "0xsrc", 18),
+                    dstToken = coin(Chain.Bitcoin, "BTC", "btc", 8),
+                    srcTokenValue = BigInteger.ONE,
+                    tokenValue = mockk(relaxed = true),
+                    currency = AppCurrency.USD,
+                    amount = BigDecimal.ONE,
+                    selectedSrcTokenTitle = "ETH",
+                )
+
+        val failure = assertIs<QuoteResolution.Failure>(result)
+        assertEquals("swapError", failure.tag)
+        assertEquals(UiText.StringResource(R.string.swap_route_not_available), failure.formError)
+    }
+
+    @Test
+    fun `resolveBestQuote wraps a fetched quote in a Success result`() = runTest {
+        val btc = coin(Chain.Bitcoin, "BTC", "bc1qsrc", 8)
+        val eth = coin(Chain.Ethereum, "ETH", "0xdst", 18)
+        val thorDst = TokenValue(BigInteger.valueOf(100), eth)
+        val thorQuote =
+            SwapQuote.ThorChain(
+                expectedDstValue = thorDst,
+                fees = TokenValue(BigInteger.ZERO, eth),
+                expiredAt = Clock.System.now().plus(5.minutes),
+                recommendedMinTokenValue = TokenValue(BigInteger.ZERO, eth),
+                data =
+                    THORChainSwapQuote(
+                        dustThreshold = null,
+                        expectedAmountOut = "100",
+                        expiry = BigInteger.ZERO,
+                        fees = Fees(affiliate = "0", asset = "0", outbound = "0", total = "0"),
+                        inboundAddress = "thorinbound",
+                        inboundConfirmationBlocks = null,
+                        inboundConfirmationSeconds = null,
+                        maxStreamingQuantity = 0,
+                        memo = "memo",
+                        notes = "",
+                        outboundDelayBlocks = BigInteger.ZERO,
+                        outboundDelaySeconds = BigInteger.ZERO,
+                        recommendedMinAmountIn = "0",
+                        streamingSwapBlocks = BigInteger.ZERO,
+                        totalSwapSeconds = 0L,
+                        warning = "",
+                        router = null,
+                        error = null,
+                    ),
+            )
+        coEvery { tokenRepository.getNativeToken(any()) } returns btc
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal("100"), "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "0"
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.THORCHAIN, any()) } returns
+            SwapQuoteResult.Native(thorQuote)
+
+        val result =
+            createManager()
+                .resolveBestQuote(
+                    candidates = listOf(QuoteCandidate(SwapProvider.THORCHAIN, null, null)),
+                    src = mockk(relaxed = true),
+                    dst = mockk(relaxed = true),
+                    srcToken = btc,
+                    dstToken = eth,
+                    srcTokenValue = BigInteger.ONE,
+                    tokenValue = TokenValue(BigInteger.ONE, btc),
+                    currency = AppCurrency.USD,
+                    amount = BigDecimal.ONE,
+                    selectedSrcTokenTitle = "BTC",
+                )
+
+        val success = assertIs<QuoteResolution.Success>(result)
+        assertEquals(SwapProvider.THORCHAIN, success.best.candidate.provider)
+    }
 
     private fun coin(chain: Chain, ticker: String, address: String, decimals: Int) =
         Coin(
