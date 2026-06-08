@@ -70,6 +70,8 @@ import com.vultisig.wallet.ui.models.keysign.TonMessageOperation
 import com.vultisig.wallet.ui.models.keysign.TonMessageUiModel
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
 import com.vultisig.wallet.ui.models.keysign.TransactionTypeUiModel
+import com.vultisig.wallet.ui.models.peer.NetworkOption
+import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
@@ -83,6 +85,7 @@ import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
 import com.vultisig.wallet.ui.screens.keygen.SelectVaultTypeScreenPreview
 import com.vultisig.wallet.ui.screens.keysign.KeysignView
+import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.qbtc.QbtcClaimScreen
 import com.vultisig.wallet.ui.screens.referral.ContentRow
 import com.vultisig.wallet.ui.screens.referral.EmptyReferralBanner
@@ -191,6 +194,8 @@ class PreviewActivity : ComponentActivity() {
                     "keysign_signing_lunc" -> KeysignSigningLuncPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
+                    "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
+                    "keysign_devices_plus_after" -> KeysignDevicesCountPreview(allowsMore = false)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -211,6 +216,37 @@ private fun AssetActionButtonPreview() {
 @Composable
 private fun BannerPreview() {
     HomePagePagerContainer { UpgradeBanner {} }
+}
+
+/**
+ * Keysign peer-discovery for a 2-of-3 vault. [allowsMore] = true reproduces the old "Devices
+ * (1/2+)" (before #4769); false shows the corrected plain "Devices (1/2)" — keysign only ever needs
+ * exactly the threshold, so the "+" was misleading.
+ */
+@Composable
+private fun KeysignDevicesCountPreview(allowsMore: Boolean) {
+    PeerDiscoveryScreen(
+        state =
+            PeerDiscoveryUiModel(
+                localPartyId = "iPhone-A1B",
+                network = NetworkOption.Local,
+                devices = emptyList(),
+                selectedDevices = emptyList(),
+                minimumDevices = 2,
+                minimumDevicesDisplayed = 2,
+                allowsMoreDevices = allowsMore,
+                enableNotification = true,
+            ),
+        onResendNotification = {},
+        onBackClick = {},
+        onHelpClick = {},
+        onShareQrClick = {},
+        onSwitchModeClick = {},
+        onDeviceClick = {},
+        onNextClick = {},
+        onDismissQrHelpModal = {},
+        showHelp = false,
+    )
 }
 
 @Composable

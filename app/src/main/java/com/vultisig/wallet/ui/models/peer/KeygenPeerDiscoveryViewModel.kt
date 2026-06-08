@@ -92,6 +92,11 @@ import timber.log.Timber
 
 private const val MIN_KEYGEN_DEVICES = 2
 
+// The device-count picker tops out at "4+" (see ChooseDeviceCountScreen), encoded as a count of 4.
+// Vaults at or above this let the initiator add more than the threshold, so the peer-discovery
+// label shows the "+" (e.g. "Devices (3/4+)").
+private const val UNBOUNDED_KEYGEN_DEVICE_COUNT = 4
+
 data class PeerDiscoveryUiModel(
     val qr: BitmapPainter? = null,
     val network: NetworkOption = NetworkOption.Internet,
@@ -153,6 +158,8 @@ constructor(
                 minimumDevices = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
                 minimumDevicesDisplayed = args?.deviceCount ?: MIN_KEYGEN_DEVICES,
                 deviceCount = args?.deviceCount,
+                allowsMoreDevices =
+                    (args?.deviceCount ?: MIN_KEYGEN_DEVICES) >= UNBOUNDED_KEYGEN_DEVICE_COUNT,
                 enableNotification = false,
             )
         )
