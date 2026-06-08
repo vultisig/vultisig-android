@@ -938,8 +938,6 @@
 
     <!-- Vault Confirmation -->
     <string name="vault_confirmation_vault_upgraded">保险库已升级</string>
-    <string name="vault_confirmation_well_done">做得好。</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">您已准备好使用新的钱包标准。</string>
 
     <!-- Vault Details -->
     <string name="vault_detail_vault_info">保险库信息</string>

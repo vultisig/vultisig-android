@@ -691,7 +691,6 @@
     <string name="invite_to_x_banner_desc">Подпишитесь на нас в X</string>
     <string name="invite_to_x_banner_button">Подписаться на %s</string>
     <string name="buy_vult_banner_desc">И экономьте на комиссиях за обмен</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">Вы готовы использовать новый стандарт кошелька.</string>
     <string name="vault_detail_vault_info">Информация о хранилище</string>
     <string name="vault_details_keys">Ключи</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Включить быструю биометрическую подпись</string>
@@ -703,7 +702,6 @@
     <string name="tx_done_transaction_details_expand">Развернуть</string>
     <string name="tx_done_transaction_details_collapse">Свернуть</string>
     <string name="vault_confirmation_vault_upgraded">Хранилище обновлено</string>
-    <string name="vault_confirmation_well_done">Отлично!</string>
     <string name="this_amount_would_leave_too_little_change">С этой суммы сдачи будет слишком мало. 💡 Попробуйте «Отправить максимум» (%1$s ADA), чтобы избежать этой проблемы.</string>
     <string name="swap_form_native">Нативное</string>
     <string name="swap_transaction_overview_approval_tx_hash">Хеш транзакции подтверждения</string>
