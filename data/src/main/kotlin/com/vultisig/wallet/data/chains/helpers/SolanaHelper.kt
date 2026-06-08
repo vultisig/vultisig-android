@@ -25,6 +25,14 @@ internal const val SOLANA_PRIORITY_FEE_LIMIT = 100000
 
 const val SOLANA_DEFAULT_CONTRACT_ADDRESS = "So11111111111111111111111111111111111111112"
 
+/**
+ * Prefix of the error thrown when the sender has no associated token account for an SPL transfer.
+ * The coin ticker follows the prefix so the keysign error screen can name the token in a localized
+ * message; keep it in sync with the `KeysignErrorScreen` branch that matches on it.
+ */
+const val SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX =
+    "SPL token transfer failed: missing associated token account for "
+
 class SolanaHelper(private val vaultHexPublicKey: String) {
 
     private val coinType = CoinType.SOLANA
@@ -39,6 +47,11 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
                 ?: error("Invalid blockChainSpecific")
         if (keysignPayload.coin.chain != Chain.Solana) {
             error("Chain is not Solana")
+        }
+        if (
+            !keysignPayload.coin.isNativeToken && solanaSpecific.fromAddressPubKey.isNullOrEmpty()
+        ) {
+            error("$SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX${keysignPayload.coin.ticker}")
         }
         val toAddress = AnyAddress(keysignPayload.toAddress, coinType)
 
@@ -78,10 +91,7 @@ class SolanaHelper(private val vaultHexPublicKey: String) {
 
             return input.setTransferTransaction(transfer.build()).build().toByteArray()
         } else {
-            if (
-                !solanaSpecific.fromAddressPubKey.isNullOrEmpty() &&
-                    !solanaSpecific.toAddressPubKey.isNullOrEmpty()
-            ) {
+            if (!solanaSpecific.toAddressPubKey.isNullOrEmpty()) {
                 val transfer =
                     Solana.TokenTransfer.newBuilder()
                         .setTokenMintAddress(keysignPayload.coin.contractAddress)
