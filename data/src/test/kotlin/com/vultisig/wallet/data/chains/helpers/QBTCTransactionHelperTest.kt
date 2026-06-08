@@ -460,4 +460,12 @@ class QBTCTransactionHelperTest {
             helper.getPreSignedImageHash(payload(signDirect = sd, signAmino = SignAminoProto())),
         )
     }
+
+    @Test
+    fun `rejects a signDirect with a negative account number`() {
+        // account_number is a uint64; a negative string would mis-encode through encodeVarint.
+        assertThrows<IllegalStateException> {
+            helper.getPreSignedImageHash(payload(signDirect = signDirect(accountNumber = "-1")))
+        }
+    }
 }

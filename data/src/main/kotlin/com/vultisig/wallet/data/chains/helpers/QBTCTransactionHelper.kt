@@ -88,8 +88,11 @@ class QBTCTransactionHelper {
         val accountNumber: Long
         if (signDirect != null) {
             chainId = signDirect.chainId
+            // account_number is a uint64; encodeVarint only produces correct bytes for non-negative
+            // values, so reject a negative (or non-numeric) string rather than silently signing a
+            // SignDoc that differs from the relayed payload.
             accountNumber =
-                signDirect.accountNumber.toLongOrNull()
+                signDirect.accountNumber.toLongOrNull()?.takeIf { it >= 0 }
                     ?: error("QBTC: invalid account number in signDirect")
         } else {
             val cosmosSpecific =

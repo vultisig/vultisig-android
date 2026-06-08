@@ -42,10 +42,7 @@ object CosmosStakingSignDataResolver {
         object MissingChainSpecific :
             ResolverException("Cosmos blockchain-specific data is required")
 
-        object InvalidPublicKey :
-            ResolverException(
-                "Public key must be a compressed secp256k1 pubkey (33 bytes, 0x02/0x03 prefix)"
-            )
+        class InvalidPublicKey(message: String) : ResolverException(message)
 
         class MissingPayloadField(val field: String) :
             ResolverException("Missing required payload field: $field")
@@ -116,11 +113,14 @@ object CosmosStakingSignDataResolver {
         when (chain.TssKeysignType) {
             TssKeyType.MLDSA ->
                 (hexPublicKey.hexToByteArrayOrNull()?.takeIf { it.isNotEmpty() }
-                    ?: throw ResolverException.InvalidPublicKey) to
-                    QBTCTransactionHelper.PUB_KEY_TYPE_URL
+                    ?: throw ResolverException.InvalidPublicKey(
+                        "Public key must be a non-empty hex-encoded ML-DSA public key"
+                    )) to QBTCTransactionHelper.PUB_KEY_TYPE_URL
             else ->
-                (decodePubKey(hexPublicKey) ?: throw ResolverException.InvalidPublicKey) to
-                    CosmosStakingHelper.PUBKEY_TYPE_URL
+                (decodePubKey(hexPublicKey)
+                    ?: throw ResolverException.InvalidPublicKey(
+                        "Public key must be a compressed secp256k1 pubkey (33 bytes, 0x02/0x03 prefix)"
+                    )) to CosmosStakingHelper.PUBKEY_TYPE_URL
         }
 
     /**
