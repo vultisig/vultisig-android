@@ -104,6 +104,20 @@ internal class ContractAbiRepositoryTest {
         assertEquals(1, api.calls.get())
     }
 
+    @Test
+    fun `transient fetch failure is not cached and is refetched`() = runTest {
+        val api = ThrowOnceSourcifyApi(addTraitAbi)
+        val repo = newRepo(api)
+
+        // First call sees the transient failure (SourcifyApiImpl throws on a non-404 non-OK), so
+        // names are unavailable but nothing is cached — the next lookup must hit Sourcify again.
+        assertNull(repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature))
+        val params = repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature)
+
+        assertEquals(listOf("tokenId", "traitId", "trait"), params?.map { it.name })
+        assertEquals(2, api.calls.get())
+    }
+
     private fun newRepo(api: SourcifyApi) =
         ContractAbiRepositoryImpl(sourcifyApi = api, ioDispatcher = UnconfinedTestDispatcher())
 
@@ -113,6 +127,17 @@ internal class ContractAbiRepositoryTest {
 
         override suspend fun fetchAbi(chainId: String, contractAddress: String): JsonArray? {
             calls.incrementAndGet()
+            return abi
+        }
+    }
+
+    private class ThrowOnceSourcifyApi(abiJson: String) : SourcifyApi {
+        val calls = AtomicInteger(0)
+        private val abi: JsonArray = Json.parseToJsonElement(abiJson).jsonArray
+
+        override suspend fun fetchAbi(chainId: String, contractAddress: String): JsonArray? {
+            // Mirror SourcifyApiImpl throwing on a transient outage (429/503) the first time.
+            if (calls.getAndIncrement() == 0) error("Sourcify 503 Service Unavailable")
             return abi
         }
     }

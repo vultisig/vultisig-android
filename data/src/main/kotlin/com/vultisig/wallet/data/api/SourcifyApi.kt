@@ -63,9 +63,12 @@ internal class SourcifyApiImpl @Inject constructor(private val httpClient: HttpC
         val response =
             httpClient.get("$BASE_URL/v2/contract/$chainId/$contractAddress?fields=$fields")
         // A 404 means "no verified contract here" — a definitive answer the caller may cache. Any
-        // other non-2xx is treated the same (best-effort enrichment), but a thrown transport error
-        // still propagates so transient failures are not cached as "unverified".
-        if (response.status != HttpStatusCode.OK) return null
+        // other non-OK (a persistent 429/503 the client's retry exhausts surfaces as a non-OK
+        // response, not a thrown error) is a transient outage and must throw: the caller caches a
+        // null/empty result as "unverified" for the full TTL, so returning null here would suppress
+        // recovered names for a day over a temporary rate-limit.
+        if (response.status == HttpStatusCode.NotFound) return null
+        if (response.status != HttpStatusCode.OK) error("Sourcify ${response.status}")
         return parser.parseToJsonElement(response.bodyAsText()) as? JsonObject
     }
 

@@ -93,8 +93,9 @@ internal fun decodedFunctionParams(
         )
     val functionKey = parsed.name.lowercase(Locale.ROOT)
     val handler = PARAM_HANDLERS[functionKey]
-    if (handler != null && inputs.size == parsed.types.size) {
-        handler(ctx)
+    if (handler != null && inputs.size == parsed.types.size && handler.matchesArity(inputs.size)) {
+        handler
+            .rows(ctx)
             ?.takeIf { it.isNotEmpty() }
             ?.let {
                 return it
@@ -104,14 +105,19 @@ internal fun decodedFunctionParams(
 }
 
 /**
- * True when [signature]'s function name has a dedicated semantic handler (approve, transfer, …).
- * Callers use this to skip the cost of a verified-ABI name lookup for calls that already render
- * with curated labels — only the generic positional fallback benefits from recovered names.
+ * True when [signature] has a dedicated semantic handler that matches both its function name AND
+ * its parameter arity (approve, transfer, …). Callers use this to skip the cost of a verified-ABI
+ * name lookup for calls that already render with curated labels — only the generic positional
+ * fallback benefits from recovered names. The arity gate matters: a same-name different-arity call
+ * like `transfer(address,uint256,bytes)` is NOT handled by the 2-arg [transferRows] (which would
+ * drop the trailing `bytes`), so it must keep the ABI lookup and fall through to the
+ * name-recovering fallback.
  */
 internal fun hasSemanticHandler(signature: String?): Boolean {
     if (signature.isNullOrBlank()) return false
     val parsed = parseFunctionSignature(signature) ?: return false
-    return PARAM_HANDLERS.containsKey(parsed.name.lowercase(Locale.ROOT))
+    val handler = PARAM_HANDLERS[parsed.name.lowercase(Locale.ROOT)] ?: return false
+    return handler.matchesArity(parsed.types.size)
 }
 
 private data class ParsedSignature(val name: String, val types: List<String>)
@@ -168,13 +174,23 @@ private data class HandlerContext(
 
 private typealias ParamHandler = (HandlerContext) -> List<DecodedFunctionParam>?
 
-private val PARAM_HANDLERS: Map<String, ParamHandler> =
+/**
+ * A curated handler paired with the parameter arity it is designed for. Gating on arity (not just
+ * the function name) keeps a same-name different-arity call — e.g. a 3-arg
+ * `transfer(address,uint256,bytes)` whose trailing `bytes` the 2-arg [transferRows] would silently
+ * drop — out of the curated path so it falls through to the generic, name-recovering fallback.
+ */
+private class SemanticHandler(val rows: ParamHandler, val matchesArity: (Int) -> Boolean)
+
+private val PARAM_HANDLERS: Map<String, SemanticHandler> =
     mapOf(
-        "approve" to ::approveRows,
-        "permit" to ::permitRows,
-        "transfer" to ::transferRows,
-        "transferfrom" to ::transferFromRows,
-        "setapprovalforall" to ::setApprovalForAllRows,
+        "approve" to SemanticHandler(::approveRows) { it == 2 },
+        // ERC-2612 permit carries trailing v/r/s signature components beyond the four
+        // user-meaningful fields [permitRows] renders, so it matches any arity of at least 3.
+        "permit" to SemanticHandler(::permitRows) { it >= 3 },
+        "transfer" to SemanticHandler(::transferRows) { it == 2 },
+        "transferfrom" to SemanticHandler(::transferFromRows) { it == 3 },
+        "setapprovalforall" to SemanticHandler(::setApprovalForAllRows) { it == 2 },
     )
 
 private fun approveRows(ctx: HandlerContext): List<DecodedFunctionParam>? {

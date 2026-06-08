@@ -537,6 +537,25 @@ internal class DecodedFunctionParamsTest {
         assertEquals(false, hasSemanticHandler(null))
     }
 
+    @Test
+    fun `same-name different-arity transfer is not handled and keeps every param`() {
+        // A 3-arg transfer is not the curated 2-arg shape, so it must not be claimed by the
+        // semantic handler (which would let the caller skip the ABI lookup and let transferRows
+        // drop the trailing bytes) — it falls through to the generic, all-params fallback.
+        assertEquals(false, hasSemanticHandler("transfer(address,uint256,bytes)"))
+
+        val rows =
+            decodedFunctionParams(
+                signature = "transfer(address,uint256,bytes)",
+                inputsJson = """["0xrecipient", "100", "0xdeadbeef"]""",
+                json = json,
+            )
+
+        assertNotNull(rows)
+        assertEquals(3, rows.size)
+        assertEquals("0xdeadbeef", rows[2].copyableValue)
+    }
+
     private fun assertResId(expected: Int, label: UiText) {
         val actual = label as UiText.StringResource
         assertEquals(expected, actual.resId)
