@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.models.getEddsaSigningKey
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
+import com.vultisig.wallet.data.models.payload.carriesDappCosmosTx
 import java.math.BigInteger
 import vultisig.keysign.v1.CustomMessagePayload
 import wallet.core.jni.EthereumAbi
@@ -260,13 +261,15 @@ object SigningHelper {
 
                     Chain.Terra,
                     Chain.TerraClassic -> {
-                        // Staking flows carry a pre-encoded SignDoc (MsgDelegate / MsgUndelegate /
-                        // MsgBeginRedelegate / MsgWithdrawDelegatorReward) on `signDirect`.
-                        // TerraHelper only knows bank sends + CW20 transfers and would otherwise
-                        // sign a MsgSend to the `terravaloper…` validator — the chain rejects that
-                        // with "invalid to address: hrp does not match bech32 prefix". Route
-                        // signDirect through CosmosHelper, which signs the SignDoc verbatim.
-                        if (payload.signDirect != null) {
+                        // dApp staking flows carry a pre-encoded Cosmos tx — a protobuf SignDoc on
+                        // `signDirect` (MsgDelegate / MsgUndelegate / MsgBeginRedelegate /
+                        // MsgWithdrawDelegatorReward) or legacy amino JSON on `signAmino` (the path
+                        // Keplr-style sites like cosmosrescue.com use for LUNC). TerraHelper only
+                        // knows bank sends + CW20 transfers and would otherwise sign a MsgSend to
+                        // the `terravaloper…` validator — the chain rejects that with "invalid to
+                        // address: hrp does not match bech32 prefix". Route either through
+                        // CosmosHelper, which signs the supplied tx verbatim.
+                        if (payload.carriesDappCosmosTx) {
                             CosmosHelper(
                                     coinType = chain.coinType,
                                     denom = chain.feeUnit,
@@ -476,9 +479,10 @@ object SigningHelper {
 
             Chain.TerraClassic,
             Chain.Terra -> {
-                // Mirror the getPreSignedImageHash routing: staking SignDocs must be signed +
-                // assembled by CosmosHelper, not rebuilt as a bank send by TerraHelper.
-                return if (keysignPayload.signDirect != null) {
+                // Mirror the getPreSignedImageHash routing: a dApp-supplied Cosmos tx (signDirect
+                // SignDoc or amino JSON) must be signed + assembled by CosmosHelper, not rebuilt as
+                // a bank send by TerraHelper.
+                return if (keysignPayload.carriesDappCosmosTx) {
                     CosmosHelper(
                             coinType = chain.coinType,
                             denom = chain.feeUnit,

@@ -325,7 +325,7 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         ) {
             BackupPasswordScreen()
         }
-        dialog<VaultBackupSummary> { VaultBackupSummaryScreen() }
+        composable<VaultBackupSummary> { VaultBackupSummaryScreen() }
 
         composable<VaultConfirmation> { VaultConfirmationScreen() }
 

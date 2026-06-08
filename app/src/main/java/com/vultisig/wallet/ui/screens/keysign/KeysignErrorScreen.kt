@@ -18,20 +18,13 @@ internal fun KeysignErrorScreen(
 ) {
     val errorMessageString = errorMessage.asString()
     val errorLabel: String
-    val infoText: String?
     when {
-        errorMessageString.contains("Blockhash not found") -> {
+        errorMessageString.contains("Blockhash not found") ->
             errorLabel = stringResource(R.string.signing_error_transaction_timeout)
-            infoText = null
-        }
-        errorMessageString.contains("insufficient funds") -> {
+        errorMessageString.contains("insufficient funds") ->
             errorLabel = stringResource(R.string.signing_error_insufficient_funds)
-            infoText = null
-        }
-        errorMessageString.contains("failed to calculate bob mid and bob_mic_mc") -> {
+        errorMessageString.contains("failed to calculate bob mid and bob_mic_mc") ->
             errorLabel = stringResource(R.string.signing_error_mixed_reshare)
-            infoText = null
-        }
         errorMessageString.contains(CosmosBroadcastException.BROADCAST_FAILURE_MARKER) -> {
             // SEQUENCE_MISMATCH_MARKER is itself prefixed with BROADCAST_FAILURE_MARKER, so the
             // sequence-mismatch check has to live inside the broadcast-failure branch — otherwise
@@ -39,7 +32,6 @@ internal fun KeysignErrorScreen(
             // into the generic "rejected" copy.
             if (errorMessageString.contains(CosmosBroadcastException.SEQUENCE_MISMATCH_MARKER)) {
                 errorLabel = stringResource(R.string.signing_error_sequence_mismatch)
-                infoText = null
             } else {
                 val detail =
                     errorMessageString
@@ -56,19 +48,16 @@ internal fun KeysignErrorScreen(
                     } else {
                         stringResource(R.string.signing_error_broadcast_rejected_s, detail)
                     }
-                infoText = null
             }
         }
-        else -> {
+        else ->
             errorLabel =
                 stringResource(R.string.signing_error_please_try_again_s, errorMessageString)
-            infoText = stringResource(R.string.bottom_warning_msg_keygen_error_screen)
-        }
     }
 
     ErrorView(
         title = errorLabel,
-        description = infoText,
+        description = null,
         buttonUiModel =
             ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = tryAgain),
         onBack = onBack,
@@ -87,7 +76,7 @@ private const val BROADCAST_DETAIL_MAX_LENGTH = 120
 private fun PreviewKeysignError() {
     ErrorView(
         title = stringResource(R.string.signing_error_please_try_again_s, "some errors"),
-        description = stringResource(R.string.bottom_warning_msg_keygen_error_screen),
+        description = null,
         buttonUiModel =
             ErrorViewButtonUiModel(text = stringResource(R.string.try_again), onClick = {}),
     )

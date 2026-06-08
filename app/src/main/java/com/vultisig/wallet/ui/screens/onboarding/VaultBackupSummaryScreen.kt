@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,31 +24,23 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.util.BlockBackClick
-import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v3.V3Icon
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupSummaryUiModel
 import com.vultisig.wallet.ui.models.onboarding.VaultBackupSummaryViewModel
 import com.vultisig.wallet.ui.navigation.Route.VaultInfo.VaultType
 import com.vultisig.wallet.ui.theme.Theme
 
-@ExperimentalMaterial3Api
 @Composable
 internal fun VaultBackupSummaryScreen(model: VaultBackupSummaryViewModel = hiltViewModel()) {
     val state by model.state.collectAsState()
 
     BlockBackClick()
 
-    V2BottomSheet(
-        onDismissRequest = {
-            // no-op
-        }
-    ) {
-        VultBackupSummaryScreen(
-            state = state,
-            onNext = model::next,
-            onChooseChains = model::chooseChains,
-        )
-    }
+    VultBackupSummaryScreen(
+        state = state,
+        onNext = model::next,
+        onChooseChains = model::chooseChains,
+    )
 }
 
 @Composable

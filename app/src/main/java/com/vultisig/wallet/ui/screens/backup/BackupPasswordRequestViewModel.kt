@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.common.AppZipEntry
 import com.vultisig.wallet.data.mappers.MapVaultToProto
+import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.repositories.VaultDataStoreRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
@@ -186,13 +187,28 @@ constructor(
                 )
 
                 if (backupType is BackupType.CurrentVault && backupType.vaultType != null) {
-                    navigator.route(
-                        Route.VaultConfirmation(
-                            vaultId = vaultId,
-                            vaultType = backupType.vaultType,
-                            action = backupType.action,
+                    if (backupType.action == TssAction.Migrate) {
+                        navigator.route(
+                            Route.VaultConfirmation(
+                                vaultId = vaultId,
+                                vaultType = backupType.vaultType,
+                                action = backupType.action,
+                            )
                         )
-                    )
+                    } else {
+                        navigator.route(
+                            route =
+                                Route.VaultBackupSummary(
+                                    vaultId = vaultId,
+                                    vaultType = backupType.vaultType,
+                                ),
+                            opts =
+                                NavigationOptions(
+                                    popUpToRoute = Route.ChooseVaultType::class,
+                                    inclusive = true,
+                                ),
+                        )
+                    }
                 } else {
                     navigator.route(Route.Home(vaultId), NavigationOptions(clearBackStack = true))
                 }

@@ -91,7 +91,6 @@
     <string name="tokens">Assets</string>
     <string name="keysign">Keysign</string>
     <string name="signing_error_please_try_again_s">Signing Error. Please try again. %s</string>
-    <string name="bottom_warning_msg_keygen_error_screen">Keep devices on the same WiFi Network, correct vault and pair devices.\nMake sure no other devices are running Vultisig.</string>
     <string name="try_again">Try again</string>
     <string name="vault_settings_title">Vault Settings</string>
     <string name="vault_settings_details_title">Details</string>
@@ -955,8 +954,6 @@
     <string name="tx_done_transaction_details_expand">Expand</string>
     <string name="tx_done_transaction_details_collapse">Collapse</string>
     <string name="vault_confirmation_vault_upgraded">"Vault upgraded"</string>
-    <string name="vault_confirmation_well_done">Well done.</string>
-    <string name="vault_confirmation_you_re_ready_to_use_a_new_wallet_standard">You’re ready to use a new wallet standard.</string>
     <string name="vault_detail_vault_info">Vault Info</string>
     <string name="vault_details_keys">Keys</string>
     <string name="vault_password_biometric_enable_biometrics_fast_signing">Enable Biometrics Fast Signing</string>

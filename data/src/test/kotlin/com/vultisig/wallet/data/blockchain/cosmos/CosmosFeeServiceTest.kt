@@ -77,6 +77,14 @@ class CosmosFeeServiceTest {
     }
 
     @Test
+    fun `Akash fee amount is floored to 25000 uakt`() = runTest {
+        // Akash's chain-registry gas price computes only 7500 uakt, below the
+        // network's accepted minimum. The default fee must floor to 0.025 AKT.
+        val fee = feeService.calculateDefaultFees(transfer(Chain.Akash)) as GasFees
+        assertEquals(CosmosFeeService.AKASH_MIN_FEE_UAKT.toBigInteger(), fee.amount)
+    }
+
+    @Test
     fun `QBTC returns GasFees type`() = runTest {
         val fee = feeService.calculateDefaultFees(transfer(Chain.Qbtc))
         assertTrue(fee is GasFees)
