@@ -901,29 +901,31 @@ constructor(
                     }
 
                     is SwapPayload.SwapKit -> {
-                        // Re-fetch a live SwapKit quote at join time so the co-signer sees the
-                        // same non-zero swap fee as the initiator (mirrors the Thor/Maya branches).
-                        // Display-only: the signing bytes come from the payload and are never
-                        // touched. The quote may reprice slightly between fetches (approximate
-                        // parity, the same trade-off Thor/Maya accept); a fetch failure degrades to
-                        // a zero fee rather than stalling the verify screen. The initiator's
-                        // `affiliateBps` / `srcAddress` are intentionally omitted — the inbound fee
-                        // doesn't depend on the affiliate fee and the join device can't know the
-                        // initiator's `vultBPSDiscount`, so approximate parity holds.
+                        // Re-fetch only the SwapKit inbound fee at join time so the co-signer sees
+                        // the same non-zero swap fee as the initiator (mirrors the Thor/Maya
+                        // branches). Uses the quote-only `getSwapKitInboundFee` (`POST /v3/quote`)
+                        // rather than the full `getQuote`, which would also fire `POST /v3/swap`
+                        // and
+                        // mint a throwaway swap route — a fresh `swapId` and deposit address — per
+                        // cosigner just to read the fee. Display-only: the signing bytes come from
+                        // the payload and are never touched. The quote may reprice slightly between
+                        // fetches (approximate parity, the same trade-off Thor/Maya accept); a
+                        // fetch
+                        // failure degrades to a zero fee rather than stalling the verify screen.
+                        // The
+                        // initiator's `affiliateBps` / `srcAddress` are intentionally omitted — the
+                        // inbound fee doesn't depend on the affiliate fee and the join device can't
+                        // know the initiator's `vultBPSDiscount`, so approximate parity holds.
                         val swapKitProviderFee =
                             try {
-                                swapQuoteRepository
-                                    .getQuote(
-                                        SwapProvider.SWAPKIT,
-                                        SwapQuoteRequest(
-                                            srcToken = srcToken,
-                                            dstToken = dstToken,
-                                            tokenValue = srcTokenValue,
-                                            dstAddress = dstToken.address,
-                                        ),
+                                swapQuoteRepository.getSwapKitInboundFee(
+                                    SwapQuoteRequest(
+                                        srcToken = srcToken,
+                                        dstToken = dstToken,
+                                        tokenValue = srcTokenValue,
+                                        dstAddress = dstToken.address,
                                     )
-                                    .expectNative(SwapProvider.SWAPKIT)
-                                    .fees
+                                )
                             } catch (e: Exception) {
                                 if (e is CancellationException) throw e
                                 Timber.w(e, "SwapKit join fee re-fetch failed; showing zero fee")

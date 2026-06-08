@@ -72,6 +72,50 @@ internal class SwapKitQuoteSourceTest {
     }
 
     @Test
+    fun `fetchInboundFee reads the best route inbound fee without firing the swap call`() =
+        runTest {
+            // The join flow re-fetches only the inbound fee for display. It must NOT call /v3/swap,
+            // which would mint a throwaway swap route (fresh swapId / deposit address) per
+            // cosigner.
+            every { config.isFeatureEnabled } returns flowOf(true)
+            coEvery { api.quote(any()) } returns
+                SwapKitQuoteResponseJson(
+                    routes =
+                        listOf(
+                            route(
+                                routeId = "winner",
+                                providers = listOf("CHAINFLIP"),
+                                expectedBuy = "100",
+                                fees =
+                                    listOf(
+                                        SwapKitFee(
+                                            type = "inbound",
+                                            chain = "ETH",
+                                            amount = "0.0001",
+                                        )
+                                    ),
+                            )
+                        )
+                )
+
+            val fee = source().fetchInboundFee(request())
+
+            // 0.0001 ETH scaled by 18 native decimals; denominated in the source token.
+            assertEquals(BigInteger("100000000000000"), fee.value)
+            coVerify(exactly = 0) { api.swap(any()) }
+        }
+
+    @Test
+    fun `fetchInboundFee returns zero when the feature flag is disabled`() = runTest {
+        every { config.isFeatureEnabled } returns flowOf(false)
+
+        val fee = source().fetchInboundFee(request())
+
+        assertEquals(BigInteger.ZERO, fee.value)
+        coVerify(exactly = 0) { api.quote(any()) }
+    }
+
+    @Test
     fun `fetch filters out multi-hop and Thor and Maya routes then picks highest expected amount`() =
         runTest {
             every { config.isFeatureEnabled } returns flowOf(true)

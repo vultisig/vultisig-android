@@ -65,7 +65,8 @@ constructor(
 
         // Display-only label. `provider` below stays the canonical id (the behavioral key that
         // gates SwapKit `/track` settlement); SwapKit collapses every sub-provider onto the
-        // canonical `"SwapKit"` id, so render the persisted sub-provider (Chainflip / NEAR / Garden)
+        // canonical `"SwapKit"` id, so render the persisted sub-provider (Chainflip / NEAR /
+        // Garden)
         // for the display label instead — matching what the joined device produces via
         // `formatSwapKitProviderLabel`. Other providers reuse their specific id.
         val providerLabel =
