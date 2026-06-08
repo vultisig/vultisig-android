@@ -1230,7 +1230,6 @@
     <string name="qbtc_claim_success_title">QBTC geclaimd</string>
     <string name="qbtc_claim_successful">QBTC succesvol geclaimd</string>
     <string name="qbtc_claim_password_title">Voer kluiswachtwoord in</string>
-    <string name="qbtc_claim_pair_instruction">Scan dit met je andere apparaat om de claim mede te ondertekenen</string>
     <string name="qbtc_claim_failed">Claimen mislukt</string>
     <string name="qbtc_claim_unavailable_title">Claimen is uitgeschakeld</string>
     <string name="qbtc_claim_unavailable_detail">Het claimen van QBTC is tijdelijk uitgeschakeld op het netwerk. Probeer het later opnieuw.</string>

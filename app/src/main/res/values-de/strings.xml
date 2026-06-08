@@ -1238,7 +1238,6 @@
     <string name="qbtc_claim_success_title">QBTC abgerufen</string>
     <string name="qbtc_claim_successful">QBTC erfolgreich abgerufen</string>
     <string name="qbtc_claim_password_title">Tresorpasswort eingeben</string>
-    <string name="qbtc_claim_pair_instruction">Scannen Sie dies mit Ihrem anderen Gerät, um den Abruf gemeinsam zu signieren</string>
     <string name="qbtc_claim_failed">Abruf fehlgeschlagen</string>
     <string name="qbtc_claim_unavailable_title">Abrufen ist deaktiviert</string>
     <string name="qbtc_claim_unavailable_detail">Das Abrufen von QBTC ist im Netzwerk vorübergehend deaktiviert. Bitte versuchen Sie es später erneut.</string>

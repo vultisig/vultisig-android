@@ -1239,7 +1239,6 @@
     <string name="qbtc_claim_success_title">QBTC prelevato</string>
     <string name="qbtc_claim_successful">QBTC prelevato con successo</string>
     <string name="qbtc_claim_password_title">Inserisci la password della cassaforte</string>
-    <string name="qbtc_claim_pair_instruction">Scansiona questo con il tuo altro dispositivo per firmare congiuntamente il prelievo</string>
     <string name="qbtc_claim_failed">Prelievo non riuscito</string>
     <string name="qbtc_claim_unavailable_title">Il prelievo è disabilitato</string>
     <string name="qbtc_claim_unavailable_detail">Il prelievo di QBTC è temporaneamente disabilitato sulla rete. Riprova più tardi.</string>

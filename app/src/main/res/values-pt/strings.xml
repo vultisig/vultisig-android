@@ -1234,7 +1234,6 @@
     <string name="qbtc_claim_success_title">QBTC resgatado</string>
     <string name="qbtc_claim_successful">QBTC resgatado com sucesso</string>
     <string name="qbtc_claim_password_title">Introduza a palavra-passe do cofre</string>
-    <string name="qbtc_claim_pair_instruction">Leia isto com o seu outro dispositivo para assinar o resgate em conjunto</string>
     <string name="qbtc_claim_failed">Resgate falhou</string>
     <string name="qbtc_claim_unavailable_title">O resgate está desativado</string>
     <string name="qbtc_claim_unavailable_detail">O resgate de QBTC está temporariamente desativado na rede. Por favor, tente novamente mais tarde.</string>

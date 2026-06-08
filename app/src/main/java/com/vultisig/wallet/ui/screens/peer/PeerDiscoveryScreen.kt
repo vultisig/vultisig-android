@@ -171,6 +171,9 @@ internal fun PeerDiscoveryScreen(
     onNextClick: () -> Unit,
     onDismissQrHelpModal: () -> Unit,
     showHelp: Boolean = true,
+    showShare: Boolean = true,
+    showNetworkSwitch: Boolean = true,
+    showNext: Boolean = true,
 ) {
     val selectedDevicesSize = state.selectedDevices.size + 1 // we always have our device
     val devicesSize = state.devices.size + 1
@@ -192,7 +195,9 @@ internal fun PeerDiscoveryScreen(
                 UiSpacer(size = 8.dp)
             }
 
-            VsTopAppBarAction(icon = R.drawable.ic_share, onClick = onShareQrClick)
+            if (showShare) {
+                VsTopAppBarAction(icon = R.drawable.ic_share, onClick = onShareQrClick)
+            }
         },
         bottomBar = {
             Column(
@@ -203,8 +208,9 @@ internal fun PeerDiscoveryScreen(
                 // 2/2 and 3/3 vaults auto-start keygen once the peer threshold is met (see
                 // KeygenPeerDiscoveryViewModel.observeAutoStartKeygen), so the Next button is
                 // hidden entirely. For 4+ device vaults the initiator still picks which peers
-                // to commit, so the button stays visible.
-                if (state.deviceCount == null || state.deviceCount > 3) {
+                // to commit, so the button stays visible. showNext = false hides it regardless,
+                // for flows that always auto-advance (QBTC claim co-sign).
+                if (showNext && (state.deviceCount == null || state.deviceCount > 3)) {
                     VsButton(
                         label =
                             if (hasEnoughDevices)
@@ -217,16 +223,18 @@ internal fun PeerDiscoveryScreen(
                     )
                 }
 
-                Text(
-                    text =
-                        buildNetworkModeText(
-                            network = state.network,
-                            onSwitchModeClick = onSwitchModeClick,
-                        ),
-                    color = Theme.v2.colors.text.tertiary,
-                    style = Theme.brockmann.supplementary.caption,
-                    textAlign = TextAlign.Center,
-                )
+                if (showNetworkSwitch) {
+                    Text(
+                        text =
+                            buildNetworkModeText(
+                                network = state.network,
+                                onSwitchModeClick = onSwitchModeClick,
+                            ),
+                        color = Theme.v2.colors.text.tertiary,
+                        style = Theme.brockmann.supplementary.caption,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         },
         content = {
