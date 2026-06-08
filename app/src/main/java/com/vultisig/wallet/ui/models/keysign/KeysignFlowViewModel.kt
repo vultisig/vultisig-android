@@ -446,7 +446,7 @@ constructor(
         resendCooldownJob?.cancel()
         resendCooldownJob =
             viewModelScope.launch {
-                var seconds = 20
+                var seconds = 30
                 while (seconds > 0) {
                     uiState.update { it.copy(resendCooldownSeconds = seconds) }
                     delay(1.seconds)

@@ -155,8 +155,6 @@ internal fun KeysignPeerDiscovery(
                     selectedDevices = selectionState.filter { it != vault.localPartyID },
                     minimumDevices = minimumDevices,
                     minimumDevicesDisplayed = minimumDevices,
-                    // Keysign needs exactly the threshold, so never show the "+".
-                    // (Keygen's "X/4+" behavior is intentional — see #4595 — and lives elsewhere.)
                     allowsMoreDevices = false,
                     showQrHelpModal = false,
                     connectingToServer = null,
