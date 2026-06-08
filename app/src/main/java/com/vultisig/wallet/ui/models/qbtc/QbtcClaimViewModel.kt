@@ -350,7 +350,7 @@ constructor(
                         )
                     )
                     .encodeBase64()
-        val bitmap = generateQrBitmap(deepLink, Color.Black, Color.White, null)
+        val bitmap = generateQrBitmap(deepLink, Color.White, Color.Transparent, null)
         return BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
     }
 

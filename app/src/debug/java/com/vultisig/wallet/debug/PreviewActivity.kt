@@ -1694,7 +1694,7 @@ private fun QbtcClaimPairingPreview() {
                 "biTu5r2X-fMnsK7vIIPe9Q5KZIxnPGM5zxjnGUtZyhJWZJxJkQqRZpKkUmRS" +
                 "ZHLPF_kRbEpyqLclNtyV-7LQ3ko9-Wxqo7VqTpX5-pSXatbdatu1b16VI_qW" +
                 "T2rV_WuPtSn-lJf62v9rb_1r_42IIAdwAEcwRm8wAd8wQ_8AQ"
-        val bitmap = entry.generateQrBitmap().invoke(deepLink, Color.Black, Color.White, null)
+        val bitmap = entry.generateQrBitmap().invoke(deepLink, Color.White, Color.Transparent, null)
         BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
     }
     QbtcClaimScreen(
