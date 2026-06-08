@@ -16,8 +16,8 @@ import org.junit.jupiter.api.fail
  * Covers the SPL token branch of [SolanaHelper.getPreSignedInputData] across the three
  * sender/recipient associated-token-account (ATA) combinations. The missing-sender-ATA case used to
  * pass `null` to `CreateAndTransferToken.setSenderTokenAddress` and crash with an NPE; it must now
- * abort with a clear error, matching iOS. The JNI-dependent assertions are skipped when the
- * WalletCore native library is unavailable, as in [UtxoHelperTest].
+ * abort with a clear, ticker-bearing error instead. The JNI-dependent assertions are skipped when
+ * the WalletCore native library is unavailable, as in [UtxoHelperTest].
  */
 class SolanaHelperTest {
 
@@ -63,7 +63,7 @@ class SolanaHelperTest {
             helper.getPreSignedImageHash(payload)
             fail("Expected a missing sender ATA to abort signing")
         } catch (e: IllegalStateException) {
-            assertEquals(MISSING_SENDER_ATA_ERROR, e.message)
+            assertEquals(SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX + usdcCoin.ticker, e.message)
         } catch (e: Throwable) {
             skipIfJniUnavailable(e)
         }
@@ -114,9 +114,5 @@ class SolanaHelperTest {
         const val SENDER_TOKEN_ACCOUNT = "2Z6WGEsKfycoKAnTogC1M35dMgMtnLjwVZVLXcGQsFpA"
         const val RECIPIENT_TOKEN_ACCOUNT = "8vdCT37Lc6MLXfep8K5XFyYU6HTPpaqjJ7hyXJjUCc12"
         const val RECENT_BLOCK_HASH = "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R"
-
-        const val MISSING_SENDER_ATA_ERROR =
-            "SPL token transfer failed: sender's associated token account not found. " +
-                "Please ensure you have this token in your wallet."
     }
 }

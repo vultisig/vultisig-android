@@ -364,7 +364,7 @@
     <string name="keygen_email_continue_button">Continue</string>
     <string name="password_should_not_be_empty">Password should not be empty</string>
     <string name="signing_error_insufficient_funds">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
-    <string name="signing_error_token_account_not_found">This token was not found in your wallet.\nPlease make sure you have it before sending.</string>
+    <string name="signing_error_token_account_not_found_s">Could not load your %s account. Please try again.</string>
     <string name="signing_error_mixed_reshare">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
     <string name="signing_error_sequence_mismatch">Account sequence changed — please retry the transaction.</string>
     <string name="signing_error_broadcast_rejected">Transaction rejected by the network.</string>

@@ -5,6 +5,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.errors.CosmosBroadcastException
+import com.vultisig.wallet.data.chains.helpers.SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX
 import com.vultisig.wallet.ui.components.errors.ErrorView
 import com.vultisig.wallet.ui.components.errors.ErrorViewButtonUiModel
 import com.vultisig.wallet.ui.utils.UiText
@@ -23,8 +24,11 @@ internal fun KeysignErrorScreen(
             errorLabel = stringResource(R.string.signing_error_transaction_timeout)
         errorMessageString.contains("insufficient funds") ->
             errorLabel = stringResource(R.string.signing_error_insufficient_funds)
-        errorMessageString.contains("sender's associated token account not found") ->
-            errorLabel = stringResource(R.string.signing_error_token_account_not_found)
+        errorMessageString.contains(SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX) -> {
+            val ticker =
+                errorMessageString.substringAfter(SOLANA_MISSING_TOKEN_ACCOUNT_PREFIX).trim()
+            errorLabel = stringResource(R.string.signing_error_token_account_not_found_s, ticker)
+        }
         errorMessageString.contains("failed to calculate bob mid and bob_mic_mc") ->
             errorLabel = stringResource(R.string.signing_error_mixed_reshare)
         errorMessageString.contains(CosmosBroadcastException.BROADCAST_FAILURE_MARKER) -> {

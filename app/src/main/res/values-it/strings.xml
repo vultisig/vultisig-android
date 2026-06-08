@@ -267,7 +267,7 @@
     <string name="keygen_email_continue_button">Continuare</string>
     <string name="password_should_not_be_empty">La password non deve essere vuota</string>
     <string name="signing_error_insufficient_funds">Non c&#8217;è abbastanza benzina per coprire la commissione di transazione.\n Si prega di finanziare il portafoglio.</string>
-    <string name="signing_error_token_account_not_found">Questo token non è stato trovato nel tuo portafoglio.\nAssicurati di possederlo prima di inviare.</string>
+    <string name="signing_error_token_account_not_found_s">Impossibile caricare il tuo account %s. Riprova.</string>
     <string name="signing_error_mixed_reshare">Firma di condivisione mista.\nUtilizzare condivisioni Vault dello stesso ciclo di condivisione.</string>
     <string name="signing_error_sequence_mismatch">La sequenza dell&#8217;account è cambiata — riprova.</string>
     <string name="signing_error_broadcast_rejected">Transazione rifiutata dalla rete.</string>
