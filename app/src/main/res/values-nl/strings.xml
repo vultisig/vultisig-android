@@ -1293,6 +1293,7 @@
     <string name="cosmos_staking_validator_active">Actief</string>
     <string name="cosmos_staking_validator_churned_out">Uitgevallen</string>
     <string name="cosmos_staking_validator_picker">Validator</string>
+    <string name="cosmos_staking_validator_commission">Commissie</string>
     <string name="cosmos_staking_validators">Validators</string>
     <string name="cosmos_staking_pick_destination">Kies bestemming</string>
     <string name="cosmos_staking_pick_destination_validator">Kies een bestemmingsvalidator</string>

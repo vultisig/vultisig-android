@@ -1624,6 +1624,7 @@
     <string name="cosmos_staking_validator_active">活跃</string>
     <string name="cosmos_staking_validator_churned_out">已退出</string>
     <string name="cosmos_staking_validator_picker">验证人</string>
+    <string name="cosmos_staking_validator_commission">佣金</string>
     <string name="cosmos_staking_validators">验证人</string>
     <string name="cosmos_staking_pick_destination">选择目标</string>
     <string name="cosmos_staking_pick_destination_validator">选择目标验证人</string>

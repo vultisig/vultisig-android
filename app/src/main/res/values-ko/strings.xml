@@ -1318,6 +1318,7 @@
     <string name="cosmos_staking_validator_active">활성</string>
     <string name="cosmos_staking_validator_churned_out">탈락</string>
     <string name="cosmos_staking_validator_picker">검증인</string>
+    <string name="cosmos_staking_validator_commission">수수료</string>
     <string name="cosmos_staking_validators">검증인</string>
     <string name="cosmos_staking_pick_destination">대상 선택</string>
     <string name="cosmos_staking_pick_destination_validator">도착 검증인 선택</string>
