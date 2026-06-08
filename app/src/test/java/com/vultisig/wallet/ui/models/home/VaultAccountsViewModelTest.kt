@@ -643,6 +643,69 @@ internal class VaultAccountsViewModelTest {
             vm.uiState.value.totalFiatValue shouldBe "$10"
         }
 
+    /**
+     * Regression for #4768: the portfolio total must equal the sum of the values its rows render.
+     * Solana resolves to $5 then refetches (null); because retain keeps Solana's $5 in both the row
+     * and the total, the headline stays $15 (10 + 5) rather than dropping to $10 and disagreeing
+     * with the row that still shows $5.
+     */
+    @Test
+    fun `total stays consistent with the rows while a chain refetches`() =
+        runTest(testDispatcher) {
+            val eth = buildTestAddress(Chain.Ethereum, "0xeth", fiat = BigDecimal("10"))
+            val solResolved = buildTestAddress(Chain.Solana, "sol", fiat = BigDecimal("5"))
+            val solPending = buildTestAddress(Chain.Solana, "sol", fiat = null)
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddressBalances("vault-1") } returnsMany
+                listOf(
+                    flowOf(AddressBalancesUpdate(listOf(eth, solResolved), isComplete = true)),
+                    flowOf(AddressBalancesUpdate(listOf(eth, solPending), isComplete = true)),
+                )
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.totalFiatValue shouldBe "$15"
+
+            vm.refreshData()
+            advanceUntilIdle()
+
+            // Row still shows the retained $5, and the total still counts it: 10 + 5 = 15.
+            vm.solanaRow().fiatAmount shouldBe "$5"
+            vm.uiState.value.totalFiatValue shouldBe "$15"
+        }
+
+    /**
+     * Regression for #4768: switching vaults must not leak the previous vault's total or rows. When
+     * vault-2's first emission resolves nothing, the total/row must reset rather than carrying
+     * vault-1's $10 forward via the retain logic.
+     */
+    @Test
+    fun `switching vault clears the previous vault total and rows`() =
+        runTest(testDispatcher) {
+            val vault1Eth = buildTestAddress(Chain.Ethereum, "0xeth1", fiat = BigDecimal("10"))
+            val vault2EthPending = buildTestAddress(Chain.Ethereum, "0xeth2", fiat = null)
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns
+                flowOf("vault-1", "vault-2")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "One")
+            coEvery { vaultRepository.get("vault-2") } returns Vault(id = "vault-2", name = "Two")
+            every { accountsRepository.loadAddressBalances("vault-1") } returns
+                flowOf(AddressBalancesUpdate(listOf(vault1Eth), isComplete = true))
+            every { accountsRepository.loadAddressBalances("vault-2") } returns
+                flowOf(AddressBalancesUpdate(listOf(vault2EthPending), isComplete = true))
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            // vault-2 resolved nothing — neither vault-1's $10 total nor its row may leak through.
+            vm.uiState.value.totalFiatValue shouldBe null
+            vm.uiState.value.accounts.none { it.fiatAmount == "$10" }.shouldBeTrue()
+        }
+
     private fun VaultAccountsViewModel.solanaRow(): AccountUiModel =
         uiState.value.accounts.first { it.model.chain == Chain.Solana }
 
