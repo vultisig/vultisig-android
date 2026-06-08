@@ -27,7 +27,8 @@ internal interface SourcifyApi {
      * verified on Sourcify. [contractAddress] may be lower-case — Sourcify's v2 endpoint normalises
      * it. For an upgradeable proxy, returns the resolved implementation's ABI (via Sourcify's
      * `proxyResolution`) so the proxied functions are labelled rather than the proxy's own
-     * `upgradeTo` / `implementation` / `admin` surface.
+     * `upgradeTo` / `implementation` / `admin` surface; for an EIP-2535 diamond the ABIs of all
+     * listed facets are merged so calls to any facet are labelled.
      *
      * Throws on transport failures so the caller can distinguish a definitive "not verified" (null)
      * from a transient outage (exception) and avoid caching the latter.
@@ -42,14 +43,19 @@ internal class SourcifyApiImpl @Inject constructor(private val httpClient: HttpC
             fetchContract(chainId, contractAddress, withProxyResolution = true) ?: return null
         // For an upgradeable proxy, `fields=abi` returns only the proxy's own ABI (upgradeTo /
         // implementation / admin), never the proxied function we want to label, so resolve the
-        // implementation address and fetch its ABI instead. Fall back to the proxy ABI when the
-        // implementation can't be fetched.
-        proxyImplementationAddress(root)?.let { implementation ->
-            fetchContract(chainId, implementation, withProxyResolution = false)
-                ?.let { it["abi"] as? JsonArray }
-                ?.let {
-                    return it
+        // implementation address(es) and fetch their ABI instead. An EIP-2535 diamond lists one
+        // address per facet, so merge every facet's ABI rather than labelling only the first —
+        // otherwise calls routed to the other facets stay unlabelled. Fall back to the proxy ABI
+        // when no implementation ABI can be fetched.
+        val implementations = proxyImplementationAddresses(root)
+        if (implementations.isNotEmpty()) {
+            val merged =
+                implementations.flatMap { implementation ->
+                    (fetchContract(chainId, implementation, withProxyResolution = false)?.get("abi")
+                            as? JsonArray)
+                        .orEmpty()
                 }
+            if (merged.isNotEmpty()) return JsonArray(merged)
         }
         return root["abi"] as? JsonArray
     }
@@ -69,21 +75,28 @@ internal class SourcifyApiImpl @Inject constructor(private val httpClient: HttpC
         // recovered names for a day over a temporary rate-limit.
         if (response.status == HttpStatusCode.NotFound) return null
         if (response.status != HttpStatusCode.OK) error("Sourcify ${response.status}")
+        // A 200 whose body isn't a JSON object is a malformed/transient response, not a definitive
+        // "unverified" — throw so the caller treats it like any other outage and doesn't cache it
+        // as
+        // a negative result for the full TTL.
         return parser.parseToJsonElement(response.bodyAsText()) as? JsonObject
+            ?: error("Sourcify response is not a JSON object")
     }
 
     /**
-     * Returns the implementation address from [root]'s `proxyResolution` block when the contract is
-     * an upgradeable proxy, or null when it isn't a proxy (or no implementation is listed).
+     * Returns every distinct implementation address from [root]'s `proxyResolution` block when the
+     * contract is an upgradeable proxy, or an empty list when it isn't a proxy (or none are
+     * listed). A single-implementation proxy yields one entry; an EIP-2535 diamond yields one per
+     * facet.
      */
-    private fun proxyImplementationAddress(root: JsonObject): String? {
-        val proxyResolution = root["proxyResolution"] as? JsonObject ?: return null
-        if (proxyResolution["isProxy"]?.jsonPrimitive?.booleanOrNull != true) return null
-        val implementations = proxyResolution["implementations"] as? JsonArray ?: return null
+    private fun proxyImplementationAddresses(root: JsonObject): List<String> {
+        val proxyResolution = root["proxyResolution"] as? JsonObject ?: return emptyList()
+        if (proxyResolution["isProxy"]?.jsonPrimitive?.booleanOrNull != true) return emptyList()
+        val implementations = proxyResolution["implementations"] as? JsonArray ?: return emptyList()
         return implementations
-            .asSequence()
             .mapNotNull { (it as? JsonObject)?.get("address")?.jsonPrimitive?.content }
-            .firstOrNull { it.isNotBlank() }
+            .filter { it.isNotBlank() }
+            .distinct()
     }
 
     private companion object {

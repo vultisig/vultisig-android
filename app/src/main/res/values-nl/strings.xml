@@ -1214,6 +1214,7 @@
     <string name="decoded_function_min_amount_out">Min. bedrag uit</string>
     <string name="decoded_function_amount_out">Bedrag uit</string>
     <string name="decoded_function_swap_title">Swap</string>
+    <string name="decoded_function_truncated">Meer parameters niet weergegeven</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">QBTC claimen</string>
     <string name="qbtc_claim_loading">Geschiktheid controleren…</string>

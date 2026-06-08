@@ -1239,6 +1239,7 @@
     <string name="decoded_function_min_amount_out">최소 받는 금액</string>
     <string name="decoded_function_amount_out">받는 금액</string>
     <string name="decoded_function_swap_title">스왑</string>
+    <string name="decoded_function_truncated">표시되지 않은 추가 매개변수</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">QBTC 청구</string>
     <string name="qbtc_claim_loading">자격 확인 중…</string>

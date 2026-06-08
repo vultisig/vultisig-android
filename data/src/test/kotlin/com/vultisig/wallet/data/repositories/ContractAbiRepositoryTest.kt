@@ -7,7 +7,11 @@ import com.vultisig.wallet.data.models.Chain
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -16,6 +20,10 @@ import kotlinx.serialization.json.jsonArray
 import org.junit.jupiter.api.Test
 
 internal class ContractAbiRepositoryTest {
+
+    // Drives the repository's injected clock so TTL expiry is deterministic; defaults to 0 so every
+    // other test stays comfortably within the TTL window.
+    private var now = 0L
 
     private val addTraitSignature = "addTrait(uint256,uint256,(string,string,bytes,bool,uint256))"
 
@@ -118,8 +126,93 @@ internal class ContractAbiRepositoryTest {
         assertEquals(2, api.calls.get())
     }
 
-    private fun newRepo(api: SourcifyApi) =
-        ContractAbiRepositoryImpl(sourcifyApi = api, ioDispatcher = UnconfinedTestDispatcher())
+    @Test
+    fun `cache entry past ttl is refetched`() = runTest {
+        val api = FakeSourcifyApi(addTraitAbi)
+        val ttl = 1.hours
+        val repo = newRepo(api, ttl = ttl)
+
+        now = 0L
+        repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature)
+        // Still inside the TTL window — served from cache, no second fetch.
+        now = ttl.inWholeMilliseconds - 1
+        repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature)
+        assertEquals(1, api.calls.get())
+
+        // At/after the TTL the entry is stale and must be refetched.
+        now = ttl.inWholeMilliseconds
+        val params = repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature)
+        assertEquals(listOf("tokenId", "traitId", "trait"), params?.map { it.name })
+        assertEquals(2, api.calls.get())
+    }
+
+    @Test
+    fun `least recently used contract is evicted past the cache cap`() = runTest {
+        val api = FakeSourcifyApi(addTraitAbi)
+        val repo = newRepo(api)
+
+        // MAX_CACHE_ENTRIES in ContractAbiRepositoryImpl; inserting one past the cap evicts eldest.
+        val cap = 64
+        repeat(cap + 1) { i -> repo.resolveParams(Chain.Ethereum, contractN(i), addTraitSignature) }
+        assertEquals(cap + 1, api.calls.get())
+
+        // The eldest entry (#0) was evicted, so looking it up again refetches.
+        repo.resolveParams(Chain.Ethereum, contractN(0), addTraitSignature)
+        assertEquals(cap + 2, api.calls.get())
+
+        // The most-recently inserted entry is still cached, so it does not refetch.
+        repo.resolveParams(Chain.Ethereum, contractN(cap), addTraitSignature)
+        assertEquals(cap + 2, api.calls.get())
+    }
+
+    @Test
+    fun `concurrent lookups for the same contract coalesce into one fetch`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val api = GatedSourcifyApi(addTraitAbi)
+            val repo = newRepo(api)
+
+            val first = async { repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature) }
+            api.started.await() // owner is suspended inside the fetch, holding the in-flight slot
+            val second = async { repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature) }
+            api.gate.complete(Unit) // release the single fetch
+
+            val expected = listOf("tokenId", "traitId", "trait")
+            assertEquals(expected, first.await()?.map { it.name })
+            assertEquals(expected, second.await()?.map { it.name })
+            assertEquals(1, api.calls.get())
+        }
+
+    @Test
+    fun `follower gets an empty result when the coalesced owner is cancelled`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val api = GatedSourcifyApi(addTraitAbi)
+            val repo = newRepo(api)
+
+            val owner = async { repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature) }
+            api.started.await()
+            val follower = async { repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature) }
+
+            owner.cancel()
+            // The follower must NOT inherit the owner's cancellation — it resolves to "nothing to
+            // add" (null), not a thrown CancellationException.
+            assertNull(follower.await())
+
+            // The in-flight slot was cleared and nothing was cached, so a later lookup fetches
+            // anew.
+            api.gate.complete(Unit)
+            val later = repo.resolveParams(Chain.Ethereum, CONTRACT, addTraitSignature)
+            assertEquals(listOf("tokenId", "traitId", "trait"), later?.map { it.name })
+        }
+
+    private fun contractN(index: Int): String = "0x" + index.toString(16).padStart(40, '0')
+
+    private fun newRepo(api: SourcifyApi, ttl: Duration = ContractAbiRepositoryImpl.DEFAULT_TTL) =
+        ContractAbiRepositoryImpl(
+            sourcifyApi = api,
+            ioDispatcher = UnconfinedTestDispatcher(),
+            clock = { now },
+            ttl = ttl,
+        )
 
     private class FakeSourcifyApi(abiJson: String?) : SourcifyApi {
         val calls = AtomicInteger(0)
@@ -138,6 +231,25 @@ internal class ContractAbiRepositoryTest {
         override suspend fun fetchAbi(chainId: String, contractAddress: String): JsonArray? {
             // Mirror SourcifyApiImpl throwing on a transient outage (429/503) the first time.
             if (calls.getAndIncrement() == 0) error("Sourcify 503 Service Unavailable")
+            return abi
+        }
+    }
+
+    /**
+     * Fetch suspends on [gate] after signalling [started], so a test can interleave a second
+     * concurrent [resolveParams] call and exercise the coalescing / cancellation paths
+     * deterministically.
+     */
+    private class GatedSourcifyApi(abiJson: String) : SourcifyApi {
+        val calls = AtomicInteger(0)
+        val started = CompletableDeferred<Unit>()
+        val gate = CompletableDeferred<Unit>()
+        private val abi: JsonArray = Json.parseToJsonElement(abiJson).jsonArray
+
+        override suspend fun fetchAbi(chainId: String, contractAddress: String): JsonArray {
+            calls.incrementAndGet()
+            started.complete(Unit)
+            gate.await()
             return abi
         }
     }

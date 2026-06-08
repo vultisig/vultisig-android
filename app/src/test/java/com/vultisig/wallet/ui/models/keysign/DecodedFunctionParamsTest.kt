@@ -556,6 +556,27 @@ internal class DecodedFunctionParamsTest {
         assertEquals("0xdeadbeef", rows[2].copyableValue)
     }
 
+    @Test
+    fun `leaf rows past the cap append a single truncation indicator`() {
+        // More leaf params than MAX_PARAM_ROWS (64) so the list is capped; the signer must see that
+        // it is partial rather than a truncated list that looks complete.
+        val n = 70
+        val types = List(n) { "uint256" }.joinToString(",")
+        val values = (1..n).joinToString(",") { "\"$it\"" }
+
+        val rows =
+            decodedFunctionParams(
+                signature = "batch($types)",
+                inputsJson = "[$values]",
+                json = json,
+            )
+
+        assertNotNull(rows)
+        assertEquals(65, rows.size) // 64 rendered rows + one truncation indicator
+        assertResId(R.string.decoded_function_truncated, rows.last().label)
+        assertTrue(rows.last().isWarning)
+    }
+
     private fun assertResId(expected: Int, label: UiText) {
         val actual = label as UiText.StringResource
         assertEquals(expected, actual.resId)

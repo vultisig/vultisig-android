@@ -1218,6 +1218,7 @@
     <string name="decoded_function_min_amount_out">Valor mínimo de saída</string>
     <string name="decoded_function_amount_out">Valor de saída</string>
     <string name="decoded_function_swap_title">Troca</string>
+    <string name="decoded_function_truncated">Mais parâmetros não mostrados</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Resgatar QBTC</string>
     <string name="qbtc_claim_loading">A verificar elegibilidade…</string>

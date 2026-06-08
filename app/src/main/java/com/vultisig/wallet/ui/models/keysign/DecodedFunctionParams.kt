@@ -281,10 +281,16 @@ private fun genericParams(
     abiParams: List<AbiParam>?,
     contractLabel: (String) -> String?,
 ): List<DecodedFunctionParam> {
-    val out = mutableListOf<DecodedFunctionParam>()
+    val out = RowSink()
     val count = maxOf(types.size, inputs.size)
     for (index in 0 until count) {
-        if (out.size >= MAX_PARAM_ROWS) break
+        if (out.isFull) {
+            // More top-level params remain but the cap is reached — flag truncation so the
+            // indicator
+            // row below tells the signer the list is partial.
+            out.markTruncated()
+            break
+        }
         val abi = abiParams?.getOrNull(index)
         expandParam(
             type = types.getOrNull(index)?.takeIf { it.isNotBlank() },
@@ -297,8 +303,44 @@ private fun genericParams(
             out = out,
         )
     }
-    return out
+    // Never silently drop rows: a partial list looks complete, so a signer could authorise params
+    // that never appeared on screen. Append one visible indicator when anything was capped.
+    if (out.truncated) out.rows += truncatedRow()
+    return out.rows
 }
+
+/**
+ * Collects leaf rows under the [MAX_PARAM_ROWS] cap while recording whether any row was dropped, so
+ * [genericParams] can append a single visible "truncated" indicator instead of silently rendering a
+ * partial list that looks complete on the signing screen.
+ */
+private class RowSink {
+    val rows = mutableListOf<DecodedFunctionParam>()
+    var truncated = false
+        private set
+
+    /** True once the cap is reached and no further leaf rows can be added. */
+    val isFull: Boolean
+        get() = rows.size >= MAX_PARAM_ROWS
+
+    /** Appends [row] when under the cap; otherwise records that a row was dropped. */
+    fun add(row: DecodedFunctionParam) {
+        if (isFull) truncated = true else rows += row
+    }
+
+    /** Records that content was dropped without attempting to add a row. */
+    fun markTruncated() {
+        truncated = true
+    }
+}
+
+/** Trailing warning row shown when the leaf list was capped at [MAX_PARAM_ROWS]. */
+private fun truncatedRow(): DecodedFunctionParam =
+    DecodedFunctionParam(
+        label = R.string.decoded_function_truncated.asUiText(),
+        value = UiText.DynamicString("…"),
+        isWarning = true,
+    )
 
 private fun expandParam(
     type: String?,
@@ -308,9 +350,12 @@ private fun expandParam(
     namePath: String?,
     depth: Int,
     contractLabel: (String) -> String?,
-    out: MutableList<DecodedFunctionParam>,
+    out: RowSink,
 ) {
-    if (out.size >= MAX_PARAM_ROWS) return
+    if (out.isFull) {
+        out.markTruncated()
+        return
+    }
     val normalized = type?.trim()
     if (depth < MAX_PARAM_DEPTH && normalized != null && isPlainTuple(normalized)) {
         val innerTypes = splitTopLevelParamTypes(normalized.substring(1, normalized.length - 1))
@@ -318,7 +363,10 @@ private fun expandParam(
         val innerAbis = abi?.components
         val childCount = maxOf(innerTypes.size, innerValues.size)
         for (j in 0 until childCount) {
-            if (out.size >= MAX_PARAM_ROWS) return
+            if (out.isFull) {
+                out.markTruncated()
+                return
+            }
             val childAbi = innerAbis?.getOrNull(j)
             expandParam(
                 type = innerTypes.getOrNull(j),
@@ -343,7 +391,10 @@ private fun expandParam(
         // the same [abi] carries through.
         val elements = (element as? JsonArray)?.toList().orEmpty()
         for (k in elements.indices) {
-            if (out.size >= MAX_PARAM_ROWS) return
+            if (out.isFull) {
+                out.markTruncated()
+                return
+            }
             expandParam(
                 type = tupleElementType,
                 element = elements[k],
@@ -357,7 +408,7 @@ private fun expandParam(
         }
         return
     }
-    out += leafRow(normalized, element, positionalPath, namePath, contractLabel)
+    out.add(leafRow(normalized, element, positionalPath, namePath, contractLabel))
 }
 
 private fun leafRow(
