@@ -28,20 +28,22 @@ fun FastSignPairedButtons(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.fillMaxWidth(),
     ) {
-        VsButton(
-            label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
-            variant = VsButtonVariant.CTA,
-            state = state,
-            onClick = onFastSignClick,
-            modifier = Modifier.weight(1f),
-        )
-
+        // Figma order: Paired is the narrow leading button (wraps its content), Fast Sign is the
+        // wide trailing CTA that fills the remaining width.
         VsButton(
             label = stringResource(R.string.verify_transaction_paired_btn_title),
             iconLeft = R.drawable.ic_paired_devices,
             variant = VsButtonVariant.Secondary,
             state = state,
             onClick = onPairedSignClick,
+        )
+
+        VsButton(
+            label = stringResource(R.string.verify_transaction_fast_sign_btn_title),
+            variant = VsButtonVariant.CTA,
+            state = state,
+            onClick = onFastSignClick,
+            modifier = Modifier.weight(1f),
         )
     }
 }
