@@ -19,5 +19,5 @@ data class ClaimableUtxo(
  * than [QbtcClaimConfig.MIN_CLAIM_CONFIRMATIONS], so a `null` count (mempool / unknown tip) is
  * treated as immature — fail closed.
  */
-internal fun ClaimableUtxo.isMature(): Boolean =
-    (confirmations ?: 0L) > QbtcClaimConfig.MIN_CLAIM_CONFIRMATIONS
+internal val ClaimableUtxo.isMature: Boolean
+    get() = confirmations != null && confirmations > QbtcClaimConfig.MIN_CLAIM_CONFIRMATIONS
