@@ -206,7 +206,7 @@ constructor(
                     )
 
             val gasFee =
-                gasFee.value
+                gasFee.value?.takeIf { it.value != BigInteger.ZERO }
                     ?: throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
                     )
@@ -249,7 +249,7 @@ constructor(
             val srcTokenValue = convertTokenAndValueToTokenValue(srcToken, srcAmountInt)
 
             val quote =
-                quoteState.quote
+                quoteState.quote?.takeIf { it.expectedDstValue.value != BigInteger.ZERO }
                     ?: throw InvalidTransactionDataException(
                         UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
                     )
