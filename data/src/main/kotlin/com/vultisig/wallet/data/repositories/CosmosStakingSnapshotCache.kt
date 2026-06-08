@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.repositories
 
+import androidx.compose.runtime.Immutable
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
 import java.math.BigDecimal
@@ -11,13 +12,17 @@ import javax.inject.Singleton
  * Last-known, display-ready staking state for a Cosmos-SDK staking address (LUNA / LUNC). The rows
  * already carry their fiat strings, so a re-entry can render this snapshot verbatim while the live
  * fan-out refreshes in the background.
+ *
+ * The hero banner's fiat is the *staked* total in fiat — the same number as [totalStakedFiat] — so
+ * it isn't stored separately; the screen seeds both the banner and the Total Staked card from
+ * [totalStakedFiat] on re-entry.
  */
+@Immutable
 data class CosmosStakingSnapshot(
     val positions: List<CosmosStakePositionRow>,
     val pendingUnbondings: List<CosmosUnbondingDelegation>,
     val totalStaked: BigDecimal,
     val totalStakedFiat: String,
-    val totalAmountPrice: String,
 )
 
 /**

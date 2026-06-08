@@ -319,6 +319,34 @@ internal class CosmosStakingPositionsViewModelTest {
     }
 
     @Test
+    fun `the refresh spinner flag is cleared once a load finishes`() = runTest {
+        // Regression for the forever-spinning pull-to-refresh: the VM owns the flag and must reset
+        // it when the run completes, even on a cache-seeded refresh that never toggles isLoading.
+        val model = vm()
+        assertEquals(false, model.isRefreshing.value)
+    }
+
+    @Test
+    fun `a degraded validators read is not frozen into the cache`() = runTest {
+        // A failed validators fetch folds every delegation to "Churned Out"; persisting that as the
+        // known-good snapshot would reseed the alarming view on reopen. The write must be skipped.
+        coEvery { cosmosStakingService.fetchValidators(any()) } throws RuntimeException("LCD 503")
+        val model = vm()
+        // The live view still renders (degraded) — only the cache is withheld.
+        assertEquals(2, model.state.value.positions.size)
+        assertNull(snapshotCache.read("Terra:terra1delegator"))
+    }
+
+    @Test
+    fun `a missing price is not frozen into the cache`() = runTest {
+        // A price miss renders every fiat slot as $0.00; freezing that snapshot would reseed a
+        // zeroed-out screen on reopen, so the write is skipped until a real price is available.
+        coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
+        vm()
+        assertNull(snapshotCache.read("Terra:terra1delegator"))
+    }
+
+    @Test
     fun `a refresh failure with no cache still surfaces the error`() = runTest {
         // The keep-cached-data guard must not swallow the very first failure: with nothing cached
         // there is nothing to fall back to, so the user has to see the error + retry.

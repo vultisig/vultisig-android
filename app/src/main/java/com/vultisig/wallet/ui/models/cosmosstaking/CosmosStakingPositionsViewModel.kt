@@ -34,12 +34,14 @@ import java.text.NumberFormat
 import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -119,6 +121,22 @@ constructor(
     private val _state = MutableStateFlow(CosmosStakingPositionsUiState())
     val state: StateFlow<CosmosStakingPositionsUiState> = _state.asStateFlow()
 
+    /**
+     * Pull-to-refresh spinner state, owned by the VM so the screen never has to infer it from
+     * [CosmosStakingPositionsUiState.isLoading]. A cache-seeded refresh keeps `isLoading` false, so
+     * a screen-side `isLoading`-driven reset would leave the spinner spinning forever after the
+     * first warm load. The VM flips this true at the start of every [refresh] and false when that
+     * run finishes (issue #4773 review).
+     */
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    /**
+     * The in-flight [refresh] fan-out. Cancelled before each new run so a slow older response can't
+     * land last and pin the screen (and the cached snapshot) to stale data.
+     */
+    private var loadJob: Job? = null
+
     private var coin: Coin? = null
 
     /** Idempotent — re-invoking with the same args is a no-op so recomposition doesn't re-fetch. */
@@ -139,175 +157,240 @@ constructor(
             Chain.entries.firstOrNull { it.raw.equals(chainId, ignoreCase = true) }
                 ?: return setError("Unsupported chain: $chainId")
 
-        viewModelScope.safeLaunch(
-            onError = { e ->
-                Timber.e(e, "Failed to load staking positions")
-                onRefreshFailed("Failed to load staking positions")
-            }
-        ) {
-            val coin = coin ?: return@safeLaunch
-            val cacheKey = snapshotKey(chain, coin.address)
-
-            // Seed from the last-known snapshot so reopening renders immediately instead of
-            // flashing the empty/zero state; only show the loading state when nothing is cached
-            // (issue #4764). The live fan-out below refreshes in the background and overwrites it.
-            val cached = snapshotCache.read(cacheKey)
-            if (cached != null) {
-                _state.update {
-                    it.copy(
-                        positions = cached.positions,
-                        pendingUnbondings = cached.pendingUnbondings,
-                        totalStaked = cached.totalStaked,
-                        totalStakedFiat = cached.totalStakedFiat,
-                        totalAmountPrice = cached.totalAmountPrice,
-                        isLoading = false,
-                        errorMessage = null,
-                    )
+        loadJob?.cancel()
+        loadJob =
+            viewModelScope.safeLaunch(
+                onError = { e ->
+                    Timber.e(e, "Failed to load staking positions")
+                    onRefreshFailed("Failed to load staking positions")
                 }
-                // Re-resolve avatars for the cached rows so monograms upgrade while we refresh.
-                resolveAvatarsAsync(cached.positions)
-            } else {
-                _state.update { it.copy(isLoading = true, errorMessage = null) }
-            }
+            ) {
+                _isRefreshing.value = true
+                try {
+                    val coin = coin ?: return@safeLaunch
+                    val cacheKey = snapshotKey(chain, coin.address)
 
-            // Parallel fan-out — same shape as iOS `refresh(address:decimals:)`. Delegations is the
-            // load-bearing read and keeps its [Result] so a failure surfaces an error banner (iOS
-            // sets `self.error` on this branch alone); unbondings / rewards / validators degrade
-            // silently to empty so a transient outage on any of them just hides that sub-row.
-            val (delegationsResult, unbondings, rewards, validators) =
-                withContext(ioDispatcher) {
-                    val delegationsDeferred = async {
-                        runCatching { cosmosStakingService.fetchDelegations(chain, coin.address) }
-                            .also { it.exceptionOrNull()?.let { Timber.w(it, "delegations") } }
+                    // Seed from the last-known snapshot so reopening renders immediately instead of
+                    // flashing the empty/zero state; only show the loading state when nothing is
+                    // cached
+                    // (issue #4764). The live fan-out below refreshes in the background and
+                    // overwrites it.
+                    val cached = snapshotCache.read(cacheKey)
+                    if (cached != null) {
+                        _state.update {
+                            it.copy(
+                                positions = cached.positions,
+                                pendingUnbondings = cached.pendingUnbondings,
+                                totalStaked = cached.totalStaked,
+                                totalStakedFiat = cached.totalStakedFiat,
+                                // Banner fiat == staked-total fiat; the snapshot stores it once.
+                                totalAmountPrice = cached.totalStakedFiat,
+                                isLoading = false,
+                                errorMessage = null,
+                            )
+                        }
+                        // Re-resolve avatars for the cached rows so monograms upgrade while we
+                        // refresh.
+                        resolveAvatarsAsync(cached.positions)
+                    } else {
+                        _state.update { it.copy(isLoading = true, errorMessage = null) }
                     }
-                    val unbondingsDeferred = async {
-                        runCatching {
-                                cosmosStakingService.fetchUnbondingDelegations(chain, coin.address)
+
+                    // Parallel fan-out — same shape as iOS `refresh(address:decimals:)`.
+                    // Delegations is the
+                    // load-bearing read and keeps its [Result] so a failure surfaces an error
+                    // banner (iOS
+                    // sets `self.error` on this branch alone). Validators also keeps its [Result]:
+                    // a failed
+                    // validators read collapses every delegation to "Churned Out", so we must know
+                    // it failed
+                    // to avoid freezing that degraded view as the cached snapshot. Unbondings /
+                    // rewards
+                    // degrade silently to empty so a transient outage on either just hides that
+                    // sub-row.
+                    val (delegationsResult, unbondings, rewards, validatorsResult) =
+                        withContext(ioDispatcher) {
+                            val delegationsDeferred = async {
+                                runCatching {
+                                        cosmosStakingService.fetchDelegations(chain, coin.address)
+                                    }
+                                    .also {
+                                        it.exceptionOrNull()?.let { Timber.w(it, "delegations") }
+                                    }
                             }
-                            .also { it.exceptionOrNull()?.let { Timber.w(it, "unbondings") } }
-                            .getOrDefault(emptyList())
-                    }
-                    val rewardsDeferred = async {
-                        runCatching {
-                                cosmosStakingService.fetchDelegatorRewards(chain, coin.address)
+                            val unbondingsDeferred = async {
+                                runCatching {
+                                        cosmosStakingService.fetchUnbondingDelegations(
+                                            chain,
+                                            coin.address,
+                                        )
+                                    }
+                                    .also {
+                                        it.exceptionOrNull()?.let { Timber.w(it, "unbondings") }
+                                    }
+                                    .getOrDefault(emptyList())
                             }
-                            .also { it.exceptionOrNull()?.let { Timber.w(it, "rewards") } }
-                            .getOrDefault(CosmosDelegatorRewards(emptyList(), emptyList()))
+                            val rewardsDeferred = async {
+                                runCatching {
+                                        cosmosStakingService.fetchDelegatorRewards(
+                                            chain,
+                                            coin.address,
+                                        )
+                                    }
+                                    .also { it.exceptionOrNull()?.let { Timber.w(it, "rewards") } }
+                                    .getOrDefault(CosmosDelegatorRewards(emptyList(), emptyList()))
+                            }
+                            val validatorsDeferred = async {
+                                runCatching { cosmosStakingService.fetchValidators(chain) }
+                                    .also {
+                                        it.exceptionOrNull()?.let { Timber.w(it, "validators") }
+                                    }
+                            }
+                            Quad(
+                                delegationsDeferred.await(),
+                                unbondingsDeferred.await(),
+                                rewardsDeferred.await(),
+                                validatorsDeferred.await(),
+                            )
+                        }
+
+                    // A failed delegations read must not be swallowed into an empty positions view
+                    // — a
+                    // vault
+                    // with active stake would falsely render the empty state on a transient LCD
+                    // blip.
+                    // Surface
+                    // the error so the user sees a retry instead of a silent "no positions".
+                    val delegations =
+                        delegationsResult.getOrElse {
+                            return@safeLaunch onRefreshFailed("Failed to load staking positions")
+                        }
+                    val validators = validatorsResult.getOrDefault(emptyList())
+
+                    val entry = CosmosStakingConfig.entryFor(chain)
+                    val bondDenom = entry.bondDenom
+
+                    // Filter rewards to the bond denom — Terra Classic LCDs occasionally return
+                    // reward
+                    // entries in non-staking denoms (legacy stability-tax pool); aggregating them
+                    // as if
+                    // they were `uluna` would overstate the user's claimable native rewards. iOS
+                    // verbatim.
+                    val rewardsByValidator: Map<String, BigDecimal> =
+                        rewards.rewards.associate { reward ->
+                            reward.validatorAddress to
+                                reward.reward
+                                    .filter { it.denom == bondDenom }
+                                    .mapNotNull { it.amount.toBigDecimalOrNull() }
+                                    .fold(BigDecimal.ZERO) { acc, v -> acc + v }
+                        }
+
+                    val validatorsByAddress = validators.associateBy { it.operatorAddress }
+                    val unbondingsByValidator = unbondings.groupBy { it.validatorAddress }
+
+                    val now = Instant.now()
+                    val decimals = coin.decimal
+
+                    // Resolve chain APY in parallel with the validator metadata join. Failure
+                    // collapses to
+                    // null and the rows degrade to baseline (LUNA) or hide (LUNC) APY.
+                    val chainApy =
+                        withContext(ioDispatcher) { apyResolver.chainApy(chain, entry.bondDenom) }
+
+                    // Resolve the spot price so the banner, the Total Staked card, and each row can
+                    // show
+                    // fiat (iOS parity — the screen previously hardcoded $0.00). Price is cosmetic:
+                    // a fetch
+                    // failure degrades every fiat slot to a zero-formatted value rather than
+                    // erroring.
+                    val currency = appCurrencyRepository.currency.first()
+                    val currencyFormat = appCurrencyRepository.getCurrencyFormat()
+                    val resolvedPrice =
+                        withContext(ioDispatcher) {
+                            runCatching { tokenPriceRepository.refresh(listOf(coin)) }
+                            runCatching { tokenPriceRepository.getCachedPrice(coin.id, currency) }
+                                .getOrNull()
+                        }
+                    val price = resolvedPrice ?: BigDecimal.ZERO
+
+                    val positions =
+                        delegations.map { delegation ->
+                            buildRow(
+                                delegation = delegation,
+                                validator = validatorsByAddress[delegation.validatorAddress],
+                                pendingRewardRaw =
+                                    rewardsByValidator[delegation.validatorAddress]
+                                        ?: BigDecimal.ZERO,
+                                unbondings =
+                                    unbondingsByValidator[delegation.validatorAddress].orEmpty(),
+                                decimals = decimals,
+                                now = now,
+                                chainApy = chainApy,
+                                chain = chain,
+                                price = price,
+                                currencyFormat = currencyFormat,
+                            )
+                        }
+
+                    val totalStaked =
+                        positions.fold(BigDecimal.ZERO) { acc, p -> acc + p.stakedAmount }
+                    // iOS parity: the DeFi banner shows the staked total in fiat (not the liquid
+                    // wallet
+                    // balance), so the banner and the Total Staked card carry the same value.
+                    val totalStakedFiat = currencyFormat.format(totalStaked.multiply(price))
+
+                    _state.update {
+                        it.copy(
+                            positions = positions,
+                            pendingUnbondings = unbondings,
+                            totalStaked = totalStaked,
+                            totalStakedFiat = totalStakedFiat,
+                            totalAmountPrice = totalStakedFiat,
+                            isLoading = false,
+                            errorMessage = null,
+                        )
                     }
-                    val validatorsDeferred = async {
-                        runCatching { cosmosStakingService.fetchValidators(chain) }
-                            .also { it.exceptionOrNull()?.let { Timber.w(it, "validators") } }
-                            .getOrDefault(emptyList())
+
+                    // Cache the display-ready result so the next open within this session renders
+                    // instantly — but only when the snapshot is actually trustworthy. A degraded
+                    // validators
+                    // read folds every delegation to "Churned Out", and a missing price renders
+                    // every fiat
+                    // slot as $0.00; freezing either as the "known good" snapshot would reseed that
+                    // alarming
+                    // view on the next reopen until the live refresh repairs it. Skip the write so
+                    // a
+                    // transient LCD blip is never persisted as truth (issue #4773 review).
+                    val priceOk = resolvedPrice != null && resolvedPrice.signum() > 0
+                    if (validatorsResult.isSuccess && priceOk) {
+                        snapshotCache.write(
+                            cacheKey,
+                            CosmosStakingSnapshot(
+                                positions = positions,
+                                pendingUnbondings = unbondings,
+                                totalStaked = totalStaked,
+                                totalStakedFiat = totalStakedFiat,
+                            ),
+                        )
                     }
-                    Quad(
-                        delegationsDeferred.await(),
-                        unbondingsDeferred.await(),
-                        rewardsDeferred.await(),
-                        validatorsDeferred.await(),
-                    )
+
+                    // Fire-and-forget avatar resolution — each emission updates the row in-place.
+                    // Published
+                    // after the list is in `_state` so a cache-hit patch can't land on an empty
+                    // `positions`
+                    // and then be overwritten. The initial render uses the monogram fallback;
+                    // avatars swap
+                    // in as the network catches up.
+                    resolveAvatarsAsync(positions)
+                } finally {
+                    // Only the still-current run clears the spinner. A superseded run reaches this
+                    // block via cancellation (isActive == false) and must leave the flag for
+                    // whichever
+                    // refresh replaced it; a normally-completing run is still active here and
+                    // resets it.
+                    if (isActive) _isRefreshing.value = false
                 }
-
-            // A failed delegations read must not be swallowed into an empty positions view — a
-            // vault
-            // with active stake would falsely render the empty state on a transient LCD blip.
-            // Surface
-            // the error so the user sees a retry instead of a silent "no positions".
-            val delegations =
-                delegationsResult.getOrElse {
-                    return@safeLaunch onRefreshFailed("Failed to load staking positions")
-                }
-
-            val entry = CosmosStakingConfig.entryFor(chain)
-            val bondDenom = entry.bondDenom
-
-            // Filter rewards to the bond denom — Terra Classic LCDs occasionally return reward
-            // entries in non-staking denoms (legacy stability-tax pool); aggregating them as if
-            // they were `uluna` would overstate the user's claimable native rewards. iOS verbatim.
-            val rewardsByValidator: Map<String, BigDecimal> =
-                rewards.rewards.associate { reward ->
-                    reward.validatorAddress to
-                        reward.reward
-                            .filter { it.denom == bondDenom }
-                            .mapNotNull { it.amount.toBigDecimalOrNull() }
-                            .fold(BigDecimal.ZERO) { acc, v -> acc + v }
-                }
-
-            val validatorsByAddress = validators.associateBy { it.operatorAddress }
-            val unbondingsByValidator = unbondings.groupBy { it.validatorAddress }
-
-            val now = Instant.now()
-            val decimals = coin.decimal
-
-            // Resolve chain APY in parallel with the validator metadata join. Failure collapses to
-            // null and the rows degrade to baseline (LUNA) or hide (LUNC) APY.
-            val chainApy =
-                withContext(ioDispatcher) { apyResolver.chainApy(chain, entry.bondDenom) }
-
-            // Resolve the spot price so the banner, the Total Staked card, and each row can show
-            // fiat (iOS parity — the screen previously hardcoded $0.00). Price is cosmetic: a fetch
-            // failure degrades every fiat slot to a zero-formatted value rather than erroring.
-            val currency = appCurrencyRepository.currency.first()
-            val currencyFormat = appCurrencyRepository.getCurrencyFormat()
-            val price =
-                withContext(ioDispatcher) {
-                    runCatching { tokenPriceRepository.refresh(listOf(coin)) }
-                    runCatching { tokenPriceRepository.getCachedPrice(coin.id, currency) }
-                        .getOrNull()
-                } ?: BigDecimal.ZERO
-
-            val positions =
-                delegations.map { delegation ->
-                    buildRow(
-                        delegation = delegation,
-                        validator = validatorsByAddress[delegation.validatorAddress],
-                        pendingRewardRaw =
-                            rewardsByValidator[delegation.validatorAddress] ?: BigDecimal.ZERO,
-                        unbondings = unbondingsByValidator[delegation.validatorAddress].orEmpty(),
-                        decimals = decimals,
-                        now = now,
-                        chainApy = chainApy,
-                        chain = chain,
-                        price = price,
-                        currencyFormat = currencyFormat,
-                    )
-                }
-
-            val totalStaked = positions.fold(BigDecimal.ZERO) { acc, p -> acc + p.stakedAmount }
-            // iOS parity: the DeFi banner shows the staked total in fiat (not the liquid wallet
-            // balance), so the banner and the Total Staked card carry the same value.
-            val totalStakedFiat = currencyFormat.format(totalStaked.multiply(price))
-
-            _state.update {
-                it.copy(
-                    positions = positions,
-                    pendingUnbondings = unbondings,
-                    totalStaked = totalStaked,
-                    totalStakedFiat = totalStakedFiat,
-                    totalAmountPrice = totalStakedFiat,
-                    isLoading = false,
-                    errorMessage = null,
-                )
             }
-
-            // Cache the display-ready result so the next open within this session renders
-            // instantly.
-            snapshotCache.write(
-                cacheKey,
-                CosmosStakingSnapshot(
-                    positions = positions,
-                    pendingUnbondings = unbondings,
-                    totalStaked = totalStaked,
-                    totalStakedFiat = totalStakedFiat,
-                    totalAmountPrice = totalStakedFiat,
-                ),
-            )
-
-            // Fire-and-forget avatar resolution — each emission updates the row in-place. Published
-            // after the list is in `_state` so a cache-hit patch can't land on an empty `positions`
-            // and then be overwritten. The initial render uses the monogram fallback; avatars swap
-            // in as the network catches up.
-            resolveAvatarsAsync(positions)
-        }
     }
 
     fun stakeMore() {
