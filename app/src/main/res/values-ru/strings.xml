@@ -1295,6 +1295,7 @@
     <string name="cosmos_staking_validator_active">Активен</string>
     <string name="cosmos_staking_validator_churned_out">Выбыл</string>
     <string name="cosmos_staking_validator_picker">Валидатор</string>
+    <string name="cosmos_staking_validator_commission">Комиссия</string>
     <string name="cosmos_staking_validators">Валидаторы</string>
     <string name="cosmos_staking_pick_destination">Выбрать назначение</string>
     <string name="cosmos_staking_pick_destination_validator">Выберите целевой валидатор</string>
