@@ -28,11 +28,17 @@ fun List<Account>.calculateAccountsTotalFiatValue(): FiatValue? =
         FiatValue(acc.value + fiatValue.value, fiatValue.currency)
     }
 
-fun List<Address>.calculateAddressesTotalFiatValue(): FiatValue? =
-    this.fold(FiatValue(BigDecimal.ZERO, AppCurrency.USD.ticker)) { acc, account ->
-        // if any account dont have fiat value, return null, as in "not loaded yet"
-        val fiatValue =
-            account.accounts.calculateAccountsTotalFiatValue()
-                ?: return@calculateAddressesTotalFiatValue null
+/**
+ * Sum of every account's fiat value across all addresses, skipping the ones that haven't resolved
+ * yet. Returns null only when *nothing* has loaded (so the UI can show a loading state on a cold
+ * start), but as soon as a single chain resolves its value contributes to the total. A slow chain
+ * (e.g. Solana) therefore no longer blanks the whole portfolio total — the previously-known chains
+ * keep counting while it refetches. See issue #4768.
+ */
+fun List<Address>.calculateAddressesTotalFiatValue(): FiatValue? {
+    val resolved = this.flatMap { it.accounts }.mapNotNull { it.fiatValue }
+    if (resolved.isEmpty()) return null
+    return resolved.fold(FiatValue(BigDecimal.ZERO, resolved.first().currency)) { acc, fiatValue ->
         FiatValue(acc.value + fiatValue.value, fiatValue.currency)
     }
+}

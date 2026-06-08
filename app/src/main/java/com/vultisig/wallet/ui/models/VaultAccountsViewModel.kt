@@ -540,23 +540,46 @@ constructor(
             this.calculateAddressesTotalFiatValue()?.let { fiatValueToStringMapper(it) }
         val accountsUiModel = this.map { addressToUiModelMapper(it) }
 
-        if (!isDefi) {
-            uiState.update {
-                it.copy(
-                    totalFiatValue = totalFiatValue,
-                    accounts = accountsUiModel.filteredAccounts(searchQuery),
+        uiState.update { state ->
+            val previousAccounts = if (isDefi) state.defiAccounts else state.accounts
+            val mergedAccounts =
+                accountsUiModel
+                    .retainLastKnownValues(previousAccounts)
+                    .filteredAccounts(searchQuery)
+            if (!isDefi) {
+                state.copy(
+                    // Don't blank an already-shown total while a slow chain refetches (#4768).
+                    totalFiatValue = totalFiatValue ?: state.totalFiatValue,
+                    accounts = mergedAccounts,
                 )
-            }
-        } else {
-            uiState.update {
-                it.copy(
-                    totalDeFiValue = totalFiatValue,
-                    defiAccounts = accountsUiModel.filteredAccounts(searchQuery),
+            } else {
+                state.copy(
+                    totalDeFiValue = totalFiatValue ?: state.totalDeFiValue,
+                    defiAccounts = mergedAccounts,
                 )
             }
         }
 
         Timber.d("Update updateUiStateFromList: %s", "$this")
+    }
+
+    /**
+     * While a chain's balance is refetching its mapped fiat/native amounts come back null. Carry
+     * the last-known value for that chain forward so its row keeps showing the cached balance
+     * instead of blanking until the fresh value resolves (#4768). A non-null new value always wins.
+     */
+    private fun List<AccountUiModel>.retainLastKnownValues(
+        previous: List<AccountUiModel>
+    ): List<AccountUiModel> {
+        if (previous.isEmpty()) return this
+        val previousByChain = previous.associateBy { it.model.chain }
+        return map { account ->
+            val last = previousByChain[account.model.chain] ?: return@map account
+            account.copy(
+                fiatAmount = account.fiatAmount ?: last.fiatAmount,
+                nativeTokenAmount = account.nativeTokenAmount ?: last.nativeTokenAmount,
+            )
+        }
     }
 
     private fun List<AccountUiModel>.filteredAccounts(searchQuery: String): List<AccountUiModel> {
