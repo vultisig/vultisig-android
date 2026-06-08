@@ -14,6 +14,8 @@ import com.vultisig.wallet.data.usecases.backup.SaveBackupToUriUseCase
 import com.vultisig.wallet.data.usecases.backup.SaveBackupToUriUseCaseImpl
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCase
 import com.vultisig.wallet.data.usecases.chaintokens.GetChainTokensUseCaseImpl
+import com.vultisig.wallet.data.usecases.cosmos.CosmosStakedBalanceUseCase
+import com.vultisig.wallet.data.usecases.cosmos.CosmosStakedBalanceUseCaseImpl
 import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCase
 import com.vultisig.wallet.data.usecases.file.UriFileReaderUseCaseImpl
 import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
@@ -31,6 +33,12 @@ import javax.inject.Singleton
 internal interface DataUsecasesModule {
 
     @Binds @Singleton fun bindBroadcastTxUseCase(impl: BroadcastTxUseCaseImpl): BroadcastTxUseCase
+
+    @Binds
+    @Singleton
+    fun bindCosmosStakedBalanceUseCase(
+        impl: CosmosStakedBalanceUseCaseImpl
+    ): CosmosStakedBalanceUseCase
 
     @Binds
     @Singleton
