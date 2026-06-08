@@ -16,6 +16,7 @@ import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.common.toKeccak256
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import com.vultisig.wallet.data.models.CustomRpcSupportedChains
 import com.vultisig.wallet.data.repositories.CustomRpcRepository
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.Numeric
@@ -108,9 +109,15 @@ constructor(
                 else -> throw IllegalArgumentException("Unsupported chain $chain")
             }
 
-        // App-wide custom RPC override (#4787): falls back to the default when unset, keeping
-        // behaviour byte-identical for users who never configured one.
-        val rpcUrl = customRpcRepository.urlFor(chain) ?: defaultRpcUrl
+        // App-wide custom RPC override (#4787): only honor overrides for chains in the supported
+        // set, falling back to the default when unset, keeping behaviour byte-identical for users
+        // who never configured one.
+        val rpcUrl =
+            if (CustomRpcSupportedChains.isSupported(chain)) {
+                customRpcRepository.urlFor(chain) ?: defaultRpcUrl
+            } else {
+                defaultRpcUrl
+            }
         return EvmApiImp(httpClient, rpcUrl)
     }
 }

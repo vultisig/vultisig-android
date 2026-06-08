@@ -12,6 +12,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.isSuccess
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.buildJsonArray
 import timber.log.Timber
@@ -56,6 +57,10 @@ internal class RpcHealthProbeImpl @Inject constructor(private val httpClient: Ht
                     else -> probeReachability(endpoint)
                 }
             }
+        } catch (_: TimeoutCancellationException) {
+            // A probe timeout means the endpoint is too slow to be usable; surface it as a result
+            // rather than cancelling the caller (it's a CancellationException subtype).
+            RpcHealthResult.Unreachable
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

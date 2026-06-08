@@ -23,9 +23,14 @@ internal class RpcHealthProbeImplTest {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    private fun client(status: HttpStatusCode, body: String): HttpClient =
+    private fun client(
+        status: HttpStatusCode,
+        body: String,
+        onRequest: (() -> Unit)? = null,
+    ): HttpClient =
         HttpClient(
             MockEngine {
+                onRequest?.invoke()
                 respond(
                     content = body,
                     status = status,
@@ -97,7 +102,10 @@ internal class RpcHealthProbeImplTest {
 
     @Test
     fun `blank url is unreachable without a request`() = runBlocking {
-        val probe = RpcHealthProbeImpl(client(HttpStatusCode.OK, "{}"))
+        var requestCount = 0
+        val probe =
+            RpcHealthProbeImpl(client(HttpStatusCode.OK, "{}", onRequest = { requestCount++ }))
         assertEquals(RpcHealthResult.Unreachable, probe.probe(Chain.Ethereum, "   "))
+        assertEquals(0, requestCount)
     }
 }

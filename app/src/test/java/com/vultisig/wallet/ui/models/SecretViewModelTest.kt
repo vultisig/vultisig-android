@@ -75,4 +75,27 @@ internal class SecretViewModelTest {
 
             vm.state.value.isSwapKitEnabled.shouldBeTrue()
         }
+
+    /** Verifies toggleCustomRpc persists the new feature flag value. */
+    @Test
+    fun `toggleCustomRpc persists the new flag value`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+
+            vm.toggleCustomRpc(true)
+            coVerify { customRpcConfig.setFeatureEnabled(true) }
+
+            vm.toggleCustomRpc(false)
+            coVerify { customRpcConfig.setFeatureEnabled(false) }
+        }
+
+    /** Verifies a `true` emission from customRpcConfig.isFeatureEnabled reflects into the state. */
+    @Test
+    fun `custom rpc feature emissions reflect into state`() =
+        runTest(testDispatcher) {
+            every { customRpcConfig.isFeatureEnabled } returns flowOf(true)
+            val vm = createViewModel()
+
+            vm.state.value.isCustomRpcEnabled.shouldBeTrue()
+        }
 }

@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.customrpc
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,6 +17,8 @@ import com.vultisig.wallet.ui.navigation.back
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -29,8 +32,11 @@ internal data class CustomRpcRowUiModel(
         get() = customUrl != null
 }
 
+@Immutable
 internal data class CustomRpcListUiState(
-    val isSilver: Boolean = false,
+    // null until the tier lookup resolves; row taps are blocked while unknown so a Silver user is
+    // never misrouted to the upsell screen, and a lookup failure stays unknown instead of false.
+    val isSilver: Boolean? = null,
     val rows: List<CustomRpcRowUiModel> = emptyList(),
 )
 
@@ -46,13 +52,13 @@ constructor(
 
     private val vaultId = savedStateHandle.toRoute<Route.CustomRpcList>().vaultId
 
-    val state = MutableStateFlow(CustomRpcListUiState())
+    private val _state = MutableStateFlow(CustomRpcListUiState())
+    val state: StateFlow<CustomRpcListUiState> = _state.asStateFlow()
 
     init {
         viewModelScope.launch {
-            val isSilver =
-                runCatching { getDiscountBps.hasReachedSilverTier(vaultId) }.getOrDefault(false)
-            state.update { it.copy(isSilver = isSilver) }
+            val isSilver = runCatching { getDiscountBps.hasReachedSilverTier(vaultId) }.getOrNull()
+            _state.update { it.copy(isSilver = isSilver) }
         }
         viewModelScope.launch {
             customRpcRepository.overrides.collect { overrides ->
@@ -65,16 +71,19 @@ constructor(
                             customUrl = overrides[chain],
                         )
                     }
-                state.update { it.copy(rows = rows) }
+                _state.update { it.copy(rows = rows) }
             }
         }
     }
 
     fun onRowClick(chainId: String) {
+        // Block taps until the tier lookup resolves so a Silver user is never misrouted to the
+        // upsell screen on an early tap (#4787).
+        val isSilver = _state.value.isSilver ?: return
         viewModelScope.launch {
             // Tap-to-upsell: below Silver tier the row routes to the discount-tiers screen instead
             // of the editor (#4787).
-            if (state.value.isSilver) {
+            if (isSilver) {
                 navigator.route(Route.CustomRpcDetail(vaultId, chainId))
             } else {
                 navigator.route(Route.DiscountTiers(vaultId))

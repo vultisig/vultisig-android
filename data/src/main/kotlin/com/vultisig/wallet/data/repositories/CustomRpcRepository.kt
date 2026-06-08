@@ -7,13 +7,11 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -29,8 +27,12 @@ import timber.log.Timber
  * they cannot await DataStore. `null` from [urlFor] means "no override" and the caller keeps its
  * hardcoded default, guaranteeing byte-identical default behaviour when nothing is set.
  *
- * The mirror is hydrated from disk at construction (the repo is a [Singleton], so this happens once
- * per process and survives relaunch) and kept in sync with every [setOverride] / [clearOverride].
+ * The mirror is hydrated from disk lazily on the first [urlFor] call (the repo is a [Singleton], so
+ * this happens once per process and survives relaunch) and kept in sync with every [setOverride] /
+ * [clearOverride]. Hydrating on first use — rather than fire-and-forget at construction —
+ * guarantees the first networking lookup after process start sees persisted overrides instead of
+ * racing an async job. [urlFor] is only reached from the off-main networking path, so the one-time
+ * blocking disk read it performs never touches the main thread.
  */
 interface CustomRpcRepository {
     /** Reactive view of all overrides, keyed by chain. Empty when none are set. */
@@ -58,20 +60,29 @@ constructor(private val dataStore: AppDataStore, private val json: Json) : Custo
     // other (DataStore.set is last-writer-wins on its own).
     private val writeLock = Mutex()
 
-    // App-lifetime scope: the repository is a process Singleton, so this one-shot hydration lives
-    // as
-    // long as the app and is never cancelled by design.
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    // Guards the one-time lazy hydration so the disk read happens at most once across threads.
+    @Volatile private var hydrated = false
+    private val hydrationLock = Any()
 
     override val overrides: Flow<Map<Chain, String>> =
         dataStore.readData(KEY_OVERRIDES, "").map(::decode)
 
-    init {
-        // Hydrate the synchronous mirror from disk once at startup so overrides survive relaunch.
-        scope.launch { replaceMirror(readPersisted()) }
+    override fun urlFor(chain: Chain): String? {
+        ensureHydrated()
+        return mirror[chain.id]
     }
 
-    override fun urlFor(chain: Chain): String? = mirror[chain.id]
+    // Populate the mirror from disk on first lookup so the very first networking call after process
+    // start sees persisted overrides. Runs on the calling (off-main networking) thread; the double-
+    // checked flag keeps it to a single blocking read regardless of concurrent callers.
+    private fun ensureHydrated() {
+        if (hydrated) return
+        synchronized(hydrationLock) {
+            if (hydrated) return
+            runBlocking(Dispatchers.IO) { replaceMirror(readPersisted()) }
+            hydrated = true
+        }
+    }
 
     override suspend fun setOverride(chain: Chain, url: String) = mutate {
         it + (chain.id to url.trim())
@@ -87,6 +98,9 @@ constructor(private val dataStore: AppDataStore, private val json: Json) : Custo
             val next = transform(readPersisted())
             dataStore.set(KEY_OVERRIDES, json.encodeToString(next))
             replaceMirror(next)
+            // The mirror now reflects disk; skip the lazy first-read so it can't clobber this
+            // write.
+            hydrated = true
         }
 
     private suspend fun readPersisted(): Map<ChainId, String> =

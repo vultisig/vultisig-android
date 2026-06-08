@@ -221,6 +221,41 @@ internal class SettingsViewModelTest {
             coVerify(exactly = 0) { navigator.route(Route.Secret) }
         }
 
+    /** Verifies the Custom RPC row appears when its feature flag is enabled. */
+    @Test
+    fun `custom rpc row is visible when feature flag is enabled`() =
+        runTest(testDispatcher) {
+            every { customRpcConfig.isFeatureEnabled } returns flowOf(true)
+            val vm = createViewModel()
+
+            val hasCustomRpc =
+                vm.state.value.items.flatMap { it.items }.any { it is SettingsItem.CustomRpc }
+
+            hasCustomRpc.shouldBeTrue()
+        }
+
+    /** Verifies the Custom RPC row is hidden when its feature flag is disabled. */
+    @Test
+    fun `custom rpc row is hidden when feature flag is disabled`() =
+        runTest(testDispatcher) {
+            every { customRpcConfig.isFeatureEnabled } returns flowOf(false)
+            val vm = createViewModel()
+
+            val hasCustomRpc =
+                vm.state.value.items.flatMap { it.items }.any { it is SettingsItem.CustomRpc }
+
+            hasCustomRpc.shouldBeFalse()
+        }
+
+    /** Verifies clicking CustomRpc navigates to CustomRpcList with vault id. */
+    @Test
+    fun `clicking CustomRpc navigates to CustomRpcList`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.CustomRpc)
+            coVerify { navigator.route(Route.CustomRpcList(VAULT_ID)) }
+        }
+
     private companion object {
         const val VAULT_ID = "vault-1"
     }

@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.customrpc
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -23,10 +24,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.net.URI
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@Immutable
 internal data class CustomRpcDetailUiState(
     val chainName: String = "",
     val errorMessage: UiText? = null,
@@ -51,13 +55,14 @@ constructor(
 
     val urlFieldState = TextFieldState()
 
-    val state = MutableStateFlow(CustomRpcDetailUiState(chainName = chain.raw))
+    private val _state = MutableStateFlow(CustomRpcDetailUiState(chainName = chain.raw))
+    val state: StateFlow<CustomRpcDetailUiState> = _state.asStateFlow()
 
     init {
         val existing = customRpcRepository.urlFor(chain)
         if (existing != null) {
             urlFieldState.setTextAndPlaceCursorAtEnd(existing)
-            state.update { it.copy(hasExistingOverride = true) }
+            _state.update { it.copy(hasExistingOverride = true) }
         }
 
         // Re-validate and reset any stale test result whenever the field changes.
@@ -66,7 +71,7 @@ constructor(
                 .collectLatest { text ->
                     val trimmed = text.trim()
                     val isValid = trimmed.isEmpty() || isValidRpcUrl(trimmed)
-                    state.update {
+                    _state.update {
                         it.copy(
                             canSave = trimmed.isNotEmpty() && isValidRpcUrl(trimmed),
                             errorMessage =
@@ -82,28 +87,28 @@ constructor(
     fun onTestClick() {
         val url = urlFieldState.text.toString().trim()
         if (!isValidRpcUrl(url)) {
-            state.update {
+            _state.update {
                 it.copy(errorMessage = UiText.StringResource(R.string.custom_rpc_invalid_url))
             }
             return
         }
-        state.update { it.copy(isTesting = true, testResult = null) }
+        _state.update { it.copy(isTesting = true, testResult = null) }
         viewModelScope.safeLaunch(
             onError = {
-                state.update {
+                _state.update {
                     it.copy(isTesting = false, testResult = RpcHealthResult.Unreachable)
                 }
             }
         ) {
             val result = rpcHealthProbe.probe(chain, url)
-            state.update { it.copy(isTesting = false, testResult = result) }
+            _state.update { it.copy(isTesting = false, testResult = result) }
         }
     }
 
     fun onSaveClick() {
         val url = urlFieldState.text.toString().trim()
         if (!isValidRpcUrl(url)) {
-            state.update {
+            _state.update {
                 it.copy(errorMessage = UiText.StringResource(R.string.custom_rpc_invalid_url))
             }
             return
