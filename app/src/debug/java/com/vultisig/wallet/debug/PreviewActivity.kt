@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimBlockedReason
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.QbtcClaimError
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
@@ -70,6 +71,7 @@ import com.vultisig.wallet.ui.models.ChainTokensUiModel
 import com.vultisig.wallet.ui.models.TransactionDetailsUiModel
 import com.vultisig.wallet.ui.models.TransactionScanStatus
 import com.vultisig.wallet.ui.models.VerifyTransactionUiModel
+import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingVerifyValidatorRow
 import com.vultisig.wallet.ui.models.deposit.DepositFormUiModel
@@ -92,6 +94,7 @@ import com.vultisig.wallet.ui.models.swap.ValuedToken
 import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
+import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsContent
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
@@ -128,6 +131,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import java.math.BigDecimal
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -212,6 +216,8 @@ class PreviewActivity : ComponentActivity() {
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
                     "keysign_devices_plus_after" -> KeysignDevicesCountPreview(allowsMore = false)
+                    "staking_positions_loading" -> CosmosStakingPositionsLoadingPreview()
+                    "staking_positions_loaded" -> CosmosStakingPositionsLoadedPreview()
                     "staking_verify_before" -> CosmosStakingVerifyCtaPreview(newButtons = false)
                     "staking_verify_after" -> CosmosStakingVerifyCtaPreview(newButtons = true)
                     "staking_verify_qbtc" ->
@@ -1799,6 +1805,63 @@ private fun KeysignSigningLuncPreview() {
         hasBackClick = false,
         showSaveToAddressBook = false,
         coinLogoRes = R.drawable.lunc,
+    )
+}
+
+@Composable
+private fun CosmosStakingPositionsLoadingPreview() {
+    // Cold load (#4815): positions empty + isLoading renders the skeleton delegation cards.
+    CosmosStakingPositionsContent(
+        chainId = "TerraClassic",
+        state =
+            CosmosStakingPositionsUiState(
+                ticker = "LUNC",
+                coinLogo = Coins.TerraClassic.LUNC.logo,
+                isLoading = true,
+                selectedPositions = listOf("LUNC"),
+            ),
+    )
+}
+
+@Composable
+private fun CosmosStakingPositionsLoadedPreview() {
+    CosmosStakingPositionsContent(
+        chainId = "TerraClassic",
+        state =
+            CosmosStakingPositionsUiState(
+                ticker = "LUNC",
+                coinLogo = Coins.TerraClassic.LUNC.logo,
+                positions =
+                    listOf(
+                        CosmosStakePositionRow(
+                            validatorAddress = "terravaloper1allnodes00000000000000000000000000",
+                            validatorMoniker = "Allnodes",
+                            validatorIdentity = null,
+                            stakedAmount = BigDecimal("1200000"),
+                            stakedFiatDisplay = "$0.14",
+                            pendingReward = BigDecimal("45.231"),
+                            apyPercent = BigDecimal("0.182"),
+                            validatorStatus = CosmosStakePositionRow.ValidatorStatus.Active,
+                            pendingUnbondingUnlockDate = null,
+                        ),
+                        CosmosStakePositionRow(
+                            validatorAddress = "terravaloper1legacy000000000000000000000000000",
+                            validatorMoniker = "Legacy Node",
+                            validatorIdentity = null,
+                            stakedAmount = BigDecimal("300000"),
+                            stakedFiatDisplay = "$0.03",
+                            pendingReward = BigDecimal.ZERO,
+                            apyPercent = null,
+                            validatorStatus = CosmosStakePositionRow.ValidatorStatus.ChurnedOut,
+                            pendingUnbondingUnlockDate = null,
+                        ),
+                    ),
+                hasClaimableRewards = true,
+                totalStaked = BigDecimal("1500000"),
+                totalStakedFiat = "$0.17",
+                totalAmountPrice = "$0.17",
+                selectedPositions = listOf("LUNC"),
+            ),
     )
 }
 

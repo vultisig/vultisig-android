@@ -1616,7 +1616,6 @@
     <string name="cosmos_staking_continue">继续</string>
     <string name="cosmos_staking_amount">金额</string>
     <string name="cosmos_staking_loading_validators">正在加载验证人…</string>
-    <string name="cosmos_staking_loading_positions">正在加载仓位…</string>
     <string name="cosmos_staking_loading_rewards">正在加载奖励…</string>
     <string name="cosmos_staking_no_rewards">此链上没有可领取的奖励</string>
     <string name="cosmos_staking_empty_positions">您还没有活跃的 %1$s 仓位</string>

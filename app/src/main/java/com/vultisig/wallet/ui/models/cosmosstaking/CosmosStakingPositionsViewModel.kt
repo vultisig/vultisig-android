@@ -12,12 +12,15 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
 import com.vultisig.wallet.data.blockchain.cosmos.staking.KeybaseAvatarService
+import com.vultisig.wallet.data.blockchain.model.StakingDetails
+import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.CosmosStakingSnapshot
 import com.vultisig.wallet.data.repositories.CosmosStakingSnapshotCache
+import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -113,6 +116,7 @@ constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val snapshotCache: CosmosStakingSnapshotCache,
+    private val stakingDetailsRepository: StakingDetailsRepository,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -146,19 +150,34 @@ constructor(
 
     private var coin: Coin? = null
 
-    /** Idempotent — re-invoking with the same args is a no-op so recomposition doesn't re-fetch. */
+    /**
+     * Wires the screen's vault + chain and loads. Driven by a `LifecycleResumeEffect`, so it runs
+     * on the first open AND every time the user returns to the retained screen — e.g. after signing
+     * a delegate / undelegate / redelegate / claim. The first call resolves the native coin then
+     * loads ([loadCoin] chains into [load] once `coin` is assigned); a re-entry silently refreshes
+     * so the Total Staked card reflects the just-signed tx without a manual pull (#4815). A
+     * re-entry fired while the first load is still resolving the coin is a no-op — that load's own
+     * tail refresh already covers it.
+     */
     fun setData(vaultId: String, chainId: String) {
-        if (this.vaultId == vaultId && this.chainId == chainId) return
+        val isReentry = this.vaultId == vaultId && this.chainId == chainId
         this.vaultId = vaultId
         this.chainId = chainId
-        // [loadCoin] resolves the native coin then chains into [refresh] from the SAME coroutine.
-        // We must NOT call refresh() here in parallel: loadCoin only assigns `coin` after it
-        // suspends on the vault read, so a parallel refresh() would observe `coin == null`, bail at
-        // its `coin ?: return` guard, and the delegations list would never load on first open.
-        loadCoin()
+        when {
+            !isReentry -> loadCoin()
+            coin != null -> load(userInitiated = false)
+        }
     }
 
-    fun refresh() {
+    /** Pull-to-refresh: re-runs the fan-out and drives the pull-to-refresh spinner. */
+    fun refresh() = load(userInitiated = true)
+
+    /**
+     * @param userInitiated true only for an explicit pull-to-refresh, which owns the [isRefreshing]
+     *   spinner. The first load and the resume refresh pass false so they update in the background
+     *   (seeded from the cached snapshot) without spinning the pull indicator.
+     */
+    private fun load(userInitiated: Boolean) {
         val chainId = chainId ?: return
         val chain =
             Chain.entries.firstOrNull { it.raw.equals(chainId, ignoreCase = true) }
@@ -172,7 +191,7 @@ constructor(
                     onRefreshFailed("Failed to load staking positions")
                 }
             ) {
-                _isRefreshing.value = true
+                if (userInitiated) _isRefreshing.value = true
                 try {
                     val coin = coin ?: return@safeLaunch
                     val cacheKey = snapshotKey(chain, coin.address)
@@ -361,6 +380,15 @@ constructor(
                         )
                     }
 
+                    // Keep the persisted staking total — the cache the global DeFi/portfolio page
+                    // reads through StakingDetailsRepository — in sync with these fresh on-chain
+                    // numbers. Without it the portfolio Total Staked keeps serving the pre-tx value
+                    // (AccountsRepository only does a remote pass on an explicit refresh), so a
+                    // delegate/undelegate/redelegate/claim wouldn't surface there until a manual
+                    // pull (#4815). Mirrors CosmosStakingDeFiBalanceService: delegated base units +
+                    // floored bond-denom rewards.
+                    persistStakedTotal(coin, delegations, rewardsByValidator)
+
                     // Cache the display-ready result so the next open within this session renders
                     // instantly — but only when the snapshot is actually trustworthy. A degraded
                     // validators
@@ -399,12 +427,11 @@ constructor(
                     // in as the network catches up.
                     resolveAvatarsAsync(positions)
                 } finally {
-                    // Only the still-current run clears the spinner. A superseded run reaches this
-                    // block via cancellation (isActive == false) and must leave the flag for
-                    // whichever
-                    // refresh replaced it; a normally-completing run is still active here and
-                    // resets it.
-                    if (isActive) _isRefreshing.value = false
+                    // Only a still-current, user-initiated run clears the spinner. A superseded run
+                    // reaches this block via cancellation (isActive == false) and must leave the
+                    // flag for whichever refresh replaced it; background (resume / first) loads
+                    // never raised it, so there is nothing to reset.
+                    if (isActive && userInitiated) _isRefreshing.value = false
                 }
             }
     }
@@ -565,6 +592,51 @@ constructor(
     }
 
     /**
+     * Persists the staked total in base units (delegated + floored bond-denom rewards) for the
+     * native coin, so the global DeFi/portfolio Total Staked stays in step with this screen. The
+     * definition matches
+     * [com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalanceService] so
+     * whichever source writes last leaves the same value. A write failure is non-fatal — the
+     * positions view is already up to date and the portfolio repairs itself on its next remote
+     * pass.
+     */
+    private suspend fun persistStakedTotal(
+        coin: Coin,
+        delegations: List<CosmosDelegation>,
+        rewardsByValidator: Map<String, BigDecimal>,
+    ) {
+        val vaultId = vaultId ?: return
+        val delegated =
+            delegations.fold(BigInteger.ZERO) { acc, d ->
+                acc + (d.balance.amount.toBigIntegerOrNull() ?: BigInteger.ZERO)
+            }
+        val rewards =
+            rewardsByValidator.values.fold(BigInteger.ZERO) { acc, r -> acc + r.toBigInteger() }
+        val total = delegated + rewards
+        runCatching {
+                val details =
+                    StakingDetails(
+                        id = coin.generateId(),
+                        coin = coin,
+                        stakeAmount = total,
+                        apr = null,
+                        estimatedRewards = null,
+                        nextPayoutDate = null,
+                        rewards = null,
+                        rewardsCoin = null,
+                    )
+                val existing = stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, coin.id)
+                when {
+                    existing == null ->
+                        stakingDetailsRepository.saveStakingDetails(vaultId, details)
+                    existing.stakeAmount != total ->
+                        stakingDetailsRepository.updateStakingDetails(vaultId, details)
+                }
+            }
+            .onFailure { Timber.e(it, "Failed to persist staking total for %s", coin.chain.raw) }
+    }
+
+    /**
      * Fires off Keybase avatar lookups for any row that has a non-empty identity. Lookups are
      * deduped per-identity by the [KeybaseAvatarService] cache, so concurrent rows with the same
      * identity share a single network call.
@@ -650,7 +722,9 @@ constructor(
                 )
             }
             // Now that `coin` is resolved, load the delegations / unbondings / rewards fan-out.
-            refresh()
+            // The first open shows the skeleton (no cache yet), so it must not also raise the
+            // pull-to-refresh spinner.
+            load(userInitiated = false)
         }
     }
 

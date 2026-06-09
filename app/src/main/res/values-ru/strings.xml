@@ -1303,7 +1303,6 @@
     <string name="cosmos_staking_continue">Продолжить</string>
     <string name="cosmos_staking_amount">Сумма</string>
     <string name="cosmos_staking_loading_validators">Загрузка валидаторов…</string>
-    <string name="cosmos_staking_loading_positions">Загрузка позиций…</string>
     <string name="cosmos_staking_loading_rewards">Загрузка наград…</string>
     <string name="cosmos_staking_no_rewards">Нет наград к получению в этой сети</string>
     <string name="cosmos_staking_empty_positions">У вас пока нет активных позиций %1$s</string>

@@ -20,6 +20,7 @@ import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.CosmosStakingSnapshotCache
+import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -29,6 +30,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.text.NumberFormat
 import java.time.Instant
 import java.util.Locale
@@ -58,6 +60,7 @@ internal class CosmosStakingPositionsViewModelTest {
     private val tokenPriceRepository: TokenPriceRepository = mockk(relaxed = true)
     private val appCurrencyRepository: AppCurrencyRepository = mockk()
     private val snapshotCache = CosmosStakingSnapshotCache()
+    private val stakingDetailsRepository: StakingDetailsRepository = mockk(relaxed = true)
     private val navigator: Navigator<Destination> = mockk(relaxed = true)
 
     private val activeVal = "terravaloper1active"
@@ -130,6 +133,8 @@ internal class CosmosStakingPositionsViewModelTest {
             NumberFormat.getCurrencyInstance(Locale.US)
         coEvery { tokenPriceRepository.refresh(any()) } returns Unit
         coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns BigDecimal("0.058")
+        // No persisted staking detail yet → the VM takes the save (not update) path.
+        coEvery { stakingDetailsRepository.getStakingDetailsByCoindId(any(), any()) } returns null
     }
 
     @AfterEach
@@ -146,6 +151,7 @@ internal class CosmosStakingPositionsViewModelTest {
                 tokenPriceRepository = tokenPriceRepository,
                 appCurrencyRepository = appCurrencyRepository,
                 snapshotCache = snapshotCache,
+                stakingDetailsRepository = stakingDetailsRepository,
                 navigator = navigator,
                 ioDispatcher = testDispatcher,
             )
@@ -396,5 +402,42 @@ internal class CosmosStakingPositionsViewModelTest {
         assertNotNull(s.errorMessage)
         assertEquals(true, s.positions.isEmpty())
         assertNull(snapshotCache.read("Terra:terra1delegator"))
+    }
+
+    @Test
+    fun `returning to the screen re-runs the fan-out so a just-signed tx is reflected`() = runTest {
+        // The screen drives setData from a LifecycleResumeEffect, so a re-entry with the same
+        // vault+chain (returning after a signed delegate/undelegate/redelegate/claim) must trigger
+        // a fresh load — not the old idempotent no-op — so Total Staked + positions update without
+        // a manual pull (#4815).
+        val model = vm()
+        model.setData(vaultId = "v1", chainId = "Terra")
+        coVerify(exactly = 2) { cosmosStakingService.fetchDelegations(any(), any()) }
+        // The coin is resolved only once: a re-entry must not re-run loadCoin, which would reset
+        // the Manage Positions selection back to the default.
+        coVerify(exactly = 1) { vaultRepository.get(any()) }
+    }
+
+    @Test
+    fun `the resume refresh does not raise the pull-to-refresh spinner`() = runTest {
+        // Only an explicit pull owns the spinner; the background resume refresh stays silent so the
+        // pull indicator does not flash on every return to the screen.
+        val model = vm()
+        model.setData(vaultId = "v1", chainId = "Terra")
+        assertEquals(false, model.isRefreshing.value)
+    }
+
+    @Test
+    fun `the staked total is persisted so the global DeFi balance stays in sync`() = runTest {
+        // delegated 3 + 1 = 4 LUNA (4_000_000 uluna) plus 250_000 uluna claimable rewards =
+        // 4_250_000 base units, persisted to StakingDetailsRepository so the portfolio Total Staked
+        // reflects the stake on its next read instead of serving the pre-tx cached value (#4815).
+        vm()
+        coVerify {
+            stakingDetailsRepository.saveStakingDetails(
+                "v1",
+                match { it.stakeAmount == BigInteger.valueOf(4_250_000) },
+            )
+        }
     }
 }
