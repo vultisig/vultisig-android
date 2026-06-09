@@ -106,7 +106,7 @@ internal class CosmosRedelegateViewModelTest {
             votingPower = power,
         )
 
-    private fun vm(): CosmosRedelegateViewModel =
+    private fun vm(stakedAmount: String? = null): CosmosRedelegateViewModel =
         CosmosRedelegateViewModel(
             savedStateHandle =
                 SavedStateHandle(
@@ -114,6 +114,7 @@ internal class CosmosRedelegateViewModelTest {
                         "vaultId" to "v1",
                         "chainId" to "Terra",
                         "validatorSrcAddress" to srcValidator,
+                        "stakedAmount" to stakedAmount,
                     )
                 ),
             vaultRepository = vaultRepository,
@@ -133,6 +134,24 @@ internal class CosmosRedelegateViewModelTest {
         coEvery { cosmosStakingService.fetchRedelegations(any(), any()) } returns emptyList()
         val model = vm()
         // 5_000_000 uluna at 6 decimals = 5 LUNA.
+        assertEquals(0, BigDecimal("5").compareTo(model.state.value.stakedBalance))
+    }
+
+    @Test
+    fun `prefilled staked amount is retained when the LCD returns no matching delegation`() =
+        runTest {
+            // Transient LCD blip: keep the value carried from the tapped position (#4815).
+            coEvery { cosmosStakingService.fetchRedelegations(any(), any()) } returns emptyList()
+            coEvery { cosmosStakingService.fetchDelegations(any(), any()) } returns emptyList()
+            val model = vm(stakedAmount = "9")
+            assertEquals(0, BigDecimal("9").compareTo(model.state.value.stakedBalance))
+        }
+
+    @Test
+    fun `LCD value overrides the prefilled staked amount when it differs`() = runTest {
+        coEvery { cosmosStakingService.fetchRedelegations(any(), any()) } returns emptyList()
+        val model = vm(stakedAmount = "9")
+        // The authoritative LCD read (5 LUNA) wins over the carried hint.
         assertEquals(0, BigDecimal("5").compareTo(model.state.value.stakedBalance))
     }
 

@@ -98,7 +98,7 @@ internal class CosmosUndelegateViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun vm() =
+    private fun vm(stakedAmount: String? = null) =
         CosmosUndelegateViewModel(
             savedStateHandle =
                 SavedStateHandle(
@@ -106,6 +106,7 @@ internal class CosmosUndelegateViewModelTest {
                         "vaultId" to "v1",
                         "chainId" to "Terra",
                         "validatorAddress" to validatorAddr,
+                        "stakedAmount" to stakedAmount,
                     )
                 ),
             vaultRepository = vaultRepository,
@@ -126,6 +127,24 @@ internal class CosmosUndelegateViewModelTest {
         assertEquals(0, BigDecimal("2").compareTo(model.state.value.stakedBalance))
         assertNotNull(model.state.value.unbondingLockMessage)
         assertEquals(validatorAddr, model.state.value.validatorAddress)
+    }
+
+    @Test
+    fun `prefilled staked amount is retained when the LCD returns no matching delegation`() =
+        runTest {
+            // Transient LCD blip: no delegations come back, so the form must keep the value carried
+            // from the tapped position instead of wiping to 0 (#4815).
+            coEvery { cosmosStakingService.fetchDelegations(any(), any()) } returns emptyList()
+            val model = vm(stakedAmount = "7")
+            assertEquals(0, BigDecimal("7").compareTo(model.state.value.stakedBalance))
+            assertEquals("7", model.amountFieldState.text.toString())
+        }
+
+    @Test
+    fun `LCD value overrides the prefilled staked amount when it differs`() = runTest {
+        // The carried hint prefills instantly, but the authoritative LCD read corrects it.
+        val model = vm(stakedAmount = "7")
+        assertEquals(0, BigDecimal("2").compareTo(model.state.value.stakedBalance))
     }
 
     @Test
