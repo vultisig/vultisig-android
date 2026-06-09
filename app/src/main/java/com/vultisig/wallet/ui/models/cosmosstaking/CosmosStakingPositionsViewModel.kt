@@ -405,10 +405,21 @@ constructor(
                         delegations.fold(BigInteger.ZERO) { acc, d ->
                             acc + (d.balance.amount.toBigIntegerOrNull() ?: BigInteger.ZERO)
                         }
+                    // Floor each bond-denom reward to whole base units before summing — the exact
+                    // shape CosmosStakingDeFiBalanceService.claimableRewards uses — so the
+                    // persisted
+                    // total matches the value getRemoteDeFiBalance writes rather than diverging by
+                    // a
+                    // base unit on fractional rewards (#4815).
                     val rewardsBaseUnits =
-                        rewardsByValidator.values.fold(BigInteger.ZERO) { acc, v ->
-                            acc + v.toBigInteger()
-                        }
+                        rewards.rewards
+                            .flatMap { it.reward }
+                            .filter { it.denom == bondDenom }
+                            .fold(BigInteger.ZERO) { acc, rewardCoin ->
+                                acc +
+                                    (rewardCoin.amount.toBigDecimalOrNull()?.toBigInteger()
+                                        ?: BigInteger.ZERO)
+                            }
                     this@CosmosStakingPositionsViewModel.vaultId?.let { vid ->
                         runCatching {
                             cosmosStakingDeFiBalanceService.persistStakedTotal(
