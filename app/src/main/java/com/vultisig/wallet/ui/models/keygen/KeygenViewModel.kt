@@ -80,6 +80,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -149,7 +151,8 @@ constructor(
 
     private val args = savedStateHandle.toRoute<Route.Keygen.Generating>()
 
-    val state = MutableStateFlow(KeygenUiModel(action = args.action))
+    private val _state = MutableStateFlow(KeygenUiModel(action = args.action))
+    val state: StateFlow<KeygenUiModel> = _state.asStateFlow()
 
     private val vault =
         Vault(
@@ -310,7 +313,7 @@ constructor(
                 }
             }
 
-            state.update { it.copy(error = null) }
+            _state.update { it.copy(error = null) }
 
             try {
                 featureFlags = featureFlagRepository.getFeatureFlags()
@@ -339,9 +342,16 @@ constructor(
                 saveVault()
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
-                Timber.d(e, "generateKey error")
+                Timber.e(e, "generateKey error")
 
-                state.update { it.copy(error = resolveKeygenErrorFromException(e)) }
+                _state.update {
+                    it.copy(
+                        error = resolveKeygenErrorFromException(e),
+                        keygenState = null,
+                        isSuccess = false,
+                        progress = 0f,
+                    )
+                }
 
                 stopService()
             }
@@ -1066,7 +1076,7 @@ constructor(
 
     private fun updateStep(step: KeygenState) {
         val usesParallelRootKeyStage = usesParallelRootKeyStage(step)
-        state.update { uiModel ->
+        _state.update { uiModel ->
             uiModel.copy(
                 isSuccess = step is KeygenState.Success,
                 keygenState = step,
@@ -1172,6 +1182,7 @@ constructor(
     }
 
     override fun onCleared() {
+        super.onCleared()
         stopService()
     }
 }
