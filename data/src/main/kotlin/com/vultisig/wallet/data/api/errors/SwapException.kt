@@ -21,6 +21,9 @@ sealed class SwapException(message: String) : Exception(message) {
     class SwapRouteNotAvailable(message: String) : SwapException(message)
 
     @Suppress("SerialVersionUIDInSerializableClass")
+    class TradingHalted(message: String) : SwapException(message)
+
+    @Suppress("SerialVersionUIDInSerializableClass")
     class TimeOut(message: String) : SwapException(message)
 
     @Suppress("SerialVersionUIDInSerializableClass")
@@ -59,7 +62,8 @@ sealed class SwapException(message: String) : Exception(message) {
                     contains("amount less than dust threshold") -> AmountBelowDustThreshold(error)
                     contains("amount less than min swap amount") -> SmallSwapAmount(error)
                     contains("pool does not exist") -> SwapRouteNotAvailable(error)
-                    contains("trading is halted") -> SwapRouteNotAvailable(error)
+                    contains("trading is halted") || contains("trading halted") ->
+                        TradingHalted(error)
                     contains("timeout") -> TimeOut(error)
                     contains("unable to resolve host") -> NetworkConnection(error)
                     contains("no internet connection") -> NetworkConnection(error)

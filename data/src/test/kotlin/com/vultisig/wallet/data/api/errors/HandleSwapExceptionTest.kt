@@ -69,9 +69,24 @@ class HandleSwapExceptionTest {
     }
 
     @Test
-    fun `trading halted maps to SwapRouteNotAvailable`() {
+    fun `trading is halted maps to TradingHalted`() {
         val result = SwapException.handleSwapException("Trading is halted for this pool")
-        assertInstanceOf(SwapException.SwapRouteNotAvailable::class.java, result)
+        assertInstanceOf(SwapException.TradingHalted::class.java, result)
+    }
+
+    @Test
+    fun `trading halted variant maps to TradingHalted`() {
+        val result = SwapException.handleSwapException("asset trading halted upstream")
+        assertInstanceOf(SwapException.TradingHalted::class.java, result)
+    }
+
+    @Test
+    fun `maya simulate halt message maps to TradingHalted`() {
+        val result =
+            SwapException.handleSwapException(
+                "failed to simulate swap: trading is halted, can't process swap"
+            )
+        assertInstanceOf(SwapException.TradingHalted::class.java, result)
     }
 
     @Test

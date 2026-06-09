@@ -217,9 +217,10 @@ class MayaChainApiBodyReadTest {
     }
 
     // -------------------------------------------------------------------------
-    // getSwapQuotes — body<String>() fed into ThorChainSwapQuoteResponseJsonSerializer
-    // Pins: 200 body is read and delegated to the serializer; non-2xx returns early via the
-    // isSuccess guard without touching the body (same shape as the LiFi error-path tests).
+    // getSwapQuotes — body fed into ThorChainSwapQuoteResponseJsonSerializer
+    // Pins: the body is read and delegated to the serializer regardless of status, so a non-2xx
+    // error body (e.g. a trading halt) is preserved; only a blank body falls back to the generic
+    // HTTP status description.
     // -------------------------------------------------------------------------
 
     @Test
@@ -246,7 +247,33 @@ class MayaChainApiBodyReadTest {
     }
 
     @Test
-    fun `getSwapQuotes on non-2xx returns Error with HTTP status description without reading body`() =
+    fun `getSwapQuotes on non-2xx preserves the halt reason from the body`() = runBlocking {
+        // MAYAnode returns the halt reason in the body alongside a non-2xx status (the ETH->ZEC
+        // repro). Discarding the body here for the generic status description is what previously
+        // prevented handleSwapException from classifying it as TradingHalted.
+        val body = """{"error": "trading is halted on pool BTC.BTC"}"""
+
+        val result =
+            newApi(body, status = HttpStatusCode.BadRequest)
+                .getSwapQuotes(
+                    address = "maya1abc",
+                    fromAsset = "ETH.ETH",
+                    toAsset = "ZEC.ZEC",
+                    amount = "100000000",
+                    isAffiliate = false,
+                    bpsDiscount = 0,
+                    referralCode = "",
+                )
+
+        assertTrue(result is THORChainSwapQuoteDeserialized.Error)
+        assertEquals(
+            "trading is halted on pool BTC.BTC",
+            (result as THORChainSwapQuoteDeserialized.Error).error.message,
+        )
+    }
+
+    @Test
+    fun `getSwapQuotes on non-2xx with blank body falls back to HTTP status description`() =
         runBlocking {
             val result =
                 newApi(body = "", status = HttpStatusCode.InternalServerError)
