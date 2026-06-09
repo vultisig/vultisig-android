@@ -13,9 +13,9 @@ import timber.log.Timber
 
 /**
  * DeFi-balance provider for LUNA / LUNC staking. The user's DeFi position on Terra / TerraClassic
- * is the sum of their delegation balances (base units) — mirrors iOS
- * `DefiBalanceService.cosmosStakingTotalBalance`, where the chain's DeFi balance is the staked
- * total.
+ * is the staked total — delegated balance plus claimable bond-denom rewards (base units) — which is
+ * the single source of truth for both the DeFi row and the portfolio total (issue #4763). It feeds
+ * the native coin's DeFi balance so an active delegation no longer shows as $0.00.
  *
  * Unlike the THORChain / Maya / Tron [com.vultisig.wallet.data.blockchain.DeFiService]
  * implementations this is **chain-aware**: Terra and TerraClassic share the same bech32 address, so
@@ -37,12 +37,13 @@ class CosmosStakingDeFiBalanceService(
     ): List<DeFiBalance> {
         val coin = nativeCoin(chain) ?: return emptyList()
         return try {
-            val total =
+            val delegated =
                 cosmosStakingService.fetchDelegations(chain, address).fold(BigInteger.ZERO) {
                     acc,
                     delegation ->
                     acc + (delegation.balance.amount.toBigIntegerOrNull() ?: BigInteger.ZERO)
                 }
+            val total = delegated + claimableRewards(chain, address)
             persistStakedBalance(vaultId, coin, total)
             balanceOf(chain, coin, total)
         } catch (e: CancellationException) {
@@ -56,6 +57,32 @@ class CosmosStakingDeFiBalanceService(
             emptyList()
         }
     }
+
+    /**
+     * Claimable bond-denom rewards in base units, folded into the staked total so the DeFi row
+     * reflects delegated + rewards (issue #4763). Rewards arrive as `cosmos.Dec` strings
+     * (fractional base units) so floor to whole base units; count only the bond denom, since Terra
+     * Classic LCDs sometimes return legacy stability-tax denoms that must not inflate the native
+     * staked total. A failed rewards read degrades to zero so the delegated total is still
+     * reported.
+     */
+    private suspend fun claimableRewards(chain: Chain, address: String): BigInteger =
+        try {
+            val bondDenom = CosmosStakingConfig.entryFor(chain).bondDenom
+            cosmosStakingService
+                .fetchDelegatorRewards(chain, address)
+                .rewards
+                .flatMap { it.reward }
+                .filter { it.denom == bondDenom }
+                .fold(BigInteger.ZERO) { acc, coin ->
+                    acc + (coin.amount.toBigDecimalOrNull()?.toBigInteger() ?: BigInteger.ZERO)
+                }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "CosmosStakingDeFiBalanceService: rewards failed for %s", chain.raw)
+            BigInteger.ZERO
+        }
 
     suspend fun getCacheDeFiBalance(chain: Chain, vaultId: String): List<DeFiBalance> {
         val coin = nativeCoin(chain) ?: return emptyList()
