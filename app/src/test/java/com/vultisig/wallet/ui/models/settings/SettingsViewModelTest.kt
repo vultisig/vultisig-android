@@ -133,25 +133,27 @@ internal class SettingsViewModelTest {
             coVerify { navigator.route(Route.CustomRpcList(VAULT_ID)) }
         }
 
-    /** Below Silver, the Custom RPC entry routes to the discount-tiers upsell. */
+    /** Below Silver, the Custom RPC entry shows the Silver upsell dialog. */
     @Test
-    fun `clicking CustomRpc below Silver navigates to DiscountTiers`() =
+    fun `clicking CustomRpc below Silver shows the upsell dialog`() =
         runTest(testDispatcher) {
             coEvery { getDiscountBps.hasReachedSilverTier(VAULT_ID) } returns false
             val vm = createViewModel()
             vm.onSettingsItemClick(SettingsItem.CustomRpc)
-            coVerify { navigator.route(Route.DiscountTiers(VAULT_ID)) }
+            vm.state.value.showCustomRpcUpsell.shouldBeTrue()
+            coVerify(exactly = 0) { navigator.route(Route.CustomRpcList(VAULT_ID)) }
         }
 
     /** A failed tier lookup falls back to the upsell rather than opening the list. */
     @Test
-    fun `clicking CustomRpc with failing tier lookup falls back to DiscountTiers`() =
+    fun `clicking CustomRpc with failing tier lookup falls back to the upsell dialog`() =
         runTest(testDispatcher) {
             coEvery { getDiscountBps.hasReachedSilverTier(VAULT_ID) } throws
                 RuntimeException("boom")
             val vm = createViewModel()
             vm.onSettingsItemClick(SettingsItem.CustomRpc)
-            coVerify { navigator.route(Route.DiscountTiers(VAULT_ID)) }
+            vm.state.value.showCustomRpcUpsell.shouldBeTrue()
+            coVerify(exactly = 0) { navigator.route(Route.CustomRpcList(VAULT_ID)) }
         }
 
     /** Verifies clicking PreventScreenshots calls setEnabled with toggled value. */
