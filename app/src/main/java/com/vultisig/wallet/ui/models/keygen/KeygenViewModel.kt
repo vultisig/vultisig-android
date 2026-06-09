@@ -347,7 +347,6 @@ constructor(
                 _state.update {
                     it.copy(
                         error = resolveKeygenErrorFromException(e),
-                        keygenState = null,
                         isSuccess = false,
                         progress = 0f,
                     )
