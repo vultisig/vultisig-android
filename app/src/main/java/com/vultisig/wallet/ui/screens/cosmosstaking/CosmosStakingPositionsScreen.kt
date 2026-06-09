@@ -1,11 +1,5 @@
 package com.vultisig.wallet.ui.screens.cosmosstaking
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -35,8 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -56,6 +48,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.clickOnce
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.containers.ContainerType
 import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
@@ -579,12 +572,11 @@ private fun PositionRow(
 
 /**
  * Placeholder delegation card shown during the first cold load (#4815). Mirrors the [PositionRow]
- * silhouette — avatar + two text lines + an amount bar — with a shimmering brush so the wait reads
- * as "loading" rather than "stuck".
+ * silhouette — avatar + two text lines + an amount bar — using the shared [UiPlaceholderLoader] so
+ * the wait reads as "loading" and stays visually consistent with the other DeFi tabs.
  */
 @Composable
 private fun StakingPositionSkeleton() {
-    val brush = rememberShimmerBrush()
     Column(
         modifier =
             Modifier.fillMaxWidth()
@@ -598,62 +590,19 @@ private fun StakingPositionSkeleton() {
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(brush))
+            UiPlaceholderLoader(modifier = Modifier.size(40.dp).clip(CircleShape))
             UiSpacer(size = 12.dp)
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                ShimmerBar(brush = brush, widthFraction = 0.5f, height = 14.dp)
-                ShimmerBar(brush = brush, widthFraction = 0.3f, height = 12.dp)
+                UiPlaceholderLoader(modifier = Modifier.fillMaxWidth(0.5f).height(14.dp))
+                UiPlaceholderLoader(modifier = Modifier.fillMaxWidth(0.3f).height(12.dp))
             }
         }
-        ShimmerBar(brush = brush, widthFraction = 1f, height = 12.dp)
-        ShimmerBar(brush = brush, widthFraction = 0.6f, height = 12.dp)
+        UiPlaceholderLoader(modifier = Modifier.fillMaxWidth().height(12.dp))
+        UiPlaceholderLoader(modifier = Modifier.fillMaxWidth(0.6f).height(12.dp))
     }
-}
-
-@Composable
-private fun ShimmerBar(brush: Brush, widthFraction: Float, height: androidx.compose.ui.unit.Dp) {
-    Box(
-        modifier =
-            Modifier.fillMaxWidth(widthFraction)
-                .height(height)
-                .clip(RoundedCornerShape(4.dp))
-                .background(brush)
-    )
-}
-
-/**
- * Horizontally-sweeping shimmer gradient between the card surface and a slightly lighter border
- * tone. Self-contained so the staking screen doesn't depend on a shared skeleton component (none
- * exists yet).
- */
-@Composable
-private fun rememberShimmerBrush(): Brush {
-    val transition = rememberInfiniteTransition(label = "staking-skeleton")
-    val translate by
-        transition.animateFloat(
-            initialValue = 0f,
-            targetValue = 1000f,
-            animationSpec =
-                infiniteRepeatable(
-                    animation = tween(durationMillis = 1200, easing = LinearEasing),
-                    repeatMode = RepeatMode.Restart,
-                ),
-            label = "staking-skeleton-translate",
-        )
-    val colors =
-        listOf(
-            Theme.v2.colors.backgrounds.secondary,
-            Theme.v2.colors.border.normal,
-            Theme.v2.colors.backgrounds.secondary,
-        )
-    return Brush.linearGradient(
-        colors = colors,
-        start = Offset(x = translate - 300f, y = 0f),
-        end = Offset(x = translate, y = 0f),
-    )
 }
 
 @Composable

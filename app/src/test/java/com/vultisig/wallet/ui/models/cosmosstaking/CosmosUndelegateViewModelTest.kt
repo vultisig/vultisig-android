@@ -98,7 +98,7 @@ internal class CosmosUndelegateViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun vm(stakedAmount: String? = null) =
+    private fun vm(stakedAmount: String? = null, ticker: String? = null) =
         CosmosUndelegateViewModel(
             savedStateHandle =
                 SavedStateHandle(
@@ -107,6 +107,7 @@ internal class CosmosUndelegateViewModelTest {
                         "chainId" to "Terra",
                         "validatorAddress" to validatorAddr,
                         "stakedAmount" to stakedAmount,
+                        "ticker" to ticker,
                     )
                 ),
             vaultRepository = vaultRepository,
@@ -146,6 +147,15 @@ internal class CosmosUndelegateViewModelTest {
         val model = vm(stakedAmount = "7")
         assertEquals(0, BigDecimal("2").compareTo(model.state.value.stakedBalance))
     }
+
+    @Test
+    fun `the carried ticker seeds the title on the first frame so it never flashes Token`() =
+        runTest {
+            // #4822: the ticker is carried through the route, so the form shows the real symbol
+            // immediately rather than the "Token" placeholder until the async coin load lands.
+            val model = vm(stakedAmount = "7", ticker = "LUNA")
+            assertEquals("LUNA", model.state.value.ticker)
+        }
 
     @Test
     fun `amount exceeding the staked balance is rejected`() = runTest {

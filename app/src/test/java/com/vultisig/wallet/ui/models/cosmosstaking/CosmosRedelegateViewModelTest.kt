@@ -106,7 +106,10 @@ internal class CosmosRedelegateViewModelTest {
             votingPower = power,
         )
 
-    private fun vm(stakedAmount: String? = null): CosmosRedelegateViewModel =
+    private fun vm(
+        stakedAmount: String? = null,
+        ticker: String? = null,
+    ): CosmosRedelegateViewModel =
         CosmosRedelegateViewModel(
             savedStateHandle =
                 SavedStateHandle(
@@ -115,6 +118,7 @@ internal class CosmosRedelegateViewModelTest {
                         "chainId" to "Terra",
                         "validatorSrcAddress" to srcValidator,
                         "stakedAmount" to stakedAmount,
+                        "ticker" to ticker,
                     )
                 ),
             vaultRepository = vaultRepository,
@@ -154,6 +158,16 @@ internal class CosmosRedelegateViewModelTest {
         // The authoritative LCD read (5 LUNA) wins over the carried hint.
         assertEquals(0, BigDecimal("5").compareTo(model.state.value.stakedBalance))
     }
+
+    @Test
+    fun `the carried ticker seeds the title on the first frame so it never flashes Token`() =
+        runTest {
+            // #4822: the ticker is carried through the route, so the form shows the real symbol
+            // immediately rather than the "Token" placeholder until the async coin load lands.
+            coEvery { cosmosStakingService.fetchRedelegations(any(), any()) } returns emptyList()
+            val model = vm(stakedAmount = "9", ticker = "LUNA")
+            assertEquals("LUNA", model.state.value.ticker)
+        }
 
     @Test
     fun `cooldown blocks submit and surfaces the unlock message`() = runTest {

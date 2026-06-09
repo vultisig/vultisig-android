@@ -160,7 +160,11 @@ constructor(
         loadCoin()
     }
 
-    fun refresh() {
+    /**
+     * @param silent when true, reloads without flipping the pull-to-refresh spinner — used by the
+     *   resume reload so foregrounding the screen doesn't animate the spinner on every return.
+     */
+    fun refresh(silent: Boolean = false) {
         val chainId = chainId ?: return
         val chain =
             Chain.entries.firstOrNull { it.raw.equals(chainId, ignoreCase = true) }
@@ -174,7 +178,7 @@ constructor(
                     onRefreshFailed("Failed to load staking positions")
                 }
             ) {
-                _isRefreshing.value = true
+                if (!silent) _isRefreshing.value = true
                 try {
                     val coin = coin ?: return@safeLaunch
                     val cacheKey = snapshotKey(chain, coin.address)
@@ -435,16 +439,14 @@ constructor(
     }
 
     /**
-     * Re-fetch on screen resume. The first resume is a no-op — `coin` isn't loaded yet and the
-     * initial fetch is already driven by [setData]/[loadCoin]. A later resume means the user
-     * returned from a completed staking action (delegate / undelegate / redelegate / claim), so we
-     * reload to reflect the new Total Staked and positions without a manual pull-to-refresh
-     * (#4815). [refresh] re-seeds from the cached snapshot first, so this never flashes an empty
-     * screen.
+     * Re-fetch on screen resume to reflect a completed staking action (delegate / undelegate /
+     * redelegate / claim). The first resume is a no-op — the initial fetch is already driven by
+     * [setData]/[loadCoin]. Runs silently (no pull-to-refresh spinner), mirroring TronDeFiPositions
+     * (#4815).
      */
     fun onScreenResumed() {
         if (coin == null) return
-        refresh()
+        refresh(silent = true)
     }
 
     fun stakeMore() {
@@ -469,8 +471,9 @@ constructor(
                     chainId = chainId,
                     validatorAddress = position.validatorAddress,
                     // Prefill the form instantly from the tapped position; the VM's LCD re-fetch
-                    // still corrects it if the staked amount changed (#4815).
+                    // still corrects the amount if the staked balance changed (#4822).
                     stakedAmount = position.stakedAmount.toPlainString(),
+                    ticker = _state.value.ticker,
                 ),
                 popOptionsForStaking(Route.CosmosStakingUndelegate::class.java),
             )
@@ -487,9 +490,8 @@ constructor(
                     vaultId = vaultId,
                     chainId = chainId,
                     validatorSrcAddress = position.validatorAddress,
-                    // Prefill the form instantly from the tapped position; the VM's LCD re-fetch
-                    // still corrects it if the staked amount changed (#4815).
                     stakedAmount = position.stakedAmount.toPlainString(),
+                    ticker = _state.value.ticker,
                 ),
                 popOptionsForStaking(Route.CosmosStakingRedelegate::class.java),
             )

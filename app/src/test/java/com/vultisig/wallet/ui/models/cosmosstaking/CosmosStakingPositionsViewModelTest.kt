@@ -439,4 +439,16 @@ internal class CosmosStakingPositionsViewModelTest {
         model.onScreenResumed()
         coVerify(exactly = 0) { cosmosStakingService.fetchDelegations(any(), any()) }
     }
+
+    @Test
+    fun `onScreenResumed reloads silently without animating the pull-to-refresh spinner`() =
+        runTest {
+            // Returning to the foreground reloads, but the spinner must stay idle — it should only
+            // animate on an explicit pull, not on every app resume while the screen is retained.
+            val model = vm()
+            model.onScreenResumed()
+            assertEquals(false, model.isRefreshing.value)
+            // The reload still happens: setData's initial load + the resume reload.
+            coVerify(atLeast = 2) { cosmosStakingService.fetchDelegations(any(), any()) }
+        }
 }

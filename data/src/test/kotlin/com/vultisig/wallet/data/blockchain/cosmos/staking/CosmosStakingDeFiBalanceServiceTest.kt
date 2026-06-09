@@ -1,5 +1,7 @@
 package com.vultisig.wallet.data.blockchain.cosmos.staking
 
+import com.vultisig.wallet.data.blockchain.model.StakingDetails
+import com.vultisig.wallet.data.blockchain.model.StakingDetails.Companion.generateId
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
@@ -86,6 +88,57 @@ internal class CosmosStakingDeFiBalanceServiceTest {
 
         assertEquals(BigInteger.valueOf(4_250_000), saved.captured.stakeAmount)
         assertEquals(Coins.TerraClassic.LUNC.id, saved.captured.coin.id)
+    }
+
+    @Test
+    fun `persistStakedTotal updates the cache when a full unbond drops the total to zero`() =
+        runTest {
+            // Full unbond: the positions VM persists a zero total. The cache already holds the old
+            // non-zero stake, so the differing-amount branch must fire an update (not a save) to
+            // clear the stale DeFi balance (#4815).
+            coEvery { stakingDetailsRepository.getStakingDetailsByCoindId(VAULT_ID, any()) } returns
+                StakingDetails(
+                    id = Coins.TerraClassic.LUNC.generateId(),
+                    coin = Coins.TerraClassic.LUNC,
+                    stakeAmount = BigInteger.valueOf(4_250_000),
+                    apr = null,
+                    estimatedRewards = null,
+                    nextPayoutDate = null,
+                    rewards = null,
+                    rewardsCoin = null,
+                )
+            val updated = slot<StakingDetails>()
+            coJustRun { stakingDetailsRepository.updateStakingDetails(VAULT_ID, capture(updated)) }
+
+            service.persistStakedTotal(Chain.TerraClassic, VAULT_ID, BigInteger.ZERO)
+
+            assertEquals(BigInteger.ZERO, updated.captured.stakeAmount)
+            io.mockk.coVerify(exactly = 0) {
+                stakingDetailsRepository.saveStakingDetails(any(), any())
+            }
+        }
+
+    @Test
+    fun `persistStakedTotal is a no-op when the cached total already matches`() = runTest {
+        // No write when nothing changed — avoids churning the cache on every silent resume reload.
+        coEvery { stakingDetailsRepository.getStakingDetailsByCoindId(VAULT_ID, any()) } returns
+            StakingDetails(
+                id = Coins.TerraClassic.LUNC.generateId(),
+                coin = Coins.TerraClassic.LUNC,
+                stakeAmount = BigInteger.valueOf(4_250_000),
+                apr = null,
+                estimatedRewards = null,
+                nextPayoutDate = null,
+                rewards = null,
+                rewardsCoin = null,
+            )
+
+        service.persistStakedTotal(Chain.TerraClassic, VAULT_ID, BigInteger.valueOf(4_250_000))
+
+        io.mockk.coVerify(exactly = 0) {
+            stakingDetailsRepository.saveStakingDetails(any(), any())
+            stakingDetailsRepository.updateStakingDetails(any(), any())
+        }
     }
 
     @Test
