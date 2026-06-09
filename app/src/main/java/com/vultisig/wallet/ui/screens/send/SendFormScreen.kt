@@ -137,8 +137,8 @@ internal fun NavGraphBuilder.sendScreen(navController: NavHostController) {
 private fun SendFormScreen(
     state: SendFormUiModel,
     addressFieldState: TextFieldState,
-    addressFocusRequester: FocusRequester = FocusRequester(),
-    amountFocusRequester: FocusRequester = FocusRequester(),
+    addressFocusRequester: FocusRequester,
+    amountFocusRequester: FocusRequester,
     tokenAmountFieldState: TextFieldState,
     fiatAmountFieldState: TextFieldState,
     memoFieldState: TextFieldState,
@@ -213,6 +213,7 @@ private fun SendFormScreen(
                 DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
                 DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
                 DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
+                DeFiNavActions.DEPOSIT_USDC_CIRCLE -> stringResource(R.string.usdc_deposit_title)
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE -> stringResource(R.string.withdraw)
                 DeFiNavActions.FREEZE_TRX -> stringResource(R.string.tron_freeze_screen_title)
                 DeFiNavActions.UNFREEZE_TRX -> stringResource(R.string.tron_unfreeze_screen_title)
@@ -377,145 +378,110 @@ private fun SendFormContent(
             onAutoCompoundCheckedChange = onAutoCompoundCheckedChange,
         )
 
-    // send asset
-    if (state.defiType == null) {
-        FoldableAssetWidget(
-            state = state,
-            onExpandSection = onExpandSection,
-            onSelectNetworkRequest = onSelectNetworkRequest,
-            onNetworkDragCancel = onNetworkDragCancel,
-            onNetworkDrag = onNetworkDrag,
-            onNetworkDragStart = onNetworkDragStart,
-            onNetworkDragEnd = onNetworkDragEnd,
-            onNetworkLongPressStarted = onNetworkLongPressStarted,
-            onSelectTokenRequest = onSelectTokenRequest,
-            onAssetDragCancel = onAssetDragCancel,
-            onAssetDrag = onAssetDrag,
-            onAssetDragStart = onAssetDragStart,
-            onAssetDragEnd = onAssetDragEnd,
-            onAssetLongPressStarted = onAssetLongPressStarted,
-        )
+    when (state.defiType) {
+        // send asset
+        null -> {
+            FoldableAssetWidget(
+                state = state,
+                onExpandSection = onExpandSection,
+                onSelectNetworkRequest = onSelectNetworkRequest,
+                onNetworkDragCancel = onNetworkDragCancel,
+                onNetworkDrag = onNetworkDrag,
+                onNetworkDragStart = onNetworkDragStart,
+                onNetworkDragEnd = onNetworkDragEnd,
+                onNetworkLongPressStarted = onNetworkLongPressStarted,
+                onSelectTokenRequest = onSelectTokenRequest,
+                onAssetDragCancel = onAssetDragCancel,
+                onAssetDrag = onAssetDrag,
+                onAssetDragStart = onAssetDragStart,
+                onAssetDragEnd = onAssetDragEnd,
+                onAssetLongPressStarted = onAssetLongPressStarted,
+            )
 
-        FoldableDestinationAddressWidget(
-            state = state,
-            onExpandSection = onExpandSection,
-            addressFieldState = addressFieldState,
-            addressFocusRequester = addressFocusRequester,
-            onDstAddressLostFocus = onDstAddressLostFocus,
-            onSetOutputAddress = onSetOutputAddress,
-            onScanDstAddressRequest = onScanDstAddressRequest,
-            onAddressBookClick = onAddressBookClick,
-        )
-
-        FoldableAmountWidget(
-            state = state,
-            addressFieldState = addressFieldState,
-            onExpandSection = onExpandSection,
-            onGasSettingsClick = onGasSettingsClick,
-            focusManager = focusManager,
-            onSend = onSend,
-            amountInputs = amountInputs,
-            optionalInputs = optionalInputs,
-        )
-
-        UiSpacer(24.dp)
-
-        AnimatedContent(targetState = state.reapingError, label = "error message") { errorMessage ->
-            if (errorMessage != null) {
-                Column {
-                    UiSpacer(size = 8.dp)
-                    Text(
-                        text = errorMessage.asString(),
-                        color = Theme.v2.colors.backgrounds.amber,
-                        style = Theme.menlo.body1,
-                    )
-                }
-            }
-        }
-    } else if (state.defiType == DeFiNavActions.BOND || state.defiType == DeFiNavActions.UNBOND) {
-        FoldableBondDestinationAddress(
-            state = state,
-            onExpandSection = onExpandSection,
-            addressFieldState = addressFieldState,
-            addressFocusRequester = addressFocusRequester,
-            providerFieldState = providerFieldState,
-            onDstAddressLostFocus = onDstAddressLostFocus,
-            onSetOutputAddress = onSetOutputAddress,
-            onScanDstAddressRequest = onScanDstAddressRequest,
-            onAddressBookClick = onAddressBookClick,
-            onSetOutputProvider = onSetProvider,
-            onScanProviderRequest = onScanProvider,
-            onAddressProviderBookClick = onProviderBookClick,
-        )
-
-        FoldableAmountWidget(
-            state = state,
-            addressFieldState = addressFieldState,
-            onExpandSection = onExpandSection,
-            onGasSettingsClick = onGasSettingsClick,
-            focusManager = focusManager,
-            onSend = onSend,
-            amountInputs = amountInputs,
-            optionalInputs = optionalInputs,
-        )
-
-        UiSpacer(24.dp)
-
-        AnimatedContent(targetState = state.reapingError, label = "error message") { errorMessage ->
-            if (errorMessage != null) {
-                Column {
-                    UiSpacer(size = 8.dp)
-                    Text(
-                        text = errorMessage.asString(),
-                        color = Theme.v2.colors.backgrounds.amber,
-                        style = Theme.menlo.body1,
-                    )
-                }
-            }
-        }
-    } else if (
-        state.defiType == DeFiNavActions.STAKE_RUJI ||
-            state.defiType == DeFiNavActions.UNSTAKE_RUJI ||
-            state.defiType == DeFiNavActions.STAKE_TCY ||
-            state.defiType == DeFiNavActions.UNSTAKE_STCY ||
-            state.defiType == DeFiNavActions.STAKE_STCY ||
-            state.defiType == DeFiNavActions.UNSTAKE_TCY ||
-            state.defiType == DeFiNavActions.MINT_YRUNE ||
-            state.defiType == DeFiNavActions.MINT_YTCY ||
-            state.defiType == DeFiNavActions.REDEEM_YRUNE ||
-            state.defiType == DeFiNavActions.REDEEM_YTCY ||
-            state.defiType == DeFiNavActions.WITHDRAW_RUJI ||
-            state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE ||
-            state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
-            state.defiType == DeFiNavActions.FREEZE_TRX ||
-            state.defiType == DeFiNavActions.UNFREEZE_TRX
-    ) {
-        val resourceType = state.tronResourceType
-        if (resourceType != null) {
-            TronResourceTypeTab(
-                selected = resourceType,
-                onSelectionChange = onTronResourceTypeChange,
-                modifier = Modifier.padding(horizontal = 16.dp),
+            FoldableDestinationAddressWidget(
+                state = state,
+                onExpandSection = onExpandSection,
+                addressFieldState = addressFieldState,
+                addressFocusRequester = addressFocusRequester,
+                onDstAddressLostFocus = onDstAddressLostFocus,
+                onSetOutputAddress = onSetOutputAddress,
+                onScanDstAddressRequest = onScanDstAddressRequest,
+                onAddressBookClick = onAddressBookClick,
             )
         }
-        if (state.hasTronFrozenBalancesError) {
-            Text(
-                text = stringResource(R.string.tron_frozen_balances_error),
-                color = Theme.v2.colors.alerts.error,
-                style = Theme.brockmann.supplementary.footnote,
-                modifier = Modifier.padding(horizontal = 16.dp),
+
+        DeFiNavActions.BOND,
+        DeFiNavActions.UNBOND -> {
+            FoldableBondDestinationAddress(
+                state = state,
+                onExpandSection = onExpandSection,
+                addressFieldState = addressFieldState,
+                addressFocusRequester = addressFocusRequester,
+                providerFieldState = providerFieldState,
+                onDstAddressLostFocus = onDstAddressLostFocus,
+                onSetOutputAddress = onSetOutputAddress,
+                onScanDstAddressRequest = onScanDstAddressRequest,
+                onAddressBookClick = onAddressBookClick,
+                onSetOutputProvider = onSetProvider,
+                onScanProviderRequest = onScanProvider,
+                onAddressProviderBookClick = onProviderBookClick,
             )
         }
-        FoldableAmountWidget(
-            state = state,
-            addressFieldState = addressFieldState,
-            onExpandSection = onExpandSection,
-            onGasSettingsClick = onGasSettingsClick,
-            focusManager = focusManager,
-            onSend = onSend,
-            amountInputs = amountInputs,
-            optionalInputs = optionalInputs,
-        )
+
+        else -> {
+            val resourceType = state.tronResourceType
+            if (resourceType != null) {
+                TronResourceTypeTab(
+                    selected = resourceType,
+                    onSelectionChange = onTronResourceTypeChange,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+            if (state.hasTronFrozenBalancesError) {
+                Text(
+                    text = stringResource(R.string.tron_frozen_balances_error),
+                    color = Theme.v2.colors.alerts.error,
+                    style = Theme.brockmann.supplementary.footnote,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+        }
+    }
+
+    FoldableAmountWidget(
+        state = state,
+        addressFieldState = addressFieldState,
+        onExpandSection = onExpandSection,
+        onGasSettingsClick = onGasSettingsClick,
+        focusManager = focusManager,
+        onSend = onSend,
+        amountInputs = amountInputs,
+        optionalInputs = optionalInputs,
+    )
+
+    UiSpacer(24.dp)
+
+    ReapingErrorMessage(error = state.reapingError)
+}
+
+/**
+ * Displays the amount-validation (reaping) error returned by the view model.
+ *
+ * @param error the error to show, or null when the amount is valid.
+ */
+@Composable
+private fun ReapingErrorMessage(error: UiText?) {
+    AnimatedContent(targetState = error, label = "error message") { errorMessage ->
+        if (errorMessage != null) {
+            Column {
+                UiSpacer(size = 8.dp)
+                Text(
+                    text = errorMessage.asString(),
+                    color = Theme.v2.colors.backgrounds.amber,
+                    style = Theme.menlo.body1,
+                )
+            }
+        }
     }
 }
 
@@ -531,6 +497,8 @@ private fun SendScreenPreview() {
                 expandedSection = SendSections.Amount,
             ),
         addressFieldState = TextFieldState(),
+        addressFocusRequester = remember { FocusRequester() },
+        amountFocusRequester = remember { FocusRequester() },
         tokenAmountFieldState = TextFieldState("50"),
         fiatAmountFieldState = TextFieldState("$2,000.56"),
         memoFieldState = TextFieldState(),
