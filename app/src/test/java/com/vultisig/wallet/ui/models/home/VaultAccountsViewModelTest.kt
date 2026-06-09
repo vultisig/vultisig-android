@@ -14,7 +14,7 @@ import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
-import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
+import com.vultisig.wallet.data.models.calculateAccountsPartialFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressBalancesUpdate
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
@@ -678,6 +678,39 @@ internal class VaultAccountsViewModelTest {
         }
 
     /**
+     * Regression for #4768: within a single chain holding several tokens, a still-pending token
+     * must not blank the whole row. The partial total counts the resolved tokens, so the row must
+     * too — here Ethereum's native token resolves to $10 while an ERC-20 is still pending; the row
+     * reads $10 (not blank) and equals its contribution to the total.
+     */
+    @Test
+    fun `multi-token row shows resolved sum while one token is pending`() =
+        runTest(testDispatcher) {
+            val ethPartial =
+                buildMultiTokenAddress(
+                    Chain.Ethereum,
+                    "0xeth",
+                    nativeFiat = BigDecimal("10"),
+                    tokenFiat = null,
+                )
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddressBalances("vault-1") } returns
+                flowOf(AddressBalancesUpdate(listOf(ethPartial), isComplete = true))
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            // The pending ERC-20 does not blank the row; it shows the resolved native $10.
+            vm.uiState.value.accounts.first { it.model.chain == Chain.Ethereum }.fiatAmount shouldBe
+                "$10"
+            // And the row equals its contribution to the headline total.
+            vm.uiState.value.totalFiatValue shouldBe "$10"
+        }
+
+    /**
      * Regression for #4768: switching vaults must not leak the previous vault's total or rows. When
      * vault-2's first emission resolves nothing, the total/row must reset rather than carrying
      * vault-1's $10 forward via the retain logic.
@@ -685,8 +718,10 @@ internal class VaultAccountsViewModelTest {
     @Test
     fun `switching vault clears the previous vault total and rows`() =
         runTest(testDispatcher) {
-            val vault1Eth = buildTestAddress(Chain.Ethereum, "0xeth1", fiat = BigDecimal("10"))
-            val vault2EthPending = buildTestAddress(Chain.Ethereum, "0xeth2", fiat = null)
+            // Same chain + address in both vaults so their retainKey collides — only the
+            // vault-change reset (not a key mismatch) can stop vault-1's $10 from leaking through.
+            val vault1Eth = buildTestAddress(Chain.Ethereum, "0xeth", fiat = BigDecimal("10"))
+            val vault2EthPending = buildTestAddress(Chain.Ethereum, "0xeth", fiat = null)
 
             every { lastOpenedVaultRepository.lastOpenedVaultId } returns
                 flowOf("vault-1", "vault-2")
@@ -743,7 +778,9 @@ internal class VaultAccountsViewModelTest {
         uiState.value.accounts.first { it.model.chain == Chain.Solana }
 
     /**
-     * Maps each [Address] to a UiModel whose fiat is null exactly when the chain hasn't resolved.
+     * Maps each [Address] to a UiModel using the same lenient per-row fold as production
+     * (`calculateAccountsPartialFiatValue`): fiat is null only when nothing in the address has
+     * resolved, and a partially-resolved address sums its resolved tokens (#4768).
      */
     private fun stubBalanceMappers() {
         coEvery { addressToUiModelMapper(any()) } answers
@@ -757,7 +794,7 @@ internal class VaultAccountsViewModelTest {
                     address = addr.address,
                     nativeTokenAmount = native.tokenValue?.let { "1.0" },
                     fiatAmount =
-                        addr.accounts.calculateAccountsTotalFiatValue()?.let {
+                        addr.accounts.calculateAccountsPartialFiatValue()?.let {
                             "$" + it.value.toPlainString()
                         },
                     assetsSize = addr.accounts.size,
@@ -792,6 +829,49 @@ internal class VaultAccountsViewModelTest {
                 price = fiat?.let { FiatValue(value = it, currency = "USD") },
             )
         return Address(chain = chain, address = address, accounts = listOf(account))
+    }
+
+    /**
+     * Builds an [Address] with a resolved native account plus a second (ERC-20-style) token whose
+     * fiat may be pending, to exercise the lenient per-row fold (#4768).
+     */
+    private fun buildMultiTokenAddress(
+        chain: Chain,
+        address: String,
+        nativeFiat: BigDecimal,
+        tokenFiat: BigDecimal?,
+    ): Address {
+        fun coin(ticker: String, native: Boolean) =
+            Coin(
+                chain = chain,
+                ticker = ticker,
+                logo = "",
+                address = address,
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "",
+                contractAddress = if (native) "" else "0xtoken",
+                isNativeToken = native,
+            )
+
+        fun account(coin: Coin, fiat: BigDecimal?) =
+            Account(
+                token = coin,
+                tokenValue =
+                    fiat?.let { TokenValue(value = BigInteger.ONE, unit = coin.ticker, 18) },
+                fiatValue = fiat?.let { FiatValue(value = it, currency = "USD") },
+                price = fiat?.let { FiatValue(value = it, currency = "USD") },
+            )
+
+        return Address(
+            chain = chain,
+            address = address,
+            accounts =
+                listOf(
+                    account(coin(chain.feeUnit, native = true), nativeFiat),
+                    account(coin("TKN", native = false), tokenFiat),
+                ),
+        )
     }
 
     private fun buildTestAddress(chain: Chain, address: String): Address {

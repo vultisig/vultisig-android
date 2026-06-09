@@ -54,8 +54,19 @@ fun List<Address>.calculateAddressesTotalFiatValue(): FiatValue? =
  * non-USD portfolio is labelled correctly (mixed-currency lists were never supported by either
  * fold).
  */
-fun List<Address>.calculateAddressesPartialFiatValue(): FiatValue? {
-    val resolved = this.flatMap { it.accounts }.mapNotNull { it.fiatValue }
+fun List<Address>.calculateAddressesPartialFiatValue(): FiatValue? =
+    this.flatMap { it.accounts }.calculateAccountsPartialFiatValue()
+
+/**
+ * Lenient per-address total mirroring [calculateAddressesPartialFiatValue]: sums each account's
+ * resolved fiat value and skips the ones still pending, returning null only when nothing in the
+ * address has loaded. The home row mapper uses this so a row's fiat equals exactly its contribution
+ * to the partial portfolio total — a chain holding several tokens with one still pending no longer
+ * feeds the headline while its row blanks (the strict [calculateAccountsTotalFiatValue] would null
+ * the whole row). See issue #4768.
+ */
+fun List<Account>.calculateAccountsPartialFiatValue(): FiatValue? {
+    val resolved = this.mapNotNull { it.fiatValue }
     if (resolved.isEmpty()) return null
     return resolved.fold(FiatValue(BigDecimal.ZERO, resolved.first().currency)) { acc, fiatValue ->
         FiatValue(acc.value + fiatValue.value, fiatValue.currency)

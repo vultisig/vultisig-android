@@ -2,7 +2,7 @@ package com.vultisig.wallet.ui.models.mappers
 
 import com.vultisig.wallet.data.mappers.SuspendMapperFunc
 import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
+import com.vultisig.wallet.data.models.calculateAccountsPartialFiatValue
 import com.vultisig.wallet.data.models.logo
 import com.vultisig.wallet.ui.models.AccountUiModel
 import javax.inject.Inject
@@ -27,8 +27,11 @@ constructor(
             logo = if (isDefiProvider) defiChain.logo else from.chain.logo,
             address = from.address,
             nativeTokenAmount = nativeAccount.tokenValue?.let(mapTokenValueToStringWithUnitMapper),
+            // Lenient sum (skips still-pending tokens) so the row's fiat equals exactly its
+            // contribution to the partial portfolio total — a multi-token chain with one token
+            // pending no longer feeds the headline while the whole row blanks (#4768).
             fiatAmount =
-                from.accounts.calculateAccountsTotalFiatValue()?.let {
+                from.accounts.calculateAccountsPartialFiatValue()?.let {
                     fiatValueToStringMapper(it)
                 },
             assetsSize = from.accounts.size,
