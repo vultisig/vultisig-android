@@ -27,9 +27,11 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -106,15 +108,17 @@ internal class CosmosRedelegateViewModelTest {
             votingPower = power,
         )
 
-    private fun vm(): CosmosRedelegateViewModel =
+    private fun vm(ticker: String = "", stakedAmount: String = ""): CosmosRedelegateViewModel =
         CosmosRedelegateViewModel(
             savedStateHandle =
                 SavedStateHandle(
-                    mapOf(
-                        "vaultId" to "v1",
-                        "chainId" to "Terra",
-                        "validatorSrcAddress" to srcValidator,
-                    )
+                    buildMap {
+                        put("vaultId", "v1")
+                        put("chainId", "Terra")
+                        put("validatorSrcAddress", srcValidator)
+                        if (ticker.isNotEmpty()) put("ticker", ticker)
+                        if (stakedAmount.isNotEmpty()) put("stakedAmount", stakedAmount)
+                    }
                 ),
             vaultRepository = vaultRepository,
             cosmosStakingService = cosmosStakingService,
@@ -167,5 +171,55 @@ internal class CosmosRedelegateViewModelTest {
         assertTrue(visible.none { it.operatorAddress == srcValidator })
         // Dest 2 (900) before Dest 1 (300).
         assertEquals("terravaloper1dst2", visible.first().operatorAddress)
+    }
+
+    @Test
+    fun `route ticker and staked amount seed the form before the LCD load resolves`() = runTest {
+        // Hold the coin load open so we observe the first frame — the values carried on the route
+        // must already render (real ticker + staked balance + amount), not 0 / Token.
+        val gate = CompletableDeferred<Unit>()
+        coEvery { vaultRepository.get(any()) } coAnswers
+            {
+                gate.await()
+                Vault("v1", "v", "pk", "lp", coins = listOf(coin))
+            }
+        val model = vm(ticker = "LUNA", stakedAmount = "5")
+        assertEquals("LUNA", model.state.value.ticker)
+        assertEquals(0, BigDecimal("5").compareTo(model.state.value.stakedBalance))
+        assertEquals("5", model.amountFieldState.text.toString())
+        gate.complete(Unit)
+    }
+
+    @Test
+    fun `the async refresh keeps an amount the user typed during the load`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        coEvery { vaultRepository.get(any()) } coAnswers
+            {
+                gate.await()
+                Vault("v1", "v", "pk", "lp", coins = listOf(coin))
+            }
+        val model = vm(ticker = "LUNA", stakedAmount = "5")
+        model.amountFieldState.edit { replace(0, length, "2.5") }
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals("2.5", model.amountFieldState.text.toString())
+    }
+
+    @Test
+    fun `the async refresh updates an untouched amount to the on-chain balance`() = runTest {
+        // A slightly stale seed must be refreshed to the authoritative on-chain balance (5 LUNA
+        // from setUp) when the user hasn't touched the field.
+        coEvery { cosmosStakingService.fetchRedelegations(any(), any()) } returns emptyList()
+        val gate = CompletableDeferred<Unit>()
+        coEvery { vaultRepository.get(any()) } coAnswers
+            {
+                gate.await()
+                Vault("v1", "v", "pk", "lp", coins = listOf(coin))
+            }
+        val model = vm(ticker = "LUNA", stakedAmount = "1")
+        assertEquals("1", model.amountFieldState.text.toString())
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals("5", model.amountFieldState.text.toString())
     }
 }

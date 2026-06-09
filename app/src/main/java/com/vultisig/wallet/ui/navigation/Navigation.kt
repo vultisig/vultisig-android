@@ -462,23 +462,34 @@ internal sealed class Route {
      */
     @Serializable data class CosmosStakingDelegate(val vaultId: String, val chainId: String)
 
-    /** Undelegate flow — validator address comes from the active-delegation card. */
+    /**
+     * Undelegate flow — validator address comes from the active-delegation card. [ticker] and
+     * [stakedAmount] (human-decimal, plain string) are carried from the tapped position row so the
+     * form renders the real values on the first frame instead of flashing `0 Token`; the VM's async
+     * load then refreshes them from the LCD (#4822).
+     */
     @Serializable
     data class CosmosStakingUndelegate(
         val vaultId: String,
         val chainId: String,
         val validatorAddress: String,
+        val ticker: String = "",
+        val stakedAmount: String = "",
     )
 
     /**
      * Redelegate flow — src is fixed (the current delegation), dst is picked. The 21-day cooldown
-     * gate runs at submit-time inside the VM.
+     * gate runs at submit-time inside the VM. [ticker] and [stakedAmount] (human-decimal, plain
+     * string) are carried from the tapped position row to prefill the form and avoid the `0 Token`
+     * flash; the VM's async load then refreshes them (#4822).
      */
     @Serializable
     data class CosmosStakingRedelegate(
         val vaultId: String,
         val chainId: String,
         val validatorSrcAddress: String,
+        val ticker: String = "",
+        val stakedAmount: String = "",
     )
 
     /**

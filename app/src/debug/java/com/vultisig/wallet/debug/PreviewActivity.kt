@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,6 +56,7 @@ import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.buttons.FastSignPairedButtons
 import com.vultisig.wallet.ui.components.buttons.VsButton
+import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.hero.HeroCoinAmount
 import com.vultisig.wallet.ui.components.hero.HeroContent
@@ -63,6 +65,7 @@ import com.vultisig.wallet.ui.components.securityscanner.SecurityScannerBottomSh
 import com.vultisig.wallet.ui.components.v2.fastselection.SelectPopupUiModel
 import com.vultisig.wallet.ui.components.v2.fastselection.components.ChainSelectorPickerItem
 import com.vultisig.wallet.ui.components.v2.fastselection.components.SelectPopup
+import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.snackbar.rememberVsSnackbarState
 import com.vultisig.wallet.ui.models.AccountUiModel
 import com.vultisig.wallet.ui.models.ChainTokenUiModel
@@ -93,6 +96,10 @@ import com.vultisig.wallet.ui.models.swap.VerifySwapUiModel
 import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
+import com.vultisig.wallet.ui.screens.cosmosstaking.StakingAmountCard
+import com.vultisig.wallet.ui.screens.cosmosstaking.UnbondingLockNotice
+import com.vultisig.wallet.ui.screens.cosmosstaking.UnstakeAmountCard
+import com.vultisig.wallet.ui.screens.cosmosstaking.ValidatorReadonlyBlock
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
@@ -128,6 +135,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import java.math.BigDecimal
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -218,6 +226,10 @@ class PreviewActivity : ComponentActivity() {
                         CosmosStakingVerifyCtaPreview(newButtons = true, qbtc = true)
                     "sign_message_before" -> VerifySignMessageCtaPreview(newButtons = false)
                     "sign_message_after" -> VerifySignMessageCtaPreview(newButtons = true)
+                    "unstake_form_before" -> CosmosUnstakeFormPreview(prefilled = false)
+                    "unstake_form_after" -> CosmosUnstakeFormPreview(prefilled = true)
+                    "move_form_before" -> CosmosMoveFormPreview(prefilled = false)
+                    "move_form_after" -> CosmosMoveFormPreview(prefilled = true)
                     else -> SwapConfirmPreview()
                 }
             }
@@ -1800,6 +1812,95 @@ private fun KeysignSigningLuncPreview() {
         showSaveToAddressBook = false,
         coinLogoRes = R.drawable.lunc,
     )
+}
+
+@Composable
+private fun CosmosUnstakeFormPreview(prefilled: Boolean) {
+    // BEFORE (#4822): the route carried no ticker/amount, so the form opened on "Unstake Token"
+    // with a 0 balance and empty amount. AFTER: the tapped position's ticker + staked amount seed
+    // the form on the first frame.
+    val ticker = if (prefilled) "LUNC" else ""
+    val staked = if (prefilled) BigDecimal("1200000") else BigDecimal.ZERO
+    val amount = rememberTextFieldState(if (prefilled) "1200000" else "")
+    V2Scaffold(
+        title =
+            stringResource(
+                R.string.cosmos_staking_undelegate_title,
+                ticker.ifEmpty { stringResource(R.string.cosmos_staking_token_fallback) },
+            ),
+        onBackClick = {},
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp).padding(bottom = 80.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                ValidatorReadonlyBlock(
+                    moniker = "Allnodes",
+                    address = "terravaloper1allnodes00000000000000000000000000",
+                )
+                UnstakeAmountCard(
+                    ticker = ticker,
+                    amountFieldState = amount,
+                    available = staked,
+                    percentageSelected = 100,
+                    onPercentage = {},
+                    modifier = Modifier.weight(1f),
+                )
+                UnbondingLockNotice(
+                    message = "Funds are locked for 21 days. Available on Jun 30, 2026."
+                )
+            }
+            VsButton(
+                label = stringResource(R.string.cosmos_staking_continue),
+                variant = VsButtonVariant.CTA,
+                state = VsButtonState.Enabled,
+                onClick = {},
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CosmosMoveFormPreview(prefilled: Boolean) {
+    // BEFORE (#4822): "Move Token" with a 0 balance and empty amount until the LCD load landed.
+    // AFTER: the tapped position's ticker + staked amount seed the form immediately.
+    val ticker = if (prefilled) "LUNC" else ""
+    val staked = if (prefilled) BigDecimal("1200000") else BigDecimal.ZERO
+    val amount = rememberTextFieldState(if (prefilled) "1200000" else "")
+    V2Scaffold(
+        title =
+            stringResource(R.string.cosmos_staking_redelegate_title, ticker.ifEmpty { "Token" }),
+        onBackClick = {},
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize().padding(16.dp).padding(bottom = 80.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                ValidatorReadonlyBlock(
+                    moniker = "Allnodes",
+                    address = "terravaloper1allnodes00000000000000000000000000",
+                )
+                StakingAmountCard(
+                    ticker = ticker,
+                    amountFieldState = amount,
+                    available = staked,
+                    percentageSelected = 100,
+                    onPercentage = {},
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            VsButton(
+                label = stringResource(R.string.cosmos_staking_continue),
+                variant = VsButtonVariant.CTA,
+                state = VsButtonState.Enabled,
+                onClick = {},
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp),
+            )
+        }
+    }
 }
 
 @Composable

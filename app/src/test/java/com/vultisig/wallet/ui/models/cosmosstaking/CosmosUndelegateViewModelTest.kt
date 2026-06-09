@@ -23,9 +23,11 @@ import io.mockk.mockk
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -98,15 +100,17 @@ internal class CosmosUndelegateViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun vm() =
+    private fun vm(ticker: String = "", stakedAmount: String = "") =
         CosmosUndelegateViewModel(
             savedStateHandle =
                 SavedStateHandle(
-                    mapOf(
-                        "vaultId" to "v1",
-                        "chainId" to "Terra",
-                        "validatorAddress" to validatorAddr,
-                    )
+                    buildMap {
+                        put("vaultId", "v1")
+                        put("chainId", "Terra")
+                        put("validatorAddress", validatorAddr)
+                        if (ticker.isNotEmpty()) put("ticker", ticker)
+                        if (stakedAmount.isNotEmpty()) put("stakedAmount", stakedAmount)
+                    }
                 ),
             vaultRepository = vaultRepository,
             cosmosStakingService = cosmosStakingService,
@@ -135,5 +139,56 @@ internal class CosmosUndelegateViewModelTest {
         model.submit()
         assertNotNull(model.state.value.errorMessage)
         coVerify(exactly = 0) { navigator.route(any<Route.VerifyDeposit>()) }
+    }
+
+    @Test
+    fun `route ticker and staked amount seed the form before the LCD load resolves`() = runTest {
+        // Hold the coin load open so we observe the very first frame — the values carried on the
+        // route must already be rendered (real ticker + staked balance + amount), not 0 / Token.
+        val gate = CompletableDeferred<Unit>()
+        coEvery { vaultRepository.get(any()) } coAnswers
+            {
+                gate.await()
+                Vault("v1", "v", "pk", "lp", coins = listOf(coin))
+            }
+        val model = vm(ticker = "LUNA", stakedAmount = "2")
+        assertEquals("LUNA", model.state.value.ticker)
+        assertEquals(0, BigDecimal("2").compareTo(model.state.value.stakedBalance))
+        assertEquals("2", model.amountFieldState.text.toString())
+        gate.complete(Unit)
+    }
+
+    @Test
+    fun `the async refresh keeps an amount the user typed during the load`() = runTest {
+        // With the form interactive from the first frame, a user can edit the amount before the LCD
+        // load lands. The refresh must not stomp that input back to 100%.
+        val gate = CompletableDeferred<Unit>()
+        coEvery { vaultRepository.get(any()) } coAnswers
+            {
+                gate.await()
+                Vault("v1", "v", "pk", "lp", coins = listOf(coin))
+            }
+        val model = vm(ticker = "LUNA", stakedAmount = "2")
+        model.amountFieldState.edit { replace(0, length, "1.5") }
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals("1.5", model.amountFieldState.text.toString())
+    }
+
+    @Test
+    fun `the async refresh updates an untouched amount to the on-chain balance`() = runTest {
+        // The route can carry a slightly stale staked amount; if the user hasn't touched the field,
+        // the LCD load must refresh it to the authoritative on-chain balance (2 LUNA from setUp).
+        val gate = CompletableDeferred<Unit>()
+        coEvery { vaultRepository.get(any()) } coAnswers
+            {
+                gate.await()
+                Vault("v1", "v", "pk", "lp", coins = listOf(coin))
+            }
+        val model = vm(ticker = "LUNA", stakedAmount = "1")
+        assertEquals("1", model.amountFieldState.text.toString())
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals("2", model.amountFieldState.text.toString())
     }
 }

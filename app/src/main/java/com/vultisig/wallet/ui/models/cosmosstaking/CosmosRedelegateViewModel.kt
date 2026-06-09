@@ -136,10 +136,25 @@ constructor(
     val amountFieldState: TextFieldState = TextFieldState()
 
     private val _state =
-        MutableStateFlow(CosmosRedelegateUiState(srcValidatorAddress = route.validatorSrcAddress))
+        MutableStateFlow(
+            CosmosRedelegateUiState(
+                // Seeded from the tapped position row so the title, amount field and balance row
+                // render the real values on the first frame; the async load refreshes them (#4822).
+                ticker = route.ticker,
+                srcValidatorAddress = route.validatorSrcAddress,
+                stakedBalance = route.stakedAmount.toBigDecimalOrNull() ?: BigDecimal.ZERO,
+            )
+        )
     val state: StateFlow<CosmosRedelegateUiState> = _state.asStateFlow()
 
     private var coin: Coin? = null
+
+    /**
+     * The amount the VM last auto-filled (seed or post-load refresh). The async refresh only
+     * overwrites the field while it still holds this value, so a user who moves the slider during
+     * the ~1s load doesn't have their input clobbered when the fetch lands.
+     */
+    private var lastAutoFilledAmount: String = ""
 
     /**
      * The delegator's outstanding redelegations, fetched once by [loadCooldown]. Retained so the
@@ -154,6 +169,8 @@ constructor(
         // only assigned after that coroutine suspends on the vault read, so a parallel cooldown
         // fetch would observe `coin == null`, bail at its guard, and silently skip the 21-day
         // redelegation gate on first open. It is chained from loadCoinAndStakedBalance() instead.
+        // Pre-fill the amount to 100% of the seeded balance so the field shows it immediately.
+        prefillAmount(_state.value.stakedBalance)
         loadCoinAndStakedBalance()
         loadValidators()
     }
@@ -394,9 +411,10 @@ constructor(
                 matching?.balance?.amount?.toBigDecimalOrNull()?.movePointLeft(nativeCoin.decimal)
                     ?: BigDecimal.ZERO
 
-            // Default amount = 100% of staked, matching iOS pattern (slider type defaults to max).
-            amountFieldState.edit {
-                replace(0, length, stakedBalance.stripTrailingZeros().toPlainString())
+            // Refresh the 100% pre-fill from the authoritative on-chain balance, but only while the
+            // field still holds the value we seeded — never stomp an amount the user just entered.
+            if (amountFieldState.text.toString() == lastAutoFilledAmount) {
+                prefillAmount(stakedBalance)
             }
 
             val spendableBalance =
@@ -517,7 +535,16 @@ constructor(
                 .divide(BigDecimal(100), 8, java.math.RoundingMode.DOWN)
                 .stripTrailingZeros()
                 .toPlainString()
+        // User-driven (slider), so don't mark this as an auto-fill — that lets the in-flight load's
+        // refresh detect the field as user-touched and leave it alone.
         amountFieldState.edit { replace(0, length, amount) }
+    }
+
+    /** Writes [value] into the amount field and records it as the latest auto-fill. */
+    private fun prefillAmount(value: BigDecimal) {
+        val text = value.stripTrailingZeros().toPlainString()
+        amountFieldState.edit { replace(0, length, text) }
+        lastAutoFilledAmount = text
     }
 
     private fun setError(message: String) {
@@ -531,4 +558,6 @@ private fun SavedStateHandle.toRoute(): Route.CosmosStakingRedelegate =
         chainId = checkNotNull(get<String>("chainId")) { "chainId is required" },
         validatorSrcAddress =
             checkNotNull(get<String>("validatorSrcAddress")) { "validatorSrcAddress is required" },
+        ticker = get<String>("ticker").orEmpty(),
+        stakedAmount = get<String>("stakedAmount").orEmpty(),
     )

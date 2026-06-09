@@ -131,8 +131,9 @@ internal fun CosmosUndelegateScreen(viewModel: CosmosUndelegateViewModel = hiltV
  * subline and a 0–100% drag slider (with 25/50/75 tick stops), rather than the 25/50/75/Max chips
  * the Stake form uses. The slider is the primary control; the percentage drives the amount field.
  */
+// internal (not private) so PreviewActivity can render this card with mock state.
 @Composable
-private fun UnstakeAmountCard(
+internal fun UnstakeAmountCard(
     ticker: String,
     amountFieldState: TextFieldState,
     available: BigDecimal,

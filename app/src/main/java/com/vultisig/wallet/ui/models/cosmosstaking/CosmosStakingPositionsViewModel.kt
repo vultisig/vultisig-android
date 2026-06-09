@@ -430,6 +430,10 @@ constructor(
                     vaultId = vaultId,
                     chainId = chainId,
                     validatorAddress = position.validatorAddress,
+                    // Prefill so the form shows the real ticker + staked balance on the first frame
+                    // instead of flashing `0 Token` while the LCD load runs (#4822).
+                    ticker = coin?.ticker.orEmpty(),
+                    stakedAmount = position.stakedAmount.toPlainString(),
                 ),
                 popOptionsForStaking(Route.CosmosStakingUndelegate::class.java),
             )
@@ -446,6 +450,10 @@ constructor(
                     vaultId = vaultId,
                     chainId = chainId,
                     validatorSrcAddress = position.validatorAddress,
+                    // Prefill so the form shows the real ticker + staked balance on the first frame
+                    // instead of flashing `0 Token` while the LCD load runs (#4822).
+                    ticker = coin?.ticker.orEmpty(),
+                    stakedAmount = position.stakedAmount.toPlainString(),
                 ),
                 popOptionsForStaking(Route.CosmosStakingRedelegate::class.java),
             )
