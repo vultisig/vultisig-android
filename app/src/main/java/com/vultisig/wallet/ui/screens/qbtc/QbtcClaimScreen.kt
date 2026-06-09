@@ -64,9 +64,12 @@ import com.vultisig.wallet.ui.components.rive.RiveAnimation
 import com.vultisig.wallet.ui.components.v2.bottomsheets.V2BottomSheet
 import com.vultisig.wallet.ui.components.v3.V3Scaffold
 import com.vultisig.wallet.ui.models.keysign.TransactionStatus
+import com.vultisig.wallet.ui.models.peer.NetworkOption
+import com.vultisig.wallet.ui.models.peer.PeerDiscoveryUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUiState
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimUtxoUiModel
 import com.vultisig.wallet.ui.models.qbtc.QbtcClaimViewModel
+import com.vultisig.wallet.ui.screens.peer.PeerDiscoveryScreen
 import com.vultisig.wallet.ui.screens.send.FadingHorizontalDivider
 import com.vultisig.wallet.ui.screens.transaction.TransactionStatusRow
 import com.vultisig.wallet.ui.screens.transaction.TxDoneScaffold
@@ -114,6 +117,9 @@ internal fun QbtcClaimScreen(
             ClaimErrorScreen(error = state.error, onRetry = onRetry, onBack = onBackClick)
         is QbtcClaimUiState.Blocked ->
             ClaimBlockedScreen(reason = state.reason, onRetry = onRetry, onBack = onBackClick)
+        // The Secure Vault pairing step is a regular keysign co-sign, so it renders the shared
+        // PeerDiscoveryScreen (own scaffold) instead of a bespoke layout.
+        is QbtcClaimUiState.Pairing -> ClaimPairingScreen(state, onBackClick = onBackClick)
         else ->
             V3Scaffold(
                 title = null,
@@ -140,7 +146,6 @@ internal fun QbtcClaimScreen(
                     QbtcClaimUiState.Loading ->
                         CenteredProgress(stringResource(R.string.qbtc_claim_loading))
                     is QbtcClaimUiState.Selecting -> SelectingContent(state, onToggle)
-                    is QbtcClaimUiState.Pairing -> PairingContent(state)
                     is QbtcClaimUiState.Signing ->
                         ClaimSigningProgress(
                             label = stringResource(R.string.qbtc_claim_proving),
@@ -148,7 +153,8 @@ internal fun QbtcClaimScreen(
                         )
                     is QbtcClaimUiState.Done,
                     is QbtcClaimUiState.Failed,
-                    is QbtcClaimUiState.Blocked -> Unit
+                    is QbtcClaimUiState.Blocked,
+                    is QbtcClaimUiState.Pairing -> Unit
                 }
             }
     }
@@ -487,40 +493,34 @@ private fun ClaimSigningProgress(label: String, @DrawableRes logoRes: Int) {
 }
 
 @Composable
-private fun PairingContent(state: QbtcClaimUiState.Pairing) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-        modifier = Modifier.fillMaxSize().padding(top = 24.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.qbtc_claim_pair_instruction),
-            style = Theme.brockmann.body.m.medium,
-            color = Theme.v2.colors.text.primary,
-            textAlign = TextAlign.Center,
-        )
-        val qr = state.qr
-        if (qr != null) {
-            Image(
-                painter = qr,
-                contentDescription = null,
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = 48.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Theme.v2.colors.text.primary),
-            )
-        } else {
-            VsSigningProgressIndicator(text = stringResource(R.string.qbtc_claim_title))
-        }
-        state.joinedDevices.forEach { device ->
-            Text(
-                text = device,
-                style = Theme.brockmann.body.s.regular,
-                color = Theme.v2.colors.text.secondary,
-            )
-        }
-    }
+private fun ClaimPairingScreen(state: QbtcClaimUiState.Pairing, onBackClick: () -> Unit) {
+    PeerDiscoveryScreen(
+        state =
+            PeerDiscoveryUiModel(
+                qr = state.qr,
+                network = NetworkOption.Internet,
+                localPartyId = state.localPartyId,
+                devices = state.joinedDevices,
+                selectedDevices = state.joinedDevices,
+                minimumDevices = state.minimumDevices,
+                minimumDevicesDisplayed = state.minimumDevices,
+                allowsMoreDevices = false,
+                enableNotification = false,
+            ),
+        onBackClick = onBackClick,
+        onHelpClick = {},
+        onShareQrClick = {},
+        onSwitchModeClick = {},
+        onDeviceClick = {},
+        onResendNotification = {},
+        onNextClick = {},
+        onDismissQrHelpModal = {},
+        showHelp = false,
+        showShare = false,
+        showNetworkSwitch = false,
+        // The claim always auto-advances once the peer threshold is met, so there is no Next step.
+        showNext = false,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

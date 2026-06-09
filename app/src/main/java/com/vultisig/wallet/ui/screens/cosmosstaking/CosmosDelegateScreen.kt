@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -332,7 +331,9 @@ internal fun ValidatorPickerSheet(
         sheetState = sheetState,
         containerColor = Theme.v2.colors.backgrounds.primary,
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        // Full-screen sheet (Figma node 75918:74747): the column fills the height so the list
+        // expands instead of leaving the stake screen visible above a ~¾-height sheet.
+        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             ValidatorPickerHeader(
                 title = title,
                 onClose = onDismiss,
@@ -345,57 +346,99 @@ internal fun ValidatorPickerSheet(
 
             UiSpacer(size = 12.dp)
 
-            BasicTextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                singleLine = true,
-                textStyle = TextStyle(color = Theme.v2.colors.text.primary, fontSize = 16.sp),
-                decorationBox = { inner ->
-                    if (searchQuery.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.token_selection_search_hint),
-                            style = Theme.brockmann.body.s.medium,
-                            color = Theme.v2.colors.text.secondary,
-                        )
-                    }
-                    inner()
-                },
+            // Figma: pill-shaped search with a leading magnifier (node 75918:74796).
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier =
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Theme.v2.colors.backgrounds.secondary)
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-            )
-
-            UiSpacer(size = 12.dp)
-
-            when {
-                isLoading ->
-                    Text(
-                        text = stringResource(R.string.cosmos_staking_loading_validators),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.secondary,
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    )
-                validators.isEmpty() ->
-                    Text(
-                        text = stringResource(R.string.cosmos_staking_no_validators_found),
-                        style = Theme.brockmann.body.s.medium,
-                        color = Theme.v2.colors.text.secondary,
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    )
-                else ->
-                    LazyColumn(modifier = Modifier.fillMaxWidth().height(440.dp)) {
-                        items(validators, key = { it.operatorAddress }) { validator ->
-                            ValidatorPickerRow(
-                                validator = validator,
-                                ticker = ticker,
-                                isSelected = validator.operatorAddress == pickedAddress,
-                                onResolveAvatar = onResolveAvatar,
-                                onClick = { pickedAddress = validator.operatorAddress },
+                        .clip(RoundedCornerShape(99.dp))
+                        .background(Theme.v2.colors.backgrounds.surface1)
+                        .border(
+                            width = 1.dp,
+                            color = Theme.v2.colors.border.normal,
+                            shape = RoundedCornerShape(99.dp),
+                        )
+                        .padding(horizontal = 12.dp, vertical = 12.dp),
+            ) {
+                UiIcon(
+                    drawableResId = R.drawable.ic_search,
+                    size = 16.dp,
+                    tint = Theme.v2.colors.text.tertiary,
+                )
+                BasicTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    singleLine = true,
+                    textStyle = TextStyle(color = Theme.v2.colors.text.primary, fontSize = 16.sp),
+                    decorationBox = { inner ->
+                        if (searchQuery.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.token_selection_search_hint),
+                                style = Theme.brockmann.supplementary.footnote,
+                                color = Theme.v2.colors.text.tertiary,
                             )
                         }
-                    }
+                        inner()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            UiSpacer(size = 16.dp)
+
+            // Figma: column header clarifies the bare right-hand % is the validator's commission
+            // rate (node 76925:75467), not voting power.
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    text = stringResource(R.string.cosmos_staking_validator_picker),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+                Text(
+                    text = stringResource(R.string.cosmos_staking_validator_commission),
+                    style = Theme.brockmann.supplementary.footnote,
+                    color = Theme.v2.colors.text.tertiary,
+                )
+            }
+
+            UiSpacer(size = 8.dp)
+
+            Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                when {
+                    isLoading ->
+                        Text(
+                            text = stringResource(R.string.cosmos_staking_loading_validators),
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.text.secondary,
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        )
+                    validators.isEmpty() ->
+                        Text(
+                            text = stringResource(R.string.cosmos_staking_no_validators_found),
+                            style = Theme.brockmann.body.s.medium,
+                            color = Theme.v2.colors.text.secondary,
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        )
+                    else ->
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            items(validators, key = { it.operatorAddress }) { validator ->
+                                ValidatorPickerRow(
+                                    validator = validator,
+                                    ticker = ticker,
+                                    isSelected = validator.operatorAddress == pickedAddress,
+                                    onResolveAvatar = onResolveAvatar,
+                                    onClick = { pickedAddress = validator.operatorAddress },
+                                )
+                            }
+                        }
+                }
             }
 
             UiSpacer(size = 16.dp)
@@ -450,23 +493,28 @@ private fun ValidatorPickerRow(
         produceState<String?>(initialValue = null, key1 = validator.operatorAddress) {
             value = onResolveAvatar(validator.identity)
         }
+    // Figma (node 75918:75259 / 75918:75266): spaced rounded-16 cards on surface-1. The selected
+    // card carries a success-tinted fill + border; unselected cards are borderless.
+    val shape = RoundedCornerShape(16.dp)
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .padding(vertical = 4.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Theme.v2.colors.backgrounds.secondary)
-                .border(
-                    // Keep a 1.dp border in both states (1px Figma parity); the accent colour +
-                    // green check already distinguish the selected row.
-                    width = 1.dp,
-                    color =
-                        if (isSelected) Theme.v2.colors.primary.accent4
-                        else Theme.v2.colors.border.normal,
-                    shape = RoundedCornerShape(12.dp),
+                .clip(shape)
+                .background(
+                    if (isSelected) Theme.v2.colors.backgrounds.success
+                    else Theme.v2.colors.backgrounds.surface1
+                )
+                .then(
+                    if (isSelected)
+                        Modifier.border(
+                            width = 1.dp,
+                            color = Theme.v2.colors.alerts.success,
+                            shape = shape,
+                        )
+                    else Modifier
                 )
                 .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {

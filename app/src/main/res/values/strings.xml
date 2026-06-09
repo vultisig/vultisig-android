@@ -364,6 +364,7 @@
     <string name="keygen_email_continue_button">Continue</string>
     <string name="password_should_not_be_empty">Password should not be empty</string>
     <string name="signing_error_insufficient_funds">Not enough gas to cover the transaction fee.\nPlease fund the wallet.</string>
+    <string name="signing_error_token_account_not_found_s">Could not load your %s token account. Please try again.</string>
     <string name="signing_error_mixed_reshare">Mixed Reshare signing.\nPlease use vault shares of the same Reshare cycle.</string>
     <string name="signing_error_sequence_mismatch">Account sequence changed — please retry the transaction.</string>
     <string name="signing_error_broadcast_rejected">Transaction rejected by the network.</string>
@@ -1273,6 +1274,7 @@
     <string name="decoded_function_min_amount_out">Min amount out</string>
     <string name="decoded_function_amount_out">Amount out</string>
     <string name="decoded_function_swap_title">Swap</string>
+    <string name="decoded_function_truncated">More parameters not shown</string>
 
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Claim QBTC</string>
@@ -1290,7 +1292,6 @@
     <string name="qbtc_claim_success_title">QBTC claimed</string>
     <string name="qbtc_claim_successful">QBTC Claim Successful</string>
     <string name="qbtc_claim_password_title">Enter vault password</string>
-    <string name="qbtc_claim_pair_instruction">Scan this with your other device to co-sign the claim</string>
     <string name="qbtc_claim_failed">Claim failed</string>
     <string name="qbtc_claim_unavailable_title">Claiming is disabled</string>
     <string name="qbtc_claim_unavailable_detail">QBTC claiming is temporarily disabled on the network. Please try again later.</string>
@@ -1336,6 +1337,7 @@
     <string name="cosmos_staking_validator_active">Active</string>
     <string name="cosmos_staking_validator_churned_out">Churned Out</string>
     <string name="cosmos_staking_validator_picker">Validator</string>
+    <string name="cosmos_staking_validator_commission">Commission</string>
     <string name="cosmos_staking_validators">Validators</string>
     <string name="cosmos_staking_pick_destination">Pick destination</string>
     <string name="cosmos_staking_pick_destination_validator">Pick a destination validator</string>

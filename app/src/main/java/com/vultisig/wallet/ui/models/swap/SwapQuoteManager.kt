@@ -38,6 +38,8 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeout
 import kotlinx.datetime.Clock
 import timber.log.Timber
@@ -65,6 +67,20 @@ internal data class QuoteCandidate(
 internal data class BestQuote(val candidate: QuoteCandidate, val result: QuoteFetchResult)
 
 /**
+ * Outcome of resolving the best quote for a pair: either a [Success] holding the winning
+ * [BestQuote], or a [Failure] whose typed swap error has already been mapped to a renderable
+ * [Failure.formError] so the ViewModel only has to surface it.
+ */
+internal sealed interface QuoteResolution {
+    /** A winning quote was fetched. */
+    data class Success(val best: BestQuote) : QuoteResolution
+
+    /** The fetch failed; [formError] is the mapped message, [cause]/[tag] are for logging. */
+    data class Failure(val formError: UiText, val cause: Throwable, val tag: String) :
+        QuoteResolution
+}
+
+/**
  * Display-only indicative destination estimate derived from cached spot prices, shown greyed while
  * the firm quote is still resolving so the destination field never blanks (#4712). It is never used
  * to build a signed transaction — only the firm [SwapQuote] gates Continue.
@@ -88,6 +104,54 @@ constructor(
 ) {
 
     private val quoteCache = QuoteCache()
+
+    // Set true right before a programmatic amount change (percentage / Max) so the next non-empty
+    // amount emission skips the typing debounce and fetches a quote immediately (#4712). Reset as
+    // soon as it is consumed by the quote flow so it never leaks into subsequent free typing. Only
+    // ever touched on the main thread (UI callbacks + the Main-dispatched quote flow).
+    private var fetchQuoteImmediately = false
+
+    // Length of the previous source-amount text, used to distinguish a paste (multi-character jump)
+    // from free typing so a paste also fetches immediately (#4712).
+    private var lastSrcAmountLength = 0
+
+    /**
+     * Marks the next non-empty source-amount change to bypass the typing debounce, so an explicit
+     * percentage / Max tap fetches a quote immediately instead of waiting it out (#4712). Call on
+     * the main thread, before mutating the amount text, so the resulting emission is already
+     * marked.
+     */
+    fun markImmediateFetch() {
+        fetchQuoteImmediately = true
+    }
+
+    /**
+     * Maps a raw source-amount [textFlow] to a flow emitting, per change, whether the quote should
+     * fetch immediately (percentage / Max / paste) rather than waiting out the typing debounce
+     * (#4712). A paste is detected as a multi-character length jump (tracked across empties so a
+     * clear-then-paste still counts). An empty field rides the normal path and deliberately leaves
+     * any pending immediate flag intact for the next real amount.
+     */
+    fun amountChanges(textFlow: Flow<CharSequence>): Flow<Boolean> =
+        textFlow
+            .map { it.toString() }
+            .map { text ->
+                val isPaste = text.length - lastSrcAmountLength > 1
+                lastSrcAmountLength = text.length
+                text to isPaste
+            }
+            .map { (text, isPaste) ->
+                if (text.isEmpty()) return@map false
+                val immediate = fetchQuoteImmediately || isPaste
+                fetchQuoteImmediately = false
+                immediate
+            }
+
+    /**
+     * Debounce window for a quote fetch: 0ms for an [immediate] change (percentage / Max / paste)
+     * so it fires at once, [QUOTE_DEBOUNCE_MS] for free typing so rapid edits coalesce.
+     */
+    fun quoteDebounceMillis(immediate: Boolean): Long = if (immediate) 0L else QUOTE_DEBOUNCE_MS
 
     /**
      * Compute an instant, indicative destination amount from already-cached spot prices: `dst =
@@ -393,6 +457,62 @@ constructor(
                 .thenByDescending { it.result.estimatedDstFiat.value }
         ) ?: best
     }
+
+    /**
+     * Fetches the best quote and maps any typed swap failure to a renderable
+     * [QuoteResolution.Failure] so the ViewModel only has to surface it. Cancellation is rethrown
+     * so the caller's `collectLatest` can still cancel an in-flight fetch.
+     *
+     * @param selectedSrcTokenTitle the source token's display title, used when formatting
+     *   amount-too-low errors.
+     */
+    suspend fun resolveBestQuote(
+        candidates: List<QuoteCandidate>,
+        src: SendSrc,
+        dst: SendSrc,
+        srcToken: Coin,
+        dstToken: Coin,
+        srcTokenValue: BigInteger,
+        tokenValue: TokenValue,
+        currency: AppCurrency,
+        amount: BigDecimal,
+        selectedSrcTokenTitle: String?,
+    ): QuoteResolution =
+        try {
+            QuoteResolution.Success(
+                fetchBestQuote(
+                    candidates = candidates,
+                    src = src,
+                    dst = dst,
+                    srcToken = srcToken,
+                    dstToken = dstToken,
+                    srcTokenValue = srcTokenValue,
+                    tokenValue = tokenValue,
+                    currency = currency,
+                    amount = amount,
+                )
+            )
+        } catch (e: SwapException) {
+            QuoteResolution.Failure(
+                formError = mapSwapExceptionToFormError(e, srcToken, selectedSrcTokenTitle),
+                cause = e,
+                tag = "swapError",
+            )
+        } catch (e: SwapKitError) {
+            QuoteResolution.Failure(
+                formError = mapSwapKitErrorToFormError(e),
+                cause = e,
+                tag = "swapKitError",
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            QuoteResolution.Failure(
+                formError = UiText.StringResource(R.string.swap_error_quote_failed),
+                cause = e,
+                tag = "swapUnexpectedError",
+            )
+        }
 
     /**
      * Provider preference order for the banded selection. Lower index = preferred. THORChain is
@@ -1022,6 +1142,11 @@ constructor(
         private const val SWAPKIT_AFFILIATE_FEE_BPS = 50
         private const val NATIVE_TOKEN_SENTINEL = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
         private const val QUOTE_FETCH_TIMEOUT_MS = 15_000L
+        /**
+         * Coalesces rapid free typing into a single quote fetch; bypassed (0ms) for percentage /
+         * Max / paste via [quoteDebounceMillis].
+         */
+        private const val QUOTE_DEBOUNCE_MS = 300L
         /**
          * Matches the firm quote's UI formatter cap so the indicative value never out-renders it.
          */

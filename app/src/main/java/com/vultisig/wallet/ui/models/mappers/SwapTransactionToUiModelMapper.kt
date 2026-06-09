@@ -63,9 +63,12 @@ constructor(
 
         val quotesFeesFiat = convertTokenValueToFiat(tokenValue, from.estimatedFees, currency)
 
-        // SwapKit collapses every sub-provider onto the canonical `"SwapKit"` id, so render the
-        // persisted sub-provider (Chainflip / NEAR / Garden) for the done/history label instead —
-        // matching the live form/verify label. Other providers keep their specific id.
+        // Display-only label. `provider` below stays the canonical id (the behavioral key that
+        // gates SwapKit `/track` settlement); SwapKit collapses every sub-provider onto the
+        // canonical `"SwapKit"` id, so render the persisted sub-provider (Chainflip / NEAR /
+        // Garden)
+        // for the display label instead — matching what the joined device produces via
+        // `formatSwapKitProviderLabel`. Other providers reuse their specific id.
         val providerLabel =
             if (provider == SwapProvider.SWAPKIT) {
                 val subProvider =
@@ -118,7 +121,8 @@ constructor(
             networkFeeFormatted =
                 mapTokenValueToDecimalUiString(from.gasFees) + " ${from.gasFees.unit}",
             totalFee = fiatValueToStringMapper(quotesFeesFiat + from.gasFeeFiatValue, asFee = true),
-            provider = providerLabel,
+            provider = provider.getSwapProviderId(),
+            providerLabel = providerLabel,
             swapId = swapId,
         )
     }

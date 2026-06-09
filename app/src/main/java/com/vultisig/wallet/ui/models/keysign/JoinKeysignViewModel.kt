@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.errors.SwapException
+import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.api.utils.HttpException
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.cosmos.qbtc.claim.ComputeQbtcClaimMessageHashUseCase
@@ -59,6 +60,7 @@ import com.vultisig.wallet.data.qbtc.QbtcClaimResultPoller
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.ContractAbiRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -234,6 +236,7 @@ constructor(
     private val fourByteRepository: FourByteRepository,
     private val tokenMetadataResolver: TokenMetadataResolver,
     private val tonApi: TonApi,
+    private val contractAbiRepository: ContractAbiRepository,
     private val securityScannerService: SecurityScannerContract,
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
@@ -642,8 +645,17 @@ constructor(
                         is SwapPayload.EVM ->
                             swapProviderFromWireId(swapPayload.data.provider)?.getSwapProviderId()
                                 ?: swapPayload.data.provider
+                        is SwapPayload.SwapKit -> SwapProvider.SWAPKIT.getSwapProviderId()
+                    }
+
+                // Display-only label. `provider` above stays the canonical id (the behavioral key
+                // that gates SwapKit `/track` settlement); native SwapKit routes render their
+                // sub-provider (`SwapKit (NEAR)`). All other providers reuse the canonical id.
+                val providerLabel =
+                    when (swapPayload) {
                         is SwapPayload.SwapKit ->
                             formatSwapKitProviderLabel(swapPayload.data.subProvider)
+                        else -> provider
                     }
 
                 when (swapPayload) {
@@ -892,8 +904,41 @@ constructor(
                     }
 
                     is SwapPayload.SwapKit -> {
-                        // Zero provider fee — the initiator's per-leg `fees[]` isn't re-fetched
-                        // at join time; the network gas estimate carries the cost.
+                        // Re-fetch only the SwapKit inbound fee at join time so the co-signer sees
+                        // the same non-zero swap fee as the initiator (mirrors the Thor/Maya
+                        // branches). Uses the quote-only `getSwapKitInboundFee` (`POST /v3/quote`)
+                        // rather than the full `getQuote`, which would also fire `POST /v3/swap`
+                        // and
+                        // mint a throwaway swap route — a fresh `swapId` and deposit address — per
+                        // cosigner just to read the fee. Display-only: the signing bytes come from
+                        // the payload and are never touched. The quote may reprice slightly between
+                        // fetches (approximate parity, the same trade-off Thor/Maya accept); a
+                        // fetch
+                        // failure degrades to a zero fee rather than stalling the verify screen.
+                        // The
+                        // initiator's `affiliateBps` / `srcAddress` are intentionally omitted — the
+                        // inbound fee doesn't depend on the affiliate fee and the join device can't
+                        // know the initiator's `vultBPSDiscount`, so approximate parity holds.
+                        val swapKitProviderFee =
+                            try {
+                                swapQuoteRepository.getSwapKitInboundFee(
+                                    SwapQuoteRequest(
+                                        srcToken = srcToken,
+                                        dstToken = dstToken,
+                                        tokenValue = srcTokenValue,
+                                        dstAddress = dstToken.address,
+                                    )
+                                )
+                            } catch (e: SwapKitError) {
+                                // The SwapKit API layer wraps network/timeout/decoding failures
+                                // into
+                                // SwapKitError and rethrows CancellationException un-wrapped, so
+                                // this
+                                // narrow catch degrades quote failures to a zero fee while letting
+                                // cancellation (and any genuinely unexpected exception) propagate.
+                                Timber.w(e, "SwapKit join fee re-fetch failed; showing zero fee")
+                                TokenValue(value = BigInteger.ZERO, token = srcToken)
+                            }
                         val swapTransactionUiModel =
                             buildSwapUiModel(
                                 srcToken = srcToken,
@@ -902,9 +947,10 @@ constructor(
                                 dstTokenValue = dstTokenValue,
                                 estimatedNetworkGasFee = estimatedNetworkGasFee,
                                 provider = provider,
-                                providerFee = TokenValue(value = BigInteger.ZERO, token = srcToken),
+                                providerFee = swapKitProviderFee,
                                 providerFeeToken = srcToken,
                                 currency = currency,
+                                providerLabel = providerLabel,
                             )
                         transactionTypeUiModel = TransactionTypeUiModel.Swap(swapTransactionUiModel)
                         transactionHistoryData =
@@ -1192,6 +1238,9 @@ constructor(
                             json = json,
                             tokenMetadataResolver = tokenMetadataResolver,
                             nativeTokenLookup = { c -> nativeTokenOrNull(c.id) },
+                            resolveAbiParams = { c, address, sig ->
+                                contractAbiRepository.resolveParams(c, address, sig)
+                            },
                         )
 
                     val tonMessages =
@@ -1252,6 +1301,7 @@ constructor(
         providerFee: TokenValue,
         providerFeeToken: Coin,
         currency: AppCurrency,
+        providerLabel: String = provider,
     ): SwapTransactionUiModel {
         val estimatedFee = convertTokenValueToFiat(providerFeeToken, providerFee, currency)
         return SwapTransactionUiModel(
@@ -1295,6 +1345,7 @@ constructor(
                     asFee = true,
                 ),
             provider = provider,
+            providerLabel = providerLabel,
         )
     }
 
