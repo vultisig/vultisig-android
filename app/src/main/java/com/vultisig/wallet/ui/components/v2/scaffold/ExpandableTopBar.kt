@@ -30,10 +30,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -150,9 +156,25 @@ fun VsExpandableTopBar(
 
         val coroutineScope = rememberCoroutineScope()
 
+        // Bridges the bar's own drag gesture into the nested-scroll system. When the bar is at a
+        // bound (fully expanded and over-dragged downward), the unused delta is dispatched to the
+        // surrounding parents so a downward pull that starts on the top bar reaches the enclosing
+        // PullToRefreshBox instead of being swallowed by this draggable (#4752).
+        val nestedScrollDispatcher = remember { NestedScrollDispatcher() }
+        val noOpConnection = remember { object : NestedScrollConnection {} }
+
         val dragState = rememberDraggableState { delta ->
-            coroutineScope.launch {
-                animatedOffset.snapTo((animatedOffset.value + delta).coerceIn(offsetLimit, 0f))
+            val current = animatedOffset.value
+            val target = (current + delta).coerceIn(offsetLimit, 0f)
+            val consumed = target - current
+            coroutineScope.launch { animatedOffset.snapTo(target) }
+            val leftover = delta - consumed
+            if (leftover != 0f) {
+                nestedScrollDispatcher.dispatchPostScroll(
+                    consumed = Offset(0f, consumed),
+                    available = Offset(0f, leftover),
+                    source = NestedScrollSource.UserInput,
+                )
             }
         }
 
@@ -160,10 +182,20 @@ fun VsExpandableTopBar(
             modifier =
                 modifier
                     .height(with(density) { currentHeightPx.toDp() })
+                    .nestedScroll(connection = noOpConnection, dispatcher = nestedScrollDispatcher)
                     .draggable(
                         orientation = Orientation.Vertical,
                         state = dragState,
-                        onDragStopped = {
+                        onDragStopped = { velocity ->
+                            // Hand the release to the nested-scroll parents first so a downward
+                            // over-drag of the top bar lets PullToRefreshBox settle / trigger.
+                            val available = Velocity(0f, velocity)
+                            val consumedVelocity =
+                                nestedScrollDispatcher.dispatchPreFling(available)
+                            nestedScrollDispatcher.dispatchPostFling(
+                                consumedVelocity,
+                                available - consumedVelocity,
+                            )
                             val target = if (expandedFraction < 0.5f) offsetLimit else 0f
                             animatedOffset.animateTo(
                                 targetValue = target,
