@@ -93,6 +93,37 @@ constructor(
         }
     }
 
+    /**
+     * Re-fetch only the source-chain inbound fee for the best SwapKit route from `POST /v3/quote`,
+     * skipping the `POST /v3/swap` call a full [fetch] makes. The join flow uses this to show the
+     * same non-zero swap fee as the initiator (display-only) without minting a throwaway swap route
+     * — a fresh `swapId` and deposit `targetAddress` per cosigner — just to read `.fees`. Unlike
+     * THORChain/Maya, SwapKit's full quote path stages a swap, so this lighter call keeps the
+     * join-side re-fetch idempotent. Returns a zero-valued [TokenValue] in
+     * [SwapQuoteRequest.srcToken] when the feature flag is off or no route / inbound-fee entry is
+     * found, so the verify screen degrades gracefully rather than stalling.
+     */
+    suspend fun fetchInboundFee(request: SwapQuoteRequest): TokenValue {
+        if (!config.isFeatureEnabled.first()) {
+            return TokenValue(BigInteger.ZERO, request.srcToken)
+        }
+        val quoteResponse =
+            api.quote(
+                SwapKitQuoteRequest(
+                    sellAsset = assetIdentifier(request.srcToken),
+                    buyAsset = assetIdentifier(request.dstToken),
+                    sellAmount = formatSellAmount(request.tokenValue),
+                    sourceAddress = request.srcAddress.ifBlank { null },
+                    destinationAddress = request.dstAddress.ifBlank { null },
+                    affiliateFee = request.affiliateBps,
+                )
+            )
+        val best =
+            pickBestRoute(quoteResponse.routes)
+                ?: return TokenValue(BigInteger.ZERO, request.srcToken)
+        return TokenValue(inboundFeeRawUnits(request.srcToken, best.fees), request.srcToken)
+    }
+
     private suspend fun fetchInternal(request: SwapQuoteRequest): SwapQuoteResult {
         // Feature-flag kill switch (Advanced Settings → SwapKit). Defaults to on (iOS parity) —
         // short-circuits before any /quote network I/O when the user has opted out.

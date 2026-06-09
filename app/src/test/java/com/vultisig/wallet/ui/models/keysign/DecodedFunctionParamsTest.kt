@@ -1,6 +1,7 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.repositories.AbiParam
 import com.vultisig.wallet.ui.utils.UiText
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -371,7 +372,7 @@ internal class DecodedFunctionParamsTest {
     }
 
     @Test
-    fun `tuple parameters are kept as a single positional row in unknown-function fallback`() {
+    fun `tuple parameters expand into one positional row per inner field`() {
         val rows =
             decodedFunctionParams(
                 signature =
@@ -381,11 +382,199 @@ internal class DecodedFunctionParamsTest {
             )
 
         assertNotNull(rows)
-        assertEquals(1, rows.size)
-        assertEquals(
-            "#1 ((address,address,uint24,address,uint256,uint256,uint160))",
-            (rows[0].label as UiText.DynamicString).text,
-        )
+        assertEquals(7, rows.size)
+        assertEquals("#1.1 (address)", (rows[0].label as UiText.DynamicString).text)
+        assertEquals("#1.3 (uint24)", (rows[2].label as UiText.DynamicString).text)
+        assertEquals("#1.7 (uint160)", (rows[6].label as UiText.DynamicString).text)
+        assertEquals("500", (rows[2].value as UiText.DynamicString).text)
+    }
+
+    @Test
+    fun `scalar args alongside a tuple expand the tuple while keeping the scalars positional`() {
+        val rows =
+            decodedFunctionParams(
+                signature = "addTrait(uint256,uint256,(string,string,bytes,bool,uint256))",
+                inputsJson = """[ "7", "42", [ "Gold", "AU", "0xdeadbeef", true, "100" ] ]""",
+                json = json,
+            )
+
+        assertNotNull(rows)
+        // 2 scalars + 5 expanded tuple fields.
+        assertEquals(7, rows.size)
+        assertEquals("#1 (uint256)", (rows[0].label as UiText.DynamicString).text)
+        assertEquals("#2 (uint256)", (rows[1].label as UiText.DynamicString).text)
+        assertEquals("#3.1 (string)", (rows[2].label as UiText.DynamicString).text)
+        assertEquals("Gold", (rows[2].value as UiText.DynamicString).text)
+        // bytes stays full-hex and copyable behind the renderer's middle-ellipsis.
+        assertEquals("#3.3 (bytes)", (rows[4].label as UiText.DynamicString).text)
+        assertEquals("0xdeadbeef", rows[4].copyableValue)
+        // bool renders true/false.
+        assertEquals("#3.4 (bool)", (rows[5].label as UiText.DynamicString).text)
+        assertEquals("true", (rows[5].value as UiText.DynamicString).text)
+    }
+
+    @Test
+    fun `resolved abi names label scalars and expanded tuple fields`() {
+        val rows =
+            decodedFunctionParams(
+                signature = "addTrait(uint256,uint256,(string,string))",
+                inputsJson = """[ "7", "42", [ "Gold", "AU" ] ]""",
+                json = json,
+                abiParams =
+                    listOf(
+                        AbiParam("tokenId", "uint256"),
+                        AbiParam("traitId", "uint256"),
+                        AbiParam(
+                            "trait",
+                            "tuple",
+                            listOf(AbiParam("name", "string"), AbiParam("symbol", "string")),
+                        ),
+                    ),
+            )
+
+        assertNotNull(rows)
+        assertEquals(4, rows.size)
+        assertEquals("tokenId", (rows[0].label as UiText.DynamicString).text)
+        assertEquals("traitId", (rows[1].label as UiText.DynamicString).text)
+        assertEquals("trait.name", (rows[2].label as UiText.DynamicString).text)
+        assertEquals("trait.symbol", (rows[3].label as UiText.DynamicString).text)
+    }
+
+    @Test
+    fun `nested tuples recurse into dotted name paths`() {
+        val rows =
+            decodedFunctionParams(
+                signature = "f((uint256,(address,bool)))",
+                inputsJson = """[ [ "1", [ "0xabc", false ] ] ]""",
+                json = json,
+                abiParams =
+                    listOf(
+                        AbiParam(
+                            "outer",
+                            "tuple",
+                            listOf(
+                                AbiParam("id", "uint256"),
+                                AbiParam(
+                                    "inner",
+                                    "tuple",
+                                    listOf(AbiParam("who", "address"), AbiParam("flag", "bool")),
+                                ),
+                            ),
+                        )
+                    ),
+                contractLabel = { if (it == "0xabc") "Known Thing" else null },
+            )
+
+        assertNotNull(rows)
+        assertEquals(3, rows.size)
+        assertEquals("outer.id", (rows[0].label as UiText.DynamicString).text)
+        assertEquals("outer.inner.who", (rows[1].label as UiText.DynamicString).text)
+        assertEquals("Known Thing", rows[1].secondary)
+        assertEquals("0xabc", rows[1].copyableValue)
+        assertEquals("outer.inner.flag", (rows[2].label as UiText.DynamicString).text)
+        assertEquals("false", (rows[2].value as UiText.DynamicString).text)
+    }
+
+    @Test
+    fun `tuple array expands one row per element field`() {
+        val rows =
+            decodedFunctionParams(
+                signature = "aggregate((address,bytes)[])",
+                inputsJson = """[ [ ["0xaaa", "0xbb"], ["0xccc", "0xdd"] ] ]""",
+                json = json,
+            )
+
+        assertNotNull(rows)
+        assertEquals(4, rows.size)
+        assertEquals("#1[0].1 (address)", (rows[0].label as UiText.DynamicString).text)
+        assertEquals("0xaaa", (rows[0].value as UiText.DynamicString).text)
+        assertEquals("#1[0].2 (bytes)", (rows[1].label as UiText.DynamicString).text)
+        assertEquals("#1[1].1 (address)", (rows[2].label as UiText.DynamicString).text)
+        assertEquals("0xccc", (rows[2].value as UiText.DynamicString).text)
+        assertEquals("#1[1].2 (bytes)", (rows[3].label as UiText.DynamicString).text)
+    }
+
+    @Test
+    fun `nested tuple array peels one dimension per recursion keeping rows aligned`() {
+        val rows =
+            decodedFunctionParams(
+                signature = "f((address,bytes)[][])",
+                inputsJson = """[ [ [ ["0xaaa", "0xbb"] ], [ ["0xccc", "0xdd"] ] ] ]""",
+                json = json,
+            )
+
+        assertNotNull(rows)
+        assertEquals(4, rows.size)
+        assertEquals("#1[0][0].1 (address)", (rows[0].label as UiText.DynamicString).text)
+        assertEquals("0xaaa", (rows[0].value as UiText.DynamicString).text)
+        assertEquals("#1[0][0].2 (bytes)", (rows[1].label as UiText.DynamicString).text)
+        assertEquals("0xbb", rows[1].copyableValue)
+        assertEquals("#1[1][0].1 (address)", (rows[2].label as UiText.DynamicString).text)
+        assertEquals("0xccc", (rows[2].value as UiText.DynamicString).text)
+        assertEquals("#1[1][0].2 (bytes)", (rows[3].label as UiText.DynamicString).text)
+    }
+
+    @Test
+    fun `malformed abi names fall back to positional labels`() {
+        val rows =
+            decodedFunctionParams(
+                signature = "doStuff(address,uint256)",
+                inputsJson = """["0xabc", "1"]""",
+                json = json,
+                abiParams = listOf(AbiParam("has space", "address"), AbiParam("", "uint256")),
+            )
+
+        assertNotNull(rows)
+        assertEquals("#1 (address)", (rows[0].label as UiText.DynamicString).text)
+        assertEquals("#2 (uint256)", (rows[1].label as UiText.DynamicString).text)
+    }
+
+    @Test
+    fun `hasSemanticHandler recognises curated functions and rejects unknowns`() {
+        assertTrue(hasSemanticHandler("approve(address,uint256)"))
+        assertTrue(hasSemanticHandler("transferFrom(address,address,uint256)"))
+        assertEquals(false, hasSemanticHandler("addTrait(uint256,uint256)"))
+        assertEquals(false, hasSemanticHandler(null))
+    }
+
+    @Test
+    fun `same-name different-arity transfer is not handled and keeps every param`() {
+        // A 3-arg transfer is not the curated 2-arg shape, so it must not be claimed by the
+        // semantic handler (which would let the caller skip the ABI lookup and let transferRows
+        // drop the trailing bytes) — it falls through to the generic, all-params fallback.
+        assertEquals(false, hasSemanticHandler("transfer(address,uint256,bytes)"))
+
+        val rows =
+            decodedFunctionParams(
+                signature = "transfer(address,uint256,bytes)",
+                inputsJson = """["0xrecipient", "100", "0xdeadbeef"]""",
+                json = json,
+            )
+
+        assertNotNull(rows)
+        assertEquals(3, rows.size)
+        assertEquals("0xdeadbeef", rows[2].copyableValue)
+    }
+
+    @Test
+    fun `leaf rows past the cap append a single truncation indicator`() {
+        // More leaf params than MAX_PARAM_ROWS (64) so the list is capped; the signer must see that
+        // it is partial rather than a truncated list that looks complete.
+        val n = 70
+        val types = List(n) { "uint256" }.joinToString(",")
+        val values = (1..n).joinToString(",") { "\"$it\"" }
+
+        val rows =
+            decodedFunctionParams(
+                signature = "batch($types)",
+                inputsJson = "[$values]",
+                json = json,
+            )
+
+        assertNotNull(rows)
+        assertEquals(65, rows.size) // 64 rendered rows + one truncation indicator
+        assertResId(R.string.decoded_function_truncated, rows.last().label)
+        assertTrue(rows.last().isWarning)
     }
 
     private fun assertResId(expected: Int, label: UiText) {

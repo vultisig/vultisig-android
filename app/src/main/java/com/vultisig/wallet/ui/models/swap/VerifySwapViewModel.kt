@@ -48,7 +48,14 @@ internal data class SwapTransactionUiModel(
     val networkFeeFormatted: String = "",
     val providerFeeFormatted: String = "",
     val hasConsentAllowance: Boolean = false,
+    // Canonical provider id (e.g. `SwapKit`). Behavioral key: copied onto the tx-history row and
+    // matched against `SwapProvider.SWAPKIT.getSwapProviderId()` to gate SwapKit `/track`
+    // settlement — never a human label. Use [providerLabel] for display.
     val provider: String = "",
+    // Display-only provider label (e.g. `SwapKit (NEAR)`). Falls back to [provider] when blank.
+    // Kept separate from [provider] so the sub-provider shown in the UI never leaks into the
+    // gating key.
+    val providerLabel: String = "",
     // SwapKit `/v3/swap` swap id — correlation key persisted on the tx-history row so a cross-chain
     // SwapKit swap's Success can be gated on the destination-leg `/track` settlement. Null for
     // non-SwapKit providers and for SwapKit rows rebuilt on a cosigning peer without it.
