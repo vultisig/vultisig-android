@@ -20,8 +20,6 @@ class QBTCTransactionHelper {
         private const val DENOM = "qbtc"
         // Higher than typical Cosmos chains — ML-DSA-44 signatures are ~2.4 KB
         internal const val GAS_LIMIT = 300_000L
-        // Internal so the shared Cosmos staking resolver stamps the same ML-DSA pubkey `Any` URL
-        // into the AuthInfo it builds for QBTC delegate / undelegate / redelegate / claim.
         internal const val PUB_KEY_TYPE_URL = "/cosmos.crypto.mldsa.PubKey"
         private const val MSG_SEND_TYPE_URL = "/cosmos.bank.v1beta1.MsgSend"
         private const val MSG_IBC_TRANSFER_TYPE_URL = "/ibc.applications.transfer.v1.MsgTransfer"

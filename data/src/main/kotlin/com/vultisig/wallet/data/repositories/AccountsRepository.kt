@@ -342,6 +342,7 @@ constructor(
                     Chain.Tron to Coins.Tron.TRX,
                     Chain.Terra to Coins.Terra.LUNA,
                     Chain.TerraClassic to Coins.TerraClassic.LUNC,
+                    Chain.Qbtc to Coins.Qbtc.QBTC,
                 )
 
             val addressesByChain = addresses.associateBy { it.chain }
@@ -500,11 +501,12 @@ constructor(
             Chain.Ethereum -> true
             Chain.MayaChain -> true
             Chain.Tron -> true
-            // LUNA / LUNC surface a staking DeFi position; without these the chains are selectable
-            // in the "Select DeFi chains" sheet (isDeFiSupported) but never appear in the Portfolio
-            // DeFi list because their coins are filtered out of the candidate set here.
+            // LUNA / LUNC / QBTC surface a staking DeFi position. Without these their coins are
+            // dropped from the candidate set, so they pass isDeFiSupported (selectable in the
+            // "Select DeFi chains" sheet) yet never appear in the Portfolio DeFi list.
             Chain.Terra -> true
             Chain.TerraClassic -> true
+            Chain.Qbtc -> true
             else -> false
         }
     }

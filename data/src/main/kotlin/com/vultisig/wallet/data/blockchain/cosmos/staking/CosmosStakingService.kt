@@ -170,7 +170,6 @@ internal class CosmosStakingServiceImpl @Inject constructor(private val httpClie
             mapOf(
                 Chain.Terra to "https://terra-lcd.publicnode.com",
                 Chain.TerraClassic to "https://terra-classic-lcd.publicnode.com",
-                // QBTC's Cosmos REST gateway, mirroring the host already wired in CosmosApi.
                 Chain.Qbtc to "https://api.vultisig.com/qbtc-rpc",
             )
     }
