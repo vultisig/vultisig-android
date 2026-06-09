@@ -1224,6 +1224,7 @@
     <string name="decoded_function_min_amount_out">Importo minimo in uscita</string>
     <string name="decoded_function_amount_out">Importo in uscita</string>
     <string name="decoded_function_swap_title">Scambio</string>
+    <string name="decoded_function_truncated">Altri parametri non mostrati</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Preleva QBTC</string>
     <string name="qbtc_claim_loading">Verifica dell\'idoneità…</string>

@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.models.TransactionId
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.ContractAbiRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
@@ -177,6 +178,7 @@ constructor(
     private val addressBookRepository: AddressBookRepository,
     private val fourByteRepository: FourByteRepository,
     private val tokenMetadataResolver: TokenMetadataResolver,
+    private val contractAbiRepository: ContractAbiRepository,
     private val tokenRepository: TokenRepository,
     @param:PrettyJson private val json: Json,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
@@ -385,6 +387,9 @@ constructor(
                     json = json,
                     tokenMetadataResolver = tokenMetadataResolver,
                     nativeTokenLookup = { c -> nativeTokenOrNull(c.id) },
+                    resolveAbiParams = { c, address, sig ->
+                        contractAbiRepository.resolveParams(c, address, sig)
+                    },
                 )
 
             val namedUiModel =

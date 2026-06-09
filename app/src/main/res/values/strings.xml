@@ -1273,6 +1273,7 @@
     <string name="decoded_function_min_amount_out">Min amount out</string>
     <string name="decoded_function_amount_out">Amount out</string>
     <string name="decoded_function_swap_title">Swap</string>
+    <string name="decoded_function_truncated">More parameters not shown</string>
 
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Claim QBTC</string>

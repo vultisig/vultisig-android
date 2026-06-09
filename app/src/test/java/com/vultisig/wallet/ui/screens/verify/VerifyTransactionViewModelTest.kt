@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Transaction
 import com.vultisig.wallet.data.repositories.AddressBookRepository
+import com.vultisig.wallet.data.repositories.ContractAbiRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -81,6 +82,7 @@ internal class VerifyTransactionViewModelTest {
     private lateinit var addressBookRepository: AddressBookRepository
     private lateinit var fourByteRepository: FourByteRepository
     private lateinit var tokenMetadataResolver: TokenMetadataResolver
+    private lateinit var contractAbiRepository: ContractAbiRepository
     private lateinit var tokenRepository: TokenRepository
     private val json: Json = Json
 
@@ -102,6 +104,7 @@ internal class VerifyTransactionViewModelTest {
         addressBookRepository = mockk(relaxed = true)
         fourByteRepository = mockk(relaxed = true)
         tokenMetadataResolver = mockk(relaxed = true)
+        contractAbiRepository = mockk(relaxed = true)
         tokenRepository = mockk(relaxed = true)
         // Function-type-interface mocks need explicit return-type stubs; relaxed mode auto-stubs
         // to a generic Object that fails the implicit cast at the VM call site.
@@ -139,6 +142,7 @@ internal class VerifyTransactionViewModelTest {
             addressBookRepository = addressBookRepository,
             fourByteRepository = fourByteRepository,
             tokenMetadataResolver = tokenMetadataResolver,
+            contractAbiRepository = contractAbiRepository,
             tokenRepository = tokenRepository,
             json = json,
             ioDispatcher = testDispatcher,
