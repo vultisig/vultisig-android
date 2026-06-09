@@ -51,6 +51,8 @@ import timber.log.Timber
 
 internal data class CosmosRedelegateUiState(
     val ticker: String = "",
+    /** Native-coin base-unit decimals — drives the validator picker's voting-power formatting. */
+    val decimal: Int = 0,
     val srcValidatorAddress: String = "",
     val srcValidatorMoniker: String = "",
     val stakedBalance: BigDecimal = BigDecimal.ZERO,
@@ -405,6 +407,7 @@ constructor(
             _state.update {
                 it.copy(
                     ticker = nativeCoin.ticker,
+                    decimal = nativeCoin.decimal,
                     stakedBalance = stakedBalance,
                     percentageSelected = 100,
                     spendableBalance = spendableBalance,

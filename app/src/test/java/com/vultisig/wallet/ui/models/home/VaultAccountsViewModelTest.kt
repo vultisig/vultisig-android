@@ -14,6 +14,7 @@ import com.vultisig.wallet.data.models.CryptoConnectionType
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.models.calculateAccountsPartialFiatValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AddressBalancesUpdate
 import com.vultisig.wallet.data.repositories.BalanceVisibilityRepository
@@ -581,6 +582,297 @@ internal class VaultAccountsViewModelTest {
 
             coVerify(exactly = 0) { navigator.route(any<Route.Swap>()) }
         }
+
+    /**
+     * Regression for #4768: when a chain's balance refetch is in flight its mapped fiat comes back
+     * null, but the row must keep showing the last-known value instead of blanking. Here Solana
+     * resolves to $5 on the first load, then a refresh re-emits Solana with an unresolved (null)
+     * fiat — the Solana row must still read $5 while Ethereum updates normally.
+     */
+    @Test
+    fun `per-chain row keeps last-known fiat while it refetches`() =
+        runTest(testDispatcher) {
+            val eth = buildTestAddress(Chain.Ethereum, "0xeth", fiat = BigDecimal("10"))
+            val solResolved = buildTestAddress(Chain.Solana, "sol", fiat = BigDecimal("5"))
+            val solPending = buildTestAddress(Chain.Solana, "sol", fiat = null)
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddressBalances("vault-1") } returnsMany
+                listOf(
+                    flowOf(AddressBalancesUpdate(listOf(eth, solResolved), isComplete = true)),
+                    flowOf(AddressBalancesUpdate(listOf(eth, solPending), isComplete = true)),
+                )
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.solanaRow().fiatAmount shouldBe "$5"
+
+            vm.refreshData()
+            advanceUntilIdle()
+
+            // Solana refetch returned null fiat — the row retains the previously-shown $5.
+            vm.solanaRow().fiatAmount shouldBe "$5"
+            // Ethereum stayed resolved and still shows its own value.
+            vm.uiState.value.accounts.first { it.model.chain == Chain.Ethereum }.fiatAmount shouldBe
+                "$10"
+        }
+
+    /**
+     * Regression for #4768: the big portfolio total must not blank while a chain refetches. With
+     * one chain resolved and another pending the total reflects the resolved chain rather than
+     * going null.
+     */
+    @Test
+    fun `total reflects resolved chains while another is pending`() =
+        runTest(testDispatcher) {
+            val eth = buildTestAddress(Chain.Ethereum, "0xeth", fiat = BigDecimal("10"))
+            val solPending = buildTestAddress(Chain.Solana, "sol", fiat = null)
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddressBalances("vault-1") } returns
+                flowOf(AddressBalancesUpdate(listOf(eth, solPending), isComplete = true))
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            vm.uiState.value.totalFiatValue shouldBe "$10"
+        }
+
+    /**
+     * Regression for #4768: the portfolio total must equal the sum of the values its rows render.
+     * Solana resolves to $5 then refetches (null); because retain keeps Solana's $5 in both the row
+     * and the total, the headline stays $15 (10 + 5) rather than dropping to $10 and disagreeing
+     * with the row that still shows $5.
+     */
+    @Test
+    fun `total stays consistent with the rows while a chain refetches`() =
+        runTest(testDispatcher) {
+            val eth = buildTestAddress(Chain.Ethereum, "0xeth", fiat = BigDecimal("10"))
+            val solResolved = buildTestAddress(Chain.Solana, "sol", fiat = BigDecimal("5"))
+            val solPending = buildTestAddress(Chain.Solana, "sol", fiat = null)
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddressBalances("vault-1") } returnsMany
+                listOf(
+                    flowOf(AddressBalancesUpdate(listOf(eth, solResolved), isComplete = true)),
+                    flowOf(AddressBalancesUpdate(listOf(eth, solPending), isComplete = true)),
+                )
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.totalFiatValue shouldBe "$15"
+
+            vm.refreshData()
+            advanceUntilIdle()
+
+            // Row still shows the retained $5, and the total still counts it: 10 + 5 = 15.
+            vm.solanaRow().fiatAmount shouldBe "$5"
+            vm.uiState.value.totalFiatValue shouldBe "$15"
+        }
+
+    /**
+     * Regression for #4768: within a single chain holding several tokens, a still-pending token
+     * must not blank the whole row. The partial total counts the resolved tokens, so the row must
+     * too — here Ethereum's native token resolves to $10 while an ERC-20 is still pending; the row
+     * reads $10 (not blank) and equals its contribution to the total.
+     */
+    @Test
+    fun `multi-token row shows resolved sum while one token is pending`() =
+        runTest(testDispatcher) {
+            val ethPartial =
+                buildMultiTokenAddress(
+                    Chain.Ethereum,
+                    "0xeth",
+                    nativeFiat = BigDecimal("10"),
+                    tokenFiat = null,
+                )
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddressBalances("vault-1") } returns
+                flowOf(AddressBalancesUpdate(listOf(ethPartial), isComplete = true))
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            // The pending ERC-20 does not blank the row; it shows the resolved native $10.
+            vm.uiState.value.accounts.first { it.model.chain == Chain.Ethereum }.fiatAmount shouldBe
+                "$10"
+            // And the row equals its contribution to the headline total.
+            vm.uiState.value.totalFiatValue shouldBe "$10"
+        }
+
+    /**
+     * Regression for #4768: switching vaults must not leak the previous vault's total or rows. When
+     * vault-2's first emission resolves nothing, the total/row must reset rather than carrying
+     * vault-1's $10 forward via the retain logic.
+     */
+    @Test
+    fun `switching vault clears the previous vault total and rows`() =
+        runTest(testDispatcher) {
+            // Same chain + address in both vaults so their retainKey collides — only the
+            // vault-change reset (not a key mismatch) can stop vault-1's $10 from leaking through.
+            val vault1Eth = buildTestAddress(Chain.Ethereum, "0xeth", fiat = BigDecimal("10"))
+            val vault2EthPending = buildTestAddress(Chain.Ethereum, "0xeth", fiat = null)
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns
+                flowOf("vault-1", "vault-2")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "One")
+            coEvery { vaultRepository.get("vault-2") } returns Vault(id = "vault-2", name = "Two")
+            every { accountsRepository.loadAddressBalances("vault-1") } returns
+                flowOf(AddressBalancesUpdate(listOf(vault1Eth), isComplete = true))
+            every { accountsRepository.loadAddressBalances("vault-2") } returns
+                flowOf(AddressBalancesUpdate(listOf(vault2EthPending), isComplete = true))
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+
+            // vault-2 resolved nothing — neither vault-1's $10 total nor its row may leak through.
+            vm.uiState.value.totalFiatValue shouldBe null
+            vm.uiState.value.accounts.none { it.fiatAmount == "$10" }.shouldBeTrue()
+        }
+
+    /**
+     * Regression for #4768: a progressive snapshot can re-emit an address with no accounts. Retain
+     * must fall back to the cached accounts for that cycle rather than blanking the row/total.
+     */
+    @Test
+    fun `row keeps cached value when an address re-emits with empty accounts`() =
+        runTest(testDispatcher) {
+            val ethResolved = buildTestAddress(Chain.Ethereum, "0xeth", fiat = BigDecimal("10"))
+            val ethEmpty =
+                Address(chain = Chain.Ethereum, address = "0xeth", accounts = emptyList())
+
+            every { lastOpenedVaultRepository.lastOpenedVaultId } returns flowOf("vault-1")
+            coEvery { vaultRepository.get("vault-1") } returns Vault(id = "vault-1", name = "Test")
+            every { accountsRepository.loadAddressBalances("vault-1") } returnsMany
+                listOf(
+                    flowOf(AddressBalancesUpdate(listOf(ethResolved), isComplete = true)),
+                    flowOf(AddressBalancesUpdate(listOf(ethEmpty), isComplete = true)),
+                )
+            stubBalanceMappers()
+
+            val vm = createViewModel()
+            advanceUntilIdle()
+            vm.uiState.value.totalFiatValue shouldBe "$10"
+
+            vm.refreshData()
+            advanceUntilIdle()
+
+            // The empty re-emission must not blank the row or the total.
+            vm.uiState.value.accounts.first { it.model.chain == Chain.Ethereum }.fiatAmount shouldBe
+                "$10"
+            vm.uiState.value.totalFiatValue shouldBe "$10"
+        }
+
+    private fun VaultAccountsViewModel.solanaRow(): AccountUiModel =
+        uiState.value.accounts.first { it.model.chain == Chain.Solana }
+
+    /**
+     * Maps each [Address] to a UiModel using the same lenient per-row fold as production
+     * (`calculateAccountsPartialFiatValue`): fiat is null only when nothing in the address has
+     * resolved, and a partially-resolved address sums its resolved tokens (#4768).
+     */
+    private fun stubBalanceMappers() {
+        coEvery { addressToUiModelMapper(any()) } answers
+            {
+                val addr = firstArg<Address>()
+                val native = addr.accounts.first()
+                AccountUiModel(
+                    model = addr,
+                    chainName = addr.chain.raw,
+                    logo = 0,
+                    address = addr.address,
+                    nativeTokenAmount = native.tokenValue?.let { "1.0" },
+                    fiatAmount =
+                        addr.accounts.calculateAccountsPartialFiatValue()?.let {
+                            "$" + it.value.toPlainString()
+                        },
+                    assetsSize = addr.accounts.size,
+                    nativeTokenTicker = native.token.ticker,
+                )
+            }
+        coEvery { fiatValueToStringMapper(any(), any()) } answers
+            {
+                "$" + firstArg<FiatValue>().value.toPlainString()
+            }
+    }
+
+    private fun buildTestAddress(chain: Chain, address: String, fiat: BigDecimal?): Address {
+        val nativeCoin =
+            Coin(
+                chain = chain,
+                ticker = chain.feeUnit,
+                logo = "",
+                address = address,
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+        val account =
+            Account(
+                token = nativeCoin,
+                tokenValue =
+                    fiat?.let { TokenValue(value = BigInteger.ONE, unit = nativeCoin.ticker, 18) },
+                fiatValue = fiat?.let { FiatValue(value = it, currency = "USD") },
+                price = fiat?.let { FiatValue(value = it, currency = "USD") },
+            )
+        return Address(chain = chain, address = address, accounts = listOf(account))
+    }
+
+    /**
+     * Builds an [Address] with a resolved native account plus a second (ERC-20-style) token whose
+     * fiat may be pending, to exercise the lenient per-row fold (#4768).
+     */
+    private fun buildMultiTokenAddress(
+        chain: Chain,
+        address: String,
+        nativeFiat: BigDecimal,
+        tokenFiat: BigDecimal?,
+    ): Address {
+        fun coin(ticker: String, native: Boolean) =
+            Coin(
+                chain = chain,
+                ticker = ticker,
+                logo = "",
+                address = address,
+                decimal = 18,
+                hexPublicKey = "",
+                priceProviderID = "",
+                contractAddress = if (native) "" else "0xtoken",
+                isNativeToken = native,
+            )
+
+        fun account(coin: Coin, fiat: BigDecimal?) =
+            Account(
+                token = coin,
+                tokenValue =
+                    fiat?.let { TokenValue(value = BigInteger.ONE, unit = coin.ticker, 18) },
+                fiatValue = fiat?.let { FiatValue(value = it, currency = "USD") },
+                price = fiat?.let { FiatValue(value = it, currency = "USD") },
+            )
+
+        return Address(
+            chain = chain,
+            address = address,
+            accounts =
+                listOf(
+                    account(coin(chain.feeUnit, native = true), nativeFiat),
+                    account(coin("TKN", native = false), tokenFiat),
+                ),
+        )
+    }
 
     private fun buildTestAddress(chain: Chain, address: String): Address {
         val nativeCoin =

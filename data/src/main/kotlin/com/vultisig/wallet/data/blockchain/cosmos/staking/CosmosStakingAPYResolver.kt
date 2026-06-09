@@ -89,6 +89,11 @@ constructor(private val cosmosStakingService: CosmosStakingService) : CosmosStak
     private val inFlight = mutableMapOf<Chain, CompletableDeferred<CosmosChainApyData?>>()
 
     override suspend fun chainApy(chain: Chain, stakingDenom: String): CosmosChainApyData? {
+        // QBTC has no x/mint module, so the inflation fan-out always 501s and collapses to a null
+        // APY. Short-circuit before the four LCD round-trips so the positions screen isn't held up
+        // by ~1s of doomed requests on every load.
+        if (chain == Chain.Qbtc) return null
+
         // Cache hit, then in-flight coalescing, then fresh fan-out — all under the mutex.
         // Ownership is decided inside the mutex so only the creator runs the fan-out; an identity
         // check after the lock would be true for every coalescing caller too (they share the same

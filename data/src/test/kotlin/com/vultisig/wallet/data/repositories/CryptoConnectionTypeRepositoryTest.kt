@@ -11,9 +11,16 @@ internal class CryptoConnectionTypeRepositoryTest {
 
     @Test
     fun `chains with a DeFi positions screen are recognised`() {
-        // Terra / TerraClassic must be present — otherwise the LUNA/LUNC staking view is filtered
-        // out of the DeFi portfolio list and the user can never reach it.
-        listOf(Chain.ThorChain, Chain.MayaChain, Chain.Tron, Chain.Terra, Chain.TerraClassic)
+        // Terra / TerraClassic / QBTC must be present — otherwise the Cosmos staking view is
+        // filtered out of the DeFi portfolio list and the user can never reach it.
+        listOf(
+                Chain.ThorChain,
+                Chain.MayaChain,
+                Chain.Tron,
+                Chain.Terra,
+                Chain.TerraClassic,
+                Chain.Qbtc,
+            )
             .forEach { chain -> assertTrue(repository.hasDeFiPositionsScreen(chain), chain.raw) }
     }
 

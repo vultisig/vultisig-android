@@ -105,6 +105,7 @@ constructor(
                         Chain.Tron.id,
                         Chain.Terra.id,
                         Chain.TerraClassic.id,
+                        Chain.Qbtc.id,
                     )
             )
                 BOTH_CRYPTO_CONNECTION_TYPES
@@ -141,7 +142,8 @@ constructor(
                                     ChainDashboardRoute.PositionMaya(vaultId = vaultId)
                                 Chain.Tron.id -> ChainDashboardRoute.PositionTron(vaultId = vaultId)
                                 Chain.Terra.id,
-                                Chain.TerraClassic.id ->
+                                Chain.TerraClassic.id,
+                                Chain.Qbtc.id ->
                                     ChainDashboardRoute.PositionCosmosStaking(
                                         vaultId = vaultId,
                                         chainId = requireNotNull(chainId),

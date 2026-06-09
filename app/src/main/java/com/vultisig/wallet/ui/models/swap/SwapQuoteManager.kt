@@ -546,6 +546,7 @@ constructor(
             is SwapException.InsufficientFunds,
             is SwapException.HighPriceImpact,
             is SwapException.RateLimitExceeded,
+            is SwapException.TradingHalted,
             is SwapException.TimeOut,
             is TimeoutCancellationException,
             is SwapException.NetworkConnection,
@@ -1030,6 +1031,8 @@ constructor(
                 UiText.StringResource(R.string.swap_error_amount_too_low)
             is SwapException.SwapRouteNotAvailable ->
                 UiText.StringResource(R.string.swap_route_not_available)
+            is SwapException.TradingHalted ->
+                UiText.StringResource(R.string.swap_error_trading_halted)
             is SwapException.TimeOut -> UiText.StringResource(R.string.swap_error_time_out)
             is SwapException.NetworkConnection ->
                 UiText.StringResource(R.string.network_connection_lost)

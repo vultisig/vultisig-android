@@ -41,6 +41,8 @@ import timber.log.Timber
 
 internal data class CosmosDelegateUiState(
     val ticker: String = "",
+    /** Native-coin base-unit decimals — drives the validator picker's voting-power formatting. */
+    val decimal: Int = 0,
     val validators: List<CosmosValidator> = emptyList(),
     val selectedValidator: CosmosValidator? = null,
     val validatorSearchQuery: String = "",
@@ -326,7 +328,13 @@ constructor(
                 withContext(ioDispatcher) { balanceRepository.cachedSpendableBalance(nativeCoin) }
             val stakeable = (total - feeReservation).coerceAtLeast(BigDecimal.ZERO)
 
-            _state.update { it.copy(ticker = nativeCoin.ticker, stakeableBalance = stakeable) }
+            _state.update {
+                it.copy(
+                    ticker = nativeCoin.ticker,
+                    decimal = nativeCoin.decimal,
+                    stakeableBalance = stakeable,
+                )
+            }
         }
     }
 

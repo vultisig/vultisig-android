@@ -138,6 +138,7 @@ internal fun CosmosRedelegateScreen(viewModel: CosmosRedelegateViewModel = hiltV
                 isLoading = state.isLoadingValidators,
                 validators = viewModel.visibleValidators(state),
                 ticker = state.ticker,
+                decimal = state.decimal,
                 selectedValidatorAddress = state.selectedDstValidator?.operatorAddress,
                 onValidatorSelected = viewModel::selectDstValidator,
                 onResolveAvatar = viewModel::resolveValidatorAvatar,
