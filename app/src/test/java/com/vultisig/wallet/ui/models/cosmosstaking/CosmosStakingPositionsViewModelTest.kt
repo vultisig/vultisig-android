@@ -152,6 +152,27 @@ internal class CosmosStakingPositionsViewModelTest {
             .also { it.setData(vaultId = "v1", chainId = "Terra") }
 
     @Test
+    fun `hasClaimableRewards is true when a reward exceeds one base unit`() = runTest {
+        // Fixture reward is 250000 uluna (0.25 LUNA) — well above one base unit, so claimable.
+        assertEquals(true, vm().state.value.hasClaimableRewards)
+    }
+
+    @Test
+    fun `hasClaimableRewards is false when rewards round down to zero base units`() = runTest {
+        // 0.5 uluna accrued — a fractional cosmos.Dec below one whole base unit, so withdrawal
+        // would yield 0; the Claim CTA must stay hidden rather than burn a fee on nothing.
+        coEvery { cosmosStakingService.fetchDelegatorRewards(any(), any()) } returns
+            CosmosDelegatorRewards(
+                rewards =
+                    listOf(
+                        CosmosDelegatorReward(activeVal, listOf(CosmosStakingCoin("uluna", "0.5")))
+                    ),
+                total = emptyList(),
+            )
+        assertEquals(false, vm().state.value.hasClaimableRewards)
+    }
+
+    @Test
     fun `builds rows with correct status and total staked`() = runTest {
         val model = vm()
         val s = model.state.value

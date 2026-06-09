@@ -156,8 +156,7 @@ internal fun CosmosStakingPositionsScreen(
                                 ticker = state.ticker,
                                 totalStaked = formatStakeAmount(state.totalStaked),
                                 totalFiat = state.totalStakedFiat,
-                                hasClaimableRewards =
-                                    state.positions.any { it.pendingReward > BigDecimal.ZERO },
+                                hasClaimableRewards = state.hasClaimableRewards,
                                 onClaim = viewModel::claimAll,
                                 onDelegateToNewValidator = viewModel::stakeMore,
                             )

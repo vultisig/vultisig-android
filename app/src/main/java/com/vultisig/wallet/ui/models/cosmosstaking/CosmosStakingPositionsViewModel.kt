@@ -49,6 +49,13 @@ internal data class CosmosStakingPositionsUiState(
     val ticker: String = "",
     val coinLogo: String = "",
     val positions: List<CosmosStakePositionRow> = emptyList(),
+    /**
+     * True only when at least one validator has accrued a whole base unit of rewards. Rewards
+     * accrue as fractional base units (`cosmos.Dec`) but withdrawal floors to whole base units, so
+     * a sub-1-base-unit reward shows a non-zero tile yet is unclaimable — gating Claim on it would
+     * let the user pay a fee to withdraw nothing.
+     */
+    val hasClaimableRewards: Boolean = false,
     val pendingUnbondings: List<CosmosUnbondingDelegation> = emptyList(),
     val totalStaked: BigDecimal = BigDecimal.ZERO,
     val isLoading: Boolean = false,
@@ -180,6 +187,8 @@ constructor(
                         _state.update {
                             it.copy(
                                 positions = cached.positions,
+                                hasClaimableRewards =
+                                    hasClaimableRewards(cached.positions, coin.decimal),
                                 pendingUnbondings = cached.pendingUnbondings,
                                 totalStaked = cached.totalStaked,
                                 totalStakedFiat = cached.totalStakedFiat,
@@ -342,6 +351,7 @@ constructor(
                     _state.update {
                         it.copy(
                             positions = positions,
+                            hasClaimableRewards = hasClaimableRewards(positions, decimals),
                             pendingUnbondings = unbondings,
                             totalStaked = totalStaked,
                             totalStakedFiat = totalStakedFiat,
@@ -537,6 +547,16 @@ constructor(
             value > BigDecimal.ONE -> BigDecimal.ONE
             else -> value
         }
+
+    // A reward is claimable only once it reaches a whole base unit, since withdrawal floors the
+    // fractional cosmos.Dec accrual. `pendingReward` is in coin units, so one base unit is 10^-dp.
+    private fun hasClaimableRewards(
+        positions: List<CosmosStakePositionRow>,
+        decimals: Int,
+    ): Boolean {
+        val oneBaseUnit = BigDecimal.ONE.movePointLeft(decimals)
+        return positions.any { it.pendingReward >= oneBaseUnit }
+    }
 
     /**
      * Fires off Keybase avatar lookups for any row that has a non-empty identity. Lookups are
