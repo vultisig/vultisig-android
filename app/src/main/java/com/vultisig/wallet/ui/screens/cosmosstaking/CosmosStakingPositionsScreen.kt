@@ -38,16 +38,11 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
-import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsViewModel
@@ -108,31 +103,16 @@ internal fun CosmosStakingPositionsScreen(
                     )
                 }
 
-                Row(
+                // Single manage-positions control: the ChainDashboard top-bar action above. The
+                // inline edit-chains button that used to sit here duplicated it (#4821).
+                Box(
                     modifier =
-                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp)
                 ) {
                     VsTabGroup(index = 0) {
                         COSMOS_STAKING_TABS.forEach { tab ->
                             tab { VsTab(label = stringResource(tab.displayNameRes), onClick = {}) }
                         }
-                    }
-                    V2Container(
-                        type = ContainerType.SECONDARY,
-                        cornerType = CornerType.Circular,
-                        modifier =
-                            Modifier.clickOnce(
-                                onClick = { viewModel.setPositionSelectionDialogVisibility(true) }
-                            ),
-                    ) {
-                        UiIcon(
-                            drawableResId = R.drawable.edit_chain,
-                            size = 16.dp,
-                            modifier = Modifier.padding(all = 12.dp),
-                            tint = Theme.v2.colors.primary.accent4,
-                        )
                     }
                 }
 

@@ -1,10 +1,8 @@
 package com.vultisig.wallet.ui.screens.v2.defi.maya
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,12 +27,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.VaultId
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
-import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.MayachainDefiPositionsUiModel
@@ -164,11 +157,9 @@ internal fun MayachainDefiPositionsScreenContent(
 
             UiSpacer(16.dp)
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            // Single manage-positions control: the ChainDashboard top-bar action above. The inline
+            // edit-chains button that used to sit here duplicated it (#4821).
+            Box(modifier = Modifier.fillMaxWidth()) {
                 VsTabGroup(index = tabs.indexOfFirst { it.displayNameRes == state.selectedTab }) {
                     tabs.forEach { tab ->
                         tab {
@@ -178,19 +169,6 @@ internal fun MayachainDefiPositionsScreenContent(
                             )
                         }
                     }
-                }
-
-                V2Container(
-                    type = ContainerType.SECONDARY,
-                    cornerType = CornerType.Circular,
-                    modifier = Modifier.clickOnce(onClick = onEditPositionClick),
-                ) {
-                    UiIcon(
-                        drawableResId = R.drawable.edit_chain,
-                        size = 16.dp,
-                        modifier = Modifier.padding(all = 12.dp),
-                        tint = Theme.v2.colors.primary.accent4,
-                    )
                 }
             }
 
