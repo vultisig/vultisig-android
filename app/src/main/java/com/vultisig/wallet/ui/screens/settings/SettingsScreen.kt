@@ -43,6 +43,7 @@ import com.vultisig.wallet.ui.models.settings.SettingsUiEvent
 import com.vultisig.wallet.ui.models.settings.SettingsUiModel
 import com.vultisig.wallet.ui.models.settings.SettingsViewModel
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.ShareLinkBottomSheet
+import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheet
 import com.vultisig.wallet.ui.theme.Theme
 import com.vultisig.wallet.ui.utils.VsUriHandler
 import com.vultisig.wallet.ui.utils.asString
@@ -71,6 +72,8 @@ fun SettingsScreen() {
         onShareVaultQrClick = viewModel::onShareVaultQrClick,
         onDismissShareLink = viewModel::onDismissShareLinkBottomSheet,
         onVersionClick = viewModel::onVersionClick,
+        onUnlockCustomRpcTier = viewModel::onUnlockCustomRpcTier,
+        onDismissCustomRpcUpsell = viewModel::onDismissCustomRpcUpsell,
     )
 }
 
@@ -84,6 +87,8 @@ private fun SettingsScreen(
     onDismissReferral: () -> Unit,
     onDismissShareLink: () -> Unit,
     onVersionClick: () -> Unit,
+    onUnlockCustomRpcTier: () -> Unit,
+    onDismissCustomRpcUpsell: () -> Unit,
 ) {
     V2Scaffold(
         title = stringResource(R.string.settings_screen_title),
@@ -124,6 +129,14 @@ private fun SettingsScreen(
 
         if (state.showShareBottomSheet) {
             ShareLinkBottomSheet(onDismissRequest = onDismissShareLink)
+        }
+
+        if (state.showCustomRpcUpsell) {
+            TierDiscountBottomSheet(
+                tier = TierType.SILVER,
+                onContinue = onUnlockCustomRpcTier,
+                onDismissRequest = onDismissCustomRpcUpsell,
+            )
         }
     }
 }
@@ -290,6 +303,8 @@ internal fun SettingsScreenPreview() {
         onShareVaultQrClick = {},
         onDismissShareLink = {},
         onVersionClick = {},
+        onUnlockCustomRpcTier = {},
+        onDismissCustomRpcUpsell = {},
     )
 }
 

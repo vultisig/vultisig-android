@@ -51,6 +51,7 @@ internal data class SettingsUiModel(
     val items: List<SettingsGroupUiModel>,
     val hasToShowReferralCodeSheet: Boolean = false,
     val showShareBottomSheet: Boolean = false,
+    val showCustomRpcUpsell: Boolean = false,
 )
 
 internal data class SettingsGroupUiModel(val title: UiText, val items: List<SettingsItem>)
@@ -347,9 +348,10 @@ constructor(
             }
 
             CustomRpc -> {
-                // Tier gate at the entry point (parity with iOS): below Silver, route to the
-                // upsell instead of the editor. Once inside the list the user edits freely. A
-                // failed/unknown tier lookup falls back to the upsell rather than blocking access.
+                // Tier gate at the entry point (parity with iOS): below Silver, show the Silver
+                // upsell dialog instead of the editor. Once inside the list the user edits freely.
+                // A failed/unknown tier lookup falls back to the upsell rather than blocking
+                // access.
                 viewModelScope.launch {
                     val isSilver =
                         runCatching { getDiscountBps.hasReachedSilverTier(vaultId) }
@@ -357,7 +359,7 @@ constructor(
                     if (isSilver) {
                         navigator.route(Route.CustomRpcList(vaultId))
                     } else {
-                        navigator.route(Route.DiscountTiers(vaultId))
+                        state.update { it.copy(showCustomRpcUpsell = true) }
                     }
                 }
             }
@@ -537,5 +539,14 @@ constructor(
 
     private fun openShareLinkModalBottomSheet() {
         state.update { it.copy(showShareBottomSheet = true) }
+    }
+
+    fun onDismissCustomRpcUpsell() {
+        state.update { it.copy(showCustomRpcUpsell = false) }
+    }
+
+    fun onUnlockCustomRpcTier() {
+        state.update { it.copy(showCustomRpcUpsell = false) }
+        viewModelScope.launch { navigator.route(Route.DiscountTiers(vaultId)) }
     }
 }
