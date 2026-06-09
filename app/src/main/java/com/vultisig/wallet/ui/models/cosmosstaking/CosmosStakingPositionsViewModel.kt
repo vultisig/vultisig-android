@@ -371,7 +371,13 @@ constructor(
                     // view on the next reopen until the live refresh repairs it. Skip the write so
                     // a
                     // transient LCD blip is never persisted as truth (issue #4773 review).
-                    val priceOk = resolvedPrice != null && resolvedPrice.signum() > 0
+                    // A chain with no price feed (QBTC) legitimately prices to $0.00 — that's not
+                    // the degraded "price fetch failed" case above, so only skip the write when a
+                    // feed-bearing chain couldn't be priced. Otherwise QBTC never caches and every
+                    // reopen is a cold load.
+                    val priceOk =
+                        coin.priceProviderID.isEmpty() ||
+                            (resolvedPrice != null && resolvedPrice.signum() > 0)
                     if (validatorsResult.isSuccess && priceOk) {
                         snapshotCache.write(
                             cacheKey,

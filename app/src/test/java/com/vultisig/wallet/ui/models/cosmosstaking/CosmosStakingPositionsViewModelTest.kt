@@ -71,7 +71,7 @@ internal class CosmosStakingPositionsViewModelTest {
             address = "terra1delegator",
             decimal = 6,
             hexPublicKey = "02".repeat(33),
-            priceProviderID = "",
+            priceProviderID = "terra-luna",
             contractAddress = "",
             isNativeToken = true,
         )
@@ -359,12 +359,31 @@ internal class CosmosStakingPositionsViewModelTest {
     }
 
     @Test
-    fun `a missing price is not frozen into the cache`() = runTest {
-        // A price miss renders every fiat slot as $0.00; freezing that snapshot would reseed a
-        // zeroed-out screen on reopen, so the write is skipped until a real price is available.
+    fun `a missing price on a feed-bearing chain is not frozen into the cache`() = runTest {
+        // A price miss on a chain that HAS a feed renders every fiat slot as $0.00; freezing that
+        // snapshot would reseed a zeroed-out screen on reopen, so the write is skipped until a real
+        // price is available.
         coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
         vm()
         assertNull(snapshotCache.read("Terra:terra1delegator"))
+    }
+
+    @Test
+    fun `a no-price-feed chain still writes the cache despite a null price`() = runTest {
+        // QBTC has no price feed, so $0.00 fiat is correct rather than a failed fetch — the
+        // snapshot
+        // must still be cached so reopens render instantly instead of cold-loading every time.
+        coEvery { vaultRepository.get(any()) } returns
+            Vault(
+                id = "v1",
+                name = "v",
+                pubKeyECDSA = "pk",
+                localPartyID = "lp",
+                coins = listOf(coin.copy(priceProviderID = "")),
+            )
+        coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
+        vm()
+        assertNotNull(snapshotCache.read("Terra:terra1delegator"))
     }
 
     @Test
