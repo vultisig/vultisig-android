@@ -1,5 +1,11 @@
 package com.vultisig.wallet.ui.screens.cosmosstaking
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -29,9 +35,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
@@ -50,6 +61,7 @@ import com.vultisig.wallet.ui.components.v2.containers.CornerType
 import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsViewModel
 import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
@@ -89,12 +101,57 @@ internal fun CosmosStakingPositionsScreen(
 
     LaunchedEffect(vaultId, chainId) { viewModel.setData(vaultId = vaultId, chainId = chainId) }
 
+    // Reload when the screen comes back to the foreground — e.g. after returning from a completed
+    // delegate / undelegate / redelegate / claim — so Total Staked and the positions reflect the tx
+    // without a manual pull. The first resume is a no-op in the VM (#4815).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
+
     RegisterChainDashboardTopBarAction(
         icon = R.drawable.ic_shapes_plus_x_square_circle,
         onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
     )
 
-    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = { viewModel.refresh() }) {
+    CosmosStakingPositionsContent(
+        state = state,
+        chainId = chainId,
+        isRefreshing = isRefreshing,
+        onRefresh = viewModel::refresh,
+        onManagePositions = { viewModel.setPositionSelectionDialogVisibility(true) },
+        onClaim = viewModel::claimAll,
+        onDelegateToNewValidator = viewModel::stakeMore,
+        onUnstake = viewModel::unstake,
+        onMove = viewModel::move,
+        onStakeMore = viewModel::stakeMore,
+        onPositionSelectionChange = viewModel::onPositionSelectionChange,
+        onPositionSelectionDone = viewModel::onPositionSelectionDone,
+        onDismissDialog = { viewModel.setPositionSelectionDialogVisibility(false) },
+    )
+}
+
+/**
+ * Stateless body of the staking-positions screen — split out from the Hilt/ViewModel-bound
+ * [CosmosStakingPositionsScreen] so the loaded / loading / empty states are previewable in
+ * isolation (the public composable can't be, since it drives navigation and registers top-bar
+ * actions).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CosmosStakingPositionsContent(
+    state: CosmosStakingPositionsUiState,
+    chainId: String,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    onManagePositions: () -> Unit,
+    onClaim: () -> Unit,
+    onDelegateToNewValidator: () -> Unit,
+    onUnstake: (CosmosStakePositionRow) -> Unit,
+    onMove: (CosmosStakePositionRow) -> Unit,
+    onStakeMore: () -> Unit,
+    onPositionSelectionChange: (String, Boolean) -> Unit,
+    onPositionSelectionDone: () -> Unit,
+    onDismissDialog: () -> Unit,
+) {
+    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)
@@ -122,10 +179,7 @@ internal fun CosmosStakingPositionsScreen(
                     V2Container(
                         type = ContainerType.SECONDARY,
                         cornerType = CornerType.Circular,
-                        modifier =
-                            Modifier.clickOnce(
-                                onClick = { viewModel.setPositionSelectionDialogVisibility(true) }
-                            ),
+                        modifier = Modifier.clickOnce(onClick = onManagePositions),
                     ) {
                         UiIcon(
                             drawableResId = R.drawable.edit_chain,
@@ -142,13 +196,7 @@ internal fun CosmosStakingPositionsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     if (!state.isPositionEnabled) {
-                        item {
-                            NoPositionsContainer(
-                                onManagePositionsClick = {
-                                    viewModel.setPositionSelectionDialogVisibility(true)
-                                }
-                            )
-                        }
+                        item { NoPositionsContainer(onManagePositionsClick = onManagePositions) }
                     } else {
                         item {
                             TotalStakedCard(
@@ -157,8 +205,8 @@ internal fun CosmosStakingPositionsScreen(
                                 totalStaked = formatStakeAmount(state.totalStaked),
                                 totalFiat = state.totalStakedFiat,
                                 hasClaimableRewards = state.hasClaimableRewards,
-                                onClaim = viewModel::claimAll,
-                                onDelegateToNewValidator = viewModel::stakeMore,
+                                onClaim = onClaim,
+                                onDelegateToNewValidator = onDelegateToNewValidator,
                             )
                         }
 
@@ -183,29 +231,26 @@ internal fun CosmosStakingPositionsScreen(
                                     position = position,
                                     ticker = state.ticker,
                                     fiat = position.stakedFiatDisplay,
-                                    onUnstake = { viewModel.unstake(position) },
-                                    onMove = { viewModel.move(position) },
-                                    onStakeMore = viewModel::stakeMore,
+                                    onUnstake = { onUnstake(position) },
+                                    onMove = { onMove(position) },
+                                    onStakeMore = onStakeMore,
                                 )
                             }
+                        } else if (state.isLoading) {
+                            // First fetch in flight with nothing cached: show skeleton placeholder
+                            // cards instead of plain text, which reads as "stuck" for the second or
+                            // two the fan-out takes (#4815).
+                            items(count = 2, key = { "skeleton-$it" }) { StakingPositionSkeleton() }
                         } else {
-                            // No delegations yet: surface a loading hint while the first fetch is
-                            // in
-                            // flight, then an empty-state once it settles (the screen would
-                            // otherwise
-                            // render only the zeroed Total Staked card).
+                            // Fetch settled with no delegations: empty-state (the screen would
+                            // otherwise render only the zeroed Total Staked card).
                             item {
                                 Text(
                                     text =
-                                        if (state.isLoading)
-                                            stringResource(
-                                                R.string.cosmos_staking_loading_positions
-                                            )
-                                        else
-                                            stringResource(
-                                                R.string.cosmos_staking_empty_positions,
-                                                state.ticker,
-                                            ),
+                                        stringResource(
+                                            R.string.cosmos_staking_empty_positions,
+                                            state.ticker,
+                                        ),
                                     style = Theme.brockmann.body.s.medium,
                                     color = Theme.v2.colors.text.secondary,
                                 )
@@ -249,9 +294,9 @@ internal fun CosmosStakingPositionsScreen(
                     stakePositions = state.stakePositionsDialog,
                     selectedPositions = state.tempSelectedPositions,
                     searchTextFieldState = searchTextFieldState,
-                    onPositionSelectionChange = viewModel::onPositionSelectionChange,
-                    onDoneClick = viewModel::onPositionSelectionDone,
-                    onCancelClick = { viewModel.setPositionSelectionDialogVisibility(false) },
+                    onPositionSelectionChange = onPositionSelectionChange,
+                    onDoneClick = onPositionSelectionDone,
+                    onCancelClick = onDismissDialog,
                 )
             }
         }
@@ -532,6 +577,85 @@ private fun PositionRow(
     }
 }
 
+/**
+ * Placeholder delegation card shown during the first cold load (#4815). Mirrors the [PositionRow]
+ * silhouette — avatar + two text lines + an amount bar — with a shimmering brush so the wait reads
+ * as "loading" rather than "stuck".
+ */
+@Composable
+private fun StakingPositionSkeleton() {
+    val brush = rememberShimmerBrush()
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.size(40.dp).clip(CircleShape).background(brush))
+            UiSpacer(size = 12.dp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                ShimmerBar(brush = brush, widthFraction = 0.5f, height = 14.dp)
+                ShimmerBar(brush = brush, widthFraction = 0.3f, height = 12.dp)
+            }
+        }
+        ShimmerBar(brush = brush, widthFraction = 1f, height = 12.dp)
+        ShimmerBar(brush = brush, widthFraction = 0.6f, height = 12.dp)
+    }
+}
+
+@Composable
+private fun ShimmerBar(brush: Brush, widthFraction: Float, height: androidx.compose.ui.unit.Dp) {
+    Box(
+        modifier =
+            Modifier.fillMaxWidth(widthFraction)
+                .height(height)
+                .clip(RoundedCornerShape(4.dp))
+                .background(brush)
+    )
+}
+
+/**
+ * Horizontally-sweeping shimmer gradient between the card surface and a slightly lighter border
+ * tone. Self-contained so the staking screen doesn't depend on a shared skeleton component (none
+ * exists yet).
+ */
+@Composable
+private fun rememberShimmerBrush(): Brush {
+    val transition = rememberInfiniteTransition(label = "staking-skeleton")
+    val translate by
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1000f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(durationMillis = 1200, easing = LinearEasing),
+                    repeatMode = RepeatMode.Restart,
+                ),
+            label = "staking-skeleton-translate",
+        )
+    val colors =
+        listOf(
+            Theme.v2.colors.backgrounds.secondary,
+            Theme.v2.colors.border.normal,
+            Theme.v2.colors.backgrounds.secondary,
+        )
+    return Brush.linearGradient(
+        colors = colors,
+        start = Offset(x = translate - 300f, y = 0f),
+        end = Offset(x = translate, y = 0f),
+    )
+}
+
 @Composable
 private fun UnbondingCard(unbonding: CosmosUnbondingDelegation) {
     Column(
@@ -735,3 +859,117 @@ private val stakeAmountFormat: DecimalFormat =
     DecimalFormat("#,##0.######").apply { roundingMode = RoundingMode.HALF_EVEN }
 
 internal fun formatStakeAmount(value: BigDecimal): String = stakeAmountFormat.format(value)
+
+private fun previewPosition(
+    address: String,
+    moniker: String,
+    staked: String,
+    fiat: String,
+    reward: String,
+    status: CosmosStakePositionRow.ValidatorStatus,
+    apy: BigDecimal? = BigDecimal("0.121"),
+) =
+    CosmosStakePositionRow(
+        validatorAddress = address,
+        validatorMoniker = moniker,
+        validatorIdentity = null,
+        stakedAmount = BigDecimal(staked),
+        stakedFiatDisplay = fiat,
+        pendingReward = BigDecimal(reward),
+        apyPercent = apy,
+        validatorAvatarUrl = null,
+        validatorStatus = status,
+        pendingUnbondingUnlockDate = null,
+        pendingUnbondingEntryCount = 0,
+    )
+
+private fun previewLoadedState() =
+    CosmosStakingPositionsUiState(
+        ticker = "LUNC",
+        coinLogo = "",
+        positions =
+            listOf(
+                previewPosition(
+                    address = "terravaloper1allnodes78wk0n3d3kjm0lue0ramln8m8r2x7yg",
+                    moniker = "Allnodes",
+                    staked = "1000",
+                    fiat = "$58.00",
+                    reward = "0.512345",
+                    status = CosmosStakePositionRow.ValidatorStatus.Active,
+                ),
+                previewPosition(
+                    address = "terravaloper1churned9wk0n3d3kjm0lue0ramln8m8r2zzzz",
+                    moniker = "Churned Val",
+                    staked = "234.5",
+                    fiat = "$13.60",
+                    reward = "0.0",
+                    status = CosmosStakePositionRow.ValidatorStatus.ChurnedOut,
+                    apy = null,
+                ),
+            ),
+        hasClaimableRewards = true,
+        totalStaked = BigDecimal("1234.5"),
+        totalStakedFiat = "$71.60",
+        totalAmountPrice = "$71.60",
+        selectedPositions = listOf("LUNC"),
+    )
+
+@Preview
+@Composable
+private fun CosmosStakingPositionsContentLoadedPreview() {
+    CosmosStakingPositionsContent(
+        state = previewLoadedState(),
+        chainId = "TerraClassic",
+        isRefreshing = false,
+        onRefresh = {},
+        onManagePositions = {},
+        onClaim = {},
+        onDelegateToNewValidator = {},
+        onUnstake = {},
+        onMove = {},
+        onStakeMore = {},
+        onPositionSelectionChange = { _, _ -> },
+        onPositionSelectionDone = {},
+        onDismissDialog = {},
+    )
+}
+
+@Preview
+@Composable
+private fun CosmosStakingPositionsContentLoadingPreview() {
+    CosmosStakingPositionsContent(
+        state =
+            CosmosStakingPositionsUiState(
+                ticker = "LUNC",
+                coinLogo = "",
+                positions = emptyList(),
+                isLoading = true,
+                selectedPositions = listOf("LUNC"),
+            ),
+        chainId = "TerraClassic",
+        isRefreshing = false,
+        onRefresh = {},
+        onManagePositions = {},
+        onClaim = {},
+        onDelegateToNewValidator = {},
+        onUnstake = {},
+        onMove = {},
+        onStakeMore = {},
+        onPositionSelectionChange = { _, _ -> },
+        onPositionSelectionDone = {},
+        onDismissDialog = {},
+    )
+}
+
+@Preview
+@Composable
+private fun StakingPositionSkeletonPreview() {
+    Column(
+        modifier =
+            Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp).fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        StakingPositionSkeleton()
+        StakingPositionSkeleton()
+    }
+}

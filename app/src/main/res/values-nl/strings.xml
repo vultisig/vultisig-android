@@ -1285,7 +1285,6 @@
     <string name="cosmos_staking_continue">Doorgaan</string>
     <string name="cosmos_staking_amount">Bedrag</string>
     <string name="cosmos_staking_loading_validators">Validators laden…</string>
-    <string name="cosmos_staking_loading_positions">Posities laden…</string>
     <string name="cosmos_staking_loading_rewards">Beloningen laden…</string>
     <string name="cosmos_staking_no_rewards">Geen claimbare beloningen op deze keten</string>
     <string name="cosmos_staking_empty_positions">Je hebt nog geen actieve %1$s-posities</string>
