@@ -74,6 +74,29 @@ internal class CosmosStakingDeFiBalanceServiceTest {
         }
 
     @Test
+    fun `persistStakedTotal writes the supplied total for the chain native coin`() = runTest {
+        // The staking-positions screen hands its freshly-fetched delegated + rewards total here so
+        // the cached DeFi read reflects it on next open (#4815).
+        coEvery { stakingDetailsRepository.getStakingDetailsByCoindId(VAULT_ID, any()) } returns
+            null
+        val saved = slot<com.vultisig.wallet.data.blockchain.model.StakingDetails>()
+        coJustRun { stakingDetailsRepository.saveStakingDetails(VAULT_ID, capture(saved)) }
+
+        service.persistStakedTotal(Chain.TerraClassic, VAULT_ID, BigInteger.valueOf(4_250_000))
+
+        assertEquals(BigInteger.valueOf(4_250_000), saved.captured.stakeAmount)
+        assertEquals(Coins.TerraClassic.LUNC.id, saved.captured.coin.id)
+    }
+
+    @Test
+    fun `persistStakedTotal is a no-op for a non-staking chain`() = runTest {
+        // Bitcoin has no cosmos native coin; the call must not attempt a write.
+        service.persistStakedTotal(Chain.Bitcoin, VAULT_ID, BigInteger.valueOf(100))
+
+        io.mockk.coVerify(exactly = 0) { stakingDetailsRepository.saveStakingDetails(any(), any()) }
+    }
+
+    @Test
     fun `failed delegations read blanks the balance rather than throwing`() = runTest {
         coEvery { stakingService.fetchDelegations(Chain.TerraClassic, ADDRESS) } throws
             RuntimeException("LCD down")

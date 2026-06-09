@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosDelegatorRewards
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingAPYResolver
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingCoin
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingEntry
@@ -29,6 +30,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import java.math.BigDecimal
+import java.math.BigInteger
 import java.text.NumberFormat
 import java.time.Instant
 import java.util.Locale
@@ -58,6 +60,8 @@ internal class CosmosStakingPositionsViewModelTest {
     private val tokenPriceRepository: TokenPriceRepository = mockk(relaxed = true)
     private val appCurrencyRepository: AppCurrencyRepository = mockk()
     private val snapshotCache = CosmosStakingSnapshotCache()
+    private val cosmosStakingDeFiBalanceService: CosmosStakingDeFiBalanceService =
+        mockk(relaxed = true)
     private val navigator: Navigator<Destination> = mockk(relaxed = true)
 
     private val activeVal = "terravaloper1active"
@@ -146,6 +150,7 @@ internal class CosmosStakingPositionsViewModelTest {
                 tokenPriceRepository = tokenPriceRepository,
                 appCurrencyRepository = appCurrencyRepository,
                 snapshotCache = snapshotCache,
+                cosmosStakingDeFiBalanceService = cosmosStakingDeFiBalanceService,
                 navigator = navigator,
                 ioDispatcher = testDispatcher,
             )
@@ -396,5 +401,42 @@ internal class CosmosStakingPositionsViewModelTest {
         assertNotNull(s.errorMessage)
         assertEquals(true, s.positions.isEmpty())
         assertNull(snapshotCache.read("Terra:terra1delegator"))
+    }
+
+    @Test
+    fun `refresh persists the staked total so the DeFi page reflects it`() = runTest {
+        // delegated 3_000_000 + 1_000_000 + claimable rewards 250_000 = 4_250_000 uluna; the same
+        // delegated + rewards sum CosmosStakingDeFiBalanceService.getRemoteDeFiBalance persists
+        // (#4815).
+        vm()
+        coVerify {
+            cosmosStakingDeFiBalanceService.persistStakedTotal(
+                chain = Chain.Terra,
+                vaultId = "v1",
+                totalBaseUnits = BigInteger("4250000"),
+            )
+        }
+    }
+
+    @Test
+    fun `onScreenResumed before the initial load is a no-op`() = runTest {
+        // Built without setData → coin is null, so a resume must not kick off a fetch (the initial
+        // load is driven by setData/loadCoin). The real reload only happens on a later resume after
+        // a completed staking tx (#4815).
+        val model =
+            CosmosStakingPositionsViewModel(
+                vaultRepository = vaultRepository,
+                cosmosStakingService = cosmosStakingService,
+                apyResolver = apyResolver,
+                keybaseAvatarService = keybaseAvatarService,
+                tokenPriceRepository = tokenPriceRepository,
+                appCurrencyRepository = appCurrencyRepository,
+                snapshotCache = snapshotCache,
+                cosmosStakingDeFiBalanceService = cosmosStakingDeFiBalanceService,
+                navigator = navigator,
+                ioDispatcher = testDispatcher,
+            )
+        model.onScreenResumed()
+        coVerify(exactly = 0) { cosmosStakingService.fetchDelegations(any(), any()) }
     }
 }

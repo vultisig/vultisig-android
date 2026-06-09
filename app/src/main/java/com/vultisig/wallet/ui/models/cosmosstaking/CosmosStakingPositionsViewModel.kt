@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosDelegatorRewards
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingAPYResolver
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingConfig
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
@@ -113,6 +114,7 @@ constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val snapshotCache: CosmosStakingSnapshotCache,
+    private val cosmosStakingDeFiBalanceService: CosmosStakingDeFiBalanceService,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -390,6 +392,29 @@ constructor(
                         )
                     }
 
+                    // Keep the persisted DeFi-page total in sync with what we just fetched, so the
+                    // portfolio/DeFi balance reflects a delegate/undelegate/redelegate on its next
+                    // open without a manual pull (#4815). Mirrors the delegated + claimable-rewards
+                    // sum CosmosStakingDeFiBalanceService.getRemoteDeFiBalance persists. Computed
+                    // from base-unit strings the fan-out already returned (no extra network).
+                    val delegatedBaseUnits =
+                        delegations.fold(BigInteger.ZERO) { acc, d ->
+                            acc + (d.balance.amount.toBigIntegerOrNull() ?: BigInteger.ZERO)
+                        }
+                    val rewardsBaseUnits =
+                        rewardsByValidator.values.fold(BigInteger.ZERO) { acc, v ->
+                            acc + v.toBigInteger()
+                        }
+                    this@CosmosStakingPositionsViewModel.vaultId?.let { vid ->
+                        runCatching {
+                            cosmosStakingDeFiBalanceService.persistStakedTotal(
+                                chain = chain,
+                                vaultId = vid,
+                                totalBaseUnits = delegatedBaseUnits + rewardsBaseUnits,
+                            )
+                        }
+                    }
+
                     // Fire-and-forget avatar resolution — each emission updates the row in-place.
                     // Published
                     // after the list is in `_state` so a cache-hit patch can't land on an empty
@@ -407,6 +432,19 @@ constructor(
                     if (isActive) _isRefreshing.value = false
                 }
             }
+    }
+
+    /**
+     * Re-fetch on screen resume. The first resume is a no-op — `coin` isn't loaded yet and the
+     * initial fetch is already driven by [setData]/[loadCoin]. A later resume means the user
+     * returned from a completed staking action (delegate / undelegate / redelegate / claim), so we
+     * reload to reflect the new Total Staked and positions without a manual pull-to-refresh
+     * (#4815). [refresh] re-seeds from the cached snapshot first, so this never flashes an empty
+     * screen.
+     */
+    fun onScreenResumed() {
+        if (coin == null) return
+        refresh()
     }
 
     fun stakeMore() {
@@ -430,6 +468,9 @@ constructor(
                     vaultId = vaultId,
                     chainId = chainId,
                     validatorAddress = position.validatorAddress,
+                    // Prefill the form instantly from the tapped position; the VM's LCD re-fetch
+                    // still corrects it if the staked amount changed (#4815).
+                    stakedAmount = position.stakedAmount.toPlainString(),
                 ),
                 popOptionsForStaking(Route.CosmosStakingUndelegate::class.java),
             )
@@ -446,6 +487,9 @@ constructor(
                     vaultId = vaultId,
                     chainId = chainId,
                     validatorSrcAddress = position.validatorAddress,
+                    // Prefill the form instantly from the tapped position; the VM's LCD re-fetch
+                    // still corrects it if the staked amount changed (#4815).
+                    stakedAmount = position.stakedAmount.toPlainString(),
                 ),
                 popOptionsForStaking(Route.CosmosStakingRedelegate::class.java),
             )

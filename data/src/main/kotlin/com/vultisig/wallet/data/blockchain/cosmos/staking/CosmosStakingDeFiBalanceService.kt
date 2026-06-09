@@ -85,6 +85,18 @@ class CosmosStakingDeFiBalanceService(
             BigInteger.ZERO
         }
 
+    /**
+     * Persists a staked total already fetched elsewhere (the staking-positions screen's live
+     * fan-out) so the cached DeFi-page read reflects it on the next open without a manual pull
+     * (#4815). [totalBaseUnits] must be the same delegated + claimable-rewards sum this service
+     * computes in [getRemoteDeFiBalance], so the two write paths stay consistent. No-op for a
+     * non-staking chain.
+     */
+    suspend fun persistStakedTotal(chain: Chain, vaultId: String, totalBaseUnits: BigInteger) {
+        val coin = nativeCoin(chain) ?: return
+        persistStakedBalance(vaultId, coin, totalBaseUnits)
+    }
+
     suspend fun getCacheDeFiBalance(chain: Chain, vaultId: String): List<DeFiBalance> {
         val coin = nativeCoin(chain) ?: return emptyList()
         val cached = stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, coin.id)
