@@ -67,7 +67,7 @@ constructor(
         val filtered =
             try {
                 val candidates = utxosService.fetchClaimableCandidates(btcAddress)
-                chainService.filterClaimable(candidates)
+                chainService.filterClaimable(candidates).filter { it.isMature }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

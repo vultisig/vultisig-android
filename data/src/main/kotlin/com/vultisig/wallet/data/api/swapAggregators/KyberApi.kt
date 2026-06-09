@@ -189,6 +189,7 @@ constructor(
         private const val REFERRER_ADDRESS = "0x8E247a480449c84a5fDD25974A8501f3EFa4ABb9"
         private const val CLIENT_ID = "vultisig-android"
         private const val NULL_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-        private const val SLIPPAGE_TOLERANCE = 2.5
+        // Slippage tolerance in basis points (10000 = 100%); 100 = 1%.
+        private const val SLIPPAGE_TOLERANCE = 100
     }
 }
