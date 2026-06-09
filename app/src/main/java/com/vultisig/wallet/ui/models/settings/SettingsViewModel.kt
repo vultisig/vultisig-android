@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.repositories.AppLocaleRepository
 import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
 import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Currency
@@ -249,6 +250,7 @@ constructor(
     private val referralRepository: ReferralCodeSettingsRepositoryContract,
     private val preventScreenshotsRepository: PreventScreenshotsRepository,
     private val customRpcConfig: CustomRpcConfig,
+    private val getDiscountBps: GetDiscountBpsUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _uiEvents = Channel<SettingsUiEvent>()
@@ -345,7 +347,19 @@ constructor(
             }
 
             CustomRpc -> {
-                viewModelScope.launch { navigator.route(Route.CustomRpcList(vaultId)) }
+                // Tier gate at the entry point (parity with iOS): below Silver, route to the
+                // upsell instead of the editor. Once inside the list the user edits freely. A
+                // failed/unknown tier lookup falls back to the upsell rather than blocking access.
+                viewModelScope.launch {
+                    val isSilver =
+                        runCatching { getDiscountBps.hasReachedSilverTier(vaultId) }
+                            .getOrDefault(false)
+                    if (isSilver) {
+                        navigator.route(Route.CustomRpcList(vaultId))
+                    } else {
+                        navigator.route(Route.DiscountTiers(vaultId))
+                    }
+                }
             }
 
             Notifications -> {

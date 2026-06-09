@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -59,10 +60,14 @@ constructor(
     val state: StateFlow<CustomRpcDetailUiState> = _state.asStateFlow()
 
     init {
-        val existing = customRpcRepository.urlFor(chain)
-        if (existing != null) {
-            urlFieldState.setTextAndPlaceCursorAtEnd(existing)
-            _state.update { it.copy(hasExistingOverride = true) }
+        // Read the persisted override off the main thread via the reactive API. The synchronous
+        // urlFor() would block on first-use disk hydration, and init runs on the main thread.
+        viewModelScope.launch {
+            val existing = customRpcRepository.overrides.first()[chain]
+            if (existing != null) {
+                urlFieldState.setTextAndPlaceCursorAtEnd(existing)
+                _state.update { it.copy(hasExistingOverride = true) }
+            }
         }
 
         // Re-validate and reset any stale test result whenever the field changes.

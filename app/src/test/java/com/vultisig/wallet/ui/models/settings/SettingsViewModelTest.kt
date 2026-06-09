@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.repositories.AppLocaleRepository
 import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
@@ -16,6 +17,7 @@ import com.vultisig.wallet.ui.utils.VsAuxiliaryLinks
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -45,6 +47,7 @@ internal class SettingsViewModelTest {
     private lateinit var referralRepository: ReferralCodeSettingsRepositoryContract
     private lateinit var preventScreenshotsRepository: PreventScreenshotsRepository
     private lateinit var customRpcConfig: CustomRpcConfig
+    private lateinit var getDiscountBps: GetDiscountBpsUseCase
 
     /** Sets up mocks and test dispatcher before each test. */
     @BeforeEach
@@ -59,6 +62,7 @@ internal class SettingsViewModelTest {
         referralRepository = mockk(relaxed = true)
         preventScreenshotsRepository = mockk(relaxed = true)
         customRpcConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
+        getDiscountBps = mockk(relaxed = true)
     }
 
     /** Cleans up mocks and resets test dispatcher after each test. */
@@ -76,6 +80,7 @@ internal class SettingsViewModelTest {
             referralRepository = referralRepository,
             preventScreenshotsRepository = preventScreenshotsRepository,
             customRpcConfig = customRpcConfig,
+            getDiscountBps = getDiscountBps,
             savedStateHandle = SavedStateHandle(),
         )
 
@@ -116,6 +121,37 @@ internal class SettingsViewModelTest {
             vm.state.value.hasToShowReferralCodeSheet.shouldBeTrue()
             vm.onDismissReferralBottomSheet()
             vm.state.value.hasToShowReferralCodeSheet.shouldBeFalse()
+        }
+
+    /** Silver-tier users reach the Custom RPC list directly. */
+    @Test
+    fun `clicking CustomRpc as Silver navigates to CustomRpcList`() =
+        runTest(testDispatcher) {
+            coEvery { getDiscountBps.hasReachedSilverTier(VAULT_ID) } returns true
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.CustomRpc)
+            coVerify { navigator.route(Route.CustomRpcList(VAULT_ID)) }
+        }
+
+    /** Below Silver, the Custom RPC entry routes to the discount-tiers upsell. */
+    @Test
+    fun `clicking CustomRpc below Silver navigates to DiscountTiers`() =
+        runTest(testDispatcher) {
+            coEvery { getDiscountBps.hasReachedSilverTier(VAULT_ID) } returns false
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.CustomRpc)
+            coVerify { navigator.route(Route.DiscountTiers(VAULT_ID)) }
+        }
+
+    /** A failed tier lookup falls back to the upsell rather than opening the list. */
+    @Test
+    fun `clicking CustomRpc with failing tier lookup falls back to DiscountTiers`() =
+        runTest(testDispatcher) {
+            coEvery { getDiscountBps.hasReachedSilverTier(VAULT_ID) } throws
+                RuntimeException("boom")
+            val vm = createViewModel()
+            vm.onSettingsItemClick(SettingsItem.CustomRpc)
+            coVerify { navigator.route(Route.DiscountTiers(VAULT_ID)) }
         }
 
     /** Verifies clicking PreventScreenshots calls setEnabled with toggled value. */
@@ -245,15 +281,6 @@ internal class SettingsViewModelTest {
                 vm.state.value.items.flatMap { it.items }.any { it is SettingsItem.CustomRpc }
 
             hasCustomRpc.shouldBeFalse()
-        }
-
-    /** Verifies clicking CustomRpc navigates to CustomRpcList with vault id. */
-    @Test
-    fun `clicking CustomRpc navigates to CustomRpcList`() =
-        runTest(testDispatcher) {
-            val vm = createViewModel()
-            vm.onSettingsItemClick(SettingsItem.CustomRpc)
-            coVerify { navigator.route(Route.CustomRpcList(VAULT_ID)) }
         }
 
     private companion object {

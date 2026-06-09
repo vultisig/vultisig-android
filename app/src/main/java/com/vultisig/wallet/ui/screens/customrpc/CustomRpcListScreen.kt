@@ -146,7 +146,6 @@ private fun CustomRpcListScreenPreview() {
     CustomRpcListScreen(
         state =
             CustomRpcListUiState(
-                isSilver = true,
                 rows =
                     listOf(
                         CustomRpcRowUiModel(
@@ -161,7 +160,7 @@ private fun CustomRpcListScreenPreview() {
                             logo = R.drawable.atom,
                             customUrl = null,
                         ),
-                    ),
+                    )
             ),
         onRowClick = {},
         onBackClick = {},
