@@ -1546,6 +1546,7 @@
     <string name="decoded_function_min_amount_out">最小转出金额</string>
     <string name="decoded_function_amount_out">转出金额</string>
     <string name="decoded_function_swap_title">交换</string>
+    <string name="decoded_function_truncated">更多参数未显示</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">提取 QBTC</string>
     <string name="qbtc_claim_loading">正在检查资格…</string>

@@ -59,6 +59,7 @@ import com.vultisig.wallet.data.qbtc.QbtcClaimResultPoller
 import com.vultisig.wallet.data.repositories.AddressBookRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
+import com.vultisig.wallet.data.repositories.ContractAbiRepository
 import com.vultisig.wallet.data.repositories.FourByteRepository
 import com.vultisig.wallet.data.repositories.PrettyJson
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
@@ -234,6 +235,7 @@ constructor(
     private val fourByteRepository: FourByteRepository,
     private val tokenMetadataResolver: TokenMetadataResolver,
     private val tonApi: TonApi,
+    private val contractAbiRepository: ContractAbiRepository,
     private val securityScannerService: SecurityScannerContract,
     private val addressBookRepository: AddressBookRepository,
     private val feeServiceComposite: FeeServiceComposite,
@@ -1192,6 +1194,9 @@ constructor(
                             json = json,
                             tokenMetadataResolver = tokenMetadataResolver,
                             nativeTokenLookup = { c -> nativeTokenOrNull(c.id) },
+                            resolveAbiParams = { c, address, sig ->
+                                contractAbiRepository.resolveParams(c, address, sig)
+                            },
                         )
 
                     val tonMessages =

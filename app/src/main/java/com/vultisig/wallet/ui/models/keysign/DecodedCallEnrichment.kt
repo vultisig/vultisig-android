@@ -3,9 +3,12 @@ package com.vultisig.wallet.ui.models.keysign
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
+import com.vultisig.wallet.data.repositories.AbiParam
 import com.vultisig.wallet.data.repositories.KnownEvmContracts
 import com.vultisig.wallet.data.repositories.TokenMetadataResolver
 import com.vultisig.wallet.data.repositories.UniversalRouterDecoder
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 
 /**
@@ -57,6 +60,7 @@ internal suspend fun enrichDecodedCall(
     json: Json,
     tokenMetadataResolver: TokenMetadataResolver,
     nativeTokenLookup: suspend (Chain) -> Coin? = { null },
+    resolveAbiParams: suspend (Chain, String, String) -> List<AbiParam>? = { _, _, _ -> null },
 ): DecodedCallExtras {
     if (functionInfo == null) return EMPTY
 
@@ -94,6 +98,21 @@ internal suspend fun enrichDecodedCall(
             )
         } else null
 
+    // Only the positional fallback benefits from recovered names, so skip the verified-ABI lookup
+    // entirely for swap intents and for calls a semantic handler already labels (approve,
+    // transfer…).
+    // Bound the Sourcify lookup: it runs on a client with no HttpTimeout and a 3x retry, and the
+    // caller awaits this before emitting the verify model and starting the security scan, so a slow
+    // or rate-limited Sourcify must not stall the signing screen. A timeout just drops the
+    // recovered
+    // names (the positional fallback still renders).
+    val abiParams =
+        if (urRows == null && !hasSemanticHandler(signature)) {
+            withTimeoutOrNull(ABI_RESOLVE_TIMEOUT) {
+                resolveAbiParams(chain, dstAddress, signature)
+            }
+        } else null
+
     val rows =
         urRows
             ?: decodedFunctionParams(
@@ -104,6 +123,7 @@ internal suspend fun enrichDecodedCall(
                 tokenDecimals = approvalToken?.decimals,
                 contractLabel = { address -> KnownEvmContracts.lookup(chain, address) },
                 isUnlimitedApproval = isUnlimitedApproval,
+                abiParams = abiParams,
             )
 
     return DecodedCallExtras(
@@ -146,3 +166,8 @@ private suspend fun resolveApprovalToken(
 }
 
 private val EMPTY = DecodedCallExtras(null, null, null, false)
+
+/**
+ * Upper bound on the verified-ABI name lookup so a slow Sourcify can't stall the signing screen.
+ */
+private val ABI_RESOLVE_TIMEOUT = 4.seconds

@@ -1231,6 +1231,7 @@
     <string name="decoded_function_min_amount_out">Minimalni izlazni iznos</string>
     <string name="decoded_function_amount_out">Izlazni iznos</string>
     <string name="decoded_function_swap_title">Zamjena</string>
+    <string name="decoded_function_truncated">Više parametara nije prikazano</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Preuzmi QBTC</string>
     <string name="qbtc_claim_loading">Provjera prihvatljivosti…</string>
