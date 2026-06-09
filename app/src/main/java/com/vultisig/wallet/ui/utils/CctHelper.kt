@@ -2,11 +2,13 @@ package com.vultisig.wallet.ui.utils
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsService
+import com.vultisig.wallet.app.activity.MainActivity
 import timber.log.Timber
 
 internal fun Activity.openCct(uri: Uri, onError: () -> Unit = {}) {
@@ -24,15 +26,24 @@ internal fun Activity.openCct(uri: Uri, onError: () -> Unit = {}) {
  * Opens [uri] in a standard browser via [Intent.ACTION_VIEW].
  *
  * Used as a fallback when no Custom-Tabs-capable browser is installed (e.g. Chrome-less devices
- * with Firefox as the default browser). [onError] is invoked only if no browser can handle the URI.
+ * with Firefox as the default browser). The app claims `vultisig.com` universal links, so a plain
+ * [Intent.ACTION_VIEW] could resolve back into our own [MainActivity]; [MainActivity] is excluded
+ * from the chooser so the URL always lands in a real browser. [onError] is invoked only if no
+ * browser can handle the URI.
  *
  * @param uri the URL to open.
  * @param onError invoked when no activity is available to open the URL.
  */
 private fun Activity.openInBrowser(uri: Uri, onError: () -> Unit) {
+    val browserIntent = Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
+    val chooser =
+        Intent.createChooser(browserIntent, null)
+            .putExtra(
+                Intent.EXTRA_EXCLUDE_COMPONENTS,
+                arrayOf(ComponentName(this, MainActivity::class.java)),
+            )
     try {
-        val browserIntent = Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
-        startActivity(browserIntent)
+        startActivity(chooser)
     } catch (e: ActivityNotFoundException) {
         Timber.e(e, "No browser available to open URI: %s", uri)
         onError()
