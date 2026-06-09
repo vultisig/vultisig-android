@@ -2195,6 +2195,52 @@ internal class SwapFormViewModelTest {
         }
 
     @Test
+    fun `InsufficientUtxos after a successful plan fee clears the stale fee and total`() =
+        runTest(mainDispatcher) {
+            // Regression for #4810: an earlier successful plan fee leaves the network-fee row and
+            // totalFee populated; a later quote that hits InsufficientUtxos must blank both rather
+            // than leaving a stale fee on screen alongside the insufficient-utxos error.
+            val vm = setupUtxoPlanFeeTest(SwapProvider.THORCHAIN, createThorChainQuote())
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.01")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            // The successful plan fee is shown and the swap is enabled.
+            assertFalse(vm.uiState.value.isSwapDisabled)
+            assertEquals("0.00000816 BTC", vm.uiState.value.feeBreakdown.networkFee)
+
+            // A later quote can no longer afford the plan: the fee must be cleared.
+            coEvery {
+                swapGasCalculator.resolveUtxoPlanFee(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns UtxoPlanFeeResult.InsufficientUtxos
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.02")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            assertTrue(vm.uiState.value.isSwapDisabled)
+            assertEquals(
+                UiText.StringResource(R.string.insufficient_utxos_error),
+                vm.uiState.value.formError,
+            )
+            assertEquals("", vm.uiState.value.feeBreakdown.networkFee)
+            assertEquals("", vm.uiState.value.feeBreakdown.networkFeeFiat)
+            assertEquals("", vm.uiState.value.feeBreakdown.totalFee)
+        }
+
+    @Test
     fun `calculateFees for UTXO chain clears fee and disables swap on plan network error`() =
         runTest(mainDispatcher) {
             coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
