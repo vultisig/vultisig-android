@@ -89,6 +89,7 @@ internal fun CosmosDelegateScreen(viewModel: CosmosDelegateViewModel = hiltViewM
                 isLoading = state.isLoadingValidators,
                 validators = viewModel.visibleValidators(state),
                 ticker = state.ticker,
+                decimal = state.decimal,
                 selectedValidatorAddress = state.selectedValidator?.operatorAddress,
                 onValidatorSelected = viewModel::selectValidator,
                 onResolveAvatar = viewModel::resolveValidatorAvatar,
@@ -317,6 +318,7 @@ internal fun ValidatorPickerSheet(
     isLoading: Boolean,
     validators: List<CosmosValidator>,
     ticker: String,
+    decimal: Int,
     selectedValidatorAddress: String?,
     onValidatorSelected: (CosmosValidator) -> Unit,
     onResolveAvatar: suspend (String?) -> String?,
@@ -432,6 +434,7 @@ internal fun ValidatorPickerSheet(
                                 ValidatorPickerRow(
                                     validator = validator,
                                     ticker = ticker,
+                                    decimal = decimal,
                                     isSelected = validator.operatorAddress == pickedAddress,
                                     onResolveAvatar = onResolveAvatar,
                                     onClick = { pickedAddress = validator.operatorAddress },
@@ -485,6 +488,7 @@ private fun ValidatorPickerHeader(title: String, onClose: () -> Unit, onConfirm:
 private fun ValidatorPickerRow(
     validator: CosmosValidator,
     ticker: String,
+    decimal: Int,
     isSelected: Boolean,
     onResolveAvatar: suspend (String?) -> String?,
     onClick: () -> Unit,
@@ -533,7 +537,7 @@ private fun ValidatorPickerRow(
                 maxLines = 1,
             )
             Text(
-                text = "${formatVotingPower(validator.votingPower)} $ticker",
+                text = "${formatVotingPower(validator.votingPower, decimal)} $ticker",
                 style = Theme.brockmann.supplementary.caption,
                 color = Theme.v2.colors.text.secondary,
                 maxLines = 1,
@@ -572,12 +576,12 @@ private fun formatCommissionPercent(commission: BigDecimal): String =
 
 /**
  * Voting power arrives as bond-denom base units (uint string). Render it in whole-token units with
- * thousands separators, matching the iOS validator picker (e.g. "137,888,608,306 LUNC"). LUNA/LUNC
- * use 6 decimals.
+ * thousands separators, matching the iOS validator picker (e.g. "137,888,608,306 LUNC"). The
+ * base-unit decimals are chain-specific — LUNA/LUNC use 6, QBTC uses 8 — so the coin's [decimals]
+ * must be passed in rather than assumed.
  */
-private fun formatVotingPower(votingPowerBaseUnits: BigDecimal): String {
-    // Terra (LUNA) and Terra Classic (LUNC) both use 6 base-unit decimals.
-    val whole = votingPowerBaseUnits.movePointLeft(6).toBigInteger()
+private fun formatVotingPower(votingPowerBaseUnits: BigDecimal, decimals: Int): String {
+    val whole = votingPowerBaseUnits.movePointLeft(decimals).toBigInteger()
     return "%,d".format(whole)
 }
 

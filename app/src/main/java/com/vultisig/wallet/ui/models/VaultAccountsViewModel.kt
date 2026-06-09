@@ -400,7 +400,8 @@ constructor(
                                 )
                             )
                         account.chainName.equals(Chain.Terra.raw, true) ||
-                            account.chainName.equals(Chain.TerraClassic.raw, true) ->
+                            account.chainName.equals(Chain.TerraClassic.raw, true) ||
+                            account.chainName.equals(Chain.Qbtc.raw, true) ->
                             navigator.route(
                                 Route.ChainDashboard(
                                     route =

@@ -115,7 +115,12 @@ object CosmosStakingHelper {
     }
 
     /**
-     * Builds the `AuthInfo` for a single-signer secp256k1 tx in SIGN_MODE_DIRECT.
+     * Builds the `AuthInfo` for a single-signer tx in SIGN_MODE_DIRECT.
+     *
+     * [pubKeyTypeUrl] defaults to secp256k1 (the Terra path). QBTC passes the ML-DSA URL
+     * (`/cosmos.crypto.mldsa.PubKey`) so the post-quantum signing path reuses this single AuthInfo
+     * encoder rather than maintaining a divergent copy — only the inner `Any` type URL differs by
+     * scheme; the rest of the wire shape is pubkey-agnostic.
      *
      * AuthInfo: `{ signer_infos(1, repeated), fee(2) }`. SignerInfo: `{ public_key(1, Any),
      * mode_info(2), sequence(3) }`. ModeInfo: `{ single(1) }` → Single: `{ mode(1) }`. Fee: `{
@@ -127,12 +132,13 @@ object CosmosStakingHelper {
         gasLimit: Long,
         feeDenom: String,
         feeAmount: Long,
+        pubKeyTypeUrl: String = PUBKEY_TYPE_URL,
     ): ByteArray {
         val pubKeyInner = ByteArrayOutputStream()
         pubKeyInner.appendProtoBytes(1, pubKey)
 
         val pubKeyAny = ByteArrayOutputStream()
-        pubKeyAny.appendProtoString(1, PUBKEY_TYPE_URL)
+        pubKeyAny.appendProtoString(1, pubKeyTypeUrl)
         pubKeyAny.appendProtoBytes(2, pubKeyInner.toByteArray())
 
         val single = ByteArrayOutputStream()

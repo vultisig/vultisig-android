@@ -131,6 +131,18 @@ class CosmosStakingAPYResolverTests {
     }
 
     @Test
+    fun `chainApy short-circuits to null for QBTC without hitting the LCD`() = runTest {
+        // QBTC has no x/mint module, so the fan-out would 501 and collapse to null anyway — it must
+        // skip the four reads entirely so the positions screen isn't slowed by doomed requests.
+        val svc = service()
+        assertNull(resolver(svc).chainApy(Chain.Qbtc, "qbtc"))
+        coVerify(exactly = 0) { svc.fetchMintInflation(any()) }
+        coVerify(exactly = 0) { svc.fetchStakingPool(any()) }
+        coVerify(exactly = 0) { svc.fetchBankSupplyByDenom(any(), any()) }
+        coVerify(exactly = 0) { svc.fetchDistributionParams(any()) }
+    }
+
+    @Test
     fun `chainApy serves from cache within the TTL without re-fetching`() = runTest {
         val svc = service()
         coEvery { svc.fetchMintInflation(Chain.Terra) } returns CosmosMintInflationResponse("0.07")
