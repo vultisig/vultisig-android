@@ -269,7 +269,7 @@ private fun VerifySwapScreen(
                     VerifyCardDivider(size = 20.dp)
 
                     if (tx.provider.isNotBlank()) {
-                        VerifyProviderRow(provider = tx.provider)
+                        VerifyProviderRow(provider = tx.providerLabel.ifBlank { tx.provider })
                     }
 
                     EstimatedNetworkFee(
