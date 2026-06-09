@@ -795,7 +795,7 @@ constructor(
                             networkFeeFiat = fee.formattedFiatValue,
                         )
                     NetworkFeeUpdate.Clear ->
-                        it.feeBreakdown.copy(networkFee = "", networkFeeFiat = "")
+                        it.feeBreakdown.copy(networkFee = "", networkFeeFiat = "", totalFee = "")
                     null -> it.feeBreakdown
                 }
             it.copy(

@@ -417,6 +417,8 @@ internal class SwapQuotePipeline(
                         isSwapDisabled = false
                     }
                     UtxoPlanFeeResult.InsufficientUtxos -> {
+                        networkFee = NetworkFeeUpdate.Clear
+                        effectiveNetworkFeeTokenValue = null
                         isSwapDisabled = true
                         formError = UiText.StringResource(R.string.insufficient_utxos_error)
                     }
