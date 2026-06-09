@@ -34,7 +34,7 @@ private fun Activity.openInBrowser(uri: Uri, onError: () -> Unit) {
         val browserIntent = Intent(Intent.ACTION_VIEW, uri).addCategory(Intent.CATEGORY_BROWSABLE)
         startActivity(browserIntent)
     } catch (e: ActivityNotFoundException) {
-        Timber.e(e, "No browser available to open URI: $uri")
+        Timber.e(e, "No browser available to open URI: %s", uri)
         onError()
     }
 }
