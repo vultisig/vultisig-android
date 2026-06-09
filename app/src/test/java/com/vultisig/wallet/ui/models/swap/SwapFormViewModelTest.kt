@@ -1648,6 +1648,97 @@ internal class SwapFormViewModelTest {
             assertFalse(vm.uiState.value.isLoadingNextScreen)
         }
 
+    @Test
+    fun `swap with zero gas fee shows error and does not stage`() =
+        runTest(mainDispatcher) {
+            coEvery { swapGasCalculator.calculateGasFee(any(), any()) } returns
+                GasCalculationResult(
+                    gasFee = TokenValue(value = BigInteger.ZERO, token = ETH_COIN),
+                    estimated =
+                        EstimatedGasFee(
+                            formattedTokenValue = "0 ETH",
+                            formattedFiatValue = "$0.00",
+                            tokenValue = TokenValue(value = BigInteger.ZERO, token = ETH_COIN),
+                            fiatValue = FiatValue(BigDecimal.ZERO, "USD"),
+                        ),
+                    chain = Chain.Ethereum,
+                )
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns createDefaultQuoteFetchResult()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.5")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.swap()
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation),
+                vm.uiState.value.error,
+            )
+            assertFalse(vm.uiState.value.isLoadingNextScreen)
+            coVerify(exactly = 0) { swapTransactionRepository.addTransaction(any()) }
+        }
+
+    @Test
+    fun `swap with zero expected destination amount shows error and does not stage`() =
+        runTest(mainDispatcher) {
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote =
+                        createThorChainQuote(
+                            expectedDstValue =
+                                TokenValue(value = BigInteger.ZERO, token = USDC_COIN)
+                        )
+                )
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("0.5")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.swap()
+            advanceUntilIdle()
+
+            assertEquals(
+                UiText.StringResource(R.string.swap_screen_invalid_quote_calculation),
+                vm.uiState.value.error,
+            )
+            assertFalse(vm.uiState.value.isLoadingNextScreen)
+            coVerify(exactly = 0) { swapTransactionRepository.addTransaction(any()) }
+        }
+
     // endregion
 
     // region collectSelectedAccounts

@@ -12,6 +12,12 @@ object QbtcClaimConfig {
     const val MAX_CLAIM_UTXOS = 50
 
     /**
+     * The chain rejects a claim unless the funding UTXO has strictly more than this many
+     * confirmations ("no valid claimable UTXOs found"), so the client filters immature UTXOs out.
+     */
+    const val MIN_CLAIM_CONFIRMATIONS = 144L
+
+    /**
      * The proof service expects `signature_r` zero-padded to this byte width — 24, not 32, matching
      * the proof circuit's witness size.
      */

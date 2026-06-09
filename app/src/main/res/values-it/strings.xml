@@ -267,6 +267,7 @@
     <string name="keygen_email_continue_button">Continuare</string>
     <string name="password_should_not_be_empty">La password non deve essere vuota</string>
     <string name="signing_error_insufficient_funds">Non c&#8217;è abbastanza benzina per coprire la commissione di transazione.\n Si prega di finanziare il portafoglio.</string>
+    <string name="signing_error_token_account_not_found_s">Impossibile caricare il tuo account token %s. Riprova.</string>
     <string name="signing_error_mixed_reshare">Firma di condivisione mista.\nUtilizzare condivisioni Vault dello stesso ciclo di condivisione.</string>
     <string name="signing_error_sequence_mismatch">La sequenza dell&#8217;account è cambiata — riprova.</string>
     <string name="signing_error_broadcast_rejected">Transazione rifiutata dalla rete.</string>
@@ -1240,6 +1241,7 @@
     <string name="decoded_function_min_amount_out">Importo minimo in uscita</string>
     <string name="decoded_function_amount_out">Importo in uscita</string>
     <string name="decoded_function_swap_title">Scambio</string>
+    <string name="decoded_function_truncated">Altri parametri non mostrati</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Preleva QBTC</string>
     <string name="qbtc_claim_loading">Verifica dell\'idoneità…</string>
@@ -1256,7 +1258,6 @@
     <string name="qbtc_claim_success_title">QBTC prelevato</string>
     <string name="qbtc_claim_successful">QBTC prelevato con successo</string>
     <string name="qbtc_claim_password_title">Inserisci la password della cassaforte</string>
-    <string name="qbtc_claim_pair_instruction">Scansiona questo con il tuo altro dispositivo per firmare congiuntamente il prelievo</string>
     <string name="qbtc_claim_failed">Prelievo non riuscito</string>
     <string name="qbtc_claim_unavailable_title">Il prelievo è disabilitato</string>
     <string name="qbtc_claim_unavailable_detail">Il prelievo di QBTC è temporaneamente disabilitato sulla rete. Riprova più tardi.</string>

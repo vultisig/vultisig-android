@@ -267,6 +267,7 @@
     <string name="keygen_email_continue_button">Continuar</string>
     <string name="password_should_not_be_empty">La contraseña no debe estar vacía</string>
     <string name="signing_error_insufficient_funds">No hay suficiente gas para cubrir la tarifa de transacción.\n Por favor, cargue la billetera.</string>
+    <string name="signing_error_token_account_not_found_s">No se pudo cargar tu cuenta del token %s. Inténtalo de nuevo.</string>
     <string name="signing_error_mixed_reshare">Firma de recompartición mixta.\n Utilice recursos compartidos de bóveda del mismo ciclo de recompartición.</string>
     <string name="signing_error_sequence_mismatch">La secuencia de la cuenta ha cambiado — por favor, vuelva a intentarlo.</string>
     <string name="signing_error_broadcast_rejected">Transacción rechazada por la red.</string>
@@ -1237,6 +1238,7 @@
     <string name="decoded_function_min_amount_out">Cantidad mínima de salida</string>
     <string name="decoded_function_amount_out">Cantidad de salida</string>
     <string name="decoded_function_swap_title">Intercambio</string>
+    <string name="decoded_function_truncated">No se muestran más parámetros</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Reclamar QBTC</string>
     <string name="qbtc_claim_loading">Comprobando elegibilidad…</string>
@@ -1253,7 +1255,6 @@
     <string name="qbtc_claim_success_title">QBTC reclamado</string>
     <string name="qbtc_claim_successful">QBTC reclamado correctamente</string>
     <string name="qbtc_claim_password_title">Introduce la contraseña de la bóveda</string>
-    <string name="qbtc_claim_pair_instruction">Escanea esto con tu otro dispositivo para firmar la reclamación de forma conjunta</string>
     <string name="qbtc_claim_failed">Reclamación fallida</string>
     <string name="qbtc_claim_unavailable_title">La reclamación está deshabilitada</string>
     <string name="qbtc_claim_unavailable_detail">La reclamación de QBTC está temporalmente deshabilitada en la red. Por favor, inténtalo de nuevo más tarde.</string>

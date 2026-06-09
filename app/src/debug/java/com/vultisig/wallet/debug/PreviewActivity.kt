@@ -25,7 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -112,6 +114,7 @@ import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfoType
 import com.vultisig.wallet.ui.screens.v2.chaintokens.ChainTokensScreen
+import com.vultisig.wallet.ui.screens.v2.defi.HeaderDeFiWidget
 import com.vultisig.wallet.ui.screens.v2.home.components.AccountList
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetAction
 import com.vultisig.wallet.ui.screens.v2.home.components.AssetActionButton
@@ -199,10 +202,12 @@ class PreviewActivity : ComponentActivity() {
                     "universal_router_verify_after" ->
                         VerifyUniversalRouterPreview(expanded = true, useUrRows = true)
                     "qbtc_claim" -> QbtcClaimSelectingPreview()
+                    "qbtc_claim_pairing" -> QbtcClaimPairingPreview()
                     "qbtc_claim_done" -> QbtcClaimDonePreview()
                     "qbtc_claim_error" -> QbtcClaimErrorPreview()
                     "qbtc_claim_blocked" -> QbtcClaimBlockedPreview()
                     "keysign_signing_lunc" -> KeysignSigningLuncPreview()
+                    "circle_usdc_widget" -> CircleUsdcWidgetPreview()
                     "btc_detail_claim" -> BtcDetailClaimPreview()
                     "qbtc_detail_claim" -> QbtcDetailClaimPreview()
                     "keysign_devices_plus_before" -> KeysignDevicesCountPreview(allowsMore = true)
@@ -262,6 +267,25 @@ private fun KeysignDevicesCountPreview(allowsMore: Boolean) {
         onDismissQrHelpModal = {},
         showHelp = false,
     )
+}
+
+@Composable
+private fun CircleUsdcWidgetPreview() {
+    Box(
+        modifier =
+            Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary).padding(16.dp)
+    ) {
+        HeaderDeFiWidget(
+            title = "USDC deposited",
+            iconRes = R.drawable.usdc,
+            buttonFirstActionText = "Withdraw",
+            buttonSecondActionText = "Deposit",
+            onClickFirstAction = {},
+            onClickSecondAction = {},
+            totalAmount = "1500 USDC",
+            totalPrice = "$1,500.34",
+        )
+    }
 }
 
 @Composable
@@ -1661,6 +1685,48 @@ private fun QbtcClaimSelectingPreview() {
     QbtcClaimScreen(
         state = state,
         isFastVault = true,
+        onBackClick = {},
+        onToggle = {},
+        onConfirm = {},
+        onStartSecureVault = {},
+        onRetry = {},
+    )
+}
+
+/**
+ * The QBTC claim co-sign pairing step, now rendered via the shared PeerDiscoveryScreen. The QR is
+ * built exactly like [com.vultisig.wallet.ui.models.qbtc.QbtcClaimViewModel.renderPairingQr] —
+ * black-on-white, no logo — so the painter's intrinsic size matches production. Shown in the
+ * waiting state of a 2-device co-sign ("1 of 2", one device still to scan).
+ */
+@Composable
+private fun QbtcClaimPairingPreview() {
+    val context = LocalContext.current
+    val qr = remember {
+        val entry =
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                ShareQrPreviewEntryPoint::class.java,
+            )
+        val deepLink =
+            "https://vultisig.com?type=SignTransaction&resharePrefix=0&vault=03a1b2c3" +
+                "&jsonData=" +
+                "H4sIAAAAAAAA_y2OQQ6CMBBF7zJrFy1Q2rIzkRhciAvdGBfYTrCJgGlL1Bju" +
+                "biTu5r2X-fMnsK7vIIPe9Q5KZIxnPGM5zxjnGUtZyhJWZJxJkQqRZpKkUmRS" +
+                "ZHLPF_kRbEpyqLclNtyV-7LQ3ko9-Wxqo7VqTpX5-pSXatbdatu1b16VI_qW" +
+                "T2rV_WuPtSn-lJf62v9rb_1r_42IIAdwAEcwRm8wAd8wQ_8AQ"
+        val bitmap = entry.generateQrBitmap().invoke(deepLink, Color.White, Color.Transparent, null)
+        BitmapPainter(bitmap.asImageBitmap(), filterQuality = FilterQuality.None)
+    }
+    QbtcClaimScreen(
+        state =
+            QbtcClaimUiState.Pairing(
+                qr = qr,
+                joinedDevices = emptyList(),
+                localPartyId = "Pixel 9 Pro-C3D4",
+                minimumDevices = 2,
+            ),
+        isFastVault = false,
         onBackClick = {},
         onToggle = {},
         onConfirm = {},

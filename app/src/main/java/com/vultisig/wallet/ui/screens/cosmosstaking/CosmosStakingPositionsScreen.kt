@@ -24,9 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -84,23 +82,19 @@ internal fun CosmosStakingPositionsScreen(
     viewModel: CosmosStakingPositionsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
-    var isRefreshing by remember { mutableStateOf(false) }
+    // The VM owns the refresh flag: a cache-seeded refresh keeps `isLoading` false, so deriving the
+    // spinner from `isLoading` on the screen would leave it spinning forever after the first warm
+    // load. Collect it directly instead.
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
 
     LaunchedEffect(vaultId, chainId) { viewModel.setData(vaultId = vaultId, chainId = chainId) }
-    LaunchedEffect(state.isLoading) { if (isRefreshing && !state.isLoading) isRefreshing = false }
 
     RegisterChainDashboardTopBarAction(
         icon = R.drawable.ic_shapes_plus_x_square_circle,
         onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
     )
 
-    PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = {
-            isRefreshing = true
-            viewModel.refresh()
-        },
-    ) {
+    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = { viewModel.refresh() }) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)

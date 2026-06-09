@@ -266,6 +266,7 @@
     <string name="keygen_email_continue_button">Продолжить</string>
     <string name="password_should_not_be_empty">Пароль не должен быть пустым</string>
     <string name="signing_error_insufficient_funds">Недостаточно газа для покрытия комиссии за транзакцию.\n Пожалуйста, пополните кошелек.</string>
+    <string name="signing_error_token_account_not_found_s">Не удалось загрузить токен-аккаунт %s. Попробуйте ещё раз.</string>
     <string name="signing_error_mixed_reshare">Смешанное подписание Reshare.\nПожалуйста, используйте общие ресурсы хранилища одного и того же цикла Reshare.</string>
     <string name="signing_error_sequence_mismatch">Порядковый номер аккаунта изменился — пожалуйста, повторите попытку.</string>
     <string name="signing_error_broadcast_rejected">Транзакция отклонена сетью.</string>
@@ -1249,6 +1250,7 @@
     <string name="decoded_function_min_amount_out">Мин. сумма получения</string>
     <string name="decoded_function_amount_out">Сумма получения</string>
     <string name="decoded_function_swap_title">Обмен</string>
+    <string name="decoded_function_truncated">Показаны не все параметры</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Получить QBTC</string>
     <string name="qbtc_claim_loading">Проверка права на получение…</string>
@@ -1265,7 +1267,6 @@
     <string name="qbtc_claim_success_title">QBTC получен</string>
     <string name="qbtc_claim_successful">QBTC успешно получен</string>
     <string name="qbtc_claim_password_title">Введите пароль хранилища</string>
-    <string name="qbtc_claim_pair_instruction">Отсканируйте это другим устройством, чтобы совместно подписать получение</string>
     <string name="qbtc_claim_failed">Получение не удалось</string>
     <string name="qbtc_claim_unavailable_title">Получение отключено</string>
     <string name="qbtc_claim_unavailable_detail">Получение QBTC временно отключено в сети. Пожалуйста, попробуйте позже.</string>

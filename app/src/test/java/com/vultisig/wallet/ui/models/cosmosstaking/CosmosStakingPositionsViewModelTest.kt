@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.CosmosStakingSnapshotCache
 import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.ui.navigation.Destination
@@ -56,6 +57,7 @@ internal class CosmosStakingPositionsViewModelTest {
     private val keybaseAvatarService: KeybaseAvatarService = mockk(relaxed = true)
     private val tokenPriceRepository: TokenPriceRepository = mockk(relaxed = true)
     private val appCurrencyRepository: AppCurrencyRepository = mockk()
+    private val snapshotCache = CosmosStakingSnapshotCache()
     private val navigator: Navigator<Destination> = mockk(relaxed = true)
 
     private val activeVal = "terravaloper1active"
@@ -143,6 +145,7 @@ internal class CosmosStakingPositionsViewModelTest {
                 keybaseAvatarService = keybaseAvatarService,
                 tokenPriceRepository = tokenPriceRepository,
                 appCurrencyRepository = appCurrencyRepository,
+                snapshotCache = snapshotCache,
                 navigator = navigator,
                 ioDispatcher = testDispatcher,
             )
@@ -284,5 +287,74 @@ internal class CosmosStakingPositionsViewModelTest {
         assertNotNull(active.pendingUnbondingUnlockDate)
         model.move(active)
         coVerify(exactly = 0) { navigator.route(any<Route.CosmosStakingRedelegate>(), any()) }
+    }
+
+    @Test
+    fun `a successful load writes a snapshot into the cache`() = runTest {
+        // First open with an empty cache must persist the computed result so the next open within
+        // the session can render it instantly instead of flashing the empty state (issue #4764).
+        vm()
+        val snapshot = snapshotCache.read("Terra:terra1delegator")
+        assertNotNull(snapshot)
+        assertEquals(2, snapshot.positions.size)
+        assertEquals(0, BigDecimal("4").compareTo(snapshot.totalStaked))
+        assertEquals("$0.23", snapshot.totalStakedFiat)
+    }
+
+    @Test
+    fun `a cached snapshot renders immediately without a loading flash`() = runTest {
+        // Prime the cache, then make the live delegations read hang-fail. A second VM must show the
+        // cached positions right away rather than the empty/zero state the issue reports.
+        vm()
+        coEvery { cosmosStakingService.fetchDelegations(any(), any()) } throws
+            RuntimeException("LCD 503")
+
+        val reopened = vm()
+        val s = reopened.state.value
+        assertEquals(2, s.positions.size)
+        assertEquals(false, s.isLoading)
+        // A background-refresh failure on a screen seeded from cache keeps the data visible — it
+        // must NOT replace the readable list with an error banner.
+        assertNull(s.errorMessage)
+    }
+
+    @Test
+    fun `the refresh spinner flag is cleared once a load finishes`() = runTest {
+        // Regression for the forever-spinning pull-to-refresh: the VM owns the flag and must reset
+        // it when the run completes, even on a cache-seeded refresh that never toggles isLoading.
+        val model = vm()
+        assertEquals(false, model.isRefreshing.value)
+    }
+
+    @Test
+    fun `a degraded validators read is not frozen into the cache`() = runTest {
+        // A failed validators fetch folds every delegation to "Churned Out"; persisting that as the
+        // known-good snapshot would reseed the alarming view on reopen. The write must be skipped.
+        coEvery { cosmosStakingService.fetchValidators(any()) } throws RuntimeException("LCD 503")
+        val model = vm()
+        // The live view still renders (degraded) — only the cache is withheld.
+        assertEquals(2, model.state.value.positions.size)
+        assertNull(snapshotCache.read("Terra:terra1delegator"))
+    }
+
+    @Test
+    fun `a missing price is not frozen into the cache`() = runTest {
+        // A price miss renders every fiat slot as $0.00; freezing that snapshot would reseed a
+        // zeroed-out screen on reopen, so the write is skipped until a real price is available.
+        coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
+        vm()
+        assertNull(snapshotCache.read("Terra:terra1delegator"))
+    }
+
+    @Test
+    fun `a refresh failure with no cache still surfaces the error`() = runTest {
+        // The keep-cached-data guard must not swallow the very first failure: with nothing cached
+        // there is nothing to fall back to, so the user has to see the error + retry.
+        coEvery { cosmosStakingService.fetchDelegations(any(), any()) } throws
+            RuntimeException("LCD 503")
+        val s = vm().state.value
+        assertNotNull(s.errorMessage)
+        assertEquals(true, s.positions.isEmpty())
+        assertNull(snapshotCache.read("Terra:terra1delegator"))
     }
 }

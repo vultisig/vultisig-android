@@ -223,7 +223,7 @@ private fun SwapTransactionDetail(swapTransaction: SwapTransactionUiModel) {
     if (swapTransaction.provider.isNotEmpty()) {
         OtherField(
             title = stringResource(R.string.swap_screen_provider_title),
-            value = swapTransaction.provider,
+            value = swapTransaction.providerLabel.ifBlank { swapTransaction.provider },
         )
     }
 

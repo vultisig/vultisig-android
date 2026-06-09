@@ -8,7 +8,12 @@ import org.junit.jupiter.api.Test
 class LoadClaimableQbtcUtxosUseCaseTest {
 
     private val p2wpkh = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"
-    private val candidate = ClaimableUtxo(txid = "aa".repeat(32), vout = 0, amount = 100_000)
+    // Mature (> 144 confirmations) so it passes the maturity gate.
+    private val candidate =
+        ClaimableUtxo(txid = "aa".repeat(32), vout = 0, amount = 100_000, confirmations = 145)
+
+    private fun utxoWith(confirmations: Long?) =
+        candidate.copy(txid = "bb".repeat(32), confirmations = confirmations)
 
     @Test
     fun `unsupported btc address blocks before any network call`() = runTest {
@@ -72,6 +77,65 @@ class LoadClaimableQbtcUtxosUseCaseTest {
     fun `available when claimable utxos remain`() = runTest {
         val result = useCase(FakeChainService(), FakeUtxosService(listOf(candidate))).invoke(p2wpkh)
         assertEquals(listOf(candidate), (result as QbtcClaimLoadResult.Available).utxos)
+    }
+
+    @Test
+    fun `utxo with 143 confirmations is excluded as immature`() = runTest {
+        val result =
+            useCase(FakeChainService(), FakeUtxosService(listOf(utxoWith(143)))).invoke(p2wpkh)
+        assertEquals(QbtcClaimBlockedReason.NoUtxos, (result as QbtcClaimLoadResult.Blocked).reason)
+    }
+
+    @Test
+    fun `utxo with exactly 144 confirmations is excluded since chain requires strictly more`() =
+        runTest {
+            val result =
+                useCase(FakeChainService(), FakeUtxosService(listOf(utxoWith(144)))).invoke(p2wpkh)
+            assertEquals(
+                QbtcClaimBlockedReason.NoUtxos,
+                (result as QbtcClaimLoadResult.Blocked).reason,
+            )
+        }
+
+    @Test
+    fun `utxo with 145 confirmations is available`() = runTest {
+        val mature = utxoWith(145)
+        val result = useCase(FakeChainService(), FakeUtxosService(listOf(mature))).invoke(p2wpkh)
+        assertEquals(listOf(mature), (result as QbtcClaimLoadResult.Available).utxos)
+    }
+
+    @Test
+    fun `utxo with null confirmations is excluded as immature`() = runTest {
+        val result =
+            useCase(FakeChainService(), FakeUtxosService(listOf(utxoWith(null)))).invoke(p2wpkh)
+        assertEquals(QbtcClaimBlockedReason.NoUtxos, (result as QbtcClaimLoadResult.Blocked).reason)
+    }
+
+    @Test
+    fun `only mature utxos survive a mixed set`() = runTest {
+        val mature =
+            ClaimableUtxo(txid = "cc".repeat(32), vout = 0, amount = 50_000, confirmations = 145)
+        val immatureLow =
+            ClaimableUtxo(txid = "dd".repeat(32), vout = 0, amount = 60_000, confirmations = 144)
+        val immatureNull =
+            ClaimableUtxo(txid = "ee".repeat(32), vout = 0, amount = 70_000, confirmations = null)
+        val result =
+            useCase(FakeChainService(), FakeUtxosService(listOf(immatureLow, mature, immatureNull)))
+                .invoke(p2wpkh)
+        assertEquals(listOf(mature), (result as QbtcClaimLoadResult.Available).utxos)
+    }
+
+    @Test
+    fun `all immature utxos block as no utxos`() = runTest {
+        val immature =
+            listOf(
+                ClaimableUtxo(txid = "11".repeat(32), vout = 0, amount = 1, confirmations = 0),
+                ClaimableUtxo(txid = "22".repeat(32), vout = 0, amount = 1, confirmations = 143),
+                ClaimableUtxo(txid = "33".repeat(32), vout = 0, amount = 1, confirmations = 144),
+                ClaimableUtxo(txid = "44".repeat(32), vout = 0, amount = 1, confirmations = null),
+            )
+        val result = useCase(FakeChainService(), FakeUtxosService(immature)).invoke(p2wpkh)
+        assertEquals(QbtcClaimBlockedReason.NoUtxos, (result as QbtcClaimLoadResult.Blocked).reason)
     }
 
     private fun useCase(chain: FakeChainService, utxos: FakeUtxosService) =

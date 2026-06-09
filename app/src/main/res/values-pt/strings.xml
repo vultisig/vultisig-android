@@ -267,6 +267,7 @@
     <string name="keygen_email_continue_button">Continuar</string>
     <string name="password_should_not_be_empty">A palavra-passe não deve estar vazia</string>
     <string name="signing_error_insufficient_funds">Não há gás suficiente para cobrir a taxa de transação.\n Por favor, financie a carteira.</string>
+    <string name="signing_error_token_account_not_found_s">Não foi possível carregar a sua conta de token %s. Tente novamente.</string>
     <string name="signing_error_mixed_reshare">Assinatura mista de nova partilha. \nUtilizar partilhas do cofre do mesmo ciclo de nova partilha.</string>
     <string name="signing_error_sequence_mismatch">A sequência da conta foi alterada — por favor, tente novamente.</string>
     <string name="signing_error_broadcast_rejected">Transação rejeitada pela rede.</string>
@@ -1235,6 +1236,7 @@
     <string name="decoded_function_min_amount_out">Valor mínimo de saída</string>
     <string name="decoded_function_amount_out">Valor de saída</string>
     <string name="decoded_function_swap_title">Troca</string>
+    <string name="decoded_function_truncated">Mais parâmetros não mostrados</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Resgatar QBTC</string>
     <string name="qbtc_claim_loading">A verificar elegibilidade…</string>
@@ -1251,7 +1253,6 @@
     <string name="qbtc_claim_success_title">QBTC resgatado</string>
     <string name="qbtc_claim_successful">QBTC resgatado com sucesso</string>
     <string name="qbtc_claim_password_title">Introduza a palavra-passe do cofre</string>
-    <string name="qbtc_claim_pair_instruction">Leia isto com o seu outro dispositivo para assinar o resgate em conjunto</string>
     <string name="qbtc_claim_failed">Resgate falhou</string>
     <string name="qbtc_claim_unavailable_title">O resgate está desativado</string>
     <string name="qbtc_claim_unavailable_detail">O resgate de QBTC está temporariamente desativado na rede. Por favor, tente novamente mais tarde.</string>

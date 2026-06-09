@@ -272,6 +272,10 @@ internal interface RepositoriesModule {
 
     @Binds
     @Singleton
+    fun bindContractAbiRepository(impl: ContractAbiRepositoryImpl): ContractAbiRepository
+
+    @Binds
+    @Singleton
     fun bindSecretSettingsRepository(impl: SecretSettingsRepositoryImpl): SecretSettingsRepository
 
     @Binds

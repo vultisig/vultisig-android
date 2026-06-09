@@ -267,6 +267,7 @@
     <string name="keygen_email_continue_button">Nastaviti</string>
     <string name="password_should_not_be_empty">Lozinka ne smije biti prazna</string>
     <string name="signing_error_insufficient_funds">Nema dovoljno goriva za pokrivanje naknade za transakciju.\n Molimo uplatite novčanik.</string>
+    <string name="signing_error_token_account_not_found_s">Nije moguće učitati vaš %s token račun. Pokušajte ponovno.</string>
     <string name="signing_error_mixed_reshare">Potpisivanje mješovitog ponovnog dijeljenja.\nUpotrijebite dijeljenja trezora istog ciklusa ponovnog dijeljenja.</string>
     <string name="signing_error_sequence_mismatch">Slijed računa je promijenjen — pokušajte ponovno.</string>
     <string name="signing_error_broadcast_rejected">Mreža je odbila transakciju.</string>
@@ -1247,6 +1248,7 @@
     <string name="decoded_function_min_amount_out">Minimalni izlazni iznos</string>
     <string name="decoded_function_amount_out">Izlazni iznos</string>
     <string name="decoded_function_swap_title">Zamjena</string>
+    <string name="decoded_function_truncated">Više parametara nije prikazano</string>
     <!-- QBTC Claim -->
     <string name="qbtc_claim_title">Preuzmi QBTC</string>
     <string name="qbtc_claim_loading">Provjera prihvatljivosti…</string>
@@ -1263,7 +1265,6 @@
     <string name="qbtc_claim_success_title">QBTC preuzet</string>
     <string name="qbtc_claim_successful">QBTC uspješno preuzet</string>
     <string name="qbtc_claim_password_title">Unesite lozinku trezora</string>
-    <string name="qbtc_claim_pair_instruction">Skenirajte ovo svojim drugim uređajem kako biste zajednički potpisali preuzimanje</string>
     <string name="qbtc_claim_failed">Preuzimanje nije uspjelo</string>
     <string name="qbtc_claim_unavailable_title">Preuzimanje je onemogućeno</string>
     <string name="qbtc_claim_unavailable_detail">Preuzimanje QBTC-a privremeno je onemogućeno na mreži. Molimo pokušajte ponovno kasnije.</string>
