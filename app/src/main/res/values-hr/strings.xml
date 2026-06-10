@@ -1319,7 +1319,6 @@
     <string name="cosmos_staking_continue">Nastavi</string>
     <string name="cosmos_staking_amount">Iznos</string>
     <string name="cosmos_staking_loading_validators">Učitavanje validatora…</string>
-    <string name="cosmos_staking_loading_positions">Učitavanje pozicija…</string>
     <string name="cosmos_staking_loading_rewards">Učitavanje nagrada…</string>
     <string name="cosmos_staking_no_rewards">Nema nagrada za preuzimanje na ovom lancu</string>
     <string name="cosmos_staking_empty_positions">Još nemate aktivnih %1$s pozicija</string>

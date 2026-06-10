@@ -1328,7 +1328,6 @@
     <string name="cosmos_staking_continue">계속</string>
     <string name="cosmos_staking_amount">금액</string>
     <string name="cosmos_staking_loading_validators">검증인 로드 중…</string>
-    <string name="cosmos_staking_loading_positions">포지션 로드 중…</string>
     <string name="cosmos_staking_loading_rewards">보상 로드 중…</string>
     <string name="cosmos_staking_no_rewards">이 체인에 청구 가능한 보상이 없습니다</string>
     <string name="cosmos_staking_empty_positions">아직 활성 %1$s 포지션이 없습니다</string>

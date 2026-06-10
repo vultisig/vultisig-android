@@ -32,6 +32,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import coil.compose.AsyncImage
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
@@ -43,8 +45,10 @@ import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
+import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsViewModel
 import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
@@ -84,12 +88,57 @@ internal fun CosmosStakingPositionsScreen(
 
     LaunchedEffect(vaultId, chainId) { viewModel.setData(vaultId = vaultId, chainId = chainId) }
 
+    // Reload when the screen comes back to the foreground — e.g. after returning from a completed
+    // delegate / undelegate / redelegate / claim — so Total Staked and the positions reflect the tx
+    // without a manual pull. The first resume is a no-op in the VM (#4815).
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onScreenResumed() }
+
     RegisterChainDashboardTopBarAction(
         icon = R.drawable.ic_shapes_plus_x_square_circle,
         onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
     )
 
-    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = { viewModel.refresh() }) {
+    CosmosStakingPositionsContent(
+        state = state,
+        chainId = chainId,
+        isRefreshing = isRefreshing,
+        onRefresh = viewModel::refresh,
+        onManagePositions = { viewModel.setPositionSelectionDialogVisibility(true) },
+        onClaim = viewModel::claimAll,
+        onDelegateToNewValidator = viewModel::stakeMore,
+        onUnstake = viewModel::unstake,
+        onMove = viewModel::move,
+        onStakeMore = viewModel::stakeMore,
+        onPositionSelectionChange = viewModel::onPositionSelectionChange,
+        onPositionSelectionDone = viewModel::onPositionSelectionDone,
+        onDismissDialog = { viewModel.setPositionSelectionDialogVisibility(false) },
+    )
+}
+
+/**
+ * Stateless body of the staking-positions screen — split out from the Hilt/ViewModel-bound
+ * [CosmosStakingPositionsScreen] so the loaded / loading / empty states are previewable in
+ * isolation (the public composable can't be, since it drives navigation and registers top-bar
+ * actions).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun CosmosStakingPositionsContent(
+    state: CosmosStakingPositionsUiState,
+    chainId: String,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    onManagePositions: () -> Unit,
+    onClaim: () -> Unit,
+    onDelegateToNewValidator: () -> Unit,
+    onUnstake: (CosmosStakePositionRow) -> Unit,
+    onMove: (CosmosStakePositionRow) -> Unit,
+    onStakeMore: () -> Unit,
+    onPositionSelectionChange: (String, Boolean) -> Unit,
+    onPositionSelectionDone: () -> Unit,
+    onDismissDialog: () -> Unit,
+) {
+    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)
@@ -123,13 +172,7 @@ internal fun CosmosStakingPositionsScreen(
                     }
 
                     if (!state.isPositionEnabled) {
-                        item {
-                            NoPositionsContainer(
-                                onManagePositionsClick = {
-                                    viewModel.setPositionSelectionDialogVisibility(true)
-                                }
-                            )
-                        }
+                        item { NoPositionsContainer(onManagePositionsClick = onManagePositions) }
                     } else {
                         item {
                             TotalStakedCard(
@@ -138,8 +181,8 @@ internal fun CosmosStakingPositionsScreen(
                                 totalStaked = formatStakeAmount(state.totalStaked),
                                 totalFiat = state.totalStakedFiat,
                                 hasClaimableRewards = state.hasClaimableRewards,
-                                onClaim = viewModel::claimAll,
-                                onDelegateToNewValidator = viewModel::stakeMore,
+                                onClaim = onClaim,
+                                onDelegateToNewValidator = onDelegateToNewValidator,
                             )
                         }
 
@@ -164,29 +207,26 @@ internal fun CosmosStakingPositionsScreen(
                                     position = position,
                                     ticker = state.ticker,
                                     fiat = position.stakedFiatDisplay,
-                                    onUnstake = { viewModel.unstake(position) },
-                                    onMove = { viewModel.move(position) },
-                                    onStakeMore = viewModel::stakeMore,
+                                    onUnstake = { onUnstake(position) },
+                                    onMove = { onMove(position) },
+                                    onStakeMore = onStakeMore,
                                 )
                             }
+                        } else if (state.isLoading) {
+                            // First fetch in flight with nothing cached: show skeleton placeholder
+                            // cards instead of plain text, which reads as "stuck" for the second or
+                            // two the fan-out takes (#4815).
+                            items(count = 2, key = { "skeleton-$it" }) { StakingPositionSkeleton() }
                         } else {
-                            // No delegations yet: surface a loading hint while the first fetch is
-                            // in
-                            // flight, then an empty-state once it settles (the screen would
-                            // otherwise
-                            // render only the zeroed Total Staked card).
+                            // Fetch settled with no delegations: empty-state (the screen would
+                            // otherwise render only the zeroed Total Staked card).
                             item {
                                 Text(
                                     text =
-                                        if (state.isLoading)
-                                            stringResource(
-                                                R.string.cosmos_staking_loading_positions
-                                            )
-                                        else
-                                            stringResource(
-                                                R.string.cosmos_staking_empty_positions,
-                                                state.ticker,
-                                            ),
+                                        stringResource(
+                                            R.string.cosmos_staking_empty_positions,
+                                            state.ticker,
+                                        ),
                                     style = Theme.brockmann.body.s.medium,
                                     color = Theme.v2.colors.text.secondary,
                                 )
@@ -230,9 +270,9 @@ internal fun CosmosStakingPositionsScreen(
                     stakePositions = state.stakePositionsDialog,
                     selectedPositions = state.tempSelectedPositions,
                     searchTextFieldState = searchTextFieldState,
-                    onPositionSelectionChange = viewModel::onPositionSelectionChange,
-                    onDoneClick = viewModel::onPositionSelectionDone,
-                    onCancelClick = { viewModel.setPositionSelectionDialogVisibility(false) },
+                    onPositionSelectionChange = onPositionSelectionChange,
+                    onDoneClick = onPositionSelectionDone,
+                    onCancelClick = onDismissDialog,
                 )
             }
         }
@@ -510,6 +550,41 @@ private fun PositionRow(
                 color = Theme.v2.colors.text.secondary,
             )
         }
+    }
+}
+
+/**
+ * Placeholder delegation card shown during the first cold load (#4815). Mirrors the [PositionRow]
+ * silhouette — avatar + two text lines + an amount bar — using the shared [UiPlaceholderLoader] so
+ * the wait reads as "loading" and stays visually consistent with the other DeFi tabs.
+ */
+@Composable
+internal fun StakingPositionSkeleton() {
+    Column(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .border(
+                    width = 1.dp,
+                    color = Theme.v2.colors.border.normal,
+                    shape = RoundedCornerShape(12.dp),
+                )
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            UiPlaceholderLoader(modifier = Modifier.size(40.dp).clip(CircleShape))
+            UiSpacer(size = 12.dp)
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                UiPlaceholderLoader(modifier = Modifier.fillMaxWidth(0.5f).height(14.dp))
+                UiPlaceholderLoader(modifier = Modifier.fillMaxWidth(0.3f).height(12.dp))
+            }
+        }
+        UiPlaceholderLoader(modifier = Modifier.fillMaxWidth().height(12.dp))
+        UiPlaceholderLoader(modifier = Modifier.fillMaxWidth(0.6f).height(12.dp))
     }
 }
 

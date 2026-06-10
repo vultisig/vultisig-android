@@ -468,6 +468,8 @@ internal sealed class Route {
         val vaultId: String,
         val chainId: String,
         val validatorAddress: String,
+        val stakedAmount: String? = null,
+        val ticker: String? = null,
     )
 
     /**
@@ -479,6 +481,8 @@ internal sealed class Route {
         val vaultId: String,
         val chainId: String,
         val validatorSrcAddress: String,
+        val stakedAmount: String? = null,
+        val ticker: String? = null,
     )
 
     /**

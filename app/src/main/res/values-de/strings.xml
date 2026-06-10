@@ -1311,7 +1311,6 @@
     <string name="cosmos_staking_continue">Weiter</string>
     <string name="cosmos_staking_amount">Betrag</string>
     <string name="cosmos_staking_loading_validators">Validatoren werden geladen…</string>
-    <string name="cosmos_staking_loading_positions">Positionen werden geladen…</string>
     <string name="cosmos_staking_loading_rewards">Belohnungen werden geladen…</string>
     <string name="cosmos_staking_no_rewards">Keine einforderbaren Belohnungen auf dieser Chain</string>
     <string name="cosmos_staking_empty_positions">Du hast noch keine aktiven %1$s-Positionen</string>

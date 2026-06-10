@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosDelegatorRewards
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingAPYResolver
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingConfig
+import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingDeFiBalanceService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakingService
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosValidator
@@ -113,6 +114,7 @@ constructor(
     private val tokenPriceRepository: TokenPriceRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val snapshotCache: CosmosStakingSnapshotCache,
+    private val cosmosStakingDeFiBalanceService: CosmosStakingDeFiBalanceService,
     private val navigator: Navigator<Destination>,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
@@ -158,7 +160,11 @@ constructor(
         loadCoin()
     }
 
-    fun refresh() {
+    /**
+     * @param silent when true, reloads without flipping the pull-to-refresh spinner — used by the
+     *   resume reload so foregrounding the screen doesn't animate the spinner on every return.
+     */
+    fun refresh(silent: Boolean = false) {
         val chainId = chainId ?: return
         val chain =
             Chain.entries.firstOrNull { it.raw.equals(chainId, ignoreCase = true) }
@@ -172,7 +178,7 @@ constructor(
                     onRefreshFailed("Failed to load staking positions")
                 }
             ) {
-                _isRefreshing.value = true
+                if (!silent) _isRefreshing.value = true
                 try {
                     val coin = coin ?: return@safeLaunch
                     val cacheKey = snapshotKey(chain, coin.address)
@@ -390,6 +396,40 @@ constructor(
                         )
                     }
 
+                    // Keep the persisted DeFi-page total in sync with what we just fetched, so the
+                    // portfolio/DeFi balance reflects a delegate/undelegate/redelegate on its next
+                    // open without a manual pull (#4815). Mirrors the delegated + claimable-rewards
+                    // sum CosmosStakingDeFiBalanceService.getRemoteDeFiBalance persists. Computed
+                    // from base-unit strings the fan-out already returned (no extra network).
+                    val delegatedBaseUnits =
+                        delegations.fold(BigInteger.ZERO) { acc, d ->
+                            acc + (d.balance.amount.toBigIntegerOrNull() ?: BigInteger.ZERO)
+                        }
+                    // Floor each bond-denom reward to whole base units before summing — the exact
+                    // shape CosmosStakingDeFiBalanceService.claimableRewards uses — so the
+                    // persisted
+                    // total matches the value getRemoteDeFiBalance writes rather than diverging by
+                    // a
+                    // base unit on fractional rewards (#4815).
+                    val rewardsBaseUnits =
+                        rewards.rewards
+                            .flatMap { it.reward }
+                            .filter { it.denom == bondDenom }
+                            .fold(BigInteger.ZERO) { acc, rewardCoin ->
+                                acc +
+                                    (rewardCoin.amount.toBigDecimalOrNull()?.toBigInteger()
+                                        ?: BigInteger.ZERO)
+                            }
+                    this@CosmosStakingPositionsViewModel.vaultId?.let { vid ->
+                        runCatching {
+                            cosmosStakingDeFiBalanceService.persistStakedTotal(
+                                chain = chain,
+                                vaultId = vid,
+                                totalBaseUnits = delegatedBaseUnits + rewardsBaseUnits,
+                            )
+                        }
+                    }
+
                     // Fire-and-forget avatar resolution — each emission updates the row in-place.
                     // Published
                     // after the list is in `_state` so a cache-hit patch can't land on an empty
@@ -407,6 +447,17 @@ constructor(
                     if (isActive) _isRefreshing.value = false
                 }
             }
+    }
+
+    /**
+     * Re-fetch on screen resume to reflect a completed staking action (delegate / undelegate /
+     * redelegate / claim). The first resume is a no-op — the initial fetch is already driven by
+     * [setData]/[loadCoin]. Runs silently (no pull-to-refresh spinner), mirroring TronDeFiPositions
+     * (#4815).
+     */
+    fun onScreenResumed() {
+        if (coin == null) return
+        refresh(silent = true)
     }
 
     fun stakeMore() {
@@ -430,6 +481,10 @@ constructor(
                     vaultId = vaultId,
                     chainId = chainId,
                     validatorAddress = position.validatorAddress,
+                    // Prefill the form instantly from the tapped position; the VM's LCD re-fetch
+                    // still corrects the amount if the staked balance changed (#4822).
+                    stakedAmount = position.stakedAmount.toPlainString(),
+                    ticker = _state.value.ticker,
                 ),
                 popOptionsForStaking(Route.CosmosStakingUndelegate::class.java),
             )
@@ -446,6 +501,8 @@ constructor(
                     vaultId = vaultId,
                     chainId = chainId,
                     validatorSrcAddress = position.validatorAddress,
+                    stakedAmount = position.stakedAmount.toPlainString(),
+                    ticker = _state.value.ticker,
                 ),
                 popOptionsForStaking(Route.CosmosStakingRedelegate::class.java),
             )
