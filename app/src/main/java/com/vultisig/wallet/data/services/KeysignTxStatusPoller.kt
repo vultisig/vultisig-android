@@ -61,6 +61,12 @@ constructor(
             pollStatusService(txHash, chain, onStatus)
         }
 
+    /**
+     * Default status poll for the done screen — drives the foreground
+     * [TransactionStatusServiceManager] for [txHash] on [chain], emitting each observed status via
+     * [onStatus] and persisting it. Returns the first terminal status, or `null` if no status flow
+     * is available. Tears down the foreground service on every exit path.
+     */
     private suspend fun pollStatusService(
         txHash: String,
         chain: Chain,
@@ -167,6 +173,9 @@ constructor(
         transactionStatusServiceManager.cleanup()
     }
 
+    /**
+     * Whether this status is settled and polling can stop (confirmed, failed, refunded, timed out).
+     */
     private fun TransactionResult.isTerminal(): Boolean =
         when (this) {
             TransactionResult.Confirmed,
