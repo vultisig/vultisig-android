@@ -205,7 +205,7 @@ class BuildCosmosStakingKeysignPayloadUseCaseTests {
             CosmosStakingHelper.buildAuthInfo(
                 pubKey = mldsaPubKey,
                 sequence = cosmosSpecific.sequence.toLong(),
-                gasLimit = 400_000L,
+                gasLimit = 800_000L,
                 feeDenom = "qbtc",
                 feeAmount = 800L,
                 pubKeyTypeUrl = "/cosmos.crypto.mldsa.PubKey",

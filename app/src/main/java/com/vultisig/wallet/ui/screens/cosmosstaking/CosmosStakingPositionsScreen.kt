@@ -41,7 +41,6 @@ import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosStakePositionRow
 import com.vultisig.wallet.data.blockchain.cosmos.staking.CosmosUnbondingDelegation
 import com.vultisig.wallet.data.models.getCoinLogo
 import com.vultisig.wallet.ui.components.UiGradientHorizontalDivider
-import com.vultisig.wallet.ui.components.UiIcon
 import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonSize
@@ -158,11 +157,11 @@ private fun CosmosStakingPositionsContent(
                     )
                 }
 
-                Row(
+                // Single manage-positions control: the ChainDashboard top-bar action above. The
+                // inline edit-chains button that used to sit here duplicated it (#4821).
+                Box(
                     modifier =
-                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp)
                 ) {
                     VsTabGroup(index = 0) {
                         COSMOS_STAKING_TABS.forEach { tab ->

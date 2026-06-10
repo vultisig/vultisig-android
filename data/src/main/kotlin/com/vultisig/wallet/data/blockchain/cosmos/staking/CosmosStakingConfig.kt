@@ -69,7 +69,9 @@ object CosmosStakingConfig {
                     feeAmount = 133_333_334L,
                     unbondingDays = 21,
                 ),
-            // Values verified against the live qbtc-testnet LCD; mirrors iOS #4481.
+            // Chain identity (chainId / denom / valoper / unbonding) mirrors iOS #4481; the gas
+            // and fee are tuned to the live qbtc-testnet instead — iOS's 300_000 gas OoGs on
+            // redelegate (see below) and its 7_500 fee overpays the verified 800 min_tx_fee.
             Chain.Qbtc to
                 Entry(
                     chainId = "qbtc-testnet",
@@ -77,9 +79,16 @@ object CosmosStakingConfig {
                     bondDenom = "qbtc",
                     feeDenom = "qbtc",
                     valoperHrp = "qbtcvaloper",
-                    // Terra's post-OoG floor — a MsgDelegate simulate burned 278_759; redelegate
-                    // (dual-record write + ~2.4 KB ML-DSA sig) is heavier.
-                    gasLimit = 400_000L,
+                    // Redelegate OoG'd at the borrowed 400_000 Terra floor: on-chain
+                    // MsgBeginRedelegate burned 400_832 gas (qbtc-testnet tx 67B85E1C…, sdk code
+                    // 11 "ReadPerByte"). It's the heaviest single-msg path — the dual-record
+                    // x/staking write plus the per-byte read of QBTC's ~2.4 KB ML-DSA signature
+                    // outruns the floor a single MsgDelegate (simulate burned 278_759) fits in.
+                    // Raised to 800_000 (~2x the observed burn). Free here: qbtc-testnet has no
+                    // minimum gas price and block.max_gas is -1, so a larger budget moves neither
+                    // the fee nor the block-limit risk. Batched claims scale this per-msg in the
+                    // resolver, keeping the same headroom.
+                    gasLimit = 800_000L,
                     // qbtc-testnet min_tx_fee floor (min_gas_price is 0, so gas can't raise it).
                     feeAmount = 800L,
                     unbondingDays = 21,

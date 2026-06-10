@@ -141,7 +141,7 @@ class QbtcStakingSignDataResolverTests {
             CosmosStakingHelper.buildAuthInfo(
                 pubKey = FX.MLDSA_PUBKEY,
                 sequence = FX.SEQUENCE,
-                gasLimit = 400_000L,
+                gasLimit = 800_000L,
                 feeDenom = FX.DENOM,
                 feeAmount = 800L,
                 pubKeyTypeUrl = FX.MLDSA_PUBKEY_TYPE_URL,
@@ -161,7 +161,7 @@ class QbtcStakingSignDataResolverTests {
             CosmosStakingHelper.buildAuthInfo(
                 pubKey = FX.MLDSA_PUBKEY,
                 sequence = FX.SEQUENCE,
-                gasLimit = 1_200_000L, // 3 × 400_000
+                gasLimit = 2_400_000L, // 3 × 800_000
                 feeDenom = FX.DENOM,
                 feeAmount = 2_400L, // 3 × 800
                 pubKeyTypeUrl = FX.MLDSA_PUBKEY_TYPE_URL,
