@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models
 
+import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.swap.SwapKitConfig
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -27,6 +28,7 @@ internal class SecretViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private lateinit var swapKitConfig: SwapKitConfig
+    private lateinit var customRpcConfig: CustomRpcConfig
     private lateinit var navigator: Navigator<Destination>
 
     /** Sets up mocks and test dispatcher before each test. */
@@ -34,6 +36,7 @@ internal class SecretViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         swapKitConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
+        customRpcConfig = mockk(relaxed = true) { every { isFeatureEnabled } returns flowOf(false) }
         navigator = mockk(relaxed = true)
     }
 
@@ -44,7 +47,11 @@ internal class SecretViewModelTest {
     }
 
     private fun createViewModel() =
-        SecretViewModel(swapKitConfig = swapKitConfig, navigator = navigator)
+        SecretViewModel(
+            swapKitConfig = swapKitConfig,
+            customRpcConfig = customRpcConfig,
+            navigator = navigator,
+        )
 
     /** Verifies toggleSwapKit persists the new feature flag value. */
     @Test
@@ -67,5 +74,28 @@ internal class SecretViewModelTest {
             val vm = createViewModel()
 
             vm.state.value.isSwapKitEnabled.shouldBeTrue()
+        }
+
+    /** Verifies toggleCustomRpc persists the new feature flag value. */
+    @Test
+    fun `toggleCustomRpc persists the new flag value`() =
+        runTest(testDispatcher) {
+            val vm = createViewModel()
+
+            vm.toggleCustomRpc(true)
+            coVerify { customRpcConfig.setFeatureEnabled(true) }
+
+            vm.toggleCustomRpc(false)
+            coVerify { customRpcConfig.setFeatureEnabled(false) }
+        }
+
+    /** Verifies a `true` emission from customRpcConfig.isFeatureEnabled reflects into the state. */
+    @Test
+    fun `custom rpc feature emissions reflect into state`() =
+        runTest(testDispatcher) {
+            every { customRpcConfig.isFeatureEnabled } returns flowOf(true)
+            val vm = createViewModel()
+
+            vm.state.value.isCustomRpcEnabled.shouldBeTrue()
         }
 }
