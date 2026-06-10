@@ -8,7 +8,10 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.repositories.StakingDetailsRepository
 import java.math.BigInteger
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 
 /**
@@ -120,11 +123,17 @@ class CosmosStakingDeFiBalanceService(
                     rewards = null,
                     rewardsCoin = null,
                 )
-            val existing = stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, coin.id)
-            when {
-                existing == null -> stakingDetailsRepository.saveStakingDetails(vaultId, details)
-                existing.stakeAmount != total ->
-                    stakingDetailsRepository.updateStakingDetails(vaultId, details)
+            // Serialize the read-modify-write on this row: both write paths reach here — the DeFi
+            // page's getRemoteDeFiBalance and the staking screen's persistStakedTotal — and without
+            // a lock a concurrent read-decide-write could interleave and persist a stale total.
+            persistLockFor(vaultId, coin.id).withLock {
+                val existing = stakingDetailsRepository.getStakingDetailsByCoindId(vaultId, coin.id)
+                when {
+                    existing == null ->
+                        stakingDetailsRepository.saveStakingDetails(vaultId, details)
+                    existing.stakeAmount != total ->
+                        stakingDetailsRepository.updateStakingDetails(vaultId, details)
+                }
             }
         } catch (e: CancellationException) {
             throw e
@@ -132,6 +141,11 @@ class CosmosStakingDeFiBalanceService(
             Timber.e(e, "CosmosStakingDeFiBalanceService: failed to persist staked balance")
         }
     }
+
+    private val persistLocks = ConcurrentHashMap<String, Mutex>()
+
+    private fun persistLockFor(vaultId: String, coinId: String): Mutex =
+        persistLocks.computeIfAbsent("$vaultId:$coinId") { Mutex() }
 
     private fun nativeCoin(chain: Chain): Coin? =
         when (chain) {
