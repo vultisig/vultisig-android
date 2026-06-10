@@ -3,8 +3,8 @@
 package com.vultisig.wallet.ui.components.v2.scaffold
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -25,9 +25,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
@@ -41,7 +39,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 
 @Composable
 fun VsExpandableTopBar(
@@ -107,34 +104,27 @@ fun VsExpandableTopBar(
             }
         val offsetLimit = remember(heightDiffPx) { -heightDiffPx }
 
-        val animatedOffset = remember { Animatable(0f) }
-
+        // Single source of truth for the bar height: scrollBehavior.state.heightOffset. Both the
+        // direct drag below and the nested-scroll from the list write this same value, so they can
+        // never diverge (no separate Animatable that goes stale when the list scrolls the bar).
         val previousOffsetLimit = remember { mutableFloatStateOf(offsetLimit) }
 
         LaunchedEffect(offsetLimit) {
             val oldLimit = previousOffsetLimit.floatValue
-            val currentOffset = animatedOffset.value
+            val currentOffset = scrollBehavior.state.heightOffset
 
-            animatedOffset.updateBounds(lowerBound = offsetLimit, upperBound = 0f)
+            // Update the limit first so the coercing setter below accepts the rescaled offset.
+            scrollBehavior.state.heightOffsetLimit = offsetLimit
 
             if (oldLimit != 0f && oldLimit != offsetLimit && currentOffset != 0f) {
                 val collapsePercentage = (currentOffset / oldLimit).coerceIn(0f, 1f)
                 val newOffset = (offsetLimit * collapsePercentage).coerceIn(offsetLimit, 0f)
-                animatedOffset.snapTo(newOffset)
+                scrollBehavior.state.heightOffset = newOffset
             } else {
-                val clampedValue = currentOffset.coerceIn(offsetLimit, 0f)
-                if (clampedValue != currentOffset) {
-                    animatedOffset.snapTo(clampedValue)
-                }
+                scrollBehavior.state.heightOffset = currentOffset.coerceIn(offsetLimit, 0f)
             }
 
-            scrollBehavior.state.heightOffsetLimit = offsetLimit
             previousOffsetLimit.floatValue = offsetLimit
-        }
-
-        LaunchedEffect(Unit) {
-            snapshotFlow { animatedOffset.value }
-                .collect { value -> scrollBehavior.state.heightOffset = value }
         }
 
         val offset by remember { derivedStateOf { scrollBehavior.state.heightOffset } }
@@ -154,8 +144,6 @@ fun VsExpandableTopBar(
                 collapsedHeightPx + (expandedHeightPx - collapsedHeightPx) * expandedFraction
             }
 
-        val coroutineScope = rememberCoroutineScope()
-
         // Bridges the bar's own drag gesture into the nested-scroll system. When the bar is at a
         // bound (fully expanded and over-dragged downward), the unused delta is dispatched to the
         // surrounding parents so a downward pull that starts on the top bar reaches the enclosing
@@ -164,14 +152,13 @@ fun VsExpandableTopBar(
         val noOpConnection = remember { object : NestedScrollConnection {} }
 
         val dragState = rememberDraggableState { delta ->
-            val current = animatedOffset.value
+            val current = scrollBehavior.state.heightOffset
             val target = (current + delta).coerceIn(offsetLimit, 0f)
-            val consumed = target - current
-            coroutineScope.launch { animatedOffset.snapTo(target) }
-            val leftover = delta - consumed
+            scrollBehavior.state.heightOffset = target
+            val leftover = delta - (target - current)
             if (leftover != 0f) {
                 nestedScrollDispatcher.dispatchPostScroll(
-                    consumed = Offset(0f, consumed),
+                    consumed = Offset(0f, target - current),
                     available = Offset(0f, leftover),
                     source = NestedScrollSource.UserInput,
                 )
@@ -187,21 +174,33 @@ fun VsExpandableTopBar(
                         orientation = Orientation.Vertical,
                         state = dragState,
                         onDragStopped = { velocity ->
-                            // Hand the release to the nested-scroll parents first so a downward
-                            // over-drag of the top bar lets PullToRefreshBox settle / trigger.
-                            val available = Velocity(0f, velocity)
-                            val consumedVelocity =
-                                nestedScrollDispatcher.dispatchPreFling(available)
-                            nestedScrollDispatcher.dispatchPostFling(
-                                consumedVelocity,
-                                available - consumedVelocity,
-                            )
-                            val target = if (expandedFraction < 0.5f) offsetLimit else 0f
-                            animatedOffset.animateTo(
-                                targetValue = target,
-                                animationSpec =
-                                    tween(durationMillis = 300, easing = FastOutSlowInEasing),
-                            )
+                            if (scrollBehavior.state.heightOffset >= 0f) {
+                                // The bar is fully expanded and the user kept over-dragging
+                                // downward: hand the release velocity to the nested-scroll parents
+                                // so PullToRefreshBox can settle / trigger. The bar itself does not
+                                // move, so there is nothing for us to settle.
+                                val available = Velocity(0f, velocity)
+                                val consumedVelocity =
+                                    nestedScrollDispatcher.dispatchPreFling(available)
+                                nestedScrollDispatcher.dispatchPostFling(
+                                    consumedVelocity,
+                                    available - consumedVelocity,
+                                )
+                            } else {
+                                // The bar is partially dragged: settle it to the nearest state.
+                                // We do NOT dispatch the fling to the parent here — doing so would
+                                // let exitUntilCollapsed.onPostFling settle the bar too, producing
+                                // a settle-then-jump-back double animation on the shared offset.
+                                val target = if (expandedFraction < 0.5f) offsetLimit else 0f
+                                animate(
+                                    initialValue = scrollBehavior.state.heightOffset,
+                                    targetValue = target,
+                                    animationSpec =
+                                        tween(durationMillis = 300, easing = FastOutSlowInEasing),
+                                ) { value, _ ->
+                                    scrollBehavior.state.heightOffset = value
+                                }
+                            }
                         },
                     ),
             tonalElevation = 0.dp,
