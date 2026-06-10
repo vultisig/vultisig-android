@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -45,6 +46,7 @@ import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
+import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsUiState
 import com.vultisig.wallet.ui.models.cosmosstaking.CosmosStakingPositionsViewModel
 import com.vultisig.wallet.ui.screens.RegisterChainDashboardTopBarAction
 import com.vultisig.wallet.ui.screens.v2.defi.NoPositionsContainer
@@ -89,7 +91,39 @@ internal fun CosmosStakingPositionsScreen(
         onClick = { viewModel.setPositionSelectionDialogVisibility(true) },
     )
 
-    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = { viewModel.refresh() }) {
+    CosmosStakingPositionsContent(
+        chainId = chainId,
+        state = state,
+        isRefreshing = isRefreshing,
+        onRefresh = viewModel::refresh,
+        onManagePositions = { viewModel.setPositionSelectionDialogVisibility(true) },
+        onClaimAll = viewModel::claimAll,
+        onStakeMore = viewModel::stakeMore,
+        onUnstake = viewModel::unstake,
+        onMove = viewModel::move,
+        onPositionSelectionChange = viewModel::onPositionSelectionChange,
+        onPositionSelectionDone = viewModel::onPositionSelectionDone,
+        onDismissPositionSelection = { viewModel.setPositionSelectionDialogVisibility(false) },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CosmosStakingPositionsContent(
+    chainId: String,
+    state: CosmosStakingPositionsUiState,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    onManagePositions: () -> Unit,
+    onClaimAll: () -> Unit,
+    onStakeMore: () -> Unit,
+    onUnstake: (CosmosStakePositionRow) -> Unit,
+    onMove: (CosmosStakePositionRow) -> Unit,
+    onPositionSelectionChange: (String, Boolean) -> Unit,
+    onPositionSelectionDone: () -> Unit,
+    onDismissPositionSelection: () -> Unit,
+) {
+    PullToRefreshBox(isRefreshing = isRefreshing, onRefresh = onRefresh) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)
@@ -122,13 +156,7 @@ internal fun CosmosStakingPositionsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     if (!state.isPositionEnabled) {
-                        item {
-                            NoPositionsContainer(
-                                onManagePositionsClick = {
-                                    viewModel.setPositionSelectionDialogVisibility(true)
-                                }
-                            )
-                        }
+                        item { NoPositionsContainer(onManagePositionsClick = onManagePositions) }
                     } else {
                         item {
                             TotalStakedCard(
@@ -137,8 +165,8 @@ internal fun CosmosStakingPositionsScreen(
                                 totalStaked = formatStakeAmount(state.totalStaked),
                                 totalFiat = state.totalStakedFiat,
                                 hasClaimableRewards = state.hasClaimableRewards,
-                                onClaim = viewModel::claimAll,
-                                onDelegateToNewValidator = viewModel::stakeMore,
+                                onClaim = onClaimAll,
+                                onDelegateToNewValidator = onStakeMore,
                             )
                         }
 
@@ -163,9 +191,9 @@ internal fun CosmosStakingPositionsScreen(
                                     position = position,
                                     ticker = state.ticker,
                                     fiat = position.stakedFiatDisplay,
-                                    onUnstake = { viewModel.unstake(position) },
-                                    onMove = { viewModel.move(position) },
-                                    onStakeMore = viewModel::stakeMore,
+                                    onUnstake = { onUnstake(position) },
+                                    onMove = { onMove(position) },
+                                    onStakeMore = onStakeMore,
                                 )
                             }
                         } else {
@@ -229,9 +257,9 @@ internal fun CosmosStakingPositionsScreen(
                     stakePositions = state.stakePositionsDialog,
                     selectedPositions = state.tempSelectedPositions,
                     searchTextFieldState = searchTextFieldState,
-                    onPositionSelectionChange = viewModel::onPositionSelectionChange,
-                    onDoneClick = viewModel::onPositionSelectionDone,
-                    onCancelClick = { viewModel.setPositionSelectionDialogVisibility(false) },
+                    onPositionSelectionChange = onPositionSelectionChange,
+                    onDoneClick = onPositionSelectionDone,
+                    onCancelClick = onDismissPositionSelection,
                 )
             }
         }
@@ -715,3 +743,76 @@ private val stakeAmountFormat: DecimalFormat =
     DecimalFormat("#,##0.######").apply { roundingMode = RoundingMode.HALF_EVEN }
 
 internal fun formatStakeAmount(value: BigDecimal): String = stakeAmountFormat.format(value)
+
+/**
+ * Empty QBTC staking state — reproduces issue #4831's screen (balance banner + "Staked" tab +
+ * "Delegate to New Validator" + empty-positions hint). The inline edit-chains icon that used to
+ * overlap the "Staked" label was removed in #4825, so this row now renders the tab alone.
+ */
+@Preview(showBackground = true, name = "QBTC staking — empty (no positions)")
+@Composable
+private fun CosmosStakingPositionsEmptyPreview() {
+    CosmosStakingPositionsPreviewHost(
+        state =
+            CosmosStakingPositionsUiState(
+                ticker = "QBTC",
+                selectedPositions = listOf("QBTC"),
+                totalAmountPrice = "$0.00",
+                totalStakedFiat = "$0.00",
+            )
+    )
+}
+
+/**
+ * Populated state — one active delegation with rewards, so the Claim button + a position card show.
+ */
+@Preview(showBackground = true, name = "QBTC staking — one active delegation")
+@Composable
+private fun CosmosStakingPositionsWithDelegationPreview() {
+    CosmosStakingPositionsPreviewHost(
+        state =
+            CosmosStakingPositionsUiState(
+                ticker = "QBTC",
+                selectedPositions = listOf("QBTC"),
+                totalStaked = BigDecimal("1250.5"),
+                totalAmountPrice = "$842.18",
+                totalStakedFiat = "$842.18",
+                hasClaimableRewards = true,
+                positions =
+                    listOf(
+                        CosmosStakePositionRow(
+                            validatorAddress =
+                                "terravaloper1qxv9z8m5n2k7w3pwl4rytsx0d8jh6c2e9abch7",
+                            validatorMoniker = "Vultisig Validator",
+                            validatorIdentity = null,
+                            stakedAmount = BigDecimal("1250.5"),
+                            stakedFiatDisplay = "$842.18",
+                            pendingReward = BigDecimal("0.453217"),
+                            apyPercent = BigDecimal("0.142"),
+                            validatorAvatarUrl = null,
+                            validatorStatus = CosmosStakePositionRow.ValidatorStatus.Active,
+                            pendingUnbondingUnlockDate = null,
+                            pendingUnbondingEntryCount = 0,
+                        )
+                    ),
+            )
+    )
+}
+
+@Composable
+private fun CosmosStakingPositionsPreviewHost(state: CosmosStakingPositionsUiState) {
+    CosmosStakingPositionsContent(
+        chainId = "QBTC",
+        state = state,
+        isRefreshing = false,
+        onRefresh = {},
+        onManagePositions = {},
+        onClaimAll = {},
+        onStakeMore = {},
+        onUnstake = {},
+        onMove = {},
+        onPositionSelectionChange = { _, _ -> },
+        onPositionSelectionDone = {},
+        onDismissPositionSelection = {},
+    )
+}
