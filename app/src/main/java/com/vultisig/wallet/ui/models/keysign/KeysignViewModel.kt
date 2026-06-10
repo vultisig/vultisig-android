@@ -396,6 +396,12 @@ constructor(
         )
     }
 
+    /**
+     * Runs the DKLS/KeyImport signing path for the active [keyType], dispatching to the matching
+     * native helper (ECDSA/EdDSA/MLDSA) via [signWithKeyType] and feeding the result through
+     * [runSigningFlow]. The public-key overrides and [chainPath] let per-chain signing keys be used
+     * instead of the vault's root keys.
+     */
     private suspend fun startKeysignCore(
         ecdsaPublicKeyOverride: String?,
         eddsaPublicKeyOverride: String?,
@@ -925,6 +931,7 @@ constructor(
             }
     }
 
+    /** True when this keysign is a SwapKit-routed swap, which settles on its destination leg. */
     private fun isSwapKitSwap(): Boolean =
         (transactionHistoryData as? SwapTransactionHistoryData)?.provider ==
             SwapProvider.SWAPKIT.getSwapProviderId()
@@ -1016,6 +1023,7 @@ constructor(
         }
     }
 
+    /** Maps a polled [TransactionResult] to the [TransactionStatus] shown on the done screen. */
     private fun TransactionResult.toTransactionStatus() =
         when (this) {
             TransactionResult.Confirmed -> TransactionStatus.Confirmed
