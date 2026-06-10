@@ -507,6 +507,10 @@ internal sealed class Route {
 
     @Serializable data class DiscountTiers(val vaultId: String)
 
+    @Serializable data class CustomRpcList(val vaultId: String)
+
+    @Serializable data class CustomRpcDetail(val vaultId: String, val chainId: String)
+
     @Serializable data object LanguageSetting
 
     @Serializable data object CurrencyUnitSetting

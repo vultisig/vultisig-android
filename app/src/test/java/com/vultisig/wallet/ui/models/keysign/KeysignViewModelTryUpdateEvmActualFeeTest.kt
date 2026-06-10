@@ -139,12 +139,11 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             pullTssMessages = mockk(relaxed = true),
             addressBookRepository = mockk(relaxed = true),
             txStatusConfigurationProvider = mockk(relaxed = true),
-            transactionStatusServiceManager = mockk(relaxed = true),
+            txStatusPoller = mockk(relaxed = true),
             vaultRepository = mockk(relaxed = true),
             transactionHistoryRepository = mockk(relaxed = true),
             balanceRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = gasFeeToEstimatedFee,
-            swapKitTrackingService = mockk(relaxed = true),
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
 

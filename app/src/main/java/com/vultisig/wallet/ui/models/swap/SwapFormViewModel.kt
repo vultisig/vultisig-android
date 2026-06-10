@@ -134,6 +134,14 @@ constructor(
 
     private var refreshQuoteJob: Job? = null
 
+    // Whether the currently selected source/destination pair has any eligible swap provider.
+    // Resolved up front on every pair change (#4710) so an unroutable pair surfaces guidance the
+    // moment it is selected and never reaches the quote pipeline (which would throw
+    // SwapIsNotSupported only after the user typed an amount and waited out the debounce).
+    private var isPairSupported = true
+
+    private val pairNotSupportedError = UiText.StringResource(R.string.swap_route_not_available)
+
     private data class PreFlipState(
         val srcAmount: String,
         val srcTokenId: String,
@@ -656,7 +664,7 @@ constructor(
                     src to dst
                 }
                 .distinctUntilChanged()
-                .onEach {
+                .onEach { (src, dst) ->
                     // A freshly selected pair has no quote yet, and a token switch never clears the
                     // previous pair's destination value. Reset it so the skeleton shows while the
                     // new quote loads instead of the stale amount reading as a firm quote for the
@@ -670,6 +678,7 @@ constructor(
                                 )
                         )
                     }
+                    updatePairSupport(src, dst)
                 }
                 .combine(amountChanges) { address, immediate ->
                     QuoteInput(address = address, amount = srcAmount, immediate = immediate)
@@ -680,6 +689,9 @@ constructor(
                 // the debounce and an instant indicative estimate fills the destination field while
                 // we wait, without flashing on background refreshes (#4712).
                 .onEach { input ->
+                    // Unroutable pair: the "no route" guidance already showed on selection (#4710),
+                    // so don't spin or fetch an indicative estimate for a pair we can't quote.
+                    if (!isPairSupported) return@onEach
                     isLoading = true
                     showIndicativeRate(input)
                 }
@@ -690,6 +702,13 @@ constructor(
                 // collectLatest so newer input cancels an in-flight fetch instead of letting a
                 // stale fetch write isLoading = false after the user has already typed again.
                 .collectLatest { input ->
+                    // Never request a quote for a pair with no eligible provider — that path throws
+                    // SwapIsNotSupported. The guidance set on selection stands; just keep the
+                    // spinner off and wait for the next pair change (#4710).
+                    if (!isPairSupported) {
+                        isLoading = false
+                        return@collectLatest
+                    }
                     when (
                         val result =
                             swapQuotePipeline.resolveQuote(
@@ -858,6 +877,31 @@ constructor(
                 delay(expiredAt - Clock.System.now())
                 refreshQuoteState.value++
             }
+    }
+
+    /**
+     * Resolves whether the selected source/destination pair has any eligible provider and surfaces
+     * the "no route" guidance immediately on selection, instead of letting the quote pipeline throw
+     * SwapIsNotSupported only after the user has typed an amount and waited for a quote (#4710).
+     *
+     * Same-token pairs are treated as supported here — the zero-amount / same-asset guards handle
+     * those — so we never flash "no route" while the user is mid-pick. Eligibility stays driven by
+     * the static [com.vultisig.wallet.data.repositories.swap.SwapProviderTable] (a local lookup, so
+     * this is instant); moving it to live provider/token data is deferred (#4685).
+     */
+    private fun updatePairSupport(src: SendSrc, dst: SendSrc) {
+        val srcToken = src.account.token
+        val dstToken = dst.account.token
+        isPairSupported =
+            srcToken == dstToken ||
+                swapQuoteRepository.getEligibleProviders(srcToken, dstToken).isNotEmpty()
+        if (!isPairSupported) {
+            resetQuoteState(error = pairNotSupportedError, cause = null, tag = null)
+        } else if (uiState.value.formError == pairNotSupportedError) {
+            // Moving from an unroutable pair to a routable one clears the stale guidance at once,
+            // ahead of the debounced quote that would otherwise clear it ~300ms later.
+            uiState.update { it.copy(formError = null) }
+        }
     }
 
     private fun resetQuoteState(error: UiText?, cause: Throwable?, tag: String?) {

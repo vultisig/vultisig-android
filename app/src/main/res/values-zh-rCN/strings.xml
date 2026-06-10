@@ -825,6 +825,23 @@
     <!-- Vault Settings Advanced -->
     <string name="vault_settings_advanced_title">高级</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit 聚合器</string>
+    <string name="settings_advanced_custom_rpc_toggle">自定义 RPC</string>
+    <string name="custom_rpc_title">自定义 RPC</string>
+    <string name="custom_rpc_list_subtitle">将链指向您自己的节点。保留默认值则使用 Vultisig 的端点。</string>
+    <string name="custom_rpc_chip_custom">自定义</string>
+    <string name="custom_rpc_chip_default">默认</string>
+    <string name="custom_rpc_url_label">RPC URL</string>
+    <string name="custom_rpc_url_hint">https://your-node.example</string>
+    <string name="custom_rpc_invalid_url">请输入有效的 http(s) URL</string>
+    <string name="custom_rpc_test_button">测试</string>
+    <string name="custom_rpc_save_button">保存</string>
+    <string name="custom_rpc_reset_button">重置为默认</string>
+    <string name="custom_rpc_testing">测试中…</string>
+    <string name="custom_rpc_reachable">可访问 · %1$d 毫秒</string>
+    <string name="custom_rpc_reachable_unverified">可访问 · %1$d 毫秒 — 网络身份未验证</string>
+    <string name="custom_rpc_wrong_chain">此端点服务于其他链</string>
+    <string name="custom_rpc_invalid_response">此端点返回意外响应</string>
+    <string name="custom_rpc_unreachable">端点无法访问</string>
     <string name="swapkit_error_api_key_missing">SwapKit API 密钥未配置</string>
     <string name="swapkit_error_api_key_invalid">SwapKit API 密钥无效</string>
     <string name="swapkit_error_insufficient_balance">余额不足,无法完成此路径</string>
