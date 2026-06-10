@@ -764,6 +764,76 @@ internal class SwapFormViewModelTest {
 
     // endregion
 
+    // region pair eligibility (#4710)
+
+    @Test
+    fun `unsupported pair surfaces route guidance on selection before any amount is entered`() =
+        runTest(mainDispatcher) {
+            // No eligible provider for the chosen pair — e.g. a thin-coverage chain like Sui.
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns emptyList()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            // The guidance appears from token selection alone — no amount typed, no quote
+            // requested.
+            assertEquals(
+                UiText.StringResource(R.string.swap_route_not_available),
+                vm.uiState.value.formError,
+            )
+            assertTrue(vm.uiState.value.isSwapDisabled)
+            assertFalse(vm.uiState.value.isLoading)
+        }
+
+    @Test
+    fun `unsupported pair never requests a quote even after an amount is entered`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns emptyList()
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("100")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(400)
+            advanceUntilIdle()
+
+            // The quote pipeline (which would throw SwapIsNotSupported) is never reached, and the
+            // pre-quote guidance still stands.
+            coVerify(exactly = 0) {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            }
+            assertEquals(
+                UiText.StringResource(R.string.swap_route_not_available),
+                vm.uiState.value.formError,
+            )
+            assertFalse(vm.uiState.value.isLoading)
+        }
+
+    @Test
+    fun `routable pair does not show route guidance`() =
+        runTest(mainDispatcher) {
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.THORCHAIN)
+
+            val vm = createViewModelWithSwapTokens()
+            advanceUntilIdle()
+
+            assertNull(vm.uiState.value.formError)
+        }
+
+    // endregion
+
     @Test
     fun `selectSrcPercentage fetches a quote immediately, bypassing the typing debounce`() =
         runTest(mainDispatcher) {
