@@ -94,33 +94,34 @@ internal fun CosmosStakingPositionsScreen(
             Column(
                 modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)
             ) {
-                Box(modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
-                    CosmosStakingBalanceBanner(
-                        chainName = chainId,
-                        coinLogo = state.coinLogo,
-                        balanceFiat = state.totalAmountPrice,
-                        isBalanceVisible = state.isBalanceVisible,
-                    )
-                }
-
-                // Single manage-positions control: the ChainDashboard top-bar action above. The
-                // inline edit-chains button that used to sit here duplicated it (#4821).
-                Box(
-                    modifier =
-                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                ) {
-                    VsTabGroup(index = 0) {
-                        COSMOS_STAKING_TABS.forEach { tab ->
-                            tab { VsTab(label = stringResource(tab.displayNameRes), onClick = {}) }
-                        }
-                    }
-                }
-
                 LazyColumn(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    // Banner + tab row scroll with the list as part of the whole screen (mirrors
+                    // iOS) rather than staying pinned above it (#4761).
+                    item {
+                        CosmosStakingBalanceBanner(
+                            chainName = chainId,
+                            coinLogo = state.coinLogo,
+                            balanceFiat = state.totalAmountPrice,
+                            isBalanceVisible = state.isBalanceVisible,
+                        )
+                    }
+
+                    // Single manage-positions control: the ChainDashboard top-bar action above. The
+                    // inline edit-chains button that used to sit here duplicated it (#4821).
+                    item {
+                        VsTabGroup(index = 0) {
+                            COSMOS_STAKING_TABS.forEach { tab ->
+                                tab {
+                                    VsTab(label = stringResource(tab.displayNameRes), onClick = {})
+                                }
+                            }
+                        }
+                    }
+
                     if (!state.isPositionEnabled) {
                         item {
                             NoPositionsContainer(
