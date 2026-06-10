@@ -169,7 +169,18 @@ sealed class JoinKeysignError(val message: UiText) {
     /** Relay server is unavailable after exhausting all retry attempts. */
     data object RelayUnavailable :
         JoinKeysignError(R.string.join_keysign_relay_unavailable.asUiText())
+
+    /**
+     * This vault is missing the Bitcoin or QBTC account the claim hash is derived from, so it
+     * cannot co-sign the QBTC claim.
+     */
+    data object MissingQbtcClaimAccount :
+        JoinKeysignError(R.string.join_keysign_qbtc_claim_missing_account.asUiText())
 }
+
+/** Thrown when a QBTC claim co-sign cannot find the [chain] account it needs in this vault. */
+private class MissingQbtcClaimAccountException(chain: Chain) :
+    Exception("Missing ${chain.raw} account for QBTC claim co-sign")
 
 sealed interface JoinKeysignState {
     data object DiscoveringSessionID : JoinKeysignState
@@ -1566,15 +1577,21 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e ->
                 Timber.e(e, "QBTC claim co-sign failed")
-                currentState.value = JoinKeysignState.Error(JoinKeysignError.FailedConnectToServer)
+                val error =
+                    when (e) {
+                        is MissingQbtcClaimAccountException ->
+                            JoinKeysignError.MissingQbtcClaimAccount
+                        else -> JoinKeysignError.FailedConnectToServer
+                    }
+                currentState.value = JoinKeysignState.Error(error)
             }
         ) {
             val btc =
                 _currentVault.coins.firstOrNull { it.chain == Chain.Bitcoin }
-                    ?: error("Missing Bitcoin account for QBTC claim co-sign")
+                    ?: throw MissingQbtcClaimAccountException(Chain.Bitcoin)
             val qbtc =
                 _currentVault.coins.firstOrNull { it.chain == Chain.Qbtc }
-                    ?: error("Missing QBTC account for QBTC claim co-sign")
+                    ?: throw MissingQbtcClaimAccountException(Chain.Qbtc)
             val messageHashHex =
                 computeQbtcClaimMessageHash(btc.address, btc.hexPublicKey, qbtc.address)
             val session =
