@@ -7,11 +7,13 @@ import com.vultisig.wallet.data.sources.AppDataStore
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -27,12 +29,15 @@ import timber.log.Timber
  * they cannot await DataStore. `null` from [urlFor] means "no override" and the caller keeps its
  * hardcoded default, guaranteeing byte-identical default behaviour when nothing is set.
  *
- * The mirror is hydrated from disk lazily on the first [urlFor] call (the repo is a [Singleton], so
- * this happens once per process and survives relaunch) and kept in sync with every [setOverride] /
- * [clearOverride]. Hydrating on first use — rather than fire-and-forget at construction —
- * guarantees the first networking lookup after process start sees persisted overrides instead of
- * racing an async job. [urlFor] is only reached from the off-main networking path, so the one-time
- * blocking disk read it performs never touches the main thread.
+ * The mirror is hydrated from disk once at construction (the repo is a [Singleton], so this happens
+ * once per process and survives relaunch) and kept in sync with every [setOverride] /
+ * [clearOverride]. Hydration runs fire-and-forget on [Dispatchers.IO] so [urlFor] stays a pure,
+ * non-blocking map read: it is reached both from the off-main networking factories and from
+ * main-thread `viewModelScope.launch` callers (e.g. `GasSettingsViewModel`), so it must never
+ * block. If the startup read fails the mirror stays empty and callers fall back to their hardcoded
+ * default, preserving byte-identical default behaviour. The brief window before hydration completes
+ * likewise resolves to defaults; the eager IO read closes it well before the user reaches any
+ * networking.
  */
 interface CustomRpcRepository {
     /** Reactive view of all overrides, keyed by chain. Empty when none are set. */
@@ -56,33 +61,35 @@ constructor(private val dataStore: AppDataStore, private val json: Json) : Custo
 
     private val mirror = ConcurrentHashMap<ChainId, String>()
 
-    // Serializes read-modify-write of the persisted map so concurrent set/clear can't clobber each
-    // other (DataStore.set is last-writer-wins on its own).
+    // Serializes read-modify-write of the persisted map so concurrent set/clear (and startup
+    // hydration) can't clobber each other. DataStore.set is last-writer-wins on its own.
     private val writeLock = Mutex()
 
-    // Guards the one-time lazy hydration so the disk read happens at most once across threads.
+    // True once the mirror reflects disk — set by either startup hydration or a set/clear write.
+    // Lets a late-running hydration skip rather than clobber a newer override.
     @Volatile private var hydrated = false
-    private val hydrationLock = Any()
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    init {
+        // Eagerly hydrate the mirror off the main thread so urlFor() never has to block on disk.
+        scope.launch { hydrate() }
+    }
 
     override val overrides: Flow<Map<Chain, String>> =
         dataStore.readData(KEY_OVERRIDES, "").map(::decode)
 
-    override fun urlFor(chain: Chain): String? {
-        ensureHydrated()
-        return mirror[chain.id]
-    }
+    override fun urlFor(chain: Chain): String? = mirror[chain.id]
 
-    // Populate the mirror from disk on first lookup so the very first networking call after process
-    // start sees persisted overrides. Runs on the calling (off-main networking) thread; the double-
-    // checked flag keeps it to a single blocking read regardless of concurrent callers.
-    private fun ensureHydrated() {
-        if (hydrated) return
-        synchronized(hydrationLock) {
-            if (hydrated) return
-            runBlocking(Dispatchers.IO) { replaceMirror(readPersisted()) }
+    // Populate the mirror from disk once. A read failure leaves the mirror empty, so urlFor()
+    // returns null and callers keep their default endpoint (byte-identical-default guarantee).
+    private suspend fun hydrate() =
+        writeLock.withLock {
+            if (hydrated) return@withLock
+            runCatching { replaceMirror(readPersisted()) }
+                .onFailure { Timber.w(it, "Failed to hydrate custom RPC overrides") }
             hydrated = true
         }
-    }
 
     override suspend fun setOverride(chain: Chain, url: String) = mutate {
         it + (chain.id to url.trim())

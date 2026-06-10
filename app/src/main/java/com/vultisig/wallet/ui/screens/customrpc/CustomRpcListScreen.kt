@@ -9,9 +9,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,21 +53,19 @@ private fun CustomRpcListScreen(
     onBackClick: () -> Unit,
 ) {
     V2Scaffold(title = stringResource(R.string.custom_rpc_title), onBackClick = onBackClick) {
-        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        Column {
             Text(
                 text = stringResource(R.string.custom_rpc_list_subtitle),
                 style = Theme.brockmann.supplementary.footnote,
                 color = Theme.v2.colors.text.tertiary,
             )
             UiSpacer(size = 12.dp)
-            Column(
+            LazyColumn(
                 modifier =
-                    Modifier.background(
-                        color = Theme.v2.colors.backgrounds.surface1,
-                        shape = RoundedCornerShape(size = 12.dp),
-                    )
+                    Modifier.clip(RoundedCornerShape(size = 12.dp))
+                        .background(color = Theme.v2.colors.backgrounds.surface1)
             ) {
-                state.rows.forEachIndexed { index, row ->
+                itemsIndexed(state.rows, key = { _, row -> row.chainId }) { index, row ->
                     CustomRpcRow(
                         row = row,
                         onClick = { onRowClick(row.chainId) },
@@ -75,7 +73,6 @@ private fun CustomRpcListScreen(
                     )
                 }
             }
-            UiSpacer(size = 24.dp)
         }
     }
 }

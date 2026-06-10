@@ -450,14 +450,16 @@ constructor(
     private fun loadAppLocale() {
         viewModelScope.launch {
             appLocaleRepository.local.collect { locale: AppLanguage ->
-                val items = updatedLocale(locale)
-                state.update { it.copy(items = items) }
+                // Map inside update (not over a state.value snapshot) so a concurrent emission —
+                // e.g. loadCustomRpcFlag inserting the Custom RPC row — isn't dropped by this
+                // write.
+                state.update { it.copy(items = updatedLocale(it.items, locale)) }
             }
         }
     }
 
-    private fun updatedLocale(locale: AppLanguage) =
-        state.value.items.map { group ->
+    private fun updatedLocale(groups: List<SettingsGroupUiModel>, locale: AppLanguage) =
+        groups.map { group ->
             group.copy(
                 items =
                     group.items.map { item ->
@@ -472,14 +474,16 @@ constructor(
     private fun loadCurrency() {
         viewModelScope.launch {
             appCurrencyRepository.currency.collect { currency: AppCurrency ->
-                val items = updateCurrency(currency)
-                state.update { it.copy(items = items) }
+                // Map inside update (not over a state.value snapshot) so a concurrent emission —
+                // e.g. loadCustomRpcFlag inserting the Custom RPC row — isn't dropped by this
+                // write.
+                state.update { it.copy(items = updateCurrency(it.items, currency)) }
             }
         }
     }
 
-    private fun updateCurrency(currency: AppCurrency) =
-        state.value.items.map { group ->
+    private fun updateCurrency(groups: List<SettingsGroupUiModel>, currency: AppCurrency) =
+        groups.map { group ->
             group.copy(
                 items =
                     group.items.map { item ->
