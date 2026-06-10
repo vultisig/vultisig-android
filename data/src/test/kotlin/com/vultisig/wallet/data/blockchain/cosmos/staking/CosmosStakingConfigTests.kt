@@ -53,10 +53,12 @@ class CosmosStakingConfigTests {
         assertEquals("qbtc", entry.bondDenom)
         assertEquals("qbtc", entry.feeDenom)
         assertEquals("qbtcvaloper", entry.valoperHrp)
-        // 400_000 matches Terra's post-OoG floor (live MsgDelegate simulate burned 278_759;
-        // redelegate is heavier). feeAmount 800 is the qbtc-testnet `min_tx_fee` floor; since
-        // `min_gas_price` is 0 the higher gas budget does not raise the fee. Mirrors iOS #4481.
-        assertEquals(400_000L, entry.gasLimit)
+        // 800_000 after MsgBeginRedelegate OoG'd at the prior 400_000 floor on-chain (tx
+        // 67B85E1C…, gasUsed 400_832, sdk code 11 ReadPerByte) — the heaviest single-msg path. It
+        // must stay above that observed burn. feeAmount 800 is the qbtc-testnet `min_tx_fee` floor;
+        // `min_gas_price` is 0 so the higher gas budget does not raise the fee (#4820).
+        assertEquals(800_000L, entry.gasLimit)
+        assertTrue(entry.gasLimit > 400_832L, "gas must exceed the observed redelegate OoG burn")
         assertEquals(800L, entry.feeAmount)
         // Live LCD `unbonding_time` = 1814400s = 21 days.
         assertEquals(21, entry.unbondingDays)
