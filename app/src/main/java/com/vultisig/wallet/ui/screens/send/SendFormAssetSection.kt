@@ -23,7 +23,7 @@ import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.selectors.ChainSelector
 import com.vultisig.wallet.ui.models.send.SendFormUiModel
 import com.vultisig.wallet.ui.models.send.SendSections
-import com.vultisig.wallet.ui.screens.swap.TokenChip
+import com.vultisig.wallet.ui.screens.swap.components.TokenChip
 import com.vultisig.wallet.ui.theme.Theme
 
 @Composable
