@@ -4,6 +4,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
+import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -689,7 +690,7 @@ constructor(
                         srcNativeToken,
                         gasFees,
                     )
-                val updatedTx = apiQuote.tx.copy(swapFee = feeAmount.toString())
+                val updatedTx = apiQuote.tx.withResolvedSwapFee(feeAmount, feeCoin)
                 val tokenFees = TokenValue(value = feeAmount, token = feeCoin)
                 SwapQuote.OneInch(
                     expectedDstValue = expectedDstValue,
@@ -821,7 +822,7 @@ constructor(
                             apiQuote.tx.swapFee.toBigInteger(),
                         )
                     }
-                val updatedTx = apiQuote.tx.copy(swapFee = feeAmount.toString())
+                val updatedTx = apiQuote.tx.withResolvedSwapFee(feeAmount, feeCoin)
                 val tokenFees = TokenValue(value = feeAmount, token = feeCoin)
                 SwapQuote.OneInch(
                     expectedDstValue = expectedDstValue,
@@ -939,6 +940,18 @@ constructor(
             else formatSwapKitProviderLabel(resolvedSubProvider).asUiText()
         return swapQuote to providerLabel
     }
+
+    // Stamps the resolved swap fee (`feeAmount`, already denominated in `feeCoin`) back onto the tx
+    // together with the coin context so a join-flow co-signer — which has no live quote — renders
+    // the same fiat value. Keeping the amount and the coin context in lockstep is what makes the
+    // commondata swap_fee_chain/token_id/decimals fields trustworthy on the read side.
+    private fun OneInchSwapTxJson.withResolvedSwapFee(feeAmount: BigInteger, feeCoin: Coin) =
+        copy(
+            swapFee = feeAmount.toString(),
+            swapFeeChain = feeCoin.chain.id,
+            swapFeeTokenContract = feeCoin.contractAddress,
+            swapFeeDecimals = feeCoin.decimal,
+        )
 
     private suspend fun resolveSwapFee(
         swapFeeTokenContract: String,

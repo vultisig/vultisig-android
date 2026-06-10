@@ -685,20 +685,49 @@ constructor(
                                 (srcToken.chain != dstToken.chain &&
                                     provider != SwapProvider.SWAPKIT.getSwapProviderId())
 
-                        val feeToken =
-                            when {
-                                // Mirror iOS / SwapFormViewModel: LI.FI integrator fee is a
-                                // percentage of the destination amount, denominated in the
-                                // destination token. The raw "LIFI Fixed Fee" amount has no
-                                // chainId and cannot be safely interpreted as source-native wei
-                                // for cross-chain swaps (#3300).
-                                isLiFi -> dstToken
-                                hasJupiterSwapProvider -> srcToken
-                                else -> nativeToken
+                        // When the initiator stamped the swap-fee coin context (commondata
+                        // swap_fee_chain / swap_fee_token_id / swap_fee_decimals, surfaced here as
+                        // swapFeeChain / swapFeeTokenContract / swapFeeDecimals), trust it instead
+                        // of guessing the fee coin. This is what lets a payload whose affiliate fee
+                        // is in the destination token (e.g. KyberSwap USDC, 6 decimals) render the
+                        // right fiat value rather than misreading a 6-decimal amount as 18-decimal
+                        // native and overshooting by ~10^12. Empty chain / null decimals means a
+                        // sender that predates the field, so we fall back to the heuristic below.
+                        val explicitSwapFee: Pair<Coin, BigInteger>? = run {
+                            val feeChain = oneInchSwapTxJson.swapFeeChain
+                            val feeRaw = oneInchSwapTxJson.swapFee.toBigIntegerOrNull()
+                            if (
+                                feeChain.isEmpty() ||
+                                    oneInchSwapTxJson.swapFeeDecimals == null ||
+                                    feeRaw == null
+                            ) {
+                                return@run null
                             }
+                            val feeTokenId = oneInchSwapTxJson.swapFeeTokenContract
+                            val coin =
+                                listOf(dstToken, srcToken, nativeToken).firstOrNull {
+                                    it.chain.id == feeChain &&
+                                        it.contractAddress.equals(feeTokenId, ignoreCase = true)
+                                } ?: return@run null
+                            coin to feeRaw
+                        }
+
+                        val feeToken =
+                            explicitSwapFee?.first
+                                ?: when {
+                                    // Mirror iOS / SwapFormViewModel: LI.FI integrator fee is a
+                                    // percentage of the destination amount, denominated in the
+                                    // destination token. The raw "LIFI Fixed Fee" amount has no
+                                    // chainId and cannot be safely interpreted as source-native wei
+                                    // for cross-chain swaps (#3300).
+                                    isLiFi -> dstToken
+                                    hasJupiterSwapProvider -> srcToken
+                                    else -> nativeToken
+                                }
 
                         val value =
                             when {
+                                explicitSwapFee != null -> explicitSwapFee.second
                                 // VULT tier discount isn't available in the join flow, so this
                                 // uses the base integrator rate. The difference vs. the initiator
                                 // display is at most 0.5% of dstAmount.
