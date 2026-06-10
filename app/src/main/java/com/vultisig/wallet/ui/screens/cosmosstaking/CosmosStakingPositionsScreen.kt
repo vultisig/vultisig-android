@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -124,7 +123,7 @@ internal fun CosmosStakingPositionsScreen(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CosmosStakingPositionsContent(
+internal fun CosmosStakingPositionsContent(
     state: CosmosStakingPositionsUiState,
     chainId: String,
     isRefreshing: Boolean,
@@ -560,7 +559,7 @@ private fun PositionRow(
  * the wait reads as "loading" and stays visually consistent with the other DeFi tabs.
  */
 @Composable
-private fun StakingPositionSkeleton() {
+internal fun StakingPositionSkeleton() {
     Column(
         modifier =
             Modifier.fillMaxWidth()
@@ -792,117 +791,3 @@ private val stakeAmountFormat: DecimalFormat =
     DecimalFormat("#,##0.######").apply { roundingMode = RoundingMode.HALF_EVEN }
 
 internal fun formatStakeAmount(value: BigDecimal): String = stakeAmountFormat.format(value)
-
-private fun previewPosition(
-    address: String,
-    moniker: String,
-    staked: String,
-    fiat: String,
-    reward: String,
-    status: CosmosStakePositionRow.ValidatorStatus,
-    apy: BigDecimal? = BigDecimal("0.121"),
-) =
-    CosmosStakePositionRow(
-        validatorAddress = address,
-        validatorMoniker = moniker,
-        validatorIdentity = null,
-        stakedAmount = BigDecimal(staked),
-        stakedFiatDisplay = fiat,
-        pendingReward = BigDecimal(reward),
-        apyPercent = apy,
-        validatorAvatarUrl = null,
-        validatorStatus = status,
-        pendingUnbondingUnlockDate = null,
-        pendingUnbondingEntryCount = 0,
-    )
-
-private fun previewLoadedState() =
-    CosmosStakingPositionsUiState(
-        ticker = "LUNC",
-        coinLogo = "",
-        positions =
-            listOf(
-                previewPosition(
-                    address = "terravaloper1allnodes78wk0n3d3kjm0lue0ramln8m8r2x7yg",
-                    moniker = "Allnodes",
-                    staked = "1000",
-                    fiat = "$58.00",
-                    reward = "0.512345",
-                    status = CosmosStakePositionRow.ValidatorStatus.Active,
-                ),
-                previewPosition(
-                    address = "terravaloper1churned9wk0n3d3kjm0lue0ramln8m8r2zzzz",
-                    moniker = "Churned Val",
-                    staked = "234.5",
-                    fiat = "$13.60",
-                    reward = "0.0",
-                    status = CosmosStakePositionRow.ValidatorStatus.ChurnedOut,
-                    apy = null,
-                ),
-            ),
-        hasClaimableRewards = true,
-        totalStaked = BigDecimal("1234.5"),
-        totalStakedFiat = "$71.60",
-        totalAmountPrice = "$71.60",
-        selectedPositions = listOf("LUNC"),
-    )
-
-@Preview
-@Composable
-private fun CosmosStakingPositionsContentLoadedPreview() {
-    CosmosStakingPositionsContent(
-        state = previewLoadedState(),
-        chainId = "TerraClassic",
-        isRefreshing = false,
-        onRefresh = {},
-        onManagePositions = {},
-        onClaim = {},
-        onDelegateToNewValidator = {},
-        onUnstake = {},
-        onMove = {},
-        onStakeMore = {},
-        onPositionSelectionChange = { _, _ -> },
-        onPositionSelectionDone = {},
-        onDismissDialog = {},
-    )
-}
-
-@Preview
-@Composable
-private fun CosmosStakingPositionsContentLoadingPreview() {
-    CosmosStakingPositionsContent(
-        state =
-            CosmosStakingPositionsUiState(
-                ticker = "LUNC",
-                coinLogo = "",
-                positions = emptyList(),
-                isLoading = true,
-                selectedPositions = listOf("LUNC"),
-            ),
-        chainId = "TerraClassic",
-        isRefreshing = false,
-        onRefresh = {},
-        onManagePositions = {},
-        onClaim = {},
-        onDelegateToNewValidator = {},
-        onUnstake = {},
-        onMove = {},
-        onStakeMore = {},
-        onPositionSelectionChange = { _, _ -> },
-        onPositionSelectionDone = {},
-        onDismissDialog = {},
-    )
-}
-
-@Preview
-@Composable
-private fun StakingPositionSkeletonPreview() {
-    Column(
-        modifier =
-            Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp).fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        StakingPositionSkeleton()
-        StakingPositionSkeleton()
-    }
-}
