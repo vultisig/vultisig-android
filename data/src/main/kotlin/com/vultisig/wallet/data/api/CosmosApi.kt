@@ -12,6 +12,8 @@ import com.vultisig.wallet.data.api.models.cosmos.CosmosTHORChainAccountResponse
 import com.vultisig.wallet.data.api.models.cosmos.CosmosTxStatusJson
 import com.vultisig.wallet.data.api.models.cosmos.THORChainAccountValue
 import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.models.CustomRpcSupportedChains
+import com.vultisig.wallet.data.repositories.CustomRpcRepository
 import com.vultisig.wallet.data.utils.CosmosThorChainResponseSerializer
 import com.vultisig.wallet.data.utils.NetworkException
 import com.vultisig.wallet.data.utils.bodyOrThrow
@@ -65,9 +67,10 @@ constructor(
     private val httpClient: HttpClient,
     private val json: Json,
     private val cosmosThorChainResponseSerializer: CosmosThorChainResponseSerializer,
+    private val customRpcRepository: CustomRpcRepository,
 ) : CosmosApiFactory {
     override fun createCosmosApi(chain: Chain): CosmosApi {
-        val apiUrl =
+        val defaultApiUrl =
             when (chain) {
                 Chain.GaiaChain -> "https://cosmos-rest.publicnode.com"
                 Chain.Kujira -> "https://kujira-rest.publicnode.com"
@@ -79,6 +82,16 @@ constructor(
                 Chain.Akash -> "https://akash-rest.publicnode.com"
                 Chain.Qbtc -> "https://api.vultisig.com/qbtc-rpc"
                 else -> throw IllegalArgumentException("Unsupported chain $chain")
+            }
+
+        // App-wide custom RPC override (#4787): only honor overrides for chains in the supported
+        // set so an excluded chain (e.g. Qbtc, a Vultisig proxy with no real-node equivalent)
+        // always resolves to its default. Unset chains keep their default endpoint.
+        val apiUrl =
+            if (CustomRpcSupportedChains.isSupported(chain)) {
+                customRpcRepository.urlFor(chain) ?: defaultApiUrl
+            } else {
+                defaultApiUrl
             }
 
         return CosmosApiImp(httpClient, apiUrl, json, cosmosThorChainResponseSerializer)

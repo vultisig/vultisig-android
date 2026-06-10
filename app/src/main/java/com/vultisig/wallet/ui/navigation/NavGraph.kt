@@ -62,6 +62,8 @@ import com.vultisig.wallet.ui.screens.VaultRenameScreen
 import com.vultisig.wallet.ui.screens.backup.BackupPasswordRequestScreen
 import com.vultisig.wallet.ui.screens.backup.ServerBackupScreen
 import com.vultisig.wallet.ui.screens.backup.VaultsToBackupScreen
+import com.vultisig.wallet.ui.screens.customrpc.CustomRpcDetailScreen
+import com.vultisig.wallet.ui.screens.customrpc.CustomRpcListScreen
 import com.vultisig.wallet.ui.screens.deposit.BondFormScreen
 import com.vultisig.wallet.ui.screens.deposit.DepositScreen
 import com.vultisig.wallet.ui.screens.deposit.VerifyDepositScreen
@@ -233,6 +235,10 @@ internal fun SetupNavGraph(navController: NavHostController, startDestination: A
         composable<Route.FAQSetting> { FaqSettingScreen(navController = navController) }
 
         composable<Route.DiscountTiers> { DiscountTiersScreen() }
+
+        composable<Route.CustomRpcList> { CustomRpcListScreen() }
+
+        composable<Route.CustomRpcDetail> { CustomRpcDetailScreen() }
 
         composable<Route.LanguageSetting> { LanguageSettingScreen(navController = navController) }
 

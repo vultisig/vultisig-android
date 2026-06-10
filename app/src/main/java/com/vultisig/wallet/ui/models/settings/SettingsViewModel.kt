@@ -10,11 +10,14 @@ import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.models.settings.AppLanguage
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.AppLocaleRepository
+import com.vultisig.wallet.data.repositories.CustomRpcConfig
 import com.vultisig.wallet.data.repositories.PreventScreenshotsRepository
 import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepositoryContract
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.ui.models.settings.SettingsItem.AddressBook
 import com.vultisig.wallet.ui.models.settings.SettingsItem.CheckForUpdates
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Currency
+import com.vultisig.wallet.ui.models.settings.SettingsItem.CustomRpc
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Discord
 import com.vultisig.wallet.ui.models.settings.SettingsItem.DiscountTiers
 import com.vultisig.wallet.ui.models.settings.SettingsItem.Faq
@@ -48,6 +51,7 @@ internal data class SettingsUiModel(
     val items: List<SettingsGroupUiModel>,
     val hasToShowReferralCodeSheet: Boolean = false,
     val showShareBottomSheet: Boolean = false,
+    val showCustomRpcUpsell: Boolean = false,
 )
 
 internal data class SettingsGroupUiModel(val title: UiText, val items: List<SettingsItem>)
@@ -209,6 +213,15 @@ internal sealed class SettingsItem(val value: SettingsItemUiModel, val enabled: 
                 trailingSwitch = isEnabled,
             )
         )
+
+    data object CustomRpc :
+        SettingsItem(
+            SettingsItemUiModel(
+                title = UiText.StringResource(R.string.custom_rpc_title),
+                leadingIcon = R.drawable.settings_globe,
+                trailingIcon = R.drawable.ic_small_caret_right,
+            )
+        )
 }
 
 internal data class SettingsItemUiModel(
@@ -237,6 +250,8 @@ constructor(
     private val appLocaleRepository: AppLocaleRepository,
     private val referralRepository: ReferralCodeSettingsRepositoryContract,
     private val preventScreenshotsRepository: PreventScreenshotsRepository,
+    private val customRpcConfig: CustomRpcConfig,
+    private val getDiscountBps: GetDiscountBpsUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     private val _uiEvents = Channel<SettingsUiEvent>()
@@ -332,6 +347,23 @@ constructor(
                 viewModelScope.launch { navigator.route(Route.DiscountTiers(vaultId)) }
             }
 
+            CustomRpc -> {
+                // Tier gate at the entry point (parity with iOS): below Silver, show the Silver
+                // upsell dialog instead of the editor. Once inside the list the user edits freely.
+                // A failed/unknown tier lookup falls back to the upsell rather than blocking
+                // access.
+                viewModelScope.launch {
+                    val isSilver =
+                        runCatching { getDiscountBps.hasReachedSilverTier(vaultId) }
+                            .getOrDefault(false)
+                    if (isSilver) {
+                        navigator.route(Route.CustomRpcList(vaultId))
+                    } else {
+                        state.update { it.copy(showCustomRpcUpsell = true) }
+                    }
+                }
+            }
+
             Notifications -> {
                 viewModelScope.launch { navigator.route(Route.NotificationSettings) }
             }
@@ -357,6 +389,33 @@ constructor(
             loadAppLocale()
             loadPreventScreenshots()
             loadWasReferralUsed()
+            loadCustomRpcFlag()
+        }
+    }
+
+    /**
+     * The Custom RPC row (#4787) is hidden behind the Advanced Settings → Custom RPC feature flag.
+     * When enabled, it is inserted into the General group; when disabled, it is removed.
+     */
+    private fun loadCustomRpcFlag() {
+        viewModelScope.launch {
+            customRpcConfig.isFeatureEnabled.collect { enabled ->
+                state.update { current ->
+                    current.copy(
+                        items =
+                            current.items.map { group ->
+                                if (group.title != UiText.StringResource(R.string.general)) {
+                                    group
+                                } else {
+                                    val withoutRpc = group.items.filterNot { it is CustomRpc }
+                                    group.copy(
+                                        items = if (enabled) withoutRpc + CustomRpc else withoutRpc
+                                    )
+                                }
+                            }
+                    )
+                }
+            }
         }
     }
 
@@ -391,14 +450,16 @@ constructor(
     private fun loadAppLocale() {
         viewModelScope.launch {
             appLocaleRepository.local.collect { locale: AppLanguage ->
-                val items = updatedLocale(locale)
-                state.update { it.copy(items = items) }
+                // Map inside update (not over a state.value snapshot) so a concurrent emission —
+                // e.g. loadCustomRpcFlag inserting the Custom RPC row — isn't dropped by this
+                // write.
+                state.update { it.copy(items = updatedLocale(it.items, locale)) }
             }
         }
     }
 
-    private fun updatedLocale(locale: AppLanguage) =
-        state.value.items.map { group ->
+    private fun updatedLocale(groups: List<SettingsGroupUiModel>, locale: AppLanguage) =
+        groups.map { group ->
             group.copy(
                 items =
                     group.items.map { item ->
@@ -413,14 +474,16 @@ constructor(
     private fun loadCurrency() {
         viewModelScope.launch {
             appCurrencyRepository.currency.collect { currency: AppCurrency ->
-                val items = updateCurrency(currency)
-                state.update { it.copy(items = items) }
+                // Map inside update (not over a state.value snapshot) so a concurrent emission —
+                // e.g. loadCustomRpcFlag inserting the Custom RPC row — isn't dropped by this
+                // write.
+                state.update { it.copy(items = updateCurrency(it.items, currency)) }
             }
         }
     }
 
-    private fun updateCurrency(currency: AppCurrency) =
-        state.value.items.map { group ->
+    private fun updateCurrency(groups: List<SettingsGroupUiModel>, currency: AppCurrency) =
+        groups.map { group ->
             group.copy(
                 items =
                     group.items.map { item ->
@@ -480,5 +543,14 @@ constructor(
 
     private fun openShareLinkModalBottomSheet() {
         state.update { it.copy(showShareBottomSheet = true) }
+    }
+
+    fun onDismissCustomRpcUpsell() {
+        state.update { it.copy(showCustomRpcUpsell = false) }
+    }
+
+    fun onUnlockCustomRpcTier() {
+        state.update { it.copy(showCustomRpcUpsell = false) }
+        viewModelScope.launch { navigator.route(Route.DiscountTiers(vaultId)) }
     }
 }
