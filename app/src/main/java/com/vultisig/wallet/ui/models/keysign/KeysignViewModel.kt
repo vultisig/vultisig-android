@@ -919,7 +919,7 @@ constructor(
     private fun startForegroundPolling(txHash: String, chain: Chain) {
         pollingTxStatusJob?.cancel()
         pollingTxStatusJob =
-            viewModelScope.launch {
+            viewModelScope.safeLaunch {
                 val terminal =
                     txStatusPoller.poll(txHash, chain, isSwapKitSwap = isSwapKitSwap()) { result ->
                         currentState.value =

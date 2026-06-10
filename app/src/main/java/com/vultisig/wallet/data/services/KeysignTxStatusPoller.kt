@@ -66,14 +66,14 @@ constructor(
         chain: Chain,
         onStatus: suspend (TransactionResult) -> Unit,
     ): TransactionResult? {
-        transactionStatusServiceManager.startPolling(txHash, chain)
-        onStatus(TransactionResult.Pending)
-        transactionStatusServiceManager.serviceReady
-            .filter { it } // Wait until service is ready
-            .first()
-        val statusFlow = transactionStatusServiceManager.getStatusFlow() ?: return null
-        val terminal =
-            statusFlow
+        try {
+            transactionStatusServiceManager.startPolling(txHash, chain)
+            onStatus(TransactionResult.Pending)
+            transactionStatusServiceManager.serviceReady
+                .filter { it } // Wait until service is ready
+                .first()
+            val statusFlow = transactionStatusServiceManager.getStatusFlow() ?: return null
+            return statusFlow
                 .onEach { statusResult ->
                     persistStatus(
                         txHash,
@@ -84,8 +84,11 @@ constructor(
                     onStatus(statusResult)
                 }
                 .first { it.isTerminal() }
-        transactionStatusServiceManager.stopPolling()
-        return terminal
+        } finally {
+            // Tear down the foreground service on every exit path (terminal, early null return,
+            // or cancellation) so it can't outlive the poll.
+            transactionStatusServiceManager.stopPolling()
+        }
     }
 
     /**
