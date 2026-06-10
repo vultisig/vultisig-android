@@ -401,119 +401,137 @@ constructor(
         eddsaPublicKeyOverride: String?,
         chainPath: String,
     ) {
-        try {
+        runSigningFlow(onAllSigned = { extractCustomMessageSignature() }) {
             if (keysignPayload == null && customMessagePayload == null) {
                 error("Keysign payload is null")
             }
             when (keyType) {
-                TssKeyType.ECDSA -> {
-                    currentState.value = KeysignState.KeysignECDSA
-
-                    val dkls =
-                        DKLSKeysign(
-                            vault = vault,
-                            keysignCommittee = keysignCommittee,
-                            mediatorURL = serverUrl,
-                            sessionID = sessionId,
-                            encryptionKeyHex = encryptionKeyHex,
-                            messageToSign = messagesToSign,
-                            chainPath = chainPath,
-                            isInitiateDevice = isInitiatingDevice,
-                            publicKeyOverride = ecdsaPublicKeyOverride,
-                            sessionApi = sessionApi,
-                            encryption = encryption,
-                            onWaitingForPeers = { peers ->
-                                currentState.value = KeysignState.WaitingForPeer(peers)
-                            },
-                            onPeersResumed = { currentState.value = KeysignState.KeysignECDSA },
-                        )
-
-                    dkls.keysignWithRetry()
-
-                    this.signatures += dkls.signatures
-                    if (signatures.isEmpty()) {
-                        error("Failed to sign transaction, signatures empty")
+                TssKeyType.ECDSA ->
+                    signWithKeyType(
+                        activeState = KeysignState.KeysignECDSA,
+                        waitingProgress = 0.33f,
+                    ) { onWaitingForPeers, onPeersResumed ->
+                        val dkls =
+                            DKLSKeysign(
+                                vault = vault,
+                                keysignCommittee = keysignCommittee,
+                                mediatorURL = serverUrl,
+                                sessionID = sessionId,
+                                encryptionKeyHex = encryptionKeyHex,
+                                messageToSign = messagesToSign,
+                                chainPath = chainPath,
+                                isInitiateDevice = isInitiatingDevice,
+                                publicKeyOverride = ecdsaPublicKeyOverride,
+                                sessionApi = sessionApi,
+                                encryption = encryption,
+                                onWaitingForPeers = onWaitingForPeers,
+                                onPeersResumed = onPeersResumed,
+                            )
+                        dkls.keysignWithRetry()
+                        dkls.signatures
                     }
-                }
 
-                TssKeyType.EDDSA -> {
-                    currentState.value = KeysignState.KeysignEdDSA
-
-                    val schnorr =
-                        SchnorrKeysign(
-                            vault = vault,
-                            keysignCommittee = keysignCommittee,
-                            mediatorURL = serverUrl,
-                            sessionID = sessionId,
-                            encryptionKeyHex = encryptionKeyHex,
-                            messageToSign = messagesToSign,
-                            isInitiateDevice = isInitiatingDevice,
-                            publicKeyOverride = eddsaPublicKeyOverride,
-                            sessionApi = sessionApi,
-                            encryption = encryption,
-                            onWaitingForPeers = { peers ->
-                                currentState.value = KeysignState.WaitingForPeer(peers, 0.66f)
-                            },
-                            onPeersResumed = { currentState.value = KeysignState.KeysignEdDSA },
-                        )
-
-                    schnorr.keysignWithRetry()
-
-                    this.signatures += schnorr.signatures
-
-                    if (signatures.isEmpty()) {
-                        error("Failed to sign transaction, signatures empty")
+                TssKeyType.EDDSA ->
+                    signWithKeyType(
+                        activeState = KeysignState.KeysignEdDSA,
+                        waitingProgress = 0.66f,
+                    ) { onWaitingForPeers, onPeersResumed ->
+                        val schnorr =
+                            SchnorrKeysign(
+                                vault = vault,
+                                keysignCommittee = keysignCommittee,
+                                mediatorURL = serverUrl,
+                                sessionID = sessionId,
+                                encryptionKeyHex = encryptionKeyHex,
+                                messageToSign = messagesToSign,
+                                isInitiateDevice = isInitiatingDevice,
+                                publicKeyOverride = eddsaPublicKeyOverride,
+                                sessionApi = sessionApi,
+                                encryption = encryption,
+                                onWaitingForPeers = onWaitingForPeers,
+                                onPeersResumed = onPeersResumed,
+                            )
+                        schnorr.keysignWithRetry()
+                        schnorr.signatures
                     }
-                }
 
                 TssKeyType.MLDSA -> {
-                    currentState.value = KeysignState.KeysignMLDSA
-
                     Timber.d(
                         "MLDSA keysign: pubKeyMLDSA=%s..., keyshares=%s, isInitiating=%b",
                         vault.pubKeyMLDSA.take(20),
                         vault.keyshares.map { it.pubKey.take(20) },
                         isInitiatingDevice,
                     )
-
-                    val mldsa =
-                        MldsaKeysign(
-                            keysignCommittee = keysignCommittee,
-                            mediatorURL = serverUrl,
-                            sessionID = sessionId,
-                            messageToSign = messagesToSign,
-                            vault = vault,
-                            encryptionKeyHex = encryptionKeyHex,
-                            isInitiateDevice = isInitiatingDevice,
-                            sessionApi = sessionApi,
-                            encryption = encryption,
-                            onWaitingForPeers = { peers ->
-                                currentState.value = KeysignState.WaitingForPeer(peers, 0.66f)
-                            },
-                            onPeersResumed = { currentState.value = KeysignState.KeysignMLDSA },
-                        )
-
-                    mldsa.keysignWithRetry()
-
-                    this.signatures += mldsa.signatures
-
-                    if (signatures.isEmpty()) {
-                        error("Failed to sign transaction, signatures empty")
+                    signWithKeyType(
+                        activeState = KeysignState.KeysignMLDSA,
+                        waitingProgress = 0.66f,
+                    ) { onWaitingForPeers, onPeersResumed ->
+                        val mldsa =
+                            MldsaKeysign(
+                                keysignCommittee = keysignCommittee,
+                                mediatorURL = serverUrl,
+                                sessionID = sessionId,
+                                messageToSign = messagesToSign,
+                                vault = vault,
+                                encryptionKeyHex = encryptionKeyHex,
+                                isInitiateDevice = isInitiatingDevice,
+                                sessionApi = sessionApi,
+                                encryption = encryption,
+                                onWaitingForPeers = onWaitingForPeers,
+                                onPeersResumed = onPeersResumed,
+                            )
+                        mldsa.keysignWithRetry()
+                        mldsa.signatures
                     }
                 }
             }
+        }
+    }
 
+    /**
+     * Runs one keyType-specific signing attempt and merges its signatures into [signatures],
+     * running the empty-signatures check once. Collapses the otherwise-identical ECDSA/EdDSA/MLDSA
+     * branches, which differ only by [activeState], [waitingProgress], and which native helper
+     * [runKeysign] builds.
+     */
+    private suspend fun signWithKeyType(
+        activeState: KeysignState,
+        waitingProgress: Float,
+        runKeysign:
+            suspend (onWaitingForPeers: (List<String>) -> Unit, onPeersResumed: () -> Unit) -> Map<
+                    String,
+                    KeysignResponse,
+                >,
+    ) {
+        currentState.value = activeState
+        val newSignatures =
+            runKeysign(
+                { peers ->
+                    currentState.value = KeysignState.WaitingForPeer(peers, waitingProgress)
+                },
+                { currentState.value = activeState },
+            )
+        this.signatures += newSignatures
+        if (signatures.isEmpty()) {
+            error("Failed to sign transaction, signatures empty")
+        }
+    }
+
+    /**
+     * Shared post-signing tail reused by the legacy GG20 and DKLS/KeyImport paths: runs [sign],
+     * then [onAllSigned], then broadcasts (or finishes without broadcast), handling
+     * cancellation/errors uniformly. [cancelPullJobOnFinish] cancels [pullTssMessagesJob] on
+     * success and on cancellation — only the legacy GG20 path pulls TSS messages.
+     */
+    private suspend fun runSigningFlow(
+        cancelPullJobOnFinish: Boolean = false,
+        onAllSigned: suspend () -> Unit = {},
+        sign: suspend () -> Unit,
+    ) {
+        try {
+            sign()
             Timber.d("All messages signed, broadcasting transaction")
-            if (customMessagePayload != null) {
-                require(messagesToSign.isNotEmpty()) {
-                    "messagesToSign must not be empty when extracting custom message"
-                }
-                val customMessageKey = messagesToSign.first()
-                val customMessageResp =
-                    signatures[customMessageKey]
-                        ?: error("No signature found for custom message $customMessageKey")
-                calculateCustomMessageSignature(customMessageResp)
-            }
+            onAllSigned()
             if (!skipBroadcast()) {
                 broadcastTransaction()
                 checkThorChainTxResult()
@@ -526,12 +544,30 @@ constructor(
                 currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
             }
             isNavigateToHome = true
+            if (cancelPullJobOnFinish) pullTssMessagesJob?.cancel()
         } catch (e: CancellationException) {
+            if (cancelPullJobOnFinish) pullTssMessagesJob?.cancel()
             throw e
         } catch (e: Exception) {
             Timber.e(e)
             currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
+    }
+
+    /**
+     * For custom-message signing, derives the transaction signature from the response stored under
+     * the first message-to-sign. No-op when there is no [customMessagePayload].
+     */
+    private fun extractCustomMessageSignature() {
+        if (customMessagePayload == null) return
+        require(messagesToSign.isNotEmpty()) {
+            "messagesToSign must not be empty when extracting custom message"
+        }
+        val customMessageKey = messagesToSign.first()
+        val customMessageResp =
+            signatures[customMessageKey]
+                ?: error("No signature found for custom message $customMessageKey")
+        calculateCustomMessageSignature(customMessageResp)
     }
 
     /**
@@ -558,7 +594,7 @@ constructor(
     private suspend fun signAndBroadcast() {
         Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
-        try {
+        runSigningFlow(cancelPullJobOnFinish = true) {
             featureFlags = featureFlagApi.getFeatureFlags()
             val isEncryptionGcm = featureFlags?.isEncryptGcmEnabled == true
 
@@ -581,29 +617,6 @@ constructor(
                 Timber.d("signing message: $message")
                 signMessageWithRetry(tssService, message, 1)
             }
-
-            Timber.d("All messages signed, broadcasting transaction")
-
-            if (!skipBroadcast()) {
-                broadcastTransaction()
-                checkThorChainTxResult()
-            } else {
-                finishWithoutBroadcast()
-            }
-            if (customMessagePayload != null) {
-                // For custom message signing, we consider the flow complete after signing without
-                // broadcasting
-                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
-            }
-            isNavigateToHome = true
-
-            pullTssMessagesJob?.cancel()
-        } catch (e: CancellationException) {
-            pullTssMessagesJob?.cancel()
-            throw e
-        } catch (e: Exception) {
-            Timber.e(e)
-            currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
         }
     }
 
@@ -896,6 +909,29 @@ constructor(
         }
     }
 
+    /**
+     * Best-effort persists [statusResult] to tx history and pushes it to [currentState]. Shared
+     * status-update core of the foreground and SwapKit pollers, which differ only in their
+     * [warnMessage] (a Timber template with a single `%s` for [txHash]) and terminal handling.
+     */
+    private suspend fun applyPollStatus(
+        txHash: String,
+        chain: Chain,
+        statusResult: TransactionResult,
+        warnMessage: String,
+    ) {
+        runCatching {
+                transactionHistoryRepository.updateTransactionStatus(
+                    chain = chain.raw,
+                    txHash = txHash,
+                    result = statusResult,
+                )
+            }
+            .onFailure { Timber.w(it, warnMessage, txHash) }
+        currentState.value =
+            KeysignState.KeysignFinished(transactionStatus = statusResult.toTransactionStatus())
+    }
+
     private fun startForegroundPolling(txHash: String, chain: Chain) {
         // A SwapKit-routed swap settles on its destination leg, which the source-chain status
         // service can't see — gate Success on `/track` instead (parity with the tx-history poller
@@ -921,20 +957,12 @@ constructor(
                     .filter { it } // Wait until service is ready
                     .first()
                 transactionStatusServiceManager.getStatusFlow()?.collect { statusResult ->
-                    runCatching {
-                            transactionHistoryRepository.updateTransactionStatus(
-                                chain = chain.raw,
-                                txHash = txHash,
-                                result = statusResult,
-                            )
-                        }
-                        .onFailure {
-                            Timber.w(it, "Failed to update tx history status for %s", txHash)
-                        }
-                    currentState.value =
-                        KeysignState.KeysignFinished(
-                            transactionStatus = statusResult.toTransactionStatus()
-                        )
+                    applyPollStatus(
+                        txHash,
+                        chain,
+                        statusResult,
+                        "Failed to update tx history status for %s",
+                    )
                     when (statusResult) {
                         TransactionResult.Confirmed,
                         is TransactionResult.Failed,
@@ -982,24 +1010,12 @@ constructor(
                     }
 
                     val statusResult = swapKitTrackingService.checkSettlementStatus(txHash, chain)
-                    runCatching {
-                            transactionHistoryRepository.updateTransactionStatus(
-                                chain = chain.raw,
-                                txHash = txHash,
-                                result = statusResult,
-                            )
-                        }
-                        .onFailure {
-                            Timber.w(
-                                it,
-                                "Failed to update SwapKit tx history status for %s",
-                                txHash,
-                            )
-                        }
-                    currentState.value =
-                        KeysignState.KeysignFinished(
-                            transactionStatus = statusResult.toTransactionStatus()
-                        )
+                    applyPollStatus(
+                        txHash,
+                        chain,
+                        statusResult,
+                        "Failed to update SwapKit tx history status for %s",
+                    )
                     when (statusResult) {
                         TransactionResult.Confirmed,
                         is TransactionResult.Failed,
