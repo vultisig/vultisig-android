@@ -212,6 +212,17 @@ sealed interface TransactionStatus {
     data class Refunded(val reason: UiText) : TransactionStatus
 }
 
+/**
+ * One keyType-specific signing attempt: builds and runs the native helper, reporting peer-wait
+ * transitions via [onWaitingForPeers]/[onPeersResumed], and returns the produced signatures keyed
+ * by message hash.
+ */
+private typealias RunKeysign =
+    suspend (onWaitingForPeers: (List<String>) -> Unit, onPeersResumed: () -> Unit) -> Map<
+            String,
+            KeysignResponse,
+        >
+
 /** ViewModel that drives the keysign screen: starts the TSS signing flow and tracks its state. */
 internal class KeysignViewModel
 @AssistedInject
@@ -497,11 +508,7 @@ constructor(
     private suspend fun signWithKeyType(
         activeState: KeysignState,
         waitingProgress: Float,
-        runKeysign:
-            suspend (onWaitingForPeers: (List<String>) -> Unit, onPeersResumed: () -> Unit) -> Map<
-                    String,
-                    KeysignResponse,
-                >,
+        runKeysign: RunKeysign,
     ) {
         currentState.value = activeState
         val newSignatures =
