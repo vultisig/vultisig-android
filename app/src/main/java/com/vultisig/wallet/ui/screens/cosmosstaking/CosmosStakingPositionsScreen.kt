@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -109,7 +108,7 @@ internal fun CosmosStakingPositionsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CosmosStakingPositionsContent(
+internal fun CosmosStakingPositionsContent(
     chainId: String,
     state: CosmosStakingPositionsUiState,
     isRefreshing: Boolean,
@@ -743,76 +742,3 @@ private val stakeAmountFormat: DecimalFormat =
     DecimalFormat("#,##0.######").apply { roundingMode = RoundingMode.HALF_EVEN }
 
 internal fun formatStakeAmount(value: BigDecimal): String = stakeAmountFormat.format(value)
-
-/**
- * Empty QBTC staking state — reproduces issue #4831's screen (balance banner + "Staked" tab +
- * "Delegate to New Validator" + empty-positions hint). The inline edit-chains icon that used to
- * overlap the "Staked" label was removed in #4825, so this row now renders the tab alone.
- */
-@Preview(showBackground = true, name = "QBTC staking — empty (no positions)")
-@Composable
-private fun CosmosStakingPositionsEmptyPreview() {
-    CosmosStakingPositionsPreviewHost(
-        state =
-            CosmosStakingPositionsUiState(
-                ticker = "QBTC",
-                selectedPositions = listOf("QBTC"),
-                totalAmountPrice = "$0.00",
-                totalStakedFiat = "$0.00",
-            )
-    )
-}
-
-/**
- * Populated state — one active delegation with rewards, so the Claim button + a position card show.
- */
-@Preview(showBackground = true, name = "QBTC staking — one active delegation")
-@Composable
-private fun CosmosStakingPositionsWithDelegationPreview() {
-    CosmosStakingPositionsPreviewHost(
-        state =
-            CosmosStakingPositionsUiState(
-                ticker = "QBTC",
-                selectedPositions = listOf("QBTC"),
-                totalStaked = BigDecimal("1250.5"),
-                totalAmountPrice = "$842.18",
-                totalStakedFiat = "$842.18",
-                hasClaimableRewards = true,
-                positions =
-                    listOf(
-                        CosmosStakePositionRow(
-                            validatorAddress =
-                                "terravaloper1qxv9z8m5n2k7w3pwl4rytsx0d8jh6c2e9abch7",
-                            validatorMoniker = "Vultisig Validator",
-                            validatorIdentity = null,
-                            stakedAmount = BigDecimal("1250.5"),
-                            stakedFiatDisplay = "$842.18",
-                            pendingReward = BigDecimal("0.453217"),
-                            apyPercent = BigDecimal("0.142"),
-                            validatorAvatarUrl = null,
-                            validatorStatus = CosmosStakePositionRow.ValidatorStatus.Active,
-                            pendingUnbondingUnlockDate = null,
-                            pendingUnbondingEntryCount = 0,
-                        )
-                    ),
-            )
-    )
-}
-
-@Composable
-private fun CosmosStakingPositionsPreviewHost(state: CosmosStakingPositionsUiState) {
-    CosmosStakingPositionsContent(
-        chainId = "QBTC",
-        state = state,
-        isRefreshing = false,
-        onRefresh = {},
-        onManagePositions = {},
-        onClaimAll = {},
-        onStakeMore = {},
-        onUnstake = {},
-        onMove = {},
-        onPositionSelectionChange = { _, _ -> },
-        onPositionSelectionDone = {},
-        onDismissPositionSelection = {},
-    )
-}
