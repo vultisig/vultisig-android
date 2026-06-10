@@ -25,7 +25,6 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.http.isSuccess
 import io.ktor.http.path
 import javax.inject.Inject
 import kotlinx.serialization.SerialName
@@ -205,18 +204,22 @@ constructor(
                     parameter("affiliate_bps", if (isAffiliate) affiliateFeeRate else "0")
                     header(xClientID, xClientIDValue)
                 }
-            if (!response.status.isSuccess()) {
-                return THORChainSwapQuoteDeserialized.Error(
-                    THORChainSwapQuoteError(
-                        HttpStatusCode.fromValue(response.status.value).description
+            val responseRawString = response.bodyAsText()
+            return runCatching {
+                    json.decodeFromString(
+                        thorChainSwapQuoteResponseJsonSerializer,
+                        responseRawString,
                     )
-                )
-            }
-            val responseRawString = response.bodyOrThrow<String>()
-            return json.decodeFromString(
-                thorChainSwapQuoteResponseJsonSerializer,
-                responseRawString,
-            )
+                }
+                .getOrElse {
+                    THORChainSwapQuoteDeserialized.Error(
+                        THORChainSwapQuoteError(
+                            responseRawString.ifBlank {
+                                HttpStatusCode.fromValue(response.status.value).description
+                            }
+                        )
+                    )
+                }
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             return THORChainSwapQuoteDeserialized.Error(

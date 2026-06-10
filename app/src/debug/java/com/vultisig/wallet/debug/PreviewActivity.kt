@@ -214,6 +214,8 @@ class PreviewActivity : ComponentActivity() {
                     "keysign_devices_plus_after" -> KeysignDevicesCountPreview(allowsMore = false)
                     "staking_verify_before" -> CosmosStakingVerifyCtaPreview(newButtons = false)
                     "staking_verify_after" -> CosmosStakingVerifyCtaPreview(newButtons = true)
+                    "staking_verify_qbtc" ->
+                        CosmosStakingVerifyCtaPreview(newButtons = true, qbtc = true)
                     "sign_message_before" -> VerifySignMessageCtaPreview(newButtons = false)
                     "sign_message_after" -> VerifySignMessageCtaPreview(newButtons = true)
                     else -> SwapConfirmPreview()
@@ -1801,27 +1803,51 @@ private fun KeysignSigningLuncPreview() {
 }
 
 @Composable
-private fun CosmosStakingVerifyCtaPreview(newButtons: Boolean) {
+private fun CosmosStakingVerifyCtaPreview(newButtons: Boolean, qbtc: Boolean = false) {
     val state =
-        CosmosStakingVerifyUiState(
-            headlineRes = R.string.cosmos_staking_youre_staking,
-            amount = "12.5",
-            ticker = "LUNA",
-            vaultName = "Main Vault",
-            fromAddress = "terra1delegatorxxxxxxxxxxxxxxxxxxxxxxxxxx78wk",
-            validatorRows =
-                listOf(
-                    CosmosStakingVerifyValidatorRow(
-                        labelRes = R.string.cosmos_staking_validator_picker,
-                        value = "Allnodes (5% commission)",
-                    )
-                ),
-            networkName = "Terra",
-            feeCrypto = "0.01 LUNA",
-            feeFiat = "$0.02",
-            hasFastSign = true,
-            isLoading = false,
-        )
+        if (qbtc) {
+            // QBTC rides the same chain-generic verify screen as LUNA/LUNC. No price feed, so the
+            // fiat fee is hidden ($0.00 equivalent); the fee is the qbtc-testnet min_tx_fee.
+            CosmosStakingVerifyUiState(
+                headlineRes = R.string.cosmos_staking_youre_staking,
+                amount = "0.5",
+                ticker = "QBTC",
+                vaultName = "Main Vault",
+                fromAddress = "qbtc1delegatorxxxxxxxxxxxxxxxxxxxxxxxxxx78wk",
+                validatorRows =
+                    listOf(
+                        CosmosStakingVerifyValidatorRow(
+                            labelRes = R.string.cosmos_staking_validator_picker,
+                            value = "QBTC Labs (3% commission)",
+                        )
+                    ),
+                networkName = "QBTC",
+                feeCrypto = "0.000008 QBTC",
+                feeFiat = "",
+                hasFastSign = true,
+                isLoading = false,
+            )
+        } else {
+            CosmosStakingVerifyUiState(
+                headlineRes = R.string.cosmos_staking_youre_staking,
+                amount = "12.5",
+                ticker = "LUNA",
+                vaultName = "Main Vault",
+                fromAddress = "terra1delegatorxxxxxxxxxxxxxxxxxxxxxxxxxx78wk",
+                validatorRows =
+                    listOf(
+                        CosmosStakingVerifyValidatorRow(
+                            labelRes = R.string.cosmos_staking_validator_picker,
+                            value = "Allnodes (5% commission)",
+                        )
+                    ),
+                networkName = "Terra",
+                feeCrypto = "0.01 LUNA",
+                feeFiat = "$0.02",
+                hasFastSign = true,
+                isLoading = false,
+            )
+        }
     CosmosStakingVerifyContent(state = state, onClose = {}) {
         val ctaModifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(16.dp)
         if (newButtons) {

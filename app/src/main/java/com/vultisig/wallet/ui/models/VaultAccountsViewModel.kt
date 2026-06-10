@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.blockchain.TierRemoteNFTService
+import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coins
@@ -17,7 +18,7 @@ import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.data.models.calculateAccountsTotalFiatValue
-import com.vultisig.wallet.data.models.calculateAddressesTotalFiatValue
+import com.vultisig.wallet.data.models.calculateAddressesPartialFiatValue
 import com.vultisig.wallet.data.models.isFastVault
 import com.vultisig.wallet.data.models.isSecureVault
 import com.vultisig.wallet.data.models.isSwapSupported
@@ -162,6 +163,12 @@ constructor(
     private var loadDeFiBalancesJob: Job? = null
     private var buyVultBannerJob: Job? = null
 
+    // Last merged snapshot per stream (wallet / DeFi), keyed in-memory so a chain that comes back
+    // with a null balance mid-refetch can carry its previously-shown value forward (#4768). Reset
+    // on vault switch so one vault's balances never leak into the next.
+    private var lastWalletAddresses: List<Address> = emptyList()
+    private var lastDeFiAddresses: List<Address> = emptyList()
+
     // In-memory "dismissed for this visit" flag. When the vault holds less than the Silver-tier
     // VULT amount, closing the Buy VULT banner only flips this (no persistence), so it returns the
     // next time the home screen is entered or the vault is switched.
@@ -228,6 +235,18 @@ constructor(
         if (vaultChanged) {
             // Don't carry a per-visit Buy VULT dismissal across to the next vault.
             buyVultSessionDismissed.value = false
+            // Drop the previous vault's balances so the retain/partial-total logic can't surface
+            // one vault's totals or rows under the next (#4768).
+            lastWalletAddresses = emptyList()
+            lastDeFiAddresses = emptyList()
+            uiState.update {
+                it.copy(
+                    accounts = emptyList(),
+                    defiAccounts = emptyList(),
+                    totalFiatValue = null,
+                    totalDeFiValue = null,
+                )
+            }
         }
         collectBuyVultBannerDismissed(vaultId)
         loadVaultNameAndShowBackup(vaultId)
@@ -400,7 +419,8 @@ constructor(
                                 )
                             )
                         account.chainName.equals(Chain.Terra.raw, true) ||
-                            account.chainName.equals(Chain.TerraClassic.raw, true) ->
+                            account.chainName.equals(Chain.TerraClassic.raw, true) ||
+                            account.chainName.equals(Chain.Qbtc.raw, true) ->
                             navigator.route(
                                 Route.ChainDashboard(
                                     route =
@@ -536,28 +556,66 @@ constructor(
         searchQuery: String,
         isDefi: Boolean = false,
     ) {
-        val totalFiatValue =
-            this.calculateAddressesTotalFiatValue()?.let { fiatValueToStringMapper(it) }
-        val accountsUiModel = this.map { addressToUiModelMapper(it) }
+        // Retain at the Address level, then derive both the total and the rows from the same merged
+        // list. The headline figure then always equals the sum its rows render (#4768), rather than
+        // the total counting only freshly-resolved chains while a row still shows a cached one.
+        val previous = if (isDefi) lastDeFiAddresses else lastWalletAddresses
+        val merged = this.retainLastKnownBalances(previous)
+        if (isDefi) lastDeFiAddresses = merged else lastWalletAddresses = merged
 
-        if (!isDefi) {
-            uiState.update {
-                it.copy(
-                    totalFiatValue = totalFiatValue,
-                    accounts = accountsUiModel.filteredAccounts(searchQuery),
-                )
-            }
-        } else {
-            uiState.update {
-                it.copy(
-                    totalDeFiValue = totalFiatValue,
-                    defiAccounts = accountsUiModel.filteredAccounts(searchQuery),
-                )
+        val totalFiatValue =
+            merged.calculateAddressesPartialFiatValue()?.let { fiatValueToStringMapper(it) }
+        val accountsUiModel =
+            merged.map { addressToUiModelMapper(it) }.filteredAccounts(searchQuery)
+
+        uiState.update { state ->
+            if (!isDefi) {
+                state.copy(totalFiatValue = totalFiatValue, accounts = accountsUiModel)
+            } else {
+                // An empty merged list (e.g. every DeFi chain deselected) yields a null total here,
+                // clearing the header instead of stranding a stale figure over zero rows (#4768).
+                state.copy(totalDeFiValue = totalFiatValue, defiAccounts = accountsUiModel)
             }
         }
 
         Timber.d("Update updateUiStateFromList: %s", "$this")
     }
+
+    /**
+     * While a chain's balance is refetching, its mapped fiat/native values come back null. Carry
+     * the last-known [Account] values for that row forward so both the row and the portfolio total
+     * keep showing the cached balance instead of blanking until the fresh value resolves (#4768). A
+     * non-null fresh value always wins.
+     *
+     * Keyed by chain + address + provider flag, not chain alone, so two DeFi rows that share a
+     * chain (e.g. a Circle position and another Ethereum position) never carry each other's value
+     * forward.
+     */
+    private fun List<Address>.retainLastKnownBalances(previous: List<Address>): List<Address> {
+        if (previous.isEmpty()) return this
+        val previousByKey = previous.associateBy { it.retainKey() }
+        return map { address ->
+            val last = previousByKey[address.retainKey()] ?: return@map address
+            address.copy(accounts = address.accounts.retainMissing(last.accounts))
+        }
+    }
+
+    private fun List<Account>.retainMissing(previous: List<Account>): List<Account> {
+        // A progressive snapshot can re-emit an address with no accounts; fall back to the cached
+        // ones rather than blanking the row for that cycle (#4768).
+        if (isEmpty()) return previous
+        val previousByToken = previous.associateBy { it.token.id }
+        return map { account ->
+            val last = previousByToken[account.token.id] ?: return@map account
+            account.copy(
+                tokenValue = account.tokenValue ?: last.tokenValue,
+                fiatValue = account.fiatValue ?: last.fiatValue,
+                price = account.price ?: last.price,
+            )
+        }
+    }
+
+    private fun Address.retainKey(): String = "${chain.id}|$address|$isDefiProvider"
 
     private fun List<AccountUiModel>.filteredAccounts(searchQuery: String): List<AccountUiModel> {
         if (searchQuery.isBlank()) return this

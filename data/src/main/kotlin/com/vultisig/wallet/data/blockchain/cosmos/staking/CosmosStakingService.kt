@@ -170,6 +170,7 @@ internal class CosmosStakingServiceImpl @Inject constructor(private val httpClie
             mapOf(
                 Chain.Terra to "https://terra-lcd.publicnode.com",
                 Chain.TerraClassic to "https://terra-classic-lcd.publicnode.com",
+                Chain.Qbtc to "https://api.vultisig.com/qbtc-rpc",
             )
     }
 }

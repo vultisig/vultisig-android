@@ -163,4 +163,53 @@ class BuildCosmosStakingKeysignPayloadUseCaseTests {
             )
         assertEquals("columbus-5", result.signDirect?.chainId)
     }
+
+    @Test
+    fun `QBTC coin routes through the ML-DSA resolver and stamps the ML-DSA pubkey`() {
+        val mldsaPubKeyHex = "ab".repeat(1312)
+        val mldsaPubKey = ByteArray(1312) { 0xAB.toByte() }
+        val qbtcCoin =
+            Coin(
+                chain = Chain.Qbtc,
+                ticker = "QBTC",
+                logo = "qbtc",
+                address = "qbtc1delegator0000000000000000000000000000",
+                decimal = 8,
+                hexPublicKey = mldsaPubKeyHex,
+                priceProviderID = "",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+        val qbtcValidator = Bech32TestEncoder.encode("qbtcvaloper", ByteArray(20) { it.toByte() })
+
+        val result =
+            useCase(
+                coin = qbtcCoin,
+                payload =
+                    CosmosStakingPayload.Delegate(
+                        validatorAddress = qbtcValidator,
+                        amount = "100000000",
+                    ),
+                blockChainSpecific = cosmosSpecific,
+                vaultPublicKeyECDSA = "p",
+                vaultLocalPartyID = "l",
+                libType = SigningLibType.DKLS,
+            )
+
+        val signDirect = assertNotNull(result.signDirect)
+        assertEquals("qbtc-testnet", signDirect.chainId)
+        // The AuthInfo must carry the ML-DSA pubkey `Any` and the QBTC base gas/fee — proving the
+        // use case dispatched to `resolveMLDSA`, not the secp256k1 `resolve` (which would have
+        // rejected the 1312-byte key).
+        val expectedAuth =
+            CosmosStakingHelper.buildAuthInfo(
+                pubKey = mldsaPubKey,
+                sequence = cosmosSpecific.sequence.toLong(),
+                gasLimit = 800_000L,
+                feeDenom = "qbtc",
+                feeAmount = 800L,
+                pubKeyTypeUrl = "/cosmos.crypto.mldsa.PubKey",
+            )
+        assertContentEquals(expectedAuth, Base64.getDecoder().decode(signDirect.authInfoBytes))
+    }
 }

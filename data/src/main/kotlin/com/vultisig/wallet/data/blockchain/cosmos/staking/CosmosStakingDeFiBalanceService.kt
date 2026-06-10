@@ -12,14 +12,15 @@ import kotlin.coroutines.cancellation.CancellationException
 import timber.log.Timber
 
 /**
- * DeFi-balance provider for LUNA / LUNC staking. The user's DeFi position on Terra / TerraClassic
- * is the staked total — delegated balance plus claimable bond-denom rewards (base units) — which is
- * the single source of truth for both the DeFi row and the portfolio total (issue #4763). It feeds
- * the native coin's DeFi balance so an active delegation no longer shows as $0.00.
+ * DeFi-balance provider for Cosmos-SDK staking (LUNA / LUNC / QBTC). The user's DeFi position on
+ * the chain is the staked total — delegated balance plus claimable bond-denom rewards (base units)
+ * — which is the single source of truth for both the DeFi row and the portfolio total
+ * (issue #4763). It feeds the native coin's DeFi balance so an active delegation no longer shows as
+ * $0.00.
  *
  * Unlike the THORChain / Maya / Tron [com.vultisig.wallet.data.blockchain.DeFiService]
- * implementations this is **chain-aware**: Terra and TerraClassic share the same bech32 address, so
- * the chain must be passed explicitly to pick the right LCD + native coin.
+ * implementations this is **chain-aware**: every staking chain has its own LCD + native coin (and
+ * Terra / TerraClassic even share a bech32 address), so the chain must be passed explicitly.
  *
  * A network failure returns an empty list rather than throwing — the DeFi balance fan-out runs each
  * chain inside an `async`, so a thrown exception here would cancel the whole load and blank every
@@ -124,6 +125,7 @@ class CosmosStakingDeFiBalanceService(
         when (chain) {
             Chain.Terra -> Coins.Terra.LUNA
             Chain.TerraClassic -> Coins.TerraClassic.LUNC
+            Chain.Qbtc -> Coins.Qbtc.QBTC
             else -> null
         }
 }

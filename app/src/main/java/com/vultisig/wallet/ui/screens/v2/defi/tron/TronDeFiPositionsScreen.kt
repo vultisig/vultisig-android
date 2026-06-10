@@ -38,10 +38,6 @@ import com.vultisig.wallet.data.api.models.ResourceUsage
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.VaultId
 import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.clickOnce
-import com.vultisig.wallet.ui.components.v2.containers.ContainerType
-import com.vultisig.wallet.ui.components.v2.containers.CornerType
-import com.vultisig.wallet.ui.components.v2.containers.V2Container
 import com.vultisig.wallet.ui.components.v2.tab.VsTab
 import com.vultisig.wallet.ui.components.v2.tab.VsTabGroup
 import com.vultisig.wallet.ui.models.defi.TronAction
@@ -107,7 +103,6 @@ internal fun TronDeFiPositionsScreen(
             viewModel.refresh()
         },
         onTabSelected = viewModel::onTabSelected,
-        onEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(true) },
         onCancelEditPositionClick = { viewModel.setPositionSelectionDialogVisibility(false) },
         onDonePositionClick = viewModel::onPositionSelectionDone,
         onPositionSelectionChange = viewModel::onPositionSelectionChange,
@@ -124,7 +119,6 @@ private fun TronDeFiPositionsScreenContent(
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
     onTabSelected: (DeFiTab) -> Unit = {},
-    onEditPositionClick: () -> Unit = {},
     onCancelEditPositionClick: () -> Unit = {},
     onDonePositionClick: () -> Unit = {},
     onPositionSelectionChange: (String, Boolean) -> Unit = { _, _ -> },
@@ -161,12 +155,11 @@ private fun TronDeFiPositionsScreenContent(
 
                 if (state is TronDeFiUiState.Success || state is TronDeFiUiState.Loading) {
                     val isLoading = state is TronDeFiUiState.Loading
-                    Row(
+                    // Single manage-positions control: the ChainDashboard top-bar action above. The
+                    // inline edit-chains button that used to sit here duplicated it (#4821).
+                    Box(
                         modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(start = 16.dp, end = 16.dp, top = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
+                            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp)
                     ) {
                         VsTabGroup(index = 0) {
                             TRON_DEFI_TABS.forEach { tab ->
@@ -178,25 +171,6 @@ private fun TronDeFiPositionsScreenContent(
                                     )
                                 }
                             }
-                        }
-
-                        V2Container(
-                            type = ContainerType.SECONDARY,
-                            cornerType = CornerType.Circular,
-                            modifier =
-                                Modifier.clickOnce(
-                                    enabled = !isLoading,
-                                    onClick = onEditPositionClick,
-                                ),
-                        ) {
-                            UiIcon(
-                                drawableResId = R.drawable.edit_chain,
-                                size = 16.dp,
-                                modifier = Modifier.padding(all = 12.dp),
-                                tint =
-                                    if (isLoading) Theme.v2.colors.text.tertiary
-                                    else Theme.v2.colors.primary.accent4,
-                            )
                         }
                     }
                 }

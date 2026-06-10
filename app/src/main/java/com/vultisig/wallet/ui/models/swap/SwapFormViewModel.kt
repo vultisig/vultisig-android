@@ -9,8 +9,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
-import com.vultisig.wallet.data.api.errors.SwapException
-import com.vultisig.wallet.data.api.errors.SwapKitError
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.FiatValue
@@ -24,7 +22,6 @@ import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
-import com.vultisig.wallet.data.usecases.getTierType
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.findCurrentSrc
 import com.vultisig.wallet.ui.models.firstSendSrc
@@ -47,9 +44,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.catch
@@ -79,10 +73,10 @@ constructor(
     private val swapQuoteRepository: SwapQuoteRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
-    private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
-    private val referralRepository: ReferralCodeSettingsRepository,
+    getDiscountBpsUseCase: GetDiscountBpsUseCase,
+    referralRepository: ReferralCodeSettingsRepository,
     private val swapValidator: SwapValidator,
-    private val swapDiscountChecker: SwapDiscountChecker,
+    swapDiscountChecker: SwapDiscountChecker,
     private val swapGasCalculator: SwapGasCalculator,
     private val swapTokenSelector: SwapTokenSelector,
     private val swapQuoteManager: SwapQuoteManager,
@@ -91,6 +85,23 @@ constructor(
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
+
+    // Constructed here (not Hilt-injected) so it shares the ViewModel's exact collaborator
+    // instances — notably the cache-bearing swapQuoteManager, whose flip-quote cache would split
+    // across two instances.
+    private val swapQuotePipeline =
+        SwapQuotePipeline(
+            swapQuoteRepository = swapQuoteRepository,
+            appCurrencyRepository = appCurrencyRepository,
+            referralRepository = referralRepository,
+            getDiscountBpsUseCase = getDiscountBpsUseCase,
+            convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
+            swapQuoteManager = swapQuoteManager,
+            swapDiscountChecker = swapDiscountChecker,
+            swapGasCalculator = swapGasCalculator,
+            swapValidator = swapValidator,
+            fiatValueToString = fiatValueToString,
+        )
 
     val uiState = MutableStateFlow(SwapFormUiModel())
 
@@ -113,7 +124,6 @@ constructor(
     private val estimatedNetworkFeeTokenValue = MutableStateFlow<TokenValue?>(null)
     private val gasFee = MutableStateFlow<TokenValue?>(null)
     private val gasFeeChain = MutableStateFlow<Chain?>(null)
-    private val swapFeeFiat = MutableStateFlow<FiatValue?>(null)
     private val estimatedNetworkFeeFiatValue = MutableStateFlow<FiatValue?>(null)
 
     private val addresses = MutableStateFlow<List<Address>>(emptyList())
@@ -131,25 +141,35 @@ constructor(
         val flippedAmount: String,
     )
 
-    private data class QuoteInput(
-        val address: Pair<SendSrc, SendSrc>,
-        val amount: BigDecimal?,
-        // True when the change should bypass the typing debounce (percentage / Max / paste).
-        val immediate: Boolean,
-    )
-
     /**
-     * Mutable swap-quote state confined to the main thread.
+     * Mutable swap-quote state confined to the main thread, and the single owner of the
+     * quote-coupled fee flow.
      *
      * Every read/write happens from Main.immediate-dispatched code (the quote pipeline, the flip
-     * gesture, and the reset paths), so these plain `var`s need no synchronization. Grouping them
-     * here keeps that threading invariant explicit in one place instead of scattering it across
-     * fields.
+     * gesture, and the reset paths), so the plain `var`s need no synchronization. Grouping them
+     * here keeps that threading invariant explicit in one place, and lets [reset] clear the whole
+     * quote unit from one place instead of poking scattered fields.
      */
     private class QuoteStateHolder {
         var quote: SwapQuote? = null
         var provider: SwapProvider? = null
         var preFlipState: PreFlipState? = null
+
+        // Latest resolved swap fee. collectTotalFee() combines it with the gas fee; filterNotNull()
+        // short-circuits while it is null so a later gas update can't write a (newGas + staleSwap)
+        // total back into state during a reset or flip.
+        val swapFeeFiat = MutableStateFlow<FiatValue?>(null)
+
+        /**
+         * Clears the quote and its swap fee on reset / flip / error. [preFlipState] is owned by the
+         * flip gesture and intentionally not cleared here. Network-fee state is gas-coupled (owned
+         * by calculateGas), not quote-coupled, so it is deliberately left untouched.
+         */
+        fun reset() {
+            quote = null
+            provider = null
+            swapFeeFiat.value = null
+        }
     }
 
     private var isLoading: Boolean
@@ -178,7 +198,7 @@ constructor(
         collectSelectedTokens()
 
         calculateGas()
-        calculateFees()
+        observeQuotePipeline()
         collectTotalFee()
     }
 
@@ -601,7 +621,7 @@ constructor(
     private fun collectTotalFee() {
         estimatedNetworkFeeFiatValue
             .filterNotNull()
-            .combine(swapFeeFiat.filterNotNull()) { gasFeeFiat, swapFeeFiat ->
+            .combine(quoteState.swapFeeFiat.filterNotNull()) { gasFeeFiat, swapFeeFiat ->
                 gasFeeFiat + swapFeeFiat
             }
             .onEach { totalFee ->
@@ -617,8 +637,14 @@ constructor(
             .launchIn(viewModelScope)
     }
 
+    /**
+     * Wires the source-amount / token-selection flows to the quote pipeline: shows the loading
+     * spinner and an indicative rate on real user intent, debounces, then hands each input to
+     * [SwapQuotePipeline] and applies its result (quote display, discounts, fees, refresh timer).
+     * Named for the whole pipeline it drives — fees are only one part of what it produces.
+     */
     @OptIn(FlowPreview::class)
-    private fun calculateFees() {
+    private fun observeQuotePipeline() {
         viewModelScope.safeLaunch {
             // Emits once per source-amount change carrying whether the quote should fetch
             // immediately (percentage / Max / paste) instead of waiting out the typing debounce.
@@ -664,350 +690,119 @@ constructor(
                 // collectLatest so newer input cancels an in-flight fetch instead of letting a
                 // stale fetch write isLoading = false after the user has already typed again.
                 .collectLatest { input ->
-                    val (src, dst) = input.address
-                    val amount = input.amount
-
-                    val srcToken = src.account.token
-                    val dstToken = dst.account.token
-
-                    val srcTokenValue =
-                        amount?.movePointRight(src.account.token.decimal)?.toBigInteger()
-
-                    // An empty field (the initial state on entry, or a cleared field) is not an
-                    // error. The empty-input filter was removed so clearing the field clears the
-                    // stale quote (#4712); without this guard that same empty emission would throw
-                    // AmountCannotBeZero and flash "Invalid amount" the moment the screen opens.
-                    // Clear the quote silently and wait for a real amount instead. An explicitly
-                    // entered zero still falls through to the AmountCannotBeZero error below.
-                    if (srcAmountState.text.isEmpty()) {
-                        resetQuoteState(error = null, cause = null, tag = null)
-                        return@collectLatest
-                    }
-
-                    try {
-                        if (srcTokenValue == null || srcTokenValue <= BigInteger.ZERO) {
-                            throw SwapException.AmountCannotBeZero("Amount must be positive")
-                        }
-                        if (srcToken == dstToken) {
-                            throw SwapException.SameAssets("Can't swap same assets ${srcToken.id})")
-                        }
-
-                        val tokenValue = convertTokenAndValueToTokenValue(srcToken, srcTokenValue)
-
-                        val eligibleProviders =
-                            swapQuoteRepository.getEligibleProviders(srcToken, dstToken)
-                        if (eligibleProviders.isEmpty()) {
-                            throw SwapException.SwapIsNotSupported(
-                                "Swap is not supported for this pair"
-                            )
-                        }
-
-                        val currency = appCurrencyRepository.currency.first()
-
-                        val baselineReferral =
-                            referralCode.value
-                                ?: vaultId?.let { referralRepository.getExternalReferralBy(it) }
-
-                        val candidates = coroutineScope {
-                            eligibleProviders
-                                .map { p ->
-                                    async {
-                                        val discount =
-                                            vaultId?.let { id ->
-                                                getDiscountBpsUseCase.invoke(id, p).takeIf { bps ->
-                                                    bps != 0
-                                                }
-                                            }
-                                        QuoteCandidate(
-                                            provider = p,
-                                            vultBPSDiscount = discount,
-                                            referral = baselineReferral,
-                                        )
-                                    }
-                                }
-                                .awaitAll()
-                        }
-
-                        val resolution =
-                            swapQuoteManager.resolveBestQuote(
-                                candidates = candidates,
-                                src = src,
-                                dst = dst,
-                                srcToken = srcToken,
-                                dstToken = dstToken,
-                                srcTokenValue = srcTokenValue,
-                                tokenValue = tokenValue,
-                                currency = currency,
-                                amount = amount,
+                    when (
+                        val result =
+                            swapQuotePipeline.resolveQuote(
+                                input = input,
+                                // Read live, not from input.amount: the field may have been
+                                // cleared during the debounce, and an empty field clears the quote
+                                // silently rather than erroring (#4712).
+                                isAmountFieldEmpty = srcAmountState.text.isEmpty(),
+                                vaultId = vaultId,
+                                referralCode = referralCode.value,
+                                currentDiscountInfo = uiState.value.discountInfo,
                                 selectedSrcTokenTitle = uiState.value.selectedSrcToken?.title,
                             )
-                        // Map the sealed result: a typed fetch failure resets the quote state with
-                        // its already-mapped error; only a Success continues into fee processing.
-                        val bestQuote =
-                            when (resolution) {
-                                is QuoteResolution.Failure -> {
-                                    resetQuoteState(
-                                        error = resolution.formError,
-                                        cause = resolution.cause,
-                                        tag = resolution.tag,
-                                    )
-                                    return@collectLatest
-                                }
-                                is QuoteResolution.Success -> resolution.best
-                            }
-
-                        val quoteResult = bestQuote.result
-                        val provider = quoteResult.provider
-                        quoteState.provider = provider
-
-                        val vultBPSDiscount = bestQuote.candidate.vultBPSDiscount
-                        val referral = bestQuote.candidate.referral
-
-                        if (provider == SwapProvider.THORCHAIN) {
-                            referral?.let { code ->
-                                val tierType = vultBPSDiscount?.getTierType()
-                                val result =
-                                    swapDiscountChecker.checkReferralBpsDiscount(
-                                        tierType,
-                                        srcToken,
-                                        tokenValue,
-                                        code,
-                                    )
-                                result.referralCode?.let { rc -> referralCode.update { rc } }
-                                uiState.update {
-                                    it.copy(
-                                        discountInfo =
-                                            it.discountInfo.copy(
-                                                referralBpsDiscount = result.referralBpsDiscount,
-                                                referralBpsDiscountFiatValue =
-                                                    result.referralBpsDiscountFiatValue,
-                                            )
-                                    )
-                                }
-                            }
-                        } else {
-                            uiState.update {
-                                it.copy(
-                                    discountInfo =
-                                        it.discountInfo.copy(
-                                            referralBpsDiscount = null,
-                                            referralBpsDiscountFiatValue = null,
-                                        )
-                                )
-                            }
-                        }
-
-                        val vultResult =
-                            swapDiscountChecker.checkVultBpsDiscount(
-                                srcToken,
-                                tokenValue,
-                                vultBPSDiscount,
+                    ) {
+                        SwapQuotePipelineResult.Empty -> resetQuoteState()
+                        is SwapQuotePipelineResult.Failure ->
+                            resetQuoteState(
+                                error = result.error,
+                                cause = result.cause,
+                                tag = result.tag,
                             )
-                        uiState.update {
-                            it.copy(
-                                discountInfo =
-                                    it.discountInfo.copy(
-                                        vultBpsDiscount = vultResult.vultBpsDiscount,
-                                        vultBpsDiscountFiatValue =
-                                            vultResult.vultBpsDiscountFiatValue,
-                                        tierType = vultResult.tierType,
-                                    )
-                            )
-                        }
-
-                        quoteState.quote = quoteResult.quote
-                        // SwapKit BTC settles by broadcasting the provider's PSBT, whose miner fee
-                        // is the only network cost — and it is already surfaced as the UTXO plan
-                        // network fee below. SwapKit reports that same deposit cost as its inbound
-                        // fee, so counting it again as a swap fee would double-count the BTC
-                        // network
-                        // cost in the headline total (iOS shows it once). Zero the swap-fee
-                        // contribution and the breakdown row so Total reconciles to Network Fee
-                        // alone; the affiliate fee is already baked into expectedDstValue.
-                        val isSwapKitUtxoSwap =
-                            quoteResult.quote is SwapQuote.SwapKit &&
-                                srcToken.chain.standard == TokenStandard.UTXO
-                        val effectiveSwapFeeFiat =
-                            if (isSwapKitUtxoSwap)
-                                FiatValue(BigDecimal.ZERO, quoteResult.swapFeeFiat.currency)
-                            else quoteResult.swapFeeFiat
-                        val feeText =
-                            if (isSwapKitUtxoSwap)
-                                fiatValueToString(effectiveSwapFeeFiat, asFee = true)
-                            else quoteResult.feeText
-                        swapFeeFiat.value = effectiveSwapFeeFiat
-
-                        // Determine destination address and memo for UTXO plan fee computation.
-                        // Must be computed before the uiState.update so the button stays
-                        // disabled for UTXO swaps until the plan fee is verified.
-                        val utxoFeeData: Pair<String, String?>? =
-                            when (val q = quoteResult.quote) {
-                                is SwapQuote.ThorChain ->
-                                    (q.data.router
-                                        ?: q.data.inboundAddress
-                                        ?: src.address.address) to q.data.memo
-                                is SwapQuote.MayaChain ->
-                                    (q.data.inboundAddress ?: src.address.address) to q.data.memo
-                                // SwapKit BTC is a PSBT deposit to targetAddress; route it through
-                                // the same UTXO plan-fee path so the network fee is computed and
-                                // swap() doesn't abort with invalid_gas_fee_calculation.
-                                is SwapQuote.SwapKit ->
-                                    if (srcToken.chain.standard == TokenStandard.UTXO) {
-                                        q.data.targetAddress to q.data.memo
-                                    } else null
-                                else -> null
-                            }
-                        val isUtxoSwap =
-                            utxoFeeData != null &&
-                                srcToken.chain.standard == TokenStandard.UTXO &&
-                                srcToken.chain != Chain.Cardano
-
-                        // For UTXO swaps keep isSwapDisabled=true until plan fee is verified
-                        // so a tap between this update and the plan-fee write never submits
-                        // with sats/byte as the total fee.
-                        uiState.update {
-                            it.copy(
-                                srcFiatValue = quoteResult.srcFiatValueText,
-                                quoteDisplay =
-                                    it.quoteDisplay.copy(
-                                        provider = quoteResult.providerUiText,
-                                        estimatedDstTokenValue = quoteResult.estimatedDstTokenValue,
-                                        estimatedDstFiatValue = quoteResult.estimatedDstFiatValue,
-                                        isDstEstimated = false,
-                                        hasQuote = true,
-                                        expiredAt = quoteState.quote?.expiredAt,
-                                    ),
-                                feeBreakdown =
-                                    it.feeBreakdown.copy(
-                                        fee = feeText,
-                                        outboundFee = quoteResult.outboundFeeText,
-                                        swapFeePercent = quoteResult.swapFeePercent,
-                                    ),
-                                formError = null,
-                                isSwapDisabled = isUtxoSwap,
-                                isLoading = false,
-                            )
-                        }
-
-                        if (isUtxoSwap) {
-                            val currentGasFee =
-                                gasFee.value?.takeIf { gasFeeChain.value == srcToken.chain }
-                            val currentVaultId = vaultId
-                            if (currentGasFee != null && currentVaultId != null) {
-                                val (utxoDstAddress, utxoMemo) = utxoFeeData!!
-                                when (
-                                    val planFee =
-                                        swapGasCalculator.resolveUtxoPlanFee(
-                                            vaultId = currentVaultId,
-                                            srcToken = srcToken,
-                                            srcAddress = src.address.address,
-                                            dstAddress = utxoDstAddress,
-                                            memo = utxoMemo,
-                                            tokenAmountInt = srcTokenValue,
-                                            gasFee = currentGasFee,
-                                        )
-                                ) {
-                                    is UtxoPlanFeeResult.Success -> {
-                                        estimatedNetworkFeeFiatValue.value =
-                                            planFee.estimated.fiatValue
-                                        estimatedNetworkFeeTokenValue.value =
-                                            planFee.estimated.tokenValue
-                                        uiState.update {
-                                            it.copy(
-                                                feeBreakdown =
-                                                    it.feeBreakdown.copy(
-                                                        networkFee =
-                                                            planFee.estimated.formattedTokenValue,
-                                                        networkFeeFiat =
-                                                            planFee.estimated.formattedFiatValue,
-                                                    ),
-                                                isSwapDisabled = false,
-                                            )
-                                        }
-                                    }
-                                    UtxoPlanFeeResult.InsufficientUtxos -> {
-                                        uiState.update {
-                                            it.copy(
-                                                isSwapDisabled = true,
-                                                formError =
-                                                    UiText.StringResource(
-                                                        R.string.insufficient_utxos_error
-                                                    ),
-                                            )
-                                        }
-                                    }
-                                    UtxoPlanFeeResult.Unavailable -> {
-                                        estimatedNetworkFeeTokenValue.value = null
-                                        estimatedNetworkFeeFiatValue.value = null
-                                        uiState.update {
-                                            it.copy(
-                                                isSwapDisabled = true,
-                                                feeBreakdown =
-                                                    it.feeBreakdown.copy(
-                                                        networkFee = "",
-                                                        networkFeeFiat = "",
-                                                    ),
-                                            )
-                                        }
-                                    }
-                                }
-                            } else {
-                                // gasFeeChain lags srcToken.chain after a token switch:
-                                // clear any stale fee from the previous chain.
-                                estimatedNetworkFeeTokenValue.value = null
-                                estimatedNetworkFeeFiatValue.value = null
-                                uiState.update {
-                                    it.copy(
-                                        feeBreakdown =
-                                            it.feeBreakdown.copy(
-                                                networkFee = "",
-                                                networkFeeFiat = "",
-                                            )
-                                    )
-                                }
-                            }
-                        }
-
-                        val balanceError =
-                            swapValidator.validateBalanceForSwap(
-                                src,
-                                srcTokenValue,
-                                estimatedNetworkFeeTokenValue.value,
-                            )
-                        if (balanceError != null) {
-                            uiState.update {
-                                it.copy(isSwapDisabled = true, formError = balanceError.formError)
-                            }
-                        }
-                    } catch (e: SwapException) {
-                        resetQuoteState(
-                            error =
-                                swapQuoteManager.mapSwapExceptionToFormError(
-                                    e,
-                                    srcToken,
-                                    uiState.value.selectedSrcToken?.title,
-                                ),
-                            cause = e,
-                            tag = "swapError",
-                        )
-                    } catch (e: SwapKitError) {
-                        resetQuoteState(
-                            error = swapQuoteManager.mapSwapKitErrorToFormError(e),
-                            cause = e,
-                            tag = "swapKitError",
-                        )
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        resetQuoteState(
-                            error = UiText.StringResource(R.string.swap_error_quote_failed),
-                            cause = e,
-                            tag = "swapUnexpectedError",
-                        )
+                        is SwapQuotePipelineResult.Success -> applyQuoteResult(input, result)
                     }
-
-                    quoteState.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
                 }
+        }
+    }
+
+    /**
+     * Writes a resolved quote into UI state, then runs the follow-up network-fee / balance pass and
+     * arms the refresh timer. UTXO swaps stay disabled here until
+     * [SwapQuotePipeline.resolveNetworkFee] verifies the plan fee, so a tap before then can never
+     * submit with sats/byte as the total fee.
+     */
+    private suspend fun applyQuoteResult(
+        input: QuoteInput,
+        result: SwapQuotePipelineResult.Success,
+    ) {
+        val (src, _) = input.address
+
+        quoteState.provider = result.provider
+        quoteState.quote = result.quote
+        result.referralCodeToStore?.let { rc -> referralCode.update { rc } }
+        quoteState.swapFeeFiat.value = result.swapFeeFiat
+
+        uiState.update {
+            it.copy(
+                srcFiatValue = result.srcFiatValue,
+                quoteDisplay =
+                    it.quoteDisplay.copy(
+                        provider = result.providerUiText,
+                        estimatedDstTokenValue = result.estimatedDstTokenValue,
+                        estimatedDstFiatValue = result.estimatedDstFiatValue,
+                        isDstEstimated = false,
+                        hasQuote = true,
+                        expiredAt = result.expiredAt,
+                    ),
+                feeBreakdown =
+                    it.feeBreakdown.copy(
+                        fee = result.feeText,
+                        outboundFee = result.outboundFeeText,
+                        swapFeePercent = result.swapFeePercent,
+                    ),
+                discountInfo = result.discountInfo,
+                formError = null,
+                isSwapDisabled = result.isUtxoSwap,
+                isLoading = false,
+            )
+        }
+
+        applyNetworkFeeOutcome(
+            swapQuotePipeline.resolveNetworkFee(
+                result = result,
+                src = src,
+                vaultId = vaultId,
+                gasFee = gasFee.value,
+                gasFeeChain = gasFeeChain.value,
+                networkFeeTokenValue = estimatedNetworkFeeTokenValue.value,
+            )
+        )
+
+        quoteState.quote?.expiredAt?.let { launchRefreshQuoteTimer(it) }
+    }
+
+    /** Applies the UTXO plan-fee / balance outcome to the network-fee flows and form state. */
+    private fun applyNetworkFeeOutcome(outcome: NetworkFeeOutcome) {
+        when (val fee = outcome.networkFee) {
+            is NetworkFeeUpdate.Set -> {
+                estimatedNetworkFeeFiatValue.value = fee.fiatValue
+                estimatedNetworkFeeTokenValue.value = fee.tokenValue
+            }
+            NetworkFeeUpdate.Clear -> {
+                estimatedNetworkFeeTokenValue.value = null
+                estimatedNetworkFeeFiatValue.value = null
+            }
+            null -> Unit
+        }
+        uiState.update {
+            val feeBreakdown =
+                when (val fee = outcome.networkFee) {
+                    is NetworkFeeUpdate.Set ->
+                        it.feeBreakdown.copy(
+                            networkFee = fee.formattedTokenValue,
+                            networkFeeFiat = fee.formattedFiatValue,
+                        )
+                    NetworkFeeUpdate.Clear ->
+                        it.feeBreakdown.copy(networkFee = "", networkFeeFiat = "", totalFee = "")
+                    null -> it.feeBreakdown
+                }
+            it.copy(
+                feeBreakdown = feeBreakdown,
+                isSwapDisabled = outcome.isSwapDisabled,
+                formError = outcome.formError,
+            )
         }
     }
 
@@ -1066,20 +861,15 @@ constructor(
     }
 
     private fun resetQuoteState(error: UiText?, cause: Throwable?, tag: String?) {
-        // The prior quote's refresh timer would otherwise fire mid-flip/mid-error and re-run
-        // calculateFees against the same invalid amount, briefly re-exposing the fee block.
+        // The prior quote's refresh timer would otherwise fire mid-flip/mid-error and re-run the
+        // quote pipeline against the same invalid amount, briefly re-exposing the fee block.
         refreshQuoteJob?.cancel()
         refreshQuoteJob = null
-        quoteState.quote = null
-        quoteState.provider = null
-        // collectTotalFee() combines this with estimatedNetworkFeeFiatValue. Resetting it
-        // to null lets filterNotNull() short-circuit so a later calculateGas() update can't
-        // write a (newGas + staleSwap) combination back into state.totalFee — the same race
-        // that triggers on flipSelectedTokens since selectedSrc changes synchronously.
-        swapFeeFiat.value = null
-        // networkFee/networkFeeFiat are tied to the source token (calculateGas), not to a
-        // specific quote, so we deliberately leave them alone — resetting them would leave
-        // them empty until selectedSrc changes again.
+        // Clears quote/provider and the swap fee in one place. Resetting swapFeeFiat lets
+        // collectTotalFee()'s filterNotNull() short-circuit so a later calculateGas() update can't
+        // write a (newGas + staleSwap) combination back into state.totalFee — the same race that
+        // triggers on flipSelectedTokens since selectedSrc changes synchronously.
+        quoteState.reset()
         uiState.update {
             it.copy(
                 srcFiatValue = "0",

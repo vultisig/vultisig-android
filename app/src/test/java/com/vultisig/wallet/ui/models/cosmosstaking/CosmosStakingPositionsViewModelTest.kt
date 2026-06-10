@@ -71,7 +71,7 @@ internal class CosmosStakingPositionsViewModelTest {
             address = "terra1delegator",
             decimal = 6,
             hexPublicKey = "02".repeat(33),
-            priceProviderID = "",
+            priceProviderID = "terra-luna",
             contractAddress = "",
             isNativeToken = true,
         )
@@ -150,6 +150,27 @@ internal class CosmosStakingPositionsViewModelTest {
                 ioDispatcher = testDispatcher,
             )
             .also { it.setData(vaultId = "v1", chainId = "Terra") }
+
+    @Test
+    fun `hasClaimableRewards is true when a reward exceeds one base unit`() = runTest {
+        // Fixture reward is 250000 uluna (0.25 LUNA) — well above one base unit, so claimable.
+        assertEquals(true, vm().state.value.hasClaimableRewards)
+    }
+
+    @Test
+    fun `hasClaimableRewards is false when rewards round down to zero base units`() = runTest {
+        // 0.5 uluna accrued — a fractional cosmos.Dec below one whole base unit, so withdrawal
+        // would yield 0; the Claim CTA must stay hidden rather than burn a fee on nothing.
+        coEvery { cosmosStakingService.fetchDelegatorRewards(any(), any()) } returns
+            CosmosDelegatorRewards(
+                rewards =
+                    listOf(
+                        CosmosDelegatorReward(activeVal, listOf(CosmosStakingCoin("uluna", "0.5")))
+                    ),
+                total = emptyList(),
+            )
+        assertEquals(false, vm().state.value.hasClaimableRewards)
+    }
 
     @Test
     fun `builds rows with correct status and total staked`() = runTest {
@@ -338,12 +359,31 @@ internal class CosmosStakingPositionsViewModelTest {
     }
 
     @Test
-    fun `a missing price is not frozen into the cache`() = runTest {
-        // A price miss renders every fiat slot as $0.00; freezing that snapshot would reseed a
-        // zeroed-out screen on reopen, so the write is skipped until a real price is available.
+    fun `a missing price on a feed-bearing chain is not frozen into the cache`() = runTest {
+        // A price miss on a chain that HAS a feed renders every fiat slot as $0.00; freezing that
+        // snapshot would reseed a zeroed-out screen on reopen, so the write is skipped until a real
+        // price is available.
         coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
         vm()
         assertNull(snapshotCache.read("Terra:terra1delegator"))
+    }
+
+    @Test
+    fun `a no-price-feed chain still writes the cache despite a null price`() = runTest {
+        // QBTC has no price feed, so $0.00 fiat is correct rather than a failed fetch — the
+        // snapshot
+        // must still be cached so reopens render instantly instead of cold-loading every time.
+        coEvery { vaultRepository.get(any()) } returns
+            Vault(
+                id = "v1",
+                name = "v",
+                pubKeyECDSA = "pk",
+                localPartyID = "lp",
+                coins = listOf(coin.copy(priceProviderID = "")),
+            )
+        coEvery { tokenPriceRepository.getCachedPrice(any(), any()) } returns null
+        vm()
+        assertNotNull(snapshotCache.read("Terra:terra1delegator"))
     }
 
     @Test
