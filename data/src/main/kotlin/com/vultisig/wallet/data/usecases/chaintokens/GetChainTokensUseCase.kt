@@ -86,6 +86,12 @@ constructor(
                 .flatten()
                 .asSequence()
                 .distinctBy { it.contractAddress to it.chain.id }
+                // The UI keys each row on Coin.id (ticker-chainId). Collapse any remaining
+                // collisions on that key so the same ticker sourced with two different contract
+                // addresses on one chain can't produce duplicate LazyColumn keys and crash on
+                // scroll (issue #4869). Built-in/refreshed tokens are ordered first, so the
+                // canonical entry wins over a searchable/provider duplicate.
+                .distinctBy { it.id }
                 .toList()
                 .modifyIfNeeded()
         emit(coins)
