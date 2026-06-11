@@ -163,22 +163,21 @@ internal fun JoinKeysignView() {
                         }
                     )
                 val keysignViewModel = wrapperViewModel.viewModel
-                val kState = keysignViewModel.currentState.collectAsState().value
+                val keysignUiState = keysignViewModel.state.collectAsState().value
+                val kState = keysignUiState.signingState
                 keysignState = kState
                 KeysignView(
                     state = kState,
-                    txHash = keysignViewModel.txHash.collectAsState().value,
-                    approveTransactionHash = keysignViewModel.approveTxHash.collectAsState().value,
-                    transactionLink = keysignViewModel.txLink.collectAsState().value,
-                    approveTransactionLink = keysignViewModel.approveTxLink.collectAsState().value,
-                    progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
+                    txHash = keysignUiState.txHash,
+                    approveTransactionHash = keysignUiState.approveTxHash,
+                    transactionLink = keysignUiState.txLink,
+                    approveTransactionLink = keysignUiState.approveTxLink,
+                    progressLink = keysignUiState.swapProgressLink,
                     onComplete = viewModel::complete,
                     onBack = keysignViewModel::navigateToHome,
-                    transactionTypeUiModel =
-                        keysignViewModel.resolvedTransactionUiModel.collectAsState().value,
+                    transactionTypeUiModel = keysignUiState.transactionUiModel,
                     onAddToAddressBook = keysignViewModel::navigateToAddressBook,
-                    showSaveToAddressBook =
-                        keysignViewModel.showSaveToAddressBook.collectAsState().value,
+                    showSaveToAddressBook = keysignUiState.showSaveToAddressBook,
                     hasBackClick = false,
                     dappMetadata = dappMetadata,
                     coinLogoRes = keysignViewModel.coinLogoRes,

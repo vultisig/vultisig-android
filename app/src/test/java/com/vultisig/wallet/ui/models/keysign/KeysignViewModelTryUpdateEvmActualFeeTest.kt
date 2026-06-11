@@ -151,13 +151,17 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
     fun `EVM receipt with both fee fields updates resolvedTransactionUiModel`() =
         runTest(testDispatcher) {
             val vm = createViewModel(ethKeysignPayload)
-            vm.resolvedTransactionUiModel.value =
-                TransactionTypeUiModel.Send(
-                    TransactionDetailsUiModel(
-                        networkFeeTokenValue = "0.001 ETH",
-                        networkFeeFiatValue = "~$3",
-                    )
+            vm.updateUiStateForTesting {
+                it.copy(
+                    transactionUiModel =
+                        TransactionTypeUiModel.Send(
+                            TransactionDetailsUiModel(
+                                networkFeeTokenValue = "0.001 ETH",
+                                networkFeeFiatValue = "~$3",
+                            )
+                        )
                 )
+            }
             coEvery { evmApi.getTxStatus("0xabc") } returns
                 EvmRpcResponseJson(
                     id = 1,
@@ -179,7 +183,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             vm.tryUpdateEvmActualFee("0xabc", Chain.Ethereum)
             advanceUntilIdle()
 
-            val model = vm.resolvedTransactionUiModel.value as TransactionTypeUiModel.Send
+            val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
             assertEquals("0.00042 ETH", model.tx.networkFeeTokenValue)
             assertEquals("$1.50", model.tx.networkFeeFiatValue)
         }
@@ -188,16 +192,20 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
     fun `non-EVM chain skips RPC call entirely`() =
         runTest(testDispatcher) {
             val vm = createViewModel(btcKeysignPayload)
-            vm.resolvedTransactionUiModel.value =
-                TransactionTypeUiModel.Send(
-                    TransactionDetailsUiModel(networkFeeTokenValue = "0.0001 BTC")
+            vm.updateUiStateForTesting {
+                it.copy(
+                    transactionUiModel =
+                        TransactionTypeUiModel.Send(
+                            TransactionDetailsUiModel(networkFeeTokenValue = "0.0001 BTC")
+                        )
                 )
+            }
 
             vm.tryUpdateEvmActualFee("0xabc", Chain.Bitcoin)
             advanceUntilIdle()
 
             coVerify(exactly = 0) { evmApiFactory.createEvmApi(any()) }
-            val model = vm.resolvedTransactionUiModel.value as TransactionTypeUiModel.Send
+            val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
             assertEquals("0.0001 BTC", model.tx.networkFeeTokenValue)
         }
 
@@ -205,13 +213,17 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
     fun `receipt missing effectiveGasPrice leaves model unchanged`() =
         runTest(testDispatcher) {
             val vm = createViewModel(ethKeysignPayload)
-            vm.resolvedTransactionUiModel.value =
-                TransactionTypeUiModel.Send(
-                    TransactionDetailsUiModel(
-                        networkFeeTokenValue = "0.001 ETH",
-                        networkFeeFiatValue = "~$3",
-                    )
+            vm.updateUiStateForTesting {
+                it.copy(
+                    transactionUiModel =
+                        TransactionTypeUiModel.Send(
+                            TransactionDetailsUiModel(
+                                networkFeeTokenValue = "0.001 ETH",
+                                networkFeeFiatValue = "~$3",
+                            )
+                        )
                 )
+            }
             coEvery { evmApi.getTxStatus("0xabc") } returns
                 EvmRpcResponseJson(
                     id = 1,
@@ -226,7 +238,7 @@ internal class KeysignViewModelTryUpdateEvmActualFeeTest {
             vm.tryUpdateEvmActualFee("0xabc", Chain.Ethereum)
             advanceUntilIdle()
 
-            val model = vm.resolvedTransactionUiModel.value as TransactionTypeUiModel.Send
+            val model = vm.state.value.transactionUiModel as TransactionTypeUiModel.Send
             assertEquals("0.001 ETH", model.tx.networkFeeTokenValue)
             assertEquals("~$3", model.tx.networkFeeFiatValue)
         }
