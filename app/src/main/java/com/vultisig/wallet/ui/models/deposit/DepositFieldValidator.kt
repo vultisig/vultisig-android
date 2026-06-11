@@ -112,7 +112,7 @@ constructor(private val chainAccountAddressRepository: ChainAccountAddressReposi
             } else {
                 null
             }
-        } catch (e: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             UiText.StringResource(R.string.slippage_format_error)
         }
     }

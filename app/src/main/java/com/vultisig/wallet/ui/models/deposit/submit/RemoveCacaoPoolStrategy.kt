@@ -63,10 +63,15 @@ internal class RemoveCacaoPoolStrategy(
         val basisPoints = tokenAmountFieldState.text.toString().toIntOrNull()
 
         validateBasisPoints(basisPoints)?.let { throw InvalidTransactionDataException(it) }
+        val validatedBasisPoints =
+            basisPoints
+                ?: throw InvalidTransactionDataException(
+                    UiText.StringResource(R.string.send_from_invalid_amount)
+                )
 
         val memo =
             DepositMemo.WithdrawPool(
-                basisPoints = basisPoints!! * 100 // 10000 BP = 100%; basisPoints in 0..100
+                basisPoints = validatedBasisPoints * 100 // 10000 BP = 100%; basisPoints in 0..100
             )
 
         val specific =
