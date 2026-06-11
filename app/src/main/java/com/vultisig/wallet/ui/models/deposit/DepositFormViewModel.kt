@@ -12,9 +12,6 @@ import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.thorchain.MergeAccount
 import com.vultisig.wallet.data.api.models.thorchain.RujiStakeBalances
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
-import com.vultisig.wallet.data.blockchain.model.Transfer
-import com.vultisig.wallet.data.blockchain.model.VaultData
-import com.vultisig.wallet.data.chains.helpers.UtxoHelper
 import com.vultisig.wallet.data.crypto.ThorChainHelper.Companion.SECURE_ASSETS_TICKERS
 import com.vultisig.wallet.data.crypto.getChainName
 import com.vultisig.wallet.data.models.Account
@@ -24,15 +21,11 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.EstimatedGasFee
-import com.vultisig.wallet.data.models.GasFeeParams
-import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.coinType
 import com.vultisig.wallet.data.models.getDustThreshold
-import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.isSecuredAsset
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.ticker
 import com.vultisig.wallet.data.models.toValue
@@ -45,11 +38,9 @@ import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
-import com.vultisig.wallet.data.repositories.TokenPriceRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
 import com.vultisig.wallet.data.usecases.DepositMemoAssetsValidatorUseCase
-import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCaseImpl
 import com.vultisig.wallet.data.usecases.GetMayaCacaoMaturityStatusUseCase
 import com.vultisig.wallet.data.usecases.GetThorChainLpPositionUseCase
@@ -216,7 +207,6 @@ constructor(
     private val sendNavigator: Navigator<SendDst>,
     private val requestQrScan: RequestQrScanUseCase,
     appCurrencyRepository: AppCurrencyRepository,
-    private val tokenPriceRepository: TokenPriceRepository,
     private val mapTokenValueToStringWithUnit: TokenValueToStringWithUnitMapper,
     private val accountsRepository: AccountsRepository,
     private val isAssetCharsValid: DepositMemoAssetsValidatorUseCase,
@@ -228,7 +218,6 @@ constructor(
     private val mayaChainApi: MayaChainApi,
     private val mayachainBondRepository: MayachainBondRepository,
     private val balanceRepository: BalanceRepository,
-    private val gasFeeToEstimatedFee: GasFeeToEstimatedFeeUseCase,
     private val validateMayaTransactionHeight: ValidateMayaTransactionHeightUseCase,
     private val getMayaCacaoMaturityStatus: GetMayaCacaoMaturityStatusUseCase,
     private val feeServiceComposite: FeeServiceComposite,
@@ -239,6 +228,7 @@ constructor(
     private val getThorChainLpPositionUseCase: GetThorChainLpPositionUseCase,
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase,
     private val fieldValidator: DepositFieldValidator,
+    private val gasFeeHelper: DepositGasFeeHelper,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -1958,20 +1948,7 @@ constructor(
         specific: BlockChainSpecificAndUtxo,
         gasFee: TokenValue,
         selectedToken: Coin,
-    ): EstimatedGasFee {
-        return gasFeeToEstimatedFee(
-            GasFeeParams(
-                gasLimit =
-                    if (chain?.standard == TokenStandard.EVM) {
-                        (specific.blockChainSpecific as BlockChainSpecific.Ethereum).gasLimit
-                    } else {
-                        BigInteger.valueOf(1)
-                    },
-                gasFee = gasFee,
-                selectedToken = selectedToken,
-            )
-        )
-    }
+    ): EstimatedGasFee = gasFeeHelper.getFeesFiatValue(chain, specific, gasFee, selectedToken)
 
     private fun collectAmountChanges() {
         if (amountChangesJob != null) return
@@ -2019,25 +1996,7 @@ constructor(
         value: String,
         token: Coin,
         transform: (value: BigDecimal, price: BigDecimal) -> BigDecimal,
-    ): String? {
-        val decimalValue = value.toBigDecimalOrNull() ?: return ""
-        return try {
-            val price = tokenPriceRepository.getPrice(token, appCurrency.value).first()
-            if (price == BigDecimal.ZERO) {
-                Timber.w(
-                    "convertAmountValue: price is ZERO for token %s, skipping conversion",
-                    token.ticker,
-                )
-                return null
-            }
-            transform(decimalValue, price).toPlainString()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Timber.d(e, "Failed to get price for token %s", token.ticker)
-            null
-        }
-    }
+    ): String? = gasFeeHelper.convertAmountValue(value, token, appCurrency.value, transform)
 
     private fun isLpUnitCharsValid(lpUnits: String) =
         lpUnits.toLongOrNull() != null && lpUnits.all { it.isDigit() } && lpUnits.toLong() > 0
@@ -2086,27 +2045,13 @@ constructor(
         }
     }
 
-    private suspend fun calculateGasFee(chain: Chain, token: Coin, srcAddress: String): TokenValue {
-        val vaultId = vaultId ?: error("Vault ID not set")
-        val vault =
-            withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: error("Vault not found")
-        val blockchainTransaction =
-            Transfer(
-                coin = token,
-                vault =
-                    VaultData(
-                        vaultHexChainCode = vault.hexChainCode,
-                        vaultHexPublicKey = vault.getPubKeyByChain(chain),
-                    ),
-                amount = BigInteger.ZERO,
-                to = srcAddress,
-                isMax = false,
-            )
-        val fees =
-            withContext(Dispatchers.IO) { feeServiceComposite.calculateFees(blockchainTransaction) }
-        val nativeCoin = withContext(Dispatchers.IO) { tokenRepository.getNativeToken(chain.id) }
-        return TokenValue(value = fees.amount, token = nativeCoin)
-    }
+    private suspend fun calculateGasFee(chain: Chain, token: Coin, srcAddress: String): TokenValue =
+        gasFeeHelper.calculateGasFee(
+            vaultId = vaultId ?: error("Vault ID not set"),
+            chain = chain,
+            token = token,
+            srcAddress = srcAddress,
+        )
 
     private suspend fun getBitcoinTransactionPlan(
         vaultId: String,
@@ -2115,28 +2060,15 @@ constructor(
         tokenAmountInt: BigInteger,
         specific: BlockChainSpecificAndUtxo,
         memo: String?,
-    ): Bitcoin.TransactionPlan {
-        val vault = vaultRepository.get(vaultId) ?: error("Can't calculate plan fees")
-
-        val keysignPayload =
-            KeysignPayload(
-                coin = selectedToken,
-                toAddress = dstAddress,
-                toAmount = tokenAmountInt,
-                blockChainSpecific = specific.blockChainSpecific,
-                memo = memo,
-                vaultPublicKeyECDSA = vault.pubKeyECDSA,
-                vaultLocalPartyID = vault.localPartyID,
-                utxos = specific.utxos,
-                libType = vault.libType,
-                wasmExecuteContractPayload = null,
-            )
-
-        val utxo = UtxoHelper.getHelper(vault, keysignPayload.coin.coinType)
-
-        val plan = utxo.getBitcoinTransactionPlan(keysignPayload)
-        return plan
-    }
+    ): Bitcoin.TransactionPlan =
+        gasFeeHelper.getBitcoinTransactionPlan(
+            vaultId = vaultId,
+            selectedToken = selectedToken,
+            dstAddress = dstAddress,
+            tokenAmountInt = tokenAmountInt,
+            specific = specific,
+            memo = memo,
+        )
 
     companion object {
         private const val ADDRESS_AWAIT_TIMEOUT_MS = 5_000L
