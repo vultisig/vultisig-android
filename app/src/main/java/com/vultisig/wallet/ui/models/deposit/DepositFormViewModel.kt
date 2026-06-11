@@ -74,7 +74,9 @@ import com.vultisig.wallet.ui.models.deposit.submit.BondStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.DepositSubmitStrategies
 import com.vultisig.wallet.ui.models.deposit.submit.DepositSubmitStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.LeaveStrategy
+import com.vultisig.wallet.ui.models.deposit.submit.StakeStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.UnbondStrategy
+import com.vultisig.wallet.ui.models.deposit.submit.UnstakeStrategy
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.navigation.Destination
@@ -348,6 +350,34 @@ constructor(
             getFeesFiatValue = ::getFeesFiatValue,
         )
 
+    private val stakeStrategy: DepositSubmitStrategy =
+        StakeStrategy(
+            vaultIdProvider = { vaultId },
+            chainProvider = { chain },
+            stateProvider = { state.value },
+            nodeAddressFieldState = nodeAddressFieldState,
+            tokenAmountFieldState = tokenAmountFieldState,
+            accountsRepository = accountsRepository,
+            chainAccountAddressRepository = chainAccountAddressRepository,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            calculateGasFee = ::calculateGasFee,
+            getFeesFiatValue = ::getFeesFiatValue,
+        )
+
+    private val unstakeStrategy: DepositSubmitStrategy =
+        UnstakeStrategy(
+            vaultIdProvider = { vaultId },
+            chainProvider = { chain },
+            stateProvider = { state.value },
+            nodeAddressFieldState = nodeAddressFieldState,
+            tokenAmountFieldState = tokenAmountFieldState,
+            accountsRepository = accountsRepository,
+            chainAccountAddressRepository = chainAccountAddressRepository,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            calculateGasFee = ::calculateGasFee,
+            getFeesFiatValue = ::getFeesFiatValue,
+        )
+
     private val depositStrategies: DepositSubmitStrategies =
         mapOf(
                 DepositOption.AddCacaoPool to
@@ -356,8 +386,8 @@ constructor(
                 DepositOption.Unbond to unbondStrategy,
                 DepositOption.Leave to leaveStrategy,
                 DepositOption.Custom to DepositSubmitStrategy { createCustomTransaction() },
-                DepositOption.Stake to DepositSubmitStrategy { createStakeTransaction() },
-                DepositOption.Unstake to DepositSubmitStrategy { createUnstakeTransaction() },
+                DepositOption.Stake to stakeStrategy,
+                DepositOption.Unstake to unstakeStrategy,
                 DepositOption.TransferIbc to DepositSubmitStrategy { createTransferIbcTx() },
                 DepositOption.Switch to DepositSubmitStrategy { createSwitchTx() },
                 DepositOption.Merge to DepositSubmitStrategy { createMergeTx() },
@@ -2263,86 +2293,6 @@ constructor(
             blockChainSpecific = specific.blockChainSpecific,
         )
     }
-
-    private suspend fun createTonDepositTransaction(memo: DepositMemo): DepositTransaction {
-        val vaultId =
-            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
-        val chain =
-            chain
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val depositChain = state.value.depositChain
-
-        if (depositChain != Chain.Ton) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.error_invalid_chain)
-            )
-        }
-
-        val nodeAddress = nodeAddressFieldState.text.toString()
-
-        if (nodeAddress.isBlank() || !chainAccountAddressRepository.isValid(chain, nodeAddress)) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_address)
-            )
-        }
-
-        val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
-
-        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-        val address = accountsRepository.loadAddress(vaultId, chain).first()
-
-        val selectedToken =
-            address.accounts.firstOrNull { it.token.isNativeToken }?.token
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val tokenAmountInt =
-            tokenAmount.movePointRight(selectedToken.decimal)?.toBigInteger() ?: BigInteger.ONE
-
-        val srcAddress = selectedToken.address
-
-        val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
-
-        val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = nodeAddress,
-            memo = memo.toString(),
-            srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-        )
-    }
-
-    private suspend fun createStakeTransaction(): DepositTransaction =
-        createTonDepositTransaction(DepositMemo.Stake)
-
-    private suspend fun createUnstakeTransaction(): DepositTransaction =
-        createTonDepositTransaction(DepositMemo.Unstake)
 
     private suspend fun createMergeTx(): DepositTransaction {
         val vaultId =
