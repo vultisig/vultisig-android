@@ -161,7 +161,14 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
             val bumpPercent = if (chain == Chain.Ethereum) 50 else 10
             return baseNetworkPrice.increaseByPercent(bumpPercent)
         }
-        return baseNetworkPrice
+        // Non-swap transfers: bump the committed base so the broadcast ceiling
+        // (calculateMaxFeePerGas adds a further 20%) lands at baseFee × 1.5 + priorityFee
+        // instead of baseFee × 1.2 + priorityFee. EIP-1559 raises the base fee up to 12.5%
+        // per block, so a flat 20% margin is exhausted after ~1.5 blocks and a send can
+        // stall in the mempool when the base fee climbs across the MPC review + sign window.
+        // The extra headroom only improves inclusion robustness — the amount actually paid
+        // stays near baseFee + priorityFee under EIP-1559.
+        return baseNetworkPrice.increaseByPercent(NON_SWAP_BASE_FEE_BUMP_PERCENT)
     }
 
     private suspend fun calculateMaxPriorityFeePerGas(
@@ -251,6 +258,12 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
 
     companion object {
         private val GWEI = BigInteger.TEN.pow(9)
+
+        // Extra bump applied to the committed base fee on the non-swap send path. With the
+        // further 20% added in calculateMaxFeePerGas this yields a baseFee × 1.5 + priorityFee
+        // ceiling (~3 consecutive max EIP-1559 base-fee increases of 12.5%) so a transfer
+        // survives a base-fee climb during the MPC review + sign window without stalling.
+        private const val NON_SWAP_BASE_FEE_BUMP_PERCENT = 25
 
         private val DEFAULT_MAX_PRIORITY_FEE_PER_GAS_L2 = "20".toBigInteger()
         private val DEFAULT_MAX_PRIORITY_FEE_POLYGON = "30".toBigInteger()
