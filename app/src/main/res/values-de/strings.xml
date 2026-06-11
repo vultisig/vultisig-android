@@ -30,13 +30,8 @@
     <string name="vault_tier_unlock_ultimate_part2">Ultimativ</string>
     <string name="vault_tier_unlock_ultimate_part3">-Stufe freischalten</string>
     <string name="vault_tier_ultimate">Ultimativ</string>
-    <string name="vault_tier_bronze_discount">Rabatt: 5bps</string>
-    <string name="vault_tier_silver_discount">Rabatt: 10bps</string>
-    <string name="vault_tier_gold_discount">Rabatt: 20bps</string>
-    <string name="vault_tier_platinum_discount">Rabatt: 25bps</string>
-    <string name="vault_tier_diamond_discount">Rabatt: 35bps</string>
-    <string name="vault_tier_ultimate_discount">Keine Gebühr</string>
-    <string name="vault_tier_hold">Halten</string>
+    <string name="vault_tier_swap_discount">Tausch-Rabatt: %1$dbps</string>
+    <string name="vault_tier_more_coming_soon">Bald mehr verfügbar</string>
     <string name="vault_tier_unlock">Stufe freischalten</string>
     <string name="vault_tier_active">Aktiv</string>
     <string name="vault_tier_unlock_bronze_part1"></string>
@@ -51,6 +46,8 @@
     <string name="vault_tier_unlock_platinum_part1"></string>
     <string name="vault_tier_unlock_platinum_part2">Platin</string>
     <string name="vault_tier_unlock_platinum_part3">-Stufe freischalten</string>
+    <string name="vault_tier_banner_title">$VULT halten</string>
+    <string name="vault_tier_banner_subtitle">Handelsrabatt erhalten</string>
     <string name="vault_tier_description">Halten Sie $VULT, um niedrigere Handelsgebühren freizuschalten.</string>
     <string name="vault_tier_bronze_description_part1">Durch das Halten von 1.500 $VULT schalten Sie die Bronze-Stufe frei und erhalten einen </string>
     <string name="vault_tier_bronze_description_part2">Rabatt von 5 Basispunkten auf die Handelsgebühren</string>

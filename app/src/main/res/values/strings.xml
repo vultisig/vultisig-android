@@ -111,13 +111,8 @@
     <string name="vault_tier_platinum">Platinum</string>
     <string name="vault_tier_diamond">Diamond</string>
     <string name="vault_tier_ultimate">Ultimate</string>
-    <string name="vault_tier_bronze_discount">Discount: 5bps</string>
-    <string name="vault_tier_silver_discount">Discount: 10bps</string>
-    <string name="vault_tier_gold_discount">Discount: 20bps</string>
-    <string name="vault_tier_platinum_discount">Discount: 25bps</string>
-    <string name="vault_tier_diamond_discount">Discount: 35bps</string>
-    <string name="vault_tier_ultimate_discount">No Fee</string>
-    <string name="vault_tier_hold">Hold</string>
+    <string name="vault_tier_swap_discount">Swap Discount: %1$dbps</string>
+    <string name="vault_tier_more_coming_soon">More coming soon</string>
     <string name="vault_tier_unlock">Unlock Tier</string>
     <string name="vault_tier_active">Active</string>
     <string name="vault_tier_unlock_bronze_part1">Unlock </string>
@@ -140,6 +135,8 @@
     <string name="vault_tier_unlock_ultimate_part2">Ultimate</string>
     <string name="vault_tier_unlock_ultimate_part3"> Tier</string>
 
+    <string name="vault_tier_banner_title">Hold $VULT</string>
+    <string name="vault_tier_banner_subtitle">receive a trading discount</string>
     <string name="vault_tier_description">Hold $VULT to unlock lower trading fees.</string>
     <string name="vault_tier_bronze_description_part1">By holding 1,500 $VULT, you\'ll unlock the Bronze Tier and receive a </string>
     <string name="vault_tier_bronze_description_part2">5 bps trading fee discount</string>

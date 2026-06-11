@@ -28,13 +28,8 @@
     <string name="vault_tier_unlock_ultimate_part2">Definitivo</string>
     <string name="vault_tier_unlock_ultimate_part3"></string>
     <string name="vault_tier_ultimate">Definitivo</string>
-    <string name="vault_tier_bronze_discount">Desconto: 5bps</string>
-    <string name="vault_tier_silver_discount">Desconto: 10bps</string>
-    <string name="vault_tier_gold_discount">Desconto: 20bps</string>
-    <string name="vault_tier_platinum_discount">Desconto: 25bps</string>
-    <string name="vault_tier_diamond_discount">Desconto: 35bps</string>
-    <string name="vault_tier_ultimate_discount">Sem Taxa</string>
-    <string name="vault_tier_hold">Manter</string>
+    <string name="vault_tier_swap_discount">Desconto de troca: %1$dbps</string>
+    <string name="vault_tier_more_coming_soon">Mais em breve</string>
     <string name="vault_tier_unlock">Desbloquear Nível</string>
     <string name="vault_tier_active">Ativo</string>
     <string name="vault_tier_unlock_bronze_part1">Desbloquear Nível </string>
@@ -49,6 +44,8 @@
     <string name="vault_tier_unlock_platinum_part1">Desbloquear Nível </string>
     <string name="vault_tier_unlock_platinum_part2">Platina</string>
     <string name="vault_tier_unlock_platinum_part3"></string>
+    <string name="vault_tier_banner_title">Mantenha $VULT</string>
+    <string name="vault_tier_banner_subtitle">receba um desconto de negociação</string>
     <string name="vault_tier_description">Mantenha $VULT para desbloquear taxas de negociação mais baixas.</string>
     <string name="vault_tier_bronze_description_part1">Ao manter 1.500 $VULT, você desbloqueará o Nível Bronze e receberá um </string>
     <string name="vault_tier_bronze_description_part2">desconto de 5 pontos base nas taxas de negociação</string>
