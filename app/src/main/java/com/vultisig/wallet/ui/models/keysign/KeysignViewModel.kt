@@ -10,15 +10,12 @@ import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
-import com.vultisig.wallet.data.chains.helpers.SigningHelper
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.MldsaKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
@@ -43,11 +40,14 @@ import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
-import com.vultisig.wallet.data.usecases.ApprovalConfirmationResult
 import com.vultisig.wallet.data.usecases.AwaitApprovalConfirmationUseCase
+import com.vultisig.wallet.data.usecases.BroadcastKeysignUseCase
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.KeysignBroadcastResult
+import com.vultisig.wallet.data.usecases.SaveKeysignTransactionHistoryUseCase
+import com.vultisig.wallet.data.usecases.UpdateEvmActualFeeUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
@@ -68,7 +68,6 @@ import com.vultisig.wallet.ui.utils.or
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import java.math.BigInteger
 import java.util.*
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
@@ -307,6 +306,14 @@ constructor(
     private val saveKeysignTransactionHistory =
         SaveKeysignTransactionHistoryUseCase(transactionHistoryRepository)
     private val updateEvmActualFee = UpdateEvmActualFeeUseCase(evmApiFactory, gasFeeToEstimatedFee)
+    private val broadcastKeysign =
+        BroadcastKeysignUseCase(
+            broadcastTx = broadcastTx,
+            awaitApprovalConfirmation = awaitApprovalConfirmation,
+            explorerLinkRepository = explorerLinkRepository,
+            evmApiFactory = evmApiFactory,
+            balanceRepository = balanceRepository,
+        )
 
     init {
         val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
@@ -726,146 +733,50 @@ constructor(
     private suspend fun broadcastTransaction() {
         val payload = keysignPayload ?: return
 
-        var nonceAcc = BigInteger.ZERO
-
-        val approvePayload = payload.approvePayload
-        val chain = payload.coin.chain
-        if (approvePayload != null) {
-            val (approveKey, approveChainCode) = vault.getEcdsaSigningKey(chain)
-            val signedApproveTransaction =
-                THORChainSwaps(approveKey, approveChainCode, vault.getEddsaSigningKey(chain))
-                    .getSignedApproveTransaction(approvePayload, payload, signatures)
-
-            val evmApi = evmApiFactory.createEvmApi(chain)
-            approveTxHash.value = evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
-
-            Timber.d("Approval tx broadcast: %s, awaiting confirmation", approveTxHash.value)
-
-            when (awaitApprovalConfirmation(chain, approveTxHash.value)) {
-                ApprovalConfirmationResult.Confirmed -> {
-                    Timber.d("Approval tx confirmed: %s", approveTxHash.value)
-                }
-                ApprovalConfirmationResult.TimedOut -> {
-                    Timber.w(
-                        "Approval tx %s timed out waiting for confirmation on %s",
-                        approveTxHash.value,
-                        chain,
-                    )
-                    approveTxLink.value =
-                        explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
-                    currentState.value =
+        when (
+            val result =
+                broadcastKeysign(
+                    vault = vault,
+                    payload = payload,
+                    signatures = signatures,
+                    isInitiatingDevice = isInitiatingDevice,
+                )
+        ) {
+            is KeysignBroadcastResult.ApprovalNotConfirmed -> {
+                approveTxHash.value = result.approveTxHash
+                approveTxLink.value = result.approveTxLink
+                currentState.value =
+                    if (result.timedOut) {
                         KeysignState.Error(R.string.swap_error_approval_timeout.asUiText())
-                    return
-                }
-                ApprovalConfirmationResult.Failed -> {
-                    Timber.w("Approval tx %s reverted on chain %s", approveTxHash.value, chain)
-                    approveTxLink.value =
-                        explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
-                    // The approval was broadcast and then reverted on-chain — a terminal on-chain
-                    // failure, not a TSS/keysign failure. Land on the swap overview with a Failed
-                    // status (and the approval tx hash/link already set above) rather than the
-                    // generic "Signing Error / try again" screen, which wrongly implies a
-                    // pairing/network problem and drops the explorer link.
-                    currentState.value =
+                    } else {
+                        // The approval was broadcast and then reverted on-chain — a terminal
+                        // on-chain failure, not a TSS/keysign failure. Land on the swap overview
+                        // with a Failed status (and the approval tx hash/link already set above)
+                        // rather than the generic "Signing Error / try again" screen, which wrongly
+                        // implies a pairing/network problem and drops the explorer link.
                         KeysignState.KeysignFinished(
                             TransactionStatus.Failed(R.string.swap_error_approval_failed.asUiText())
                         )
-                    return
+                    }
+            }
+            is KeysignBroadcastResult.Broadcasted -> {
+                approveTxHash.value = result.approveTxHash
+                approveTxLink.value = result.approveTxLink
+                val txHash = result.txHash
+                if (txHash != null) {
+                    this.txHash.value = txHash
+                    txLink.value = result.txLink
+                    swapProgressLink.value = result.swapProgressLink
+                    saveTransactionHistory(txHash, result.chain)
+                    if (txStatusConfigurationProvider.supportTxStatus(result.chain)) {
+                        startForegroundPolling(txHash, result.chain)
+                    } else {
+                        currentState.value =
+                            KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+                    }
                 }
             }
-
-            nonceAcc++
         }
-
-        val signedTx =
-            SigningHelper.getSignedTransaction(
-                keysignPayload = payload,
-                vault = vault,
-                signatures = signatures,
-                nonceAcc = nonceAcc,
-            )
-
-        val txHash = broadcastOrRecover(chain = chain, signedTx = signedTx)
-
-        Timber.d("transaction hash: $txHash")
-        if (txHash != null) {
-            this.txHash.value = txHash
-            txLink.value = explorerLinkRepository.getTransactionLink(chain, txHash)
-            swapProgressLink.value =
-                explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
-            runCatching { balanceRepository.invalidateBalance(payload.coin.address, payload.coin) }
-                .onFailure { Timber.e(it, "Failed to invalidate balance cache after broadcast") }
-            runCatching {
-                    balanceRepository.invalidateDeFiBalance(
-                        address = payload.coin.address,
-                        chain = chain,
-                        vaultId = vault.id,
-                    )
-                }
-                .onFailure {
-                    Timber.e(it, "Failed to invalidate DeFi balance cache after broadcast")
-                }
-            saveTransactionHistory(txHash, chain)
-            if (txStatusConfigurationProvider.supportTxStatus(chain)) {
-                startForegroundPolling(txHash, chain)
-            } else {
-                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
-            }
-        }
-        if (approveTxHash.value.isNotEmpty()) {
-            approveTxLink.value =
-                explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
-        }
-    }
-
-    /**
-     * Broadcasts [signedTx] for [chain], falling back to the deterministic locally computed hash
-     * when a non-initiator's duplicate broadcast is rejected.
-     *
-     * In a multi-device vault both peers compute the same signed extrinsic and call this path;
-     * whichever device's broadcast reaches the network first wins. The losing device's broadcast is
-     * then rejected — Substrate in particular surfaces this as `Transaction has a bad signature`
-     * (code 1010) when the initiator's extrinsic has already advanced the nonce. The signed bytes
-     * are byte-identical on both devices, so the locally computed
-     * [SignedTransactionResult.transactionHash] is the canonical on-chain hash, and we use it
-     * instead of failing the joined-device screen.
-     *
-     * iOS does the same recovery in `KeysignViewModel.handleBroadcastError` / `isAlreadyOnChain`.
-     * We keep it scoped to non-initiator devices so a real broadcast failure on the initiator is
-     * still surfaced as an error.
-     */
-    internal suspend fun broadcastOrRecover(
-        chain: Chain,
-        signedTx: SignedTransactionResult,
-    ): String? =
-        try {
-            broadcastTx(chain = chain, tx = signedTx)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            recoverJoinedDeviceBroadcast(chain, signedTx, e) ?: throw e
-        }
-
-    /**
-     * Returns the locally computed transaction hash if this is a joined-device broadcast failure we
-     * should swallow; `null` if the caller must re-throw the original error.
-     */
-    private fun recoverJoinedDeviceBroadcast(
-        chain: Chain,
-        signedTx: SignedTransactionResult,
-        error: Throwable,
-    ): String? {
-        if (isInitiatingDevice) return null
-        return signedTx.transactionHash
-            .takeUnless { it.isBlank() }
-            ?.also { hash ->
-                Timber.w(
-                    error,
-                    "Joined-device broadcast for %s failed; using locally computed hash %s",
-                    chain.raw,
-                    hash,
-                )
-            }
     }
 
     internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
