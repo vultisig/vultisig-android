@@ -150,7 +150,7 @@ constructor(
 
         val txHash = broadcastOrRecover(chain, signedTx, isInitiatingDevice)
 
-        Timber.d("transaction hash: $txHash")
+        Timber.d("transaction hash: %s", txHash)
         var txLink = ""
         var swapProgressLink: String? = null
         if (txHash != null) {

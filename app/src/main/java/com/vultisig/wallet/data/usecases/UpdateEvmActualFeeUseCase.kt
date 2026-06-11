@@ -48,9 +48,8 @@ constructor(
             }
             if (attempt < MAX_EVM_RECEIPT_RETRIES) delay(EVM_RECEIPT_RETRY_DELAY_MS)
         }
-        val gasUsed = BigInteger((gasUsedHex ?: return null).removePrefix("0x"), 16)
-        val effectiveGasPrice =
-            BigInteger((effectiveGasPriceHex ?: return null).removePrefix("0x"), 16)
+        val gasUsed = parseHexOrNull(gasUsedHex) ?: return null
+        val effectiveGasPrice = parseHexOrNull(effectiveGasPriceHex) ?: return null
         val actualFeeWei = gasUsed.multiply(effectiveGasPrice)
         return gasFeeToEstimatedFee(
             GasFeeParams(
@@ -61,6 +60,15 @@ constructor(
             )
         )
     }
+
+    /**
+     * Parses a `0x`-prefixed hex receipt field into a [BigInteger], returning null for null, empty,
+     * or non-hex input so a malformed receipt never crashes the best-effort fee computation.
+     */
+    private fun parseHexOrNull(hex: String?): BigInteger? =
+        hex?.removePrefix("0x")
+            ?.takeIf { it.isNotBlank() }
+            ?.let { runCatching { BigInteger(it, 16) }.getOrNull() }
 
     private companion object {
         const val MAX_EVM_RECEIPT_RETRIES = 5

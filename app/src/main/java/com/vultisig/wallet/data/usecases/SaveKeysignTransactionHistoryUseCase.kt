@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
 import javax.inject.Inject
+import timber.log.Timber
 
 /**
  * Persists a freshly broadcast keysign transaction to the local transaction-history store.
@@ -24,7 +25,7 @@ constructor(private val transactionHistoryRepository: TransactionHistoryReposito
 
     /**
      * Records the broadcast transaction. No-op when [transactionHistoryData] is null or of an
-     * unknown type. Any persistence failure is swallowed so it never breaks the keysign flow.
+     * unknown type. Any persistence failure is logged but never breaks the keysign flow.
      *
      * @param vaultId Id of the vault that signed the transaction.
      * @param txHash On-chain hash of the broadcast transaction.
@@ -44,33 +45,38 @@ constructor(private val transactionHistoryRepository: TransactionHistoryReposito
     ) {
         transactionHistoryData?.let {
             runCatching {
-                val now = System.currentTimeMillis()
-                val historyData =
-                    CommonTransactionHistoryData(
+                    val now = System.currentTimeMillis()
+                    val historyData =
+                        CommonTransactionHistoryData(
+                            vaultId = vaultId,
+                            txHash = txHash,
+                            chain = chain.raw,
+                            timestamp = now,
+                            explorerUrl = explorerUrl,
+                            status = BROADCASTED,
+                            type =
+                                when (it) {
+                                    is SendTransactionHistoryData -> TransactionType.SEND
+                                    is SwapTransactionHistoryData -> TransactionType.SWAP
+                                    is UnknownTransactionHistoryData -> return@runCatching
+                                },
+                            confirmedAt = null,
+                            failureReason = null,
+                            lastCheckedAt = now,
+                            broadcastBlockNumber = broadcastBlockNumber,
+                        )
+                    transactionHistoryRepository.recordTransaction(
                         vaultId = vaultId,
                         txHash = txHash,
-                        chain = chain.raw,
-                        timestamp = now,
-                        explorerUrl = explorerUrl,
-                        status = BROADCASTED,
-                        type =
-                            when (it) {
-                                is SendTransactionHistoryData -> TransactionType.SEND
-                                is SwapTransactionHistoryData -> TransactionType.SWAP
-                                is UnknownTransactionHistoryData -> return@runCatching
-                            },
-                        confirmedAt = null,
-                        failureReason = null,
-                        lastCheckedAt = now,
-                        broadcastBlockNumber = broadcastBlockNumber,
+                        txData = it,
+                        genericData = historyData,
                     )
-                transactionHistoryRepository.recordTransaction(
-                    vaultId = vaultId,
-                    txHash = txHash,
-                    txData = it,
-                    genericData = historyData,
-                )
-            }
+                }
+                .onFailure { error ->
+                    // Keep the keysign flow non-blocking, but surface the failure so a broken
+                    // history write is observable. Log the hash only — never the payload contents.
+                    Timber.e(error, "Failed to record transaction history for %s", txHash)
+                }
         }
     }
 }
