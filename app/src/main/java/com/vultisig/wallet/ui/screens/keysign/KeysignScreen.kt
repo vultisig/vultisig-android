@@ -79,7 +79,8 @@ private fun Keysign(
 
     val keysignViewModel = wrapperViewModel.viewModel
 
-    val state: KeysignState = keysignViewModel.currentState.collectAsState().value
+    val uiState = keysignViewModel.state.collectAsState().value
+    val state: KeysignState = uiState.signingState
     LaunchedEffect(state) {
         when (state) {
             is KeysignState.Error -> onError(state.errorMessage)
@@ -98,17 +99,17 @@ private fun Keysign(
     }
     KeysignView(
         state = state,
-        transactionTypeUiModel = keysignViewModel.resolvedTransactionUiModel.collectAsState().value,
-        txHash = keysignViewModel.txHash.collectAsState().value,
-        approveTransactionHash = keysignViewModel.approveTxHash.collectAsState().value,
-        transactionLink = keysignViewModel.txLink.collectAsState().value,
-        approveTransactionLink = keysignViewModel.approveTxLink.collectAsState().value,
+        transactionTypeUiModel = uiState.transactionUiModel,
+        txHash = uiState.txHash,
+        approveTransactionHash = uiState.approveTxHash,
+        transactionLink = uiState.txLink,
+        approveTransactionLink = uiState.approveTxLink,
         onComplete = onComplete,
-        progressLink = keysignViewModel.swapProgressLink.collectAsState().value,
+        progressLink = uiState.swapProgressLink,
         showToolbar = true,
         onBack = viewModel::navigateToHome,
         onAddToAddressBook = keysignViewModel::navigateToAddressBook,
-        showSaveToAddressBook = keysignViewModel.showSaveToAddressBook.collectAsState().value,
+        showSaveToAddressBook = uiState.showSaveToAddressBook,
         hasBackClick = true,
         dappMetadata = keysignViewModel.dappMetadata,
         coinLogoRes = keysignViewModel.coinLogoRes,

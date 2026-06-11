@@ -1,6 +1,8 @@
 package com.vultisig.wallet.ui.models.keysign
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.VisibleForTesting
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vultisig.wallet.R
@@ -10,28 +12,18 @@ import com.vultisig.wallet.data.api.KeysignVerify
 import com.vultisig.wallet.data.api.SessionApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.FeatureFlagJson
-import com.vultisig.wallet.data.chains.helpers.SigningHelper
-import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
-import com.vultisig.wallet.data.db.models.TransactionStatus.BROADCASTED
-import com.vultisig.wallet.data.db.models.TransactionType
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.MldsaKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.CommonTransactionHistoryData
-import com.vultisig.wallet.data.models.GasFeeParams
-import com.vultisig.wallet.data.models.SendTransactionHistoryData
-import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
-import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
@@ -50,11 +42,14 @@ import com.vultisig.wallet.data.tss.LocalStateAccessor
 import com.vultisig.wallet.data.tss.TssMessenger
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.tss.getSignatureWithRecoveryID
-import com.vultisig.wallet.data.usecases.ApprovalConfirmationResult
 import com.vultisig.wallet.data.usecases.AwaitApprovalConfirmationUseCase
+import com.vultisig.wallet.data.usecases.BroadcastKeysignUseCase
 import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
 import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GasFeeToEstimatedFeeUseCase
+import com.vultisig.wallet.data.usecases.KeysignBroadcastResult
+import com.vultisig.wallet.data.usecases.SaveKeysignTransactionHistoryUseCase
+import com.vultisig.wallet.data.usecases.UpdateEvmActualFeeUseCase
 import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
 import com.vultisig.wallet.data.usecases.txstatus.TransactionResult
 import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
@@ -75,7 +70,6 @@ import com.vultisig.wallet.ui.utils.or
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import java.math.BigInteger
 import java.util.*
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
@@ -84,6 +78,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -95,8 +91,6 @@ import tss.Tss
 import vultisig.keysign.v1.CustomMessagePayload
 
 private const val DEFAULT_ETHEREUM_DERIVATION_PATH = "m/44'/60'/0'/0/0"
-private const val MAX_EVM_RECEIPT_RETRIES = 5
-private const val EVM_RECEIPT_RETRY_DELAY_MS = 2_000L
 
 /** UI state for an in-progress or completed keysign session. */
 internal sealed class KeysignState {
@@ -151,8 +145,7 @@ internal val KeysignState.progress: Float
             is KeysignState.KeysignMLDSA -> 0.66f
             is KeysignState.WaitingForPeer -> this.signingProgress
             is KeysignState.KeysignFinished -> 1f
-            // Dead code: Error state is rendered by a separate branch in KeysignView
-            is KeysignState.Error -> 0f
+            else -> 0f
         }
 
 /** Discriminated union of transaction types shown in the keysign confirmation UI. */
@@ -201,6 +194,34 @@ sealed interface TransactionStatus {
      */
     data class Refunded(val reason: UiText) : TransactionStatus
 }
+
+/**
+ * Immutable aggregate of every observable keysign UI value. A single backing [MutableStateFlow] in
+ * [KeysignViewModel] is the only place these fields are mutated, giving the keysign state machine
+ * one source of truth and keeping mutually-dependent fields (e.g. [txHash]/[txLink]) consistent.
+ *
+ * @property signingState Current signing/broadcast phase rendered by the keysign screen.
+ * @property transactionUiModel Transaction UI model, enriched after address-book lookup and once
+ *   the actual EVM fee is known.
+ * @property txHash Primary transaction hash after broadcast, or empty before broadcast.
+ * @property approveTxHash ERC-20 approval transaction hash, or empty when not applicable.
+ * @property txLink Explorer URL for [txHash], or empty before broadcast.
+ * @property approveTxLink Explorer URL for [approveTxHash], or empty when not applicable.
+ * @property swapProgressLink Deep-link to the swap progress page, or null when not a swap.
+ * @property showSaveToAddressBook True when the destination address is not yet saved and is not
+ *   another vault.
+ */
+@Immutable
+internal data class KeysignUiState(
+    val signingState: KeysignState = KeysignState.CreatingInstance,
+    val transactionUiModel: TransactionTypeUiModel? = null,
+    val txHash: String = "",
+    val approveTxHash: String = "",
+    val txLink: String = "",
+    val approveTxLink: String = "",
+    val swapProgressLink: String? = null,
+    val showSaveToAddressBook: Boolean = false,
+)
 
 /**
  * One keyType-specific signing attempt: builds and runs the native helper, reporting peer-wait
@@ -267,24 +288,17 @@ constructor(
         ): KeysignViewModel
     }
 
-    /** Current signing UI state; observed by the Compose screen. */
-    val currentState: MutableStateFlow<KeysignState> =
-        MutableStateFlow(KeysignState.CreatingInstance)
+    private val _state =
+        MutableStateFlow(KeysignUiState(transactionUiModel = transactionTypeUiModel))
 
-    /** Primary transaction hash after broadcast, or empty before broadcast. */
-    val txHash = MutableStateFlow("")
-    /** ERC-20 approval transaction hash, or empty when not applicable. */
-    val approveTxHash = MutableStateFlow("")
-    /** Explorer URL for [txHash], or empty before broadcast. */
-    val txLink = MutableStateFlow("")
-    /** Explorer URL for [approveTxHash], or empty when not applicable. */
-    val approveTxLink = MutableStateFlow("")
-    /** Deep-link to the swap progress page, or null when not a swap. */
-    val swapProgressLink = MutableStateFlow<String?>(null)
-    /** True when the destination address is not yet saved and is not another vault. */
-    val showSaveToAddressBook = MutableStateFlow(false)
-    /** Transaction UI model, potentially enriched after signing completes. */
-    val resolvedTransactionUiModel = MutableStateFlow(transactionTypeUiModel)
+    /** Aggregated read-only keysign UI state; observed by the Compose screen. */
+    val state: StateFlow<KeysignUiState> = _state.asStateFlow()
+
+    /** Test-only seam to seed [state] without driving the full signing flow. */
+    @VisibleForTesting
+    internal fun updateUiStateForTesting(transform: (KeysignUiState) -> KeysignUiState) {
+        _state.update(transform)
+    }
 
     /**
      * dApp identity attached to the keysign request, if any. Read by the verify and done banners.
@@ -309,9 +323,19 @@ constructor(
     private val signatures: MutableMap<String, KeysignResponse> = mutableMapOf()
     private var featureFlags: FeatureFlagJson? = null
 
-    private var isNavigateToHome: Boolean = false
-
     private var pollingTxStatusJob: Job? = null
+
+    private val saveKeysignTransactionHistory =
+        SaveKeysignTransactionHistoryUseCase(transactionHistoryRepository)
+    private val updateEvmActualFee = UpdateEvmActualFeeUseCase(evmApiFactory, gasFeeToEstimatedFee)
+    private val broadcastKeysign =
+        BroadcastKeysignUseCase(
+            broadcastTx = broadcastTx,
+            awaitApprovalConfirmation = awaitApprovalConfirmation,
+            explorerLinkRepository = explorerLinkRepository,
+            evmApiFactory = evmApiFactory,
+            balanceRepository = balanceRepository,
+        )
 
     init {
         val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
@@ -333,8 +357,6 @@ constructor(
                 val isSavedBefore =
                     addressBookRepository.entryExists(address = tx.dstAddress, chainId = chain.id)
 
-                showSaveToAddressBook.value = isSavedBefore.not() && dstVaultName == null
-
                 val dstAddressBookTitle =
                     if (dstVaultName == null && isSavedBefore) {
                         runCatching {
@@ -343,14 +365,19 @@ constructor(
                             .getOrNull()
                     } else null
 
-                resolvedTransactionUiModel.value =
-                    TransactionTypeUiModel.Send(
-                        tx.copy(
-                            srcVaultName = vault.name,
-                            dstVaultName = dstVaultName,
-                            dstAddressBookTitle = dstAddressBookTitle,
-                        )
+                _state.update {
+                    it.copy(
+                        showSaveToAddressBook = isSavedBefore.not() && dstVaultName == null,
+                        transactionUiModel =
+                            TransactionTypeUiModel.Send(
+                                tx.copy(
+                                    srcVaultName = vault.name,
+                                    dstVaultName = dstVaultName,
+                                    dstAddressBookTitle = dstAddressBookTitle,
+                                )
+                            ),
                     )
+                }
             }
         }
     }
@@ -505,18 +532,20 @@ constructor(
         waitingProgress: Float,
         runKeysign: RunKeysign,
     ) {
-        currentState.value = activeState
+        _state.update { it.copy(signingState = activeState) }
         val newSignatures =
             runKeysign(
                 { peers ->
-                    currentState.value = KeysignState.WaitingForPeer(peers, waitingProgress)
+                    _state.update {
+                        it.copy(signingState = KeysignState.WaitingForPeer(peers, waitingProgress))
+                    }
                 },
-                { currentState.value = activeState },
+                { _state.update { it.copy(signingState = activeState) } },
             )
-        this.signatures += newSignatures
-        if (signatures.isEmpty()) {
+        if (newSignatures.isEmpty()) {
             error("Failed to sign transaction, signatures empty")
         }
+        this.signatures += newSignatures
     }
 
     /**
@@ -543,16 +572,21 @@ constructor(
             if (customMessagePayload != null) {
                 // For custom message signing, we consider the flow complete after signing without
                 // broadcasting
-                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+                _state.update {
+                    it.copy(
+                        signingState = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+                    )
+                }
             }
-            isNavigateToHome = true
             if (cancelPullJobOnFinish) pullTssMessagesJob?.cancel()
         } catch (e: CancellationException) {
             if (cancelPullJobOnFinish) pullTssMessagesJob?.cancel()
             throw e
         } catch (e: Exception) {
             Timber.e(e)
-            currentState.value = KeysignState.Error(e.message or R.string.unknown_error)
+            _state.update {
+                it.copy(signingState = KeysignState.Error(e.message or R.string.unknown_error))
+            }
         }
     }
 
@@ -578,7 +612,9 @@ constructor(
      * status (vs. `Broadcasted`) keeps the success screen honest — the tx is not yet on-chain.
      */
     private fun finishWithoutBroadcast() {
-        currentState.value = KeysignState.KeysignFinished(TransactionStatus.Signed)
+        _state.update {
+            it.copy(signingState = KeysignState.KeysignFinished(TransactionStatus.Signed))
+        }
     }
 
     private fun skipBroadcast(): Boolean {
@@ -595,8 +631,11 @@ constructor(
 
     private suspend fun signAndBroadcast() {
         Timber.d("Start to SignAndBroadcast")
-        currentState.value = KeysignState.CreatingInstance
-        runSigningFlow(cancelPullJobOnFinish = true) {
+        _state.update { it.copy(signingState = KeysignState.CreatingInstance) }
+        runSigningFlow(
+            cancelPullJobOnFinish = true,
+            onAllSigned = { extractCustomMessageSignature() },
+        ) {
             featureFlags = featureFlagApi.getFeatureFlags()
             val isEncryptionGcm = featureFlags?.isEncryptGcmEnabled == true
 
@@ -626,7 +665,7 @@ constructor(
         val chainSpecific = keysignPayload?.blockChainSpecific
         if (chainSpecific !is BlockChainSpecific.THORChain) return
         if (!chainSpecific.isDeposit) return
-        val transactionDetail = thorChainApi.getTransactionDetail(txHash.value)
+        val transactionDetail = thorChainApi.getTransactionDetail(_state.value.txHash)
 
         // https://docs.cosmos.network/v0.46/building-modules/errors.html#registration
         if (transactionDetail.code != null && !transactionDetail.codeSpace.isNullOrBlank()) {
@@ -669,24 +708,21 @@ constructor(
                 when (keyType) {
                     TssKeyType.ECDSA -> {
                         keysignReq.pubKey = vault.pubKeyECDSA
-                        currentState.value = KeysignState.KeysignECDSA
+                        _state.update { it.copy(signingState = KeysignState.KeysignECDSA) }
                         service.keysignECDSA(keysignReq)
                     }
 
                     TssKeyType.EDDSA -> {
                         keysignReq.pubKey = vault.pubKeyEDDSA
-                        currentState.value = KeysignState.KeysignEdDSA
+                        _state.update { it.copy(signingState = KeysignState.KeysignEdDSA) }
                         service.keysignEdDSA(keysignReq)
                     }
 
-                    TssKeyType.MLDSA -> {
-                        error("MLDSA is not supported in legacy TSS signing")
-                    }
+                    else -> error("MLDSA is not supported in legacy TSS signing")
                 }
             if (keysignResp.r.isNullOrEmpty() || keysignResp.s.isNullOrEmpty()) {
                 throw Exception("Failed to sign message")
             }
-            calculateCustomMessageSignature(keysignResp)
             this.signatures[message] = keysignResp
             keysignVerify.markLocalPartyKeysignComplete(message, keysignResp)
 
@@ -715,7 +751,7 @@ constructor(
     @OptIn(ExperimentalStdlibApi::class)
     private fun calculateCustomMessageSignature(keysignResp: KeysignResponse) {
         if (customMessagePayload == null) return
-        txHash.value =
+        val signature =
             when (keyType) {
                 // EdDSA chains (Solana, TON, etc.) use little-endian reversed r+s
                 TssKeyType.EDDSA -> keysignResp.getSignature().toHexString()
@@ -724,196 +760,96 @@ constructor(
                 // MLDSA keysign populates derSignature rather than r/s/recoveryID
                 TssKeyType.MLDSA -> keysignResp.derSignature
             }
+        _state.update { it.copy(txHash = signature) }
     }
 
     private suspend fun broadcastTransaction() {
         val payload = keysignPayload ?: return
 
-        var nonceAcc = BigInteger.ZERO
-
-        val approvePayload = payload.approvePayload
-        val chain = payload.coin.chain
-        if (approvePayload != null) {
-            val (approveKey, approveChainCode) = vault.getEcdsaSigningKey(chain)
-            val signedApproveTransaction =
-                THORChainSwaps(approveKey, approveChainCode, vault.getEddsaSigningKey(chain))
-                    .getSignedApproveTransaction(approvePayload, payload, signatures)
-
-            val evmApi = evmApiFactory.createEvmApi(chain)
-            approveTxHash.value = evmApi.sendTransaction(signedApproveTransaction.rawTransaction)
-
-            Timber.d("Approval tx broadcast: %s, awaiting confirmation", approveTxHash.value)
-
-            when (awaitApprovalConfirmation(chain, approveTxHash.value)) {
-                ApprovalConfirmationResult.Confirmed -> {
-                    Timber.d("Approval tx confirmed: %s", approveTxHash.value)
-                }
-                ApprovalConfirmationResult.TimedOut -> {
-                    Timber.w(
-                        "Approval tx %s timed out waiting for confirmation on %s",
-                        approveTxHash.value,
-                        chain,
-                    )
-                    approveTxLink.value =
-                        explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
-                    currentState.value =
-                        KeysignState.Error(R.string.swap_error_approval_timeout.asUiText())
-                    return
-                }
-                ApprovalConfirmationResult.Failed -> {
-                    Timber.w("Approval tx %s reverted on chain %s", approveTxHash.value, chain)
-                    approveTxLink.value =
-                        explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
-                    // The approval was broadcast and then reverted on-chain — a terminal on-chain
-                    // failure, not a TSS/keysign failure. Land on the swap overview with a Failed
-                    // status (and the approval tx hash/link already set above) rather than the
-                    // generic "Signing Error / try again" screen, which wrongly implies a
-                    // pairing/network problem and drops the explorer link.
-                    currentState.value =
-                        KeysignState.KeysignFinished(
-                            TransactionStatus.Failed(R.string.swap_error_approval_failed.asUiText())
-                        )
-                    return
-                }
-            }
-
-            nonceAcc++
-        }
-
-        val signedTx =
-            SigningHelper.getSignedTransaction(
-                keysignPayload = payload,
-                vault = vault,
-                signatures = signatures,
-                nonceAcc = nonceAcc,
-            )
-
-        val txHash = broadcastOrRecover(chain = chain, signedTx = signedTx)
-
-        Timber.d("transaction hash: $txHash")
-        if (txHash != null) {
-            this.txHash.value = txHash
-            txLink.value = explorerLinkRepository.getTransactionLink(chain, txHash)
-            swapProgressLink.value =
-                explorerLinkRepository.getSwapProgressLink(txHash, payload.swapPayload)
-            runCatching { balanceRepository.invalidateBalance(payload.coin.address, payload.coin) }
-                .onFailure { Timber.e(it, "Failed to invalidate balance cache after broadcast") }
-            runCatching {
-                    balanceRepository.invalidateDeFiBalance(
-                        address = payload.coin.address,
-                        chain = chain,
-                        vaultId = vault.id,
-                    )
-                }
-                .onFailure {
-                    Timber.e(it, "Failed to invalidate DeFi balance cache after broadcast")
-                }
-            saveTransactionHistory(txHash, chain)
-            if (txStatusConfigurationProvider.supportTxStatus(chain)) {
-                startForegroundPolling(txHash, chain)
-            } else {
-                currentState.value = KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
-            }
-        }
-        if (approveTxHash.value.isNotEmpty()) {
-            approveTxLink.value =
-                explorerLinkRepository.getTransactionLink(chain, approveTxHash.value)
-        }
-    }
-
-    /**
-     * Broadcasts [signedTx] for [chain], falling back to the deterministic locally computed hash
-     * when a non-initiator's duplicate broadcast is rejected.
-     *
-     * In a multi-device vault both peers compute the same signed extrinsic and call this path;
-     * whichever device's broadcast reaches the network first wins. The losing device's broadcast is
-     * then rejected — Substrate in particular surfaces this as `Transaction has a bad signature`
-     * (code 1010) when the initiator's extrinsic has already advanced the nonce. The signed bytes
-     * are byte-identical on both devices, so the locally computed
-     * [SignedTransactionResult.transactionHash] is the canonical on-chain hash, and we use it
-     * instead of failing the joined-device screen.
-     *
-     * iOS does the same recovery in `KeysignViewModel.handleBroadcastError` / `isAlreadyOnChain`.
-     * We keep it scoped to non-initiator devices so a real broadcast failure on the initiator is
-     * still surfaced as an error.
-     */
-    internal suspend fun broadcastOrRecover(
-        chain: Chain,
-        signedTx: SignedTransactionResult,
-    ): String? =
-        try {
-            broadcastTx(chain = chain, tx = signedTx)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            recoverJoinedDeviceBroadcast(chain, signedTx, e) ?: throw e
-        }
-
-    /**
-     * Returns the locally computed transaction hash if this is a joined-device broadcast failure we
-     * should swallow; `null` if the caller must re-throw the original error.
-     */
-    private fun recoverJoinedDeviceBroadcast(
-        chain: Chain,
-        signedTx: SignedTransactionResult,
-        error: Throwable,
-    ): String? {
-        if (isInitiatingDevice) return null
-        return signedTx.transactionHash
-            .takeUnless { it.isBlank() }
-            ?.also { hash ->
-                Timber.w(
-                    error,
-                    "Joined-device broadcast for %s failed; using locally computed hash %s",
-                    chain.raw,
-                    hash,
+        when (
+            val result =
+                broadcastKeysign(
+                    vault = vault,
+                    payload = payload,
+                    signatures = signatures,
+                    isInitiatingDevice = isInitiatingDevice,
                 )
+        ) {
+            is KeysignBroadcastResult.ApprovalNotConfirmed -> {
+                _state.update {
+                    it.copy(
+                        approveTxHash = result.approveTxHash,
+                        approveTxLink = result.approveTxLink,
+                        signingState =
+                            if (result.timedOut) {
+                                KeysignState.Error(R.string.swap_error_approval_timeout.asUiText())
+                            } else {
+                                // Approval reverted on-chain — a terminal on-chain failure, not a
+                                // TSS/keysign failure. Land on the swap overview with a Failed
+                                // status (approval tx hash/link set above) instead of the generic
+                                // "Signing Error / try again" screen, which would wrongly imply a
+                                // pairing/network problem and drop the explorer link.
+                                KeysignState.KeysignFinished(
+                                    TransactionStatus.Failed(
+                                        R.string.swap_error_approval_failed.asUiText()
+                                    )
+                                )
+                            },
+                    )
+                }
             }
+            is KeysignBroadcastResult.Broadcasted -> {
+                _state.update {
+                    it.copy(
+                        approveTxHash = result.approveTxHash,
+                        approveTxLink = result.approveTxLink,
+                    )
+                }
+                val txHash = result.txHash
+                if (txHash != null) {
+                    _state.update {
+                        it.copy(
+                            txHash = txHash,
+                            txLink = result.txLink,
+                            swapProgressLink = result.swapProgressLink,
+                        )
+                    }
+                    saveTransactionHistory(txHash, result.chain)
+                    if (txStatusConfigurationProvider.supportTxStatus(result.chain)) {
+                        startForegroundPolling(txHash, result.chain)
+                    } else {
+                        _state.update {
+                            it.copy(
+                                signingState =
+                                    KeysignState.KeysignFinished(TransactionStatus.Broadcasted)
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 
     internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
-        transactionHistoryData?.let {
-            runCatching {
-                val now = System.currentTimeMillis()
-                val historyData =
-                    CommonTransactionHistoryData(
-                        vaultId = vault.id,
-                        txHash = txHash,
-                        chain = chain.raw,
-                        timestamp = now,
-                        explorerUrl = swapProgressLink.value ?: txLink.value,
-                        status = BROADCASTED,
-                        type =
-                            when (it) {
-                                is SendTransactionHistoryData -> TransactionType.SEND
-                                is SwapTransactionHistoryData -> TransactionType.SWAP
-                                is UnknownTransactionHistoryData -> return@runCatching
-                            },
-                        confirmedAt = null,
-                        failureReason = null,
-                        lastCheckedAt = now,
-                        // Polkadot extrinsics are mortal: persist the head block at broadcast so
-                        // the
-                        // status poller can scan the absolute inclusion window instead of a
-                        // head-relative one that drifts out of reach. Null for other chains.
-                        broadcastBlockNumber =
-                            (keysignPayload?.blockChainSpecific as? BlockChainSpecific.Polkadot)
-                                ?.currentBlockNumber
-                                ?.toLong(),
-                    )
-                transactionHistoryRepository.recordTransaction(
-                    vaultId = vault.id,
-                    txHash = txHash,
-                    txData = it,
-                    genericData = historyData,
-                )
-            }
-        }
+        saveKeysignTransactionHistory(
+            vaultId = vault.id,
+            txHash = txHash,
+            chain = chain,
+            explorerUrl = _state.value.let { it.swapProgressLink ?: it.txLink },
+            transactionHistoryData = transactionHistoryData,
+            // Polkadot extrinsics are mortal: persist the head block at broadcast so the status
+            // poller can scan the absolute inclusion window instead of a head-relative one that
+            // drifts out of reach. Null for other chains.
+            broadcastBlockNumber =
+                (keysignPayload?.blockChainSpecific as? BlockChainSpecific.Polkadot)
+                    ?.currentBlockNumber
+                    ?.toLong(),
+        )
     }
 
     /**
      * Starts foreground transaction-status polling, delegating the status-service / SwapKit polling
-     * strategies to [txStatusPoller]. Mirrors each observed status into [currentState] and, once a
+     * strategies to [txStatusPoller]. Mirrors each observed status into [state] and, once a
      * terminal status is reached, replaces the estimated EVM fee with the actual burned fee.
      */
     private fun startForegroundPolling(txHash: String, chain: Chain) {
@@ -922,10 +858,14 @@ constructor(
             viewModelScope.safeLaunch {
                 val terminal =
                     txStatusPoller.poll(txHash, chain, isSwapKitSwap = isSwapKitSwap()) { result ->
-                        currentState.value =
-                            KeysignState.KeysignFinished(
-                                transactionStatus = result.toTransactionStatus()
+                        _state.update {
+                            it.copy(
+                                signingState =
+                                    KeysignState.KeysignFinished(
+                                        transactionStatus = result.toTransactionStatus()
+                                    )
                             )
+                        }
                     }
                 if (terminal != null) tryUpdateEvmActualFee(txHash, chain)
             }
@@ -947,44 +887,19 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e -> Timber.w(e, "Failed to update EVM actual fee for %s", txHash) }
         ) {
-            val evmApi = evmApiFactory.createEvmApi(chain)
-            var gasUsedHex: String? = null
-            var effectiveGasPriceHex: String? = null
-            for (attempt in 1..MAX_EVM_RECEIPT_RETRIES) {
-                val result = evmApi.getTxStatus(txHash)?.result
-                if (result != null) {
-                    gasUsedHex = result.gasUsed
-                    effectiveGasPriceHex = result.effectiveGasPrice
-                    break // receipt received — stop retrying whether or not fee fields are
-                    // populated
-                }
-                if (attempt < MAX_EVM_RECEIPT_RETRIES) delay(EVM_RECEIPT_RETRY_DELAY_MS)
-            }
-            val gasUsed = BigInteger((gasUsedHex ?: return@safeLaunch).removePrefix("0x"), 16)
-            val effectiveGasPrice =
-                BigInteger((effectiveGasPriceHex ?: return@safeLaunch).removePrefix("0x"), 16)
-            val actualFeeWei = gasUsed.multiply(effectiveGasPrice)
-            val estimatedFee =
-                gasFeeToEstimatedFee(
-                    GasFeeParams(
-                        gasLimit = BigInteger.ONE,
-                        gasFee =
-                            TokenValue(
-                                value = actualFeeWei,
-                                unit = coin.ticker,
-                                decimals = coin.decimal,
-                            ),
-                        selectedToken = coin,
-                    )
-                )
-            resolvedTransactionUiModel.update { currentModel ->
+            val estimatedFee = updateEvmActualFee(txHash, chain, coin) ?: return@safeLaunch
+            _state.update { current ->
                 val sendTx =
-                    currentModel as? TransactionTypeUiModel.Send ?: return@update currentModel
-                TransactionTypeUiModel.Send(
-                    sendTx.tx.copy(
-                        networkFeeTokenValue = estimatedFee.formattedTokenValue,
-                        networkFeeFiatValue = estimatedFee.formattedFiatValue,
-                    )
+                    current.transactionUiModel as? TransactionTypeUiModel.Send
+                        ?: return@update current
+                current.copy(
+                    transactionUiModel =
+                        TransactionTypeUiModel.Send(
+                            sendTx.tx.copy(
+                                networkFeeTokenValue = estimatedFee.formattedTokenValue,
+                                networkFeeFiatValue = estimatedFee.formattedFiatValue,
+                            )
+                        )
                 )
             }
         }
@@ -996,10 +911,13 @@ constructor(
         txStatusPoller.stopPolling()
     }
 
-    /** Navigates to the home screen (or back) depending on whether the flow completed normally. */
+    /**
+     * Navigates to home once signing reached the terminal [KeysignState.KeysignFinished] state,
+     * otherwise navigates back. Derived from [state] rather than an imperative flag.
+     */
     fun navigateToHome() {
         viewModelScope.launch {
-            if (isNavigateToHome) {
+            if (_state.value.signingState is KeysignState.KeysignFinished) {
                 navigator.route(Route.Home(), NavigationOptions(clearBackStack = true))
             } else {
                 navigator.navigate(Destination.Back)

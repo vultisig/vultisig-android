@@ -109,8 +109,12 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
     fun `swap tx prefers swapProgressLink over txLink for explorerUrl`() =
         runTest(testDispatcher) {
             val vm = createViewModel(swapTxData)
-            vm.txLink.value = "https://blockstream.info/tx/0xabc"
-            vm.swapProgressLink.value = "https://thorchain.net/tx/0xabc"
+            vm.updateUiStateForTesting {
+                it.copy(
+                    txLink = "https://blockstream.info/tx/0xabc",
+                    swapProgressLink = "https://thorchain.net/tx/0xabc",
+                )
+            }
 
             val captured = slot<CommonTransactionHistoryData>()
             vm.saveTransactionHistory(txHash = "0xabc", chain = Chain.Bitcoin)
@@ -131,8 +135,9 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
     fun `swap tx falls back to txLink when swapProgressLink is null`() =
         runTest(testDispatcher) {
             val vm = createViewModel(swapTxData)
-            vm.txLink.value = "https://blockstream.info/tx/0xabc"
-            vm.swapProgressLink.value = null
+            vm.updateUiStateForTesting {
+                it.copy(txLink = "https://blockstream.info/tx/0xabc", swapProgressLink = null)
+            }
 
             val captured = slot<CommonTransactionHistoryData>()
             vm.saveTransactionHistory(txHash = "0xabc", chain = Chain.Bitcoin)
@@ -153,8 +158,9 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
     fun `send tx uses txLink when swapProgressLink is null`() =
         runTest(testDispatcher) {
             val vm = createViewModel(sendTxData)
-            vm.txLink.value = "https://etherscan.io/tx/0xabc"
-            vm.swapProgressLink.value = null
+            vm.updateUiStateForTesting {
+                it.copy(txLink = "https://etherscan.io/tx/0xabc", swapProgressLink = null)
+            }
 
             val captured = slot<CommonTransactionHistoryData>()
             vm.saveTransactionHistory(txHash = "0xabc", chain = Chain.Ethereum)
