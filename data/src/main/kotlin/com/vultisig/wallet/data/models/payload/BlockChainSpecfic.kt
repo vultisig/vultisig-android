@@ -9,9 +9,9 @@ sealed class BlockChainSpecific {
     /**
      * @param zcashBranchId live ZIP-243 consensus branch id (little-endian hex, e.g. `30f33754`)
      *   fetched at send time for Zcash; null for every other UTXO chain and when the RPC was
-     *   unreachable, in which case signing falls back to the compiled-in constant. Transient: it is
-     *   NOT carried by the `UTXOSpecific` proto, so a co-signing device that rebuilds the payload
-     *   from proto must repopulate it (see JoinKeysignViewModel) before signing.
+     *   unreachable, in which case signing refuses (there is no compiled-in fallback). Transient:
+     *   it is NOT carried by the `UTXOSpecific` proto, so a co-signing device that rebuilds the
+     *   payload from proto must repopulate it (see JoinKeysignViewModel) before signing.
      */
     data class UTXO(
         val byteFee: BigInteger,
@@ -111,7 +111,7 @@ sealed class BlockChainSpecific {
 
 /**
  * Live ZIP-243 branch id carried on a Zcash payload's UTXO specific, or null for non-Zcash payloads
- * and when the RPC was unreachable (signing then falls back to the compiled-in constant).
+ * and when the RPC was unreachable (signing then refuses; there is no compiled-in fallback).
  */
 val KeysignPayload.zcashBranchId: String?
     get() = (blockChainSpecific as? BlockChainSpecific.UTXO)?.zcashBranchId

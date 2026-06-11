@@ -1791,8 +1791,9 @@ constructor(
 
     /**
      * Stamps the live ZIP-243 branch id onto a Zcash UTXO payload rebuilt from proto. Returns the
-     * payload unchanged for non-Zcash chains, non-UTXO specifics, or when the RPC is unreachable
-     * (UtxoHelper then falls back to the compiled-in constant).
+     * payload unchanged for non-Zcash chains, non-UTXO specifics, or when the RPC is unreachable —
+     * in the Zcash case that leaves the branch id null, so signing refuses (there is no compiled-in
+     * fallback).
      */
     private suspend fun withZcashBranchId(payload: KeysignPayload): KeysignPayload {
         if (payload.coin.chain != Chain.Zcash) return payload

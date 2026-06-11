@@ -42,8 +42,8 @@ internal class SwapKitZcashSigner(
 
     /**
      * ZIP-243 preimage hashes (sorted hex) for every input. [zcashBranchId] is the live branch id
-     * resolved at send time (carried on the source-chain payload's UTXO specific); null falls back
-     * to the compiled-in constant.
+     * resolved at send time (carried on the source-chain payload's UTXO specific); a null/empty
+     * branch id is rejected (buildSigningInputData throws) — there is no compiled-in fallback.
      */
     fun getPreSignedImageHash(
         psbtBytes: ByteArray,
