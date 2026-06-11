@@ -69,11 +69,15 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
+import com.vultisig.wallet.ui.models.deposit.submit.AddCacaoPoolStrategy
+import com.vultisig.wallet.ui.models.deposit.submit.AddLiquidityStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.BondStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.DepositSubmitStrategies
 import com.vultisig.wallet.ui.models.deposit.submit.DepositSubmitStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.LeaveStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.MergeStrategy
+import com.vultisig.wallet.ui.models.deposit.submit.RemoveCacaoPoolStrategy
+import com.vultisig.wallet.ui.models.deposit.submit.RemoveLiquidityStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.StakeStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.SwitchStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.TransferIbcStrategy
@@ -435,10 +439,59 @@ constructor(
             getFeesFiatValue = ::getFeesFiatValue,
         )
 
+    private val addCacaoPoolStrategy: DepositSubmitStrategy =
+        AddCacaoPoolStrategy(
+            vaultIdProvider = { vaultId },
+            chainProvider = { chain },
+            tokenAmountFieldState = tokenAmountFieldState,
+            accountsRepository = accountsRepository,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            calculateGasFee = ::calculateGasFee,
+            getFeesFiatValue = ::getFeesFiatValue,
+        )
+
+    private val removeCacaoPoolStrategy: DepositSubmitStrategy =
+        RemoveCacaoPoolStrategy(
+            vaultIdProvider = { vaultId },
+            chainProvider = { chain },
+            tokenAmountFieldState = tokenAmountFieldState,
+            accountsRepository = accountsRepository,
+            validateMayaTransactionHeight = validateMayaTransactionHeight,
+            validateBasisPoints = ::validateBasisPoints,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            calculateGasFee = ::calculateGasFee,
+            getFeesFiatValue = ::getFeesFiatValue,
+        )
+
+    private val addLiquidityStrategy: DepositSubmitStrategy =
+        AddLiquidityStrategy(
+            vaultIdProvider = { vaultId },
+            chainProvider = { chain },
+            lpPoolIdProvider = { lpPoolId },
+            tokenAmountFieldState = tokenAmountFieldState,
+            accountsRepository = accountsRepository,
+            thorChainLpPreflight = thorChainLpPreflight,
+            resolvePairedAddress = ::resolvePairedAddress,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            calculateGasFee = ::calculateGasFee,
+            getFeesFiatValue = ::getFeesFiatValue,
+        )
+
+    private val removeLiquidityStrategy: DepositSubmitStrategy =
+        RemoveLiquidityStrategy(
+            vaultIdProvider = { vaultId },
+            chainProvider = { chain },
+            lpPoolIdProvider = { lpPoolId },
+            stateProvider = { state.value },
+            accountsRepository = accountsRepository,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            calculateGasFee = ::calculateGasFee,
+            getFeesFiatValue = ::getFeesFiatValue,
+        )
+
     private val depositStrategies: DepositSubmitStrategies =
         mapOf(
-                DepositOption.AddCacaoPool to
-                    DepositSubmitStrategy { createAddCacaoPoolTransaction() },
+                DepositOption.AddCacaoPool to addCacaoPoolStrategy,
                 DepositOption.Bond to bondStrategy,
                 DepositOption.Unbond to unbondStrategy,
                 DepositOption.Leave to leaveStrategy,
@@ -449,12 +502,9 @@ constructor(
                 DepositOption.Switch to switchStrategy,
                 DepositOption.Merge to mergeStrategy,
                 DepositOption.UnMerge to unMergeStrategy,
-                DepositOption.RemoveCacaoPool to
-                    DepositSubmitStrategy { createRemoveCacaoPoolTransaction() },
-                DepositOption.AddLiquidity to
-                    DepositSubmitStrategy { createAddLiquidityTransaction() },
-                DepositOption.RemoveLiquidity to
-                    DepositSubmitStrategy { createRemoveLiquidityTransaction() },
+                DepositOption.RemoveCacaoPool to removeCacaoPoolStrategy,
+                DepositOption.AddLiquidity to addLiquidityStrategy,
+                DepositOption.RemoveLiquidity to removeLiquidityStrategy,
                 DepositOption.SecuredAsset to
                     DepositSubmitStrategy { createSecuredAssetTransaction() },
                 DepositOption.WithdrawSecuredAsset to
@@ -1638,69 +1688,6 @@ constructor(
         }
     }
 
-    private suspend fun createAddCacaoPoolTransaction(): DepositTransaction {
-        val vaultId =
-            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
-        val chain =
-            chain
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val address = accountsRepository.loadAddress(vaultId, chain).first()
-        val selectedToken =
-            address.accounts.firstOrNull { it.token.isNativeToken }?.token
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        if (selectedToken.ticker != "CACAO") {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.cacaopool_only_cacao_supported)
-            )
-        }
-
-        val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
-
-        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-        val tokenAmountInt = tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
-
-        val srcAddress = selectedToken.address
-
-        val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
-        val memo = DepositMemo.DepositPool
-
-        val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = "",
-            memo = memo.toString(),
-            srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
-            estimatedFees = gasFee,
-            blockChainSpecific = specific.blockChainSpecific,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-        )
-    }
-
     @OptIn(ExperimentalStdlibApi::class)
     private suspend fun createSecuredAssetTransaction(): DepositTransaction {
         val vaultId =
@@ -1969,89 +1956,6 @@ constructor(
         )
     }
 
-    private suspend fun createAddLiquidityTransaction(): DepositTransaction {
-        val vaultId =
-            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
-        val chain =
-            chain
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val poolId =
-            lpPoolId
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val address = accountsRepository.loadAddress(vaultId, chain).first()
-        val selectedToken =
-            address.accounts.firstOrNull { it.token.isNativeToken }?.token
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val tokenAmount = tokenAmountFieldState.text.toString().toBigDecimalOrNull()
-
-        if (tokenAmount == null || tokenAmount <= BigDecimal.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-        val tokenAmountInt = tokenAmount.movePointRight(selectedToken.decimal).toBigInteger()
-
-        // Preflight against THORChain network state — pool status and the relevant mimir pause
-        // keys. Refuses to build the keysign payload when the network would refund the inbound,
-        // sparing the user the inbound gas spend.
-        if (chain == Chain.ThorChain) {
-            thorChainLpPreflight(poolId)?.let { block -> throw block.toError() }
-        }
-
-        val srcAddress = selectedToken.address
-        val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
-        val pairedAddress = resolvePairedAddress(chain, vaultId, poolId)
-        // For a RUNE-side add into a non-THOR pool the memo MUST carry the paired-chain address —
-        // otherwise THORChain can't credit the LP when the asset half is later deposited.
-        if (chain == Chain.ThorChain && pairedAddress == null) {
-            val assetChain = parseThorChainPool(poolId).chain
-            if (assetChain != null && assetChain != Chain.ThorChain) {
-                throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-            }
-        }
-        val memo = DepositMemo.AddLiquidity(poolId, pairedAddress)
-
-        val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = "",
-            memo = memo.toString(),
-            srcTokenValue = TokenValue(value = tokenAmountInt, token = selectedToken),
-            estimatedFees = gasFee,
-            blockChainSpecific = specific.blockChainSpecific,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            operation = OPERATION_MINT,
-            pool = poolId,
-            pairedAddress = pairedAddress.orEmpty(),
-        )
-    }
-
     /**
      * For symmetric LP add the memo carries the user's address on the *paired* chain so THORChain
      * can credit them when the asset half is later deposited from that chain. Returns null when the
@@ -2075,134 +1979,6 @@ constructor(
             Timber.e(e, "Failed to resolve paired address for $poolId")
             null
         }
-    }
-
-    private suspend fun createRemoveLiquidityTransaction(): DepositTransaction {
-        val vaultId =
-            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
-        val chain =
-            chain
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val poolId =
-            lpPoolId
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val address = accountsRepository.loadAddress(vaultId, chain).first()
-        val selectedToken =
-            address.accounts.firstOrNull { it.token.isNativeToken }?.token
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val srcAddress = selectedToken.address
-        val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
-
-        val s = state.value
-        // Reuse the exact basis points (0..10000) the slider used to compute the displayed redeem
-        // amount so the on-chain memo withdraws the same fraction the user saw.
-        val basisPoints = s.removeLpBasisPoints
-
-        if (basisPoints <= 0 || basisPoints > 10_000) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_from_invalid_amount)
-            )
-        }
-
-        val memo = DepositMemo.RemoveLiquidity(poolId, basisPoints)
-
-        val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-            )
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = "",
-            memo = memo.toString(),
-            srcTokenValue = TokenValue(value = BigInteger.ZERO, token = selectedToken),
-            estimatedFees = gasFee,
-            blockChainSpecific = specific.blockChainSpecific,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            operation = OPERATION_WITHDRAW,
-            pool = poolId,
-        )
-    }
-
-    private suspend fun createRemoveCacaoPoolTransaction(): DepositTransaction {
-        val vaultId =
-            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
-
-        val chain =
-            chain
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val address = accountsRepository.loadAddress(vaultId, chain).first()
-
-        val selectedToken =
-            address.accounts.firstOrNull { it.token.isNativeToken }?.token
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val srcAddress = selectedToken.address
-
-        validateMayaTransactionHeight(srcAddress) ||
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.deposit_error_has_not_reached_maturity)
-            )
-
-        val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
-
-        val basisPoints = tokenAmountFieldState.text.toString().toIntOrNull()
-
-        validateBasisPoints(basisPoints)?.let { throw InvalidTransactionDataException(it) }
-
-        val memo =
-            DepositMemo.WithdrawPool(
-                basisPoints = basisPoints!! * 100 // 10000 BP = 100%; basisPoints in 0..100
-            )
-
-        val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-            )
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = "",
-            memo = memo.toString(),
-            srcTokenValue = TokenValue(value = BigInteger.ZERO, token = selectedToken),
-            estimatedFees = gasFee,
-            blockChainSpecific = specific.blockChainSpecific,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-        )
     }
 
     private fun getSelectedToken(): Coin? {

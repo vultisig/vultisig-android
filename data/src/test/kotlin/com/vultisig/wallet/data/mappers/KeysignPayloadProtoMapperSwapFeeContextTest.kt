@@ -92,7 +92,8 @@ class KeysignPayloadProtoMapperSwapFeeContextTest {
     fun `outbound mapper maps empty token context to null proto fields`() {
         // Native fee coin: empty token id must serialize as absent (null), not an empty string, so
         // the field stays a clean proto3 `optional` absence on the wire.
-        val outbound = requireNotNull(outboundMapper.invoke(domainWith(domainTx(swapFee = "21000"))))
+        val outbound =
+            requireNotNull(outboundMapper.invoke(domainWith(domainTx(swapFee = "21000"))))
         val tx = requireNotNull(outbound.oneinchSwapPayload?.quote?.tx)
 
         assertNull(tx.swapFeeChain)
@@ -118,7 +119,9 @@ class KeysignPayloadProtoMapperSwapFeeContextTest {
 
         val domain = inboundMapper.invoke(inboundProto)
         val roundTripped =
-            requireNotNull(requireNotNull(outboundMapper.invoke(domain)).oneinchSwapPayload?.quote?.tx)
+            requireNotNull(
+                requireNotNull(outboundMapper.invoke(domain)).oneinchSwapPayload?.quote?.tx
+            )
 
         assertEquals("1500000", roundTripped.swapFee)
         assertEquals("Ethereum", roundTripped.swapFeeChain)
