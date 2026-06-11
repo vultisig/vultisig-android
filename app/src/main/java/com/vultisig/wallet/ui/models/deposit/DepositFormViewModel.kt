@@ -238,6 +238,7 @@ constructor(
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase,
     private val getThorChainLpPositionUseCase: GetThorChainLpPositionUseCase,
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase,
+    private val fieldValidator: DepositFieldValidator,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -317,7 +318,7 @@ constructor(
             chainAccountAddressRepository = chainAccountAddressRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
             isAssetCharsValid = isAssetCharsValid,
-            isLpUnitCharsValid = ::isLpUnitCharsValid,
+            isLpUnitCharsValid = fieldValidator::isLpUnitCharsValid,
             calculateGasFee = ::calculateGasFee,
             getFeesFiatValue = ::getFeesFiatValue,
         )
@@ -336,7 +337,7 @@ constructor(
             chainAccountAddressRepository = chainAccountAddressRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
             isAssetCharsValid = isAssetCharsValid,
-            isLpUnitCharsValid = ::isLpUnitCharsValid,
+            isLpUnitCharsValid = fieldValidator::isLpUnitCharsValid,
             calculateGasFee = ::calculateGasFee,
             getFeesFiatValue = ::getFeesFiatValue,
         )
@@ -414,7 +415,7 @@ constructor(
             addressProvider = { address.value },
             nodeAddressFieldState = nodeAddressFieldState,
             thorAddressFieldState = thorAddressFieldState,
-            dstAddressErrorOrNull = ::dstAddressErrorOrNull,
+            dstAddressErrorOrNull = fieldValidator::dstAddressErrorOrNull,
             requireTokenAmount = ::requireTokenAmount,
             blockChainSpecificRepository = blockChainSpecificRepository,
             calculateGasFee = ::calculateGasFee,
@@ -429,7 +430,7 @@ constructor(
             addressProvider = { address.value },
             nodeAddressFieldState = nodeAddressFieldState,
             customMemoFieldState = customMemoFieldState,
-            dstAddressErrorOrNull = ::dstAddressErrorOrNull,
+            dstAddressErrorOrNull = fieldValidator::dstAddressErrorOrNull,
             requireTokenAmount = ::requireTokenAmount,
             blockChainSpecificRepository = blockChainSpecificRepository,
             calculateGasFee = ::calculateGasFee,
@@ -454,7 +455,7 @@ constructor(
             tokenAmountFieldState = tokenAmountFieldState,
             accountsRepository = accountsRepository,
             validateMayaTransactionHeight = validateMayaTransactionHeight,
-            validateBasisPoints = ::validateBasisPoints,
+            validateBasisPoints = fieldValidator::validateBasisPoints,
             blockChainSpecificRepository = blockChainSpecificRepository,
             calculateGasFee = ::calculateGasFee,
             getFeesFiatValue = ::getFeesFiatValue,
@@ -1532,13 +1533,13 @@ constructor(
                 state.value.dstAddressError != null
         )
             return
-        val error = dstAddressErrorOrNull(validationChain, dstAddress)
+        val error = fieldValidator.dstAddressErrorOrNull(validationChain, dstAddress)
         _state.update { it.copy(dstAddressError = error) }
     }
 
     fun validateNodeAddress() {
         val nodeAddress = nodeAddressFieldState.text.toString()
-        val errorText = addressErrorOrNull(chain, nodeAddress)
+        val errorText = fieldValidator.addressErrorOrNull(chain, nodeAddress)
         if (errorText != null) {
             whitelistJob?.cancel()
             _state.update { it.copy(nodeAddressError = errorText, isCheckingWhitelist = false) }
@@ -1612,7 +1613,7 @@ constructor(
     }
 
     fun validateTokenAmount() {
-        val errorText = validateTokenAmount(tokenAmountFieldState.text.toString())
+        val errorText = fieldValidator.validateTokenAmount(tokenAmountFieldState.text.toString())
         _state.update { it.copy(tokenAmountError = errorText) }
     }
 
@@ -1624,52 +1625,35 @@ constructor(
     }
 
     fun validateProvider() {
-        val errorText = addressErrorOrNull(chain, providerFieldState.text.toString())
+        val errorText = fieldValidator.addressErrorOrNull(chain, providerFieldState.text.toString())
         _state.update { it.copy(providerError = errorText) }
     }
 
     fun validateOperatorFee() {
         val text = operatorFeeFieldState.text.toString()
         if (text.isNotEmpty()) {
-            val errorText = validateBasisPoints(text.toIntOrNull())
+            val errorText = fieldValidator.validateBasisPoints(text.toIntOrNull())
             _state.update { it.copy(operatorFeeError = errorText) }
         }
     }
 
     fun validateCustomMemo() {
-        val errorText = validateCustomMemo(customMemoFieldState.text.toString())
+        val errorText = fieldValidator.validateCustomMemo(customMemoFieldState.text.toString())
         _state.update { it.copy(customMemoError = errorText) }
     }
 
     fun validateBasisPoints() {
         val text = basisPointsFieldState.text.toString()
         if (text.isNotEmpty()) {
-            val errorText = validateBasisPoints(text.toIntOrNull())
+            val errorText = fieldValidator.validateBasisPoints(text.toIntOrNull())
             _state.update { it.copy(basisPointsError = errorText) }
         }
     }
 
     fun validateSlippage() {
         val text = slippageFieldState.text.toString()
-        val errorText = validateSlippage(text)
+        val errorText = fieldValidator.validateSlippage(text)
         _state.update { it.copy(slippageError = errorText) }
-    }
-
-    private fun validateSlippage(slippage: String?): UiText? {
-        if (slippage.isNullOrBlank()) {
-            return UiText.StringResource(R.string.slippage_required_error)
-        }
-
-        return try {
-            val value = slippage.toBigDecimal()
-            if (value < BigDecimal.ZERO || value > BigDecimal("100")) {
-                UiText.StringResource(R.string.slippage_invalid_error)
-            } else {
-                null
-            }
-        } catch (e: NumberFormatException) {
-            UiText.StringResource(R.string.slippage_format_error)
-        }
     }
 
     fun setProvider(provider: String) {
@@ -1694,7 +1678,11 @@ constructor(
      */
     fun validateThorAddress() {
         if (state.value.depositOption != DepositOption.Switch) return
-        val errorText = addressErrorOrNull(Chain.ThorChain, thorAddressFieldState.text.toString())
+        val errorText =
+            fieldValidator.addressErrorOrNull(
+                Chain.ThorChain,
+                thorAddressFieldState.text.toString(),
+            )
         _state.update { it.copy(thorAddressError = errorText) }
     }
 
