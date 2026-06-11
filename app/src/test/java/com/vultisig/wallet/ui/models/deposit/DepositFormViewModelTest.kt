@@ -93,6 +93,8 @@ internal class DepositFormViewModelTest {
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase = mockk(relaxed = true)
     private val getThorChainLpPositionUseCase: GetThorChainLpPositionUseCase = mockk(relaxed = true)
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
+    private val fieldValidator: DepositFieldValidator =
+        DepositFieldValidatorImpl(chainAccountAddressRepository)
 
     @BeforeEach
     fun setUp() {
@@ -132,6 +134,7 @@ internal class DepositFormViewModelTest {
             requestAddressBookEntry = requestAddressBookEntry,
             getThorChainLpPositionUseCase = getThorChainLpPositionUseCase,
             thorChainLpPreflight = thorChainLpPreflight,
+            fieldValidator = fieldValidator,
         )
 
     @Test
