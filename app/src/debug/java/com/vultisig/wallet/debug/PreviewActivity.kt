@@ -221,6 +221,9 @@ class PreviewActivity : ComponentActivity() {
                     "staking_verify_after" -> CosmosStakingVerifyCtaPreview(newButtons = true)
                     "staking_verify_qbtc" ->
                         CosmosStakingVerifyCtaPreview(newButtons = true, qbtc = true)
+                    "cosmos_staking_positions_empty" -> CosmosStakingPositionsEmptyPreview()
+                    "cosmos_staking_positions_delegation" ->
+                        CosmosStakingPositionsWithDelegationPreview()
                     "cosmos_staking_positions_loaded" ->
                         CosmosStakingPositionsContentLoadedPreview()
                     "cosmos_staking_positions_loading" ->
@@ -1921,6 +1924,78 @@ private fun ColumnScope.VerifySignMessageCta(newButtons: Boolean) {
             modifier = Modifier.fillMaxWidth(),
         )
     }
+}
+
+/**
+ * Empty QBTC staking state — reproduces issue #4831's screen (balance banner + "Staked" tab +
+ * "Delegate to New Validator" + empty-positions hint). The inline edit-chains icon that used to
+ * overlap the "Staked" label was removed in #4825, so this row now renders the tab alone.
+ */
+@Composable
+private fun CosmosStakingPositionsEmptyPreview() {
+    CosmosStakingPositionsPreviewHost(
+        state =
+            CosmosStakingPositionsUiState(
+                ticker = "QBTC",
+                selectedPositions = listOf("QBTC"),
+                totalAmountPrice = "$0.00",
+                totalStakedFiat = "$0.00",
+            )
+    )
+}
+
+/**
+ * Populated state — one active delegation with rewards, so the Claim button + a position card show.
+ */
+@Composable
+private fun CosmosStakingPositionsWithDelegationPreview() {
+    CosmosStakingPositionsPreviewHost(
+        state =
+            CosmosStakingPositionsUiState(
+                ticker = "QBTC",
+                selectedPositions = listOf("QBTC"),
+                totalStaked = BigDecimal("1250.5"),
+                totalAmountPrice = "$842.18",
+                totalStakedFiat = "$842.18",
+                hasClaimableRewards = true,
+                positions =
+                    listOf(
+                        CosmosStakePositionRow(
+                            validatorAddress =
+                                "terravaloper1qxv9z8m5n2k7w3pwl4rytsx0d8jh6c2e9abch7",
+                            validatorMoniker = "Vultisig Validator",
+                            validatorIdentity = null,
+                            stakedAmount = BigDecimal("1250.5"),
+                            stakedFiatDisplay = "$842.18",
+                            pendingReward = BigDecimal("0.453217"),
+                            apyPercent = BigDecimal("0.142"),
+                            validatorAvatarUrl = null,
+                            validatorStatus = CosmosStakePositionRow.ValidatorStatus.Active,
+                            pendingUnbondingUnlockDate = null,
+                            pendingUnbondingEntryCount = 0,
+                        )
+                    ),
+            )
+    )
+}
+
+@Composable
+private fun CosmosStakingPositionsPreviewHost(state: CosmosStakingPositionsUiState) {
+    CosmosStakingPositionsContent(
+        chainId = "QBTC",
+        state = state,
+        isRefreshing = false,
+        onRefresh = {},
+        onManagePositions = {},
+        onClaim = {},
+        onDelegateToNewValidator = {},
+        onUnstake = {},
+        onMove = {},
+        onStakeMore = {},
+        onPositionSelectionChange = { _, _ -> },
+        onPositionSelectionDone = {},
+        onDismissDialog = {},
+    )
 }
 
 private fun cosmosStakingPreviewPosition(
