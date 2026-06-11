@@ -11,6 +11,7 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.LiFiChainApi
 import com.vultisig.wallet.data.api.RouterApi
 import com.vultisig.wallet.data.api.SessionApi
+import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.errors.SwapException
 import com.vultisig.wallet.data.api.errors.SwapKitError
@@ -242,6 +243,7 @@ constructor(
     private val protoBuf: ProtoBuf,
     private val decompressQr: DecompressQrUseCase,
     private val sessionApi: SessionApi,
+    private val zcashApi: ZcashApi,
     private val chainAccountAddressRepository: ChainAccountAddressRepository,
     private val routerApi: RouterApi,
     private val fourByteRepository: FourByteRepository,
@@ -1749,11 +1751,20 @@ constructor(
         return false
     }
 
-    private fun resolveMessagesToSign() {
+    private suspend fun resolveMessagesToSign() {
         try {
             when {
                 _keysignPayload != null -> {
-                    val payload = _keysignPayload ?: error("keysignPayload unexpectedly null")
+                    // The UTXOSpecific proto can't carry the live ZEC branch id, so a payload
+                    // rebuilt from the initiator's QR/relay proto arrives with it null. Re-resolve
+                    // it here (same network-global value the initiator used) before computing
+                    // sighashes so this co-signer's ZIP-243 digest matches the rest of the
+                    // committee.
+                    val payload =
+                        withZcashBranchId(
+                            _keysignPayload ?: error("keysignPayload unexpectedly null")
+                        )
+                    _keysignPayload = payload
                     messagesToSign =
                         SigningHelper.getKeysignMessages(payload = payload, vault = _currentVault)
                 }
@@ -1776,6 +1787,18 @@ constructor(
         } catch (e: Exception) {
             throw KeysignMessagesException(e.message ?: "Failed to resolve messages to sign")
         }
+    }
+
+    /**
+     * Stamps the live ZIP-243 branch id onto a Zcash UTXO payload rebuilt from proto. Returns the
+     * payload unchanged for non-Zcash chains, non-UTXO specifics, or when the RPC is unreachable
+     * (UtxoHelper then falls back to the compiled-in constant).
+     */
+    private suspend fun withZcashBranchId(payload: KeysignPayload): KeysignPayload {
+        if (payload.coin.chain != Chain.Zcash) return payload
+        val utxo = payload.blockChainSpecific as? BlockChainSpecific.UTXO ?: return payload
+        val branchId = zcashApi.getConsensusBranchIdHex() ?: return payload
+        return payload.copy(blockChainSpecific = utxo.copy(zcashBranchId = branchId))
     }
 
     fun enableNavigationToHome() {

@@ -6,7 +6,18 @@ import vultisig.keysign.v1.SuiCoin
 import vultisig.keysign.v1.TransactionType
 
 sealed class BlockChainSpecific {
-    data class UTXO(val byteFee: BigInteger, val sendMaxAmount: Boolean) : BlockChainSpecific()
+    /**
+     * @param zcashBranchId live ZIP-243 consensus branch id (little-endian hex, e.g. `30f33754`)
+     *   fetched at send time for Zcash; null for every other UTXO chain and when the RPC was
+     *   unreachable, in which case signing falls back to the compiled-in constant. Transient: it is
+     *   NOT carried by the `UTXOSpecific` proto, so a co-signing device that rebuilds the payload
+     *   from proto must repopulate it (see JoinKeysignViewModel) before signing.
+     */
+    data class UTXO(
+        val byteFee: BigInteger,
+        val sendMaxAmount: Boolean,
+        val zcashBranchId: String? = null,
+    ) : BlockChainSpecific()
 
     /**
      * Marker variant for Bitcoin PSBT co-signing initiated by external dApps. The structured
@@ -97,3 +108,10 @@ sealed class BlockChainSpecific {
     data class Cardano(val byteFee: Long, val sendMaxAmount: Boolean, val ttl: ULong) :
         BlockChainSpecific()
 }
+
+/**
+ * Live ZIP-243 branch id carried on a Zcash payload's UTXO specific, or null for non-Zcash payloads
+ * and when the RPC was unreachable (signing then falls back to the compiled-in constant).
+ */
+val KeysignPayload.zcashBranchId: String?
+    get() = (blockChainSpecific as? BlockChainSpecific.UTXO)?.zcashBranchId

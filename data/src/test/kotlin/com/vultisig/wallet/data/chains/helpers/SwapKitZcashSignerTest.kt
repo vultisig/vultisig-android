@@ -138,9 +138,25 @@ class SwapKitZcashSignerTest {
             )
         val e =
             assertThrows(SwapKitZcashSignerException::class.java) {
-                signer().buildSigningInputData(psbt, "", BigInteger.valueOf(1_000))
+                signer().buildSigningInputData(psbt, "", BigInteger.valueOf(1_000), TEST_BRANCH_ID)
             }
         assertTrue(e.message!!.contains("exceeds the quoted swap amount"))
+    }
+
+    @Test
+    fun `rejects a missing branch id rather than falling back to a constant`() {
+        val psbt =
+            encodeSaplingPsbt(
+                inputs = listOf(saplingIn(amount = 100_000)),
+                outputs = listOf(SaplingOut(99_000, p2pkh("22".repeat(20)))),
+            )
+        val e =
+            assertThrows(SwapKitZcashSignerException::class.java) {
+                // No branch id supplied (RPC unavailable) — must refuse rather than sign with a
+                // stale value.
+                signer().buildSigningInputData(psbt, "", FROM_AMOUNT, zcashBranchId = null)
+            }
+        assertTrue(e.message!!.contains("branch id is unavailable"))
     }
 
     @Test
@@ -170,7 +186,7 @@ class SwapKitZcashSignerTest {
                             SaplingOut(39_000, p2pkh("11".repeat(20))),
                         ),
                 )
-            val hashes = signer().getPreSignedImageHash(psbt, "", FROM_AMOUNT)
+            val hashes = signer().getPreSignedImageHash(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
             assertEquals(1, hashes.size)
             assertEquals(64, hashes[0].length)
         } catch (e: Throwable) {
@@ -208,7 +224,7 @@ class SwapKitZcashSignerTest {
 
             val input =
                 Bitcoin.SigningInput.parseFrom(
-                    signer().buildSigningInputData(psbt, "", FROM_AMOUNT)
+                    signer().buildSigningInputData(psbt, "", FROM_AMOUNT, TEST_BRANCH_ID)
                 )
 
             assertEquals(880_000, input.lockTime)
@@ -218,11 +234,12 @@ class SwapKitZcashSignerTest {
             assertEquals(60_000L, input.plan.amount)
             assertEquals(39_000L, input.plan.change)
             assertEquals(1_000L, input.plan.fee)
-            // ZIP-243 branch id must be on the plan or WalletCore derives the wrong digest.
-            // Hardcoded on purpose (not the production constant): a golden value that fails loudly
-            // if the branch id is ever changed without a deliberate update here per network
-            // upgrade.
-            assertEquals("30f33754", Numeric.toHexStringNoPrefix(input.plan.branchId.toByteArray()))
+            // The branch id passed in must land verbatim on the plan, or WalletCore derives the
+            // wrong ZIP-243 digest.
+            assertEquals(
+                TEST_BRANCH_ID,
+                Numeric.toHexStringNoPrefix(input.plan.branchId.toByteArray()),
+            )
 
             assertEquals(1, input.utxoCount)
             val utxo = input.getUtxo(0)
@@ -366,6 +383,9 @@ class SwapKitZcashSignerTest {
         // Generous quoted swap amount — above every fixture's fee so the ceiling never trips except
         // in the dedicated rejection test (which passes its own small value).
         private val FROM_AMOUNT = BigInteger.valueOf(1_000_000)
+        // Sample little-endian ZIP-243 branch id passed into the signer in place of the (now
+        // removed) compiled-in constant; the signer must land it verbatim on the plan.
+        private const val TEST_BRANCH_ID = "30f33754"
         private const val TXID_ONE =
             "0000000000000000000000000000000000000000000000000000000000000001"
         private const val SAPLING_TX_VERSION = 0x80000004L

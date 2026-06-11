@@ -21,6 +21,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import com.vultisig.wallet.data.models.payload.carriesDappCosmosTx
+import com.vultisig.wallet.data.models.payload.zcashBranchId
 import java.math.BigInteger
 import vultisig.keysign.v1.CustomMessagePayload
 import wallet.core.jni.EthereumAbi
@@ -139,6 +140,7 @@ object SigningHelper {
                                         psbtBytes = swapPayload.data.txPayload,
                                         targetAddress = swapPayload.data.targetAddress,
                                         fromAmount = swapPayload.data.fromAmount,
+                                        zcashBranchId = payload.zcashBranchId,
                                     )
                             SwapKitSwapPayloadJson.TX_TYPE_TRON ->
                                 SwapKitTronSigner(ecdsaKey, ecdsaChainCode)
@@ -237,6 +239,8 @@ object SigningHelper {
                                 expectedToAmount = payload.toAmount,
                             )
                         } else {
+                            // UtxoHelper reads the live ZEC branch id straight off the payload's
+                            // UTXO specific (no-op for the other UTXO chains).
                             utxo.getPreSignedImageHash(payload)
                         }
                     }
@@ -391,6 +395,7 @@ object SigningHelper {
                                     targetAddress = swapPayload.data.targetAddress,
                                     fromAmount = swapPayload.data.fromAmount,
                                     signatures = signatures,
+                                    zcashBranchId = keysignPayload.zcashBranchId,
                                 )
                         SwapKitSwapPayloadJson.TX_TYPE_TRON ->
                             SwapKitTronSigner(ecdsaKey, ecdsaChainCode)

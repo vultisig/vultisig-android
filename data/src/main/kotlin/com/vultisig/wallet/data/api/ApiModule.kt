@@ -50,6 +50,8 @@ internal interface ApiModule {
 
     @Binds @Singleton fun bindDashApi(impl: DashApiImpl): DashApi
 
+    @Binds @Singleton fun bindZcashApi(impl: ZcashApiImpl): ZcashApi
+
     @Binds @Singleton fun bindCosmosApi(impl: CosmosApiFactoryImp): CosmosApiFactory
 
     @Binds @Singleton fun bindSolanaApi(impl: SolanaApiImp): SolanaApi
