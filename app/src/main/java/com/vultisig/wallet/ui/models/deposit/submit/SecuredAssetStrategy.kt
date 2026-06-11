@@ -14,20 +14,28 @@ import com.vultisig.wallet.data.models.GasFeeParams
 import com.vultisig.wallet.data.models.OPERATION_MINT
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.coinType
+import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.getPubKeyByChain
 import com.vultisig.wallet.data.models.isSecuredAssetEligible
+import com.vultisig.wallet.data.models.payload.BlockChainSpecific
+import com.vultisig.wallet.data.models.payload.UtxoInfo
+import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.repositories.VaultRepository
+import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.utils.UiText
+import com.vultisig.wallet.ui.utils.asUiText
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import wallet.core.jni.proto.Bitcoin
+import wallet.core.jni.proto.Common.SigningError
 
 /**
  * Builds a Bitcoin transaction plan (UTXO selection + fee) for a secured-asset deposit.
@@ -62,13 +70,11 @@ internal class SecuredAssetStrategy(
     private val tokenRepository: TokenRepository,
     private val blockChainSpecificRepository: BlockChainSpecificRepository,
     private val gasFeeToEstimate: suspend (GasFeeParams) -> EstimatedGasFee,
-    private val planBtcProvider: () -> Bitcoin.TransactionPlan?,
-    private val setPlanBtc: (Bitcoin.TransactionPlan?) -> Unit,
     private val getBitcoinTransactionPlan: BitcoinTransactionPlanBuilder,
-    private val selectUtxosIfNeeded:
-        (Chain, BlockChainSpecificAndUtxo) -> BlockChainSpecificAndUtxo,
-    private val validateBtcLikeAmount: (BigInteger, Chain) -> Unit,
 ) : DepositSubmitStrategy {
+
+    /** Cached Bitcoin transaction plan from the most recent build, used for UTXO selection. */
+    private var planBtc: Bitcoin.TransactionPlan? = null
 
     override suspend fun build(): DepositTransaction {
         val vaultId =
@@ -91,7 +97,7 @@ internal class SecuredAssetStrategy(
         // Invalidate any cached UTXO plan so a re-submitted deposit recomputes its Bitcoin
         // transaction plan (UTXO selection + fee) for the current amount/destination/token rather
         // than reusing a stale plan from a previous submit.
-        setPlanBtc(null)
+        planBtc = null
 
         val selectedAccount =
             selectedAccountProvider()
@@ -171,7 +177,7 @@ internal class SecuredAssetStrategy(
                 )
                 .let { specific ->
                     if (chain.standard == TokenStandard.UTXO && chain != Chain.Cardano) {
-                        planBtcProvider()
+                        planBtc
                             ?: getBitcoinTransactionPlan(
                                     vaultId,
                                     selectedToken,
@@ -180,7 +186,7 @@ internal class SecuredAssetStrategy(
                                     specific,
                                     memo,
                                 )
-                                .also { plan -> setPlanBtc(plan) }
+                                .also { plan -> planBtc = plan }
 
                         selectUtxosIfNeeded(chain, specific)
                     } else {
@@ -207,5 +213,50 @@ internal class SecuredAssetStrategy(
             thorAddress = thorAddress,
             operation = OPERATION_MINT,
         )
+    }
+
+    /**
+     * Replaces the UTXOs in [specific] with those selected by the cached Bitcoin transaction plan
+     * for UTXO chains, leaving non-UTXO chains and missing plans untouched.
+     */
+    @OptIn(kotlin.ExperimentalStdlibApi::class)
+    private fun selectUtxosIfNeeded(
+        chain: Chain,
+        specific: BlockChainSpecificAndUtxo,
+    ): BlockChainSpecificAndUtxo {
+        specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
+
+        val updatedUtxo =
+            planBtc?.utxosOrBuilderList?.map { planUtxo ->
+                UtxoInfo(
+                    hash = planUtxo.outPoint.hash.toByteArray().reversedArray().toHexString(),
+                    index = planUtxo.outPoint.index.toUInt(),
+                    amount = planUtxo.amount,
+                )
+            } ?: return specific
+
+        return specific.copy(utxos = updatedUtxo)
+    }
+
+    /**
+     * Validates that [tokenAmountInt] is above the chain dust threshold and that the cached Bitcoin
+     * transaction plan resolved successfully, throwing [InvalidTransactionDataException] otherwise.
+     */
+    private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
+        val minAmount = chain.getDustThreshold
+        if (tokenAmountInt < minAmount) {
+            val symbol = chain.coinType.symbol
+            val name = chain.raw
+            val formattedMinAmount = chain.toValue(minAmount).toString()
+            throw InvalidTransactionDataException(
+                UiText.FormattedText(
+                    R.string.send_form_minimum_send_amount_is_requires_this,
+                    listOf(formattedMinAmount, symbol, name),
+                )
+            )
+        }
+        if (planBtc?.error != SigningError.OK) {
+            throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
+        }
     }
 }

@@ -22,13 +22,8 @@ import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.EstimatedGasFee
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.models.coinType
-import com.vultisig.wallet.data.models.getDustThreshold
 import com.vultisig.wallet.data.models.isSecuredAsset
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
-import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.models.ticker
-import com.vultisig.wallet.data.models.toValue
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
 import com.vultisig.wallet.data.repositories.BalanceRepository
@@ -36,6 +31,7 @@ import com.vultisig.wallet.data.repositories.BlockChainSpecificAndUtxo
 import com.vultisig.wallet.data.repositories.BlockChainSpecificRepository
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.repositories.DepositTransactionRepository
+import com.vultisig.wallet.data.repositories.LpBondablePool
 import com.vultisig.wallet.data.repositories.MayachainBondRepository
 import com.vultisig.wallet.data.repositories.RequestResultRepository
 import com.vultisig.wallet.data.repositories.TokenRepository
@@ -51,7 +47,6 @@ import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.safeLaunch
-import com.vultisig.wallet.data.utils.symbol
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.submit.AddCacaoPoolStrategy
@@ -115,7 +110,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import wallet.core.jni.CoinType
 import wallet.core.jni.proto.Bitcoin
-import wallet.core.jni.proto.Common.SigningError
 
 internal enum class DepositOption {
     AddCacaoPool,
@@ -256,7 +250,6 @@ constructor(
 
     private var rujiMergeBalances = MutableStateFlow<List<MergeAccount>?>(null)
     private var rujiStakeBalances = MutableStateFlow<RujiStakeBalances?>(null)
-    private var planBtc: Bitcoin.TransactionPlan? = null
 
     val tokenAmountFieldState = TextFieldState()
     val fiatAmountFieldState = TextFieldState()
@@ -267,8 +260,7 @@ constructor(
     val basisPointsFieldState = TextFieldState()
     val lpUnitsFieldState = TextFieldState()
     val assetsFieldState = TextFieldState()
-    private var lpBondPoolMap: Map<String, com.vultisig.wallet.data.repositories.LpBondablePool> =
-        emptyMap()
+    private var lpBondPoolMap: Map<String, LpBondablePool> = emptyMap()
     val thorAddressFieldState = TextFieldState()
     val rewardsAmountFieldState = TextFieldState()
     val slippageFieldState = TextFieldState()
@@ -490,11 +482,7 @@ constructor(
             tokenRepository = tokenRepository,
             blockChainSpecificRepository = blockChainSpecificRepository,
             gasFeeToEstimate = gasFeeToEstimate,
-            planBtcProvider = { planBtc },
-            setPlanBtc = { planBtc = it },
             getBitcoinTransactionPlan = ::getBitcoinTransactionPlan,
-            selectUtxosIfNeeded = ::selectUtxosIfNeeded,
-            validateBtcLikeAmount = ::validateBtcLikeAmount,
         )
 
     private val withdrawSecuredAssetStrategy: DepositSubmitStrategy =
@@ -2005,43 +1993,6 @@ constructor(
         val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)
         _state.update {
             it.copy(selectedSecuredAsset = asset, balance = balance?.asUiText() ?: UiText.Empty)
-        }
-    }
-
-    @OptIn(kotlin.ExperimentalStdlibApi::class)
-    private fun selectUtxosIfNeeded(
-        chain: Chain,
-        specific: BlockChainSpecificAndUtxo,
-    ): BlockChainSpecificAndUtxo {
-        specific.blockChainSpecific as? BlockChainSpecific.UTXO ?: return specific
-
-        val updatedUtxo =
-            planBtc?.utxosOrBuilderList?.map { planUtxo ->
-                UtxoInfo(
-                    hash = planUtxo.outPoint.hash.toByteArray().reversedArray().toHexString(),
-                    index = planUtxo.outPoint.index.toUInt(),
-                    amount = planUtxo.amount,
-                )
-            } ?: return specific
-
-        return specific.copy(utxos = updatedUtxo)
-    }
-
-    private fun validateBtcLikeAmount(tokenAmountInt: BigInteger, chain: Chain) {
-        val minAmount = chain.getDustThreshold
-        if (tokenAmountInt < minAmount) {
-            val symbol = chain.coinType.symbol
-            val name = chain.raw
-            val formattedMinAmount = chain.toValue(minAmount).toString()
-            throw InvalidTransactionDataException(
-                UiText.FormattedText(
-                    R.string.send_form_minimum_send_amount_is_requires_this,
-                    listOf(formattedMinAmount, symbol, name),
-                )
-            )
-        }
-        if (planBtc?.error != SigningError.OK) {
-            throw InvalidTransactionDataException(R.string.insufficient_utxos_error.asUiText())
         }
     }
 
