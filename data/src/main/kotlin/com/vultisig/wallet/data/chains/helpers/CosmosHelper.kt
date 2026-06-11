@@ -147,15 +147,14 @@ class CosmosHelper(
         }
         return when (atomData.transactionType) {
             TransactionType.TRANSACTION_TYPE_IBC_TRANSFER -> {
-                val memoParts =
-                    keysignPayload.memo?.split(":")
-                        ?: throw Exception("To send IBC transaction, memo should be specified")
-                val sourceChannel = memoParts.getOrNull(1) ?: ""
-
-                val memo = if (memoParts.size == 4) memoParts[3] else ""
-
-                val timeouts = atomData.ibcDenomTraces?.latestBlock?.split("_") ?: emptyList()
-                val timeout = timeouts.lastOrNull()?.toLongOrNull() ?: 0L
+                val ibc =
+                    parseIbcTransferParams(
+                        memo = keysignPayload.memo,
+                        latestBlock = atomData.ibcDenomTraces?.latestBlock,
+                    )
+                val sourceChannel = ibc.sourceChannel
+                val memo = ibc.forwardMemo
+                val timeout = ibc.timeoutTimestamp
 
                 val transferMessage =
                     Cosmos.Message.Transfer.newBuilder()
@@ -428,4 +427,47 @@ class CosmosHelper(
 
         return inputBuilder.build().toByteArray()
     }
+}
+
+/**
+ * Validated parameters parsed from an IBC-transfer keysign memo.
+ *
+ * The memo grammar (see [com.vultisig.wallet.data.models.DepositMemo.TransferIbc]) is
+ * `dstChain:sourceChannel:dstAddress[:forwardMemo]`, and the timeout timestamp is the trailing
+ * `_`-separated segment of `latestBlock` (`"<block>_<timeout>"`).
+ */
+internal data class IbcTransferParams(
+    val sourceChannel: String,
+    val forwardMemo: String,
+    val timeoutTimestamp: Long,
+)
+
+/**
+ * Parses and validates an IBC-transfer memo/timeout, failing loudly instead of signing a malformed
+ * or never-expiring packet (issue #4849). Previously a missing source channel silently became `""`
+ * (a packet on no channel) and an unparseable timeout silently became `0L` (no effective timeout —
+ * an IBC packet with both timeout height and timestamp zero is invalid and hangs until manual
+ * refund).
+ */
+internal fun parseIbcTransferParams(memo: String?, latestBlock: String?): IbcTransferParams {
+    val memoParts = memo?.split(":") ?: error("To send IBC transaction, memo should be specified")
+
+    val sourceChannel = memoParts.getOrNull(1).orEmpty()
+    require(sourceChannel.isNotBlank()) {
+        "IBC transfer requires a source channel in the memo (dstChain:sourceChannel:dstAddress)"
+    }
+
+    // Forward memo is everything past the dstAddress; rejoin so a memo containing ':' survives.
+    val forwardMemo = if (memoParts.size > 3) memoParts.drop(3).joinToString(":") else ""
+
+    val timeoutTimestamp = latestBlock?.substringAfterLast('_')?.toLongOrNull() ?: 0L
+    require(timeoutTimestamp > 0L) {
+        "IBC transfer requires a non-zero timeout timestamp; latestBlock was missing or unparseable"
+    }
+
+    return IbcTransferParams(
+        sourceChannel = sourceChannel,
+        forwardMemo = forwardMemo,
+        timeoutTimestamp = timeoutTimestamp,
+    )
 }

@@ -213,15 +213,19 @@ internal class EthereumFeeServiceTest {
     // ---------- EIP-1559 fee assembly ----------
 
     @Test
-    fun `maxFeePerGas equals baseFee increased by 20 percent plus priority fee`() = runTest {
+    fun `non-swap maxFeePerGas is baseFee times 1_5 plus priority fee`() = runTest {
+        // The committed base is bumped 25% (networkPrice = 125), and calculateMaxFeePerGas
+        // adds a further 20%, so the broadcast ceiling is baseFee × 1.5 + priorityFee. This
+        // gives ~3 blocks of EIP-1559 base-fee headroom across the MPC review + sign window
+        // instead of the ~1.5 blocks a flat 20% margin allowed.
         coEvery { evmApi.getBaseFee() } returns gwei(100)
         stubFeeHistory(listOf(gwei(5)))
 
         val fee = service.calculateDefaultFees(transfer(Chain.Ethereum)) as Eip1559
 
-        assertEquals(gwei(100), fee.networkPrice)
+        assertEquals(gwei(125), fee.networkPrice) // 100 * 1.25
         assertEquals(gwei(5), fee.maxPriorityFeePerGas)
-        assertEquals(gwei(125), fee.maxFeePerGas) // 100 * 1.2 + 5
+        assertEquals(gwei(155), fee.maxFeePerGas) // 100 * 1.25 * 1.2 + 5 = 150 + 5
     }
 
     @Test

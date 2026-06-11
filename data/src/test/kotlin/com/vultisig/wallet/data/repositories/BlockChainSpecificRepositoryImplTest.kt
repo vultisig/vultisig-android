@@ -139,8 +139,8 @@ internal class BlockChainSpecificRepositoryImplTest {
                     isThorchainRouterDeposit = true,
                 )
 
-        // eth_estimateGas reverts without prior router approval, so we hardcode 200k —
-        // higher than the 150k DEFAULT_TOKEN_TRANSFER_LIMIT used for bare ERC-20 sends.
+        // eth_estimateGas reverts without prior router approval, so we hardcode 200k and use
+        // it verbatim — the bare ERC-20 default floor (210k) must not bump it up via max().
         assertEthereumSpecific(
             result = result,
             gasLimit = BigInteger("200000"),
@@ -180,10 +180,12 @@ internal class BlockChainSpecificRepositoryImplTest {
                     memo = "+:something-the-user-typed",
                 )
 
-        // ERC-20 path: max(150k DEFAULT_TOKEN_TRANSFER_LIMIT, 50k*1.5=75k) = 150k.
+        // ERC-20 path: max(210k DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN, 50k*1.5=75k) = 210k.
+        // The floor mirrors EthereumFeeService so the signed gasLimit equals the displayed
+        // fee bond (issue #4857).
         assertEthereumSpecific(
             result = result,
-            gasLimit = BigInteger("150000"),
+            gasLimit = BigInteger("210000"),
             maxFeePerGas = BigInteger("111"),
             priorityFee = BigInteger("22"),
         )
