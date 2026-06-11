@@ -19,7 +19,7 @@ import com.vultisig.wallet.data.blockchain.FeeServiceComposite
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
@@ -171,7 +171,9 @@ constructor(
                             isSwap -> DEFAULT_SWAP_LIMIT
                             chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
                             token.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
-                            else -> DEFAULT_TOKEN_TRANSFER_LIMIT
+                            // ERC-20 floor mirrors EthereumFeeService.getDefaultLimit so the
+                            // signed gasLimit equals the displayed fee bond (issue #4857).
+                            else -> DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
                         }
 
                     // ERC-20 router deposits need depositWithExpiry headroom, but
@@ -212,7 +214,11 @@ constructor(
 
                     val nonce = evmApi.getNonce(address)
 
-                    val gasLimitFee = gasLimit ?: max(defaultGasLimit, estimateGasLimit)
+                    // Router deposits use their hardcoded headroom verbatim — the raised ERC-20
+                    // default floor must not bump it up via max(). Everything else floors the
+                    // on-chain estimate at the chain default.
+                    val gasLimitFee =
+                        gasLimit ?: routerDepositGasLimit ?: max(defaultGasLimit, estimateGasLimit)
                     val fees =
                         if (isSwap) {
                             feeServiceComposite.calculateDefaultFees(

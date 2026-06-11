@@ -244,7 +244,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
             transaction is Swap -> DEFAULT_SWAP_LIMIT
             chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
             transaction is Transfer && transaction.coin.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
-            transaction is Transfer -> DEFAULT_TOKEN_TRANSFER_LIMIT.increaseByPercent(40)
+            transaction is Transfer -> DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN
             else -> error("Transaction type not supported: ${transaction::class.simpleName}")
         }
     }
@@ -274,6 +274,12 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         val DEFAULT_SWAP_LIMIT = "600000".toBigInteger()
         val DEFAULT_COIN_TRANSFER_LIMIT = "23000".toBigInteger()
         val DEFAULT_TOKEN_TRANSFER_LIMIT = "150000".toBigInteger()
+
+        // ERC-20 transfer gas-limit floor: the 150k base plus a 40% safety margin. Single
+        // source of truth shared with BlockChainSpecificRepository so the signed gasLimit and
+        // the displayed fee bond use the same floor and cannot drift (issue #4857).
+        val DEFAULT_TOKEN_TRANSFER_LIMIT_WITH_MARGIN =
+            DEFAULT_TOKEN_TRANSFER_LIMIT.increaseByPercent(40)
 
         val DEFAULT_ARBITRUM_TRANSFER = "160000".toBigInteger()
         val DEFAULT_MANTLE_SWAP_LIMIT = "3000000000".toBigInteger()
