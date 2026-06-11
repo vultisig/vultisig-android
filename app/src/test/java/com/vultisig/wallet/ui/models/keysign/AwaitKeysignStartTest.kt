@@ -60,4 +60,30 @@ internal class AwaitKeysignStartTest {
         // The wait is bounded by the timeout rather than spinning forever.
         assertEquals(timeout.inWholeMilliseconds, currentTime)
     }
+
+    @Test
+    fun `surfaces a poll failure immediately instead of masking it with the timeout`() = runTest {
+        var calls = 0
+
+        val outcome =
+            awaitKeysignStart(timeout = timeout, pollInterval = pollInterval) {
+                calls++
+                throw KeysignCheckException("relay unreachable")
+            }
+
+        assertEquals(KeysignStartOutcome.FailedToCheck("relay unreachable"), outcome)
+        assertEquals(1, calls) // the loop ends on the first real failure
+        assertEquals(0L, currentTime) // no waiting for the timeout deadline
+    }
+
+    @Test
+    fun `surfaces a message-preparation failure as FailedToPrepare`() = runTest {
+        val outcome =
+            awaitKeysignStart(timeout = timeout, pollInterval = pollInterval) {
+                throw KeysignMessagesException("cannot prepare messages")
+            }
+
+        assertEquals(KeysignStartOutcome.FailedToPrepare("cannot prepare messages"), outcome)
+        assertEquals(0L, currentTime)
+    }
 }
