@@ -456,6 +456,7 @@
     <string name="edit_address_title">Edit Address</string>
     <string name="join_keysign_failed_connect_to_server">Failed to connect to server</string>
     <string name="join_keysign_relay_unavailable">Relay server unavailable, please try again</string>
+    <string name="join_keysign_qbtc_claim_missing_account">This vault is missing the Bitcoin or QBTC account required to co-sign the claim</string>
     <string name="network_connection_lost">Network connection lost. Please check your internet connection</string>
     <string name="send_form_polka_reaping_warning">Ensure you leave enough funds to cover the fees. If an account balance falls below 1 DOT (Existential Deposit), the account will be deactivated (reaped) and any remaining funds will be lost. You can reactivate the address with a new deposit larger than the existential deposit at any time. However, this will not recover the lost funds.</string>
 
@@ -770,6 +771,23 @@
     <string name="faq_settings_a9">It is built on MPC technology, which eliminates the need for seed phrases and supports multiple blockchains, making Vultisig flexible and chain-agnostic.</string>
     <string name="vault_settings_advanced_title">Advanced</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit aggregator</string>
+    <string name="settings_advanced_custom_rpc_toggle">Custom RPC</string>
+    <string name="custom_rpc_title">Custom RPC</string>
+    <string name="custom_rpc_list_subtitle">Point a chain at your own node. Leave default to use Vultisig\'s endpoints.</string>
+    <string name="custom_rpc_chip_custom">Custom</string>
+    <string name="custom_rpc_chip_default">Default</string>
+    <string name="custom_rpc_url_label">RPC URL</string>
+    <string name="custom_rpc_url_hint">https://your-node.example</string>
+    <string name="custom_rpc_invalid_url">Enter a valid http(s) URL</string>
+    <string name="custom_rpc_test_button">Test</string>
+    <string name="custom_rpc_save_button">Save</string>
+    <string name="custom_rpc_reset_button">Reset to default</string>
+    <string name="custom_rpc_testing">Testing…</string>
+    <string name="custom_rpc_reachable">Reachable · %1$d ms</string>
+    <string name="custom_rpc_reachable_unverified">Reachable · %1$d ms — network identity not verified</string>
+    <string name="custom_rpc_wrong_chain">This endpoint serves a different chain</string>
+    <string name="custom_rpc_invalid_response">Unexpected response from this endpoint</string>
+    <string name="custom_rpc_unreachable">Endpoint unreachable</string>
     <string name="swapkit_error_api_key_missing">SwapKit API key not configured</string>
     <string name="swapkit_error_api_key_invalid">SwapKit API key is invalid</string>
     <string name="swapkit_error_insufficient_balance">Insufficient balance for this route</string>
@@ -1344,7 +1362,6 @@
     <string name="cosmos_staking_continue">Continue</string>
     <string name="cosmos_staking_amount">Amount</string>
     <string name="cosmos_staking_loading_validators">Loading validators…</string>
-    <string name="cosmos_staking_loading_positions">Loading positions…</string>
     <string name="cosmos_staking_loading_rewards">Loading rewards…</string>
     <string name="cosmos_staking_no_rewards">No claimable rewards on this chain</string>
     <string name="cosmos_staking_empty_positions">You have no active %1$s positions yet</string>

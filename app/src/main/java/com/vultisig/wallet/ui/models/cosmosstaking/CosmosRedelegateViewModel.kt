@@ -135,8 +135,20 @@ constructor(
 
     val amountFieldState: TextFieldState = TextFieldState()
 
+    // Plain-decimal staked amount carried from the tapped position so the form shows the real value
+    // on the first frame instead of `0` until the LCD re-fetch lands (#4815). ZERO on a deep-link
+    // entry that carries no amount, where we fall back to the network value only.
+    private val prefilledStakedBalance: BigDecimal =
+        route.stakedAmount?.toBigDecimalOrNull()?.takeIf { it > BigDecimal.ZERO } ?: BigDecimal.ZERO
+
     private val _state =
-        MutableStateFlow(CosmosRedelegateUiState(srcValidatorAddress = route.validatorSrcAddress))
+        MutableStateFlow(
+            CosmosRedelegateUiState(
+                ticker = route.ticker.orEmpty(),
+                srcValidatorAddress = route.validatorSrcAddress,
+                stakedBalance = prefilledStakedBalance,
+            )
+        )
     val state: StateFlow<CosmosRedelegateUiState> = _state.asStateFlow()
 
     private var coin: Coin? = null
@@ -154,6 +166,13 @@ constructor(
         // only assigned after that coroutine suspends on the vault read, so a parallel cooldown
         // fetch would observe `coin == null`, bail at its guard, and silently skip the 21-day
         // redelegation gate on first open. It is chained from loadCoinAndStakedBalance() instead.
+        // Prefill the amount field so the user sees their stake immediately;
+        // loadCoinAndStakedBalance overwrites it once the LCD read lands (#4815).
+        if (prefilledStakedBalance > BigDecimal.ZERO) {
+            amountFieldState.edit {
+                replace(0, length, prefilledStakedBalance.stripTrailingZeros().toPlainString())
+            }
+        }
         loadCoinAndStakedBalance()
         loadValidators()
     }
@@ -390,9 +409,14 @@ constructor(
                     it.validatorAddress == route.validatorSrcAddress &&
                         it.balance.denom == entry.bondDenom
                 }
-            val stakedBalance =
+            val fetchedStakedBalance =
                 matching?.balance?.amount?.toBigDecimalOrNull()?.movePointLeft(nativeCoin.decimal)
                     ?: BigDecimal.ZERO
+            // Keep the prefilled hint when the LCD yields zero (no match / transient blip) rather
+            // than wiping the field back to 0 (#4815).
+            val stakedBalance =
+                if (fetchedStakedBalance > BigDecimal.ZERO) fetchedStakedBalance
+                else prefilledStakedBalance
 
             // Default amount = 100% of staked, matching iOS pattern (slider type defaults to max).
             amountFieldState.edit {
@@ -531,4 +555,6 @@ private fun SavedStateHandle.toRoute(): Route.CosmosStakingRedelegate =
         chainId = checkNotNull(get<String>("chainId")) { "chainId is required" },
         validatorSrcAddress =
             checkNotNull(get<String>("validatorSrcAddress")) { "validatorSrcAddress is required" },
+        stakedAmount = get<String>("stakedAmount"),
+        ticker = get<String>("ticker"),
     )

@@ -38,6 +38,16 @@ data class OneInchSwapTxJson(
     @SerialName("gasPrice") val gasPrice: String,
     @SerialName("swapFee") val swapFee: String = "",
     @SerialName("swapFeeTokenContract") val swapFeeTokenContract: String = "",
+    // Coin context for `swapFee`, mirroring commondata `OneInchTransaction` fields 8-10
+    // (swap_fee_chain / swap_fee_token_id / swap_fee_decimals). The amount alone is ambiguous:
+    // different aggregators denominate the affiliate fee in different coins (src-native vs the
+    // destination token). A consumer holding only the KeysignPayload — notably the co-signer in a
+    // Secure Vault join flow, which has no live quote — needs the coin to render a correct fiat
+    // value. `swapFeeChain` empty / `swapFeeDecimals` null means a sender that predates the proto
+    // extension; consumers must fall back rather than guess. `swapFeeTokenContract` (above) doubles
+    // as `swap_fee_token_id`; empty denotes the chain's native fee coin.
+    @SerialName("swapFeeChain") val swapFeeChain: String = "",
+    @SerialName("swapFeeDecimals") val swapFeeDecimals: Int? = null,
 )
 
 @Serializable

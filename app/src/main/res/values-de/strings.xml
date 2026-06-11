@@ -356,6 +356,7 @@
     <string name="edit_address_title">Adresse bearbeiten</string>
     <string name="join_keysign_failed_connect_to_server">Verbindung zum Server fehlgeschlagen</string>
     <string name="join_keysign_relay_unavailable">Relay-Server nicht verfügbar, bitte versuchen Sie es erneut</string>
+    <string name="join_keysign_qbtc_claim_missing_account">Diesem Tresor fehlt das zum Mitsignieren des Claims erforderliche Bitcoin- oder QBTC-Konto</string>
     <string name="network_connection_lost">Netzwerkverbindung verloren. Bitte überprüfen Sie Ihre Internetverbindung</string>
     <string name="send_form_polka_reaping_warning">Stellen Sie sicher, dass Sie genügend Geld übrig lassen, um die Gebühren zu decken. Wenn ein Kontostand unter 1 DOT (Existential Deposit) fällt, wird das Konto deaktiviert (geerntet) und alle verbleibenden Gelder gehen verloren. Sie können die Adresse jederzeit mit einer neuen Einzahlung reaktivieren, die größer als die Existenzeinzahlung ist. Dadurch werden die verlorenen Gelder jedoch nicht wiederhergestellt.</string>
     <!-- Push Notifications -->
@@ -575,6 +576,23 @@
     <string name="faq_settings_a9">Die Plattform basiert auf der MPC-Technologie, die Seed-Phrasen überflüssig macht und mehrere Blockchains unterstützt. Dadurch ist Vultisig flexibel und Blockchain-unabhängig.</string>
     <string name="vault_settings_advanced_title">Fortschrittlich</string>
     <string name="settings_advanced_swapkit_toggle">SwapKit Aggregator</string>
+    <string name="settings_advanced_custom_rpc_toggle">Benutzerdefinierter RPC</string>
+    <string name="custom_rpc_title">Benutzerdefinierter RPC</string>
+    <string name="custom_rpc_list_subtitle">Richten Sie eine Blockchain auf Ihren eigenen Node aus. Standard beibehalten, um die Endpunkte von Vultisig zu verwenden.</string>
+    <string name="custom_rpc_chip_custom">Benutzerdefiniert</string>
+    <string name="custom_rpc_chip_default">Standard</string>
+    <string name="custom_rpc_url_label">RPC-URL</string>
+    <string name="custom_rpc_url_hint">https://ihr-node.example</string>
+    <string name="custom_rpc_invalid_url">Geben Sie eine gültige http(s)-URL ein</string>
+    <string name="custom_rpc_test_button">Testen</string>
+    <string name="custom_rpc_save_button">Speichern</string>
+    <string name="custom_rpc_reset_button">Auf Standard zurücksetzen</string>
+    <string name="custom_rpc_testing">Wird getestet…</string>
+    <string name="custom_rpc_reachable">Erreichbar · %1$d ms</string>
+    <string name="custom_rpc_reachable_unverified">Erreichbar · %1$d ms — Netzwerkidentität nicht verifiziert</string>
+    <string name="custom_rpc_wrong_chain">Dieser Endpunkt bedient eine andere Blockchain</string>
+    <string name="custom_rpc_invalid_response">Unerwartete Antwort von diesem Endpunkt</string>
+    <string name="custom_rpc_unreachable">Endpunkt nicht erreichbar</string>
     <string name="swapkit_error_api_key_missing">SwapKit-API-Schlüssel nicht konfiguriert</string>
     <string name="swapkit_error_api_key_invalid">SwapKit-API-Schlüssel ist ungültig</string>
     <string name="swapkit_error_insufficient_balance">Unzureichendes Guthaben für diese Route</string>
@@ -1293,7 +1311,6 @@
     <string name="cosmos_staking_continue">Weiter</string>
     <string name="cosmos_staking_amount">Betrag</string>
     <string name="cosmos_staking_loading_validators">Validatoren werden geladen…</string>
-    <string name="cosmos_staking_loading_positions">Positionen werden geladen…</string>
     <string name="cosmos_staking_loading_rewards">Belohnungen werden geladen…</string>
     <string name="cosmos_staking_no_rewards">Keine einforderbaren Belohnungen auf dieser Chain</string>
     <string name="cosmos_staking_empty_positions">Du hast noch keine aktiven %1$s-Positionen</string>

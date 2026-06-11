@@ -96,6 +96,7 @@ import com.vultisig.wallet.ui.models.toNetworkUiModel
 import com.vultisig.wallet.ui.screens.TransactionDoneView
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingPositionsContent
 import com.vultisig.wallet.ui.screens.cosmosstaking.CosmosStakingVerifyContent
+import com.vultisig.wallet.ui.screens.cosmosstaking.StakingPositionSkeleton
 import com.vultisig.wallet.ui.screens.deposit.BondFormContent
 import com.vultisig.wallet.ui.screens.keygen.FastVaultVerificationScreen
 import com.vultisig.wallet.ui.screens.keygen.ImportSeedphraseContent
@@ -109,9 +110,9 @@ import com.vultisig.wallet.ui.screens.send.VerifySendScreen
 import com.vultisig.wallet.ui.screens.settings.DiscountTiersScreenPreview
 import com.vultisig.wallet.ui.screens.settings.TierType
 import com.vultisig.wallet.ui.screens.settings.bottomsheets.sharelink.TierDiscountBottomSheetContent
-import com.vultisig.wallet.ui.screens.swap.SwapFormQuoteLoadingPreview
 import com.vultisig.wallet.ui.screens.swap.SwapScreen
 import com.vultisig.wallet.ui.screens.swap.VerifySwapScreen
+import com.vultisig.wallet.ui.screens.swap.preview.SwapFormQuoteLoadingPreview
 import com.vultisig.wallet.ui.screens.transaction.SendTxOverviewScreen
 import com.vultisig.wallet.ui.screens.transaction.TransactionHistoryEmptyState
 import com.vultisig.wallet.ui.screens.transaction.UiTransactionInfo
@@ -223,6 +224,11 @@ class PreviewActivity : ComponentActivity() {
                     "cosmos_staking_positions_empty" -> CosmosStakingPositionsEmptyPreview()
                     "cosmos_staking_positions_delegation" ->
                         CosmosStakingPositionsWithDelegationPreview()
+                    "cosmos_staking_positions_loaded" ->
+                        CosmosStakingPositionsContentLoadedPreview()
+                    "cosmos_staking_positions_loading" ->
+                        CosmosStakingPositionsContentLoadingPreview()
+                    "cosmos_staking_position_skeleton" -> StakingPositionSkeletonPreview()
                     "sign_message_before" -> VerifySignMessageCtaPreview(newButtons = false)
                     "sign_message_after" -> VerifySignMessageCtaPreview(newButtons = true)
                     else -> SwapConfirmPreview()
@@ -1981,12 +1987,124 @@ private fun CosmosStakingPositionsPreviewHost(state: CosmosStakingPositionsUiSta
         isRefreshing = false,
         onRefresh = {},
         onManagePositions = {},
-        onClaimAll = {},
-        onStakeMore = {},
+        onClaim = {},
+        onDelegateToNewValidator = {},
         onUnstake = {},
         onMove = {},
+        onStakeMore = {},
         onPositionSelectionChange = { _, _ -> },
         onPositionSelectionDone = {},
-        onDismissPositionSelection = {},
+        onDismissDialog = {},
     )
+}
+
+private fun cosmosStakingPreviewPosition(
+    address: String,
+    moniker: String,
+    staked: String,
+    fiat: String,
+    reward: String,
+    status: CosmosStakePositionRow.ValidatorStatus,
+    apy: BigDecimal? = BigDecimal("0.121"),
+) =
+    CosmosStakePositionRow(
+        validatorAddress = address,
+        validatorMoniker = moniker,
+        validatorIdentity = null,
+        stakedAmount = BigDecimal(staked),
+        stakedFiatDisplay = fiat,
+        pendingReward = BigDecimal(reward),
+        apyPercent = apy,
+        validatorAvatarUrl = null,
+        validatorStatus = status,
+        pendingUnbondingUnlockDate = null,
+        pendingUnbondingEntryCount = 0,
+    )
+
+private fun cosmosStakingLoadedState() =
+    CosmosStakingPositionsUiState(
+        ticker = "LUNC",
+        coinLogo = "",
+        positions =
+            listOf(
+                cosmosStakingPreviewPosition(
+                    address = "terravaloper1allnodes78wk0n3d3kjm0lue0ramln8m8r2x7yg",
+                    moniker = "Allnodes",
+                    staked = "1000",
+                    fiat = "$58.00",
+                    reward = "0.512345",
+                    status = CosmosStakePositionRow.ValidatorStatus.Active,
+                ),
+                cosmosStakingPreviewPosition(
+                    address = "terravaloper1churned9wk0n3d3kjm0lue0ramln8m8r2zzzz",
+                    moniker = "Churned Val",
+                    staked = "234.5",
+                    fiat = "$13.60",
+                    reward = "0.0",
+                    status = CosmosStakePositionRow.ValidatorStatus.ChurnedOut,
+                    apy = null,
+                ),
+            ),
+        hasClaimableRewards = true,
+        totalStaked = BigDecimal("1234.5"),
+        totalStakedFiat = "$71.60",
+        totalAmountPrice = "$71.60",
+        selectedPositions = listOf("LUNC"),
+    )
+
+@Composable
+private fun CosmosStakingPositionsContentLoadedPreview() {
+    CosmosStakingPositionsContent(
+        state = cosmosStakingLoadedState(),
+        chainId = "TerraClassic",
+        isRefreshing = false,
+        onRefresh = {},
+        onManagePositions = {},
+        onClaim = {},
+        onDelegateToNewValidator = {},
+        onUnstake = {},
+        onMove = {},
+        onStakeMore = {},
+        onPositionSelectionChange = { _, _ -> },
+        onPositionSelectionDone = {},
+        onDismissDialog = {},
+    )
+}
+
+@Composable
+private fun CosmosStakingPositionsContentLoadingPreview() {
+    CosmosStakingPositionsContent(
+        state =
+            CosmosStakingPositionsUiState(
+                ticker = "LUNC",
+                coinLogo = "",
+                positions = emptyList(),
+                isLoading = true,
+                selectedPositions = listOf("LUNC"),
+            ),
+        chainId = "TerraClassic",
+        isRefreshing = false,
+        onRefresh = {},
+        onManagePositions = {},
+        onClaim = {},
+        onDelegateToNewValidator = {},
+        onUnstake = {},
+        onMove = {},
+        onStakeMore = {},
+        onPositionSelectionChange = { _, _ -> },
+        onPositionSelectionDone = {},
+        onDismissDialog = {},
+    )
+}
+
+@Composable
+private fun StakingPositionSkeletonPreview() {
+    Column(
+        modifier =
+            Modifier.background(Theme.v2.colors.backgrounds.primary).padding(16.dp).fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        StakingPositionSkeleton()
+        StakingPositionSkeleton()
+    }
 }

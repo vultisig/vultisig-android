@@ -77,6 +77,11 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                                                             value = it.value,
                                                             gasPrice = it.gasPrice,
                                                             swapFee = it.swapFee,
+                                                            swapFeeChain =
+                                                                it.swapFeeChain.orEmpty(),
+                                                            swapFeeTokenContract =
+                                                                it.swapFeeTokenId.orEmpty(),
+                                                            swapFeeDecimals = it.swapFeeDecimals,
                                                         )
                                                     },
                                             )

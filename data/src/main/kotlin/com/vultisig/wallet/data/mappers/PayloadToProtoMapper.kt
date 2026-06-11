@@ -224,6 +224,10 @@ internal class PayloadToProtoMapperImpl @Inject constructor() : PayloadToProtoMa
                                                 gasPrice = it.gasPrice,
                                                 gas = it.gas,
                                                 swapFee = it.swapFee,
+                                                swapFeeChain = it.swapFeeChain.ifEmpty { null },
+                                                swapFeeTokenId =
+                                                    it.swapFeeTokenContract.ifEmpty { null },
+                                                swapFeeDecimals = it.swapFeeDecimals,
                                             )
                                         },
                                 )

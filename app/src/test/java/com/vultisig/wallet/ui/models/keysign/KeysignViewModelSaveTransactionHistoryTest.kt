@@ -97,12 +97,11 @@ internal class KeysignViewModelSaveTransactionHistoryTest {
             pullTssMessages = mockk(relaxed = true),
             addressBookRepository = mockk(relaxed = true),
             txStatusConfigurationProvider = mockk(relaxed = true),
-            transactionStatusServiceManager = mockk(relaxed = true),
+            txStatusPoller = mockk(relaxed = true),
             vaultRepository = mockk(relaxed = true),
             transactionHistoryRepository = transactionHistoryRepository,
             balanceRepository = mockk(relaxed = true),
             gasFeeToEstimatedFee = mockk(relaxed = true),
-            swapKitTrackingService = mockk(relaxed = true),
             awaitApprovalConfirmation = mockk(relaxed = true),
         )
 

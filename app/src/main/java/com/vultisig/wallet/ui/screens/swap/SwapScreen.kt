@@ -1,136 +1,66 @@
 package com.vultisig.wallet.ui.screens.swap
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.PointerInputChange
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.boundsInParent
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.models.Account
-import com.vultisig.wallet.data.models.Address
-import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Coin
-import com.vultisig.wallet.data.models.FiatValue
-import com.vultisig.wallet.data.models.SwapQuote.Companion.expiredAfter
-import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.models.logo
-import com.vultisig.wallet.data.utils.timerFlow
-import com.vultisig.wallet.ui.components.TokenAndChainLogo
-import com.vultisig.wallet.ui.components.UiIcon
-import com.vultisig.wallet.ui.components.UiSpacer
 import com.vultisig.wallet.ui.components.buttons.VsButton
 import com.vultisig.wallet.ui.components.buttons.VsButtonState
 import com.vultisig.wallet.ui.components.buttons.VsButtonVariant
 import com.vultisig.wallet.ui.components.inputs.VsBasicTextField
-import com.vultisig.wallet.ui.components.library.UiPlaceholderLoader
-import com.vultisig.wallet.ui.components.library.form.FormDetails2
 import com.vultisig.wallet.ui.components.rememberKeyboardVisibilityAsState
-import com.vultisig.wallet.ui.components.selectors.ChainSelector
-import com.vultisig.wallet.ui.components.util.CutoutPosition
-import com.vultisig.wallet.ui.components.util.RoundedWithCutoutShape
 import com.vultisig.wallet.ui.components.v2.fastselection.contentWithFastSelection
 import com.vultisig.wallet.ui.components.v2.scaffold.V2Scaffold
 import com.vultisig.wallet.ui.components.v2.utils.toPx
-import com.vultisig.wallet.ui.models.send.SendSrc
-import com.vultisig.wallet.ui.models.send.TokenBalanceUiModel
-import com.vultisig.wallet.ui.models.swap.DiscountInfo
-import com.vultisig.wallet.ui.models.swap.FeeBreakdown
-import com.vultisig.wallet.ui.models.swap.QuoteDisplay
 import com.vultisig.wallet.ui.models.swap.SwapFormUiModel
 import com.vultisig.wallet.ui.models.swap.SwapFormViewModel
 import com.vultisig.wallet.ui.navigation.Route
-import com.vultisig.wallet.ui.screens.settings.TierType
+import com.vultisig.wallet.ui.screens.swap.components.DstTokenInput
 import com.vultisig.wallet.ui.screens.swap.components.HintBox
+import com.vultisig.wallet.ui.screens.swap.components.PercentagePicker
+import com.vultisig.wallet.ui.screens.swap.components.QuoteTimer
+import com.vultisig.wallet.ui.screens.swap.components.SrcTokenInput
+import com.vultisig.wallet.ui.screens.swap.components.SwapFeeBreakdown
+import com.vultisig.wallet.ui.screens.swap.components.SwapTokenFlipButton
 import com.vultisig.wallet.ui.theme.Theme
-import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.asString
-import java.math.BigDecimal
-import java.math.BigInteger
-import java.util.Locale
-import kotlin.time.Duration
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 
 internal fun NavGraphBuilder.swapScreen(navController: NavHostController) {
     contentWithFastSelection<Route.Swap.SwapMain, Route.Swap>(navController = navController) {
@@ -201,15 +131,6 @@ internal fun SwapScreen(
 
     val isShowingKeyboard by rememberKeyboardVisibilityAsState()
 
-    var isFeeDetailsExpanded by remember { mutableStateOf(false) }
-
-    val rotationAngle by
-        animateFloatAsState(
-            targetValue = if (isFeeDetailsExpanded) 180f else 0f,
-            animationSpec = tween(durationMillis = 200),
-            label = "caretRotation",
-        )
-
     V2Scaffold(
         title = stringResource(R.string.chain_account_view_swap),
         onBackClick = onBackClick,
@@ -236,41 +157,15 @@ internal fun SwapScreen(
                     Box {
                         Column(verticalArrangement = Arrangement.spacedBy(space)) {
                             Box {
-                                val rotation = remember { Animatable(0f) }
-
-                                // Trigger spin when this is incremented
-                                var spinTrigger by remember { mutableIntStateOf(0) }
-
-                                // Launch the animation every time trigger changes
-                                LaunchedEffect(spinTrigger) {
-                                    rotation.snapTo(0f)
-                                    rotation.animateTo(
-                                        targetValue = 180f,
-                                        animationSpec =
-                                            tween(
-                                                durationMillis = 600,
-                                                easing = FastOutSlowInEasing,
-                                            ),
-                                    )
-                                }
-
-                                TokenInput(
+                                SrcTokenInput(
                                     isLoading = state.isLoading,
                                     title = stringResource(R.string.swap_form_from_title),
                                     selectedToken = state.selectedSrcToken,
                                     fiatValue = state.srcFiatValue,
+                                    space = space,
                                     onSelectNetworkClick = onSelectSrcNetworkClick,
                                     onSelectTokenClick = onSelectSrcToken,
-                                    chainTestTag = "SwapFormScreen.fromChain",
-                                    tokenTestTag = "SwapFormScreen.fromToken",
-                                    shape =
-                                        RoundedWithCutoutShape(
-                                            cutoutPosition = CutoutPosition.Bottom,
-                                            cutoutOffsetY = -space / 2,
-                                            cutoutRadius = 28.dp,
-                                            onCircleBoundsChanged = { topCenter = it },
-                                        ),
-                                    focused = true,
+                                    onCircleBoundsChanged = { topCenter = it },
                                     onDrag = onDrag,
                                     onDragEnd = onDragEnd,
                                     onDragCancel = onDragCancel,
@@ -298,67 +193,15 @@ internal fun SwapScreen(
                                         )
                                     },
                                 )
-                                Box(
-                                    modifier =
-                                        Modifier.graphicsLayer {
-                                                this.translationY = -size.height / 2 + topCenter.y
-                                                this.translationX =
-                                                    (topCenter.x + bottomCenter.x).div(2) -
-                                                        (size.width) / 2
-                                            }
-                                            .size(40.dp)
-                                            .background(
-                                                color =
-                                                    if (error != null) Theme.v2.colors.alerts.error
-                                                    else Theme.v2.colors.buttons.tertiary,
-                                                shape = CircleShape,
-                                            )
-                                            .padding(all = space)
-                                            .onGloballyPositioned {
-                                                flipButtonBottomCenter =
-                                                    it.boundsInParent().bottomCenter
-                                            },
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    AnimatedContent(
-                                        targetState = state.isLoading || state.isLoadingNextScreen,
-                                        transitionSpec = {
-                                            fadeIn(animationSpec = tween(150)) togetherWith
-                                                fadeOut(animationSpec = tween(150))
-                                        },
-                                    ) { isLoading ->
-                                        if (isLoading) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(24.dp),
-                                                color = Theme.v2.colors.text.primary,
-                                                strokeWidth = 2.dp,
-                                            )
-                                        } else {
-                                            Icon(
-                                                painter =
-                                                    painterResource(
-                                                        id =
-                                                            if (error == null)
-                                                                R.drawable.ic_arrow_bottom_top
-                                                            else R.drawable.iconwarning
-                                                    ),
-                                                contentDescription = null,
-                                                tint = Theme.v2.colors.text.primary,
-                                                modifier =
-                                                    Modifier.clickable {
-                                                            spinTrigger++
-                                                            onFlipSelectedTokens()
-                                                        }
-                                                        .size(24.dp)
-                                                        .graphicsLayer {
-                                                            rotationZ =
-                                                                if (error == null) rotation.value
-                                                                else 0f
-                                                        },
-                                            )
-                                        }
-                                    }
-                                }
+                                SwapTokenFlipButton(
+                                    isLoading = state.isLoading || state.isLoadingNextScreen,
+                                    hasError = error != null,
+                                    topCenter = topCenter,
+                                    bottomCenter = bottomCenter,
+                                    space = space,
+                                    onFlip = onFlipSelectedTokens,
+                                    onBoundsChanged = { flipButtonBottomCenter = it },
+                                )
                             }
 
                             // Keep the last (or indicative) destination value on screen while a new
@@ -367,28 +210,20 @@ internal fun SwapScreen(
                             val dstHasValue =
                                 state.quoteDisplay.estimatedDstTokenValue.isNotBlank() &&
                                     state.quoteDisplay.estimatedDstTokenValue != "0"
-                            TokenInput(
+                            DstTokenInput(
                                 title = stringResource(R.string.swap_form_dst_token_title),
                                 isLoading = state.isLoading && !dstHasValue,
                                 selectedToken = state.selectedDstToken,
                                 fiatValue = state.quoteDisplay.estimatedDstFiatValue,
+                                space = space,
                                 onSelectNetworkClick = onSelectDstNetworkClick,
                                 onSelectTokenClick = onSelectDstToken,
-                                chainTestTag = "SwapFormScreen.toChain",
-                                tokenTestTag = "SwapFormScreen.toToken",
-                                shape =
-                                    RoundedWithCutoutShape(
-                                        cutoutPosition = CutoutPosition.Top,
-                                        cutoutOffsetY = -space / 2,
-                                        cutoutRadius = 28.dp,
-                                        onCircleBoundsChanged = { bottomCenter = it },
-                                    ),
+                                onCircleBoundsChanged = { bottomCenter = it },
                                 onDrag = onDrag,
                                 onDragEnd = onDragEnd,
                                 onDragCancel = onDragCancel,
                                 onDragStart = onDragStart,
                                 onLongPressStarted = onDstLongPressStarted,
-                                focused = false,
                                 textFieldContent = {
                                     Text(
                                         text = state.quoteDisplay.estimatedDstTokenValue,
@@ -407,207 +242,12 @@ internal fun SwapScreen(
                         }
                     }
 
-                    AnimatedVisibility(visible = state.isLoading || state.quoteDisplay.hasQuote) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(10.dp),
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                        ) {
-                            val placeHolderModifier = Modifier.height(16.dp).width(80.dp)
-                            FormDetails2(
-                                title = stringResource(R.string.swap_screen_provider_title),
-                                value = state.quoteDisplay.provider.asString(),
-                                placeholder =
-                                    if (state.isLoading) {
-                                        { UiPlaceholderLoader(placeHolderModifier) }
-                                    } else null,
-                            )
-
-                            FormDetails2(
-                                modifier =
-                                    Modifier.clickable(
-                                        onClick = { isFeeDetailsExpanded = !isFeeDetailsExpanded }
-                                    ),
-                                title = stringResource(R.string.swap_form_total_fees_title),
-                                valueComposable =
-                                    if (state.isLoading) {
-                                        { UiPlaceholderLoader(placeHolderModifier) }
-                                    } else {
-                                        {
-                                            Row {
-                                                Text(
-                                                    text = state.feeBreakdown.totalFee,
-                                                    color = Theme.v2.colors.text.secondary,
-                                                    style = Theme.brockmann.supplementary.caption,
-                                                    textAlign = TextAlign.End,
-                                                )
-
-                                                UiSpacer(size = 8.dp)
-                                                UiIcon(
-                                                    drawableResId = R.drawable.ic_caret_down,
-                                                    tint = Theme.v2.colors.text.primary,
-                                                    size = 16.dp,
-                                                    modifier = Modifier.rotate(rotationAngle),
-                                                )
-                                            }
-                                        }
-                                    },
-                            )
-
-                            AnimatedVisibility(
-                                visible = isFeeDetailsExpanded && state.isLoading.not()
-                            ) {
-                                Row(modifier = Modifier.height(IntrinsicSize.Max)) {
-                                    Box(
-                                        modifier =
-                                            Modifier.width(1.5.dp)
-                                                .fillMaxHeight()
-                                                .background(
-                                                    color = Theme.v2.colors.border.primaryAccent4,
-                                                    shape = CircleShape,
-                                                )
-                                    )
-
-                                    UiSpacer(size = 8.dp)
-
-                                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                        FormDetails2(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            title =
-                                                buildAnnotatedString {
-                                                    append(
-                                                        stringResource(R.string.swap_form_gas_title)
-                                                    )
-                                                },
-                                            value =
-                                                buildAnnotatedString {
-                                                    withStyle(
-                                                        style =
-                                                            SpanStyle(
-                                                                color =
-                                                                    Theme.v2.colors.neutrals.n100
-                                                            )
-                                                    ) {
-                                                        append(state.feeBreakdown.networkFee)
-                                                    }
-                                                    append(" ")
-                                                    withStyle(
-                                                        style =
-                                                            SpanStyle(
-                                                                color =
-                                                                    Theme.v2.colors.neutrals.n400
-                                                            )
-                                                    ) {
-                                                        append(
-                                                            if (
-                                                                state.feeBreakdown.networkFeeFiat
-                                                                    .isNotEmpty()
-                                                            )
-                                                                "(~${state.feeBreakdown.networkFeeFiat})"
-                                                            else ""
-                                                        )
-                                                    }
-                                                },
-                                            placeholder =
-                                                if (state.isLoading) {
-                                                    { UiPlaceholderLoader(placeHolderModifier) }
-                                                } else null,
-                                        )
-
-                                        val feeTitle =
-                                            state.feeBreakdown.swapFeePercent?.let {
-                                                stringResource(
-                                                    R.string
-                                                        .swap_form_estimated_fees_with_percent_title,
-                                                    it,
-                                                )
-                                            }
-                                                ?: stringResource(
-                                                    R.string.swap_form_estimated_fees_title
-                                                )
-                                        FormDetails2(
-                                            title = feeTitle,
-                                            value = state.feeBreakdown.fee,
-                                            placeholder =
-                                                if (state.isLoading) {
-                                                    { UiPlaceholderLoader(placeHolderModifier) }
-                                                } else null,
-                                        )
-
-                                        if (state.feeBreakdown.outboundFee != null) {
-                                            FormDetails2(
-                                                title =
-                                                    stringResource(
-                                                        R.string.swap_form_outbound_fee_title
-                                                    ),
-                                                value = state.feeBreakdown.outboundFee,
-                                            )
-                                        }
-
-                                        if (
-                                            state.discountInfo.vultBpsDiscount != null &&
-                                                state.discountInfo.vultBpsDiscountFiatValue != null
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                            ) {
-                                                VultDiscountTier(
-                                                    vultBpsDiscount =
-                                                        state.discountInfo.vultBpsDiscount,
-                                                    tierType = state.discountInfo.tierType,
-                                                )
-
-                                                Text(
-                                                    text =
-                                                        "-${state.discountInfo.vultBpsDiscountFiatValue}",
-                                                    color = Theme.v2.colors.text.secondary,
-                                                    style = Theme.brockmann.supplementary.caption,
-                                                )
-                                            }
-                                        }
-
-                                        if (
-                                            state.discountInfo.referralBpsDiscount != null &&
-                                                state.discountInfo.referralBpsDiscountFiatValue !=
-                                                    null
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                            ) {
-                                                UiIcon(
-                                                    drawableResId = R.drawable.referral_code,
-                                                    size = 16.dp,
-                                                    tint = Theme.v2.colors.border.primaryAccent4,
-                                                )
-                                                UiSpacer(size = 4.dp)
-
-                                                Text(
-                                                    text =
-                                                        stringResource(
-                                                            R.string
-                                                                .swap_form_referral_discount_bps,
-                                                            state.discountInfo.referralBpsDiscount,
-                                                        ),
-                                                    color = Theme.v2.colors.text.tertiary,
-                                                    style = Theme.brockmann.supplementary.caption,
-                                                )
-
-                                                UiSpacer(weight = 1f)
-
-                                                Text(
-                                                    text =
-                                                        "-${state.discountInfo.referralBpsDiscountFiatValue}",
-                                                    color = Theme.v2.colors.text.secondary,
-                                                    style = Theme.brockmann.supplementary.caption,
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    SwapFeeBreakdown(
+                        isLoading = state.isLoading,
+                        quoteDisplay = state.quoteDisplay,
+                        feeBreakdown = state.feeBreakdown,
+                        discountInfo = state.discountInfo,
+                    )
                 }
 
                 error?.let {
@@ -639,32 +279,10 @@ internal fun SwapScreen(
                 },
             ) { showPercentagePicker ->
                 if (showPercentagePicker) {
-                    Column {
-                        HorizontalDivider(thickness = 1.dp, color = Theme.v2.colors.border.light)
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .background(color = Theme.v2.colors.backgrounds.secondary)
-                                    .padding(vertical = 12.dp, horizontal = 8.dp),
-                        ) {
-                            PercentageItem(
-                                title = "25%",
-                                onClick = { onSelectSrcPercentage(0.25f) },
-                            )
-                            PercentageItem(title = "50%", onClick = { onSelectSrcPercentage(0.5f) })
-                            PercentageItem(
-                                title = "75%",
-                                onClick = { onSelectSrcPercentage(0.75f) },
-                            )
-                            if (state.enableMaxAmount)
-                                PercentageItem(
-                                    title = "MAX",
-                                    onClick = { onSelectSrcPercentage(1f) },
-                                )
-                        }
-                    }
+                    PercentagePicker(
+                        enableMaxAmount = state.enableMaxAmount,
+                        onSelectSrcPercentage = onSelectSrcPercentage,
+                    )
                 } else {
                     VsButton(
                         label =
@@ -694,581 +312,3 @@ internal fun SwapScreen(
         },
     )
 }
-
-@Composable
-private fun RowScope.PercentageItem(title: String, onClick: () -> Unit) {
-    Text(
-        text = title,
-        style = Theme.brockmann.supplementary.caption,
-        color = Theme.v2.colors.text.primary,
-        textAlign = TextAlign.Center,
-        modifier =
-            Modifier.clickable(onClick = onClick)
-                .background(
-                    color = Theme.v2.colors.backgrounds.tertiary_2,
-                    shape = RoundedCornerShape(99.dp),
-                )
-                .padding(all = 8.dp)
-                .weight(1f),
-    )
-}
-
-@Composable
-private fun VultDiscountTier(vultBpsDiscount: Int, tierType: TierType?) {
-    val (title, logo) =
-        when (tierType) {
-            TierType.BRONZE -> R.string.vault_tier_bronze to R.drawable.type_bronze_tier__size_small
-            TierType.SILVER -> R.string.vault_tier_silver to R.drawable.type_silver_tier__size_small
-            TierType.GOLD -> R.string.vault_tier_gold to R.drawable.type_gold_tier__size_small
-            TierType.PLATINUM ->
-                R.string.vault_tier_platinum to R.drawable.type_platinum_tier__size_small
-
-            TierType.DIAMOND -> R.string.vault_tier_diamond to R.drawable.type_diamond__size_small
-            TierType.ULTIMATE -> R.string.vault_tier_ultimate to R.drawable.tier_ultimate
-            else -> null to null
-        }
-
-    if (title == null || logo == null) return
-
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val infiniteTransition = rememberInfiniteTransition(label = "rotation")
-
-        val rotation by
-            infiniteTransition.animateFloat(
-                initialValue = 0f,
-                targetValue = 360f,
-                animationSpec =
-                    infiniteRepeatable(
-                        animation = tween(durationMillis = 10000, easing = LinearEasing),
-                        repeatMode = RepeatMode.Restart,
-                    ),
-                label = "rotation",
-            )
-
-        Image(
-            painterResource(logo),
-            contentDescription = null,
-            modifier = Modifier.size(16.dp).rotate(rotation),
-        )
-
-        Text(
-            text =
-                stringResource(
-                    R.string.swap_form_vult_discount_bps,
-                    stringResource(title),
-                    vultBpsDiscount,
-                ),
-            color = Theme.v2.colors.text.tertiary,
-            style = Theme.brockmann.supplementary.caption,
-        )
-    }
-}
-
-@Composable
-private fun TokenInput(
-    isLoading: Boolean,
-    title: String,
-    selectedToken: TokenBalanceUiModel?,
-    fiatValue: String,
-    onSelectNetworkClick: () -> Unit,
-    onSelectTokenClick: () -> Unit,
-    shape: Shape,
-    focused: Boolean,
-    modifier: Modifier = Modifier,
-    chainTestTag: String? = null,
-    tokenTestTag: String? = null,
-    @SuppressLint("ComposableLambdaParameterNaming") onDragStart: (Offset) -> Unit = {},
-    onDrag: (Offset) -> Unit = {},
-    onDragEnd: () -> Unit = {},
-    onDragCancel: () -> Unit = {},
-    onLongPressStarted: (Offset) -> Unit = {},
-    textFieldContent: @Composable ColumnScope.() -> Unit,
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier =
-            modifier
-                .background(
-                    color =
-                        if (focused) Theme.v2.colors.backgrounds.secondary
-                        else Theme.v2.colors.backgrounds.disabled,
-                    shape = shape,
-                )
-                .border(width = 1.dp, color = Theme.v2.colors.border.light, shape = shape)
-                .clip(shape)
-                .padding(all = 16.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            val selectedChain = selectedToken?.model?.address?.chain
-
-            if (selectedChain != null) {
-                Box(
-                    modifier =
-                        if (chainTestTag != null) Modifier.testTag(chainTestTag) else Modifier
-                ) {
-                    ChainSelector(
-                        title = title,
-                        chain = selectedChain,
-                        onClick = onSelectNetworkClick,
-                        onDragStart = onDragStart,
-                        onDragCancel = onDragCancel,
-                        onDragEnd = onDragEnd,
-                        onDrag = onDrag,
-                        onLongPressStarted = onLongPressStarted,
-                    )
-                }
-            }
-
-            Text(
-                text = selectedToken?.let { "${it.balance} ${it.title}" } ?: "",
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.tertiary,
-                textAlign = TextAlign.End,
-            )
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Box(modifier = if (tokenTestTag != null) Modifier.testTag(tokenTestTag) else Modifier) {
-                TokenChip(selectedToken = selectedToken, onSelectTokenClick = onSelectTokenClick)
-            }
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                horizontalAlignment = Alignment.End,
-            ) {
-                if (isLoading && title == stringResource(R.string.swap_form_dst_token_title)) {
-                    UiPlaceholderLoader(modifier = Modifier.height(24.dp).width(150.dp))
-                } else {
-                    textFieldContent()
-                }
-
-                if (isLoading) {
-                    UiPlaceholderLoader(modifier = Modifier.height(16.dp).width(80.dp))
-                } else {
-                    Text(
-                        text = fiatValue,
-                        style = Theme.brockmann.supplementary.caption,
-                        color = Theme.v2.colors.text.tertiary,
-                        textAlign = TextAlign.End,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-internal fun TokenChip(
-    selectedToken: TokenBalanceUiModel?,
-    onSelectTokenClick: () -> Unit,
-    onDragStart: (Offset) -> Unit = {},
-    onDrag: (Offset) -> Unit = {},
-    onDragEnd: () -> Unit = {},
-    onDragCancel: () -> Unit = {},
-    onLongPressStarted: (Offset) -> Unit = {},
-) {
-
-    var fieldPosition by remember { mutableStateOf(Offset.Zero) }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier =
-            Modifier.clickable(onClick = onSelectTokenClick)
-                .onGloballyPositioned { coordinates ->
-                    fieldPosition = coordinates.positionInWindow()
-                }
-                .pointerInput(Unit) {
-                    detectDragGesturesAfterLongPress(
-                        onDragStart = { offset ->
-                            val screenPosition =
-                                Offset(
-                                    x = fieldPosition.x + offset.x,
-                                    y = fieldPosition.y + offset.y,
-                                )
-                            onDragStart(screenPosition)
-                            onLongPressStarted(screenPosition)
-                        },
-                        onDrag = { change: PointerInputChange, _ ->
-                            val localPos = change.position
-                            val screenPos =
-                                Offset(
-                                    x = fieldPosition.x + localPos.x,
-                                    y = fieldPosition.y + localPos.y,
-                                )
-                            onDrag(screenPos)
-                            change.consume()
-                        },
-                        onDragEnd = onDragEnd,
-                        onDragCancel = onDragCancel,
-                    )
-                }
-                .background(
-                    color = Theme.v2.colors.backgrounds.tertiary_2,
-                    shape = RoundedCornerShape(99.dp),
-                )
-                .padding(all = 6.dp),
-    ) {
-        TokenAndChainLogo(
-            tokenLogo = selectedToken?.tokenLogo ?: "",
-            tokenTicker = selectedToken?.title ?: "",
-            chainLogo =
-                selectedToken?.chainLogo.takeIf {
-                    selectedToken?.isNativeToken == false || selectedToken?.isLayer2 == true
-                },
-            chainLogoSize = 16.dp,
-            tokenLogoSize = 36.dp,
-        )
-
-        UiSpacer(8.dp)
-
-        Column {
-            Text(
-                text = selectedToken?.title ?: "",
-                style = Theme.brockmann.supplementary.caption,
-                color = Theme.v2.colors.text.primary,
-            )
-
-            if (selectedToken?.isNativeToken == true) {
-                Text(
-                    text = stringResource(R.string.swap_form_native),
-                    style = Theme.brockmann.supplementary.captionSmall,
-                    color = Theme.v2.colors.text.tertiary,
-                )
-            }
-        }
-
-        UiSpacer(4.dp)
-
-        UiIcon(
-            drawableResId = R.drawable.ic_chevron_right_small,
-            size = 20.dp,
-            tint = Theme.v2.colors.text.primary,
-        )
-
-        UiSpacer(6.dp)
-    }
-}
-
-@Composable
-private fun QuoteTimer(expiredAt: Instant, modifier: Modifier = Modifier) {
-    var timeLeft: String by remember { mutableStateOf("") }
-    var progress: Float by remember { mutableFloatStateOf(0f) }
-
-    LaunchedEffect(expiredAt) {
-        timerFlow().collect {
-            val now = Clock.System.now()
-            val left = expiredAt - now
-            timeLeft = formatDurationAsMinutesSeconds(left)
-            progress = (left / expiredAfter).toFloat()
-        }
-    }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        modifier =
-            modifier
-                .background(
-                    color = Theme.v2.colors.backgrounds.secondary,
-                    shape = RoundedCornerShape(99.dp),
-                )
-                .padding(vertical = 6.dp, horizontal = 12.dp),
-    ) {
-        Text(
-            text = timeLeft,
-            style = Theme.brockmann.supplementary.caption,
-            color = Theme.v2.colors.text.secondary,
-        )
-
-        CircularProgressIndicator(
-            progress = { progress },
-            trackColor = Theme.v2.colors.border.normal,
-            color = Theme.v2.colors.primary.accent4,
-            strokeCap = StrokeCap.Square,
-            strokeWidth = 2.dp,
-            gapSize = 0.dp,
-            modifier = Modifier.size(16.dp),
-        )
-    }
-}
-
-private fun formatDurationAsMinutesSeconds(duration: Duration): String {
-    val totalSeconds = duration.inWholeSeconds.coerceAtLeast(0)
-    val minutes = totalSeconds / 60
-    val seconds = totalSeconds % 60
-    return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
-}
-
-@Preview
-@Composable
-internal fun SwapFormScreenPreview() {
-    SwapScreen(
-        state = SwapFormUiModel(quoteDisplay = QuoteDisplay(estimatedDstTokenValue = "0")),
-        srcAmountTextFieldState = TextFieldState(),
-    )
-}
-
-@Preview
-@Composable
-internal fun SwapFormScreenPreview2() {
-    SwapScreen(
-        state =
-            SwapFormUiModel(
-                selectedSrcToken = longTokenInput,
-                selectedDstToken = tokenInput,
-                srcFiatValue = "5.25",
-                quoteDisplay =
-                    QuoteDisplay(
-                        provider = UiText.DynamicString("ThorSwap"),
-                        estimatedDstTokenValue = "12.80",
-                        estimatedDstFiatValue = "5.24",
-                        expiredAt = Clock.System.now(),
-                    ),
-                feeBreakdown =
-                    FeeBreakdown(
-                        networkFee = "0.02 RUNE",
-                        networkFeeFiat = "0.004 USD",
-                        totalFee = "0.024 USD",
-                        fee = "0.02 RUNE",
-                    ),
-                error = null,
-                formError = null,
-                isSwapDisabled = false,
-                isLoading = false,
-                isLoadingNextScreen = false,
-            ),
-        srcAmountTextFieldState = TextFieldState(),
-    )
-}
-
-// Mid-load snapshot for #4712: amount entered, firm quote still resolving. Before the change the
-// destination blanked to a skeleton here; after, it shows a greyed indicative estimate.
-@Preview
-@Composable
-internal fun SwapFormQuoteLoadingPreview() {
-    SwapScreen(
-        state =
-            SwapFormUiModel(
-                selectedSrcToken = longTokenInput,
-                selectedDstToken = tokenInput,
-                srcFiatValue = "5.25",
-                quoteDisplay =
-                    QuoteDisplay(
-                        provider = UiText.Empty,
-                        estimatedDstTokenValue = "12.80",
-                        estimatedDstFiatValue = "$5.24",
-                        isDstEstimated = true,
-                    ),
-                isLoading = true,
-                isSwapDisabled = true,
-            ),
-        srcAmountTextFieldState = TextFieldState("2.5"),
-    )
-}
-
-@Preview
-@Composable
-internal fun SwapFormScreenPreview3() {
-
-    SwapScreen(
-        state =
-            SwapFormUiModel(
-                selectedSrcToken = tokenInput,
-                selectedDstToken = longTokenInput,
-                srcFiatValue = "5.25",
-                quoteDisplay =
-                    QuoteDisplay(
-                        provider = UiText.DynamicString("ThorSwap"),
-                        estimatedDstTokenValue = "12.80",
-                        estimatedDstFiatValue = "5.24",
-                        expiredAt = Clock.System.now(),
-                    ),
-                feeBreakdown =
-                    FeeBreakdown(
-                        networkFee = "0.02 RUNE",
-                        networkFeeFiat = "0.004 USD",
-                        totalFee = "0.024 USD",
-                        fee = "0.02 RUNE",
-                    ),
-                error = null,
-                formError = null,
-                isSwapDisabled = false,
-                isLoading = false,
-                isLoadingNextScreen = false,
-            ),
-        srcAmountTextFieldState = TextFieldState(),
-    )
-}
-
-@Preview
-@Composable
-internal fun SwapFormScreenPreview4() {
-
-    SwapScreen(
-        state =
-            SwapFormUiModel(
-                selectedSrcToken = longTokenInput,
-                selectedDstToken = longTokenInput,
-                srcFiatValue = "5.25",
-                quoteDisplay =
-                    QuoteDisplay(
-                        provider = UiText.DynamicString("ThorSwap"),
-                        estimatedDstTokenValue = "12.80",
-                        estimatedDstFiatValue = "5.24",
-                        expiredAt = Clock.System.now(),
-                    ),
-                feeBreakdown =
-                    FeeBreakdown(
-                        networkFee = "0.02 RUNE",
-                        networkFeeFiat = "0.004 USD",
-                        totalFee = "0.024 USD",
-                        fee = "0.02 RUNE",
-                    ),
-                discountInfo =
-                    DiscountInfo(
-                        referralBpsDiscount = 10,
-                        referralBpsDiscountFiatValue = "0.001 USD",
-                        vultBpsDiscount = 30,
-                        vultBpsDiscountFiatValue = "0.003 USD",
-                        tierType = TierType.GOLD,
-                    ),
-                error = null,
-                formError = null,
-                isSwapDisabled = false,
-                isLoading = false,
-                isLoadingNextScreen = false,
-            ),
-        srcAmountTextFieldState = TextFieldState(),
-    )
-}
-
-private val longTokenInput =
-    TokenBalanceUiModel(
-        model =
-            SendSrc(
-                address =
-                    Address(
-                        chain = Chain.ThorChain,
-                        address = "thor1xyzabc123",
-                        accounts =
-                            listOf(
-                                Account(
-                                    token =
-                                        Coin(
-                                            chain = Chain.ThorChain,
-                                            ticker = "RUNE",
-                                            logo =
-                                                "https://assets.coingecko.com/coins/images/6595/large/RUNE.png",
-                                            address = "thor1xyzabc123",
-                                            decimal = 8,
-                                            hexPublicKey = "0xabc123def456",
-                                            priceProviderID = "thorchain-rune",
-                                            contractAddress = "",
-                                            isNativeToken = true,
-                                        ),
-                                    tokenValue = TokenValue(BigInteger("2500000000"), "RUNE", 8),
-                                    fiatValue = FiatValue(BigDecimal("5.25"), "USD"),
-                                    price = FiatValue(BigDecimal("2.10"), "USD"),
-                                )
-                            ),
-                    ),
-                account =
-                    Account(
-                        token =
-                            Coin(
-                                chain = Chain.ThorChain,
-                                ticker = "RUNE",
-                                logo =
-                                    "https://assets.coingecko.com/coins/images/6595/large/RUNE.png",
-                                address = "thor1xyzabc123",
-                                decimal = 8,
-                                hexPublicKey = "0xabc123def456",
-                                priceProviderID = "thorchain-rune",
-                                contractAddress = "",
-                                isNativeToken = true,
-                            ),
-                        tokenValue = TokenValue(BigInteger("2500000000"), "RUNE", 8),
-                        fiatValue = FiatValue(BigDecimal("5.25"), "USD"),
-                        price = FiatValue(BigDecimal("2.10"), "USD"),
-                    ),
-            ),
-        title = "LP-THOR.RUJI/ ETH.USDC-XYK",
-        balance = "0.11412095",
-        fiatValue = "5.25",
-        isNativeToken = true,
-        isLayer2 = false,
-        tokenStandard = "THORCHAIN",
-        tokenLogo = "https://assets.coingecko.com/coins/images/6595/large/RUNE.png",
-        chainLogo = Chain.ThorChain.logo,
-    )
-
-private val tokenInput =
-    TokenBalanceUiModel(
-        model =
-            SendSrc(
-                address =
-                    Address(
-                        chain = Chain.TerraClassic,
-                        address = "maya1def456ghi789",
-                        accounts =
-                            listOf(
-                                Account(
-                                    token =
-                                        Coin(
-                                            chain = Chain.TerraClassic,
-                                            ticker = "CACAO",
-                                            logo =
-                                                "https://assets.coingecko.com/coins/images/40000/large/CACAO.png",
-                                            address = "maya1def456ghi789",
-                                            decimal = 6,
-                                            hexPublicKey = "0xdef789ghi012",
-                                            priceProviderID = "mayachain-cacao",
-                                            contractAddress = "",
-                                            isNativeToken = true,
-                                        ),
-                                    tokenValue = TokenValue(BigInteger("1000000000"), "CACAO", 6),
-                                    fiatValue = FiatValue(BigDecimal("4.10"), "USD"),
-                                    price = FiatValue(BigDecimal("0.41"), "USD"),
-                                )
-                            ),
-                    ),
-                account =
-                    Account(
-                        token =
-                            Coin(
-                                chain = Chain.MayaChain,
-                                ticker = "CACAO",
-                                logo =
-                                    "https://assets.coingecko.com/coins/images/40000/large/CACAO.png",
-                                address = "maya1def456ghi789",
-                                decimal = 6,
-                                hexPublicKey = "0xdef789ghi012",
-                                priceProviderID = "mayachain-cacao",
-                                contractAddress = "",
-                                isNativeToken = true,
-                            ),
-                        tokenValue = TokenValue(BigInteger("1000000000"), "CACAO", 6),
-                        fiatValue = FiatValue(BigDecimal("4.10"), "USD"),
-                        price = FiatValue(BigDecimal("0.41"), "USD"),
-                    ),
-            ),
-        title = "CACAO",
-        balance = "10.0",
-        fiatValue = "4.10",
-        isNativeToken = true,
-        isLayer2 = false,
-        tokenStandard = "THORCHAIN",
-        tokenLogo = "https://assets.coingecko.com/coins/images/40000/large/CACAO.png",
-        chainLogo = Chain.ThorChain.logo,
-    )
