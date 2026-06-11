@@ -45,7 +45,6 @@ import com.vultisig.wallet.data.usecases.RequestAddressBookEntryUseCase
 import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
-import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
@@ -1857,57 +1856,6 @@ constructor(
         _state.update { it.copy(errorText = text) }
     }
 
-    private fun validateCustomMemo(memo: String): UiText? =
-        if (memo.isBlank()) {
-            UiText.StringResource(R.string.dialog_default_error_title)
-        } else {
-            null
-        }
-
-    /**
-     * Returns a generic address-format error or `null` if [address] parses as valid for [chain].
-     * Used by [validateNodeAddress], [validateProvider] and [validateThorAddress] where the field
-     * label is already chain-specific in the UI, so a single "Address is invalid" message suffices.
-     */
-    private fun addressErrorOrNull(chain: Chain?, address: String): UiText? {
-        if (chain == null) return UiText.StringResource(R.string.dialog_default_error_title)
-        if (address.isBlank() || !chainAccountAddressRepository.isValid(chain, address))
-            return UiText.StringResource(R.string.send_error_no_address)
-        return null
-    }
-
-    /**
-     * Returns a destination-address error specific to the IBC/Switch dst field, distinguishing
-     * blank from invalid-format so the user sees the more actionable message. Used by both the
-     * public [validateDstAddress] blur helper and the TransferIbc/Switch submit guards so the
-     * inline error and the thrown error stay in lockstep.
-     */
-    private fun dstAddressErrorOrNull(chain: Chain?, dstAddress: String): UiText? {
-        if (chain == null) return UiText.StringResource(R.string.dialog_default_error_title)
-        if (dstAddress.isBlank())
-            return UiText.StringResource(R.string.deposit_error_destination_address)
-        if (!chainAccountAddressRepository.isValid(chain, dstAddress))
-            return UiText.StringResource(R.string.deposit_error_invalid_destination_address)
-        return null
-    }
-
-    private fun validateTokenAmount(tokenAmount: String): UiText? {
-        if (tokenAmount.length > TextFieldUtils.AMOUNT_MAX_LENGTH)
-            return UiText.StringResource(R.string.send_from_invalid_amount)
-        val tokenAmountBigDecimal = tokenAmount.toBigDecimalOrNull()
-        if (tokenAmountBigDecimal == null || tokenAmountBigDecimal < BigDecimal.ZERO) {
-            return UiText.StringResource(R.string.send_error_no_amount)
-        }
-        return null
-    }
-
-    private fun validateBasisPoints(basisPoints: Int?): UiText? {
-        if (basisPoints == null || basisPoints <= 0 || basisPoints > 100) {
-            return UiText.StringResource(R.string.send_from_invalid_amount)
-        }
-        return null
-    }
-
     fun validateAssets() {
         val assets = assetsFieldState.text.toString()
         _state.update {
@@ -1925,7 +1873,7 @@ constructor(
         _state.update {
             it.copy(
                 lpUnitsError =
-                    if (!isLpUnitCharsValid(lpUnits))
+                    if (!fieldValidator.isLpUnitCharsValid(lpUnits))
                         UiText.StringResource(R.string.deposit_error_invalid_lpunits)
                     else null
             )
@@ -1985,9 +1933,6 @@ constructor(
         token: Coin,
         transform: (value: BigDecimal, price: BigDecimal) -> BigDecimal,
     ): String? = gasFeeHelper.convertAmountValue(value, token, appCurrency.value, transform)
-
-    private fun isLpUnitCharsValid(lpUnits: String) =
-        lpUnits.toLongOrNull() != null && lpUnits.all { it.isDigit() } && lpUnits.toLong() > 0
 
     fun onSelectSecureAsset(asset: TokenWithdrawSecureAsset) {
         val balance = asset.tokenValue?.let(mapTokenValueToStringWithUnit)
