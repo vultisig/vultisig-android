@@ -18,7 +18,7 @@ import kotlinx.coroutines.delay
  * isolation. Polls the transaction receipt and, once available, derives the burned fee (`gasUsed ×
  * effectiveGasPrice`) and maps it through [gasFeeToEstimatedFee].
  */
-class UpdateEvmActualFeeUseCase
+internal class UpdateEvmActualFeeUseCase
 @Inject
 constructor(
     private val evmApiFactory: EvmApiFactory,

@@ -18,7 +18,7 @@ import javax.inject.Inject
  * ViewModel-derived values (explorer URL, Polkadot broadcast block) are passed in rather than read
  * from ViewModel state.
  */
-class SaveKeysignTransactionHistoryUseCase
+internal class SaveKeysignTransactionHistoryUseCase
 @Inject
 constructor(private val transactionHistoryRepository: TransactionHistoryRepository) {
 
