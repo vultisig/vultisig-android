@@ -14,24 +14,17 @@ import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.chains.helpers.THORChainSwaps
 import com.vultisig.wallet.data.common.md5
 import com.vultisig.wallet.data.common.toHexBytes
-import com.vultisig.wallet.data.db.models.TransactionStatus.BROADCASTED
-import com.vultisig.wallet.data.db.models.TransactionType
 import com.vultisig.wallet.data.keygen.DKLSKeysign
 import com.vultisig.wallet.data.keygen.MldsaKeysign
 import com.vultisig.wallet.data.keygen.SchnorrKeysign
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.CommonTransactionHistoryData
-import com.vultisig.wallet.data.models.GasFeeParams
-import com.vultisig.wallet.data.models.SendTransactionHistoryData
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapTransactionHistoryData
 import com.vultisig.wallet.data.models.TokenStandard
-import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
-import com.vultisig.wallet.data.models.UnknownTransactionHistoryData
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.getEcdsaSigningKey
 import com.vultisig.wallet.data.models.getEddsaSigningKey
@@ -95,8 +88,6 @@ import tss.Tss
 import vultisig.keysign.v1.CustomMessagePayload
 
 private const val DEFAULT_ETHEREUM_DERIVATION_PATH = "m/44'/60'/0'/0/0"
-private const val MAX_EVM_RECEIPT_RETRIES = 5
-private const val EVM_RECEIPT_RETRY_DELAY_MS = 2_000L
 
 /** UI state for an in-progress or completed keysign session. */
 internal sealed class KeysignState {
@@ -312,6 +303,10 @@ constructor(
     private var isNavigateToHome: Boolean = false
 
     private var pollingTxStatusJob: Job? = null
+
+    private val saveKeysignTransactionHistory =
+        SaveKeysignTransactionHistoryUseCase(transactionHistoryRepository)
+    private val updateEvmActualFee = UpdateEvmActualFeeUseCase(evmApiFactory, gasFeeToEstimatedFee)
 
     init {
         val sendTx = transactionTypeUiModel as? TransactionTypeUiModel.Send
@@ -874,43 +869,20 @@ constructor(
     }
 
     internal suspend fun saveTransactionHistory(txHash: String, chain: Chain) {
-        transactionHistoryData?.let {
-            runCatching {
-                val now = System.currentTimeMillis()
-                val historyData =
-                    CommonTransactionHistoryData(
-                        vaultId = vault.id,
-                        txHash = txHash,
-                        chain = chain.raw,
-                        timestamp = now,
-                        explorerUrl = swapProgressLink.value ?: txLink.value,
-                        status = BROADCASTED,
-                        type =
-                            when (it) {
-                                is SendTransactionHistoryData -> TransactionType.SEND
-                                is SwapTransactionHistoryData -> TransactionType.SWAP
-                                is UnknownTransactionHistoryData -> return@runCatching
-                            },
-                        confirmedAt = null,
-                        failureReason = null,
-                        lastCheckedAt = now,
-                        // Polkadot extrinsics are mortal: persist the head block at broadcast so
-                        // the
-                        // status poller can scan the absolute inclusion window instead of a
-                        // head-relative one that drifts out of reach. Null for other chains.
-                        broadcastBlockNumber =
-                            (keysignPayload?.blockChainSpecific as? BlockChainSpecific.Polkadot)
-                                ?.currentBlockNumber
-                                ?.toLong(),
-                    )
-                transactionHistoryRepository.recordTransaction(
-                    vaultId = vault.id,
-                    txHash = txHash,
-                    txData = it,
-                    genericData = historyData,
-                )
-            }
-        }
+        saveKeysignTransactionHistory(
+            vaultId = vault.id,
+            txHash = txHash,
+            chain = chain,
+            explorerUrl = swapProgressLink.value ?: txLink.value,
+            transactionHistoryData = transactionHistoryData,
+            // Polkadot extrinsics are mortal: persist the head block at broadcast so the status
+            // poller can scan the absolute inclusion window instead of a head-relative one that
+            // drifts out of reach. Null for other chains.
+            broadcastBlockNumber =
+                (keysignPayload?.blockChainSpecific as? BlockChainSpecific.Polkadot)
+                    ?.currentBlockNumber
+                    ?.toLong(),
+        )
     }
 
     /**
@@ -949,36 +921,7 @@ constructor(
         viewModelScope.safeLaunch(
             onError = { e -> Timber.w(e, "Failed to update EVM actual fee for %s", txHash) }
         ) {
-            val evmApi = evmApiFactory.createEvmApi(chain)
-            var gasUsedHex: String? = null
-            var effectiveGasPriceHex: String? = null
-            for (attempt in 1..MAX_EVM_RECEIPT_RETRIES) {
-                val result = evmApi.getTxStatus(txHash)?.result
-                if (result != null) {
-                    gasUsedHex = result.gasUsed
-                    effectiveGasPriceHex = result.effectiveGasPrice
-                    break // receipt received — stop retrying whether or not fee fields are
-                    // populated
-                }
-                if (attempt < MAX_EVM_RECEIPT_RETRIES) delay(EVM_RECEIPT_RETRY_DELAY_MS)
-            }
-            val gasUsed = BigInteger((gasUsedHex ?: return@safeLaunch).removePrefix("0x"), 16)
-            val effectiveGasPrice =
-                BigInteger((effectiveGasPriceHex ?: return@safeLaunch).removePrefix("0x"), 16)
-            val actualFeeWei = gasUsed.multiply(effectiveGasPrice)
-            val estimatedFee =
-                gasFeeToEstimatedFee(
-                    GasFeeParams(
-                        gasLimit = BigInteger.ONE,
-                        gasFee =
-                            TokenValue(
-                                value = actualFeeWei,
-                                unit = coin.ticker,
-                                decimals = coin.decimal,
-                            ),
-                        selectedToken = coin,
-                    )
-                )
+            val estimatedFee = updateEvmActualFee(txHash, chain, coin) ?: return@safeLaunch
             resolvedTransactionUiModel.update { currentModel ->
                 val sendTx =
                     currentModel as? TransactionTypeUiModel.Send ?: return@update currentModel
