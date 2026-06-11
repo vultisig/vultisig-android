@@ -66,7 +66,7 @@ constructor(
         rpcResponses.forEach {
             val result = it.result ?: return null
             if (it.id == CUSTOM_TOKEN_RESPONSE_TICKER_ID)
-                ticker = result.decodeContractString() ?: return null
+                ticker = decodeErc20MetadataString(result) ?: return null
             else decimal = result.decodeContractDecimal().takeIf { dec -> dec != 0 } ?: return null
         }
         val coin =
@@ -240,16 +240,6 @@ constructor(
 
     private fun Iterable<Coin>.filterNatives() = filter { it.isNativeToken }
 
-    private fun String.decodeContractString(): String? {
-        try {
-            val bytes = removePrefix("0x").chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-            val length = BigInteger(bytes.sliceArray(32..63)).toInt()
-            return String(bytes.sliceArray(64 until 64 + length)).lowercase()
-        } catch (_: Exception) {
-            return null
-        }
-    }
-
     private fun String.decodeContractDecimal(): Int {
         return BigInteger(removePrefix("0x"), 16).toInt()
     }
@@ -268,3 +258,34 @@ constructor(
 
 // Denoms surfaced under the DeFi tab — must not be auto-discovered as wallet tokens.
 internal val DEFI_ONLY_THORCHAIN_DENOMS = setOf("x/staking-ruji")
+
+/**
+ * Decodes the result of an ERC-20 `name()` / `symbol()` `eth_call` into text.
+ *
+ * The standard return is an ABI dynamic `string` (offset word, length word, then the bytes). Some
+ * legacy tokens (e.g. MKR) declare `name()`/`symbol()` as `bytes32`; bridged deployments re-encode
+ * that as a `string` whose content is the 64-char hex of the original `bytes32`, right-padded with
+ * zeros — which would otherwise surface to the UI as raw hex (`MKR` → `4d4b52…00`). When the
+ * decoded string is exactly such a hex-encoded `bytes32`, decode it back to UTF-8 and trim the zero
+ * padding (issue #4873). Returns null on malformed input.
+ */
+internal fun decodeErc20MetadataString(raw: String): String? {
+    return try {
+        val bytes = raw.removePrefix("0x").chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        val length = BigInteger(bytes.sliceArray(32..63)).toInt()
+        String(bytes.sliceArray(64 until 64 + length)).decodeBytes32HexOrSelf()
+    } catch (_: Exception) {
+        null
+    }
+}
+
+private fun String.decodeBytes32HexOrSelf(): String {
+    if (length != 64 || any { it !in '0'..'9' && it !in 'a'..'f' && it !in 'A'..'F' }) return this
+    val raw = chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+    val text = raw.takeWhile { it.toInt() != 0 }.toByteArray()
+    if (text.isEmpty()) return this
+    val decoded = String(text, Charsets.UTF_8)
+    // Only treat it as bytes32 text when the result is printable ASCII; otherwise the 64-char hex
+    // was a genuine (if unusual) symbol, so leave it untouched.
+    return if (decoded.all { it.code in 0x20..0x7E }) decoded else this
+}
