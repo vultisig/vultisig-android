@@ -5,6 +5,10 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.repositories.ChainAccountAddressRepository
 import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.ui.utils.UiText
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -115,4 +119,15 @@ constructor(private val chainAccountAddressRepository: ChainAccountAddressReposi
 
     override fun isLpUnitCharsValid(lpUnits: String): Boolean =
         lpUnits.toLongOrNull() != null && lpUnits.all { it.isDigit() } && lpUnits.toLong() > 0
+}
+
+/**
+ * Hilt bindings that expose [DepositFieldValidatorImpl] as the [DepositFieldValidator] interface.
+ */
+@Module
+@InstallIn(SingletonComponent::class)
+internal interface DepositFieldValidatorModule {
+
+    /** Binds the concrete [DepositFieldValidatorImpl] to the [DepositFieldValidator] interface. */
+    @Binds fun bindDepositFieldValidator(impl: DepositFieldValidatorImpl): DepositFieldValidator
 }
