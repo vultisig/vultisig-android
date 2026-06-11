@@ -33,16 +33,21 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import timber.log.Timber
 
@@ -135,7 +140,11 @@ constructor(
             RpcPayload(
                 jsonrpc = "2.0",
                 method = "getLatestBlockhash",
-                params = buildJsonArray { addJsonObject { put("commitment", "finalized") } },
+                // `confirmed` is the standard commitment for sending: it tracks the tip closely,
+                // whereas `finalized` lags ~32 slots (~13s) behind and burns that much of the
+                // ~60-90s blockhash validity window before the keysign ceremony even starts
+                // (issue #4863).
+                params = buildJsonArray { addJsonObject { put("commitment", "confirmed") } },
                 id = 1,
             )
         val response = httpClient.post(rpcEndpoint) { setBody(payload) }
@@ -186,14 +195,38 @@ constructor(
                     params = buildJsonArray { add(tx) },
                     id = 1,
                 )
-            val response = httpClient.post(rpcEndpoint) { setBody(requestBody) }
-            val responseRawString = response.bodyAsText()
-            val result = response.bodyOrThrow<BroadcastTransactionRespJson>()
-            result.error?.let { error ->
-                Timber.tag("SolanaApiImp").d("Error broadcasting transaction: $responseRawString")
-                error(error["message"].toString())
+            repeat(BROADCAST_MAX_ATTEMPTS) { index ->
+                val attempt = index + 1
+                val response = httpClient.post(rpcEndpoint) { setBody(requestBody) }
+                val responseRawString = response.bodyAsText()
+                val result = response.bodyOrThrow<BroadcastTransactionRespJson>()
+                val error =
+                    result.error ?: return result.result ?: error("broadcastTransaction error")
+
+                val message = error["message"]?.jsonPrimitive?.contentOrNull ?: error.toString()
+                Timber.tag("SolanaApiImp")
+                    .d("Error broadcasting transaction: %s", responseRawString)
+
+                when (solanaBroadcastAction(message, attempt, BROADCAST_MAX_ATTEMPTS)) {
+                    // Propagation lag: the RPC node hasn't observed our confirmed blockhash yet.
+                    // Resending the same signed tx after a short backoff typically clears it.
+                    SolanaBroadcastAction.RESEND -> {
+                        Timber.tag("SolanaApiImp")
+                            .w(
+                                "Transient blockhash-not-found on broadcast attempt %d/%d; resending after backoff",
+                                attempt,
+                                BROADCAST_MAX_ATTEMPTS,
+                            )
+                        delay(BROADCAST_RETRY_BACKOFF)
+                    }
+                    // True expiry (or exhausted resends): the same tx can no longer land, so
+                    // surface it as expired. Re-signing with a fresh blockhash is a deferred
+                    // follow-up (needs a cross-device KeysignMessage proto change).
+                    SolanaBroadcastAction.EXPIRED -> throw SolanaBlockhashExpiredException(message)
+                    SolanaBroadcastAction.FATAL -> error(message)
+                }
             }
-            return result.result ?: error("broadcastTransaction error")
+            error("broadcastTransaction failed after $BROADCAST_MAX_ATTEMPTS attempts")
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             Timber.tag("SolanaApiImp").e("Error broadcasting transaction: ${e.message}")
@@ -414,5 +447,44 @@ constructor(
         // 100x the floor — caps priority fee at ~0.01 SOL per tx to prevent overpayment
         // during congestion spikes or compromised RPC proxy
         private const val MAX_PRIORITY_FEE_PRICE = 100_000_000L
+    }
+}
+
+/** Max times a signed Solana tx is (re)sent when the RPC node hasn't yet seen our blockhash. */
+private const val BROADCAST_MAX_ATTEMPTS = 3
+
+/** Backoff between rebroadcast attempts, giving the confirmed blockhash time to propagate. */
+private val BROADCAST_RETRY_BACKOFF: Duration = 2.seconds
+
+/** Thrown when a Solana broadcast fails because the blockhash has expired (issue #4863). */
+class SolanaBlockhashExpiredException(message: String) : Exception(message)
+
+/** What to do with a Solana `sendTransaction` RPC error on a given attempt. */
+internal enum class SolanaBroadcastAction {
+    /** Transient blockhash-not-found (propagation lag) with retries left — resend the same tx. */
+    RESEND,
+    /** Blockhash expired (height exceeded, or blockhash-not-found after exhausting retries). */
+    EXPIRED,
+    /** Any other RPC error — not recoverable by resending. */
+    FATAL,
+}
+
+/**
+ * Classifies a Solana `sendTransaction` error message into the action to take. `-32002` is Solana's
+ * generic preflight-failure code, not specific to expired blockhashes, so we match on the message
+ * text (mirrors vultisig-ios#4551).
+ */
+internal fun solanaBroadcastAction(
+    errorMessage: String,
+    attempt: Int,
+    maxAttempts: Int,
+): SolanaBroadcastAction {
+    val lowered = errorMessage.lowercase()
+    return when {
+        lowered.contains("blockhash not found") && attempt < maxAttempts ->
+            SolanaBroadcastAction.RESEND
+        lowered.contains("blockhash not found") || lowered.contains("block height exceeded") ->
+            SolanaBroadcastAction.EXPIRED
+        else -> SolanaBroadcastAction.FATAL
     }
 }

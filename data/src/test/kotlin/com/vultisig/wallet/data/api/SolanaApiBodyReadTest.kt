@@ -9,6 +9,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.contextual
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
 
 /**
@@ -90,6 +91,41 @@ class SolanaApiBodyReadTest {
         val result = api.broadcastTransaction("fakeTxBase64Encoded")
 
         assertEquals("5xFakeTransactionHashABCDE1234", result)
+    }
+
+    @Test
+    fun `broadcastTransaction surfaces an expired blockhash as SolanaBlockhashExpiredException`() =
+        runTest {
+            val body =
+                """
+                {
+                  "error": { "code": -32002, "message": "Transaction simulation failed: Block height exceeded" },
+                  "result": null
+                }
+                """
+                    .trimIndent()
+            val api = newApi(body)
+
+            val error = runCatching { api.broadcastTransaction("tx") }.exceptionOrNull()
+
+            assertInstanceOf(SolanaBlockhashExpiredException::class.java, error)
+        }
+
+    @Test
+    fun `broadcastTransaction rethrows a non-recoverable rpc error`() = runTest {
+        val body =
+            """
+            {
+              "error": { "code": -32002, "message": "Transaction simulation failed: insufficient funds for rent" },
+              "result": null
+            }
+            """
+                .trimIndent()
+        val api = newApi(body)
+
+        val error = runCatching { api.broadcastTransaction("tx") }.exceptionOrNull()
+
+        assertInstanceOf(IllegalStateException::class.java, error)
     }
 
     // ── getSPLTokensInfo2 ───────────────────────────────────────────────────────
