@@ -67,14 +67,17 @@ import com.vultisig.wallet.data.utils.TextFieldUtils
 import com.vultisig.wallet.data.utils.getChain
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.symbol
-import com.vultisig.wallet.data.utils.toUnit
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
 import com.vultisig.wallet.ui.models.deposit.submit.BondStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.DepositSubmitStrategies
 import com.vultisig.wallet.ui.models.deposit.submit.DepositSubmitStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.LeaveStrategy
+import com.vultisig.wallet.ui.models.deposit.submit.MergeStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.StakeStrategy
+import com.vultisig.wallet.ui.models.deposit.submit.SwitchStrategy
+import com.vultisig.wallet.ui.models.deposit.submit.TransferIbcStrategy
+import com.vultisig.wallet.ui.models.deposit.submit.UnMergeStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.UnbondStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.UnstakeStrategy
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -118,7 +121,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
-import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
 import wallet.core.jni.proto.Bitcoin
 import wallet.core.jni.proto.Common.SigningError
@@ -378,6 +380,61 @@ constructor(
             getFeesFiatValue = ::getFeesFiatValue,
         )
 
+    private val mergeStrategy: DepositSubmitStrategy =
+        MergeStrategy(
+            vaultIdProvider = { vaultId },
+            chainProvider = { chain },
+            stateProvider = { state.value },
+            addressProvider = { address.value },
+            requireTokenAmount = ::requireTokenAmount,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            calculateGasFee = ::calculateGasFee,
+            getFeesFiatValue = ::getFeesFiatValue,
+        )
+
+    private val unMergeStrategy: DepositSubmitStrategy =
+        UnMergeStrategy(
+            vaultIdProvider = { vaultId },
+            chainProvider = { chain },
+            stateProvider = { state.value },
+            addressProvider = { address.value },
+            rujiMergeBalancesProvider = { rujiMergeBalances.value },
+            tokenAmountFieldState = tokenAmountFieldState,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            calculateGasFee = ::calculateGasFee,
+            getFeesFiatValue = ::getFeesFiatValue,
+        )
+
+    private val switchStrategy: DepositSubmitStrategy =
+        SwitchStrategy(
+            vaultIdProvider = { vaultId },
+            chainProvider = { chain },
+            stateProvider = { state.value },
+            addressProvider = { address.value },
+            nodeAddressFieldState = nodeAddressFieldState,
+            thorAddressFieldState = thorAddressFieldState,
+            dstAddressErrorOrNull = ::dstAddressErrorOrNull,
+            requireTokenAmount = ::requireTokenAmount,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            calculateGasFee = ::calculateGasFee,
+            getFeesFiatValue = ::getFeesFiatValue,
+        )
+
+    private val transferIbcStrategy: DepositSubmitStrategy =
+        TransferIbcStrategy(
+            vaultIdProvider = { vaultId },
+            chainProvider = { chain },
+            stateProvider = { state.value },
+            addressProvider = { address.value },
+            nodeAddressFieldState = nodeAddressFieldState,
+            customMemoFieldState = customMemoFieldState,
+            dstAddressErrorOrNull = ::dstAddressErrorOrNull,
+            requireTokenAmount = ::requireTokenAmount,
+            blockChainSpecificRepository = blockChainSpecificRepository,
+            calculateGasFee = ::calculateGasFee,
+            getFeesFiatValue = ::getFeesFiatValue,
+        )
+
     private val depositStrategies: DepositSubmitStrategies =
         mapOf(
                 DepositOption.AddCacaoPool to
@@ -388,10 +445,10 @@ constructor(
                 DepositOption.Custom to DepositSubmitStrategy { createCustomTransaction() },
                 DepositOption.Stake to stakeStrategy,
                 DepositOption.Unstake to unstakeStrategy,
-                DepositOption.TransferIbc to DepositSubmitStrategy { createTransferIbcTx() },
-                DepositOption.Switch to DepositSubmitStrategy { createSwitchTx() },
-                DepositOption.Merge to DepositSubmitStrategy { createMergeTx() },
-                DepositOption.UnMerge to DepositSubmitStrategy { createUnMergeTx() },
+                DepositOption.TransferIbc to transferIbcStrategy,
+                DepositOption.Switch to switchStrategy,
+                DepositOption.Merge to mergeStrategy,
+                DepositOption.UnMerge to unMergeStrategy,
                 DepositOption.RemoveCacaoPool to
                     DepositSubmitStrategy { createRemoveCacaoPoolTransaction() },
                 DepositOption.AddLiquidity to
@@ -1581,84 +1638,6 @@ constructor(
         }
     }
 
-    private suspend fun createUnMergeTx(): DepositTransaction {
-        val vaultId =
-            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
-        val unmergeToken = state.value.selectedUnMergeCoin
-        val unMergeAccountBalance =
-            rujiMergeBalances.value?.firstOrNull {
-                it.pool?.mergeAsset?.metadata?.symbol.equals(unmergeToken.ticker, true)
-            }
-        val maxShares = unMergeAccountBalance?.shares?.toBigInteger() ?: BigInteger.ZERO
-
-        // transform amount back to share units
-        val tokenShares =
-            tokenAmountFieldState.text.toString().toBigDecimalOrNull()?.let {
-                CoinType.THORCHAIN.toUnit(it)
-            }
-
-        if (tokenShares == null || tokenShares <= BigInteger.ZERO) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_no_amount)
-            )
-        }
-
-        if (tokenShares > maxShares) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.send_error_max_shares)
-            )
-        }
-
-        val chain =
-            chain
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-        val address =
-            address.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val account =
-            address.accounts.find { it.token.ticker.equals(unmergeToken.ticker, ignoreCase = true) }
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.merge_account_doesnt_exist)
-                )
-
-        val srcAddress = account.token.address
-        val dstAddr = unmergeToken.contract
-        val memo = "unmerge:${unmergeToken.denom}:${tokenShares}"
-        val gasFee = calculateGasFee(chain, account.token, srcAddress)
-
-        val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain,
-                srcAddress,
-                account.token,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_THOR_UNMERGE,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, account.token)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = account.token,
-            srcAddress = srcAddress,
-            dstAddress = dstAddr,
-            memo = memo,
-            srcTokenValue = TokenValue(value = tokenShares, token = account.token),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-        )
-    }
-
     private suspend fun createAddCacaoPoolTransaction(): DepositTransaction {
         val vaultId =
             requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
@@ -2294,210 +2273,6 @@ constructor(
         )
     }
 
-    private suspend fun createMergeTx(): DepositTransaction {
-        val vaultId =
-            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
-        val chain =
-            chain
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val address =
-            address.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val mergeToken = state.value.selectedCoin
-
-        val selectedAccount =
-            address.accounts.find { it.token.ticker.equals(mergeToken.ticker, ignoreCase = true) }
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.merge_account_doesnt_exist)
-                )
-
-        val selectedToken = selectedAccount.token
-
-        val srcAddress = selectedToken.address
-
-        val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
-
-        val dstAddr = mergeToken.contract
-
-        val memo = "merge:${mergeToken.denom}"
-
-        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
-
-        val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_THOR_MERGE,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = dstAddr,
-            memo = memo,
-            srcTokenValue = TokenValue(value = tokenAmount, token = selectedToken),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-        )
-    }
-
-    private suspend fun createSwitchTx(): DepositTransaction {
-        val vaultId =
-            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
-        val chain =
-            chain
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val address =
-            address.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val selectedMergeToken = state.value.selectedCoin
-        val selectedAccount =
-            address.accounts.firstOrNull {
-                it.token.ticker.equals(selectedMergeToken.ticker, ignoreCase = true)
-            }
-                ?: throw InvalidTransactionDataException(
-                    UiText.FormattedText(
-                        R.string.must_be_enabled_before_proceeding,
-                        listOf(selectedMergeToken.ticker),
-                    )
-                )
-        val selectedToken = selectedAccount.token
-
-        val srcAddress = selectedToken.address
-
-        val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
-
-        val dstAddr = nodeAddressFieldState.text.toString()
-        dstAddressErrorOrNull(chain, dstAddr)?.let { throw InvalidTransactionDataException(it) }
-
-        val memo = "SWITCH:${thorAddressFieldState.text}"
-
-        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
-
-        val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain,
-                srcAddress,
-                selectedToken,
-                gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_UNSPECIFIED,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = dstAddr,
-            memo = memo,
-            srcTokenValue = TokenValue(value = tokenAmount, token = selectedToken),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-        )
-    }
-
-    private suspend fun createTransferIbcTx(): DepositTransaction {
-        val vaultId =
-            requireNotNull(vaultId) { "vaultId must be initialized before creating transaction" }
-        val chain =
-            chain
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-
-        val address =
-            address.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_no_address)
-                )
-        val dstAddr = nodeAddressFieldState.text.toString()
-        dstAddressErrorOrNull(state.value.selectedDstChain, dstAddr)?.let {
-            throw InvalidTransactionDataException(it)
-        }
-
-        val selectedMergeToken = state.value.selectedCoin
-        val selectedAccount =
-            address.accounts.firstOrNull {
-                it.token.ticker.equals(selectedMergeToken.ticker, ignoreCase = true)
-            }
-                ?: throw InvalidTransactionDataException(
-                    UiText.FormattedText(
-                        R.string.must_be_enabled_before_proceeding,
-                        listOf(selectedMergeToken.ticker),
-                    )
-                )
-        val selectedToken = selectedAccount.token
-
-        val srcAddress = selectedToken.address
-
-        val gasFee = calculateGasFee(chain, selectedToken, srcAddress)
-
-        val memo =
-            DepositMemo.TransferIbc(
-                srcChain = chain,
-                dstChain = state.value.selectedDstChain,
-                dstAddress = dstAddr,
-                memo = customMemoFieldState.text.toString().takeIf { it.isNotBlank() },
-            )
-
-        val tokenAmount = requireTokenAmount(selectedToken, selectedAccount, address, gasFee)
-
-        val specific =
-            blockChainSpecificRepository.getSpecific(
-                chain = chain,
-                address = srcAddress,
-                token = selectedToken,
-                gasFee = gasFee,
-                isSwap = false,
-                isMaxAmountEnabled = false,
-                isDeposit = true,
-                transactionType = TransactionType.TRANSACTION_TYPE_IBC_TRANSFER,
-            )
-
-        val gasFeeFiat = getFeesFiatValue(specific, gasFee, selectedToken)
-
-        return DepositTransaction(
-            id = UUID.randomUUID().toString(),
-            vaultId = vaultId,
-            srcToken = selectedToken,
-            srcAddress = srcAddress,
-            dstAddress = dstAddr,
-            memo = memo.toString(),
-            srcTokenValue = TokenValue(value = tokenAmount, token = selectedToken),
-            estimatedFees = gasFee,
-            estimateFeesFiat = gasFeeFiat.formattedFiatValue,
-            blockChainSpecific = specific.blockChainSpecific,
-        )
-    }
-
     fun onLoadRujiMergeBalances() {
         viewModelScope.launch {
             try {
@@ -2619,7 +2394,7 @@ constructor(
     /**
      * Returns a destination-address error specific to the IBC/Switch dst field, distinguishing
      * blank from invalid-format so the user sees the more actionable message. Used by both the
-     * public [validateDstAddress] blur helper and the [createTransferIbcTx] submit guard so the
+     * public [validateDstAddress] blur helper and the TransferIbc/Switch submit guards so the
      * inline error and the thrown error stay in lockstep.
      */
     private fun dstAddressErrorOrNull(chain: Chain?, dstAddress: String): UiText? {
