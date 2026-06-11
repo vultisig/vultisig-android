@@ -25,10 +25,10 @@ internal class SwapKitZcashSignerException(message: String) : Exception(message)
  * WalletCore's `CoinType.ZCASH` path.
  *
  * Sighash: WalletCore's ZEC signer implements ZIP-243 (the Sapling signature digest with the
- * personalised Blake2b-256). It reads the branch id from the plan — the existing native ZEC send
- * uses [ZCASH_BRANCH_ID_HEX] `30f33754`, and we match that so the digest is identical to a manually
- * sent ZEC transaction. (Deviating to the Sapling-v4 spec id `0x76b809bb` would produce a different
- * digest the chain rejects.)
+ * personalised Blake2b-256). It reads the branch id from the plan — we feed it the live consensus
+ * branch id resolved at send time (the same value the native ZEC send uses), so the digest is
+ * identical to a manually sent ZEC transaction. (Deviating to the Sapling-v4 spec id `0x76b809bb`
+ * would produce a different digest the chain rejects.)
  *
  * The frozen-plan pattern is load-bearing for the same reason as [SwapKitLegacyP2PKHSigner]: NEAR
  * Intents tracks the route by the tx_id SwapKit baked into the PSBT, so we sign verbatim.
@@ -40,13 +40,18 @@ internal class SwapKitZcashSigner(
     private val coinType = CoinType.ZCASH
     private val utxo = UtxoHelper(coinType, vaultHexPublicKey, vaultHexChainCode)
 
-    /** ZIP-243 preimage hashes (sorted hex) for every input. */
+    /**
+     * ZIP-243 preimage hashes (sorted hex) for every input. [zcashBranchId] is the live branch id
+     * resolved at send time (carried on the source-chain payload's UTXO specific); a null/empty
+     * branch id is rejected (buildSigningInputData throws) — there is no compiled-in fallback.
+     */
     fun getPreSignedImageHash(
         psbtBytes: ByteArray,
         targetAddress: String,
         fromAmount: BigInteger,
+        zcashBranchId: String? = null,
     ): List<String> {
-        val inputData = buildSigningInputData(psbtBytes, targetAddress, fromAmount)
+        val inputData = buildSigningInputData(psbtBytes, targetAddress, fromAmount, zcashBranchId)
         val preHashes = TransactionCompiler.preImageHashes(coinType, inputData)
         val preSigningOutput = Bitcoin.PreSigningOutput.parseFrom(preHashes).checkError()
         return preSigningOutput.hashPublicKeysList
@@ -65,8 +70,9 @@ internal class SwapKitZcashSigner(
         targetAddress: String,
         fromAmount: BigInteger,
         signatures: Map<String, KeysignResponse>,
+        zcashBranchId: String? = null,
     ): SignedTransactionResult {
-        val inputData = buildSigningInputData(psbtBytes, targetAddress, fromAmount)
+        val inputData = buildSigningInputData(psbtBytes, targetAddress, fromAmount, zcashBranchId)
         return utxo.getSignedTransaction(inputData, signatures)
     }
 
@@ -79,6 +85,7 @@ internal class SwapKitZcashSigner(
         psbtBytes: ByteArray,
         targetAddress: String,
         fromAmount: BigInteger,
+        zcashBranchId: String? = null,
     ): ByteArray {
         if (psbtBytes.isEmpty()) {
             throw SwapKitZcashSignerException("SwapKit ZEC PSBT payload is empty")
@@ -121,6 +128,7 @@ internal class SwapKitZcashSigner(
             parsedTx.lockTime,
             fromAmount,
             targetAddress,
+            zcashBranchId,
         )
     }
 
@@ -130,7 +138,17 @@ internal class SwapKitZcashSigner(
         lockTime: Long,
         fromAmount: BigInteger,
         targetAddressHint: String,
+        zcashBranchId: String?,
     ): ByteArray {
+        // ZEC ZIP-243 needs the live consensus branch id on the plan — WalletCore reads it during
+        // preimage construction. There is no compiled-in fallback because signing with a stale id
+        // produces a tx the network rejects, so refuse up front when it could not be resolved.
+        if (zcashBranchId.isNullOrEmpty()) {
+            throw SwapKitZcashSignerException(
+                "Zcash ZIP-243 consensus branch id is unavailable; cannot sign the SwapKit ZEC " +
+                    "transaction without the live branch id"
+            )
+        }
         if (inputs.isEmpty() || outputs.isEmpty()) {
             throw SwapKitZcashSignerException("SwapKit ZEC PSBT has empty inputs or outputs")
         }
@@ -191,8 +209,8 @@ internal class SwapKitZcashSigner(
                     .build()
             }
 
-        // ZEC ZIP-243 needs the branch id on the plan — WalletCore reads it during preimage
-        // construction. Mirror the native send path's value so digest derivation is identical.
+        // Branch id validated at the top of this function; land it verbatim on the plan so digest
+        // derivation matches the native send path and the rest of the co-signing committee.
         val plan =
             Bitcoin.TransactionPlan.newBuilder()
                 .setAmount(depositAmount)
@@ -200,7 +218,7 @@ internal class SwapKitZcashSigner(
                 .setFee(fee)
                 .setChange(changeAmount)
                 .setError(SigningError.OK)
-                .setBranchId(ByteString.fromHex(ZCASH_BRANCH_ID_HEX))
+                .setBranchId(ByteString.fromHex(zcashBranchId))
                 .addAllUtxos(utxos)
                 .build()
 
@@ -439,13 +457,5 @@ internal class SwapKitZcashSigner(
         private const val SAPLING_TX_VERSION = 0x80000004L
         /** Sapling consensus group id. */
         private const val SAPLING_VERSION_GROUP_ID = 0x892F2085L
-
-        /**
-         * Branch id matching the existing native ZEC send. WalletCore reads it as the ZIP-243
-         * personalised-Blake2b branch identifier; diverging to the Sapling-v4-spec `0x76b809bb`
-         * would produce a digest the network rejects. Sourced from [ZCASH_ZIP243_BRANCH_ID_HEX] so
-         * both signing paths stay locked together.
-         */
-        private const val ZCASH_BRANCH_ID_HEX = ZCASH_ZIP243_BRANCH_ID_HEX
     }
 }

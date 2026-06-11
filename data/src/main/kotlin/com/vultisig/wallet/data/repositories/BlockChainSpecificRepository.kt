@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
 import com.vultisig.wallet.data.api.TronApiImpl.Companion.TRANSFER_FUNCTION_SELECTOR
+import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
@@ -85,6 +86,7 @@ constructor(
     private val cosmosApiFactory: CosmosApiFactory,
     private val blockChairApi: BlockChairApi,
     private val dashApi: DashApi,
+    private val zcashApi: ZcashApi,
     private val polkadotApi: PolkadotApi,
     private val bittensorApi: BittensorApi,
     private val suiApi: SuiApi,
@@ -325,6 +327,12 @@ constructor(
                             BlockChainSpecific.UTXO(
                                 byteFee = byteFee,
                                 sendMaxAmount = isMaxAmountEnabled,
+                                // Resolve the live ZIP-243 branch id for ZEC at build time so it
+                                // travels with the payload to the signing helpers; null (constant
+                                // fallback) for the other UTXO chains and when the RPC is down.
+                                zcashBranchId =
+                                    if (chain == Chain.Zcash) zcashApi.getConsensusBranchIdHex()
+                                    else null,
                             ),
                         utxos =
                             utxos

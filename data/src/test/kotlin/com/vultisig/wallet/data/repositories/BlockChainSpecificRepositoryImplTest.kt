@@ -13,6 +13,7 @@ import com.vultisig.wallet.data.api.RippleApi
 import com.vultisig.wallet.data.api.SolanaApi
 import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.TronApi
+import com.vultisig.wallet.data.api.ZcashApi
 import com.vultisig.wallet.data.api.chains.SuiApi
 import com.vultisig.wallet.data.api.chains.ton.TonApi
 import com.vultisig.wallet.data.api.models.ZkGasFee
@@ -35,6 +36,7 @@ import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -74,6 +76,27 @@ internal class BlockChainSpecificRepositoryImplTest {
             maxFeePerGas = BigInteger("111"),
             priorityFee = BigInteger("22"),
         )
+    }
+
+    @Test
+    fun `Zcash UTXO specific carries the live branch id fetched from ZcashApi`() = runTest {
+        val coin = zcashCoin()
+        val zcashApi = mockk<ZcashApi> { coEvery { getConsensusBranchIdHex() } returns "30f33754" }
+        val result =
+            repository(zcashApi = zcashApi)
+                .getSpecific(
+                    chain = Chain.Zcash,
+                    address = SOURCE_ADDRESS,
+                    token = coin,
+                    gasFee = TokenValue(BigInteger.ONE, coin),
+                    isSwap = false,
+                    isMaxAmountEnabled = false,
+                    isDeposit = false,
+                )
+
+        val specific = result.blockChainSpecific
+        assertTrue(specific is BlockChainSpecific.UTXO)
+        assertEquals("30f33754", (specific as BlockChainSpecific.UTXO).zcashBranchId)
     }
 
     @Test
@@ -413,11 +436,26 @@ internal class BlockChainSpecificRepositoryImplTest {
             isNativeToken = true,
         )
 
+    private fun zcashCoin() =
+        Coin(
+            chain = Chain.Zcash,
+            ticker = "ZEC",
+            logo = "",
+            address = SOURCE_ADDRESS,
+            decimal = 8,
+            hexPublicKey = "pub",
+            priceProviderID = "zcash",
+            contractAddress = "",
+            isNativeToken = true,
+        )
+
     private fun repository(
         evmApi: EvmApi = mockk<EvmApi>(relaxed = true),
         evmFeeService: FeeService = NoOpFeeService,
         suiApi: SuiApi = mockk<SuiApi>(relaxed = true),
         suiFeeService: FeeService = NoOpFeeService,
+        blockChairApi: BlockChairApi = mockk<BlockChairApi>(relaxed = true),
+        zcashApi: ZcashApi = mockk<ZcashApi>(relaxed = true),
     ): BlockChainSpecificRepositoryImpl {
         val evmApiFactory =
             object : EvmApiFactory {
@@ -430,8 +468,9 @@ internal class BlockChainSpecificRepositoryImplTest {
             evmApiFactory = evmApiFactory,
             solanaApi = mockk<SolanaApi>(relaxed = true),
             cosmosApiFactory = mockk<CosmosApiFactory>(relaxed = true),
-            blockChairApi = mockk<BlockChairApi>(relaxed = true),
+            blockChairApi = blockChairApi,
             dashApi = mockk<DashApi>(relaxed = true),
+            zcashApi = zcashApi,
             polkadotApi = mockk<PolkadotApi>(relaxed = true),
             bittensorApi = mockk<BittensorApi>(relaxed = true),
             suiApi = suiApi,
