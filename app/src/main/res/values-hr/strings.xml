@@ -25,13 +25,8 @@
     <string name="vault_tier_unlock_ultimate_part2">Ultimativnu</string>
     <string name="vault_tier_unlock_ultimate_part3"> razinu</string>
     <string name="vault_tier_ultimate">Ultimativni</string>
-    <string name="vault_tier_bronze_discount">Popust: 5bps</string>
-    <string name="vault_tier_silver_discount">Popust: 10bps</string>
-    <string name="vault_tier_gold_discount">Popust: 20bps</string>
-    <string name="vault_tier_platinum_discount">Popust: 25bps</string>
-    <string name="vault_tier_diamond_discount">Popust: 35bps</string>
-    <string name="vault_tier_ultimate_discount">Bez naknade</string>
-    <string name="vault_tier_hold">Zadrži</string>
+    <string name="vault_tier_swap_discount">Popust na zamjenu: %1$dbps</string>
+    <string name="vault_tier_more_coming_soon">Uskoro više</string>
     <string name="vault_tier_unlock">Otključaj razinu</string>
     <string name="vault_tier_active">Aktivno</string>
     <string name="vault_tier_unlock_bronze_part1">Otključaj </string>
@@ -46,6 +41,8 @@
     <string name="vault_tier_unlock_platinum_part1">Otključaj </string>
     <string name="vault_tier_unlock_platinum_part2">Platinsku</string>
     <string name="vault_tier_unlock_platinum_part3"> razinu</string>
+    <string name="vault_tier_banner_title">Hold $VULT</string>
+    <string name="vault_tier_banner_subtitle">ostvarite popust na trgovanje</string>
     <string name="vault_tier_description">Hold $VULT za otključavanje nižih naknada za trgovanje.</string>
     <string name="vault_tier_bronze_description_part1">Držanjem 1.500 $VULT, otključat ćete Brončanu razinu i dobiti </string>
     <string name="vault_tier_bronze_description_part2">popust od 5 baznih bodova na naknade za trgovanje</string>

@@ -111,13 +111,8 @@
     <string name="vault_tier_platinum">플래티넘</string>
     <string name="vault_tier_diamond">다이아몬드</string>
     <string name="vault_tier_ultimate">얼티밋</string>
-    <string name="vault_tier_bronze_discount">할인: 5bps</string>
-    <string name="vault_tier_silver_discount">할인: 10bps</string>
-    <string name="vault_tier_gold_discount">할인: 20bps</string>
-    <string name="vault_tier_platinum_discount">할인: 25bps</string>
-    <string name="vault_tier_diamond_discount">할인: 35bps</string>
-    <string name="vault_tier_ultimate_discount">수수료 면제</string>
-    <string name="vault_tier_hold">보유</string>
+    <string name="vault_tier_swap_discount">스왑 할인: %1$dbps</string>
+    <string name="vault_tier_more_coming_soon">더 많은 혜택이 곧 제공됩니다</string>
     <string name="vault_tier_unlock">등급 해제</string>
     <string name="vault_tier_active">활성</string>
     <string name="vault_tier_unlock_bronze_part1"></string>
@@ -140,6 +135,8 @@
     <string name="vault_tier_unlock_ultimate_part2">얼티밋</string>
     <string name="vault_tier_unlock_ultimate_part3"> 등급 해제</string>
 
+    <string name="vault_tier_banner_title">$VULT 보유</string>
+    <string name="vault_tier_banner_subtitle">거래 할인 받기</string>
     <string name="vault_tier_description">$VULT를 보유하여 더 낮은 거래 수수료를 해제하세요.</string>
     <string name="vault_tier_bronze_description_part1">1,500 $VULT를 보유하면 브론즈 등급이 해제되어 </string>
     <string name="vault_tier_bronze_description_part2">5 bps 거래 수수료 할인</string>

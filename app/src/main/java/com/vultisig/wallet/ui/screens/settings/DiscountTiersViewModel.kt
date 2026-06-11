@@ -38,7 +38,6 @@ import timber.log.Timber
 internal data class DiscountTiersUiModel(
     val activeTier: TierType? = null,
     val tierClicked: TierType? = null,
-    val expandedTiers: Set<TierType> = emptySet(),
     val isLoading: Boolean = true,
     val showBottomSheetDialog: Boolean = false,
 )
@@ -96,9 +95,6 @@ constructor(
                                 cachedVultBalance.determineTier()?.applyExtraDiscount(hasNFTCache)
                             _state.value =
                                 DiscountTiersUiModel(activeTier = cachedTier, isLoading = false)
-                            if (cachedTier != null) {
-                                expandOrCollapseTierInfo(cachedTier)
-                            }
                             Timber.d(
                                 "VULT cached balance: $cachedVultBalance, Active tier: $cachedTier"
                             )
@@ -120,10 +116,6 @@ constructor(
 
                             _state.value =
                                 DiscountTiersUiModel(activeTier = tier, isLoading = false)
-
-                            if (tier != null) {
-                                expandOrCollapseTierInfo(tier)
-                            }
 
                             Timber.d("VULT fresh balance: $vultBalance, Active tier: $tier")
 
@@ -221,19 +213,6 @@ constructor(
                     )
                 )
             }
-        }
-    }
-
-    fun expandOrCollapseTierInfo(tier: TierType) {
-        _state.update { current ->
-            current.copy(
-                expandedTiers =
-                    if (current.expandedTiers.contains(tier)) {
-                        emptySet() // Collapse
-                    } else {
-                        setOf(tier) // Expand
-                    }
-            )
         }
     }
 

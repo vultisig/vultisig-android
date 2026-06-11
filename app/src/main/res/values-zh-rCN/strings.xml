@@ -114,13 +114,8 @@
     <string name="vault_tier_unlock_ultimate_part2">终极</string>
     <string name="vault_tier_unlock_ultimate_part3">等级</string>
     <string name="vault_tier_ultimate">终极</string>
-    <string name="vault_tier_bronze_discount">折扣：5基点</string>
-    <string name="vault_tier_silver_discount">折扣：10基点</string>
-    <string name="vault_tier_gold_discount">折扣：20基点</string>
-    <string name="vault_tier_platinum_discount">折扣：25基点</string>
-    <string name="vault_tier_diamond_discount">折扣：35基点</string>
-    <string name="vault_tier_ultimate_discount">免费</string>
-    <string name="vault_tier_hold">持有</string>
+    <string name="vault_tier_swap_discount">交换折扣：%1$d基点</string>
+    <string name="vault_tier_more_coming_soon">更多即将推出</string>
     <string name="vault_tier_unlock">解锁等级</string>
     <string name="vault_tier_active">已激活</string>
     <string name="vault_tier_unlock_bronze_part1">解锁</string>
@@ -135,6 +130,8 @@
     <string name="vault_tier_unlock_platinum_part1">解锁</string>
     <string name="vault_tier_unlock_platinum_part2">铂金</string>
     <string name="vault_tier_unlock_platinum_part3">等级</string>
+    <string name="vault_tier_banner_title">持有 $VULT</string>
+    <string name="vault_tier_banner_subtitle">获得交易折扣</string>
     <string name="vault_tier_description">持有 $VULT 以解锁更低的交易费用。</string>
     <string name="vault_tier_bronze_description_part1">持有 1,500 $VULT，您将解锁青铜等级并获得</string>
     <string name="vault_tier_bronze_description_part2">5 基点交易费折扣</string>
