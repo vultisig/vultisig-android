@@ -513,10 +513,10 @@ constructor(
                 },
                 { currentState.value = activeState },
             )
-        this.signatures += newSignatures
-        if (signatures.isEmpty()) {
+        if (newSignatures.isEmpty()) {
             error("Failed to sign transaction, signatures empty")
         }
+        this.signatures += newSignatures
     }
 
     /**
@@ -596,7 +596,10 @@ constructor(
     private suspend fun signAndBroadcast() {
         Timber.d("Start to SignAndBroadcast")
         currentState.value = KeysignState.CreatingInstance
-        runSigningFlow(cancelPullJobOnFinish = true) {
+        runSigningFlow(
+            cancelPullJobOnFinish = true,
+            onAllSigned = { extractCustomMessageSignature() },
+        ) {
             featureFlags = featureFlagApi.getFeatureFlags()
             val isEncryptionGcm = featureFlags?.isEncryptGcmEnabled == true
 
@@ -686,7 +689,6 @@ constructor(
             if (keysignResp.r.isNullOrEmpty() || keysignResp.s.isNullOrEmpty()) {
                 throw Exception("Failed to sign message")
             }
-            calculateCustomMessageSignature(keysignResp)
             this.signatures[message] = keysignResp
             keysignVerify.markLocalPartyKeysignComplete(message, keysignResp)
 
