@@ -274,12 +274,23 @@ internal fun decodeErc20MetadataString(raw: String): String? {
         val bytes = raw.removePrefix("0x").chunked(2).map { it.toInt(16).toByte() }.toByteArray()
         val length = BigInteger(bytes.sliceArray(32..63)).toInt()
         String(bytes.sliceArray(64 until 64 + length)).decodeBytes32HexOrSelf()
-    } catch (_: Exception) {
+    } catch (_: NumberFormatException) {
+        // Non-hex characters in the eth_call result, or an empty byte range fed to BigInteger.
+        null
+    } catch (_: IndexOutOfBoundsException) {
+        // Result shorter than the ABI offset/length/data words require.
         null
     }
 }
 
-private fun String.decodeBytes32HexOrSelf(): String {
+/**
+ * Decodes a value that is the 64-char hex of a `bytes32` (right-padded with zeros) back to UTF-8
+ * text, trimming the zero padding. Returns the receiver unchanged when it is not such a value — so
+ * it is safe to apply to any name/symbol string (a normal ticker like `MKR` passes straight
+ * through). Used both for ABI `eth_call` results ([decodeErc20MetadataString]) and for aggregator
+ * token metadata that already arrives as the bare `bytes32` hex (issue #4873).
+ */
+internal fun String.decodeBytes32HexOrSelf(): String {
     if (length != 64 || any { it !in '0'..'9' && it !in 'a'..'f' && it !in 'A'..'F' }) return this
     val raw = chunked(2).map { it.toInt(16).toByte() }.toByteArray()
     val text = raw.takeWhile { it.toInt() != 0 }.toByteArray()

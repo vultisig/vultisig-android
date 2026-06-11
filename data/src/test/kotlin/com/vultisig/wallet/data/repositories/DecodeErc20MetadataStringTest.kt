@@ -58,4 +58,27 @@ internal class DecodeErc20MetadataStringTest {
     fun `returns null on malformed input`() {
         assertNull(decodeErc20MetadataString("0xdeadbeef"))
     }
+
+    // decodeBytes32HexOrSelf is applied directly to aggregator token symbols (1inch), which is the
+    // path that feeds the swap "To" selector — there the value already arrives as the bare bytes32
+    // hex, not a full ABI eth_call result (issue #4873).
+
+    @Test
+    fun `decodes a bare bytes32-as-hex symbol back to text`() {
+        val mkr = "4d4b52" + "0".repeat(58)
+        assertEquals("MKR", mkr.decodeBytes32HexOrSelf())
+    }
+
+    @Test
+    fun `leaves a normal aggregator ticker untouched`() {
+        assertEquals("MKR", "MKR".decodeBytes32HexOrSelf())
+        assertEquals("USDC", "USDC".decodeBytes32HexOrSelf())
+    }
+
+    @Test
+    fun `leaves a 64-char value that is not printable bytes32 text untouched`() {
+        // A genuine 64-hex-char string whose decoded bytes are non-printable must survive as-is.
+        val raw = "ff".repeat(32)
+        assertEquals(raw, raw.decodeBytes32HexOrSelf())
+    }
 }

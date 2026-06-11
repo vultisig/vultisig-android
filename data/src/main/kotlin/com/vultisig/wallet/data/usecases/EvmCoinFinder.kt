@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.api.swapAggregators.OneInchApi
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
+import com.vultisig.wallet.data.repositories.decodeBytes32HexOrSelf
 import com.vultisig.wallet.data.utils.NetworkException
 import java.math.BigInteger
 import java.net.SocketTimeoutException
@@ -156,7 +157,8 @@ constructor(private val oneInchApi: OneInchApi, private val evmApiFactory: EvmAp
     ): Coin =
         Coin(
             chain = chain,
-            ticker = token.symbol,
+            // Decode legacy bytes32-as-hex symbols (e.g. MKR) back to text (issue #4873).
+            ticker = token.symbol.decodeBytes32HexOrSelf(),
             logo = logo,
             address = "",
             decimal = token.decimals,
