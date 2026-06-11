@@ -38,7 +38,7 @@ constructor(private val transactionHistoryRepository: TransactionHistoryReposito
         vaultId: String,
         txHash: String,
         chain: Chain,
-        explorerUrl: String?,
+        explorerUrl: String,
         transactionHistoryData: TransactionHistoryData?,
         broadcastBlockNumber: Long?,
     ) {
