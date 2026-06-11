@@ -651,6 +651,7 @@
     <!-- Join Keysign Failed -->
     <string name="join_keysign_failed_connect_to_server">连接服务器失败</string>
     <string name="join_keysign_relay_unavailable">中继服务器不可用，请重试</string>
+    <string name="join_keysign_start_timeout">另一台设备未及时开始签名</string>
     <string name="join_keysign_qbtc_claim_missing_account">此保险库缺少联合签署领取所需的 Bitcoin 或 QBTC 账户</string>
 
     <!-- Network Connection -->
