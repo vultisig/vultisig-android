@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
 import com.vultisig.wallet.data.usecases.ParseCosmosMessageUseCase
 import java.math.BigInteger
+import timber.log.Timber
 
 /**
  * Polymorphic fee helper shared by the join-keysign deposit and send branches — mirrors iOS's
@@ -101,7 +102,14 @@ internal fun KeysignPayload.dappSuppliedNativeFee(
 
     val directMatched =
         signDirect
-            ?.let { runCatching { parseCosmosMessage(it) }.getOrNull() }
+            ?.let {
+                try {
+                    parseCosmosMessage(it)
+                } catch (e: IllegalArgumentException) {
+                    Timber.w("Failed to parse cosmos message: %s", e.message)
+                    null
+                }
+            }
             ?.authInfoFee
             ?.amount
             ?.filter { it.denom.lowercase() == nativeDenom }

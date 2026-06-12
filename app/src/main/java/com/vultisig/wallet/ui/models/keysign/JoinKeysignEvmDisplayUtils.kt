@@ -61,6 +61,17 @@ internal fun isTokenContractApproval(signature: String): Boolean {
 }
 
 /**
+ * Returns true when [signature] declares nested ABI params (tuple types). [firstUintParamIndex]
+ * splits on top-level commas without tuple-depth awareness, so a tuple-shaped signature (e.g.
+ * Permit2 `permitSingle((address,uint160,…),…)`) would yield an index that doesn't line up with the
+ * flat args array — guard against it until tuple-aware decoding exists.
+ */
+private fun hasNestedAbiParams(signature: String): Boolean {
+    val params = signature.substringAfter('(', "").substringBeforeLast(')', "")
+    return params.contains('(') || params.contains(')')
+}
+
+/**
  * Returns true when [signature] is an ERC-20 approval function (`approve`, `permit`,
  * `permitSingle`, or `permitBatch`) and the first uint parameter in [inputs] is at or above
  * [UNLIMITED_APPROVAL_THRESHOLD], indicating an effectively unbounded allowance.
@@ -68,6 +79,7 @@ internal fun isTokenContractApproval(signature: String): Boolean {
 internal fun isUnlimitedApproval(signature: String, inputs: String?, json: Json): Boolean {
     val normalized = signature.replace(" ", "").lowercase(Locale.ROOT)
     if (normalized.substringBefore('(') !in UNLIMITED_APPROVAL_FUNCTIONS) return false
+    if (hasNestedAbiParams(normalized)) return false // tuple args need nested value extraction
     val amountIndex = firstUintParamIndex(normalized) ?: return false
     val amount =
         runCatching {
