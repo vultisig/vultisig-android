@@ -227,6 +227,8 @@ internal class SwapFormViewModelTest {
                 swapQuoteManager = swapQuoteManager,
                 swapTransactionBuilder =
                     SwapTransactionBuilder(swapGasCalculator, allowanceRepository),
+                swapInputCollector =
+                    SwapInputCollector(convertTokenAndValueToTokenValue, swapValidator),
                 ioDispatcher = ioDispatcher,
             )
             .also { createdViewModels += it }
