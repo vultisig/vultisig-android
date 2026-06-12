@@ -143,7 +143,7 @@ internal class ExplorerLinkRepositoryImpl @Inject constructor() : ExplorerLinkRe
                 Chain.Cardano -> "https://cardanoscan.io/"
                 Chain.Mantle -> "https://mantlescan.xyz/"
                 Chain.Sei -> "https://seiscan.io/"
-                Chain.Hyperliquid -> "https://liquidscan.io/"
+                Chain.Hyperliquid -> "https://hypurrscan.io/"
                 Chain.Qbtc -> "" // no public explorer yet
             }
 }
