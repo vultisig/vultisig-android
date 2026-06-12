@@ -93,6 +93,16 @@ internal class DepositFormViewModelTest {
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase = mockk(relaxed = true)
     private val getThorChainLpPositionUseCase: GetThorChainLpPositionUseCase = mockk(relaxed = true)
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
+    private val fieldValidator: DepositFieldValidator =
+        DepositFieldValidatorImpl(chainAccountAddressRepository)
+    private val gasFeeHelper: DepositGasFeeHelper =
+        DepositGasFeeHelper(
+            vaultRepository = vaultRepository,
+            feeServiceComposite = feeServiceComposite,
+            tokenRepository = tokenRepository,
+            gasFeeToEstimatedFee = gasFeeToEstimatedFee,
+            tokenPriceRepository = tokenPriceRepository,
+        )
 
     @BeforeEach
     fun setUp() {
@@ -110,7 +120,6 @@ internal class DepositFormViewModelTest {
             sendNavigator = sendNavigator,
             requestQrScan = requestQrScan,
             appCurrencyRepository = appCurrencyRepository,
-            tokenPriceRepository = tokenPriceRepository,
             mapTokenValueToStringWithUnit = mapTokenValueToStringWithUnit,
             accountsRepository = accountsRepository,
             isAssetCharsValid = isAssetCharsValid,
@@ -122,7 +131,6 @@ internal class DepositFormViewModelTest {
             mayaChainApi = mayaChainApi,
             mayachainBondRepository = mayachainBondRepository,
             balanceRepository = balanceRepository,
-            gasFeeToEstimatedFee = gasFeeToEstimatedFee,
             validateMayaTransactionHeight = validateMayaTransactionHeight,
             getMayaCacaoMaturityStatus = getMayaCacaoMaturityStatus,
             feeServiceComposite = feeServiceComposite,
@@ -132,6 +140,8 @@ internal class DepositFormViewModelTest {
             requestAddressBookEntry = requestAddressBookEntry,
             getThorChainLpPositionUseCase = getThorChainLpPositionUseCase,
             thorChainLpPreflight = thorChainLpPreflight,
+            fieldValidator = fieldValidator,
+            gasFeeHelper = gasFeeHelper,
         )
 
     @Test
