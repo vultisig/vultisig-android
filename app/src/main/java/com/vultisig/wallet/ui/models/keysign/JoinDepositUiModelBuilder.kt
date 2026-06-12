@@ -64,7 +64,8 @@ constructor(
                 decimals = payloadToken.decimal,
             )
 
-        val vault = withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: error("Vault not found")
+        val vault =
+            withContext(Dispatchers.IO) { vaultRepository.get(vaultId) } ?: error("Vault not found")
 
         val blockchainTransaction =
             Transfer(

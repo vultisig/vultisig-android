@@ -47,10 +47,10 @@ import wallet.core.jni.proto.Common.SigningError
 
 /**
  * Builds the verify UI model for the join-keysign swap path. Extracted verbatim from
- * `JoinKeysignViewModel.loadTransaction`'s swap branch so the coordinating ViewModel only dispatches
- * on payload type. Dispatches per swap provider (ThorChain / MayaChain / EVM / SwapKit) and per
- * [BlockChainSpecific] to compute the network and provider fees, producing the same model the
- * verify screen and done-screen history previously received inline.
+ * `JoinKeysignViewModel.loadTransaction`'s swap branch so the coordinating ViewModel only
+ * dispatches on payload type. Dispatches per swap provider (ThorChain / MayaChain / EVM / SwapKit)
+ * and per [BlockChainSpecific] to compute the network and provider fees, producing the same model
+ * the verify screen and done-screen history previously received inline.
  */
 internal class JoinSwapUiModelBuilder
 @Inject
@@ -154,8 +154,7 @@ constructor(
         // sub-provider (`SwapKit (NEAR)`). All other providers reuse the canonical id.
         val providerLabel =
             when (swapPayload) {
-                is SwapPayload.SwapKit ->
-                    formatSwapKitProviderLabel(swapPayload.data.subProvider)
+                is SwapPayload.SwapKit -> formatSwapKitProviderLabel(swapPayload.data.subProvider)
                 else -> provider
             }
 
@@ -221,8 +220,7 @@ constructor(
                         // VULT tier discount isn't available in the join flow, so this
                         // uses the base integrator rate. The difference vs. the initiator
                         // display is at most 0.5% of dstAmount.
-                        isLiFi ->
-                            LiFiChainApi.integratorFeeAmount(dstAmount = dstTokenValue.value)
+                        isLiFi -> LiFiChainApi.integratorFeeAmount(dstAmount = dstTokenValue.value)
                         oneInchSwapTxJson.swapFee.isNotEmpty() &&
                             oneInchSwapTxJson.swapFee.toBigIntegerOrNull() != null ->
                             oneInchSwapTxJson.swapFee.toBigInteger()
@@ -235,8 +233,7 @@ constructor(
 
                 val estimatedTokenFees = TokenValue(value = value, token = feeToken)
 
-                val estimatedFee =
-                    convertTokenValueToFiat(feeToken, estimatedTokenFees, currency)
+                val estimatedFee = convertTokenValueToFiat(feeToken, estimatedTokenFees, currency)
 
                 val swapTransaction =
                     SwapTransactionUiModel(
@@ -268,7 +265,9 @@ constructor(
                             ValuedToken(
                                 token = srcToken,
                                 value =
-                                    mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue),
+                                    mapTokenValueToDecimalUiString(
+                                        estimatedNetworkGasFee.tokenValue
+                                    ),
                                 fiatValue =
                                     fiatValueToStringMapper(
                                         estimatedNetworkGasFee.fiatValue,
@@ -487,7 +486,10 @@ constructor(
                 mapTokenValueToDecimalUiString(estimatedNetworkGasFee.tokenValue) +
                     " ${estimatedNetworkGasFee.tokenValue.unit}",
             totalFee =
-                fiatValueToStringMapper(estimatedFee + estimatedNetworkGasFee.fiatValue, asFee = true),
+                fiatValueToStringMapper(
+                    estimatedFee + estimatedNetworkGasFee.fiatValue,
+                    asFee = true,
+                ),
             provider = provider,
             providerLabel = providerLabel,
         )
