@@ -82,9 +82,7 @@ internal fun CosmosWithdrawRewardsScreen(
                             modifier = Modifier.fillMaxWidth().padding(16.dp),
                         )
                     else ->
-                        LazyColumn(
-                            modifier = Modifier.fillMaxWidth().weight(1f).padding(bottom = 220.dp)
-                        ) {
+                        LazyColumn(modifier = Modifier.fillMaxWidth().padding(bottom = 220.dp)) {
                             items(state.candidates, key = { it.validatorAddress }) { candidate ->
                                 CandidateRow(
                                     candidate = candidate,

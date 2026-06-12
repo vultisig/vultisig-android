@@ -322,6 +322,11 @@ constructor(
                         )
                     }
                     .filter { it.pendingReward > BigDecimal.ZERO }
+                    // The LazyColumn keys rows by validatorAddress; a duplicate address from the
+                    // LCD would yield duplicate keys and crash subcompose with
+                    // IllegalArgumentException. Collapse to one row per validator to keep the
+                    // emitted list stable and key-unique.
+                    .distinctBy { it.validatorAddress }
 
             // Default-select all but cap at the soft batch size — mirrors iOS init behavior.
             val cap = CosmosStakingSignDataResolver.MAX_BATCH_WITHDRAW_VALIDATORS
