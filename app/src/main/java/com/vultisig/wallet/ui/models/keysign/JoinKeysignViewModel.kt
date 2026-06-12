@@ -117,6 +117,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -126,9 +129,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.json.Json
@@ -172,6 +175,12 @@ sealed class JoinKeysignError(val message: UiText) {
         JoinKeysignError(R.string.join_keysign_relay_unavailable.asUiText())
 
     /**
+     * The initiator never started the signing ceremony within the timeout — it likely abandoned the
+     * keysign (closed the app or lost connectivity). Retryable.
+     */
+    data object Timeout : JoinKeysignError(R.string.join_keysign_start_timeout.asUiText())
+
+    /**
      * This vault is missing the Bitcoin or QBTC account the claim hash is derived from, so it
      * cannot co-sign the QBTC claim.
      */
@@ -182,6 +191,65 @@ sealed class JoinKeysignError(val message: UiText) {
 /** Thrown when a QBTC claim co-sign cannot find the [chain] account it needs in this vault. */
 private class MissingQbtcClaimAccountException(chain: Chain) :
     Exception("Missing ${chain.raw} account for QBTC claim co-sign")
+
+/** Raised when the messages to sign cannot be prepared once the ceremony starts. */
+internal class KeysignMessagesException(message: String) : Exception(message)
+
+/** Raised when polling the relay for committee membership fails (network/relay error). */
+internal class KeysignCheckException(message: String) : Exception(message)
+
+/** How [awaitKeysignStart] finished polling for the initiator to start the ceremony. */
+internal sealed interface KeysignStartOutcome {
+    /** The local party is in the committee — the ceremony has begun. */
+    data object Started : KeysignStartOutcome
+
+    /** Preparing the messages to sign failed; carries the reason for the error state. */
+    data class FailedToPrepare(val message: String) : KeysignStartOutcome
+
+    /** Polling the relay for the committee failed; carries the reason for the error state. */
+    data class FailedToCheck(val message: String) : KeysignStartOutcome
+
+    /** The deadline elapsed without the ceremony starting (initiator likely abandoned). */
+    data object TimedOut : KeysignStartOutcome
+}
+
+/**
+ * Polls [checkStarted] every [pollInterval] until it reports the ceremony has started, bounded by
+ * [timeout]. Without the bound a joiner spins forever when the initiator abandons the keysign
+ * (issue #4856). Only a plain `false` ("not started yet") keeps the loop running. A
+ * [KeysignMessagesException] ends the wait with [KeysignStartOutcome.FailedToPrepare] and a
+ * [KeysignCheckException] with [KeysignStartOutcome.FailedToCheck], so a real poll failure surfaces
+ * immediately instead of being masked by the timeout; exceeding [timeout] yields
+ * [KeysignStartOutcome.TimedOut].
+ */
+internal suspend fun awaitKeysignStart(
+    timeout: Duration,
+    pollInterval: Duration,
+    checkStarted: suspend () -> Boolean,
+): KeysignStartOutcome =
+    withTimeoutOrNull(timeout) {
+        while (true) {
+            try {
+                if (checkStarted()) {
+                    return@withTimeoutOrNull KeysignStartOutcome.Started
+                }
+            } catch (e: KeysignMessagesException) {
+                return@withTimeoutOrNull KeysignStartOutcome.FailedToPrepare(
+                    e.message ?: "Failed to prepare messages to sign"
+                )
+            } catch (e: KeysignCheckException) {
+                return@withTimeoutOrNull KeysignStartOutcome.FailedToCheck(
+                    e.message ?: "Failed to check keysign start"
+                )
+            }
+            delay(pollInterval)
+        }
+        error("unreachable") // the loop only exits via return@withTimeoutOrNull
+    } ?: KeysignStartOutcome.TimedOut
+
+/** Bounds how long a joiner waits for the initiator to start the ceremony before failing. */
+private val WAIT_FOR_KEYSIGN_START_TIMEOUT = 2.minutes
+private val KEYSIGN_START_POLL_INTERVAL = 1.seconds
 
 sealed interface JoinKeysignState {
     data object DiscoveringSessionID : JoinKeysignState
@@ -267,8 +335,6 @@ constructor(
 
         private const val ETH_SIGN_TYPED_DATA_V4 = "eth_signTypedData_v4"
     }
-
-    private class KeysignMessagesException(message: String) : Exception(message)
 
     private val args = savedStateHandle.toRoute<Route.Keysign.Join>()
     private val vaultId: String = args.vaultId
@@ -1689,7 +1755,8 @@ constructor(
                         opts = NavigationOptions(clearBackStack = true),
                     )
 
-                JoinKeysignError.RelayUnavailable -> {
+                JoinKeysignError.RelayUnavailable,
+                JoinKeysignError.Timeout -> {
                     currentState.value = JoinKeysignState.JoinKeysign
                     joinKeysign()
                 }
@@ -1708,23 +1775,38 @@ constructor(
         _jobWaitingForKeysignStart =
             viewModelScope.launch {
                 withContext(Dispatchers.IO) {
-                    while (isActive) {
-                        try {
-                            if (checkKeygenStarted()) {
-                                currentState.value = JoinKeysignState.Keysign
-                                return@withContext
-                            }
-                        } catch (e: KeysignMessagesException) {
-                            Timber.e(e, "Failed to prepare messages to sign")
+                    when (
+                        val outcome =
+                            awaitKeysignStart(
+                                timeout = WAIT_FOR_KEYSIGN_START_TIMEOUT,
+                                pollInterval = KEYSIGN_START_POLL_INTERVAL,
+                                checkStarted = ::checkKeygenStarted,
+                            )
+                    ) {
+                        KeysignStartOutcome.Started -> currentState.value = JoinKeysignState.Keysign
+
+                        is KeysignStartOutcome.FailedToPrepare -> {
+                            Timber.e("Failed to prepare messages to sign")
                             currentState.value =
                                 JoinKeysignState.Error(
-                                    JoinKeysignError.FailedToCheck(
-                                        e.message ?: "Failed to prepare messages to sign"
-                                    )
+                                    JoinKeysignError.FailedToCheck(outcome.message)
                                 )
-                            return@withContext
                         }
-                        delay(1000)
+
+                        is KeysignStartOutcome.FailedToCheck -> {
+                            Timber.e("Failed to check keysign start: %s", outcome.message)
+                            currentState.value =
+                                JoinKeysignState.Error(
+                                    JoinKeysignError.FailedToCheck(outcome.message)
+                                )
+                        }
+
+                        KeysignStartOutcome.TimedOut -> {
+                            Timber.w("Timed out waiting for the initiator to start the keysign")
+                            // Allow tryAgain() to re-register and re-poll the session.
+                            isJoiningKeysign.set(false)
+                            currentState.value = JoinKeysignState.Error(JoinKeysignError.Timeout)
+                        }
                     }
                 }
             }
@@ -1745,8 +1827,9 @@ constructor(
             throw ce
         } catch (e: Exception) {
             Timber.e(e, "Failed to check keysign start")
-            currentState.value =
-                JoinKeysignState.Error(JoinKeysignError.FailedToCheck(e.message.toString()))
+            // Surface as a terminal outcome rather than a "not started yet" false, so a real
+            // relay failure ends the wait instead of being masked by the timeout (issue #4856).
+            throw KeysignCheckException(e.message ?: "Failed to check keysign start")
         }
         return false
     }
