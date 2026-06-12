@@ -2,17 +2,24 @@ package com.vultisig.wallet.ui.models.swap
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
+import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
 import com.vultisig.wallet.data.repositories.SwapQuoteRepository
+import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
+import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.utils.UiText
 import com.vultisig.wallet.ui.utils.textAsFlow
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import java.math.BigDecimal
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -41,29 +48,73 @@ import timber.log.Timber
 /**
  * Owns the swap gas / network-fee state and the quote pipeline wiring, writing results back into
  * the shared [uiState]. Extracted from `SwapFormViewModel` so the quote/fee flow lives in one
- * cohesive, independently testable unit; the ViewModel only constructs it, [start]s it, and reads
- * the resolved quote/fee values it exposes.
+ * cohesive, independently testable unit; the ViewModel only builds it via [Factory], [start]s it,
+ * and reads the resolved quote/fee values it exposes.
  *
- * The collaborator instances are shared with the ViewModel — notably the cache-bearing
- * [swapQuoteManager], whose flip-quote cache would split across two instances.
+ * The repos / calculator / dispatcher are Hilt-injected here; the cache-bearing [swapQuoteManager]
+ * is passed in (assisted) as the ViewModel's own instance so its flip-quote cache and
+ * immediate-fetch flag don't split across two instances.
  */
-internal class SwapQuotePipelineController(
-    private val scope: CoroutineScope,
-    private val ioDispatcher: CoroutineDispatcher,
-    private val swapQuotePipeline: SwapQuotePipeline,
+internal class SwapQuotePipelineController
+@AssistedInject
+constructor(
     private val swapGasCalculator: SwapGasCalculator,
-    private val swapQuoteManager: SwapQuoteManager,
     private val swapQuoteRepository: SwapQuoteRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val fiatValueToString: FiatValueToStringMapper,
-    private val uiState: MutableStateFlow<SwapFormUiModel>,
-    private val selectedSrc: StateFlow<SendSrc?>,
-    private val selectedDst: StateFlow<SendSrc?>,
-    private val referralCode: MutableStateFlow<String?>,
-    private val srcAmountState: TextFieldState,
-    private val vaultId: () -> String?,
-    private val showError: (UiText) -> Unit,
+    private val referralRepository: ReferralCodeSettingsRepository,
+    private val getDiscountBpsUseCase: GetDiscountBpsUseCase,
+    private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
+    private val swapDiscountChecker: SwapDiscountChecker,
+    private val swapValidator: SwapValidator,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @Assisted private val scope: CoroutineScope,
+    @Assisted private val swapQuoteManager: SwapQuoteManager,
+    @Assisted private val uiState: MutableStateFlow<SwapFormUiModel>,
+    @Assisted("selectedSrc") private val selectedSrc: StateFlow<SendSrc?>,
+    @Assisted("selectedDst") private val selectedDst: StateFlow<SendSrc?>,
+    @Assisted private val referralCode: MutableStateFlow<String?>,
+    @Assisted private val srcAmountState: TextFieldState,
+    @Assisted private val vaultId: () -> String?,
+    @Assisted private val showError: (UiText) -> Unit,
 ) {
+
+    /**
+     * Builds a [SwapQuotePipelineController] for one swap form. The repos / calculator / dispatcher
+     * are Hilt-injected; the ViewModel supplies its [scope], the shared [swapQuoteManager], and the
+     * form-owned state flows / callbacks as assisted params.
+     */
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            scope: CoroutineScope,
+            swapQuoteManager: SwapQuoteManager,
+            uiState: MutableStateFlow<SwapFormUiModel>,
+            @Assisted("selectedSrc") selectedSrc: StateFlow<SendSrc?>,
+            @Assisted("selectedDst") selectedDst: StateFlow<SendSrc?>,
+            referralCode: MutableStateFlow<String?>,
+            srcAmountState: TextFieldState,
+            vaultId: () -> String?,
+            showError: (UiText) -> Unit,
+        ): SwapQuotePipelineController
+    }
+
+    // Built here (not injected) so the pipeline shares this controller's exact collaborator
+    // instances — notably the assisted, cache-bearing [swapQuoteManager], whose flip-quote cache
+    // would otherwise split across two instances.
+    private val swapQuotePipeline =
+        SwapQuotePipeline(
+            swapQuoteRepository = swapQuoteRepository,
+            appCurrencyRepository = appCurrencyRepository,
+            referralRepository = referralRepository,
+            getDiscountBpsUseCase = getDiscountBpsUseCase,
+            convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
+            swapQuoteManager = swapQuoteManager,
+            swapDiscountChecker = swapDiscountChecker,
+            swapGasCalculator = swapGasCalculator,
+            swapValidator = swapValidator,
+            fiatValueToString = fiatValueToString,
+        )
 
     /** Mutable swap-quote state and the quote-coupled swap fee, shared with the ViewModel. */
     val quoteState = QuoteStateHolder()

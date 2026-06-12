@@ -8,19 +8,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenValue
-import com.vultisig.wallet.data.repositories.AppCurrencyRepository
-import com.vultisig.wallet.data.repositories.ReferralCodeSettingsRepository
-import com.vultisig.wallet.data.repositories.SwapQuoteRepository
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
-import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
-import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
-import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
 import com.vultisig.wallet.ui.models.swap.SwapTokenSelector.Companion.ARG_SELECTED_DST_TOKEN_ID
@@ -33,7 +26,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
 import javax.inject.Inject
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,41 +39,16 @@ internal class SwapFormViewModel
 constructor(
     savedStateHandle: SavedStateHandle,
     private val navigator: Navigator<Destination>,
-    private val fiatValueToString: FiatValueToStringMapper,
-    private val convertTokenAndValueToTokenValue: ConvertTokenAndValueToTokenValueUseCase,
-    private val swapQuoteRepository: SwapQuoteRepository,
-    private val appCurrencyRepository: AppCurrencyRepository,
     private val swapTransactionRepository: SwapTransactionRepository,
-    getDiscountBpsUseCase: GetDiscountBpsUseCase,
-    referralRepository: ReferralCodeSettingsRepository,
     private val swapValidator: SwapValidator,
-    swapDiscountChecker: SwapDiscountChecker,
-    private val swapGasCalculator: SwapGasCalculator,
     private val swapTokenSelector: SwapTokenSelector,
     private val swapQuoteManager: SwapQuoteManager,
     private val swapTransactionBuilder: SwapTransactionBuilder,
     private val swapInputCollector: SwapInputCollector,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    private val swapQuotePipelineControllerFactory: SwapQuotePipelineController.Factory,
 ) : ViewModel() {
 
     private val args = savedStateHandle.toRoute<Route.Swap>()
-
-    // Constructed here (not Hilt-injected) so it shares the ViewModel's exact collaborator
-    // instances — notably the cache-bearing swapQuoteManager, whose flip-quote cache would split
-    // across two instances.
-    private val swapQuotePipeline =
-        SwapQuotePipeline(
-            swapQuoteRepository = swapQuoteRepository,
-            appCurrencyRepository = appCurrencyRepository,
-            referralRepository = referralRepository,
-            getDiscountBpsUseCase = getDiscountBpsUseCase,
-            convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
-            swapQuoteManager = swapQuoteManager,
-            swapDiscountChecker = swapDiscountChecker,
-            swapGasCalculator = swapGasCalculator,
-            swapValidator = swapValidator,
-            fiatValueToString = fiatValueToString,
-        )
 
     private val _uiState = MutableStateFlow(SwapFormUiModel())
 
@@ -105,15 +72,9 @@ constructor(
     // Owns the gas / network-fee state and quote pipeline wiring (#4865). The ViewModel only reads
     // the resolved quote/fee values it exposes for swap(), the flip gesture, and percentage taps.
     private val quotePipeline =
-        SwapQuotePipelineController(
+        swapQuotePipelineControllerFactory.create(
             scope = viewModelScope,
-            ioDispatcher = ioDispatcher,
-            swapQuotePipeline = swapQuotePipeline,
-            swapGasCalculator = swapGasCalculator,
             swapQuoteManager = swapQuoteManager,
-            swapQuoteRepository = swapQuoteRepository,
-            appCurrencyRepository = appCurrencyRepository,
-            fiatValueToString = fiatValueToString,
             uiState = _uiState,
             selectedSrc = selectedSrc,
             selectedDst = selectedDst,
