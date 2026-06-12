@@ -5,6 +5,10 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
 
+/**
+ * Snapshot of the swap form taken before a flip gesture, so the prior amounts and token selections
+ * can be restored when the user flips back.
+ */
 internal data class PreFlipState(
     val srcAmount: String,
     val srcTokenId: String,

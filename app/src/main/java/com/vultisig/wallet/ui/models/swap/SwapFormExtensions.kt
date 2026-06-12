@@ -11,6 +11,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 private const val MAX_DISPLAY_DECIMALS = 8
 
+/**
+ * Formats an amount for display after a flip, trimming to the token's decimals (capped at
+ * [MAX_DISPLAY_DECIMALS]) and stripping trailing zeros.
+ *
+ * @param tokenDecimals the token's decimal precision; falls back to [MAX_DISPLAY_DECIMALS] when
+ *   null.
+ */
 internal fun BigDecimal.formatFlippedAmount(tokenDecimals: Int? = null): String =
     setScale(
             (tokenDecimals ?: MAX_DISPLAY_DECIMALS).coerceAtMost(MAX_DISPLAY_DECIMALS),
@@ -19,6 +26,11 @@ internal fun BigDecimal.formatFlippedAmount(tokenDecimals: Int? = null): String 
         .stripTrailingZeros()
         .toPlainString()
 
+/**
+ * Updates the source-selection flow for the given token/chain: clears it when no addresses are
+ * available, picks the first matching source when unset, or re-resolves the current source
+ * otherwise.
+ */
 internal fun MutableStateFlow<SendSrc?>.updateSrc(
     selectedTokenId: String?,
     addresses: List<Address>,
