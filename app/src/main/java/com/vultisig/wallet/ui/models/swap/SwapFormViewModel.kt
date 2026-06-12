@@ -11,10 +11,8 @@ import com.vultisig.wallet.R
 import com.vultisig.wallet.data.IoDispatcher
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
-import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.AppCurrencyRepository
@@ -24,8 +22,6 @@ import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenAndValueToTokenValueUseCase
 import com.vultisig.wallet.data.usecases.GetDiscountBpsUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
-import com.vultisig.wallet.ui.models.findCurrentSrc
-import com.vultisig.wallet.ui.models.firstSendSrc
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.send.InvalidTransactionDataException
 import com.vultisig.wallet.ui.models.send.SendSrc
@@ -39,7 +35,6 @@ import com.vultisig.wallet.ui.utils.textAsFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.math.BigDecimal
 import java.math.BigInteger
-import java.math.RoundingMode
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -83,6 +78,7 @@ constructor(
     private val swapTokenSelector: SwapTokenSelector,
     private val swapQuoteManager: SwapQuoteManager,
     private val swapTransactionBuilder: SwapTransactionBuilder,
+    private val swapInputCollector: SwapInputCollector,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -147,61 +143,6 @@ constructor(
 
     private val pairNotSupportedError = UiText.StringResource(R.string.swap_route_not_available)
 
-    private data class PreFlipState(
-        val srcAmount: String,
-        val srcTokenId: String,
-        val dstTokenId: String,
-        val flippedAmount: String,
-    )
-
-    /**
-     * Fully validated inputs required to build a swap transaction, produced by
-     * [collectValidatedSwapInputs] and consumed by [SwapTransactionBuilder.build].
-     */
-    private data class ValidatedSwapInputs(
-        val vaultId: String,
-        val srcToken: Coin,
-        val dstToken: Coin,
-        val srcAddress: String,
-        val srcTokenValue: TokenValue,
-        val quote: SwapQuote,
-        val gasFee: TokenValue,
-        val gasFeeFiatValue: FiatValue,
-        val estimatedNetworkFeeTokenValue: TokenValue?,
-        val estimatedNetworkFeeFiatValue: FiatValue?,
-    )
-
-    /**
-     * Mutable swap-quote state confined to the main thread, and the single owner of the
-     * quote-coupled fee flow.
-     *
-     * Every read/write happens from Main.immediate-dispatched code (the quote pipeline, the flip
-     * gesture, and the reset paths), so the plain `var`s need no synchronization. Grouping them
-     * here keeps that threading invariant explicit in one place, and lets [reset] clear the whole
-     * quote unit from one place instead of poking scattered fields.
-     */
-    private class QuoteStateHolder {
-        var quote: SwapQuote? = null
-        var provider: SwapProvider? = null
-        var preFlipState: PreFlipState? = null
-
-        // Latest resolved swap fee. collectTotalFee() combines it with the gas fee; filterNotNull()
-        // short-circuits while it is null so a later gas update can't write a (newGas + staleSwap)
-        // total back into state during a reset or flip.
-        val swapFeeFiat = MutableStateFlow<FiatValue?>(null)
-
-        /**
-         * Clears the quote and its swap fee on reset / flip / error. [preFlipState] is owned by the
-         * flip gesture and intentionally not cleared here. Network-fee state is gas-coupled (owned
-         * by calculateGas), not quote-coupled, so it is deliberately left untouched.
-         */
-        fun reset() {
-            quote = null
-            provider = null
-            swapFeeFiat.value = null
-        }
-    }
-
     private var isLoading: Boolean
         get() = _uiState.value.isLoading
         set(value) {
@@ -245,7 +186,16 @@ constructor(
         val inputs =
             try {
                 isLoadingNextScreen = true
-                collectValidatedSwapInputs()
+                swapInputCollector.collect(
+                    vaultId = vaultId,
+                    selectedSrc = selectedSrc.value,
+                    selectedDst = selectedDst.value,
+                    srcAmount = srcAmountState.text.toString(),
+                    quote = quoteState.quote,
+                    gasFee = gasFee.value,
+                    estimatedNetworkFeeTokenValue = estimatedNetworkFeeTokenValue.value,
+                    estimatedNetworkFeeFiatValue = estimatedNetworkFeeFiatValue.value,
+                )
             } catch (e: InvalidTransactionDataException) {
                 isLoadingNextScreen = false
                 showError(e.text)
@@ -289,102 +239,6 @@ constructor(
             )
             isLoadingNextScreen = false
         }
-    }
-
-    /**
-     * Collects and validates every input required to build a swap transaction.
-     *
-     * @return the validated inputs ready for [SwapTransactionBuilder.build].
-     * @throws InvalidTransactionDataException if any required input is missing or invalid (no
-     *   vault/source/destination, unusable gas fee, same-asset pair, invalid/zero amount,
-     *   insufficient balance, missing quote, or a failed preflight check).
-     */
-    private fun collectValidatedSwapInputs(): ValidatedSwapInputs {
-        val vaultId =
-            vaultId
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_no_vault)
-                )
-        val selectedSrc =
-            selectedSrc.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_no_src_error)
-                )
-        val selectedDst =
-            selectedDst.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_selected_no_dst)
-                )
-
-        val gasFee =
-            gasFee.value?.takeIf { it.value != BigInteger.ZERO }
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
-                )
-        val gasFeeFiatValue =
-            estimatedNetworkFeeFiatValue.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_gas_fee_calculation)
-                )
-
-        val srcToken = selectedSrc.account.token
-        val dstToken = selectedDst.account.token
-
-        if (srcToken == dstToken) {
-            throw InvalidTransactionDataException(
-                UiText.StringResource(R.string.swap_screen_same_asset_error_message)
-            )
-        }
-
-        val srcAddress = selectedSrc.address.address
-
-        val srcAmountInt =
-            srcAmount?.movePointRight(selectedSrc.account.token.decimal)?.toBigInteger()?.takeIf {
-                it != BigInteger.ZERO
-            }
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(
-                        if (srcAmountState.text.toString().toBigDecimalOrNull() == null)
-                            R.string.swap_form_invalid_amount
-                        else R.string.swap_screen_invalid_zero_token_amount
-                    )
-                )
-
-        val selectedSrcBalance =
-            selectedSrc.account.tokenValue?.value
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.send_error_insufficient_balance)
-                )
-
-        val srcTokenValue = convertTokenAndValueToTokenValue(srcToken, srcAmountInt)
-
-        val quote =
-            quoteState.quote?.takeIf { it.expectedDstValue.value != BigInteger.ZERO }
-                ?: throw InvalidTransactionDataException(
-                    UiText.StringResource(R.string.swap_screen_invalid_quote_calculation)
-                )
-
-        swapValidator
-            .validateSwapPreflight(
-                selectedSrc = selectedSrc,
-                srcAmountValue = srcAmountInt,
-                selectedSrcBalance = selectedSrcBalance,
-                estimatedNetworkFeeTokenValue = estimatedNetworkFeeTokenValue.value,
-            )
-            ?.let { throw InvalidTransactionDataException(it) }
-
-        return ValidatedSwapInputs(
-            vaultId = vaultId,
-            srcToken = srcToken,
-            dstToken = dstToken,
-            srcAddress = srcAddress,
-            srcTokenValue = srcTokenValue,
-            quote = quote,
-            gasFee = gasFee,
-            gasFeeFiatValue = gasFeeFiatValue,
-            estimatedNetworkFeeTokenValue = estimatedNetworkFeeTokenValue.value,
-            estimatedNetworkFeeFiatValue = estimatedNetworkFeeFiatValue.value,
-        )
     }
 
     fun selectSrcNetwork() {
@@ -1001,32 +855,4 @@ constructor(
         const val ETH_GAS_LIMIT: Long = SwapGasCalculator.ETH_GAS_LIMIT
         const val ARB_GAS_LIMIT: Long = SwapGasCalculator.ARB_GAS_LIMIT
     }
-}
-
-private const val MAX_DISPLAY_DECIMALS = 8
-
-internal fun BigDecimal.formatFlippedAmount(tokenDecimals: Int? = null): String =
-    setScale(
-            (tokenDecimals ?: MAX_DISPLAY_DECIMALS).coerceAtMost(MAX_DISPLAY_DECIMALS),
-            RoundingMode.DOWN,
-        )
-        .stripTrailingZeros()
-        .toPlainString()
-
-internal fun MutableStateFlow<SendSrc?>.updateSrc(
-    selectedTokenId: String?,
-    addresses: List<Address>,
-    chain: Chain?,
-) {
-    val selectedSrcValue = value
-    value =
-        if (addresses.isEmpty()) {
-            null
-        } else {
-            if (selectedSrcValue == null) {
-                addresses.firstSendSrc(selectedTokenId, chain)
-            } else {
-                addresses.findCurrentSrc(selectedTokenId, selectedSrcValue)
-            }
-        }
 }
