@@ -257,37 +257,37 @@ constructor(
                 return
             }
 
-        viewModelScope.launch {
-            try {
-                val transaction =
-                    swapTransactionBuilder.build(
-                        vaultId = inputs.vaultId,
-                        srcToken = inputs.srcToken,
-                        dstToken = inputs.dstToken,
-                        srcAddress = inputs.srcAddress,
-                        srcTokenValue = inputs.srcTokenValue,
-                        quote = inputs.quote,
-                        gasFee = inputs.gasFee,
-                        gasFeeFiatValue = inputs.gasFeeFiatValue,
-                        estimatedNetworkFeeTokenValue = inputs.estimatedNetworkFeeTokenValue,
-                        estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
-                    )
-
-                swapTransactionRepository.addTransaction(transaction)
-
-                navigator.route(
-                    Route.VerifySwap(transactionId = transaction.id, vaultId = inputs.vaultId)
-                )
+        viewModelScope.safeLaunch(
+            onError = { e ->
                 isLoadingNextScreen = false
-            } catch (e: InvalidTransactionDataException) {
-                isLoadingNextScreen = false
-                showError(e.text)
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                isLoadingNextScreen = false
-                Timber.e(e)
-                showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+                if (e is InvalidTransactionDataException) {
+                    showError(e.text)
+                } else {
+                    Timber.e(e)
+                    showError(UiText.StringResource(R.string.swap_screen_invalid_quote_calculation))
+                }
             }
+        ) {
+            val transaction =
+                swapTransactionBuilder.build(
+                    vaultId = inputs.vaultId,
+                    srcToken = inputs.srcToken,
+                    dstToken = inputs.dstToken,
+                    srcAddress = inputs.srcAddress,
+                    srcTokenValue = inputs.srcTokenValue,
+                    quote = inputs.quote,
+                    gasFee = inputs.gasFee,
+                    gasFeeFiatValue = inputs.gasFeeFiatValue,
+                    estimatedNetworkFeeTokenValue = inputs.estimatedNetworkFeeTokenValue,
+                    estimatedNetworkFeeFiatValue = inputs.estimatedNetworkFeeFiatValue,
+                )
+
+            swapTransactionRepository.addTransaction(transaction)
+
+            navigator.route(
+                Route.VerifySwap(transactionId = transaction.id, vaultId = inputs.vaultId)
+            )
+            isLoadingNextScreen = false
         }
     }
 
