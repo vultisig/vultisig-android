@@ -37,6 +37,10 @@ constructor(
     private val feeResolver: JoinKeysignFeeResolver,
 ) {
 
+    /**
+     * Builds the deposit [JoinKeysignVerifyResult] from [payload] for the vault identified by
+     * [vaultId], resolving fees and parsing the THOR memo.
+     */
     suspend fun build(payload: KeysignPayload, vaultId: String): JoinKeysignVerifyResult {
         when (payload.blockChainSpecific) {
             is BlockChainSpecific.MayaChain,

@@ -31,6 +31,12 @@ constructor(
     private val qbtcClaimPeerRoundRunner: QbtcClaimPeerRoundRunner,
     private val qbtcClaimResultPoller: QbtcClaimResultPoller,
 ) {
+    /**
+     * Runs the QBTC claim co-sign round for [vault] over the relay session ([serverUrl],
+     * [sessionId], [encryptionKeyHex]) and polls for the initiator's broadcast result.
+     *
+     * @throws MissingQbtcClaimAccountException when the vault lacks the Bitcoin or QBTC account.
+     */
     suspend operator fun invoke(
         vault: Vault,
         serverUrl: String,

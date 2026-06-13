@@ -63,6 +63,14 @@ constructor(
     @param:PrettyJson private val json: Json,
 ) {
 
+    /**
+     * Builds the send [JoinSendUiModelResult] from [payload] for the vault identified by [vaultId],
+     * resolving gas/fees and decoding any EVM calldata. Returns null when the model cannot be
+     * built.
+     *
+     * @param srcVaultName display name of the sending vault.
+     * @param currency fiat currency used for value conversion.
+     */
     suspend fun build(
         payload: KeysignPayload,
         srcVaultName: String,

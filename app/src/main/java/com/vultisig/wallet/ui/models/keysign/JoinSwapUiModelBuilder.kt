@@ -61,6 +61,12 @@ constructor(
     private val mapSwapTransactionToHistoryData: SwapTransactionToHistoryDataMapper,
 ) {
 
+    /**
+     * Builds the swap [JoinKeysignVerifyResult] from [payload] and [swapPayload] for [vault],
+     * computing network/provider fees across providers and chains.
+     *
+     * @param currency fiat currency used for value conversion.
+     */
     suspend fun build(
         payload: KeysignPayload,
         swapPayload: SwapPayload,
