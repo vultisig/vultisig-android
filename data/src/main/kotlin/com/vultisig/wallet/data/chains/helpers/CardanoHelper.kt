@@ -7,6 +7,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.SignedTransactionResult
 import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
+import com.vultisig.wallet.data.models.payload.UtxoInfo
 import com.vultisig.wallet.data.tss.getSignature
 import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.Numeric.hexStringToByteArray
@@ -25,31 +26,36 @@ import wallet.core.jni.proto.Common.SigningError
 object CardanoHelper {
 
     /**
-     * Assembles the base [Cardano.SigningInput.Builder] from [keysignPayload] without a forced fee.
+     * Assembles a [Cardano.SigningInput.Builder] from raw transaction parameters.
+     *
+     * [forceFee] pins the body fee: a positive value forces that exact fee (used when signing so
+     * the MPC sighash matches the fee transmitted by the initiator); `0` leaves the fee unset so
+     * WalletCore's planner derives it from the transaction size (used for fee estimation).
      */
-    private fun buildSigningInputBuilder(
-        keysignPayload: KeysignPayload
+    private fun buildSigningInput(
+        toAmount: Long,
+        toAddress: String,
+        changeAddress: String,
+        sendMaxAmount: Boolean,
+        ttl: Long,
+        utxos: List<UtxoInfo>,
+        forceFee: Long,
     ): Cardano.SigningInput.Builder {
-        require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
-
-        val (_, sendMaxAmount, ttl) =
-            keysignPayload.blockChainSpecific as? BlockChainSpecific.Cardano
-                ?: error("fail to get Cardano chain specific parameters")
-
-        var input =
+        val input =
             Cardano.SigningInput.newBuilder()
                 .setTransferMessage(
                     Cardano.Transfer.newBuilder()
-                        .setAmount(keysignPayload.toAmount.toLong())
-                        .setToAddress(keysignPayload.toAddress)
+                        .setAmount(toAmount)
+                        .setToAddress(toAddress)
                         .setUseMaxAmount(sendMaxAmount)
-                        .setChangeAddress(keysignPayload.coin.address)
+                        .setChangeAddress(changeAddress)
+                        .setForceFee(forceFee)
                 )
                 // TODO: Implement memo support when WalletCore adds Cardano metadata support
-                .setTtl(ttl.toLong())
+                .setTtl(ttl)
 
         // Add UTXOs to the input
-        for (inputUtxo in keysignPayload.utxos) {
+        for (inputUtxo in utxos) {
             val utxo =
                 Cardano.TxInput.newBuilder()
                     .setOutPoint(
@@ -59,7 +65,7 @@ object CardanoHelper {
                             .build()
                     )
                     .setAmount(inputUtxo.amount.toLong())
-                    .setAddress(keysignPayload.coin.address)
+                    .setAddress(changeAddress)
                     .build()
             input.addUtxos(utxo)
         }
@@ -68,25 +74,68 @@ object CardanoHelper {
     }
 
     /**
-     * Returns serialized [Cardano.SigningInput] bytes with the fee obtained from
-     * [getCardanoTransactionPlan].
+     * Assembles the [Cardano.SigningInput.Builder] from [keysignPayload], forcing the body fee to
+     * the transmitted [BlockChainSpecific.Cardano.byteFee] so every co-signer produces an identical
+     * sighash regardless of WalletCore version.
      */
-    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
-        val plan = getCardanoTransactionPlan(keysignPayload)
-        return buildSigningInputBuilder(keysignPayload)
-            .setTransferMessage(
-                Cardano.Transfer.newBuilder()
-                    .setAmount(keysignPayload.toAmount.toLong())
-                    .setToAddress(keysignPayload.toAddress)
-                    .setUseMaxAmount(
-                        (keysignPayload.blockChainSpecific as BlockChainSpecific.Cardano)
-                            .sendMaxAmount
-                    )
-                    .setChangeAddress(keysignPayload.coin.address)
-                    .setForceFee(plan.fee)
-            )
-            .build()
-            .toByteArray()
+    private fun buildSigningInputBuilder(
+        keysignPayload: KeysignPayload
+    ): Cardano.SigningInput.Builder {
+        require(keysignPayload.coin.chain == Chain.Cardano) { "Coin is not ada" }
+
+        val (byteFee, sendMaxAmount, ttl) =
+            keysignPayload.blockChainSpecific as? BlockChainSpecific.Cardano
+                ?: error("fail to get Cardano chain specific parameters")
+
+        return buildSigningInput(
+            toAmount = keysignPayload.toAmount.toLong(),
+            toAddress = keysignPayload.toAddress,
+            changeAddress = keysignPayload.coin.address,
+            sendMaxAmount = sendMaxAmount,
+            ttl = ttl.toLong(),
+            utxos = keysignPayload.utxos,
+            forceFee = byteFee,
+        )
+    }
+
+    /**
+     * Returns serialized [Cardano.SigningInput] bytes with the body fee forced to the transmitted
+     * `byteFee` carried on the payload.
+     */
+    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray =
+        buildSigningInputBuilder(keysignPayload).build().toByteArray()
+
+    /**
+     * Derives the size-based Cardano fee for a prospective transaction by running WalletCore's
+     * planner with no forced fee. Used by the initiator to seed `byteFee` before signing; the
+     * derived value is then transmitted and forced on every device.
+     */
+    fun estimateFee(
+        toAmount: Long,
+        toAddress: String,
+        changeAddress: String,
+        sendMaxAmount: Boolean,
+        ttl: Long,
+        utxos: List<UtxoInfo>,
+    ): Long {
+        val signingInput =
+            buildSigningInput(
+                    toAmount = toAmount,
+                    toAddress = toAddress,
+                    changeAddress = changeAddress,
+                    sendMaxAmount = sendMaxAmount,
+                    ttl = ttl,
+                    utxos = utxos,
+                    forceFee = 0,
+                )
+                .build()
+        val plan = AnySigner.plan(signingInput, CoinType.CARDANO, TransactionPlan.parser())
+        if (plan.error == SigningError.OK) {
+            return plan.fee
+        }
+
+        Timber.e("Cardano Plan Error: %s", plan.error.name)
+        throw RuntimeException("Signing Error During Plan calculation")
     }
 
     /**
@@ -154,20 +203,5 @@ object CardanoHelper {
             rawTransaction = output.encoded.toByteArray().toHexString(),
             transactionHash = transactionHash,
         )
-    }
-
-    /**
-     * Computes and returns the [TransactionPlan] for the given [keysignPayload] using WalletCore.
-     */
-    fun getCardanoTransactionPlan(keysignPayload: KeysignPayload): TransactionPlan {
-        val signingInput = buildSigningInputBuilder(keysignPayload).build()
-        val plan = AnySigner.plan(signingInput, CoinType.CARDANO, TransactionPlan.parser())
-        if (plan.error == SigningError.OK) {
-            return plan
-        }
-
-        Timber.e("Cardano Plan Error: ${plan.error.name}")
-
-        throw RuntimeException("Signing Error During Plan calculation")
     }
 }
