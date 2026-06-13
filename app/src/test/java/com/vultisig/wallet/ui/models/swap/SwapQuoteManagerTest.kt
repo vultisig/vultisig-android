@@ -23,6 +23,7 @@ import com.vultisig.wallet.data.usecases.SearchTokenUseCase
 import com.vultisig.wallet.ui.models.mappers.FiatValueToStringMapper
 import com.vultisig.wallet.ui.models.mappers.TokenValueToDecimalUiStringMapper
 import com.vultisig.wallet.ui.utils.UiText
+import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -350,9 +351,9 @@ internal class SwapQuoteManagerTest {
                 )
 
         // Displayed destination fiat clamps to the source fiat, not the inflated $13.18 mark.
-        assertEquals("5.26", result.estimatedDstFiatValue)
+        result.estimatedDstFiatValue shouldBe "5.26"
         // Ranking still sees the unclamped market value.
-        assertEquals(BigDecimal("13.18"), result.estimatedDstFiat.value)
+        result.estimatedDstFiat.value shouldBe BigDecimal("13.18")
     }
 
     @Test
@@ -404,8 +405,8 @@ internal class SwapQuoteManagerTest {
                     BigDecimal.ONE,
                 )
 
-        assertEquals("95", result.estimatedDstFiatValue)
-        assertEquals(BigDecimal("95"), result.estimatedDstFiat.value)
+        result.estimatedDstFiatValue shouldBe "95"
+        result.estimatedDstFiat.value shouldBe BigDecimal("95")
     }
 
     @Test
