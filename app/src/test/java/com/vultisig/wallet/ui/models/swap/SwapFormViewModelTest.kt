@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.swap
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.snapshots.Snapshot
 import androidx.lifecycle.SavedStateHandle
@@ -54,10 +55,12 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -213,23 +216,56 @@ internal class SwapFormViewModelTest {
         SwapFormViewModel(
                 savedStateHandle = savedStateHandle,
                 navigator = navigator,
-                fiatValueToString = fiatValueToString,
-                convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
-                swapQuoteRepository = swapQuoteRepository,
-                appCurrencyRepository = appCurrencyRepository,
                 swapTransactionRepository = swapTransactionRepository,
-                getDiscountBpsUseCase = getDiscountBpsUseCase,
-                referralRepository = referralRepository,
                 swapValidator = swapValidator,
-                swapDiscountChecker = swapDiscountChecker,
-                swapGasCalculator = swapGasCalculator,
                 swapTokenSelector = swapTokenSelector,
                 swapQuoteManager = swapQuoteManager,
                 swapTransactionBuilder =
                     SwapTransactionBuilder(swapGasCalculator, allowanceRepository),
-                ioDispatcher = ioDispatcher,
+                swapInputCollector =
+                    SwapInputCollector(convertTokenAndValueToTokenValue, swapValidator),
+                swapQuotePipelineControllerFactory =
+                    swapQuotePipelineControllerFactory(ioDispatcher),
             )
             .also { createdViewModels += it }
+
+    // Mirrors the Hilt-generated @AssistedFactory: repos / calculator / dispatcher come from the
+    // test mocks, the scope + shared swapQuoteManager + form-owned flows arrive as assisted params.
+    private fun swapQuotePipelineControllerFactory(ioDispatcher: CoroutineDispatcher) =
+        object : SwapQuotePipelineController.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                swapQuoteManager: SwapQuoteManager,
+                uiState: MutableStateFlow<SwapFormUiModel>,
+                selectedSrc: StateFlow<SendSrc?>,
+                selectedDst: StateFlow<SendSrc?>,
+                referralCode: MutableStateFlow<String?>,
+                srcAmountState: TextFieldState,
+                vaultId: () -> String?,
+                showError: (UiText) -> Unit,
+            ) =
+                SwapQuotePipelineController(
+                    swapGasCalculator = swapGasCalculator,
+                    swapQuoteRepository = swapQuoteRepository,
+                    appCurrencyRepository = appCurrencyRepository,
+                    fiatValueToString = fiatValueToString,
+                    referralRepository = referralRepository,
+                    getDiscountBpsUseCase = getDiscountBpsUseCase,
+                    convertTokenAndValueToTokenValue = convertTokenAndValueToTokenValue,
+                    swapDiscountChecker = swapDiscountChecker,
+                    swapValidator = swapValidator,
+                    ioDispatcher = ioDispatcher,
+                    scope = scope,
+                    swapQuoteManager = swapQuoteManager,
+                    uiState = uiState,
+                    selectedSrc = selectedSrc,
+                    selectedDst = selectedDst,
+                    referralCode = referralCode,
+                    srcAmountState = srcAmountState,
+                    vaultId = vaultId,
+                    showError = showError,
+                )
+        }
 
     private fun createViewModelWithAddresses(
         addresses: List<Address> = listOf(ethAddress(), btcAddress()),
