@@ -295,22 +295,13 @@ constructor(
 
         // `expectedDstValue × dstMarketPrice` values the destination at an independent oracle
         // (e.g. CoinGecko), which for illiquid tokens diverges from the DEX pool rate the quote
-        // actually executes at — inflating the destination fiat above the source (#4878). A swap
-        // is value-preserving, so you can never receive more fiat than you put in; clamp the
-        // *displayed* destination fiat to the source fiat so it reflects the quoted rate. Genuine
-        // price impact / fees that push the destination below the source are real and pass through
-        // unclamped. The unclamped market value is still used for cross-provider ranking below,
-        // where it scales with the destination amount and stays comparable across providers.
+        // actually executes at — inflating the destination fiat above the source (#4878). Clamp the
+        // *displayed* destination fiat to the source fiat so it reflects the quoted rate (see
+        // [clampDstFiatToSrcFiat]). The unclamped market value is still used for cross-provider
+        // ranking below, where it scales with the destination amount and stays comparable across
+        // providers.
         val marketDstFiatValue = convertTokenValueToFiat(dstToken, quote.expectedDstValue, currency)
-        val estimatedDstFiatValue =
-            if (
-                srcFiatValue.value > BigDecimal.ZERO &&
-                    marketDstFiatValue.value > srcFiatValue.value
-            ) {
-                FiatValue(value = srcFiatValue.value, currency = marketDstFiatValue.currency)
-            } else {
-                marketDstFiatValue
-            }
+        val estimatedDstFiatValue = clampDstFiatToSrcFiat(srcFiatValue, marketDstFiatValue)
 
         val rawFees =
             when (quote) {
