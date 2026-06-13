@@ -887,8 +887,13 @@ constructor(
                 try {
                     Timber.tag("JoinKeysignViewModel").d("Joining keysign")
                     sessionApi.startSession(_serverAddress, _sessionID, listOf(_localPartyID))
-                    waitForKeysignToStart()
+                    // Set the waiting state before launching the poller: waitForKeysignToStart()
+                    // starts its own coroutine that may publish Keysign immediately, and setting
+                    // the
+                    // state afterwards would overwrite that transition back to
+                    // WaitingForKeysignStart.
                     _currentState.value = JoinKeysignState.WaitingForKeysignStart
+                    waitForKeysignToStart()
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: HttpException) {
