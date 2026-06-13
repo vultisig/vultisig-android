@@ -16,7 +16,7 @@
       "to_amount": "2000000",
       "BlockchainSpecific": {
         "CardanoSpecific": {
-          "byte_fee": 44,
+          "byte_fee": 166144,
           "send_max_amount": false,
           "ttl": 190000000
         }
@@ -51,7 +51,7 @@
       "to_amount": "10000000",
       "BlockchainSpecific": {
         "CardanoSpecific": {
-          "byte_fee": 44,
+          "byte_fee": 164515,
           "send_max_amount": true,
           "ttl": 190000000
         }

@@ -439,23 +439,10 @@ class ChainHelpersTest {
             val internalPayload = transaction.keysignPayload.toInternalKeySignPayload()
             val cardano = internalPayload.blockChainSpecific as BlockChainSpecific.Cardano
 
-            // The initiator derives the size-based fee once and transmits it as byteFee.
-            val derivedFee =
-                CardanoHelper.estimateFee(
-                    toAmount = internalPayload.toAmount.toLong(),
-                    toAddress = internalPayload.toAddress,
-                    changeAddress = internalPayload.coin.address,
-                    sendMaxAmount = cardano.sendMaxAmount,
-                    ttl = cardano.ttl.toLong(),
-                    utxos = internalPayload.utxos,
-                )
-            assertTrue("Derived Cardano fee should be positive", derivedFee > 0)
-
-            // Forcing the transmitted (size-derived) fee reproduces the canonical sighash: the body
-            // carries the shared fee rather than each device re-deriving its own.
-            val forcedPayload =
-                internalPayload.copy(blockChainSpecific = cardano.copy(byteFee = derivedFee))
-            val preImageHashes = CardanoHelper.getPreSignedImageHash(forcedPayload)
+            // The signer forces the transmitted byteFee carried on the payload (Option 1): the body
+            // uses the shared fee rather than each device re-deriving its own, so every co-signer
+            // produces an identical sighash regardless of WalletCore version.
+            val preImageHashes = CardanoHelper.getPreSignedImageHash(internalPayload)
 
             assertEquals(1, preImageHashes.size)
             assertTrue(
@@ -473,13 +460,36 @@ class ChainHelpersTest {
             if (!cardano.sendMaxAmount) {
                 val tamperedPayload =
                     internalPayload.copy(
-                        blockChainSpecific = cardano.copy(byteFee = derivedFee + 1_000)
+                        blockChainSpecific = cardano.copy(byteFee = cardano.byteFee + 1_000)
                     )
                 assertNotEquals(
                     preImageHashes,
                     CardanoHelper.getPreSignedImageHash(tamperedPayload),
                 )
             }
+        }
+    }
+
+    @Test
+    fun cardanoInitiatorDerivesTheTransmittedFee() {
+        val transactions: List<TransactionData> = loadTransactionData(CARDANO_JSON_FILE)
+        transactions.forEach { transaction ->
+            val internalPayload = transaction.keysignPayload.toInternalKeySignPayload()
+            val cardano = internalPayload.blockChainSpecific as BlockChainSpecific.Cardano
+
+            // The initiator derives the size-based fee once with no forced fee; the fixture's
+            // byteFee is exactly that transmitted value, so derivation must reproduce it.
+            val derivedFee =
+                CardanoHelper.estimateFee(
+                    toAmount = internalPayload.toAmount.toLong(),
+                    toAddress = internalPayload.toAddress,
+                    changeAddress = internalPayload.coin.address,
+                    sendMaxAmount = cardano.sendMaxAmount,
+                    ttl = cardano.ttl.toLong(),
+                    utxos = internalPayload.utxos,
+                )
+
+            assertEquals(cardano.byteFee, derivedFee)
         }
     }
 
