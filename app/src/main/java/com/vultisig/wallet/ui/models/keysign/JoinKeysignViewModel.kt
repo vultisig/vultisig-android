@@ -263,6 +263,7 @@ constructor(
     private var _currentVault: Vault = Vault(id = UUID.randomUUID().toString(), "temp vault")
     private val _currentState =
         MutableStateFlow<JoinKeysignState>(JoinKeysignState.DiscoveringSessionID)
+    /** Read-only view of the join-keysign flow state the screen observes. */
     val currentState: StateFlow<JoinKeysignState> = _currentState.asStateFlow()
     private var _localPartyID: String = ""
     private var _sessionID: String = ""
