@@ -299,6 +299,116 @@ internal class SwapQuoteManagerTest {
     }
 
     @Test
+    fun `fetchQuote clamps an inflated destination fiat to the source fiat`() = runTest {
+        // ETH -> BINU on Base (#4878): the destination's CoinGecko mark ($13.18) is ~2.5x the rate
+        // the quote actually executes at, while the source ETH is valued accurately ($5.26). A swap
+        // is value-preserving, so the displayed destination fiat must clamp down to the source fiat
+        // rather than imply a free lunch. The unclamped market value still drives cross-provider
+        // ranking.
+        val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+        val binu = coin(Chain.Base, "BINU", "0xdst", 18)
+        val srcTokenValue = TokenValue(BigInteger.valueOf(3_174_080_000_000_000L), eth)
+        val dstValue = TokenValue(BigInteger.valueOf(35_900_000L), binu)
+        val quote =
+            SwapQuote.SwapKit(
+                expectedDstValue = dstValue,
+                fees = TokenValue(BigInteger.ZERO, eth),
+                expiredAt = Clock.System.now().plus(5.minutes),
+                data = mockk(relaxed = true),
+                subProvider = null,
+            )
+
+        coEvery { tokenRepository.getNativeToken(any()) } returns eth
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, any()) } returns
+            SwapQuoteResult.Native(quote)
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        coEvery { convertTokenValueToFiat(eth, srcTokenValue, AppCurrency.USD) } returns
+            FiatValue(BigDecimal("5.26"), "USD")
+        coEvery { convertTokenValueToFiat(binu, dstValue, AppCurrency.USD) } returns
+            FiatValue(BigDecimal("13.18"), "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "35900000"
+        coEvery { fiatValueToString(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+
+        val result =
+            createManager()
+                .fetchQuote(
+                    SwapProvider.SWAPKIT,
+                    mockk(relaxed = true),
+                    mockk(relaxed = true),
+                    eth,
+                    binu,
+                    BigInteger.ONE,
+                    srcTokenValue,
+                    AppCurrency.USD,
+                    null,
+                    null,
+                    BigDecimal.ONE,
+                )
+
+        // Displayed destination fiat clamps to the source fiat, not the inflated $13.18 mark.
+        assertEquals("5.26", result.estimatedDstFiatValue)
+        // Ranking still sees the unclamped market value.
+        assertEquals(BigDecimal("13.18"), result.estimatedDstFiat.value)
+    }
+
+    @Test
+    fun `fetchQuote keeps a destination fiat that is below the source fiat`() = runTest {
+        // Real price impact / fees legitimately make the destination worth less than the source.
+        // That divergence is honest, so it must pass through unclamped instead of being inflated
+        // back up to the source fiat.
+        val eth = coin(Chain.Ethereum, "ETH", "0xsrc", 18)
+        val usdc = coin(Chain.Base, "USDC", "0xdst", 6)
+        val srcTokenValue = TokenValue(BigInteger.valueOf(1_000_000_000_000_000_000L), eth)
+        val dstValue = TokenValue(BigInteger.valueOf(95_000_000L), usdc)
+        val quote =
+            SwapQuote.SwapKit(
+                expectedDstValue = dstValue,
+                fees = TokenValue(BigInteger.ZERO, eth),
+                expiredAt = Clock.System.now().plus(5.minutes),
+                data = mockk(relaxed = true),
+                subProvider = null,
+            )
+
+        coEvery { tokenRepository.getNativeToken(any()) } returns eth
+        coEvery { swapQuoteRepository.getQuote(SwapProvider.SWAPKIT, any()) } returns
+            SwapQuoteResult.Native(quote)
+        coEvery { convertTokenValueToFiat(any(), any(), any()) } returns
+            FiatValue(BigDecimal.ZERO, "USD")
+        coEvery { convertTokenValueToFiat(eth, srcTokenValue, AppCurrency.USD) } returns
+            FiatValue(BigDecimal("100"), "USD")
+        coEvery { convertTokenValueToFiat(usdc, dstValue, AppCurrency.USD) } returns
+            FiatValue(BigDecimal("95"), "USD")
+        every { mapTokenValueToDecimalUiString(any()) } returns "95"
+        coEvery { fiatValueToString(any(), any()) } answers
+            {
+                firstArg<FiatValue>().value.toPlainString()
+            }
+
+        val result =
+            createManager()
+                .fetchQuote(
+                    SwapProvider.SWAPKIT,
+                    mockk(relaxed = true),
+                    mockk(relaxed = true),
+                    eth,
+                    usdc,
+                    BigInteger.ONE,
+                    srcTokenValue,
+                    AppCurrency.USD,
+                    null,
+                    null,
+                    BigDecimal.ONE,
+                )
+
+        assertEquals("95", result.estimatedDstFiatValue)
+        assertEquals(BigDecimal("95"), result.estimatedDstFiat.value)
+    }
+
+    @Test
     fun `fetchBestQuote prefers higher-priority provider on a near-tie within the 1pct band`() =
         runTest {
             // THORChain (priority 0) prices the dst slightly lower than SwapKit (priority 2), but
