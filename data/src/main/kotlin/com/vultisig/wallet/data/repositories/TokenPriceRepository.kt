@@ -126,6 +126,21 @@ constructor(
 
         savePrices(pricesWithProviderIds, currency)
 
+        // Fall back to the contract-address lookup for tokens whose priceProviderID returned no
+        // price but which have a valid contract address (e.g. ezETH on Base, whose priceProviderID
+        // is not a CoinGecko-recognized id). Without this, such tokens would never be priced.
+        val pricedTokenIds = pricesWithProviderIds.keys
+        tokens.forEach { token ->
+            if (
+                token.priceProviderID.isNotEmpty() &&
+                    token.contractAddress.isNotEmpty() &&
+                    token.id !in pricedTokenIds
+            ) {
+                val existingChain = chainContractAddresses.getOrPut(token.chain) { mutableListOf() }
+                chainContractAddresses[token.chain] = existingChain + token
+            }
+        }
+
         chainContractAddresses.map { (chain, tokens) ->
             val pricesWithContractAddress =
                 fetchPricesWithContractAddress(
