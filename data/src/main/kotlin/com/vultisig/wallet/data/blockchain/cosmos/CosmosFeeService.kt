@@ -1,12 +1,15 @@
 package com.vultisig.wallet.data.blockchain.cosmos
 
+import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.blockchain.FeeService
 import com.vultisig.wallet.data.blockchain.model.BlockchainTransaction
 import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
+import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.models.Chain
+import java.math.BigInteger
 
-class CosmosFeeService : FeeService {
+class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeService {
 
     companion object {
         internal const val OSMOSIS_MIN_FEE_UOSMO = 25_000L
@@ -55,12 +58,39 @@ class CosmosFeeService : FeeService {
                 GasFees(limit = gasLimit.toBigInteger(), amount = 20000L.toBigInteger())
             }
             Chain.TerraClassic -> {
-                GasFees(limit = gasLimit.toBigInteger(), amount = 10000000L.toBigInteger())
+                GasFees(
+                    limit = gasLimit.toBigInteger(),
+                    amount = terraClassicFeeAmount(transaction),
+                )
             }
             Chain.Dydx -> {
                 GasFees(limit = gasLimit.toBigInteger(), amount = 2500000000000000L.toBigInteger())
             }
             else -> error("Chain Not Supported: ${chain.name}")
         }
+    }
+
+    /**
+     * Terra Classic fee = base gas + proportional burn tax. The base gas is denominated in the same
+     * denom the signer uses for the fee (uluna for native LUNC / CW20 / IBC, uusd for the USTC bank
+     * denom — see [TerraClassicTax.baseGas] and `TerraHelper`). The burn tax (~0.5%, fetched live
+     * with a conservative fallback) is folded into this single fee field only when it is paid in
+     * the send denom (native LUNC or USTC); CW20/IBC sends, whose fee is in uluna while the send is
+     * in the token's own denom, get base gas only to avoid mixing denoms.
+     */
+    private suspend fun terraClassicFeeAmount(transaction: BlockchainTransaction): BigInteger {
+        val coin = transaction.coin
+        val base = TerraClassicTax.baseGas(coin.contractAddress, coin.isNativeToken).toBigInteger()
+
+        val taxable =
+            transaction is Transfer &&
+                TerraClassicTax.taxPaidInSendDenom(coin.contractAddress, coin.isNativeToken) &&
+                transaction.amount > BigInteger.ZERO
+        if (!taxable) return base
+
+        val rawRate =
+            cosmosApiFactory.createCosmosApi(Chain.TerraClassic).getTerraClassicBurnTaxRate()
+        val rate = TerraClassicTax.parseRate(rawRate)
+        return base + TerraClassicTax.burnTax(transaction.amount, rate)
     }
 }
