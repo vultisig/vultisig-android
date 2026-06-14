@@ -567,7 +567,7 @@ internal class SwapFormViewModelTest {
         }
 
     @Test
-    fun `selectSrcPercentage with zero balance sets zero`() =
+    fun `selectSrcPercentage with zero balance clears the amount and shows an error`() =
         runTest(mainDispatcher) {
             val addresses = listOf(ethAddressWithBalance(BigInteger.ZERO))
             val vm = createViewModelWithAddresses(addresses)
@@ -575,7 +575,10 @@ internal class SwapFormViewModelTest {
 
             vm.selectSrcPercentage(1.0f)
 
-            assertEquals("0", vm.srcAmountState.text.toString())
+            // Empty (not "0") so the empty-field path clears the quote silently instead of feeding
+            // "0" into the pipeline and logging AmountCannotBeZero; the error explains why.
+            assertEquals("", vm.srcAmountState.text.toString())
+            assertNotNull(vm.uiState.value.error)
         }
 
     @Test

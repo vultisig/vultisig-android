@@ -334,6 +334,12 @@ constructor(
 
         val srcToken = selectedSrcAccount.token
 
+        // Each tap supersedes the previous one: clear any sticky error from an earlier tap so it
+        // can't outlive the condition that raised it. The screen renders `error ?: formError`, so a
+        // stale `error` (only ever cleared by an explicit dismiss) would otherwise pin a one-off
+        // "insufficient balance" warning on a now-valid amount and mask the live quote/formError.
+        _uiState.update { it.copy(error = null) }
+
         val swapFee =
             quoteState.quote?.fees?.value.takeIf { quoteState.provider == SwapProvider.LIFI }
                 ?: BigInteger.ZERO
@@ -346,7 +352,10 @@ constructor(
                 } ?: BigInteger.ZERO)
 
         if (maxUsableTokenAmount <= BigInteger.ZERO) {
-            srcAmountState.setTextAndPlaceCursorAtEnd("0")
+            // Empty (not "0"): the empty-field path clears the stale quote silently, whereas a
+            // literal "0" reaches the quote pipeline and throws/logs AmountCannotBeZero at ERROR
+            // for an expected condition. The error set below stays visible to explain why.
+            srcAmountState.setTextAndPlaceCursorAtEnd("")
             val errorRes =
                 if (srcToken.isNativeToken) {
                     R.string.swap_error_insufficient_balance_and_fees
