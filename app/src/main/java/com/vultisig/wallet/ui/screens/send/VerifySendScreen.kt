@@ -37,6 +37,7 @@ import com.vultisig.wallet.data.models.monoToneLogo
 import com.vultisig.wallet.data.models.payload.DAppMetadata
 import com.vultisig.wallet.data.securityscanner.SecurityRiskLevel
 import com.vultisig.wallet.ui.components.SignSolanaDisplayView
+import com.vultisig.wallet.ui.components.SignSuiDisplayView
 import com.vultisig.wallet.ui.components.SignTonDisplayView
 import com.vultisig.wallet.ui.components.TokenAndChainLogo
 import com.vultisig.wallet.ui.components.UiAlertDialog
@@ -303,6 +304,18 @@ internal fun VerifySendScreen(
 
                             SignSolanaDisplayView(
                                 signSolana = SignSolana(rawTransactions = listOf(it))
+                            )
+                        }
+
+                    tx.signSui
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let {
+                            VerifyCardDivider(0.dp)
+
+                            SignSuiDisplayView(
+                                sender = tx.srcAddress,
+                                unsignedTxMsg = it,
+                                initiallyExpanded = initiallyExpandedDetails,
                             )
                         }
 
