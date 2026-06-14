@@ -5,7 +5,6 @@ package com.vultisig.wallet.ui.models.swap
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -403,7 +402,7 @@ internal class SwapTransactionBuilderTest {
         }
 
     @Test
-    fun `builds OneInch swap overriding the gas limit on Mantle`() = runTest {
+    fun `builds OneInch swap keeping the quote gas limit on Mantle`() = runTest {
         val srcToken =
             coin(Chain.Mantle, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
         val dstToken = coin(Chain.Mantle, "MNT", "0xdst", 18, isNative = true)
@@ -443,8 +442,8 @@ internal class SwapTransactionBuilderTest {
             )
 
         val payload = assertIs<SwapPayload.EVM>(tx.payload)
-        // Mantle overrides the quote's gas limit with the dedicated swap limit.
-        assertEquals(DEFAULT_MANTLE_SWAP_LIMIT.toLong(), payload.data.quote.tx.gas)
+        // Mantle now keeps the quote's original gas limit like every other EVM chain.
+        assertEquals(21_000L, payload.data.quote.tx.gas)
         // The gas price is still patched from the EVM plan.
         assertEquals("7", payload.data.quote.tx.gasPrice)
     }

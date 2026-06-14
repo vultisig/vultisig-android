@@ -1,7 +1,5 @@
 package com.vultisig.wallet.ui.models.swap
 
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
-import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
@@ -240,19 +238,13 @@ constructor(
                 val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
                 val specific = specificAndUtxo.blockChainSpecific
-                val gasLimit =
-                    if (srcToken.chain == Chain.Mantle) {
-                        DEFAULT_MANTLE_SWAP_LIMIT.toLong()
-                    } else {
-                        quote.data.tx.gas
-                    }
                 val quoteData =
                     if (specific is BlockChainSpecific.Ethereum) {
                         quote.data.copy(
                             tx =
                                 quote.data.tx.copy(
                                     gasPrice = specific.maxFeePerGasWei.toString(),
-                                    gas = gasLimit,
+                                    gas = quote.data.tx.gas,
                                 )
                         )
                     } else {
