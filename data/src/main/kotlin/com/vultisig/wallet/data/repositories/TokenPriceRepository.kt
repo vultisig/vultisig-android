@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.Coins
 import com.vultisig.wallet.data.models.TokenId
+import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -78,7 +79,6 @@ constructor(
         val currencies = listOf(currency)
 
         val tokensByPriceProviderIds = tokens.groupBy { it.priceProviderID.lowercase() }
-        val tokensByContractAddress = tokens.associateBy { it.contractAddress.lowercase() }
 
         val priceProviderIds = mutableListOf<String>()
         val chainContractAddresses = mutableMapOf<Chain, List<Coin>>()
@@ -126,13 +126,16 @@ constructor(
 
         savePrices(pricesWithProviderIds, currency)
 
-        // Fall back to the contract-address lookup for tokens whose priceProviderID returned no
+        // Fall back to the contract-address lookup for EVM tokens whose priceProviderID returned no
         // price but which have a valid contract address (e.g. ezETH on Base, whose priceProviderID
         // is not a CoinGecko-recognized id). Without this, such tokens would never be priced.
+        // Restricted to EVM so non-EVM contract formats (e.g. THORChain x/… tokens handled by
+        // fetchThorContractPrices) aren't fanned out to CoinGecko/LI.FI per-contract calls.
         val pricedTokenIds = pricesWithProviderIds.keys
         tokens.forEach { token ->
             if (
-                token.priceProviderID.isNotEmpty() &&
+                token.chain.standard == TokenStandard.EVM &&
+                    token.priceProviderID.isNotEmpty() &&
                     token.contractAddress.isNotEmpty() &&
                     token.id !in pricedTokenIds
             ) {
@@ -142,6 +145,11 @@ constructor(
         }
 
         chainContractAddresses.map { (chain, tokens) ->
+            // Resolve ids from this chain's tokens only: the same contractAddress can exist on
+            // multiple chains (e.g. ezETH on Arbitrum, Base and Optimism), so a global
+            // address->token map would collapse them onto a single id and leave the rest at $0.00.
+            val tokenIdsByContractAddress =
+                tokens.associate { it.contractAddress.lowercase() to it.id }
             val pricesWithContractAddress =
                 fetchPricesWithContractAddress(
                         chain = chain,
@@ -150,7 +158,7 @@ constructor(
                     )
                     .asSequence()
                     .mapNotNull { (contractAddress, value) ->
-                        val tokenId = tokensByContractAddress[contractAddress.lowercase()]?.id
+                        val tokenId = tokenIdsByContractAddress[contractAddress.lowercase()]
                         if (
                             tokenId != null &&
                                 value.filter { it.value != BigDecimal.ZERO }.isNotEmpty()
