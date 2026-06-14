@@ -61,6 +61,16 @@ sealed class SwapQuoteResult {
         }
 }
 
+/**
+ * Minimum-output tolerance (basis points) sent on every THORChain/Maya quote request as
+ * `tolerance_bps`. The node bakes a real `LIM` into the returned swap memo — `expected_amount_out ×
+ * (1 − toleranceBps/10_000)` — protecting the user from adverse pool moves and front-running
+ * between quote and execution. Without it the memo carries no limit (unbounded slippage). 100 bps
+ * (1%) is a conservative default aligned with the streaming-upgrade threshold; there is no per-swap
+ * user slippage control yet. Mirrors iOS `SwapService.defaultThorchainToleranceBps`.
+ */
+internal const val DEFAULT_THORCHAIN_TOLERANCE_BPS = 100
+
 /** Common contract for every per-provider quote source. */
 interface SwapQuoteSource {
     suspend fun fetch(request: SwapQuoteRequest): SwapQuoteResult
