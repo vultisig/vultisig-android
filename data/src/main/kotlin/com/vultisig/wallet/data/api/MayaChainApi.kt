@@ -52,6 +52,7 @@ interface MayaChainApi {
         isAffiliate: Boolean,
         bpsDiscount: Int,
         referralCode: String,
+        toleranceBps: Int? = null,
     ): THORChainSwapQuoteDeserialized
 
     suspend fun broadcastTransaction(tx: String): String?
@@ -188,6 +189,7 @@ constructor(
         isAffiliate: Boolean,
         bpsDiscount: Int,
         referralCode: String,
+        toleranceBps: Int?,
     ): THORChainSwapQuoteDeserialized {
         try {
             val affiliateFeeRate =
@@ -202,6 +204,7 @@ constructor(
                     parameter("streaming_interval", MAYA_STREAMING_INTERVAL)
                     parameter("affiliate", THORChainSwaps.AFFILIATE_FEE_ADDRESS)
                     parameter("affiliate_bps", if (isAffiliate) affiliateFeeRate else "0")
+                    toleranceBps?.let { parameter("tolerance_bps", it) }
                     header(xClientID, xClientIDValue)
                 }
             val responseRawString = response.bodyAsText()

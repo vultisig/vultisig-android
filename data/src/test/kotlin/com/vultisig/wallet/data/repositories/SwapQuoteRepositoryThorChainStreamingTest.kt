@@ -231,6 +231,39 @@ class SwapQuoteRepositoryThorChainStreamingTest {
     }
 
     @Test
+    fun `rapid request carries 1 percent tolerance_bps so the memo gets a real limit`() = runTest {
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "0" }) } returns
+            THORChainSwapQuoteDeserialized.Result(
+                thorQuote(expectedAmountOut = "9950", feesTotal = "50")
+            )
+
+        fetchQuote()
+
+        coVerify(exactly = 1) {
+            thorChainApi.getSwapQuotes(match { it.interval == "0" && it.toleranceBps == 100 })
+        }
+    }
+
+    @Test
+    fun `streaming fallback request also carries tolerance_bps`() = runTest {
+        // High slippage forces a streaming fetch; the .copy() must preserve toleranceBps.
+        val rapidData =
+            thorQuote(expectedAmountOut = "6000", feesTotal = "4000", maxStreamingQuantity = 5)
+        val streamingData = thorQuote(expectedAmountOut = "7500", feesTotal = "500")
+
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "0" }) } returns
+            THORChainSwapQuoteDeserialized.Result(rapidData)
+        coEvery { thorChainApi.getSwapQuotes(match { it.interval == "1" }) } returns
+            THORChainSwapQuoteDeserialized.Result(streamingData)
+
+        fetchQuote()
+
+        coVerify(exactly = 1) {
+            thorChainApi.getSwapQuotes(match { it.interval == "1" && it.toleranceBps == 100 })
+        }
+    }
+
+    @Test
     fun `both rapid and streaming fail throws rapid error`() = runTest {
         coEvery { thorChainApi.getSwapQuotes(match { it.interval == "0" }) } returns
             THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError("pool suspended"))

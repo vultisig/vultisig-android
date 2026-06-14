@@ -32,6 +32,7 @@ internal class MayaQuoteSource @Inject constructor(private val mayaChainApi: May
                     isAffiliate = request.isAffiliate,
                     bpsDiscount = request.bpsDiscount,
                     referralCode = request.referralCode,
+                    toleranceBps = DEFAULT_THORCHAIN_TOLERANCE_BPS,
                 )
             }
         val data = response.unwrapOrThrow()
