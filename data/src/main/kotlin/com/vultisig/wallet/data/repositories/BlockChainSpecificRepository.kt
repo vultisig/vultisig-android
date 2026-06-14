@@ -27,6 +27,7 @@ import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.blockchain.sui.SuiFeeService.Companion.SUI_DEFAULT_GAS_BUDGET
+import com.vultisig.wallet.data.chains.helpers.CardanoHelper
 import com.vultisig.wallet.data.chains.helpers.SOLANA_PRIORITY_FEE_LIMIT
 import com.vultisig.wallet.data.chains.helpers.TronHelper.Companion.TRON_DEFAULT_ESTIMATION_FEE
 import com.vultisig.wallet.data.models.Chain
@@ -268,14 +269,42 @@ constructor(
 
             TokenStandard.UTXO -> {
                 if (chain == Chain.Cardano) {
+                    val utxos = cardanoApi.getUTXOs(token)
+                    val ttl = cardanoApi.calculateDynamicTTL()
+                    val flatFee = gasFee.value.toLong()
+                    // The initiator derives the size-based fee once and transmits it as byteFee;
+                    // every co-signer then forces this exact value so the MPC sighash matches
+                    // regardless of WalletCore version. Falls back to the flat fee when the
+                    // transaction details aren't known yet (e.g. before an amount is entered) or
+                    // when planning fails.
+                    val byteFee =
+                        if (dstAddress != null && tokenAmountValue != null) {
+                            try {
+                                CardanoHelper.estimateFee(
+                                    toAmount = tokenAmountValue.toLong(),
+                                    toAddress = dstAddress,
+                                    changeAddress = address,
+                                    sendMaxAmount = isMaxAmountEnabled,
+                                    ttl = ttl.toLong(),
+                                    utxos = utxos,
+                                )
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                Timber.e(e, "Cardano fee derivation failed, using flat fee")
+                                flatFee
+                            }
+                        } else {
+                            flatFee
+                        }
                     BlockChainSpecificAndUtxo(
                         blockChainSpecific =
                             BlockChainSpecific.Cardano(
-                                byteFee = gasFee.value.toLong(),
+                                byteFee = byteFee,
                                 sendMaxAmount = isMaxAmountEnabled,
-                                ttl = cardanoApi.calculateDynamicTTL(),
+                                ttl = ttl,
                             ),
-                        utxos = cardanoApi.getUTXOs(token),
+                        utxos = utxos,
                     )
                 } else if (chain == Chain.Dash) {
                     val dashUtxos =
