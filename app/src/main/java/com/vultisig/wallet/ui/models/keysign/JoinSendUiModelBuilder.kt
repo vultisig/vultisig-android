@@ -158,6 +158,7 @@ constructor(
             payload.signDirect?.let { json.encodeToString(parseCosmosMessage(it)) } ?: ""
 
         val signSolana = payload.signSolana?.rawTransactions?.firstOrNull() ?: ""
+        val signSui = payload.signSui?.unsignedTxMsg?.takeIf { it.isNotEmpty() }
         val transaction =
             Transaction(
                 id = UUID.randomUUID().toString(),
@@ -176,6 +177,7 @@ constructor(
                 signAmino = normalizedSignAmino,
                 signDirect = signDirect,
                 signSolana = signSolana,
+                signSui = signSui,
             )
 
         val transactionToUiModel = mapTransactionToUiModel(transaction)

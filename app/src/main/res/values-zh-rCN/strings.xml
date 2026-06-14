@@ -1322,6 +1322,8 @@
     <string name="transaction_status_notification_title">交易状态</string>
     <string name="transaction_status_checking_transaction">正在检查交易……</string>
     <string name="raw_transaction_data">原始交易数据</string>
+        <string name="sui_raw_transaction">Sui 交易</string>
+    <string name="sui_sender">从</string>
     <string name="solana_raw_transaction">Solana 原始交易数据</string>
     <string name="solana_instructions_summary">交易指令摘要</string>
     <string name="solana_instruction_number">指令 %1$d</string>
