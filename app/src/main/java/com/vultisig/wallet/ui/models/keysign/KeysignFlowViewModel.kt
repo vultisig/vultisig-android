@@ -1,13 +1,6 @@
-@file:OptIn(ExperimentalSerializationApi::class)
-
 package com.vultisig.wallet.ui.models.keysign
 
-import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.os.Build
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -16,56 +9,26 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.vultisig.wallet.R
-import com.vultisig.wallet.data.api.EvmApiFactory
-import com.vultisig.wallet.data.api.FeatureFlagApi
-import com.vultisig.wallet.data.api.RouterApi
-import com.vultisig.wallet.data.api.SessionApi
-import com.vultisig.wallet.data.api.SolanaApi
-import com.vultisig.wallet.data.api.ThorChainApi
 import com.vultisig.wallet.data.api.models.signer.JoinKeysignRequestJson
 import com.vultisig.wallet.data.chains.helpers.SigningHelper
 import com.vultisig.wallet.data.common.Endpoints
 import com.vultisig.wallet.data.common.Endpoints.LOCAL_MEDIATOR_SERVER_URL
 import com.vultisig.wallet.data.common.Utils
-import com.vultisig.wallet.data.mappers.PayloadToProtoMapper
-import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TransactionHistoryData
 import com.vultisig.wallet.data.models.TssKeyType
 import com.vultisig.wallet.data.models.TssKeysignType
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.isSecureVault
-import com.vultisig.wallet.data.models.payload.BlockChainSpecific
 import com.vultisig.wallet.data.models.payload.KeysignPayload
-import com.vultisig.wallet.data.models.proto.v1.KeysignMessageProto
 import com.vultisig.wallet.data.models.tokenLogoRes
-import com.vultisig.wallet.data.repositories.AddressBookRepository
-import com.vultisig.wallet.data.repositories.DepositTransactionRepository
-import com.vultisig.wallet.data.repositories.ExplorerLinkRepository
-import com.vultisig.wallet.data.repositories.SwapTransactionRepository
-import com.vultisig.wallet.data.repositories.TransactionHistoryRepository
-import com.vultisig.wallet.data.repositories.TransactionRepository
-import com.vultisig.wallet.data.repositories.VaultRepository
-import com.vultisig.wallet.data.repositories.VultiSignerRepository
 import com.vultisig.wallet.data.services.PushNotificationManager
 import com.vultisig.wallet.data.services.TransactionStatusServiceManager
-import com.vultisig.wallet.data.usecases.BroadcastTxUseCase
-import com.vultisig.wallet.data.usecases.CompressQrUseCase
-import com.vultisig.wallet.data.usecases.Encryption
 import com.vultisig.wallet.data.usecases.GenerateServiceName
-import com.vultisig.wallet.data.usecases.tss.DiscoverParticipantsUseCase
-import com.vultisig.wallet.data.usecases.tss.PullTssMessagesUseCase
-import com.vultisig.wallet.data.usecases.txstatus.TxStatusConfigurationProvider
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.ui.components.v2.snackbar.SnackbarType
 import com.vultisig.wallet.ui.models.AddressProvider
 import com.vultisig.wallet.ui.models.keysign.KeysignFlowState.Error
-import com.vultisig.wallet.ui.models.mappers.DepositTransactionHistoryDataMapper
-import com.vultisig.wallet.ui.models.mappers.DepositTransactionToUiModelMapper
-import com.vultisig.wallet.ui.models.mappers.SendTransactionHistoryDataMapper
-import com.vultisig.wallet.ui.models.mappers.SwapTransactionToHistoryDataMapper
-import com.vultisig.wallet.ui.models.mappers.SwapTransactionToUiModelMapper
-import com.vultisig.wallet.ui.models.mappers.TransactionToUiModelMapper
 import com.vultisig.wallet.ui.models.peer.NetworkOption
 import com.vultisig.wallet.ui.models.sign.SignMessageTransactionUiModel
 import com.vultisig.wallet.ui.navigation.Destination
@@ -82,7 +45,6 @@ import com.vultisig.wallet.ui.utils.asString
 import com.vultisig.wallet.ui.utils.asUiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.ktor.util.encodeBase64
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
@@ -94,12 +56,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.encodeToByteArray
-import kotlinx.serialization.protobuf.ProtoBuf
 import timber.log.Timber
 import vultisig.keysign.v1.CustomMessagePayload
-import vultisig.keysign.v1.TransactionType
 import wallet.core.jni.CoinType
 
 internal sealed class KeysignFlowState {
@@ -130,42 +88,19 @@ internal class KeysignFlowViewModel
 @Inject
 constructor(
     savedStateHandle: SavedStateHandle,
-    private val protoBuf: ProtoBuf,
-    private val thorChainApi: ThorChainApi,
-    private val evmApiFactory: EvmApiFactory,
-    private val explorerLinkRepository: ExplorerLinkRepository,
     private val addressProvider: AddressProvider,
     @ApplicationContext private val context: Context,
-    private val compressQr: CompressQrUseCase,
     private val navigator: Navigator<Destination>,
-    private val vultiSignerRepository: VultiSignerRepository,
-    private val sessionApi: SessionApi,
-    private val encryption: Encryption,
-    private val featureFlagApi: FeatureFlagApi,
-    private val transactionRepository: TransactionRepository,
-    private val depositTransactionRepository: DepositTransactionRepository,
-    private val swapTransactionRepository: SwapTransactionRepository,
-    private val vaultRepository: VaultRepository,
-    private val mapTransactionToUiModel: TransactionToUiModelMapper,
-    private val mapDepositTransactionUiModel: DepositTransactionToUiModelMapper,
-    private val mapSwapTransactionToUiModel: SwapTransactionToUiModelMapper,
     generateServiceName: GenerateServiceName,
-    private val routerApi: RouterApi,
-    private val pullTssMessages: PullTssMessagesUseCase,
-    private val broadcastTx: BroadcastTxUseCase,
-    private val solanaApi: SolanaApi,
-    private val payloadToProtoMapper: PayloadToProtoMapper,
-    private val discoverParticipantsUseCase: DiscoverParticipantsUseCase,
-    private val addressBookRepository: AddressBookRepository,
     private val transactionStatusServiceManager: TransactionStatusServiceManager,
-    private val txStatusConfigurationProvider: TxStatusConfigurationProvider,
     private val pushNotificationManager: PushNotificationManager,
     private val snackbarFlow: SnackbarFlow,
-    private val transactionHistoryDataMapper: SendTransactionHistoryDataMapper,
-    private val depositTransactionHistoryDataMapper: DepositTransactionHistoryDataMapper,
-    private val swapTransactionToHistoryDataMapper: SwapTransactionToHistoryDataMapper,
-    private val transactionHistoryRepository: TransactionHistoryRepository,
     private val keysignViewModelFactory: KeysignViewModel.Factory,
+    private val sessionCoordinator: KeysignSessionCoordinator,
+    private val participantDiscovery: KeysignParticipantDiscovery,
+    private val buildKeysignMessage: BuildKeysignMessageUseCase,
+    private val updateSolanaKeysignPayload: UpdateSolanaKeysignPayloadUseCase,
+    private val buildKeysignTransactionUiModel: BuildKeysignTransactionUiModelUseCase,
 ) : ViewModel() {
     private val _sessionID: String = UUID.randomUUID().toString()
     private val _serviceName: String = generateServiceName()
@@ -177,14 +112,21 @@ constructor(
     private val _keysignMessage: MutableStateFlow<String> = MutableStateFlow("")
     private var messagesToSign = emptyList<String>()
 
-    val currentState: MutableStateFlow<KeysignFlowState> =
+    private val _currentState: MutableStateFlow<KeysignFlowState> =
         MutableStateFlow(KeysignFlowState.PeerDiscovery)
-    val selection = MutableStateFlow<List<String>>(emptyList())
-    val keysignMessage: MutableStateFlow<String>
-        get() = _keysignMessage
+    val currentState: StateFlow<KeysignFlowState> = _currentState
 
-    val participants = MutableStateFlow<List<String>>(emptyList())
-    val networkOption: MutableStateFlow<NetworkOption> = MutableStateFlow(NetworkOption.Internet)
+    val selection: StateFlow<List<String>>
+        get() = participantDiscovery.selection
+
+    val keysignMessage: StateFlow<String> = _keysignMessage
+
+    val participants: StateFlow<List<String>>
+        get() = participantDiscovery.participants
+
+    private val _networkOption: MutableStateFlow<NetworkOption> =
+        MutableStateFlow(NetworkOption.Internet)
+    val networkOption: StateFlow<NetworkOption> = _networkOption
 
     private val args = savedStateHandle.toRoute<Route.Keysign.Keysign>()
     private val password = args.password
@@ -194,9 +136,11 @@ constructor(
         get() = !password.isNullOrBlank()
 
     private val isRelayEnabled: Boolean
-        get() = networkOption.value == NetworkOption.Internet || isFastSign
+        get() = _networkOption.value == NetworkOption.Internet || isFastSign
 
-    val isLoading = MutableStateFlow(false)
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     private val _isDataLoaded = MutableStateFlow(false)
     val isDataLoaded: StateFlow<Boolean> = _isDataLoaded
 
@@ -211,7 +155,6 @@ constructor(
                 }
                 ?: TssKeyType.ECDSA
 
-    private var discoverParticipantsJob: Job? = null
     private var resendCooldownJob: Job? = null
     private var lastNotifiedQrData: String = ""
 
@@ -244,7 +187,8 @@ constructor(
         )
     }
 
-    val uiState = MutableStateFlow(KeysignFlowUiState())
+    private val _uiState = MutableStateFlow(KeysignFlowUiState())
+    val uiState: StateFlow<KeysignFlowUiState> = _uiState
 
     init {
         viewModelScope.launch {
@@ -302,24 +246,24 @@ constructor(
                 viewModelScope.launch {
                     launch {
                         shareViewModel.amount.collect { amount ->
-                            uiState.update { it.copy(amount = amount) }
+                            _uiState.update { it.copy(amount = amount) }
                         }
                     }
                     launch {
                         shareViewModel.toAmount.collect { toAmount ->
-                            uiState.update { it.copy(toAmount = toAmount) }
+                            _uiState.update { it.copy(toAmount = toAmount) }
                         }
                     }
                     launch {
                         shareViewModel.qrBitmapPainter.collect { painter ->
-                            uiState.update { it.copy(qrBitmapPainter = painter) }
+                            _uiState.update { it.copy(qrBitmapPainter = painter) }
                         }
                     }
                 }
 
             val srcLogoModel = keysignPayload?.coin?.tokenLogoRes()
             val dstLogoModel = keysignPayload?.swapPayload?.dstToken?.tokenLogoRes()
-            uiState.update {
+            _uiState.update {
                 it.copy(
                     vault = vault,
                     isSwap = shareViewModel.keysignPayload?.swapPayload != null,
@@ -330,7 +274,7 @@ constructor(
                 )
             }
 
-            this.selection.value = listOf(vault.localPartyID)
+            participantDiscovery.setSelection(listOf(vault.localPartyID))
             _serverAddress = Endpoints.VULTISIG_RELAY_URL
             updateKeysignPayload(context)
             updateTransactionUiModel(keysignPayload, customMessagePayload, txType)
@@ -343,18 +287,6 @@ constructor(
         }
     }
 
-    private suspend fun updateSolanaKeysignPayload(keysignPayload: KeysignPayload?) =
-        keysignPayload
-            ?.takeIf { it.blockChainSpecific is BlockChainSpecific.Solana }
-            ?.let { payload ->
-                payload.copy(
-                    blockChainSpecific =
-                        (payload.blockChainSpecific as BlockChainSpecific.Solana).copy(
-                            recentBlockHash = solanaApi.getRecentBlockHash()
-                        )
-                )
-            } ?: keysignPayload
-
     private suspend fun updateKeysignPayload(context: Context) {
         stopParticipantDiscovery()
         val vault =
@@ -365,52 +297,37 @@ constructor(
                 }
 
         if (!isRelayEnabled) {
-            startMediatorService(context)
+            sessionCoordinator.startMediatorService(_serviceName) { onMediatorServiceStarted() }
         } else {
             _serverAddress = Endpoints.VULTISIG_RELAY_URL
             withContext(Dispatchers.IO) {
-                startSession(_serverAddress, _sessionID, vault.localPartyID)
+                sessionCoordinator.startSession(
+                    _serverAddress,
+                    _sessionID,
+                    vault.localPartyID,
+                    buildJoinRequest(vault),
+                )
             }
 
-            startParticipantDiscovery(vault)
+            participantDiscovery.start(
+                viewModelScope,
+                _serverAddress,
+                _sessionID,
+                vault.localPartyID,
+            )
         }
 
-        val keysignPayload = _keysignPayload
-        val keysignPayloadProto = payloadToProtoMapper(keysignPayload)
-
-        val keysignProto =
-            protoBuf.encodeToByteArray(
-                KeysignMessageProto(
-                    sessionId = _sessionID,
-                    serviceName = _serviceName,
-                    keysignPayload = keysignPayloadProto,
-                    encryptionKeyHex = _encryptionKeyHex,
-                    useVultisigRelay = isRelayEnabled,
-                    customMessagePayload = customMessagePayload,
-                )
+        val data =
+            buildKeysignMessage(
+                keysignPayload = _keysignPayload,
+                customMessagePayload = customMessagePayload,
+                sessionId = _sessionID,
+                serviceName = _serviceName,
+                encryptionKeyHex = _encryptionKeyHex,
+                serverAddress = _serverAddress,
+                useVultisigRelay = isRelayEnabled,
             )
 
-        Timber.d("keysignProto: $keysignProto")
-
-        var data = compressQr(keysignProto).encodeBase64()
-        if (keysignPayloadProto != null && routerApi.shouldUploadPayload(data)) {
-            protoBuf.encodeToByteArray(keysignPayloadProto).let {
-                compressQr(it).encodeBase64().let { compressedData ->
-                    val hash = routerApi.uploadPayload(_serverAddress, compressedData)
-                    protoBuf
-                        .encodeToByteArray(
-                            KeysignMessageProto(
-                                sessionId = _sessionID,
-                                serviceName = _serviceName,
-                                encryptionKeyHex = _encryptionKeyHex,
-                                useVultisigRelay = isRelayEnabled,
-                                payloadId = hash,
-                            )
-                        )
-                        .let { compressedData -> data = compressQr(compressedData).encodeBase64() }
-                }
-            }
-        }
         _keysignMessage.value =
             "https://vultisig.com?type=SignTransaction&resharePrefix=${vault.resharePrefix}&vault=${vault.pubKeyECDSA}&jsonData=" +
                 data
@@ -419,8 +336,57 @@ constructor(
         if (vault.isSecureVault()) sendNotification()
     }
 
+    /**
+     * Invoked once the local mediator service signals it is up: starts the local session (with
+     * retries) and kicks off participant discovery. Mirrors the old `serviceStartedReceiver`.
+     */
+    private fun onMediatorServiceStarted() {
+        val vault =
+            _currentVault
+                ?: run {
+                    moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
+                    return
+                }
+        viewModelScope.launch(Dispatchers.IO) {
+            val started =
+                sessionCoordinator.startSessionWithRetry(
+                    _serverAddress,
+                    _sessionID,
+                    vault.localPartyID,
+                    buildJoinRequest(vault),
+                )
+            if (started) {
+                participantDiscovery.start(
+                    viewModelScope,
+                    _serverAddress,
+                    _sessionID,
+                    vault.localPartyID,
+                )
+            } else {
+                participantDiscovery.stop()
+                moveToState(KeysignFlowState.Error("Failed to start session".asUiText()))
+            }
+        }
+    }
+
+    private fun buildJoinRequest(vault: Vault): JoinKeysignRequestJson? {
+        val password = password
+        if (password.isNullOrBlank()) return null
+        return JoinKeysignRequestJson(
+            publicKeyEcdsa = vault.pubKeyECDSA,
+            messages = messagesToSign,
+            sessionId = _sessionID,
+            hexEncryptionKey = _encryptionKeyHex,
+            derivePath = (_keysignPayload?.coin?.coinType ?: CoinType.ETHEREUM).derivationPath(),
+            isEcdsa = tssKeysignType == TssKeyType.ECDSA,
+            password = password,
+            chain = _keysignPayload?.coin?.chain?.raw ?: "",
+            mldsa = tssKeysignType == TssKeyType.MLDSA,
+        )
+    }
+
     fun sendNotification() {
-        if (uiState.value.resendCooldownSeconds > 0) return
+        if (_uiState.value.resendCooldownSeconds > 0) return
         val currentQrData = _keysignMessage.value
         if (currentQrData == lastNotifiedQrData) return
         viewModelScope.safeLaunch(
@@ -448,27 +414,12 @@ constructor(
             viewModelScope.launch {
                 var seconds = 30
                 while (seconds > 0) {
-                    uiState.update { it.copy(resendCooldownSeconds = seconds) }
+                    _uiState.update { it.copy(resendCooldownSeconds = seconds) }
                     delay(1.seconds)
                     seconds--
                 }
-                uiState.update { it.copy(resendCooldownSeconds = 0) }
+                _uiState.update { it.copy(resendCooldownSeconds = 0) }
                 lastNotifiedQrData = ""
-            }
-    }
-
-    private fun startParticipantDiscovery(vault: Vault) {
-        discoverParticipantsJob?.cancel()
-        discoverParticipantsJob =
-            viewModelScope.launch {
-                discoverParticipantsUseCase(_serverAddress, _sessionID, vault.localPartyID)
-                    .collect { participants ->
-                        val existingParticipants =
-                            this@KeysignFlowViewModel.participants.value.toSet()
-                        val newParticipants = participants - existingParticipants
-                        this@KeysignFlowViewModel.participants.update { participants }
-                        newParticipants.forEach(::addParticipant)
-                    }
             }
     }
 
@@ -478,72 +429,13 @@ constructor(
         txType: Route.Keysign.Keysign.TxType,
     ) {
         if (keysignPayload != null) {
-            transactionId.let {
-                val isSwap =
-                    keysignPayload.swapPayload != null ||
-                        txType == Route.Keysign.Keysign.TxType.Swap
-
-                viewModelScope.safeLaunch {
-                    val isDeposit =
-                        when (val specific = keysignPayload.blockChainSpecific) {
-                            is BlockChainSpecific.MayaChain -> specific.isDeposit
-                            is BlockChainSpecific.THORChain -> specific.isDeposit
-                            is BlockChainSpecific.Ton -> specific.isDeposit
-                            is BlockChainSpecific.Cosmos ->
-                                specific.transactionType ==
-                                    TransactionType.TRANSACTION_TYPE_IBC_TRANSFER ||
-                                    try {
-                                        depositTransactionRepository.getTransaction(transactionId)
-                                        true
-                                    } catch (e: Exception) {
-                                        false
-                                    }
-
-                            else -> txType == Route.Keysign.Keysign.TxType.Deposit
-                        }
-
-                    when {
-                        isSwap -> {
-                            val swapTransactionUiModel =
-                                mapSwapTransactionToUiModel(
-                                    swapTransactionRepository.getTransaction(transactionId)
-                                )
-                            transactionTypeUiModel =
-                                TransactionTypeUiModel.Swap(swapTransactionUiModel)
-                            transactionHistoryData.update {
-                                swapTransactionToHistoryDataMapper(swapTransactionUiModel)
-                            }
-                        }
-
-                        isDeposit -> {
-                            val depositTransactionUiModel =
-                                mapDepositTransactionUiModel(
-                                    depositTransactionRepository.getTransaction(transactionId)
-                                )
-                            transactionTypeUiModel =
-                                TransactionTypeUiModel.Deposit(depositTransactionUiModel)
-                            transactionHistoryData.update {
-                                depositTransactionHistoryDataMapper(depositTransactionUiModel)
-                            }
-                        }
-
-                        else -> {
-                            val tx =
-                                transactionRepository.getTransaction(transactionId)
-                                    ?: run {
-                                        Timber.e("Transaction not found: %s", transactionId)
-                                        return@safeLaunch
-                                    }
-                            val transactionDetailsUiModel = mapTransactionToUiModel(tx)
-                            transactionHistoryData.update {
-                                transactionHistoryDataMapper(transactionDetailsUiModel)
-                            }
-                            transactionTypeUiModel =
-                                TransactionTypeUiModel.Send(transactionDetailsUiModel)
-                        }
-                    }
-                    _isDataLoaded.value = true
-                }
+            viewModelScope.safeLaunch {
+                val result =
+                    buildKeysignTransactionUiModel(keysignPayload, txType, transactionId)
+                        ?: return@safeLaunch
+                transactionTypeUiModel = result.transactionTypeUiModel
+                transactionHistoryData.update { result.transactionHistoryData }
+                _isDataLoaded.value = true
             }
         } else {
             transactionTypeUiModel =
@@ -558,157 +450,12 @@ constructor(
         }
     }
 
-    private val serviceStartedReceiver: BroadcastReceiver =
-        object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if (intent.action == MediatorService.SERVICE_ACTION) {
-                    Timber.tag("KeysignFlowViewModel").d("onReceive: Mediator service started")
-                    val vault =
-                        _currentVault
-                            ?: run {
-                                moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
-                                return
-                            }
-                    // send a request to local mediator server to start the session
-                    viewModelScope.launch(Dispatchers.IO) {
-                        startSessionWithRetry(_serverAddress, _sessionID, vault.localPartyID)
-                    }
-                    // kick off discovery
-                    startParticipantDiscovery(vault)
-                }
-            }
-        }
-
-    private fun stopService(context: Context) {
-        // start mediator service
-        val intent = Intent(context, MediatorService::class.java)
-        context.stopService(intent)
-        Timber.d("stopService: Mediator service stopped")
-    }
-
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun startMediatorService(context: Context) {
-        val filter = IntentFilter()
-        filter.addAction(MediatorService.SERVICE_ACTION)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
-        } else {
-            context.registerReceiver(serviceStartedReceiver, filter)
-        }
-
-        MediatorService.start(context, _serviceName)
-    }
-
-    private suspend fun startSession(serverAddr: String, sessionID: String, localPartyID: String) {
-        // start the session
-        try {
-            sessionApi.startSession(serverAddr, sessionID, listOf(localPartyID))
-
-            Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
-
-            if (!password.isNullOrBlank()) {
-                val vault =
-                    _currentVault
-                        ?: run {
-                            Timber.e("Vault is not set when joining keysign in startSession")
-                            moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
-                            return
-                        }
-                val chain = _keysignPayload?.coin?.chain?.raw ?: ""
-                val isEcdsa = tssKeysignType == TssKeyType.ECDSA
-                Timber.tag("KeysignFlowViewModel")
-                    .d(
-                        "joinKeysign: chain=$chain, isEcdsa=$isEcdsa, tssKeysignType=$tssKeysignType, messages=${messagesToSign.map { it.take(16) }}"
-                    )
-                vultiSignerRepository.joinKeysign(
-                    JoinKeysignRequestJson(
-                        publicKeyEcdsa = vault.pubKeyECDSA,
-                        messages = messagesToSign,
-                        sessionId = sessionID,
-                        hexEncryptionKey = _encryptionKeyHex,
-                        derivePath =
-                            (_keysignPayload?.coin?.coinType ?: CoinType.ETHEREUM).derivationPath(),
-                        isEcdsa = isEcdsa,
-                        password = password,
-                        chain = chain,
-                        mldsa = tssKeysignType == TssKeyType.MLDSA,
-                    )
-                )
-                Timber.tag("KeysignFlowViewModel").d("joinKeysign: server notified successfully")
-            }
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")
-        }
-    }
-
-    private suspend fun startSessionWithRetry(
-        serverAddr: String,
-        sessionID: String,
-        localPartyID: String,
-    ) {
-        var delayMs = 200L
-        repeat(4) { attempt ->
-            try {
-                Timber.tag("KeysignFlowViewModel")
-                    .d("startSessionWithRetry: Attempt ${attempt + 1}")
-                sessionApi.startSession(serverAddr, sessionID, listOf(localPartyID))
-                Timber.tag("KeysignFlowViewModel").d("startSession: Session started")
-                if (!password.isNullOrBlank()) {
-                    val vault =
-                        _currentVault
-                            ?: run {
-                                Timber.e("Vault is not set when joining keysign in startSession")
-                                moveToState(KeysignFlowState.Error("Vault is not set".asUiText()))
-                                return
-                            }
-                    vultiSignerRepository.joinKeysign(
-                        JoinKeysignRequestJson(
-                            publicKeyEcdsa = vault.pubKeyECDSA,
-                            messages = messagesToSign,
-                            sessionId = sessionID,
-                            hexEncryptionKey = _encryptionKeyHex,
-                            derivePath =
-                                (_keysignPayload?.coin?.coinType ?: CoinType.ETHEREUM)
-                                    .derivationPath(),
-                            isEcdsa = tssKeysignType == TssKeyType.ECDSA,
-                            password = password,
-                            chain = _keysignPayload?.coin?.chain?.name ?: "",
-                        )
-                    )
-                }
-                return
-            } catch (e: Exception) {
-                if (e is kotlinx.coroutines.CancellationException) throw e
-                Timber.tag("KeysignFlowViewModel")
-                    .e(e, "startSessionWithRetry: Attempt ${attempt + 1} failed")
-                if (attempt < 3) {
-                    delay(delayMs)
-                    delayMs *= 2
-                } else {
-                    Timber.tag("KeysignFlowViewModel").e("All attempts to start session failed")
-                    moveToState(KeysignFlowState.Error("Failed to start session".asUiText()))
-                }
-            }
-        }
-    }
-
     fun addParticipant(participant: String) {
-        val currentList = selection.value
-        if (currentList.contains(participant)) return
-        selection.value = currentList + participant
-    }
-
-    private fun removeParticipant(participant: String) {
-        selection.value -= participant
+        participantDiscovery.addParticipant(participant)
     }
 
     fun handleParticipant(participant: String) {
-        if (participant in selection.value) {
-            removeParticipant(participant)
-        } else {
-            addParticipant(participant)
-        }
+        participantDiscovery.handleParticipant(participant)
     }
 
     fun moveToState(nextState: KeysignFlowState) {
@@ -716,9 +463,9 @@ constructor(
             if (nextState == KeysignFlowState.Keysign) {
                 cleanQrAddress()
             }
-            currentState.update { nextState }
+            _currentState.update { nextState }
         } catch (e: Exception) {
-            isLoading.value = false
+            _isLoading.value = false
             moveToState(
                 Error(e.message?.asUiText() ?: UiText.StringResource(R.string.unknown_error))
             )
@@ -727,15 +474,15 @@ constructor(
 
     fun moveToKeysignState() {
         viewModelScope.launch {
-            isLoading.value = true
+            _isLoading.value = true
             stopParticipantDiscovery()
             moveToState(KeysignFlowState.Keysign)
-            isLoading.value = false
+            _isLoading.value = false
         }
     }
 
     fun stopParticipantDiscovery() {
-        discoverParticipantsJob?.cancel()
+        participantDiscovery.stop()
     }
 
     private fun cleanQrAddress() {
@@ -743,10 +490,12 @@ constructor(
     }
 
     fun changeNetworkPromptOption(option: NetworkOption, context: Context) {
-        if (networkOption.value == option) return
-        networkOption.value = option
+        val resolvedOption =
+            if (isFastSign && option == NetworkOption.Local) NetworkOption.Internet else option
+        if (_networkOption.value == resolvedOption) return
+        _networkOption.value = resolvedOption
         _serverAddress =
-            when (option) {
+            when (resolvedOption) {
                 NetworkOption.Local -> {
                     LOCAL_MEDIATOR_SERVER_URL
                 }
@@ -773,8 +522,7 @@ constructor(
     private suspend fun startKeysign() {
         withContext(Dispatchers.IO) {
             try {
-                val keygenCommittee = selection.value
-                sessionApi.startWithCommittee(_serverAddress, _sessionID, keygenCommittee)
+                sessionCoordinator.startWithCommittee(_serverAddress, _sessionID, selection.value)
                 Timber.d("Keysign started")
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
@@ -785,12 +533,8 @@ constructor(
 
     override fun onCleared() {
         cleanQrAddress()
-        try {
-            context.unregisterReceiver(serviceStartedReceiver)
-        } catch (_: IllegalArgumentException) {
-            // receiver was already unregistered or never registered
-        }
-        stopService(context)
+        sessionCoordinator.unregisterServiceReceiver()
+        sessionCoordinator.stopService()
         super.onCleared()
     }
 
