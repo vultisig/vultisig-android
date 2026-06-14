@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.repositories.TokenRepository
 import com.vultisig.wallet.data.usecases.ConvertTokenValueToFiatUseCase
 import com.vultisig.wallet.ui.models.swap.SwapTransactionUiModel
 import com.vultisig.wallet.ui.models.swap.ValuedToken
+import com.vultisig.wallet.ui.models.swap.clampDstFiatToSrcFiat
 import com.vultisig.wallet.ui.models.swap.formatSwapKitProviderLabel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
@@ -63,6 +64,16 @@ constructor(
 
         val quotesFeesFiat = convertTokenValueToFiat(tokenValue, from.estimatedFees, currency)
 
+        // SwapTransaction carries no destination fiat, so it is recomputed here for the verify and
+        // keysign screens. Apply the same value-preserving clamp the swap form uses (#4878) so an
+        // illiquid token's inflated market mark can't reappear on the screens the user signs from.
+        val srcFiat = convertTokenValueToFiat(from.srcToken, from.srcTokenValue, currency)
+        val dstFiat =
+            clampDstFiatToSrcFiat(
+                srcFiat,
+                convertTokenValueToFiat(from.dstToken, from.expectedDstTokenValue, currency),
+            )
+
         // Display-only label. `provider` below stays the canonical id (the behavioral key that
         // gates SwapKit `/track` settlement); SwapKit collapses every sub-provider onto the
         // canonical `"SwapKit"` id, so render the persisted sub-provider (Chainflip / NEAR /
@@ -87,23 +98,13 @@ constructor(
                 ValuedToken(
                     value = mapTokenValueToDecimalUiString(from.srcTokenValue),
                     token = from.srcToken,
-                    fiatValue =
-                        fiatValueToStringMapper(
-                            convertTokenValueToFiat(from.srcToken, from.srcTokenValue, currency)
-                        ),
+                    fiatValue = fiatValueToStringMapper(srcFiat),
                 ),
             dst =
                 ValuedToken(
                     value = mapTokenValueToDecimalUiString(from.expectedDstTokenValue),
                     token = from.dstToken,
-                    fiatValue =
-                        fiatValueToStringMapper(
-                            convertTokenValueToFiat(
-                                from.dstToken,
-                                from.expectedDstTokenValue,
-                                currency,
-                            )
-                        ),
+                    fiatValue = fiatValueToStringMapper(dstFiat),
                 ),
             hasConsentAllowance = from.isApprovalRequired,
             providerFee =
