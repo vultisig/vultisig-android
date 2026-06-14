@@ -239,10 +239,9 @@ constructor(
                 val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
                 val specific = specificAndUtxo.blockChainSpecific
-                // Aggregators can return tx.gas == 0; fall back to the standard EVM swap unit so
-                // the
-                // signed payload never carries a zero gas limit (matches SwapQuoteManager's fee
-                // path).
+                // Aggregators can return tx.gas == 0; fall back to the standard EVM swap unit
+                // so the signed payload never carries a zero gas limit (matches
+                // SwapQuoteManager's fee path).
                 val gasLimit =
                     quote.data.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
                 val quoteData =
