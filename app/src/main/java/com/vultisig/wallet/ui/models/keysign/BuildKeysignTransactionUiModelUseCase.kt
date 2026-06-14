@@ -63,7 +63,7 @@ constructor(
                         try {
                             depositTransactionRepository.getTransaction(transactionId)
                             true
-                        } catch (e: Exception) {
+                        } catch (_: IllegalStateException) {
                             false
                         }
 

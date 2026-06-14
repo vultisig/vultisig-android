@@ -355,11 +355,18 @@ constructor(
                     vault.localPartyID,
                     buildJoinRequest(vault),
                 )
-            if (!started) {
+            if (started) {
+                participantDiscovery.start(
+                    viewModelScope,
+                    _serverAddress,
+                    _sessionID,
+                    vault.localPartyID,
+                )
+            } else {
+                participantDiscovery.stop()
                 moveToState(KeysignFlowState.Error("Failed to start session".asUiText()))
             }
         }
-        participantDiscovery.start(viewModelScope, _serverAddress, _sessionID, vault.localPartyID)
     }
 
     private fun buildJoinRequest(vault: Vault): JoinKeysignRequestJson? {
@@ -483,10 +490,12 @@ constructor(
     }
 
     fun changeNetworkPromptOption(option: NetworkOption, context: Context) {
-        if (_networkOption.value == option) return
-        _networkOption.value = option
+        val resolvedOption =
+            if (isFastSign && option == NetworkOption.Local) NetworkOption.Internet else option
+        if (_networkOption.value == resolvedOption) return
+        _networkOption.value = resolvedOption
         _serverAddress =
-            when (option) {
+            when (resolvedOption) {
                 NetworkOption.Local -> {
                     LOCAL_MEDIATOR_SERVER_URL
                 }

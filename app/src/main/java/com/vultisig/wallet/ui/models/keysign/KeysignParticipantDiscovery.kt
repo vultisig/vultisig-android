@@ -33,17 +33,17 @@ constructor(private val discoverParticipantsUseCase: DiscoverParticipantsUseCase
 
     /** Replaces the current selection (e.g. seeding it with the local party id). */
     fun setSelection(selection: List<String>) {
-        _selection.value = selection
+        _selection.update { selection }
     }
 
     fun addParticipant(participant: String) {
-        val currentList = _selection.value
-        if (currentList.contains(participant)) return
-        _selection.value = currentList + participant
+        _selection.update { current ->
+            if (participant in current) current else current + participant
+        }
     }
 
     private fun removeParticipant(participant: String) {
-        _selection.value -= participant
+        _selection.update { current -> current - participant }
     }
 
     fun handleParticipant(participant: String) {

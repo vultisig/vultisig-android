@@ -70,6 +70,7 @@ constructor(
                                 serviceName = serviceName,
                                 encryptionKeyHex = encryptionKeyHex,
                                 useVultisigRelay = useVultisigRelay,
+                                customMessagePayload = customMessagePayload,
                                 payloadId = hash,
                             )
                         )

@@ -45,6 +45,7 @@ constructor(
      */
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     fun startMediatorService(serviceName: String, onServiceStarted: () -> Unit) {
+        unregisterServiceReceiver()
         registerServiceReceiver(onServiceStarted)
         MediatorService.start(context, serviceName)
     }
@@ -65,7 +66,7 @@ constructor(
         val filter = IntentFilter()
         filter.addAction(MediatorService.SERVICE_ACTION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             context.registerReceiver(receiver, filter)
         }
@@ -106,7 +107,7 @@ constructor(
             if (joinRequest != null) {
                 Timber.tag("KeysignFlowViewModel")
                     .d(
-                        "joinKeysign: chain=${joinRequest.chain}, isEcdsa=${joinRequest.isEcdsa}, mldsa=${joinRequest.mldsa}, messages=${joinRequest.messages.map { it.take(16) }}"
+                        "joinKeysign: chain=${joinRequest.chain}, isEcdsa=${joinRequest.isEcdsa}, mldsa=${joinRequest.mldsa}"
                     )
                 vultiSignerRepository.joinKeysign(joinRequest)
                 Timber.tag("KeysignFlowViewModel").d("joinKeysign: server notified successfully")
@@ -114,7 +115,7 @@ constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Timber.tag("KeysignFlowViewModel").e("startSession: ${e.stackTraceToString()}")
+            Timber.tag("KeysignFlowViewModel").e(e, "startSession failed")
         }
     }
 
