@@ -83,7 +83,6 @@
     <string name="tron_resource_energy">에너지</string>
     <string name="circle_defi_description">USDC를 Circle 계정에 예치하고 수익을 얻으세요. Vultisig 볼트 내에서 안전하게 관리됩니다.</string>
     <string name="circle_defi_control_info">자금은 완전히 볼트의 통제 하에 있습니다. Circle 계정은 자기 수탁형이며 수익은 안전한 오프체인 트레저리를 통해 생성됩니다.</string>
-    <string name="usdc_deposit_title">USDC 예치</string>
     <string name="deposit_usdc_button">USDC 예치</string>
     <string name="open_account_button">계정 개설</string>
     <string name="app_name">Vultisig</string>

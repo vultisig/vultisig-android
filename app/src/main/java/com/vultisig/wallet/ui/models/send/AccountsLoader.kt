@@ -62,7 +62,6 @@ internal class AccountsLoader(
                 DeFiNavActions.MINT_YTCY,
                 DeFiNavActions.REDEEM_YRUNE,
                 DeFiNavActions.REDEEM_YTCY,
-                DeFiNavActions.DEPOSIT_USDC_CIRCLE,
                 DeFiNavActions.FREEZE_TRX ->
                     scope.safeLaunch(onError = ::onLoadError) {
                         accountsRepository

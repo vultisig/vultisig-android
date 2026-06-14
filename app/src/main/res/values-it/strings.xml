@@ -84,7 +84,6 @@
     <string name="send_continue_button">Continua</string>
     <string name="circle_defi_description">Deposita i tuoi USDC in un account Circle e guadagna rendimenti. In modo sicuro all interno del tuo vault Vultisig.</string>
     <string name="circle_defi_control_info">I fondi rimangono completamente sotto il controllo del tuo vault. Gli account Circle sono auto-custoditi e il rendimento è generato attraverso tesorerie sicure off-chain.</string>
-    <string name="usdc_deposit_title">Deposito USDC</string>
     <string name="deposit_usdc_button">Deposita USDC</string>
     <string name="open_account_button">Apri account</string>
     <string name="ok">OK</string>

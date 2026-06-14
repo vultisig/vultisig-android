@@ -9,14 +9,12 @@ import org.junit.jupiter.params.provider.EnumSource
 
 /**
  * Pins the [SendStrategies.submitFor] routing: every [DeFiNavActions] entry (and `null`) must run
- * at most one strategy's `submit()`, and only the expected one. `DEPOSIT_USDC_CIRCLE` is a gated
- * no-op (new Circle deposits are disabled) and runs none. The existing submit tests all run with
- * `defiType == null`, so a misrouted DeFi action would otherwise pass the suite silently.
+ * at most one strategy's `submit()`, and only the expected one. The existing submit tests all run
+ * with `defiType == null`, so a misrouted DeFi action would otherwise pass the suite silently.
  */
 internal class SendStrategiesSubmitForTest {
 
     private enum class Target {
-        NONE,
         DEFAULT,
         BOND,
         UNBOND,
@@ -92,8 +90,6 @@ internal class SendStrategiesSubmitForTest {
                 DeFiNavActions.REDEEM_YTCY to Target.REDEEM,
                 DeFiNavActions.STAKE_STCY to Target.STAKE,
                 DeFiNavActions.UNSTAKE_STCY to Target.UNSTAKE,
-                // New Circle deposits are disabled: the submit path is a no-op (no strategy runs).
-                DeFiNavActions.DEPOSIT_USDC_CIRCLE to Target.NONE,
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE to Target.WITHDRAW_USDC_CIRCLE,
                 DeFiNavActions.STAKE_CACAO to Target.DEFAULT,
                 DeFiNavActions.UNSTAKE_CACAO to Target.DEFAULT,
