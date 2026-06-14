@@ -994,7 +994,7 @@
     <string name="transaction_status_notification_title">Статус транзакции</string>
     <string name="transaction_status_checking_transaction">Проверка транзакции…</string>
     <string name="raw_transaction_data">Исходные данные транзакции</string>
-        <string name="sui_raw_transaction">Транзакция Sui</string>
+    <string name="sui_raw_transaction">Транзакция Sui</string>
     <string name="sui_sender">От</string>
     <string name="solana_raw_transaction">Исходные данные транзакции Соланы</string>
     <string name="solana_instructions_summary">Сводка инструкций транзакции</string>

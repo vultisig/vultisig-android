@@ -31,10 +31,13 @@ import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Vault
 import com.vultisig.wallet.data.models.payload.SwapPayload
 import java.math.BigInteger
+import java.util.Base64
 import kotlinx.serialization.json.Json
+import org.bouncycastle.crypto.digests.Blake2bDigest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import vultisig.keysign.v1.SignSui
 import vultisig.keysign.v1.SignTon
 import vultisig.keysign.v1.TonMessage
 import wallet.core.jni.CoinType
@@ -301,16 +304,16 @@ class ChainHelpersTest {
                 vaultLocalPartyID = "local",
                 libType = null,
                 wasmExecuteContractPayload = null,
-                signSui = vultisig.keysign.v1.SignSui(unsignedTxMsg = ptbBase64),
+                signSui = SignSui(unsignedTxMsg = ptbBase64),
             )
 
         val actual = SuiHelper.getPreSignedImageHash(payload)
 
         // Oracle: Sui signing digest = blake2b_32(intent_prefix(scope=0,version=0,app=0) || ptb),
         // computed independently here so a drift in WalletCore's SignDirect hashing surfaces.
-        val ptbBytes = java.util.Base64.getDecoder().decode(ptbBase64)
+        val ptbBytes = Base64.getDecoder().decode(ptbBase64)
         val intentMessage = byteArrayOf(0x00, 0x00, 0x00) + ptbBytes
-        val blake = org.bouncycastle.crypto.digests.Blake2bDigest(256)
+        val blake = Blake2bDigest(256)
         blake.update(intentMessage, 0, intentMessage.size)
         val expectedDigest = ByteArray(blake.digestSize).also { blake.doFinal(it, 0) }
 
