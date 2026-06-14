@@ -301,7 +301,9 @@ internal class JoinKeysignSendGasFeeTest {
     @Test
     fun `dapp fee returns null when signDirect cannot be parsed`() {
         val payload = cosmosPayload(signDirect = signDirect())
-        val parse = ParseCosmosMessageUseCase { error("malformed authInfo") }
+        val parse = ParseCosmosMessageUseCase {
+            throw IllegalArgumentException("malformed authInfo")
+        }
 
         payload.dappSuppliedNativeFee(Chain.ThorChain, parse) shouldBe null
     }
