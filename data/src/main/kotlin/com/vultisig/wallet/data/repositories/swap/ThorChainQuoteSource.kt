@@ -37,6 +37,7 @@ internal class ThorChainQuoteSource @Inject constructor(private val thorChainApi
                 interval = Interval.Rapid.wireValue,
                 referralCode = request.referralCode,
                 bpsDiscount = request.bpsDiscount,
+                toleranceBps = DEFAULT_THORCHAIN_TOLERANCE_BPS,
             )
 
         val finalData = fetchWithStreamingFallback(rapidRequest)
