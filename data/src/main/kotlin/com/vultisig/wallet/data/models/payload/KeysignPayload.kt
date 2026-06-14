@@ -7,6 +7,7 @@ import java.math.BigInteger
 import vultisig.keysign.v1.SignAmino
 import vultisig.keysign.v1.SignBitcoin
 import vultisig.keysign.v1.SignSolana
+import vultisig.keysign.v1.SignSui
 import vultisig.keysign.v1.SignTon
 import vultisig.keysign.v1.TronTransferAssetContractPayload
 import vultisig.keysign.v1.TronTransferContractPayload
@@ -30,6 +31,14 @@ data class KeysignPayload(
     val signDirect: SignDirectProto? = null,
     val signSolana: SignSolana? = null,
     val signTon: SignTon? = null,
+    /**
+     * Pre-built Sui Programmable Transaction Block (PTB) supplied by an external dApp via the Sui
+     * Wallet Standard. Carries the base64-encoded `TransactionData` BCS bytes to sign verbatim;
+     * when present, [SuiHelper] signs through WalletCore's `SignDirect` path instead of rebuilding
+     * a `Pay`/`PaySui`, and the Sui [blockChainSpecific] slot is an empty placeholder (the coins,
+     * gas budget and recipients are already baked into the bytes).
+     */
+    val signSui: SignSui? = null,
     /**
      * Structured Bitcoin PSBT payload supplied by an external dApp for co-signing. When present,
      * the UTXO signing path uses these inputs/outputs directly and bypasses WalletCore tx planning;

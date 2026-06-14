@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalStdlibApi::class)
+
 package com.vultisig.wallet.data.blockchain
 
 import BlockchainSpecific
@@ -257,6 +259,62 @@ class ChainHelpersTest {
 
             assertEquals(preImageHashes, transaction.expectedImageHash)
         }
+    }
+
+    /**
+     * Parity for issue #4881: a dApp-supplied Sui PTB (`signSui`) signed through WalletCore's
+     * SignDirect path must produce the same intent-prefixed digest the existing
+     * [com.vultisig.wallet.data.chains.helpers.SwapKitSuiSigner] computes by hand
+     * (`blake2b_32([0x00,0x00,0x00] || ptb)`). The SignDirect input carries the verbatim base64
+     * `TransactionData` BCS bytes — no Pay/PaySui rebuild — and the resulting sighash must match
+     * the cross-platform (iOS / extension / SDK) digest so co-signing converges.
+     */
+    @Test
+    fun signSuiSignDirectMatchesIntentPrefixedDigest() {
+        // base64 TransactionData BCS bytes. The digest is taken over these opaque bytes under the
+        // Sui transaction intent, so the exact contents are irrelevant to the parity assertion.
+        val ptbBase64 = "AAACAAgA4fUFAAAAAAAgWqQ5q8s0e0kq0a7s3w2QxJYwq7XmZ1pL0c1d8s2f3g4="
+        val suiCoin =
+            com.vultisig.wallet.data.models.Coin(
+                chain = Chain.Sui,
+                ticker = "SUI",
+                logo = "sui",
+                address = "0x9a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef",
+                decimal = 9,
+                hexPublicKey = HEX_PUBLIC_KEY_EDDSA,
+                priceProviderID = "sui",
+                contractAddress = "",
+                isNativeToken = true,
+            )
+        val payload =
+            com.vultisig.wallet.data.models.payload.KeysignPayload(
+                coin = suiCoin,
+                toAddress = "",
+                toAmount = BigInteger.ZERO,
+                blockChainSpecific =
+                    com.vultisig.wallet.data.models.payload.BlockChainSpecific.Sui(
+                        referenceGasPrice = BigInteger.ZERO,
+                        gasBudget = BigInteger.ZERO,
+                        coins = emptyList(),
+                    ),
+                vaultPublicKeyECDSA = HEX_PUBLIC_KEY,
+                vaultLocalPartyID = "local",
+                libType = null,
+                wasmExecuteContractPayload = null,
+                signSui = vultisig.keysign.v1.SignSui(unsignedTxMsg = ptbBase64),
+            )
+
+        val actual = SuiHelper.getPreSignedImageHash(payload)
+
+        // Oracle: Sui signing digest = blake2b_32(intent_prefix(scope=0,version=0,app=0) || ptb),
+        // computed independently here so a drift in WalletCore's SignDirect hashing surfaces.
+        val ptbBytes = java.util.Base64.getDecoder().decode(ptbBase64)
+        val intentMessage = byteArrayOf(0x00, 0x00, 0x00) + ptbBytes
+        val blake = org.bouncycastle.crypto.digests.Blake2bDigest(256)
+        blake.update(intentMessage, 0, intentMessage.size)
+        val expectedDigest = ByteArray(blake.digestSize).also { blake.doFinal(it, 0) }
+
+        assertEquals(listOf(expectedDigest.toHexString()), actual)
     }
 
     @Test

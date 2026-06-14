@@ -1021,6 +1021,8 @@
     <string name="transaction_status_notification_title">거래 상태</string>
     <string name="transaction_status_checking_transaction">거래 확인 중…</string>
     <string name="raw_transaction_data">원시 거래 데이터</string>
+        <string name="sui_raw_transaction">Sui 거래</string>
+    <string name="sui_sender">보내는 주소</string>
     <string name="solana_raw_transaction">Solana 원시 거래</string>
     <string name="solana_instructions_summary">거래 명령어 요약</string>
     <string name="solana_instruction_number">명령어 %1$d</string>
