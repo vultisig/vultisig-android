@@ -48,10 +48,10 @@ constructor(
     @Assisted private val scope: CoroutineScope,
     @Assisted private val state: MutableStateFlow<DepositFormUiModel>,
     @Assisted private val address: StateFlow<Address?>,
-    @Assisted private val assetsFieldState: TextFieldState,
-    @Assisted private val lpUnitsFieldState: TextFieldState,
-    @Assisted private val vaultId: () -> String?,
-    @Assisted private val lpPoolId: () -> String?,
+    @Assisted("assetsField") private val assetsFieldState: TextFieldState,
+    @Assisted("lpUnitsField") private val lpUnitsFieldState: TextFieldState,
+    @Assisted("vaultId") private val vaultId: () -> String?,
+    @Assisted("lpPoolId") private val lpPoolId: () -> String?,
     @Assisted private val resolvePairedAddress: suspend (Chain, String, String) -> String?,
 ) {
 
@@ -66,10 +66,10 @@ constructor(
             scope: CoroutineScope,
             state: MutableStateFlow<DepositFormUiModel>,
             address: StateFlow<Address?>,
-            assetsFieldState: TextFieldState,
-            lpUnitsFieldState: TextFieldState,
-            vaultId: () -> String?,
-            lpPoolId: () -> String?,
+            @Assisted("assetsField") assetsFieldState: TextFieldState,
+            @Assisted("lpUnitsField") lpUnitsFieldState: TextFieldState,
+            @Assisted("vaultId") vaultId: () -> String?,
+            @Assisted("lpPoolId") lpPoolId: () -> String?,
             resolvePairedAddress: suspend (Chain, String, String) -> String?,
         ): LiquidityDataLoader
     }
