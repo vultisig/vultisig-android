@@ -86,6 +86,7 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
     private lateinit var protoBuf: ProtoBuf
     private lateinit var sessionApi: SessionApi
     private lateinit var networkUtils: NetworkUtils
+    private lateinit var mediatorServiceController: MediatorServiceController
 
     private val vaultId = "vault-uuid"
 
@@ -125,6 +126,7 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
         protoBuf = ProtoBuf
         sessionApi = mockk(relaxed = true)
         networkUtils = mockk(relaxed = true)
+        mediatorServiceController = mockk(relaxed = true)
 
         mockkStatic("androidx.navigation.SavedStateHandleKt")
         mockkObject(Utils)
@@ -189,6 +191,7 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
             protoBuf = protoBuf,
             sessionApi = sessionApi,
             networkUtils = networkUtils,
+            mediatorServiceController = mediatorServiceController,
         )
 
     @Test

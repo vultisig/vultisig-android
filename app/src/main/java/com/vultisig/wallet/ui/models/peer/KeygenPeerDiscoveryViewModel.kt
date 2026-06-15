@@ -2,13 +2,8 @@
 
 package com.vultisig.wallet.ui.models.peer
 
-import android.annotation.SuppressLint
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Bitmap
-import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
@@ -25,7 +20,6 @@ import com.vultisig.wallet.data.common.Endpoints.VULTISIG_RELAY_URL
 import com.vultisig.wallet.data.common.Utils
 import com.vultisig.wallet.data.common.sha256
 import com.vultisig.wallet.data.keygen.isBatchEligibleReshare
-import com.vultisig.wallet.data.mediator.MediatorService
 import com.vultisig.wallet.data.models.SigningLibType
 import com.vultisig.wallet.data.models.TssAction
 import com.vultisig.wallet.data.repositories.FeatureFlagRepository
@@ -134,6 +128,7 @@ constructor(
     private val protoBuf: ProtoBuf,
     private val sessionApi: SessionApi,
     private val networkUtils: NetworkUtils,
+    private val mediatorServiceController: MediatorServiceController,
 ) : ViewModel() {
 
     private val args: Route.Keygen.PeerDiscovery? =
@@ -663,33 +658,14 @@ constructor(
         }
     }
 
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private fun startMediatorService() {
-        val filter = IntentFilter()
-        filter.addAction(MediatorService.SERVICE_ACTION)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(serviceStartedReceiver, filter, Context.RECEIVER_EXPORTED)
-        } else {
-            context.registerReceiver(serviceStartedReceiver, filter)
-        }
+        mediatorServiceController.start(serviceName) {
+            // send a request to local mediator server to start the session
+            viewModelScope.safeLaunch { withContext(Dispatchers.IO) { startSessionWithRetry() } }
 
-        MediatorService.start(context, serviceName)
+            startParticipantDiscovery()
+        }
     }
-
-    private val serviceStartedReceiver: BroadcastReceiver =
-        object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if (intent.action == MediatorService.SERVICE_ACTION) {
-                    Timber.d("onReceive: Mediator service started")
-                    // send a request to local mediator server to start the session
-                    viewModelScope.safeLaunch {
-                        withContext(Dispatchers.IO) { startSessionWithRetry() }
-                    }
-
-                    startParticipantDiscovery()
-                }
-            }
-        }
 
     private suspend fun startSessionWithRetry() {
         val localPartyId = session.localPartyId
@@ -723,11 +699,7 @@ constructor(
     }
 
     override fun onCleared() {
-        try {
-            context.unregisterReceiver(serviceStartedReceiver)
-        } catch (_: IllegalArgumentException) {
-            // Already unregistered
-        }
+        mediatorServiceController.stop()
         super.onCleared()
     }
 
