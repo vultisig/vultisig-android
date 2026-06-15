@@ -69,11 +69,6 @@ internal data class SendStrategies(
 
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> withdrawUsdcCircle.submit()
 
-            // New Circle (USDC yield) deposits are disabled. The UI no longer exposes a deposit
-            // entry point; this no-op gates the submit path as defense-in-depth so a deposit can't
-            // be initiated even if that path is somehow reached.
-            DeFiNavActions.DEPOSIT_USDC_CIRCLE -> Unit
-
             null,
             DeFiNavActions.STAKE_CACAO,
             DeFiNavActions.UNSTAKE_CACAO,
