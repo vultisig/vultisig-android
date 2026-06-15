@@ -322,8 +322,11 @@ constructor(
         ) {
             val session = session
             val existingVault = args.vaultId?.let { vaultRepository.get(it) }
-            val keygenCommittee =
-                (listOf(session.localPartyId) + _state.value.selectedDevices).distinct()
+            // Snapshot the selection once: startWithCommittee suspends, and oldCommittee below
+            // reads it again — without the snapshot a selection change mid-call would desync the
+            // started committee from the navigation args.
+            val selectedDevices = _state.value.selectedDevices
+            val keygenCommittee = (listOf(session.localPartyId) + selectedDevices).distinct()
             sessionApi.startWithCommittee(serverUrl, sessionId, keygenCommittee)
 
             navigator.route(
@@ -344,7 +347,7 @@ constructor(
                     vaultId = args.vaultId,
                     oldCommittee =
                         existingVault?.signers?.filter {
-                            _state.value.selectedDevices.contains(it) || it == session.localPartyId
+                            selectedDevices.contains(it) || it == session.localPartyId
                         } ?: emptyList(),
                     oldResharePrefix = existingVault?.resharePrefix ?: "",
                     deviceCount = args.deviceCount,
