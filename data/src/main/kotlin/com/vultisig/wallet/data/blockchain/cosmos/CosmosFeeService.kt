@@ -7,12 +7,25 @@ import com.vultisig.wallet.data.blockchain.model.Fee
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.models.Chain
+import java.math.BigDecimal
 import java.math.BigInteger
 
 class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeService {
 
+    /**
+     * Terra Classic burn rate only changes via governance, but [calculateFees] runs on every
+     * debounced keystroke during fee display. Cache the parsed rate for a short TTL so the hot path
+     * doesn't hit `/terra/tax/v1beta1/params` on each keypress. A single `@Volatile` reference
+     * makes the read/publish atomic; concurrent refreshes are harmless (idempotent fetch).
+     */
+    @Volatile private var cachedBurnTaxRate: CachedBurnTaxRate? = null
+
+    private data class CachedBurnTaxRate(val rate: BigDecimal, val fetchedAtMs: Long)
+
     companion object {
         internal const val OSMOSIS_MIN_FEE_UOSMO = 25_000L
+
+        private const val BURN_TAX_RATE_TTL_MS = 5 * 60 * 1000L
 
         // `gasLimit * gasPrice` lands below what Akash's validators accept: the
         // chain-registry price (0.025 uakt/gas) on a ~300k-gas delegation yields
@@ -88,9 +101,16 @@ class CosmosFeeService(private val cosmosApiFactory: CosmosApiFactory) : FeeServ
                 transaction.amount > BigInteger.ZERO
         if (!taxable) return base
 
+        return base + TerraClassicTax.burnTax(transaction.amount, burnTaxRate())
+    }
+
+    private suspend fun burnTaxRate(): BigDecimal {
+        val now = System.currentTimeMillis()
+        cachedBurnTaxRate?.let { if (now - it.fetchedAtMs < BURN_TAX_RATE_TTL_MS) return it.rate }
         val rawRate =
             cosmosApiFactory.createCosmosApi(Chain.TerraClassic).getTerraClassicBurnTaxRate()
         val rate = TerraClassicTax.parseRate(rawRate)
-        return base + TerraClassicTax.burnTax(transaction.amount, rate)
+        cachedBurnTaxRate = CachedBurnTaxRate(rate, now)
+        return rate
     }
 }

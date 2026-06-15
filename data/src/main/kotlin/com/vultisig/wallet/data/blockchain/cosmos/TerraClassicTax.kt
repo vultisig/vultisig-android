@@ -22,6 +22,14 @@ object TerraClassicTax {
     val fallbackBurnTaxRate: BigDecimal = BigDecimal("0.005")
 
     /**
+     * Sanity ceiling for a parsed burn-tax rate. The live rate is governance-controlled and has
+     * historically been ≤ 1.2%, so any value above this (e.g. a malformed `"5"` meaning 500%) is
+     * treated as garbage and replaced by [fallbackBurnTaxRate] — keeping the fail-safe symmetric
+     * with the lower bound so a bad endpoint can neither under- nor massively over-charge.
+     */
+    val maxBurnTaxRate: BigDecimal = BigDecimal("0.1")
+
+    /**
      * Base gas fee for an `uluna`-denominated Terra Classic send (300k gas × 28.325 uluna/gas =
      * 8,497,500 uluna ≈ 8.5 LUNC). Paid by native LUNC, CW20 (`terra1…`) and IBC (`ibc/…`) tokens,
      * whose fee the signer denominates in `uluna`.
@@ -45,12 +53,15 @@ object TerraClassicTax {
 
     /**
      * Parse a decimal-string `burn_tax_rate` from the LCD into a [BigDecimal], falling back to the
-     * conservative default on null input or any parse failure / negative value.
+     * conservative default on null/blank input, any parse failure, a negative value, or a value
+     * above [maxBurnTaxRate] (a parseable-but-garbage rate like `"5"` would otherwise be applied as
+     * a 500% tax).
      */
     fun parseRate(raw: String?): BigDecimal {
         if (raw == null) return fallbackBurnTaxRate
-        return runCatching { BigDecimal(raw.trim()) }.getOrNull()?.takeIf { it >= BigDecimal.ZERO }
-            ?: fallbackBurnTaxRate
+        return runCatching { BigDecimal(raw.trim()) }
+            .getOrNull()
+            ?.takeIf { it >= BigDecimal.ZERO && it <= maxBurnTaxRate } ?: fallbackBurnTaxRate
     }
 
     /**
@@ -74,6 +85,11 @@ object TerraClassicTax {
      * `TerraHelper.getPreSignedInputData`). Bank denoms (USTC / `uusd`) get the `uusd` base;
      * everything else — native LUNC, CW20 and IBC — gets the `uluna` base. Gating both this and the
      * signed fee denom on [isBankDenom] keeps the gas number and the fee denom in lockstep.
+     *
+     * NOTE: among bank denoms only `uusd` is supported — it is the only non-native bank token in
+     * the Terra Classic coin list. A different bank denom (e.g. `ukrw`) would be billed the `uusd`
+     * gas price in its own denom and be mis-priced; add per-denom gas prices here before listing
+     * one.
      */
     fun baseGas(contractAddress: String, isNativeToken: Boolean): Long =
         if (isBankDenom(contractAddress, isNativeToken)) UUSD_BASE_GAS else ULUNA_BASE_GAS

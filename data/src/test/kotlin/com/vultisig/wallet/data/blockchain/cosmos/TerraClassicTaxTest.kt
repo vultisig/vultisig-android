@@ -44,8 +44,20 @@ class TerraClassicTaxTest {
     @Test
     fun `parseRate falls back on null, blank, garbage and negative`() {
         assertEquals(TerraClassicTax.fallbackBurnTaxRate, TerraClassicTax.parseRate(null))
+        assertEquals(TerraClassicTax.fallbackBurnTaxRate, TerraClassicTax.parseRate(""))
+        assertEquals(TerraClassicTax.fallbackBurnTaxRate, TerraClassicTax.parseRate("   "))
         assertEquals(TerraClassicTax.fallbackBurnTaxRate, TerraClassicTax.parseRate("not-a-number"))
         assertEquals(TerraClassicTax.fallbackBurnTaxRate, TerraClassicTax.parseRate("-0.1"))
+    }
+
+    @Test
+    fun `parseRate falls back when the rate exceeds the sanity ceiling`() {
+        // A malformed "5" would otherwise be applied as a 500% tax and massively overcharge.
+        assertEquals(TerraClassicTax.fallbackBurnTaxRate, TerraClassicTax.parseRate("5"))
+        assertEquals(TerraClassicTax.fallbackBurnTaxRate, TerraClassicTax.parseRate("0.2"))
+        // A plausible governance rate at/under the ceiling is accepted as-is.
+        assertEquals(BigDecimal("0.012"), TerraClassicTax.parseRate("0.012"))
+        assertEquals(TerraClassicTax.maxBurnTaxRate, TerraClassicTax.parseRate("0.1"))
     }
 
     @Test
