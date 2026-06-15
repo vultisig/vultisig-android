@@ -10,11 +10,14 @@ import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.isLayer2
+import com.vultisig.wallet.data.models.isOpStackL2
+import com.vultisig.wallet.data.models.oneInchChainId
 import com.vultisig.wallet.data.models.supportsLegacyGas
+import com.vultisig.wallet.data.utils.Numeric
 import com.vultisig.wallet.data.utils.increaseByPercent
 import java.math.BigInteger
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
@@ -40,12 +43,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
                 calculateEip1559Fees(limit, chain, false, evmApi)
             }
 
-        val l1Fees =
-            if (chain.isLayer2) {
-                calculateLayer1Fees()
-            } else {
-                BigInteger.ZERO
-            }
+        val l1Fees = calculateLayer1Fees(transaction, fees, evmApi)
 
         return fees.addL1Amount(l1Fees)
     }
@@ -79,9 +77,85 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         return maxOf(calculatedLimit, getDefaultLimit(transaction))
     }
 
-    private fun calculateLayer1Fees(): BigInteger {
-        return BigInteger.ZERO
+    // OP-stack L2s charge an L1 data-availability fee on top of L2 execution gas. We price it via
+    // the chain's GasPriceOracle predeploy so the displayed/reserved fee (and any max-send
+    // headroom) reflects the true cost. Non-OP-stack chains — including the other L2s Arbitrum and
+    // ZkSync, which fold their L1 component in elsewhere — contribute zero here. Estimation is
+    // best-effort: a failed oracle call degrades to zero rather than blocking the whole fee calc.
+    private suspend fun calculateLayer1Fees(
+        transaction: BlockchainTransaction,
+        fees: Fee,
+        evmApi: EvmApi,
+    ): BigInteger {
+        val chain = transaction.coin.chain
+        if (!chain.isOpStackL2) return BigInteger.ZERO
+        if (fees !is Eip1559) return BigInteger.ZERO
+
+        return try {
+            val context = resolveL1CallContext(transaction)
+            evmApi.getOpStackL1Fee(
+                senderAddress = transaction.coin.address,
+                to = context.to,
+                value = context.value,
+                data = context.data,
+                gasLimit = fees.limit,
+                maxFeePerGas = fees.maxFeePerGas,
+                maxPriorityFeePerGas = fees.maxPriorityFeePerGas,
+                chainId = chain.oneInchChainId().toBigInteger(),
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "L1 data fee estimation failed for %s; treating as zero", chain)
+            BigInteger.ZERO
+        }
     }
+
+    // Mirrors what each transaction type actually broadcasts (the L1 fee scales with calldata
+    // size):
+    // native sends carry the memo, ERC-20 sends carry the transfer calldata to the token contract,
+    // and swaps carry the router calldata.
+    private fun resolveL1CallContext(transaction: BlockchainTransaction): L1CallContext {
+        val coin = transaction.coin
+        return when (transaction) {
+            is Transfer ->
+                if (coin.isNativeToken) {
+                    L1CallContext(
+                        to = transaction.to,
+                        value = transaction.amount,
+                        data =
+                            transaction.memo?.takeIf { it.isNotEmpty() }?.toByteArray()
+                                ?: ByteArray(0),
+                    )
+                } else {
+                    L1CallContext(
+                        to = coin.contractAddress,
+                        value = BigInteger.ZERO,
+                        data = erc20TransferCallData(transaction.to, transaction.amount),
+                    )
+                }
+            is Swap ->
+                L1CallContext(
+                    to = transaction.to,
+                    value = if (coin.isNativeToken) transaction.amount else BigInteger.ZERO,
+                    data = Numeric.hexStringToByteArray(transaction.callData),
+                )
+            else ->
+                error("Unsupported transaction type for L1 fee: ${transaction::class.simpleName}")
+        }
+    }
+
+    // ERC-20 transfer(address,uint256) calldata, built with plain hex concatenation (no JNI) so
+    // this
+    // class stays unit-testable. Matches EvmApi.constructERC20TransferData.
+    private fun erc20TransferCallData(recipient: String, amount: BigInteger): ByteArray {
+        val methodId = "a9059cbb"
+        val paddedAddress = recipient.removePrefix("0x").padStart(64, '0')
+        val paddedValue = amount.toString(16).padStart(64, '0')
+        return Numeric.hexStringToByteArray(methodId + paddedAddress + paddedValue)
+    }
+
+    private data class L1CallContext(val to: String, val value: BigInteger, val data: ByteArray)
 
     override suspend fun calculateDefaultFees(transaction: BlockchainTransaction): Fee {
         val chain = transaction.coin.chain
@@ -96,12 +170,7 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
                 calculateEip1559Fees(defaultLimit, chain, isSwap, evmApi)
             }
 
-        val l1Fees =
-            if (chain.isLayer2) {
-                calculateLayer1Fees()
-            } else {
-                BigInteger.ZERO
-            }
+        val l1Fees = calculateLayer1Fees(transaction, fees, evmApi)
 
         return fees.addL1Amount(l1Fees)
     }

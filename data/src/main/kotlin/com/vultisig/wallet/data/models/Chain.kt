@@ -308,8 +308,22 @@ val Chain.isLayer2: Boolean
             Chain.Arbitrum,
             Chain.Base,
             Chain.Blast,
+            Chain.Mantle,
             Chain.Optimism,
             Chain.ZkSync -> true
+            else -> false
+        }
+
+// OP-stack–derived L2s that expose the GasPriceOracle predeploy (0x420…0F) and charge a separate
+// L1 data fee on top of L2 execution gas. Arbitrum and ZkSync are L2s too (isLayer2) but price
+// their L1 component differently, so they are deliberately excluded from the OP-stack oracle path.
+val Chain.isOpStackL2: Boolean
+    get() =
+        when (this) {
+            Chain.Base,
+            Chain.Blast,
+            Chain.Mantle,
+            Chain.Optimism -> true
             else -> false
         }
 
