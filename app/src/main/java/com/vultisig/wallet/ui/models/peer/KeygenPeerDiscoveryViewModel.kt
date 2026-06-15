@@ -209,7 +209,7 @@ constructor(
         if (!email.isNullOrBlank() && !password.isNullOrBlank()) return
 
         viewModelScope.launch {
-            _state.map { it.selectedDevices.size }.first { it == targetDeviceCount - 1 }
+            _state.map { it.selectedDevices.size }.first { it >= targetDeviceCount - 1 }
             next()
         }
     }
