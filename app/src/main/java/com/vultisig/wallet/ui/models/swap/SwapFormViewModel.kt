@@ -10,7 +10,6 @@ import androidx.navigation.toRoute
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.models.Address
 import com.vultisig.wallet.data.models.Chain
-import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.repositories.SwapTransactionRepository
 import com.vultisig.wallet.data.utils.safeLaunch
@@ -340,13 +339,13 @@ constructor(
         // "insufficient balance" warning on a now-valid amount and mask the live quote/formError.
         _uiState.update { it.copy(error = null) }
 
-        val swapFee =
-            quoteState.quote?.fees?.value.takeIf { quoteState.provider == SwapProvider.LIFI }
-                ?: BigInteger.ZERO
-
+        // Only the source-chain network fee may be deducted from the source balance, and only for a
+        // native source on its own gas chain. The provider swap fee is taken from the destination
+        // amount (for LI.FI it is denominated in the destination token's units), so subtracting it
+        // here would mix decimals and could wrongly drive the usable amount negative for a
+        // low-decimal source into a high-decimal destination.
         val maxUsableTokenAmount =
             srcTokenValue.value -
-                swapFee -
                 (quotePipeline.estimatedNetworkFeeTokenValue.value?.value?.takeIf {
                     srcToken.isNativeToken && quotePipeline.gasFeeChain.value == srcToken.chain
                 } ?: BigInteger.ZERO)
