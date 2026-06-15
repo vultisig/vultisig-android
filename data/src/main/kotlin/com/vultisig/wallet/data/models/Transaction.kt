@@ -21,6 +21,10 @@ data class Transaction(
     val signAmino: String? = null,
     val signDirect: String? = null,
     val signSolana: String? = null,
+    /**
+     * Base64 `TransactionData` BCS bytes of a dApp-supplied Sui PTB, surfaced for verify display.
+     */
+    val signSui: String? = null,
     val estimatedFee: String,
     val blockChainSpecific: BlockChainSpecific,
     val utxos: List<UtxoInfo> = emptyList(),

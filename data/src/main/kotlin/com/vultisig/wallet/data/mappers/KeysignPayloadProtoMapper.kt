@@ -52,6 +52,7 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
             signDirect = from.signDirect,
             signSolana = from.signSolana,
             signTon = from.signTon,
+            signSui = from.signSui,
             signBitcoin = from.signBitcoin,
             swapPayload =
                 when {
@@ -132,6 +133,19 @@ internal class KeysignPayloadProtoMapperImpl @Inject constructor() : KeysignPayl
                     // would leave `blockChainSpecific` reading stale `byteFee`/`sendMaxAmount` data
                     // while sighashes dispatch through the PSBT helper.
                     from.signBitcoin != null -> BlockChainSpecific.BitcoinPSBT
+
+                    // A dApp-supplied Sui PTB (`signSui`) is signed verbatim from its BCS bytes via
+                    // WalletCore's SignDirect path, so the initiator omits the SUI RPC-derived
+                    // `suicheSpecific` (coins / gas price). Stand in an empty placeholder here so
+                    // [SuiHelper] — which casts `blockChainSpecific` to `Sui` — has a value to
+                    // read;
+                    // every field is already baked into the signed bytes and goes unused.
+                    from.signSui != null ->
+                        BlockChainSpecific.Sui(
+                            referenceGasPrice = BigInteger.ZERO,
+                            gasBudget = BigInteger.ZERO,
+                            coins = emptyList(),
+                        )
 
                     from.ethereumSpecific != null ->
                         from.ethereumSpecific.let {

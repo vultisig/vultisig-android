@@ -31,6 +31,7 @@ constructor(
             signAmino = from.signAmino,
             signDirect = from.signDirect,
             signSolana = from.signSolana,
+            signSui = from.signSui,
             networkFeeFiatValue = from.estimatedFee,
             networkFeeTokenValue = from.totalGas,
         )

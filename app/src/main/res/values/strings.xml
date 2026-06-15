@@ -1047,6 +1047,8 @@
     <string name="transaction_status_notification_title">Transaction Status</string>
     <string name="transaction_status_checking_transaction">Checking transaction…</string>
     <string name="raw_transaction_data">Raw Transaction Data</string>
+    <string name="sui_raw_transaction">Sui Transaction</string>
+    <string name="sui_sender">From</string>
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="solana_instructions_summary">Transaction Instructions Summary</string>
     <string name="solana_instruction_number">Instruction %1$d</string>
