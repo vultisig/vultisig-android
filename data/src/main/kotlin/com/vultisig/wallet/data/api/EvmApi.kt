@@ -11,6 +11,7 @@ import com.vultisig.wallet.data.api.models.RpcResponseJson
 import com.vultisig.wallet.data.api.models.SendTransactionJson
 import com.vultisig.wallet.data.api.models.ZkGasFee
 import com.vultisig.wallet.data.chains.helpers.EthereumFunction
+import com.vultisig.wallet.data.chains.helpers.EthereumRlpEncoder
 import com.vultisig.wallet.data.common.convertToBigIntegerOrZero
 import com.vultisig.wallet.data.common.stripHexPrefix
 import com.vultisig.wallet.data.common.toKeccak256
@@ -78,6 +79,23 @@ interface EvmApi {
     suspend fun getERC20Balance(address: String, contractAddress: String): BigInteger
 
     suspend fun getTxStatus(txHash: String): EvmRpcResponseJson<EvmTxStatusJson>?
+
+    /**
+     * Prices the L1 data-availability fee of an OP-stack L2 transaction via the `GasPriceOracle`
+     * predeploy (`0x420…0F`) `getL1Fee(bytes)`. Builds the RLP-encoded unsigned EIP-1559 tx from
+     * the supplied fields (the L1 fee scales with its serialized size) and returns the oracle's
+     * quote in wei, or [BigInteger.ZERO] when the chain has no L1 component or the call fails.
+     */
+    suspend fun getOpStackL1Fee(
+        senderAddress: String,
+        to: String,
+        value: BigInteger,
+        data: ByteArray,
+        gasLimit: BigInteger,
+        maxFeePerGas: BigInteger,
+        maxPriorityFeePerGas: BigInteger,
+        chainId: BigInteger,
+    ): BigInteger
 }
 
 interface EvmApiFactory {
@@ -548,6 +566,46 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
         return Numeric.toHexString(data?.copyOfRange(data.size - 20, data.size))
     }
 
+    override suspend fun getOpStackL1Fee(
+        senderAddress: String,
+        to: String,
+        value: BigInteger,
+        data: ByteArray,
+        gasLimit: BigInteger,
+        maxFeePerGas: BigInteger,
+        maxPriorityFeePerGas: BigInteger,
+        chainId: BigInteger,
+    ): BigInteger {
+        val rlpEncodedTx =
+            EthereumRlpEncoder.encodeUnsignedEip1559(
+                chainId = chainId,
+                nonce = getNonce(senderAddress),
+                maxPriorityFeePerGas = maxPriorityFeePerGas,
+                maxFeePerGas = maxFeePerGas,
+                gasLimit = gasLimit,
+                to = to,
+                value = value,
+                data = data,
+            )
+        val callData = EthereumFunction.getL1FeeEncoder(rlpEncodedTx)
+        val rpcResp =
+            fetch<RpcResponse>(
+                "eth_call",
+                buildJsonArray {
+                    addJsonObject {
+                        put("to", OP_STACK_GAS_PRICE_ORACLE)
+                        put("data", callData)
+                    }
+                    add("latest")
+                },
+            )
+        if (rpcResp.error != null) {
+            Timber.d("get l1 fee error: %s", rpcResp.error.message)
+            return BigInteger.ZERO
+        }
+        return rpcResp.result.convertToBigIntegerOrZero()
+    }
+
     override suspend fun getTxStatus(txHash: String): EvmRpcResponseJson<EvmTxStatusJson>? {
         val rpcResp =
             try {
@@ -582,5 +640,8 @@ class EvmApiImp(private val http: HttpClient, private val rpcUrl: String) : EvmA
         private const val ERROR_EXISTING_TX = "existing tx"
         private const val ERROR_TX_IN_CACHE = "tx already exists in cache"
         private const val ERROR_CODE_10055 = "code=10055"
+
+        // OP-stack GasPriceOracle predeploy, identical across all OP-stack L2s.
+        private const val OP_STACK_GAS_PRICE_ORACLE = "0x420000000000000000000000000000000000000F"
     }
 }

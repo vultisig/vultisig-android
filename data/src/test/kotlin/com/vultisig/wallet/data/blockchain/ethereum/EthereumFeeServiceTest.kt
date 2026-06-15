@@ -8,6 +8,7 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.REPRESENTATIVE_SWAP_CALLDATA_BYTES
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
@@ -19,6 +20,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -38,6 +40,9 @@ internal class EthereumFeeServiceTest {
         every { evmApiFactory.createEvmApi(any()) } returns evmApi
         coEvery { evmApi.getBaseFee() } returns BigInteger.ZERO
         coEvery { evmApi.getFeeHistory() } returns emptyList()
+        coEvery {
+            evmApi.getOpStackL1Fee(any(), any(), any(), any(), any(), any(), any(), any())
+        } returns BigInteger.ZERO
     }
 
     // ---------- Bug #6 regression: empty fee history must not crash ----------
@@ -399,6 +404,162 @@ internal class EthereumFeeServiceTest {
 
         assertEquals(DEFAULT_SWAP_LIMIT, fee.limit)
         assertEquals(gwei(110), fee.networkPrice)
+    }
+
+    // ---------- OP-stack L1 data fee (issue #4844) ----------
+
+    @Test
+    fun `Optimism adds the OP-stack L1 data fee to the amount`() = runTest {
+        coEvery {
+            evmApi.getOpStackL1Fee(any(), any(), any(), any(), any(), any(), any(), any())
+        } returns BigInteger("777")
+
+        val fee = service.calculateDefaultFees(transfer(Chain.Optimism)) as Eip1559
+
+        assertEquals(fee.maxFeePerGas.multiply(fee.limit).add(BigInteger("777")), fee.amount)
+    }
+
+    @Test
+    fun `Base prices L1 against the recipient, amount and chain id for a native transfer`() =
+        runTest {
+            val tx = transfer(Chain.Base)
+
+            service.calculateDefaultFees(tx)
+
+            coVerify(exactly = 1) {
+                evmApi.getOpStackL1Fee(
+                    senderAddress = "0xSender",
+                    to = "0xRecipient",
+                    value = tx.amount,
+                    data = any(),
+                    gasLimit = any(),
+                    maxFeePerGas = any(),
+                    maxPriorityFeePerGas = any(),
+                    chainId = BigInteger("8453"),
+                )
+            }
+        }
+
+    @Test
+    fun `ERC-20 transfer prices L1 against the token contract with 68-byte calldata`() = runTest {
+        val dataSlot = slot<ByteArray>()
+        coEvery {
+            evmApi.getOpStackL1Fee(
+                any(),
+                any(),
+                any(),
+                capture(dataSlot),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } returns BigInteger.ZERO
+
+        service.calculateDefaultFees(transfer(Chain.Base, isNative = false))
+
+        coVerify(exactly = 1) {
+            evmApi.getOpStackL1Fee(
+                senderAddress = "0xSender",
+                to = "0xContract",
+                value = BigInteger.ZERO,
+                data = any(),
+                gasLimit = any(),
+                maxFeePerGas = any(),
+                maxPriorityFeePerGas = any(),
+                chainId = BigInteger("8453"),
+            )
+        }
+        // 4-byte selector + 32-byte address + 32-byte amount
+        assertEquals(4 + 32 + 32, dataSlot.captured.size)
+    }
+
+    @Test
+    fun `swap with empty calldata prices L1 against the representative swap payload`() = runTest {
+        val dataSlot = slot<ByteArray>()
+        coEvery {
+            evmApi.getOpStackL1Fee(
+                any(),
+                any(),
+                any(),
+                capture(dataSlot),
+                any(),
+                any(),
+                any(),
+                any(),
+            )
+        } returns BigInteger.ZERO
+
+        // Mirrors production: every live swap caller builds the Swap with an empty callData because
+        // the real router calldata is fetched in parallel and is not available at estimation time.
+        service.calculateDefaultFees(swap(Chain.Base))
+
+        coVerify(exactly = 1) {
+            evmApi.getOpStackL1Fee(
+                senderAddress = "0xSender",
+                to = "0xRecipient",
+                value = BigInteger("1000000000000000000"),
+                data = any(),
+                gasLimit = any(),
+                maxFeePerGas = any(),
+                maxPriorityFeePerGas = any(),
+                chainId = BigInteger("8453"),
+            )
+        }
+        // Empty calldata falls back to the representative payload rather than pricing zero bytes.
+        assertEquals(REPRESENTATIVE_SWAP_CALLDATA_BYTES, dataSlot.captured.size)
+    }
+
+    @Test
+    fun `Mantle does not query the OP-stack L1 oracle`() = runTest {
+        coEvery { evmApi.getBaseFee() } returns gwei(100)
+        stubFeeHistory(listOf(gwei(5)))
+
+        // Mantle is OP-stack–derived but its L1 fee is ETH-denominated; summing it into the MNT fee
+        // would understate the cost, so it is excluded from the oracle path entirely.
+        service.calculateDefaultFees(swap(Chain.Mantle))
+
+        coVerify(exactly = 0) {
+            evmApi.getOpStackL1Fee(any(), any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `Arbitrum does not query the OP-stack L1 oracle`() = runTest {
+        service.calculateDefaultFees(transfer(Chain.Arbitrum))
+
+        coVerify(exactly = 0) {
+            evmApi.getOpStackL1Fee(any(), any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `ZkSync does not query the OP-stack L1 oracle`() = runTest {
+        service.calculateDefaultFees(transfer(Chain.ZkSync))
+
+        coVerify(exactly = 0) {
+            evmApi.getOpStackL1Fee(any(), any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `Ethereum does not query the OP-stack L1 oracle`() = runTest {
+        service.calculateDefaultFees(transfer(Chain.Ethereum))
+
+        coVerify(exactly = 0) {
+            evmApi.getOpStackL1Fee(any(), any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `failed L1 oracle call degrades to zero and keeps the base amount`() = runTest {
+        coEvery {
+            evmApi.getOpStackL1Fee(any(), any(), any(), any(), any(), any(), any(), any())
+        } throws RuntimeException("rpc down")
+
+        val fee = service.calculateDefaultFees(transfer(Chain.Base)) as Eip1559
+
+        assertEquals(fee.maxFeePerGas.multiply(fee.limit), fee.amount)
     }
 
     // ---------- Helpers ----------
