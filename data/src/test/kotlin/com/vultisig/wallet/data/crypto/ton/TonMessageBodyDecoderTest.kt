@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.crypto.ton
 
 import java.math.BigInteger
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
@@ -79,13 +80,18 @@ internal class TonMessageBodyDecoderTest {
     }
 
     @Test
-    fun `decode treats a swap-shaped jetton transfer as a plain jetton transfer`() {
-        // Phase 1C does not classify swaps: a jetton transfer whose forward
-        // payload is a STON.fi swap is surfaced as a jetton transfer to the
-        // router address, with the referenced payload consumed but ignored.
+    fun `decode classifies a STON-fi v2 jetton swap`() {
+        // A jetton transfer whose forward payload is a STON.fi v2 swap (0x6664de2a) is now surfaced
+        // as a Swap, carrying the jetton-transfer destination (the router) as inputRouterAddress
+        // for
+        // the runtime allow-list gate. The offer amount is the jetton transfer amount.
         val intent = TonMessageBodyDecoder.decode(jettonTransferToStonfiRouterWithSwap)
-        assertTrue(intent is TonMessageBodyIntent.JettonTransfer)
-        assertEquals(stonfiV2Router, intent.destination)
+        assertTrue(intent is TonMessageBodyIntent.Swap)
+        assertEquals(TonMessageBodyIntent.Provider.STONFI, intent.provider)
+        assertEquals(TonMessageBodyIntent.OfferAsset.JETTON, intent.offerAsset)
+        assertEquals(stonfiV2Router, intent.inputRouterAddress)
+        assertEquals(BigInteger("100000000"), intent.offerAmount)
+        assertNotNull(intent.minOut)
     }
 
     @Test
