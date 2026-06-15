@@ -32,6 +32,10 @@ constructor(@ApplicationContext private val context: Context) {
      */
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
     fun start(serviceName: String, onServiceStarted: () -> Unit) {
+        // Drop any previously registered receiver first so a repeated start() (e.g. toggling back
+        // to Local mode) cannot leak the old one or deliver stale onServiceStarted callbacks.
+        stop()
+
         val filter = IntentFilter().apply { addAction(MediatorService.SERVICE_ACTION) }
         val receiver =
             object : BroadcastReceiver() {
@@ -44,8 +48,10 @@ constructor(@ApplicationContext private val context: Context) {
             }
         this.receiver = receiver
 
+        // SERVICE_ACTION is an internal app broadcast emitted by our own MediatorService, so the
+        // receiver must not be exported to other apps — mirrors KeysignSessionCoordinator.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
+            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
         } else {
             context.registerReceiver(receiver, filter)
         }
