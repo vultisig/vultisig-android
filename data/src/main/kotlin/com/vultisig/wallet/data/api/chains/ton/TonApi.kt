@@ -10,6 +10,9 @@ import java.math.BigInteger
 import java.util.Base64
 import javax.inject.Inject
 
+/** Display metadata for a jetton, resolved from its master contract. */
+data class TonJettonMetadata(val ticker: String, val decimals: Int, val logo: String?)
+
 interface TonApi {
 
     suspend fun getBalance(address: String): BigInteger
@@ -30,6 +33,13 @@ interface TonApi {
      * vault token.
      */
     suspend fun getJettonMasterAddress(jettonWalletAddress: String): String?
+
+    /**
+     * Resolve a jetton master's display metadata (ticker, decimals, logo) for rendering a swap's
+     * output token, which the user does not hold and is not in `vault.coins`. Returns `null` when
+     * the master is unknown to the indexer or carries no usable symbol.
+     */
+    suspend fun getJettonMetadata(masterAddress: String): TonJettonMetadata?
 
     suspend fun estimateFee(address: String, serializedBoc: String): BigInteger
 
@@ -105,6 +115,26 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             }
             .bodyOrThrow<JettonWalletsJson>()
             .getMasterAddress()
+
+    override suspend fun getJettonMetadata(masterAddress: String): TonJettonMetadata? {
+        val content =
+            http
+                .get("$BASE_URL/v3/jetton/masters") {
+                    parameter("address", masterAddress)
+                    parameter("limit", 1)
+                }
+                .bodyOrThrow<JettonMastersJson>()
+                .jettonMasters
+                .firstOrNull()
+                ?.jettonContent ?: return null
+        val ticker = content.symbol?.takeIf { it.isNotBlank() } ?: return null
+        // toncenter returns decimals as a string; default to 9 (TON's native scale) when absent.
+        return TonJettonMetadata(
+            ticker = ticker,
+            decimals = content.decimals?.trim()?.toIntOrNull() ?: 9,
+            logo = content.image?.takeIf { it.isNotBlank() },
+        )
+    }
 
     override suspend fun estimateFee(address: String, serializedBoc: String): BigInteger {
         val feeResponse =

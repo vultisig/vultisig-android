@@ -71,6 +71,25 @@ data class JettonWalletJson(
 @Serializable data class AddressEntryJson(@SerialName("user_friendly") val userFriendly: String)
 
 @Serializable
+data class JettonMastersJson(
+    @SerialName("jetton_masters") val jettonMasters: List<JettonMasterJson> = emptyList()
+)
+
+@Serializable
+data class JettonMasterJson(
+    @SerialName("address") val address: String? = null,
+    @SerialName("jetton_content") val jettonContent: JettonContentJson? = null,
+)
+
+@Serializable
+data class JettonContentJson(
+    @SerialName("symbol") val symbol: String? = null,
+    // toncenter encodes decimals as a string (e.g. "6").
+    @SerialName("decimals") val decimals: String? = null,
+    @SerialName("image") val image: String? = null,
+)
+
+@Serializable
 data class TonEstimateFeeJson(
     @SerialName("ok") val ok: Boolean,
     @SerialName("result") val result: TonFeeResult? = null,
