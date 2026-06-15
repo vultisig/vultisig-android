@@ -19,6 +19,7 @@ import com.vultisig.wallet.data.models.FiatValue
 import com.vultisig.wallet.data.models.SwapProvider
 import com.vultisig.wallet.data.models.SwapQuote
 import com.vultisig.wallet.data.models.TokenValue
+import com.vultisig.wallet.data.models.getSwapProviderId
 import com.vultisig.wallet.data.models.settings.AppCurrency
 import com.vultisig.wallet.data.repositories.AccountsRepository
 import com.vultisig.wallet.data.repositories.AllowanceRepository
@@ -630,6 +631,69 @@ internal class SwapFormViewModelTest {
             vm.selectSrcPercentage(1.0f)
 
             assertEquals("0.00553297", vm.srcAmountState.text.toString())
+        }
+
+    @Test
+    fun `selectSrcPercentage does not subtract the LIFI destination-denominated swap fee`() =
+        runTest(mainDispatcher) {
+            // LI.FI's integrator fee is denominated in the destination token's raw units, so
+            // deducting it from a low-decimal source balance underflows: here the 0.1 ETH fee
+            // (1e17) far exceeds the 1000 USDC balance (1e9), which used to clear the field with
+            // an insufficient-balance error.
+            val usdcBalance = BigInteger("1000000000") // 1000 USDC (6 decimals)
+            val usdcAddress =
+                Address(
+                    chain = Chain.Ethereum,
+                    address = "0xethaddress",
+                    accounts =
+                        listOf(
+                            createAccount(USDC_COIN, usdcBalance),
+                            createAccount(ETH_COIN, BigInteger("1000000000000000000")),
+                        ),
+                )
+            every { swapQuoteRepository.getEligibleProviders(any(), any()) } returns
+                listOf(SwapProvider.LIFI)
+            coEvery {
+                swapQuoteManager.fetchBestQuote(
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                    any(),
+                )
+            } returns
+                createDefaultQuoteFetchResult(
+                    quote =
+                        createLiFiQuote(
+                            fees = TokenValue(BigInteger("100000000000000000"), ETH_COIN)
+                        ),
+                    provider = SwapProvider.LIFI,
+                    providerUiText = R.string.swap_for_provider_li_fi.asUiText(),
+                )
+
+            val vm =
+                createViewModelWithAddresses(
+                    addresses = listOf(usdcAddress, btcAddress()),
+                    srcTokenId = USDC_COIN.id,
+                    dstTokenId = ETH_COIN.id,
+                )
+            advanceUntilIdle()
+
+            // Land a LI.FI quote so quoteState carries the destination-denominated fee.
+            vm.srcAmountState.setTextAndPlaceCursorAtEnd("100")
+            Snapshot.sendApplyNotifications()
+            advanceTimeBy(500)
+            advanceUntilIdle()
+
+            vm.selectSrcPercentage(0.25f)
+
+            // 25% of the full 1000 USDC balance, with no destination-fee subtraction.
+            assertEquals("250", vm.srcAmountState.text.toString())
+            assertNull(vm.uiState.value.error)
         }
 
     // endregion
@@ -2810,6 +2874,19 @@ internal class SwapFormViewModelTest {
             expiredAt = Clock.System.now() + 1.minutes,
             data = mockk(relaxed = true),
             subProvider = "NEAR",
+        )
+
+    private fun createLiFiQuote(
+        expectedDstValue: TokenValue =
+            TokenValue(value = BigInteger("1000000000000000000"), token = ETH_COIN),
+        fees: TokenValue = TokenValue(value = BigInteger("100000000000000000"), token = ETH_COIN),
+    ): SwapQuote.OneInch =
+        SwapQuote.OneInch(
+            expectedDstValue = expectedDstValue,
+            fees = fees,
+            expiredAt = Clock.System.now() + 1.minutes,
+            data = mockk(relaxed = true),
+            provider = SwapProvider.LIFI.getSwapProviderId(),
         )
 
     /**
