@@ -546,11 +546,10 @@ internal class SwapFormViewModelTest {
 
             vm.selectSrcPercentage(1.0f)
 
-            val amountText = vm.srcAmountState.text.toString()
-            assertTrue(
-                amountText.isNotEmpty() && amountText != "0",
-                "Expected non-zero amount but got: $amountText",
-            )
+            // 1 ETH balance minus the 0.001 ETH source-chain gas fee (native source on its own gas
+            // chain). Pins the network-fee subtraction so a regression that stops deducting it is
+            // caught instead of slipping through a non-empty/non-zero check.
+            assertEquals("0.999", vm.srcAmountState.text.toString())
         }
 
     @Test
