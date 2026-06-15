@@ -91,8 +91,12 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         if (!chain.isOpStackL2) return BigInteger.ZERO
         if (fees !is Eip1559) return BigInteger.ZERO
 
+        // Resolve the call context outside the try so a genuine programming error (unsupported
+        // transaction type) surfaces instead of being masked as a zero L1 fee. Only the best-effort
+        // oracle call below degrades to zero on failure.
+        val context = resolveL1CallContext(transaction)
+
         return try {
-            val context = resolveL1CallContext(transaction)
             evmApi.getOpStackL1Fee(
                 senderAddress = transaction.coin.address,
                 to = context.to,
