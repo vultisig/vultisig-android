@@ -98,6 +98,31 @@ internal class AmountManagerTest {
         assertNull(manager.validateTokenAmount("1.5"))
     }
 
+    @Test
+    fun `validateTokenAmount over-precision returns too_many_decimals error`() {
+        selectedToken.value = usdcToken() // 6 decimals
+        val manager = build(emptyScope())
+
+        val error = manager.validateTokenAmount("1.1234567") as? UiText.FormattedText
+
+        assertEquals(R.string.send_error_too_many_decimals, error?.resId)
+        assertEquals(listOf(6), error?.formatArgs)
+    }
+
+    @Test
+    fun `validateTokenAmount at exact precision returns null`() {
+        selectedToken.value = usdcToken() // 6 decimals
+        val manager = build(emptyScope())
+        assertNull(manager.validateTokenAmount("1.123456"))
+    }
+
+    @Test
+    fun `validateTokenAmount ignores trailing zeros beyond precision`() {
+        selectedToken.value = usdcToken() // 6 decimals
+        val manager = build(emptyScope())
+        assertNull(manager.validateTokenAmount("1.5000000"))
+    }
+
     // ──────── markMax ────────
 
     @Test
@@ -340,6 +365,19 @@ internal class AmountManagerTest {
             priceProviderID = "polkadot",
             contractAddress = "",
             isNativeToken = true,
+        )
+
+    private fun usdcToken(): Coin =
+        Coin(
+            chain = Chain.Ethereum,
+            ticker = "USDC",
+            logo = "",
+            address = "0xself",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            isNativeToken = false,
         )
 
     /** Convenience: pull the StringResource id out of a UiText for terse assertions. */

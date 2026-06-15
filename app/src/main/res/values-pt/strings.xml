@@ -92,6 +92,7 @@
     <string name="select_chain_chain_title">Cadeia</string>
     <string name="select_chain_balance_title">Saldo</string>
     <string name="send_error_no_amount">A quantidade deve ser um número positivo.</string>
+    <string name="send_error_too_many_decimals">A quantidade pode ter no máximo %1$d casas decimais.</string>
     <string name="send_error_invalid_operator_fee">A taxa do operador deve ser um número válido entre 0 e 10000 pontos base</string>
     <string name="settings_screen_language">Idioma</string>
     <string name="settings_screen_currency">Moeda</string>
