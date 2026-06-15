@@ -98,7 +98,6 @@ constructor(
                     computeJoinKeysignSwapNetworkFee(
                         blockChainSpecific = blockChainSpecific,
                         nativeCoin = nativeToken,
-                        chain = chain,
                     )
                 else -> {
                     val (nativeTokenAddress, _) =

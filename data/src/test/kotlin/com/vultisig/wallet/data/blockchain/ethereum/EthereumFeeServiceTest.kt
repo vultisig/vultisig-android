@@ -6,7 +6,6 @@ import com.vultisig.wallet.data.api.EvmApi
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_ARBITRUM_TRANSFER
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_COIN_TRANSFER_LIMIT
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
 import com.vultisig.wallet.data.blockchain.model.Eip1559
@@ -392,13 +391,13 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
-    fun `calculateFees uses Mantle-specific limit for Mantle swap transactions`() = runTest {
+    fun `calculateFees uses the standard swap limit for Mantle swap transactions`() = runTest {
         coEvery { evmApi.getBaseFee() } returns gwei(100)
         stubFeeHistory(listOf(gwei(5)))
 
         val fee = service.calculateFees(swap(Chain.Mantle)) as Eip1559
 
-        assertEquals(DEFAULT_MANTLE_SWAP_LIMIT, fee.limit)
+        assertEquals(DEFAULT_SWAP_LIMIT, fee.limit)
         assertEquals(gwei(110), fee.networkPrice)
     }
 
