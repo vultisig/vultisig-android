@@ -75,6 +75,7 @@ constructor(
     }
 
     private var lpBondPoolMap: Map<String, LpBondablePool> = emptyMap()
+    private var loadMayaBondableAssetsJob: Job? = null
     private var loadLpJob: Job? = null
 
     /** Returns the bondable pool previously loaded for [asset], or `null` if not loaded. */
@@ -82,11 +83,14 @@ constructor(
 
     /** Cancels any in-flight remove-LP fetch so it can't write stale state into a new option. */
     fun cancelLoad() {
+        loadMayaBondableAssetsJob?.cancel()
         loadLpJob?.cancel()
     }
 
     /** Loads the Maya bondable assets (and their LP units/depths) for the current user address. */
     fun loadMayaBondableAssets() {
+        loadMayaBondableAssetsJob?.cancel()
+        lpBondPoolMap = emptyMap()
         state.update {
             it.copy(
                 bondableAssets = emptyList(),
@@ -97,41 +101,43 @@ constructor(
             )
         }
         assetsFieldState.clearText()
-        scope.safeLaunch {
-            val userAddress =
-                withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
-                    ?.address
-                    ?: run {
-                        state.update {
-                            it.copy(
-                                errorText =
-                                    UiText.StringResource(R.string.dialog_default_error_body)
-                            )
+        loadMayaBondableAssetsJob =
+            scope.safeLaunch {
+                val userAddress =
+                    withTimeoutOrNull(ADDRESS_AWAIT_TIMEOUT_MS) { address.filterNotNull().first() }
+                        ?.address
+                        ?: run {
+                            state.update {
+                                it.copy(
+                                    errorText =
+                                        UiText.StringResource(R.string.dialog_default_error_body)
+                                )
+                            }
+                            return@safeLaunch
                         }
-                        return@safeLaunch
+                val poolMap =
+                    withContext(Dispatchers.IO) {
+                        mayachainBondRepository.getLpBondableAssetsWithUnits(userAddress)
                     }
-            val poolMap =
-                withContext(Dispatchers.IO) {
-                    mayachainBondRepository.getLpBondableAssetsWithUnits(userAddress)
+                lpBondPoolMap = poolMap
+                val assets = poolMap.keys.toList()
+                val firstAsset = assets.firstOrNull() ?: ""
+                val firstPool = poolMap[firstAsset]
+                state.update {
+                    it.copy(
+                        bondableAssets = assets,
+                        selectedBondAsset = firstAsset,
+                        availableLpUnits = firstPool?.availableUnits,
+                        removeLpUnitsDivisor =
+                            firstPool?.totalPoolLpUnits?.toBigInteger() ?: BigInteger.ZERO,
+                        removeLpPoolDepth =
+                            firstPool?.poolCacaoDepth?.toBigInteger() ?: BigInteger.ZERO,
+                    )
                 }
-            lpBondPoolMap = poolMap
-            val assets = poolMap.keys.toList()
-            val firstAsset = assets.firstOrNull() ?: ""
-            val firstPool = poolMap[firstAsset]
-            state.update {
-                it.copy(
-                    bondableAssets = assets,
-                    selectedBondAsset = firstAsset,
-                    availableLpUnits = firstPool?.availableUnits,
-                    removeLpUnitsDivisor =
-                        firstPool?.totalPoolLpUnits?.toBigInteger() ?: BigInteger.ZERO,
-                    removeLpPoolDepth = firstPool?.poolCacaoDepth?.toBigInteger() ?: BigInteger.ZERO,
-                )
+                if (firstAsset.isNotEmpty()) {
+                    assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
+                }
             }
-            if (firstAsset.isNotEmpty()) {
-                assetsFieldState.setTextAndPlaceCursorAtEnd(firstAsset)
-            }
-        }
     }
 
     /**
@@ -146,6 +152,7 @@ constructor(
                             availableLpUnits = null,
                             removeLpUnitsDivisor = BigInteger.ZERO,
                             removeLpPoolDepth = BigInteger.ZERO,
+                            balance = UiText.Empty,
                             errorText = UiText.StringResource(R.string.dialog_default_error_body),
                         )
                     }
@@ -171,8 +178,9 @@ constructor(
                         ?: run {
                             state.update {
                                 it.copy(
+                                    balance = UiText.Empty,
                                     errorText =
-                                        UiText.StringResource(R.string.dialog_default_error_body)
+                                        UiText.StringResource(R.string.dialog_default_error_body),
                                 )
                             }
                             return@safeLaunch
@@ -189,6 +197,7 @@ constructor(
                                     availableLpUnits = null,
                                     removeLpUnitsDivisor = BigInteger.ZERO,
                                     removeLpPoolDepth = BigInteger.ZERO,
+                                    balance = UiText.Empty,
                                     errorText =
                                         UiText.StringResource(R.string.dialog_default_error_body),
                                 )
@@ -205,6 +214,7 @@ constructor(
                                     availableLpUnits = null,
                                     removeLpUnitsDivisor = BigInteger.ZERO,
                                     removeLpPoolDepth = BigInteger.ZERO,
+                                    balance = UiText.Empty,
                                     errorText =
                                         UiText.StringResource(R.string.dialog_default_error_body),
                                 )
@@ -256,6 +266,7 @@ constructor(
                             removeLpPoolDepth = BigInteger.ZERO,
                             removeLpDecimals = RemoveLpCalculator.RUNE_DECIMALS,
                             removeLpTokenSymbol = Coins.ThorChain.RUNE.ticker,
+                            balance = UiText.Empty,
                             errorText = UiText.StringResource(R.string.dialog_default_error_body),
                         )
                     }
@@ -283,8 +294,9 @@ constructor(
                         ?: run {
                             state.update {
                                 it.copy(
+                                    balance = UiText.Empty,
                                     errorText =
-                                        UiText.StringResource(R.string.dialog_default_error_body)
+                                        UiText.StringResource(R.string.dialog_default_error_body),
                                 )
                             }
                             return@safeLaunch
