@@ -269,6 +269,11 @@ constructor(
 
     fun switchMode() {
         if (args == null) return
+        // Tear down the current transport before switching, otherwise the old discovery job or
+        // local mediator receiver can keep emitting and repopulate the just-cleared device list
+        // (or leave a stale local session/receiver behind).
+        discoverParticipantsJob?.cancel()
+        mediatorServiceController.stop()
         _state.update {
             it.copy(
                 network =
