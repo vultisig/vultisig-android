@@ -330,7 +330,6 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
         val chain = transaction.coin.chain
 
         return when {
-            transaction is Swap && chain == Chain.Mantle -> DEFAULT_MANTLE_SWAP_LIMIT
             transaction is Swap -> DEFAULT_SWAP_LIMIT
             chain == Chain.Arbitrum -> DEFAULT_ARBITRUM_TRANSFER
             transaction is Transfer && transaction.coin.isNativeToken -> DEFAULT_COIN_TRANSFER_LIMIT
@@ -390,7 +389,6 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
             DEFAULT_TOKEN_TRANSFER_LIMIT.increaseByPercent(40)
 
         val DEFAULT_ARBITRUM_TRANSFER = "160000".toBigInteger()
-        val DEFAULT_MANTLE_SWAP_LIMIT = "3000000000".toBigInteger()
     }
 }
 

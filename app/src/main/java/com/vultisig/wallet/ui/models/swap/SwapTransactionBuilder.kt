@@ -1,7 +1,6 @@
 package com.vultisig.wallet.ui.models.swap
 
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
-import com.vultisig.wallet.data.models.Chain
+import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.EVMSwapPayloadJson
 import com.vultisig.wallet.data.models.FiatValue
@@ -247,12 +246,11 @@ constructor(
                 val isApprovalRequired = allowance != null && allowance < srcTokenValue.value
 
                 val specific = specificAndUtxo.blockChainSpecific
+                // Aggregators can return tx.gas == 0; fall back to the standard EVM swap unit
+                // so the signed payload never carries a zero gas limit (matches
+                // SwapQuoteManager's fee path).
                 val gasLimit =
-                    if (srcToken.chain == Chain.Mantle) {
-                        DEFAULT_MANTLE_SWAP_LIMIT.toLong()
-                    } else {
-                        quote.data.tx.gas
-                    }
+                    quote.data.tx.gas.takeIf { it != 0L } ?: EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT
                 val quoteData =
                     if (specific is BlockChainSpecific.Ethereum) {
                         quote.data.copy(

@@ -5,7 +5,7 @@ package com.vultisig.wallet.ui.models.swap
 import com.vultisig.wallet.data.api.models.quotes.EVMSwapQuoteJson
 import com.vultisig.wallet.data.api.models.quotes.OneInchSwapTxJson
 import com.vultisig.wallet.data.api.models.quotes.THORChainSwapQuote
-import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
+import com.vultisig.wallet.data.chains.helpers.EvmHelper
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.FiatValue
@@ -403,7 +403,7 @@ internal class SwapTransactionBuilderTest {
         }
 
     @Test
-    fun `builds OneInch swap overriding the gas limit on Mantle`() = runTest {
+    fun `builds OneInch swap keeping the quote gas limit on Mantle`() = runTest {
         val srcToken =
             coin(Chain.Mantle, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
         val dstToken = coin(Chain.Mantle, "MNT", "0xdst", 18, isNative = true)
@@ -443,10 +443,55 @@ internal class SwapTransactionBuilderTest {
             )
 
         val payload = assertIs<SwapPayload.EVM>(tx.payload)
-        // Mantle overrides the quote's gas limit with the dedicated swap limit.
-        assertEquals(DEFAULT_MANTLE_SWAP_LIMIT.toLong(), payload.data.quote.tx.gas)
+        // Mantle now keeps the quote's original gas limit like every other EVM chain.
+        assertEquals(21_000L, payload.data.quote.tx.gas)
         // The gas price is still patched from the EVM plan.
         assertEquals("7", payload.data.quote.tx.gasPrice)
+    }
+
+    @Test
+    fun `builds OneInch swap falling back to default gas unit when quote gas is zero`() = runTest {
+        val srcToken =
+            coin(Chain.Mantle, "USDC", "0xsrc", 6, isNative = false, contract = "0xtoken")
+        val dstToken = coin(Chain.Mantle, "MNT", "0xdst", 18, isNative = true)
+        coEvery { swapGasCalculator.getSpecificAndUtxo(any(), any(), any()) } returns
+            ethereumSpecificAndUtxo(maxFeePerGasWei = BigInteger.valueOf(7))
+        val tx0 =
+            OneInchSwapTxJson(
+                from = "0xsrc",
+                to = "0xrouter",
+                allowanceTarget = "0xproxy",
+                gas = 0,
+                data = "0xdata",
+                value = "0",
+                gasPrice = "1",
+            )
+        val quote =
+            SwapQuote.OneInch(
+                expectedDstValue = TokenValue(BigInteger.valueOf(400), dstToken),
+                fees = TokenValue(BigInteger.valueOf(9), dstToken),
+                expiredAt = Clock.System.now(),
+                data = EVMSwapQuoteJson(dstAmount = "400", tx = tx0),
+                provider = "1inch",
+            )
+
+        val tx =
+            builder.build(
+                vaultId = "vault-5",
+                srcToken = srcToken,
+                dstToken = dstToken,
+                srcAddress = "0xsrc",
+                srcTokenValue = TokenValue(BigInteger.valueOf(1_000), srcToken),
+                quote = quote,
+                gasFee = TokenValue(BigInteger.valueOf(8), srcToken),
+                gasFeeFiatValue = FiatValue(BigDecimal("2.00"), "USD"),
+                estimatedNetworkFeeTokenValue = null,
+                estimatedNetworkFeeFiatValue = null,
+            )
+
+        val payload = assertIs<SwapPayload.EVM>(tx.payload)
+        // A zero-gas quote must never reach the signed payload — fall back to the standard unit.
+        assertEquals(EvmHelper.DEFAULT_ETH_SWAP_GAS_UNIT, payload.data.quote.tx.gas)
     }
 
     /** Plan fixture whose [BlockChainSpecific] is a real [BlockChainSpecific.Ethereum]. */

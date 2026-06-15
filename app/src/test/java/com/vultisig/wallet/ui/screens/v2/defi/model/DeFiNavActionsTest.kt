@@ -30,7 +30,6 @@ internal class DeFiNavActionsTest {
         assertEquals(DeFiNavActions.REDEEM_YTCY, parseDepositType("redeem_ytcy"))
         assertEquals(DeFiNavActions.STAKE_STCY, parseDepositType("stake_stcy"))
         assertEquals(DeFiNavActions.UNSTAKE_STCY, parseDepositType("unstake_stcy"))
-        assertEquals(DeFiNavActions.DEPOSIT_USDC_CIRCLE, parseDepositType("deposit_usdc_circle"))
         assertEquals(DeFiNavActions.WITHDRAW_USDC_CIRCLE, parseDepositType("withdraw_usdc_circle"))
         assertEquals(DeFiNavActions.STAKE_CACAO, parseDepositType("stake_cacao"))
         assertEquals(DeFiNavActions.UNSTAKE_CACAO, parseDepositType("unstake_cacao"))
@@ -52,16 +51,14 @@ internal class DeFiNavActionsTest {
     fun `parseDepositType folds case for both the when-arm and valueOf-fallback paths`() {
         assertEquals(DeFiNavActions.BOND, parseDepositType("BOND"))
         assertEquals(DeFiNavActions.STAKE_RUJI, parseDepositType("Stake_Ruji"))
-        assertEquals(DeFiNavActions.DEPOSIT_USDC_CIRCLE, parseDepositType("Deposit_USDC_Circle"))
+        assertEquals(DeFiNavActions.WITHDRAW_USDC_CIRCLE, parseDepositType("Withdraw_USDC_Circle"))
     }
 
     @Test
     fun `parseDepositType resolves the underscored USDC circle wire strings via the valueOf fallback`() {
         // The underscored when-arms are unreachable (input is separator-stripped first), so these
         // resolve only via the valueOf fallback and their separator-free spelling returns null.
-        assertEquals(DeFiNavActions.DEPOSIT_USDC_CIRCLE, parseDepositType("deposit_usdc_circle"))
         assertEquals(DeFiNavActions.WITHDRAW_USDC_CIRCLE, parseDepositType("withdraw_usdc_circle"))
-        assertNull(parseDepositType("depositusdccircle"))
         assertNull(parseDepositType("withdrawusdccircle"))
     }
 

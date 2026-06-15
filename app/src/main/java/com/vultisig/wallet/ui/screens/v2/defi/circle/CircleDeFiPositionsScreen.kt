@@ -38,7 +38,6 @@ internal fun CircleDeFiPositionsScreen(
         tabs = listOf(DeFiTab.DEPOSITED),
         onTabSelected = viewModel::onTabSelected,
         onClickCloseWarning = viewModel::onClickCloseWarning,
-        onDepositAccount = viewModel::onDepositAccount,
         onCreateAccount = viewModel::onCreateAccount,
         onClickWithdraw = viewModel::onWithdrawAccount,
     )
@@ -55,7 +54,6 @@ internal fun CircleDefiPositionScreenContent(
     onEditChains: () -> Unit = {},
     onClickCloseWarning: () -> Unit = {},
     onCreateAccount: () -> Unit = {},
-    onDepositAccount: () -> Unit = {},
     onClickWithdraw: () -> Unit = {},
 ) {
     BaseDeFiPositionsScreenContent(
@@ -71,13 +69,7 @@ internal fun CircleDefiPositionScreenContent(
             CircleContentDepositTab(
                 state = state.circleDefi,
                 isBalanceVisible = state.isBalanceVisible,
-                onClickDepositOrCreateAccount = {
-                    if (state.circleDefi.isAccountOpen) {
-                        onDepositAccount()
-                    } else {
-                        onCreateAccount()
-                    }
-                },
+                onCreateAccount = onCreateAccount,
                 onClickCloseWarning = onClickCloseWarning,
                 onClickWithdraw = onClickWithdraw,
             )
@@ -85,12 +77,12 @@ internal fun CircleDefiPositionScreenContent(
     )
 }
 
-/** Tab content composable showing the Circle USDC deposit total and deposit/withdraw actions. */
+/** Tab content composable showing the Circle USDC deposit total and the withdraw action. */
 @Composable
 private fun CircleContentDepositTab(
     state: DefiUiModel.CircleDeFi,
     isBalanceVisible: Boolean,
-    onClickDepositOrCreateAccount: () -> Unit,
+    onCreateAccount: () -> Unit,
     onClickWithdraw: () -> Unit,
     onClickCloseWarning: () -> Unit,
 ) {
@@ -111,25 +103,21 @@ private fun CircleContentDepositTab(
     // balance read fails or is unparseable must still expose Withdraw so a funded user can exit.
     if (state.isAccountOpen) {
         HeaderDeFiWidget(
-            title = stringResource(R.string.usdc_deposit_title),
+            title = stringResource(R.string.circle_usdc_account),
             iconRes = R.drawable.usdc,
-            buttonFirstActionText = stringResource(R.string.withdraw),
-            buttonSecondActionText = stringResource(R.string.deposit_usdc_button),
-            onClickFirstAction = onClickWithdraw,
-            onClickSecondAction = onClickDepositOrCreateAccount,
+            buttonText = stringResource(R.string.withdraw),
+            onClickAction = onClickWithdraw,
             totalAmount = state.totalDeposit,
             totalPrice = state.totalDepositCurrency,
             isLoading = state.isLoading,
             isBalanceVisible = isBalanceVisible,
-            // New Circle deposits are disabled; existing positions can still be withdrawn.
-            isSecondActionEnabled = false,
         )
     } else {
         HeaderDeFiWidget(
-            title = stringResource(R.string.usdc_deposit_title),
+            title = stringResource(R.string.circle_usdc_account),
             iconRes = R.drawable.usdc,
             buttonText = stringResource(R.string.open_account_button),
-            onClickAction = onClickDepositOrCreateAccount,
+            onClickAction = onCreateAccount,
             totalAmount = state.totalDeposit,
             totalPrice = state.totalDepositCurrency,
             isLoading = state.isLoading,

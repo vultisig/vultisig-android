@@ -1,10 +1,15 @@
 package com.vultisig.wallet.data.blockchain.cosmos
 
+import com.vultisig.wallet.data.api.CosmosApi
+import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
+import io.mockk.coEvery
+import io.mockk.every
+import io.mockk.mockk
 import java.math.BigInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -13,9 +18,24 @@ import org.junit.jupiter.api.Test
 
 class CosmosFeeServiceTest {
 
-    private val feeService = CosmosFeeService()
+    private val cosmosApi: CosmosApi = mockk(relaxed = true)
+    private val cosmosApiFactory: CosmosApiFactory = mockk {
+        every { createCosmosApi(any()) } returns cosmosApi
+    }
 
-    private fun transfer(chain: Chain) =
+    private val feeService = CosmosFeeService(cosmosApiFactory)
+
+    init {
+        // Default live burn-tax rate (0.5%) for Terra Classic taxable sends.
+        coEvery { cosmosApi.getTerraClassicBurnTaxRate() } returns "0.005"
+    }
+
+    private fun transfer(
+        chain: Chain,
+        amount: BigInteger = BigInteger("1000000"),
+        contractAddress: String = "",
+        isNativeToken: Boolean = true,
+    ) =
         Transfer(
             coin =
                 Coin(
@@ -26,11 +46,11 @@ class CosmosFeeServiceTest {
                     decimal = 8,
                     hexPublicKey = "test_pub_key",
                     priceProviderID = "",
-                    contractAddress = "",
-                    isNativeToken = true,
+                    contractAddress = contractAddress,
+                    isNativeToken = isNativeToken,
                 ),
             vault = VaultData(vaultHexPublicKey = "pub", vaultHexChainCode = "chain"),
-            amount = BigInteger("1000000"),
+            amount = amount,
             to = "recipient_address",
         )
 
@@ -88,6 +108,59 @@ class CosmosFeeServiceTest {
     fun `QBTC returns GasFees type`() = runTest {
         val fee = feeService.calculateDefaultFees(transfer(Chain.Qbtc))
         assertTrue(fee is GasFees)
+    }
+
+    @Test
+    fun `TerraClassic native LUNC fee is uluna base gas plus burn tax`() = runTest {
+        // amount 1_000_000 × 0.5% = 5_000 tax + 8_497_500 base = 8_502_500 uluna.
+        val fee =
+            feeService.calculateDefaultFees(
+                transfer(Chain.TerraClassic, amount = BigInteger("1000000"))
+            ) as GasFees
+        assertEquals(BigInteger("300000"), fee.limit)
+        assertEquals(TerraClassicTax.ULUNA_BASE_GAS.toBigInteger() + BigInteger("5000"), fee.amount)
+    }
+
+    @Test
+    fun `TerraClassic USTC bank denom fee is uusd base gas plus burn tax`() = runTest {
+        // USTC (uusd) is a bank denom: base 225_000 uusd + 0.5% of 2_000_000 = 10_000 → 235_000.
+        val fee =
+            feeService.calculateDefaultFees(
+                transfer(
+                    Chain.TerraClassic,
+                    amount = BigInteger("2000000"),
+                    contractAddress = "uusd",
+                    isNativeToken = false,
+                )
+            ) as GasFees
+        assertEquals(TerraClassicTax.UUSD_BASE_GAS.toBigInteger() + BigInteger("10000"), fee.amount)
+    }
+
+    @Test
+    fun `TerraClassic CW20 token gets uluna base gas with no burn tax`() = runTest {
+        // CW20 (terra1…) pays its fee in uluna while the send is in the token denom, so no tax
+        // fold.
+        val fee =
+            feeService.calculateDefaultFees(
+                transfer(
+                    Chain.TerraClassic,
+                    amount = BigInteger("9999999999"),
+                    contractAddress = "terra1abcdef",
+                    isNativeToken = false,
+                )
+            ) as GasFees
+        assertEquals(TerraClassicTax.ULUNA_BASE_GAS.toBigInteger(), fee.amount)
+    }
+
+    @Test
+    fun `TerraClassic falls back to default rate when live fetch returns null`() = runTest {
+        coEvery { cosmosApi.getTerraClassicBurnTaxRate() } returns null
+        // Fallback 0.5%: 1_000_000 × 0.005 = 5_000 tax on top of the uluna base.
+        val fee =
+            feeService.calculateDefaultFees(
+                transfer(Chain.TerraClassic, amount = BigInteger("1000000"))
+            ) as GasFees
+        assertEquals(TerraClassicTax.ULUNA_BASE_GAS.toBigInteger() + BigInteger("5000"), fee.amount)
     }
 
     @Test
