@@ -62,6 +62,7 @@ constructor(
      */
     @AssistedFactory
     interface Factory {
+        /** Creates a [LiquidityDataLoader] bound to the given scope, state and form accessors. */
         fun create(
             scope: CoroutineScope,
             state: MutableStateFlow<DepositFormUiModel>,
