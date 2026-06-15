@@ -9,6 +9,7 @@ import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_MANTLE_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_SWAP_LIMIT
 import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.DEFAULT_TOKEN_TRANSFER_LIMIT
+import com.vultisig.wallet.data.blockchain.ethereum.EthereumFeeService.Companion.REPRESENTATIVE_SWAP_CALLDATA_BYTES
 import com.vultisig.wallet.data.blockchain.model.Eip1559
 import com.vultisig.wallet.data.blockchain.model.GasFees
 import com.vultisig.wallet.data.blockchain.model.Swap
@@ -475,9 +476,7 @@ internal class EthereumFeeServiceTest {
     }
 
     @Test
-    fun `Mantle swap prices L1 against the router target with the swap calldata`() = runTest {
-        coEvery { evmApi.getBaseFee() } returns gwei(100)
-        stubFeeHistory(listOf(gwei(5)))
+    fun `swap with empty calldata prices L1 against the representative swap payload`() = runTest {
         val dataSlot = slot<ByteArray>()
         coEvery {
             evmApi.getOpStackL1Fee(
@@ -492,32 +491,38 @@ internal class EthereumFeeServiceTest {
             )
         } returns BigInteger.ZERO
 
-        val swap =
-            Swap(
-                coin = coin(Chain.Mantle, isNative = true),
-                vault = VAULT,
-                amount = BigInteger("1000000000000000000"),
-                to = "0xRouter",
-                callData = "0xabcdef",
-                approvalData = null,
-            )
-
-        service.calculateDefaultFees(swap)
+        // Mirrors production: every live swap caller builds the Swap with an empty callData because
+        // the real router calldata is fetched in parallel and is not available at estimation time.
+        service.calculateDefaultFees(swap(Chain.Base))
 
         coVerify(exactly = 1) {
             evmApi.getOpStackL1Fee(
                 senderAddress = "0xSender",
-                to = "0xRouter",
-                value = swap.amount,
+                to = "0xRecipient",
+                value = BigInteger("1000000000000000000"),
                 data = any(),
                 gasLimit = any(),
                 maxFeePerGas = any(),
                 maxPriorityFeePerGas = any(),
-                chainId = BigInteger("5000"),
+                chainId = BigInteger("8453"),
             )
         }
-        // 0xabcdef = 3 bytes
-        assertEquals(3, dataSlot.captured.size)
+        // Empty calldata falls back to the representative payload rather than pricing zero bytes.
+        assertEquals(REPRESENTATIVE_SWAP_CALLDATA_BYTES, dataSlot.captured.size)
+    }
+
+    @Test
+    fun `Mantle does not query the OP-stack L1 oracle`() = runTest {
+        coEvery { evmApi.getBaseFee() } returns gwei(100)
+        stubFeeHistory(listOf(gwei(5)))
+
+        // Mantle is OP-stack–derived but its L1 fee is ETH-denominated; summing it into the MNT fee
+        // would understate the cost, so it is excluded from the oracle path entirely.
+        service.calculateDefaultFees(swap(Chain.Mantle))
+
+        coVerify(exactly = 0) {
+            evmApi.getOpStackL1Fee(any(), any(), any(), any(), any(), any(), any(), any())
+        }
     }
 
     @Test

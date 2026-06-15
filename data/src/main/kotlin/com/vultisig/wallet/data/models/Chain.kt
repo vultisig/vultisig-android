@@ -314,15 +314,20 @@ val Chain.isLayer2: Boolean
             else -> false
         }
 
-// OP-stack–derived L2s that expose the GasPriceOracle predeploy (0x420…0F) and charge a separate
-// L1 data fee on top of L2 execution gas. Arbitrum and ZkSync are L2s too (isLayer2) but price
+// OP-stack–derived L2s that expose the GasPriceOracle predeploy (0x420…0F), charge a separate L1
+// data fee on top of L2 execution gas, and denominate that L1 fee in the same token as L2 gas (ETH)
+// so it can be summed directly into the tx fee. Arbitrum and ZkSync are L2s too (isLayer2) but
+// price
 // their L1 component differently, so they are deliberately excluded from the OP-stack oracle path.
+// Mantle is also OP-stack–derived, but its getL1Fee is denominated in ETH while its L2 gas (and our
+// fee amount) is denominated in MNT; without the chain's ETH/MNT tokenRatio the two are not
+// additive,
+// so Mantle is excluded here rather than have its L1 cost mis-summed against an MNT amount.
 val Chain.isOpStackL2: Boolean
     get() =
         when (this) {
             Chain.Base,
             Chain.Blast,
-            Chain.Mantle,
             Chain.Optimism -> true
             else -> false
         }

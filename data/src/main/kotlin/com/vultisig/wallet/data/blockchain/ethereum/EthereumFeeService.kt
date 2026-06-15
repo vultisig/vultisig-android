@@ -142,7 +142,17 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
                 L1CallContext(
                     to = transaction.to,
                     value = if (coin.isNativeToken) transaction.amount else BigInteger.ZERO,
-                    data = Numeric.hexStringToByteArray(transaction.callData),
+                    // The router calldata is the dominant part of a swap's L1 data fee, but it is
+                    // not known here: gas estimation runs in parallel with the quote fetch, so
+                    // every
+                    // live caller builds the Swap with an empty callData. Pricing the empty payload
+                    // would drop almost the entire L1 cost, so we fall back to a representative
+                    // swap-calldata payload. If a caller ever supplies real calldata, we honour it.
+                    data =
+                        transaction.callData
+                            .takeIf { it.isNotEmpty() }
+                            ?.let { Numeric.hexStringToByteArray(it) }
+                            ?: REPRESENTATIVE_SWAP_CALLDATA,
                 )
             else ->
                 error("Unsupported transaction type for L1 fee: ${transaction::class.simpleName}")
@@ -331,6 +341,18 @@ class EthereumFeeService @Inject constructor(private val evmApiFactory: EvmApiFa
 
     companion object {
         private val GWEI = BigInteger.TEN.pow(9)
+
+        // Stand-in calldata used to price a swap's OP-stack L1 data fee when the real router
+        // calldata is unavailable at estimation time (see resolveL1CallContext). Sized to a typical
+        // DEX/router swap payload (~512 bytes covers a 1inch/Kyber route or a THORChain
+        // depositWithExpiry memo) and filled with non-zero bytes, which the OP-stack fee formula
+        // charges at the higher 16-gas/byte rate — a deliberately conservative estimate so the
+        // reserved fee does not under-cover the real L1 cost. Post-Ecotone/Fjord L1 fees are small
+        // in absolute terms, so the conservative sizing adds negligible cost while avoiding a gross
+        // underestimate.
+        const val REPRESENTATIVE_SWAP_CALLDATA_BYTES = 512
+        private val REPRESENTATIVE_SWAP_CALLDATA =
+            ByteArray(REPRESENTATIVE_SWAP_CALLDATA_BYTES) { 1 }
 
         // Extra bump applied to the committed base fee on the non-swap send path. With the
         // further 20% added in calculateMaxFeePerGas this yields a baseFee × 1.5 + priorityFee
