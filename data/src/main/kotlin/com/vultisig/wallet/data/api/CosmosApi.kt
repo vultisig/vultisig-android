@@ -73,7 +73,7 @@ constructor(
         val defaultApiUrl =
             when (chain) {
                 Chain.GaiaChain -> "https://cosmos-rest.publicnode.com"
-                Chain.Kujira -> "https://kujira-rest.publicnode.com"
+                Chain.Kujira -> "https://kujira-api.polkachu.com"
                 Chain.Dydx -> "https://dydx-rest.publicnode.com"
                 Chain.Osmosis -> "https://osmosis-rest.publicnode.com"
                 Chain.Terra -> "https://terra-lcd.publicnode.com"

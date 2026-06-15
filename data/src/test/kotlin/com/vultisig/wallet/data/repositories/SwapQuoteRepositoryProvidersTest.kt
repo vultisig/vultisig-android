@@ -176,7 +176,7 @@ class SwapQuoteRepositoryProvidersTest {
     fun `maya happy path returns SwapQuote MayaChain with mapped fields`() = runTest {
         val quote = mayaQuote(expectedAmountOut = "12000000000", feesTotal = "100000000")
         coEvery {
-            mayaChainApi.getSwapQuotes(any(), any(), any(), any(), any(), any(), any())
+            mayaChainApi.getSwapQuotes(any(), any(), any(), any(), any(), any(), any(), any())
         } returns THORChainSwapQuoteDeserialized.Result(quote)
 
         val srcToken = coin(Chain.Bitcoin, "BTC", decimal = 8)
@@ -207,7 +207,7 @@ class SwapQuoteRepositoryProvidersTest {
     fun `maya source MayaChain keeps original tokenValue as recommendedMin`() = runTest {
         val quote = mayaQuote(recommendedMinAmountIn = "999999")
         coEvery {
-            mayaChainApi.getSwapQuotes(any(), any(), any(), any(), any(), any(), any())
+            mayaChainApi.getSwapQuotes(any(), any(), any(), any(), any(), any(), any(), any())
         } returns THORChainSwapQuoteDeserialized.Result(quote)
 
         val srcToken = coin(Chain.MayaChain, "CACAO", decimal = 10)
@@ -232,7 +232,7 @@ class SwapQuoteRepositoryProvidersTest {
     @Test
     fun `maya deserialization error throws SwapException`() = runTest {
         coEvery {
-            mayaChainApi.getSwapQuotes(any(), any(), any(), any(), any(), any(), any())
+            mayaChainApi.getSwapQuotes(any(), any(), any(), any(), any(), any(), any(), any())
         } returns THORChainSwapQuoteDeserialized.Error(THORChainSwapQuoteError("pool unavailable"))
 
         val srcToken = coin(Chain.Bitcoin, "BTC")
@@ -254,7 +254,7 @@ class SwapQuoteRepositoryProvidersTest {
     @Test
     fun `maya inner quote error throws SwapException`() = runTest {
         coEvery {
-            mayaChainApi.getSwapQuotes(any(), any(), any(), any(), any(), any(), any())
+            mayaChainApi.getSwapQuotes(any(), any(), any(), any(), any(), any(), any(), any())
         } returns THORChainSwapQuoteDeserialized.Result(mayaQuote(error = "trading halted"))
 
         val srcToken = coin(Chain.Bitcoin, "BTC")

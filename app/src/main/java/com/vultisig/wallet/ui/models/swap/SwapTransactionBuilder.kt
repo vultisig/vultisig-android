@@ -100,6 +100,10 @@ constructor(
                                 routerAddress = quote.data.router,
                                 fromAmount = srcTokenValue.value,
                                 toAmountDecimal = dstTokenValue.decimal,
+                                // The on-chain min-output floor is enforced by the `:LIM` field
+                                // the node bakes into `quote.data.memo` (signed verbatim) when the
+                                // quote request carries `tolerance_bps`; this proto field is not
+                                // read at sign time, so it stays "0".
                                 toAmountLimit = "0",
                                 streamingInterval = "1",
                                 streamingQuantity = "0",
@@ -170,6 +174,9 @@ constructor(
                                 routerAddress = quote.data.router,
                                 fromAmount = srcTokenValue.value,
                                 toAmountDecimal = dstTokenValue.decimal,
+                                // See ThorChain branch: the real floor is the memo `:LIM` the node
+                                // adds from `tolerance_bps`; this proto field is unused at sign
+                                // time.
                                 toAmountLimit = "0",
                                 streamingInterval = "3",
                                 streamingQuantity = "0",
