@@ -18,7 +18,7 @@ constructor(private val httpClient: HttpClient) : SearchKujiraTokenUseCase {
 
     companion object {
         private const val findKujiraUrl =
-            "https://kujira-rest.publicnode.com/cosmwasm/wasm/v1/contract/"
+            "https://kujira-api.polkachu.com/cosmwasm/wasm/v1/contract/"
     }
 
     override suspend operator fun invoke(contractAddress: String): CoinAndPrice? {
