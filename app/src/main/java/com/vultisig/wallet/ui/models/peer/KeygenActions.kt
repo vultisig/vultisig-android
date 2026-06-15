@@ -193,7 +193,10 @@ internal object ReShareStrategy : KeygenActionStrategy {
                     sessionId = ctx.sessionId,
                     hexEncryptionKey = ctx.encryptionKeyHex,
                     hexChainCode = session.hexChainCode,
-                    localPartyId = session.localPartyId,
+                    // The FastVault server joins under its own generated party ID, like every other
+                    // join path (keygen/key-import/batch-reshare) and iOS' reshare — using the
+                    // device's localPartyId here would collide with the initiator.
+                    localPartyId = ctx.generateServerPartyId(),
                     encryptionPassword = password,
                     email = email,
                     oldParties = session.signers,
