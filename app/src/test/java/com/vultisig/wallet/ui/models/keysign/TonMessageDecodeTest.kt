@@ -3,6 +3,7 @@ package com.vultisig.wallet.ui.models.keysign
 import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -16,6 +17,13 @@ internal class TonMessageDecodeTest {
         "te6cckEBAQEAWQAArg+KfqUAAAAAAAAwOUBfXhAIAf//////////////////////////////////////////AAvDfWFG0oYX19jwNDNBBL1rKNT9XfaGP9HyTb5nb2Emhh6EgOvlFRU="
     private val excessesBody = "te6cckEBAQEADgAAGNUydtsAAAAAAAAABxylUgg="
     private val recipient = "0:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+
+    // Jetton transfer to a STON.fi v2 router whose forward payload is a 0x6664de2a swap.
+    private val stonfiSwap =
+        "te6cckEBAwEA+gABrg+KfqUAAAAAAAAwOUBfXhAIAERavXfYMA5q4ilwZO4WHhXKx0RKR3nWMPjCFWxdsJIlAAvDfWFG0oYX19jwNDNBBL1rKNT9XfaGP9HyTb5nb2Emhh6EgQEB4WZk3iqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQALw31hRtKGF9fY8DQzQQS9ayjU/V32hj/R8k2+Z29hJqAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgAAAAAAAAD3AAgBTREaPhQgB//////////////////////////////////////////4AAAUQRrdCMQ=="
+    private val stonfiRouterRaw =
+        "0:222d5ebbec1807357114b832770b0f0ae563a22523bceb187c610ab62ed84912"
+    private val stonfiRouterFriendly = "EQAiLV677BgHNXEUuDJ3Cw8K5WOiJSO86xh8YQq2LthJEoED"
 
     private fun jettonCoin() =
         Coin(
@@ -44,6 +52,7 @@ internal class TonMessageDecodeTest {
                                 )
                             )
                     ),
+                    fromAddress = null,
                     formatAddress = { it },
                 )
                 .single()
@@ -63,6 +72,7 @@ internal class TonMessageDecodeTest {
                                 TonMessage(to = "EQwallet", amount = "0", payload = excessesBody)
                             )
                     ),
+                    fromAddress = null,
                     formatAddress = { it },
                 )
                 .single()
@@ -76,6 +86,7 @@ internal class TonMessageDecodeTest {
         val row =
             mapTonMessages(
                     SignTon(tonMessages = listOf(TonMessage(to = "EQabc", amount = "1500000000"))),
+                    fromAddress = null,
                     formatAddress = { error("plain transfer must not reformat the outer address") },
                 )
                 .single()
@@ -154,10 +165,67 @@ internal class TonMessageDecodeTest {
     }
 
     @Test
+    fun `resolves a swap hero when the router is allow-listed in raw or friendly form`() = runTest {
+        // The decoder emits the router as raw workchain:hex; the allow-list literal is friendly.
+        // The
+        // gate normalizes both through toUserFriendly, so a canonicalizing normalizer matches
+        // either.
+        val normalize: (String) -> String? = {
+            if (it == stonfiRouterRaw || it == stonfiRouterFriendly) stonfiRouterFriendly else it
+        }
+        val hero =
+            resolveTonSwapHero(
+                messages =
+                    listOf(TonMessage(to = "EQwallet", amount = "100000000", payload = stonfiSwap)),
+                nativeTon = TonHeroCoin("TON", 9, "ton"),
+                toUserFriendly = normalize,
+                resolveCoinByWallet = { TonHeroCoin("USDT", 6, "usdt") },
+            )
+        assertNotNull(hero)
+        assertEquals("USDT", hero.from.ticker)
+    }
+
+    @Test
+    fun `returns no swap hero when the router is not allow-listed`() = runTest {
+        // Identity normalizer leaves the candidate as raw workchain:hex, which is not in the
+        // friendly-form allow-list, so the swap is rejected and degrades to the per-message
+        // display.
+        val hero =
+            resolveTonSwapHero(
+                messages =
+                    listOf(TonMessage(to = "EQwallet", amount = "100000000", payload = stonfiSwap)),
+                nativeTon = TonHeroCoin("TON", 9, "ton"),
+                toUserFriendly = { it },
+                resolveCoinByWallet = { TonHeroCoin("USDT", 6, "usdt") },
+            )
+        assertNull(hero)
+    }
+
+    @Test
+    fun `hides a small self-addressed gas sidecar when a swap is present`() {
+        val rows =
+            mapTonMessages(
+                SignTon(
+                    tonMessages =
+                        listOf(
+                            // 0.005 TON self-transfer — a swap gas sidecar.
+                            TonMessage(to = "EQself", amount = "5000000"),
+                            TonMessage(to = "EQwallet", amount = "100000000", payload = stonfiSwap),
+                        )
+                ),
+                fromAddress = "EQself",
+                formatAddress = { it },
+            )
+        assertEquals(1, rows.size)
+        assertEquals(TonMessageOperation.Swap, rows.single().operation)
+    }
+
+    @Test
     fun `maps a plain transfer with a negative amount to no amount`() {
         val row =
             mapTonMessages(
                     SignTon(tonMessages = listOf(TonMessage(to = "EQabc", amount = "-5"))),
+                    fromAddress = null,
                     formatAddress = { it },
                 )
                 .single()

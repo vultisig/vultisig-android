@@ -206,6 +206,7 @@ private fun BadgeText(text: String) {
 private val TonMessageOperation.titleRes: Int
     get() =
         when (this) {
+            TonMessageOperation.Swap -> R.string.ton_op_swap
             TonMessageOperation.JettonTransfer -> R.string.ton_op_jetton_transfer
             TonMessageOperation.NftTransfer -> R.string.ton_op_nft_transfer
             TonMessageOperation.ExcessGasRefund -> R.string.ton_op_excess_gas_refund
@@ -217,6 +218,7 @@ private val TonMessageOperation.amountLabelRes: Int
         when (this) {
             TonMessageOperation.JettonTransfer,
             TonMessageOperation.NftTransfer -> R.string.ton_forward_ton_amount
+            TonMessageOperation.Swap,
             TonMessageOperation.ExcessGasRefund,
             TonMessageOperation.Transfer -> R.string.verify_transaction_amount_title
         }

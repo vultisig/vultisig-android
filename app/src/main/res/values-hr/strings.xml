@@ -1096,6 +1096,7 @@
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Poruke</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_swap">Zamijeni</string>
     <string name="ton_op_jetton_transfer">Jetton prijenos</string>
     <string name="ton_op_nft_transfer">NFT prijenos</string>
     <string name="ton_op_excess_gas_refund">Povrat viška plina</string>
