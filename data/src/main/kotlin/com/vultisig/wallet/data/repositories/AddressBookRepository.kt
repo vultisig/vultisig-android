@@ -11,7 +11,7 @@ interface AddressBookRepository {
 
     suspend fun getEntries(): List<AddressBookEntry>
 
-    suspend fun getEntry(chainId: String, address: String): AddressBookEntry
+    suspend fun getEntry(chainId: String, address: String): AddressBookEntry?
 
     suspend fun add(entry: AddressBookEntry)
 
@@ -31,14 +31,14 @@ constructor(private val addressBookEntryDao: AddressBookEntryDao) : AddressBookR
         addressBookEntryDao.upsert(entry.toEntity())
     }
 
-    override suspend fun getEntry(chainId: String, address: String): AddressBookEntry {
+    override suspend fun getEntry(chainId: String, address: String): AddressBookEntry? {
         val entity =
             if (isEvm(chainId)) {
                 addressBookEntryDao.getEntryIgnoringCase(chainId, address)
             } else {
                 addressBookEntryDao.getEntry(chainId, address)
             }
-        return entity.toAddressBookEntry()
+        return entity?.toAddressBookEntry()
     }
 
     override suspend fun delete(chainId: String, address: String) {
