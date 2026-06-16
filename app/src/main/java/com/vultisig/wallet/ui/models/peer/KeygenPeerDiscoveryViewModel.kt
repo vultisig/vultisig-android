@@ -164,7 +164,7 @@ constructor(
             )
         )
 
-    private val sessionId = Uuid.random().toHexString()
+    private var sessionId = Uuid.random().toHexString()
     private val serviceName = generateServiceName()
 
     private val encryptionKeyHex = Utils.encryptionKeyHex
@@ -284,6 +284,15 @@ constructor(
 
     fun switchMode() {
         if (args == null) return
+
+        // Switching network mode must start a brand-new session. Reusing the same sessionId let
+        // the relay (or mediator) hand back peers that joined the previous session — e.g.
+        // Internet -> Local -> Internet would re-read the still-alive relay session and resurface
+        // stale devices (issue #4944). Cancel in-flight discovery and mint a fresh id so only peers
+        // that join the new session appear.
+        discoverParticipantsJob?.cancel()
+        sessionId = Uuid.random().toHexString()
+
         state.update {
             it.copy(
                 network =
