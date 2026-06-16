@@ -12,6 +12,7 @@ import com.vultisig.wallet.data.utils.safeLaunch
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import timber.log.Timber
@@ -56,11 +57,7 @@ constructor(
     @Assisted private val selectedToken: () -> Coin,
 ) {
 
-    /**
-     * Builds a [SecuredAssetLoader] for one deposit form. The repos / API are Hilt-injected; the
-     * ViewModel supplies its [scope], the [thorAddressFieldState], and the form-owned [vaultId] /
-     * [selectedToken] accessors as assisted params.
-     */
+    /** @see SecuredAssetLoader */
     @AssistedFactory
     interface Factory {
         /** Creates a [SecuredAssetLoader] bound to the given scope, field state and accessors. */
@@ -82,11 +79,7 @@ constructor(
                 onError = { Timber.e(it, "Failed to collect secured asset addresses") }
             ) {
                 val vaultId = vaultId() ?: return@safeLaunch
-                val vault =
-                    vaultRepository.get(vaultId)
-                        ?: run {
-                            return@safeLaunch
-                        }
+                val vault = vaultRepository.get(vaultId) ?: return@safeLaunch
                 val (thorAddress) =
                     chainAccountAddressRepository.getAddress(chain = Chain.ThorChain, vault = vault)
 
@@ -119,7 +112,7 @@ constructor(
                 else -> InboundAddressResult.Available(inboundAddress.address)
             }
         } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
+            if (e is CancellationException) throw e
             Timber.e(e, "Failed to fetch THORChain inbound for %s", chainName)
             InboundAddressResult.FetchFailed
         }
