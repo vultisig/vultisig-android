@@ -46,7 +46,9 @@ import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.data.utils.safeLaunch
 import com.vultisig.wallet.data.utils.toValue
 import com.vultisig.wallet.ui.models.defi.parseThorChainPool
+import com.vultisig.wallet.ui.models.deposit.load.InboundAddressResult
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.deposit.submit.AddCacaoPoolStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.AddLiquidityStrategy
 import com.vultisig.wallet.ui.models.deposit.submit.BondStrategy
@@ -221,6 +223,7 @@ constructor(
     private val fieldValidator: DepositFieldValidator,
     private val gasFeeHelper: DepositGasFeeHelper,
     private val liquidityDataLoaderFactory: LiquidityDataLoader.Factory,
+    private val securedAssetLoaderFactory: SecuredAssetLoader.Factory,
 ) : ViewModel() {
 
     private val appCurrency =
@@ -272,7 +275,6 @@ constructor(
 
     private val address = MutableStateFlow<Address?>(null)
     private var addressJob: Job? = null
-    private var securedAssetThorAddressJob: Job? = null
     private var whitelistJob: Job? = null
     private var switchInboundJob: Job? = null
     private var withdrawSecuredAssetJob: Job? = null
@@ -291,6 +293,14 @@ constructor(
             vaultId = { vaultId },
             lpPoolId = { lpPoolId },
             resolvePairedAddress = ::resolvePairedAddress,
+        )
+
+    private val securedAssetLoader: SecuredAssetLoader =
+        securedAssetLoaderFactory.create(
+            scope = viewModelScope,
+            thorAddressFieldState = thorAddressFieldState,
+            vaultId = { vaultId },
+            selectedToken = { state.value.selectedToken },
         )
 
     private val bondStrategy: DepositSubmitStrategy =
@@ -680,7 +690,7 @@ constructor(
                     // effect — that is done synchronously in SecuredAssetStrategy so the
                     // destination always matches the currently-selected asset's chain.
                     if (depositOption == DepositOption.SecuredAsset) {
-                        collectSecuredAssetAddresses()
+                        securedAssetLoader.collectSecuredAssetAddresses()
                     }
                     setMetadataInfo()
                 }
@@ -890,7 +900,10 @@ constructor(
                             val vaultId = vaultId ?: return@launch
                             try {
                                 when (
-                                    val result = fetchThorChainInboundForChain(SWITCH_INBOUND_CHAIN)
+                                    val result =
+                                        securedAssetLoader.fetchThorChainInboundForChain(
+                                            SWITCH_INBOUND_CHAIN
+                                        )
                                 ) {
                                     is InboundAddressResult.Available -> {
                                         nodeAddressFieldState.setTextAndPlaceCursorAtEnd(
@@ -1020,30 +1033,6 @@ constructor(
         }
     }
 
-    private fun collectSecuredAssetAddresses() {
-        securedAssetThorAddressJob?.cancel()
-        securedAssetThorAddressJob =
-            viewModelScope.safeLaunch(
-                onError = { Timber.e(it, "Failed to collect secured asset addresses") }
-            ) {
-                val vaultId = vaultId ?: return@safeLaunch
-                val vault =
-                    vaultRepository.get(vaultId)
-                        ?: run {
-                            return@safeLaunch
-                        }
-                val (thorAddress) =
-                    chainAccountAddressRepository.getAddress(chain = Chain.ThorChain, vault = vault)
-
-                thorAddressFieldState.setTextAndPlaceCursorAtEnd(thorAddress)
-            }
-    }
-
-    private suspend fun fetchSecuredAssetInboundAddress(): InboundAddressResult {
-        val chainName = state.value.selectedToken.getChainName()
-        return fetchThorChainInboundForChain(chainName)
-    }
-
     /**
      * Resolves the THORChain inbound vault address for a secured-asset deposit of [selectedToken],
      * translating halt/unsupported/fetch-failure outcomes into user-facing errors.
@@ -1052,7 +1041,7 @@ constructor(
      * @return the inbound vault address to deposit to.
      */
     private suspend fun requireSecuredAssetInboundAddress(selectedToken: Coin): String =
-        when (val result = fetchSecuredAssetInboundAddress()) {
+        when (val result = securedAssetLoader.fetchSecuredAssetInboundAddress()) {
             is InboundAddressResult.Available -> result.address
             InboundAddressResult.Halted ->
                 throw InvalidTransactionDataException(
@@ -1070,40 +1059,6 @@ constructor(
                     UiText.StringResource(R.string.deposit_error_thorchain_inbound_unavailable)
                 )
         }
-
-    /**
-     * Fetches THORChain's inbound vault address for [chainName] (matched against the THORChain
-     * inbound addresses endpoint, case-insensitive) and reports halt/network failure modes so
-     * callers can surface a distinct user error instead of silently leaving the destination empty.
-     */
-    private suspend fun fetchThorChainInboundForChain(chainName: String): InboundAddressResult =
-        try {
-            val inboundAddresses = thorChainApi.getTHORChainInboundAddresses()
-            val inboundAddress =
-                inboundAddresses.firstOrNull { it.chain.equals(chainName, ignoreCase = true) }
-            when {
-                inboundAddress == null -> InboundAddressResult.Unsupported
-                inboundAddress.halted ||
-                    inboundAddress.chainTradingPaused ||
-                    inboundAddress.chainLPActionsPaused ||
-                    inboundAddress.globalTradingPaused -> InboundAddressResult.Halted
-                else -> InboundAddressResult.Available(inboundAddress.address)
-            }
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) throw e
-            Timber.e(e, "Failed to fetch THORChain inbound for %s", chainName)
-            InboundAddressResult.FetchFailed
-        }
-
-    private sealed class InboundAddressResult {
-        data class Available(val address: String) : InboundAddressResult()
-
-        data object Halted : InboundAddressResult()
-
-        data object Unsupported : InboundAddressResult()
-
-        data object FetchFailed : InboundAddressResult()
-    }
 
     private suspend fun handleRemoveCacaoOption() {
         val addressValue = address.value?.address ?: return
