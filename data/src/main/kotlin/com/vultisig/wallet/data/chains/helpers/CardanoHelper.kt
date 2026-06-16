@@ -112,11 +112,7 @@ object CardanoHelper {
     fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         val inputBuilder = buildSigningInputBuilder(keysignPayload)
 
-        val plan = AnySigner.plan(inputBuilder.build(), CoinType.CARDANO, TransactionPlan.parser())
-        if (plan.error != SigningError.OK) {
-            Timber.e("Cardano Plan Error: %s", plan.error.name)
-            error("Cardano transaction plan error: ${plan.error.name}")
-        }
+        val plan = plan(inputBuilder.build())
 
         return inputBuilder
             .setTransferMessage(inputBuilder.transferMessage.toBuilder().setForceFee(plan.fee))
@@ -149,13 +145,21 @@ object CardanoHelper {
                     forceFee = 0,
                 )
                 .build()
-        val plan = AnySigner.plan(signingInput, CoinType.CARDANO, TransactionPlan.parser())
-        if (plan.error == SigningError.OK) {
-            return plan.fee
-        }
+        return plan(signingInput).fee
+    }
 
-        Timber.e("Cardano Plan Error: %s", plan.error.name)
-        throw RuntimeException("Signing Error During Plan calculation")
+    /**
+     * Runs WalletCore's Cardano planner and returns the resulting [TransactionPlan], throwing on a
+     * planning error. Centralises the planner invocation and error handling shared by
+     * [getPreSignedInputData] and [estimateFee].
+     */
+    private fun plan(input: Cardano.SigningInput): TransactionPlan {
+        val plan = AnySigner.plan(input, CoinType.CARDANO, TransactionPlan.parser())
+        if (plan.error != SigningError.OK) {
+            Timber.e("Cardano Plan Error: %s", plan.error.name)
+            error("Cardano transaction plan error: ${plan.error.name}")
+        }
+        return plan
     }
 
     /**
