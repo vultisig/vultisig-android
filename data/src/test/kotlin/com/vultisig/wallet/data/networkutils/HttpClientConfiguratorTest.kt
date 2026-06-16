@@ -11,6 +11,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import java.io.IOException
+import java.net.SocketTimeoutException
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
@@ -137,12 +138,13 @@ class HttpClientConfiguratorTest {
     }
 
     /**
-     * Pins the documented behavior that [retryOnException] applies to every HTTP method, including
-     * unsafe ones like POST. This is intentional — transport-level retries on IOException are safe
-     * because the request never made it onto the wire.
+     * Verifies a non-idempotent POST request is NOT resent on IOException. A retry could duplicate
+     * a side effect (e.g. a transaction broadcast the node already received), so transport-level
+     * retries are restricted to idempotent methods. The IOException surfaces as a NetworkException
+     * on the very first failure via HttpCallValidator.
      */
     @Test
-    fun `retryOnIOException forPostMethod alsoRetriesThreeTimes`() = runTest {
+    fun `retryOnIOException forPostMethod doesNotRetry`() = runTest {
         var callCount = 0
         configuredClient(
                 MockEngine {
@@ -152,7 +154,48 @@ class HttpClientConfiguratorTest {
             )
             .use { client ->
                 assertFailsWith<NetworkException> { client.post("http://localhost/test") }
-                // 1 original call + 3 retries — the IOException retry policy is method-agnostic.
+                assertEquals(1, callCount)
+            }
+    }
+
+    /**
+     * Verifies a non-idempotent POST request is NOT resent on a read-timeout
+     * ([SocketTimeoutException], an IOException subclass). This is the core idempotency guard: a
+     * broadcast the node accepted but slow-ACKed must not be auto-rebroadcast. The failure surfaces
+     * as a NetworkException on the first attempt.
+     */
+    @Test
+    fun `retryOnSocketTimeout forPostMethod doesNotRetry`() = runTest {
+        var callCount = 0
+        configuredClient(
+                MockEngine {
+                    callCount++
+                    throw SocketTimeoutException("Read timed out")
+                }
+            )
+            .use { client ->
+                assertFailsWith<NetworkException> { client.post("http://localhost/test") }
+                assertEquals(1, callCount)
+            }
+    }
+
+    /**
+     * Verifies a safe GET request IS still retried three times on a read-timeout
+     * ([SocketTimeoutException]) before throwing NetworkException — idempotent-method transport
+     * retries are unchanged.
+     */
+    @Test
+    fun `retryOnSocketTimeout forSafeMethod retriesThreeTimes`() = runTest {
+        var callCount = 0
+        configuredClient(
+                MockEngine {
+                    callCount++
+                    throw SocketTimeoutException("Read timed out")
+                }
+            )
+            .use { client ->
+                assertFailsWith<NetworkException> { client.get("http://localhost/test") }
+                // 1 original call + 3 retries
                 assertEquals(4, callCount)
             }
     }
