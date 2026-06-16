@@ -457,7 +457,16 @@ constructor(
                 resharePrefix = existingVault.resharePrefix
                 signers = existingVault.signers
 
-                if (args.action == TssAction.Migrate || args.action == TssAction.SingleKeygen) {
+                // Migrate/SingleKeygen and ReShare all operate on an existing vault, so every
+                // one of its devices must rejoin before the session can start. Without this,
+                // ReShare keeps the default MIN_KEYGEN_DEVICES threshold and lets the initiator
+                // start once only 2 devices joined — the reshare then fails partway through
+                // because the missing parties never participated (issue #4940).
+                if (
+                    args.action == TssAction.Migrate ||
+                        args.action == TssAction.SingleKeygen ||
+                        args.action == TssAction.ReShare
+                ) {
                     state.update {
                         it.copy(
                             minimumDevices = existingVault.signers.size,

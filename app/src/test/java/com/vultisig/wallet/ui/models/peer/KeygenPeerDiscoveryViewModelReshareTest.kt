@@ -50,6 +50,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -277,6 +278,26 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
                 )
             }
             coVerify(exactly = 0) { vultiSignerRepository.joinReshare(any()) }
+        }
+
+    @Test
+    fun `reshare requires every existing vault device to join before start is enabled`() =
+        runTest(testDispatcher) {
+            // Issue #4940: a reshare must not start until all of the vault's existing devices
+            // have rejoined. The minimum-device threshold therefore has to track the vault's
+            // signer count, not the default MIN_KEYGEN_DEVICES (2). A secure vault (no
+            // email/password) so the flow stays on the manual peer-discovery path.
+            coEvery { vaultRepository.get(vaultId) } returns existingVault
+            coEvery { featureFlagRepository.getFeatureFlags() } returns
+                FeatureFlagJson(isTssBatchEnabled = false)
+
+            stubReshareRoute(email = null, password = null)
+            val viewModel = createViewModel()
+            advanceUntilIdle()
+
+            val state = viewModel.state.value
+            assertEquals(existingVault.signers.size, state.minimumDevices)
+            assertEquals(existingVault.signers.size, state.minimumDevicesDisplayed)
         }
 
     @Test
