@@ -193,12 +193,9 @@ constructor(
                     }
                 }
                 ?.name
-        val isSavedInAddressBook =
-            dstVaultName == null && addressBookRepository.entryExists(chain.id, payload.toAddress)
         val dstAddressBookTitle =
-            if (isSavedInAddressBook) {
-                runCatching { addressBookRepository.getEntry(chain.id, payload.toAddress).title }
-                    .getOrNull()
+            if (dstVaultName == null) {
+                addressBookRepository.getEntry(chain.id, payload.toAddress)?.title
             } else null
 
         val isUnlimitedApproval =

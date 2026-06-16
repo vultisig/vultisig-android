@@ -339,16 +339,21 @@ constructor(
         // "insufficient balance" warning on a now-valid amount and mask the live quote/formError.
         _uiState.update { it.copy(error = null) }
 
-        // Only the source-chain network fee may be deducted from the source balance, and only for a
-        // native source on its own gas chain. The provider swap fee is taken from the destination
-        // amount (for LI.FI it is denominated in the destination token's units), so subtracting it
-        // here would mix decimals and could wrongly drive the usable amount negative for a
-        // low-decimal source into a high-decimal destination.
-        val maxUsableTokenAmount =
-            srcTokenValue.value -
-                (quotePipeline.estimatedNetworkFeeTokenValue.value?.value?.takeIf {
+        // The 25/50/75 chips take a plain fraction of the full balance, matching iOS and the
+        // desktop app. Only MAX reserves the source-chain network fee, and only for a native source
+        // on its own gas chain. The provider swap fee is taken from the destination amount (for
+        // LI.FI it is denominated in the destination token's units), so it is never deducted from
+        // the source balance here — that would mix decimals and could wrongly drive the usable
+        // amount negative for a low-decimal source into a high-decimal destination.
+        val reservedNetworkFee =
+            if (percentage >= 1f) {
+                quotePipeline.estimatedNetworkFeeTokenValue.value?.value?.takeIf {
                     srcToken.isNativeToken && quotePipeline.gasFeeChain.value == srcToken.chain
-                } ?: BigInteger.ZERO)
+                } ?: BigInteger.ZERO
+            } else {
+                BigInteger.ZERO
+            }
+        val maxUsableTokenAmount = srcTokenValue.value - reservedNetworkFee
 
         if (maxUsableTokenAmount <= BigInteger.ZERO) {
             // Empty (not "0"): the empty-field path clears the stale quote silently, whereas a

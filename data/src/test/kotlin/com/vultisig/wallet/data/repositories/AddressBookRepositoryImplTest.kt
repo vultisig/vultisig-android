@@ -6,6 +6,8 @@ import com.vultisig.wallet.data.models.AddressBookEntry
 import com.vultisig.wallet.data.models.Chain
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -39,8 +41,15 @@ internal class AddressBookRepositoryImplTest {
 
         val entry = repository.getEntry(Chain.Ethereum.id, LOWERCASED)
 
+        assertNotNull(entry)
         assertEquals(CHECKSUMMED, entry.address)
         assertEquals("Alice", entry.title)
+    }
+
+    @Test
+    fun `getEntry returns null when the address is not saved`() = runTest {
+        assertNull(repository.getEntry(Chain.Ethereum.id, CHECKSUMMED))
+        assertNull(repository.getEntry(Chain.Bitcoin.id, BTC_ADDRESS))
     }
 
     @Test
@@ -111,14 +120,16 @@ private class FakeAddressBookEntryDao : AddressBookEntryDao {
 
     override suspend fun getEntries(): List<AddressBookEntryEntity> = entries.toList()
 
-    override suspend fun getEntry(chainId: String, address: String): AddressBookEntryEntity =
-        entries.first { it.chainId == chainId && it.address == address }
+    override suspend fun getEntry(chainId: String, address: String): AddressBookEntryEntity? =
+        entries.firstOrNull { it.chainId == chainId && it.address == address }
 
     override suspend fun getEntryIgnoringCase(
         chainId: String,
         address: String,
-    ): AddressBookEntryEntity =
-        entries.first { it.chainId == chainId && it.address.equals(address, ignoreCase = true) }
+    ): AddressBookEntryEntity? =
+        entries.firstOrNull {
+            it.chainId == chainId && it.address.equals(address, ignoreCase = true)
+        }
 
     override suspend fun upsert(entry: AddressBookEntryEntity) {
         entries.removeAll { it.chainId == entry.chainId && it.address == entry.address }
