@@ -101,9 +101,29 @@ object CardanoHelper {
     /**
      * Returns serialized [Cardano.SigningInput] bytes with the body fee forced to the transmitted
      * `byteFee` carried on the payload.
+     *
+     * Mirrors the iOS/SDK signing path: even though [buildSigningInputBuilder] already seeds
+     * `forceFee = byteFee`, we still run WalletCore's planner here (which honors the seeded
+     * `forceFee`, so `plan.fee == byteFee`) and pin both the resulting `plan` and `plan.fee` into
+     * the input. Embedding the plan makes the pre-image-hash phase and the compile phase consume
+     * byte-identical bytes, and signing from `plan.fee` is exactly what an iOS join device does —
+     * so every co-signer reproduces the same Blake2b sighash regardless of platform.
      */
-    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray =
-        buildSigningInputBuilder(keysignPayload).build().toByteArray()
+    fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
+        val inputBuilder = buildSigningInputBuilder(keysignPayload)
+
+        val plan = AnySigner.plan(inputBuilder.build(), CoinType.CARDANO, TransactionPlan.parser())
+        if (plan.error != SigningError.OK) {
+            Timber.e("Cardano Plan Error: %s", plan.error.name)
+            error("Cardano transaction plan error: ${plan.error.name}")
+        }
+
+        return inputBuilder
+            .setTransferMessage(inputBuilder.transferMessage.toBuilder().setForceFee(plan.fee))
+            .setPlan(plan)
+            .build()
+            .toByteArray()
+    }
 
     /**
      * Derives the size-based Cardano fee for a prospective transaction by running WalletCore's
