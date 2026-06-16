@@ -110,6 +110,11 @@ class TerraHelper(
                 !keysignPayload.coin.contractAddress.contains("terra1") &&
                     !keysignPayload.coin.contractAddress.contains("ibc/")
             ) {
+                // Terra Classic bank-denom tokens (e.g. USTC / uusd) pay the base gas fee plus a
+                // proportional burn tax in the send denom itself. The total (gas + burn tax) is
+                // precomputed upstream in CosmosFeeService and carried in atomData.gas, so the fee
+                // is a single coin in the token's own denom. Mirrors vultisig-ios
+                // TerraHelperStruct.
                 val input =
                     Cosmos.SigningInput.newBuilder()
                         .setPublicKey(ByteString.copyFrom(publicKey.data()))
@@ -139,17 +144,11 @@ class TerraHelper(
                         )
                         .setFee(
                             Cosmos.Fee.newBuilder()
-                                .setGas(1000000)
+                                .setGas(gasLimit)
                                 .addAmounts(
                                     Cosmos.Amount.newBuilder()
-                                        .setDenom("uluna")
+                                        .setDenom(keysignPayload.coin.contractAddress)
                                         .setAmount(atomData.gas.toString())
-                                        .build()
-                                )
-                                .addAmounts(
-                                    Cosmos.Amount.newBuilder()
-                                        .setDenom("uusd")
-                                        .setAmount("1000000")
                                         .build()
                                 )
                                 .build()

@@ -39,9 +39,9 @@ internal fun computeJoinKeysignNetworkFee(
 /**
  * Swap-only fee helper. Only [BlockChainSpecific.Ethereum] and [BlockChainSpecific.THORChain] are
  * reachable in the swap branch — every other subtype goes through `feeServiceComposite`. The
- * Ethereum case uses [defaultEvmSwapGasLimit] for [chain] so joiner output matches the initiator's
- * swap-fee display (see [EthereumFeeService.calculateDefaultFees] for Swap) instead of being ~15×
- * lower for native ETH/Arb transfers.
+ * Ethereum case uses [EthereumFeeService.DEFAULT_SWAP_LIMIT] so joiner output matches the
+ * initiator's swap-fee display (see [EthereumFeeService.calculateDefaultFees] for Swap) instead of
+ * being ~15× lower for native ETH/Arb transfers.
  *
  * The [error] branch is the safety net for [JoinKeysignViewModel.loadTransaction]'s swap path: if a
  * new [BlockChainSpecific] subtype is ever added to that branch's type check, this helper crashes
@@ -50,12 +50,11 @@ internal fun computeJoinKeysignNetworkFee(
 internal fun computeJoinKeysignSwapNetworkFee(
     blockChainSpecific: BlockChainSpecific,
     nativeCoin: Coin,
-    chain: Chain,
 ): TokenValue =
     when (blockChainSpecific) {
         is BlockChainSpecific.Ethereum ->
             TokenValue(
-                value = blockChainSpecific.maxFeePerGasWei * defaultEvmSwapGasLimit(chain),
+                value = blockChainSpecific.maxFeePerGasWei * EthereumFeeService.DEFAULT_SWAP_LIMIT,
                 token = nativeCoin,
             )
         is BlockChainSpecific.THORChain ->
@@ -67,17 +66,6 @@ internal fun computeJoinKeysignSwapNetworkFee(
                     "new swap-branch subtypes"
             )
     }
-
-/**
- * The initiator's swap path always displays `maxFeePerGas * DEFAULT_SWAP_LIMIT` (via
- * [EthereumFeeService.calculateDefaultFees] for Swap), ignoring `BlockChainSpecific.gasLimit` —
- * which can be as low as 40k for native ETH/Arb swaps. Mantle uses
- * [EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT] because its per-gas limit is an order of magnitude
- * higher than other EVM chains.
- */
-internal fun defaultEvmSwapGasLimit(chain: Chain): BigInteger =
-    if (chain == Chain.Mantle) EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
-    else EthereumFeeService.DEFAULT_SWAP_LIMIT
 
 /**
  * The fee a dApp signed in [KeysignPayload.signAmino] or [KeysignPayload.signDirect], or `null` for

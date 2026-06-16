@@ -91,9 +91,7 @@ internal fun FoldableAmountWidget(
     val operatorFeeFieldState = optionalInputs.operatorFeeFieldState
     val slippageTextFieldState = optionalInputs.slippageFieldState
     val onAutoCompoundCheckedChange = optionalInputs.onAutoCompoundCheckedChange
-    val isCircleMode =
-        state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
-            state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
+    val isCircleMode = state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
 
     FoldableSection(
         expanded = isCircleMode || state.expandedSection == SendSections.Amount,

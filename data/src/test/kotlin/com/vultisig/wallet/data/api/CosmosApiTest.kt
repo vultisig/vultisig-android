@@ -115,6 +115,41 @@ class CosmosApiTest {
         assertNull(api.getDenomMetadata("uluna"))
     }
 
+    @Test
+    fun `getTerraClassicBurnTaxRate parses burn_tax_rate from x-tax params`() = runTest {
+        var capturedPath: String? = null
+        val api =
+            cosmosApi(
+                MockEngine { request ->
+                    capturedPath = request.url.encodedPath
+                    respond(
+                        content =
+                            """{"params":{"burn_tax_rate":"0.005000000000000000",""" +
+                                """"gas_prices":[]}}""",
+                        status = HttpStatusCode.OK,
+                        headers = jsonHeaders,
+                    )
+                }
+            )
+
+        val rate = api.getTerraClassicBurnTaxRate()
+
+        assertEquals("/terra/tax/v1beta1/params", capturedPath)
+        assertEquals("0.005000000000000000", rate)
+    }
+
+    @Test
+    fun `getTerraClassicBurnTaxRate returns null on failure so caller can fall back`() = runTest {
+        val api =
+            cosmosApi(
+                MockEngine {
+                    respond(content = "boom", status = HttpStatusCode.InternalServerError)
+                }
+            )
+
+        assertNull(api.getTerraClassicBurnTaxRate())
+    }
+
     private fun cosmosApi(engine: MockEngine): CosmosApi {
         val json = Json { ignoreUnknownKeys = true }
         return CosmosApiImp(
