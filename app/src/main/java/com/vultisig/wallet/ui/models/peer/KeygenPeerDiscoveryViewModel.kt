@@ -457,22 +457,29 @@ constructor(
                 resharePrefix = existingVault.resharePrefix
                 signers = existingVault.signers
 
-                // Migrate/SingleKeygen and ReShare all operate on an existing vault, so every
-                // one of its devices must rejoin before the session can start. Without this,
-                // ReShare keeps the default MIN_KEYGEN_DEVICES threshold and lets the initiator
-                // start once only 2 devices joined — the reshare then fails partway through
-                // because the missing parties never participated (issue #4940).
-                if (
-                    args.action == TssAction.Migrate ||
-                        args.action == TssAction.SingleKeygen ||
-                        args.action == TssAction.ReShare
-                ) {
-                    state.update {
-                        it.copy(
-                            minimumDevices = existingVault.signers.size,
-                            minimumDevicesDisplayed = existingVault.signers.size,
-                        )
+                when (args.action) {
+                    // Migrate/SingleKeygen recreate the full vault, so every existing signer
+                    // must rejoin before the session can start.
+                    TssAction.Migrate,
+                    TssAction.SingleKeygen ->
+                        state.update {
+                            it.copy(
+                                minimumDevices = existingVault.signers.size,
+                                minimumDevicesDisplayed = existingVault.signers.size,
+                            )
+                        }
+                    // ReShare only needs a signing quorum of the old committee — matching iOS
+                    // getThreshold()+1, keysign discovery, and the reshare_start_screen_warning
+                    // contract. Requiring every signer would deadlock a reshare that intentionally
+                    // drops a lost device, since next() already filters oldCommittee to the
+                    // present signers.
+                    TssAction.ReShare -> {
+                        val threshold = Utils.getThreshold(existingVault.signers.size)
+                        state.update {
+                            it.copy(minimumDevices = threshold, minimumDevicesDisplayed = threshold)
+                        }
                     }
+                    else -> Unit
                 }
             }
 

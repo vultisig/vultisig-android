@@ -31,6 +31,7 @@ import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
 import com.vultisig.wallet.ui.navigation.Route
 import com.vultisig.wallet.ui.utils.NetworkUtils
+import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -50,7 +51,6 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -281,12 +281,13 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
         }
 
     @Test
-    fun `reshare requires every existing vault device to join before start is enabled`() =
+    fun `reshare clamps the start threshold to a signing quorum of the existing committee`() =
         runTest(testDispatcher) {
-            // Issue #4940: a reshare must not start until all of the vault's existing devices
-            // have rejoined. The minimum-device threshold therefore has to track the vault's
-            // signer count, not the default MIN_KEYGEN_DEVICES (2). A secure vault (no
-            // email/password) so the flow stays on the manual peer-discovery path.
+            // Issue #4940: a reshare must not start at the default MIN_KEYGEN_DEVICES (2) for a
+            // larger vault. It clamps to the old committee's signing quorum (Utils.getThreshold),
+            // not the full signer count — requiring every signer would deadlock a reshare that
+            // intentionally drops a lost device. A secure vault (no email/password) keeps the flow
+            // on the manual peer-discovery path.
             coEvery { vaultRepository.get(vaultId) } returns existingVault
             coEvery { featureFlagRepository.getFeatureFlags() } returns
                 FeatureFlagJson(isTssBatchEnabled = false)
@@ -295,9 +296,10 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
             val viewModel = createViewModel()
             advanceUntilIdle()
 
+            val threshold = Utils.getThreshold(existingVault.signers.size)
             val state = viewModel.state.value
-            assertEquals(existingVault.signers.size, state.minimumDevices)
-            assertEquals(existingVault.signers.size, state.minimumDevicesDisplayed)
+            state.minimumDevices shouldBe threshold
+            state.minimumDevicesDisplayed shouldBe threshold
         }
 
     @Test
