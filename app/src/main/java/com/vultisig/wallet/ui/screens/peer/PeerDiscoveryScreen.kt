@@ -133,13 +133,17 @@ internal fun KeygenPeerDiscoveryScreen(model: KeygenPeerDiscoveryViewModel = hil
                 showRive = true
             }
 
-            if (showRive) {
-                RiveAnimation(
-                    file = riveFile,
-                    viewModelInstance = vmi,
-                    modifier = Modifier.fillMaxSize(),
-                    fit = Fit.Cover(),
-                )
+            // Solid backdrop so the 300ms pre-Rive window renders the app background rather than
+            // an empty/blank frame between the password screen and the connecting animation.
+            Box(modifier = Modifier.fillMaxSize().background(Theme.v2.colors.backgrounds.primary)) {
+                if (showRive) {
+                    RiveAnimation(
+                        file = riveFile,
+                        viewModelInstance = vmi,
+                        modifier = Modifier.fillMaxSize(),
+                        fit = Fit.Cover(),
+                    )
+                }
             }
         }
 

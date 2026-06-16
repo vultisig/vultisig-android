@@ -160,6 +160,19 @@ constructor(
                 deviceCount = args?.deviceCount,
                 allowsMoreDevices =
                     (args?.deviceCount ?: MIN_KEYGEN_DEVICES) >= UNBOUNDED_KEYGEN_DEVICE_COUNT,
+                // Seed the connecting state for Fast Vault so the QR/devices branch is never
+                // composed during the async loadData() window (it would otherwise flash before
+                // startVultiServerConnection() flips this to non-null). Excludes Migrate: the
+                // active-vault migrate (signers > 2) path intentionally shows peer discovery, and
+                // we can't know the signer count synchronously here.
+                connectingToServer =
+                    if (
+                        !args?.email.isNullOrBlank() &&
+                            !args.password.isNullOrBlank() &&
+                            args.action != TssAction.Migrate
+                    )
+                        ConnectingToServerUiModel(false)
+                    else null,
                 enableNotification = false,
             )
         )
