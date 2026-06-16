@@ -161,12 +161,11 @@ object TonMessageBodyDecoder {
         if (slice.loadBit()) throw TonCellException("dedust given_out swap not supported")
         val minOut = slice.loadCoins()
         slice.loadMaybeRef() // next:(Maybe ^SwapStep) — discarded
-        // SwapParams
-        slice.loadUInt(32) // deadline — discarded
-        val receiverAddress = slice.loadMaybeAddress()
-        slice.loadMaybeAddress() // referral_address — discarded
-        slice.loadMaybeRef() // fulfill_payload — discarded
-        slice.loadMaybeRef() // reject_payload — discarded
+        // params:^SwapParams lives in a ref, not inline. Descending into it (and reading the
+        // deadline + recipient) both surfaces the receiver and rejects a body missing the ref.
+        val params = slice.loadRef().beginParse()
+        params.loadUInt(32) // deadline — discarded
+        val receiverAddress = params.loadMaybeAddress() // recipient_addr
         return TonMessageBodyIntent.Swap(
             provider = TonMessageBodyIntent.Provider.DEDUST,
             offerAsset = TonMessageBodyIntent.OfferAsset.TON,

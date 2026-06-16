@@ -25,6 +25,11 @@ internal class TonMessageDecodeTest {
         "0:222d5ebbec1807357114b832770b0f0ae563a22523bceb187c610ab62ed84912"
     private val stonfiRouterFriendly = "EQAiLV677BgHNXEUuDJ3Cw8K5WOiJSO86xh8YQq2LthJEoED"
 
+    // DeDust native swap (TON -> jetton): root op 0xea06185d, target = pool (not a jetton wallet).
+    private val dedustNativeSwap =
+        "te6cckEBAwEASAABa+oGGF067C2U2WZEMUBfXhAIAHy/+VG7+ebYbZP+jeYqxVVqNzIpCLWthNl7zJOrFKsQMCjRFAECCWoxFXwOAgIACC4c+oJiXsgi"
+    private val dedustNativeVault = "EQDa4VOnTYlLvDJ0gZjNYm5PXfSmmtL6Vs6A_CZEtXCNICq_"
+
     private fun jettonCoin() =
         Coin(
             chain = Chain.Ton,
@@ -180,9 +185,34 @@ internal class TonMessageDecodeTest {
                 nativeTon = TonHeroCoin("TON", 9, "ton"),
                 toUserFriendly = normalize,
                 resolveCoinByWallet = { TonHeroCoin("USDT", 6, "usdt") },
+                resolveDedustOutputCoin = { null },
             )
         assertNotNull(hero)
         assertEquals("USDT", hero.from.ticker)
+    }
+
+    @Test
+    fun `resolves a DeDust native swap hero from the pool output`() = runTest {
+        // DeDust addresses the native vault (gated on the outer destination) and the swap's target
+        // is the pool, so the output coin comes from resolveDedustOutputCoin, not a wallet lookup.
+        val hero =
+            resolveTonSwapHero(
+                messages =
+                    listOf(
+                        TonMessage(
+                            to = dedustNativeVault,
+                            amount = "100000000",
+                            payload = dedustNativeSwap,
+                        )
+                    ),
+                nativeTon = TonHeroCoin("TON", 9, "ton"),
+                toUserFriendly = { it },
+                resolveCoinByWallet = { null },
+                resolveDedustOutputCoin = { TonHeroCoin("USDT", 6, "usdt") },
+            )
+        assertNotNull(hero)
+        assertEquals("TON", hero.from.ticker)
+        assertEquals("USDT", hero.to.ticker)
     }
 
     @Test
@@ -197,6 +227,7 @@ internal class TonMessageDecodeTest {
                 nativeTon = TonHeroCoin("TON", 9, "ton"),
                 toUserFriendly = { it },
                 resolveCoinByWallet = { TonHeroCoin("USDT", 6, "usdt") },
+                resolveDedustOutputCoin = { null },
             )
         assertNull(hero)
     }

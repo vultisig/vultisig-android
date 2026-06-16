@@ -33,6 +33,7 @@ internal suspend fun resolveTonSwapHero(
     nativeTon: TonHeroCoin,
     toUserFriendly: (String) -> String?,
     resolveCoinByWallet: suspend (jettonWalletAddress: String) -> TonHeroCoin?,
+    resolveDedustOutputCoin: suspend (poolAddress: String) -> TonHeroCoin?,
 ): HeroContent.Swap? {
     val routers = TonKnownRouters.stonfiV2Routers.normalizeWith(toUserFriendly)
     val ptonWallets = TonKnownRouters.stonfiV2PtonWallets.normalizeWith(toUserFriendly)
@@ -60,15 +61,18 @@ internal suspend fun resolveTonSwapHero(
                 TonMessageBodyIntent.OfferAsset.JETTON ->
                     resolveCoinByWallet(message.to) ?: continue
             }
-        // Output token: a known pTON wallet means the swap pays out native TON; otherwise resolve
-        // the
-        // output jetton from its wallet. Unresolvable output → skip (don't guess the ticker).
+        // Output token. STON.fi's target IS the output jetton wallet (a known pTON wallet means the
+        // swap pays out native TON). DeDust's target is the liquidity pool, so the output asset is
+        // resolved from the pool instead. Unresolvable output → skip (don't guess the ticker).
         val target = swap.targetAddress ?: continue
-        val targetFriendly = toUserFriendly(target)
         val to =
-            when {
-                targetFriendly != null && targetFriendly in ptonWallets -> nativeTon
-                else -> resolveCoinByWallet(target) ?: continue
+            when (swap.provider) {
+                TonMessageBodyIntent.Provider.DEDUST -> resolveDedustOutputCoin(target) ?: continue
+                TonMessageBodyIntent.Provider.STONFI -> {
+                    val targetFriendly = toUserFriendly(target)
+                    if (targetFriendly != null && targetFriendly in ptonWallets) nativeTon
+                    else resolveCoinByWallet(target) ?: continue
+                }
             }
 
         return HeroContent.Swap(

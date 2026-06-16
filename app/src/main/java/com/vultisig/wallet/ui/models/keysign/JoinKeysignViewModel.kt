@@ -719,6 +719,9 @@ constructor(
                             resolveCoinByWallet = { wallet ->
                                 resolveTonCoinByWallet(wallet, vaultCoins)
                             },
+                            resolveDedustOutputCoin = { pool ->
+                                resolveTonDedustOutputCoin(pool, vaultCoins)
+                            },
                         )
                             ?: resolveTonJettonHero(messages, vaultCoins) { wallet ->
                                     tonApi.getJettonMasterAddress(wallet)
@@ -739,7 +742,34 @@ constructor(
         vaultCoins: List<Coin>,
     ): TonHeroCoin? {
         val master = tonApi.getJettonMasterAddress(wallet) ?: return null
-        vaultCoins
+        return resolveTonCoinByMaster(master, vaultCoins)
+    }
+
+    /**
+     * Resolve a DeDust swap's output token. The swap addresses the liquidity **pool**, not the
+     * output jetton wallet, so the output master is read from the pool's `get_assets`.
+     */
+    private suspend fun resolveTonDedustOutputCoin(
+        poolAddress: String,
+        vaultCoins: List<Coin>,
+    ): TonHeroCoin? {
+        val master = tonApi.getDedustPoolOutputMaster(poolAddress) ?: return null
+        return resolveTonCoinByMaster(master, vaultCoins)
+    }
+
+    /**
+     * Resolve a jetton master to its display coin: vault-tracked tokens first (richest metadata),
+     * then the built-in [Coins] registry, then on-chain metadata. Returns `null` when nothing
+     * resolves, so the swap hero degrades rather than mislabelling the asset. [masterAddress] may
+     * be raw or user-friendly; it is canonicalized for comparison against the friendly-form
+     * contract addresses the registry/vault store.
+     */
+    private suspend fun resolveTonCoinByMaster(
+        masterAddress: String,
+        vaultCoins: List<Coin>,
+    ): TonHeroCoin? {
+        val master = TONAddressConverter.toUserFriendly(masterAddress, true, false) ?: masterAddress
+        (vaultCoins.asSequence() + Coins.coins[Chain.Ton].orEmpty().asSequence())
             .firstOrNull {
                 it.chain == Chain.Ton && !it.isNativeToken && it.contractAddress == master
             }

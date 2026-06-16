@@ -90,6 +90,25 @@ data class JettonContentJson(
 )
 
 @Serializable
+internal data class RunGetMethodRequest(
+    @SerialName("address") val address: String,
+    @SerialName("method") val method: String,
+    @SerialName("stack") val stack: List<String> = emptyList(),
+)
+
+@Serializable
+internal data class RunGetMethodResponse(
+    @SerialName("exit_code") val exitCode: Int = -1,
+    @SerialName("stack") val stack: List<RunGetMethodStackEntry> = emptyList(),
+)
+
+@Serializable
+internal data class RunGetMethodStackEntry(
+    @SerialName("type") val type: String,
+    @SerialName("value") val value: String? = null,
+)
+
+@Serializable
 data class TonEstimateFeeJson(
     @SerialName("ok") val ok: Boolean,
     @SerialName("result") val result: TonFeeResult? = null,
