@@ -199,6 +199,12 @@ constructor(
     private val qrBitmap = MutableStateFlow<Bitmap?>(null)
 
     private var discoverParticipantsJob: Job? = null
+    private var startPeerDiscoveryJob: Job? = null
+
+    // Session captured when the local mediator service is started, read by the (async)
+    // service-started broadcast receiver so it doesn't pick up a sessionId a later switchMode()
+    // moved.
+    private var mediatorSessionId: String = sessionId
 
     private var serverUrl: String = VULTISIG_RELAY_URL
 
@@ -290,8 +296,15 @@ constructor(
         // Internet -> Local -> Internet would re-read the still-alive relay session and resurface
         // stale devices (issue #4944). Cancel in-flight discovery and mint a fresh id so only peers
         // that join the new session appear.
+        //
+        // Cancel the whole previous discovery run, not just participant polling: an already-running
+        // startPeerDiscovery() would otherwise keep going and observe the new sessionId mid-flight,
+        // mixing the old and new session lifecycles. The fresh id is captured in a local and passed
+        // through the run so every step uses the same session even if switchMode() fires again.
         discoverParticipantsJob?.cancel()
-        sessionId = Uuid.random().toHexString()
+        startPeerDiscoveryJob?.cancel()
+        val newSessionId = Uuid.random().toHexString()
+        sessionId = newSessionId
 
         state.update {
             it.copy(
@@ -304,7 +317,7 @@ constructor(
                 selectedDevices = emptyList(),
             )
         }
-        viewModelScope.launch { startPeerDiscovery() }
+        startPeerDiscoveryJob = viewModelScope.launch { startPeerDiscovery(newSessionId) }
     }
 
     fun selectDevice(device: ParticipantName) {
@@ -483,23 +496,24 @@ constructor(
                 // join
                 // Also need to request the server to join the upgrade process
                 if (args.action == TssAction.Migrate && signers.count() > 2) {
-                    startPeerDiscovery()
+                    startPeerDiscovery(sessionId)
                     requestVultiServerConnection()
                 } else {
                     startVultiServerConnection()
                 }
             } else {
-                startPeerDiscovery()
+                startPeerDiscovery(sessionId)
             }
         }
     }
 
-    private suspend fun startPeerDiscovery() {
+    private suspend fun startPeerDiscovery(sessionId: String) {
         checkQrHelperModalIsVisited()
 
         val isRelayEnabled = state.value.network == NetworkOption.Internet
 
-        val keygenPayload = createKeygenPayload(isRelayEnabled = isRelayEnabled)
+        val keygenPayload =
+            createKeygenPayload(isRelayEnabled = isRelayEnabled, sessionId = sessionId)
 
         loadQr(keygenPayload)
 
@@ -507,23 +521,26 @@ constructor(
 
         if (isRelayEnabled) {
             serverUrl = VULTISIG_RELAY_URL
-            startSessionWithRetry()
-            startParticipantDiscovery()
+            startSessionWithRetry(sessionId)
+            startParticipantDiscovery(sessionId)
         } else {
             serverUrl = LOCAL_MEDIATOR_SERVER_URL
-            startMediatorService()
+            startMediatorService(sessionId)
         }
     }
 
     private suspend fun startVultiServerConnection() {
+        // Snapshot the session for this run so a later switchMode() can't shift it mid-flight.
+        val sessionId = sessionId
         state.update { it.copy(connectingToServer = ConnectingToServerUiModel(false)) }
 
         try {
-            startSessionWithRetry()
+            startSessionWithRetry(sessionId)
 
             requestVultiServerConnection()
 
             startParticipantDiscovery(
+                sessionId = sessionId,
                 onDiscovered = { devices ->
                     if (devices.size == 1) {
                         state.update {
@@ -536,7 +553,7 @@ constructor(
 
                         next()
                     }
-                }
+                },
             )
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
@@ -560,7 +577,8 @@ constructor(
     }
 
     private fun startParticipantDiscovery(
-        onDiscovered: (suspend (devices: List<ParticipantName>) -> Unit)? = null
+        sessionId: String,
+        onDiscovered: (suspend (devices: List<ParticipantName>) -> Unit)? = null,
     ) {
         discoverParticipantsJob?.cancel()
         discoverParticipantsJob =
@@ -616,7 +634,7 @@ constructor(
             }
     }
 
-    private fun createKeygenPayload(isRelayEnabled: Boolean): String {
+    private fun createKeygenPayload(isRelayEnabled: Boolean, sessionId: String): String {
         val args = args ?: return ""
         return when (args.action) {
             TssAction.KEYGEN ->
@@ -842,7 +860,10 @@ constructor(
     }
 
     @SuppressLint("UnspecifiedRegisterReceiverFlag")
-    private fun startMediatorService() {
+    private fun startMediatorService(sessionId: String) {
+        // The service-started broadcast fires asynchronously, so stash this run's session for the
+        // receiver to read instead of the shared mutable field that switchMode() may have moved on.
+        mediatorSessionId = sessionId
         val filter = IntentFilter()
         filter.addAction(MediatorService.SERVICE_ACTION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -860,14 +881,15 @@ constructor(
                 if (intent.action == MediatorService.SERVICE_ACTION) {
                     Timber.d("onReceive: Mediator service started")
                     // send a request to local mediator server to start the session
-                    viewModelScope.launch(Dispatchers.IO) { startSessionWithRetry() }
+                    val sessionId = mediatorSessionId
+                    viewModelScope.launch(Dispatchers.IO) { startSessionWithRetry(sessionId) }
 
-                    startParticipantDiscovery()
+                    startParticipantDiscovery(sessionId)
                 }
             }
         }
 
-    private suspend fun startSessionWithRetry() {
+    private suspend fun startSessionWithRetry(sessionId: String) {
         repeat(3) { attempt ->
             try {
                 delay(1000)
