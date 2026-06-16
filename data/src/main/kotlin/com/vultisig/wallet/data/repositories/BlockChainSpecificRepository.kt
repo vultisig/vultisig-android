@@ -297,6 +297,14 @@ constructor(
                         } else {
                             flatFee
                         }
+                    Timber.d(
+                        "Cardano fee for toAddress=%s amount=%s is %s (byteFee=%s flatFee=%s)",
+                        dstAddress,
+                        tokenAmountValue,
+                        byteFee,
+                        byteFee,
+                        flatFee,
+                    )
                     BlockChainSpecificAndUtxo(
                         blockChainSpecific =
                             BlockChainSpecific.Cardano(

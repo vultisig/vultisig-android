@@ -554,7 +554,7 @@ class ChainHelpersTest {
 
             assertTrue(
                 "Derived Cardano fee $derivedFee must cover minFeeB (155381)",
-                derivedFee > 155_381,
+                derivedFee >= 155_381,
             )
         }
     }
