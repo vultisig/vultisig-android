@@ -15,6 +15,35 @@ import vultisig.keysign.v1.TonMessage
 internal data class TonHeroCoin(val ticker: String, val decimals: Int, val logo: String)
 
 /**
+ * Anti-spoofing gate shared by [resolveTonSwapHero] (the keysign swap hero) and [mapTonMessages]
+ * (the per-message list), so both trust exactly the same set of swaps and can't drift apart.
+ *
+ * [TonMessageBodyDecoder] classifies a swap purely from the signed bytes; opcodes are
+ * contract-local so any contract can craft a swap-shaped body. Before a body may be *presented* as
+ * a swap, its relevant destination must be allow-listed. The allow-lists are normalized once
+ * through WalletCore (so URL-safe / raw variants compare equal); set selection mirrors the contract
+ * binding documented on [TonMessageBodyIntent.Swap]. An ungated swap fails closed — it degrades to
+ * a plain transfer.
+ */
+internal class TonSwapGate(private val toUserFriendly: (String) -> String?) {
+    val ptonWallets: Set<String> = TonKnownRouters.stonfiV2PtonWallets.normalizeWith(toUserFriendly)
+    private val routers: Set<String> = TonKnownRouters.stonfiV2Routers.normalizeWith(toUserFriendly)
+    private val nativeVaults: Set<String> =
+        TonKnownRouters.dedustNativeVaults.normalizeWith(toUserFriendly)
+
+    /** True when [swap]'s gated destination is allow-listed and may be presented as a swap. */
+    fun isTrusted(swap: TonMessageBodyIntent.Swap, messageTo: String?): Boolean =
+        when {
+            swap.provider == TonMessageBodyIntent.Provider.STONFI &&
+                swap.offerAsset == TonMessageBodyIntent.OfferAsset.JETTON ->
+                swap.inputRouterAddress.isAllowed(routers, toUserFriendly)
+            swap.provider == TonMessageBodyIntent.Provider.STONFI ->
+                messageTo.isAllowed(ptonWallets, toUserFriendly)
+            else -> messageTo.isAllowed(nativeVaults, toUserFriendly)
+        }
+}
+
+/**
  * Resolve a "You're swapping X → Y" hero from a TonConnect request.
  *
  * The swap is classified purely from the signed bytes by [TonMessageBodyDecoder]; this layer
@@ -35,25 +64,14 @@ internal suspend fun resolveTonSwapHero(
     resolveCoinByWallet: suspend (jettonWalletAddress: String) -> TonHeroCoin?,
     resolveDedustOutputCoin: suspend (poolAddress: String) -> TonHeroCoin?,
 ): HeroContent.Swap? {
-    val routers = TonKnownRouters.stonfiV2Routers.normalizeWith(toUserFriendly)
-    val ptonWallets = TonKnownRouters.stonfiV2PtonWallets.normalizeWith(toUserFriendly)
-    val nativeVaults = TonKnownRouters.dedustNativeVaults.normalizeWith(toUserFriendly)
+    val gate = TonSwapGate(toUserFriendly)
 
     for (message in messages) {
         val swap =
             TonMessageBodyDecoder.decode(message.payload) as? TonMessageBodyIntent.Swap ?: continue
 
         // Gate: bind the opcode-based classification to a known contract.
-        val gated =
-            when {
-                swap.provider == TonMessageBodyIntent.Provider.STONFI &&
-                    swap.offerAsset == TonMessageBodyIntent.OfferAsset.JETTON ->
-                    swap.inputRouterAddress.isAllowed(routers, toUserFriendly)
-                swap.provider == TonMessageBodyIntent.Provider.STONFI ->
-                    message.to.isAllowed(ptonWallets, toUserFriendly)
-                else -> message.to.isAllowed(nativeVaults, toUserFriendly)
-            }
-        if (!gated) continue
+        if (!gate.isTrusted(swap, message.to)) continue
 
         val from =
             when (swap.offerAsset) {
@@ -70,7 +88,7 @@ internal suspend fun resolveTonSwapHero(
                 TonMessageBodyIntent.Provider.DEDUST -> resolveDedustOutputCoin(target) ?: continue
                 TonMessageBodyIntent.Provider.STONFI -> {
                     val targetFriendly = toUserFriendly(target)
-                    if (targetFriendly != null && targetFriendly in ptonWallets) nativeTon
+                    if (targetFriendly != null && targetFriendly in gate.ptonWallets) nativeTon
                     else resolveCoinByWallet(target) ?: continue
                 }
             }

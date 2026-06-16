@@ -31,9 +31,28 @@ internal fun mapTonMessages(
     fromAddress: String?,
     formatAddress: (String) -> String,
 ): List<TonMessageUiModel> {
+    val rawDecoded =
+        signTon?.tonMessages?.filterNotNull().orEmpty().map { message ->
+            message to TonMessageBodyDecoder.decode(message.payload)
+        }
+    // Apply the same anti-spoofing gate as the swap hero (TonSwapGate): a body that decodes as a
+    // swap but targets an unknown contract is demoted to a plain transfer, so an untrusted contract
+    // can neither earn a trusted Swap label nor have its self-addressed gas sidecar hidden by
+    // `hasSwap`. The gate is built only when a swap is present so plain-transfer requests never pay
+    // the allow-list normalization (and never reformat their outer destination).
+    val gate =
+        if (rawDecoded.any { it.second is TonMessageBodyIntent.Swap }) TonSwapGate(formatAddress)
+        else null
     val decoded =
-        signTon?.tonMessages?.filterNotNull().orEmpty().map {
-            it to TonMessageBodyDecoder.decode(it.payload)
+        rawDecoded.map { (message, intent) ->
+            val gatedIntent =
+                if (
+                    intent is TonMessageBodyIntent.Swap &&
+                        gate?.isTrusted(intent, message.to) != true
+                )
+                    null
+                else intent
+            message to gatedIntent
         }
     val hasSwap = decoded.any { it.second is TonMessageBodyIntent.Swap }
     return decoded.mapNotNull { (message, intent) ->

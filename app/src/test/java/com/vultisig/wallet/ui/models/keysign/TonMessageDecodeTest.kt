@@ -233,7 +233,9 @@ internal class TonMessageDecodeTest {
     }
 
     @Test
-    fun `hides a small self-addressed gas sidecar when a swap is present`() {
+    fun `hides a small self-addressed gas sidecar when a trusted swap is present`() {
+        // The normalizer canonicalizes the swap's router to its allow-listed friendly form, so the
+        // swap is trusted and presented as a Swap; the self-addressed sidecar is then hidden.
         val rows =
             mapTonMessages(
                 SignTon(
@@ -245,10 +247,32 @@ internal class TonMessageDecodeTest {
                         )
                 ),
                 fromAddress = "EQself",
-                formatAddress = { it },
+                formatAddress = { if (it == stonfiRouterRaw) stonfiRouterFriendly else it },
             )
         assertEquals(1, rows.size)
         assertEquals(TonMessageOperation.Swap, rows.single().operation)
+    }
+
+    @Test
+    fun `demotes an ungated swap to a plain transfer and keeps its gas sidecar visible`() {
+        // Identity normalizer: the swap's router stays raw workchain:hex, which is not in the
+        // friendly-form allow-list, so the swap is untrusted. It must NOT earn a Swap label, and
+        // because no trusted swap is present its self-addressed sidecar is shown, not hidden.
+        val rows =
+            mapTonMessages(
+                SignTon(
+                    tonMessages =
+                        listOf(
+                            TonMessage(to = "EQself", amount = "5000000"),
+                            TonMessage(to = "EQwallet", amount = "100000000", payload = stonfiSwap),
+                        )
+                ),
+                fromAddress = "EQself",
+                formatAddress = { it },
+            )
+        assertEquals(2, rows.size)
+        assertEquals(TonMessageOperation.Transfer, rows[0].operation)
+        assertEquals(TonMessageOperation.Transfer, rows[1].operation)
     }
 
     @Test
