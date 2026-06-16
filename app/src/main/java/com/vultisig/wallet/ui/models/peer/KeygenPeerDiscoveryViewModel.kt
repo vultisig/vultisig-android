@@ -157,11 +157,10 @@ constructor(
     private val vaultName: String = args?.vaultName ?: ""
 
     /**
-     * Immutable per-session config. Seeded with the same construction-time defaults the old `var`
-     * soup used, then replaced atomically by [loadData] once chain code, lib type, signers and the
-     * `tss-batch` flag are resolved. Holding it as one object (instead of eight separately-mutated
-     * vars) means the QR payload, the FastVault dispatch and the navigation arg always observe a
-     * consistent snapshot rather than a half-updated mix.
+     * Per-session config. Seeded with construction-time defaults, then replaced atomically by
+     * [loadData] once chain code, lib type, signers and the `tss-batch` flag are resolved. Holding
+     * it as one object means the QR payload, the FastVault dispatch and the navigation arg always
+     * observe a consistent snapshot rather than a half-updated mix.
      */
     private var session: KeygenSession =
         KeygenSession(
