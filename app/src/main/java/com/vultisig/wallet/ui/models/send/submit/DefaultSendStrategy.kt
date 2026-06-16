@@ -2,6 +2,7 @@ package com.vultisig.wallet.ui.models.send.submit
 
 import androidx.compose.foundation.text.input.TextFieldState
 import com.vultisig.wallet.R
+import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.blockchain.tron.TRON_STAKING_MEMO_REGEX
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Chain
@@ -242,6 +243,26 @@ internal class DefaultSendStrategy(
                                 tokenAmountInt,
                                 chain,
                                 planBtc.value,
+                            )
+                        }
+                    } else if (
+                        chain == Chain.TerraClassic &&
+                            TerraClassicTax.isBankDenom(
+                                selectedToken.contractAddress,
+                                selectedToken.isNativeToken,
+                            )
+                    ) {
+                        // Terra Classic bank denoms (USTC/uusd) pay gas + burn tax in their OWN
+                        // denom, not in native LUNC, so gate on the token's own balance covering
+                        // amount + fee. Requiring a LUNC balance here (as the generic non-native
+                        // branch below does) would wrongly block a USTC send from a vault with ~0
+                        // LUNC, even though the chain deducts the fee from the USTC being sent.
+                        if (selectedTokenValue.value < tokenAmountInt + gasFee.value) {
+                            throw InvalidTransactionDataException(
+                                UiText.FormattedText(
+                                    R.string.send_error_insufficient_native_balance_with_fees,
+                                    listOf(selectedToken.ticker),
+                                )
                             )
                         }
                     } else {

@@ -2,6 +2,7 @@
 
 package com.vultisig.wallet.ui.models.deposit
 
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.R
 import com.vultisig.wallet.data.api.MayaChainApi
@@ -33,6 +34,7 @@ import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
+import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -44,8 +46,11 @@ import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestCoroutineScheduler
@@ -92,6 +97,31 @@ internal class DepositFormViewModelTest {
     private val gasFeeToEstimate: GasFeeToEstimatedFeeUseCaseImpl = mockk(relaxed = true)
     private val requestAddressBookEntry: RequestAddressBookEntryUseCase = mockk(relaxed = true)
     private val getThorChainLpPositionUseCase: GetThorChainLpPositionUseCase = mockk(relaxed = true)
+    private val liquidityDataLoaderFactory: LiquidityDataLoader.Factory =
+        object : LiquidityDataLoader.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                state: MutableStateFlow<DepositFormUiModel>,
+                address: StateFlow<Address?>,
+                assetsFieldState: TextFieldState,
+                lpUnitsFieldState: TextFieldState,
+                vaultId: () -> String?,
+                lpPoolId: () -> String?,
+                resolvePairedAddress: suspend (Chain, String, String) -> String?,
+            ): LiquidityDataLoader =
+                LiquidityDataLoader(
+                    mayachainBondRepository = mayachainBondRepository,
+                    getThorChainLpPositionUseCase = getThorChainLpPositionUseCase,
+                    scope = scope,
+                    state = state,
+                    address = address,
+                    assetsFieldState = assetsFieldState,
+                    lpUnitsFieldState = lpUnitsFieldState,
+                    vaultId = vaultId,
+                    lpPoolId = lpPoolId,
+                    resolvePairedAddress = resolvePairedAddress,
+                )
+        }
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
     private val fieldValidator: DepositFieldValidator =
         DepositFieldValidatorImpl(chainAccountAddressRepository)
@@ -138,7 +168,7 @@ internal class DepositFormViewModelTest {
             tokenRepository = tokenRepository,
             gasFeeToEstimate = gasFeeToEstimate,
             requestAddressBookEntry = requestAddressBookEntry,
-            getThorChainLpPositionUseCase = getThorChainLpPositionUseCase,
+            liquidityDataLoaderFactory = liquidityDataLoaderFactory,
             thorChainLpPreflight = thorChainLpPreflight,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,

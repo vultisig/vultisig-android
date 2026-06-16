@@ -271,29 +271,6 @@ constructor(
         snackbarFlow.showMessage(StringResource(messageRes).asString(context), type)
     }
 
-    /** Navigates to the Send screen to deposit USDC into the Circle account. */
-    fun onDepositAccount() {
-        viewModelScope.launch {
-            try {
-                val tokenId = Coins.Ethereum.USDC.id
-                if (!mscaAddress.isNullOrBlank()) {
-                    navigator.route(
-                        Route.Send(
-                            vaultId = vaultId,
-                            chainId = Chain.Ethereum.id,
-                            tokenId = tokenId,
-                            address = mscaAddress,
-                            type = DeFiNavActions.DEPOSIT_USDC_CIRCLE.type,
-                        )
-                    )
-                }
-            } catch (t: Throwable) {
-                if (t is kotlinx.coroutines.CancellationException) throw t
-                Timber.e(t)
-            }
-        }
-    }
-
     /** Navigates to the Send screen to withdraw USDC from the Circle account. */
     fun onWithdrawAccount() {
         viewModelScope.launch {

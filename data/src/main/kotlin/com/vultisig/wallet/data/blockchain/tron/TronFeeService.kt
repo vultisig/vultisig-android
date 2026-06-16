@@ -18,6 +18,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import wallet.core.jni.Base58
 
@@ -66,7 +68,8 @@ import wallet.core.jni.Base58
  */
 class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeService {
 
-    private var chainParameters: TronChainParametersJson? = null
+    private val chainParametersMutex = Mutex()
+    @Volatile private var chainParameters: TronChainParametersJson? = null
 
     override suspend fun calculateFees(transaction: BlockchainTransaction): TronFees =
         coroutineScope {
@@ -310,12 +313,14 @@ class TronFeeService @Inject constructor(private val tronApi: TronApi) : FeeServ
     }
 
     private suspend fun getCacheTronChainParameters(): TronChainParametersJson {
-        return if (chainParameters == null) {
-            val params = tronApi.getChainParameters()
-            chainParameters = params
-            params
-        } else {
-            chainParameters!!
+        chainParameters?.let {
+            return it
+        }
+        return chainParametersMutex.withLock {
+            chainParameters?.let {
+                return it
+            }
+            tronApi.getChainParameters().also { chainParameters = it }
         }
     }
 

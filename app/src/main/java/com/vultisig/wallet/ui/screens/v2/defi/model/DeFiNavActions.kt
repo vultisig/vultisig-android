@@ -18,7 +18,6 @@ internal enum class DeFiNavActions(val type: String) {
     REDEEM_YTCY("redeem_ytcy"),
     STAKE_STCY("stake_stcy"),
     UNSTAKE_STCY("unstake_stcy"),
-    DEPOSIT_USDC_CIRCLE("deposit_usdc_circle"),
     WITHDRAW_USDC_CIRCLE("withdraw_usdc_circle"),
     STAKE_CACAO("stake_cacao"),
     UNSTAKE_CACAO("unstake_cacao"),
@@ -63,7 +62,6 @@ internal fun parseDepositType(type: String?): DeFiNavActions? {
         "stakestcy" -> DeFiNavActions.STAKE_STCY
         "unstakestcy",
         "unstake_stcy" -> DeFiNavActions.UNSTAKE_STCY
-        "deposit_usdc_circle" -> DeFiNavActions.DEPOSIT_USDC_CIRCLE
         "withdraw_usdc_circle" -> DeFiNavActions.WITHDRAW_USDC_CIRCLE
         "stakecacao",
         "stake_cacao" -> DeFiNavActions.STAKE_CACAO

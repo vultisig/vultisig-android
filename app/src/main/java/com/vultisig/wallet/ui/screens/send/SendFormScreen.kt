@@ -213,7 +213,6 @@ private fun SendFormScreen(
                 DeFiNavActions.BOND -> stringResource(R.string.bond_screen_title)
                 DeFiNavActions.UNBOND -> stringResource(R.string.unbond_screen_title)
                 DeFiNavActions.WITHDRAW_RUJI -> stringResource(R.string.rewards_screen_title)
-                DeFiNavActions.DEPOSIT_USDC_CIRCLE -> stringResource(R.string.usdc_deposit_title)
                 DeFiNavActions.WITHDRAW_USDC_CIRCLE -> stringResource(R.string.withdraw)
                 DeFiNavActions.FREEZE_TRX -> stringResource(R.string.tron_freeze_screen_title)
                 DeFiNavActions.UNFREEZE_TRX -> stringResource(R.string.tron_unfreeze_screen_title)
@@ -250,9 +249,7 @@ private fun SendFormScreen(
                 },
                 modifier = Modifier.fillMaxSize(),
             ) {
-                val isCircleMode =
-                    state.defiType == DeFiNavActions.DEPOSIT_USDC_CIRCLE ||
-                        state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
+                val isCircleMode = state.defiType == DeFiNavActions.WITHDRAW_USDC_CIRCLE
                 Column(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier =

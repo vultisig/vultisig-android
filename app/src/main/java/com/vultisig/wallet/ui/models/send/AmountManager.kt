@@ -81,6 +81,13 @@ internal class AmountManager(
         if (decimal == null || decimal <= BigDecimal.ZERO) {
             return UiText.StringResource(R.string.send_error_no_amount)
         }
+        val tokenDecimals = selectedToken.value?.decimal
+        if (tokenDecimals != null && decimal.hasExcessDecimals(tokenDecimals)) {
+            return UiText.FormattedText(
+                R.string.send_error_too_many_decimals,
+                listOf(tokenDecimals),
+            )
+        }
         return null
     }
 

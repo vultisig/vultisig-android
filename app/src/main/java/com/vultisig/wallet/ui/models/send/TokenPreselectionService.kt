@@ -149,7 +149,6 @@ internal class TokenPreselectionService(
             DeFiNavActions.WITHDRAW_RUJI -> RUJI_REWARDS_COIN
             DeFiNavActions.REDEEM_YRUNE -> Coins.ThorChain.yRUNE
             DeFiNavActions.REDEEM_YTCY -> Coins.ThorChain.yTCY
-            DeFiNavActions.DEPOSIT_USDC_CIRCLE -> Coins.Ethereum.USDC
             DeFiNavActions.WITHDRAW_USDC_CIRCLE -> Coins.Ethereum.USDC
             DeFiNavActions.STAKE_STCY -> Coins.ThorChain.TCY
             DeFiNavActions.UNSTAKE_STCY -> Coins.ThorChain.sTCY

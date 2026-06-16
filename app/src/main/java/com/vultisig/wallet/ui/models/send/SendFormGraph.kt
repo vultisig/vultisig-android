@@ -10,6 +10,7 @@ import com.vultisig.wallet.data.blockchain.tron.TronFrozenBalanceState
 import com.vultisig.wallet.data.blockchain.tron.TronResourceType
 import com.vultisig.wallet.data.models.Account
 import com.vultisig.wallet.data.models.Address
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.Coin
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
@@ -452,7 +453,9 @@ internal class SendFormGraph(
                 if (switching) return@combine null // <-- SKIP during transitions
 
                 val address = token.address
-                val hasMemo = token.isNativeToken || token.chain.standard == TokenStandard.COSMOS
+                val hasMemo =
+                    (token.isNativeToken || token.chain.standard == TokenStandard.COSMOS) &&
+                        token.chain != Chain.Sui
 
                 val uiModel =
                     accountToTokenBalanceUiModelMapper(

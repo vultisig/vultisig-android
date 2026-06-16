@@ -2,6 +2,7 @@ package com.vultisig.wallet.data.blockchain
 
 import com.vultisig.wallet.data.api.BittensorApi
 import com.vultisig.wallet.data.api.BlockChairApi
+import com.vultisig.wallet.data.api.CosmosApiFactory
 import com.vultisig.wallet.data.api.EvmApiFactory
 import com.vultisig.wallet.data.api.PolkadotApi
 import com.vultisig.wallet.data.api.RippleApi
@@ -83,7 +84,11 @@ object FeeServiceProvidersModule {
     fun provideThorchainService(thorChainApi: ThorChainApi): FeeService =
         ThorchainFeeService(thorChainApi)
 
-    @Provides @Singleton @CosmosFee fun provideCosmosService(): FeeService = CosmosFeeService()
+    @Provides
+    @Singleton
+    @CosmosFee
+    fun provideCosmosService(cosmosApiFactory: CosmosApiFactory): FeeService =
+        CosmosFeeService(cosmosApiFactory)
 
     @Provides
     @Singleton

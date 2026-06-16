@@ -108,6 +108,31 @@ internal class AccountValidatorTest {
     }
 
     @Test
+    fun `validate throws too_many_decimals when amount exceeds token precision`() = runTest {
+        account = usdcAccount() // 6 decimals
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1.1234567")
+        val ex = assertFailsWith<InvalidTransactionDataException> { build().validate() }
+        assertEquals(
+            R.string.send_error_too_many_decimals,
+            (ex.text as? UiText.FormattedText)?.resId,
+        )
+    }
+
+    @Test
+    fun `validate accepts amount at exact token precision`() = runTest {
+        account = usdcAccount() // 6 decimals
+        tokenAmountFieldState.setTextAndPlaceCursorAtEnd("1.123456")
+        addressFieldState.setTextAndPlaceCursorAtEnd("0xabc123")
+        gasFee.value = TokenValue(value = BigInteger.valueOf(21000), token = usdcCoin())
+        coEvery { addressParserRepository.resolveName("0xabc123", Chain.Ethereum) } returns
+            "0xresolved"
+
+        val result = build().validate()
+
+        assertEquals("0xresolved", result.dstAddress)
+    }
+
+    @Test
     fun `validate wraps resolveName failure in failed_to_resolve_address`() = runTest {
         account = ethAccount()
         tokenAmountFieldState.setTextAndPlaceCursorAtEnd("0.5")
@@ -157,6 +182,27 @@ internal class AccountValidatorTest {
             priceProviderID = "ethereum",
             contractAddress = "",
             isNativeToken = true,
+        )
+
+    private fun usdcAccount(): Account =
+        Account(
+            token = usdcCoin(),
+            tokenValue = TokenValue(BigInteger.valueOf(1_000_000), usdcCoin()),
+            fiatValue = null,
+            price = null,
+        )
+
+    private fun usdcCoin(): Coin =
+        Coin(
+            chain = Chain.Ethereum,
+            ticker = "USDC",
+            logo = "",
+            address = "0xself",
+            decimal = 6,
+            hexPublicKey = "",
+            priceProviderID = "usd-coin",
+            contractAddress = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            isNativeToken = false,
         )
 
     private fun UiText?.stringId(): Int? = (this as? UiText.StringResource)?.resId
