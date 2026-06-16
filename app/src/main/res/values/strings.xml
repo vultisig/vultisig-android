@@ -83,8 +83,6 @@
     <string name="tron_frozen_balances_error">Unable to load frozen balances. Pull to retry.</string>
     <string name="circle_defi_description">Deposit your USDC into a Circle account and earn yield. Securely within your Vultisig vault.</string>
     <string name="circle_defi_control_info">Funds remain fully under your vault\'s control. Circle accounts are self-custodial and yield is generated through secure off-chain treasuries.</string>
-    <string name="usdc_deposit_title">USDC Deposit</string>
-    <string name="deposit_usdc_button">Deposit USDC</string>
     <string name="open_account_button">Open Account</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">Token logo</string>
@@ -179,6 +177,7 @@
     <string name="send_error_no_gas_fee">No gas fees</string>
     <string name="send_error_no_address">Address is invalid</string>
     <string name="send_error_no_amount">Amount must be a positive number</string>
+    <string name="send_error_too_many_decimals">Amount can have at most %1$d decimal places</string>
     <string name="send_error_invalid_operator_fee">Operator fee must be a valid number between 0 and 10000 basis points</string>
     <string name="send_error_max_shares">Amount should not exceed balance</string>
     <string name="send_error_insufficient_balance">Insufficient funds</string>
@@ -1047,6 +1046,8 @@
     <string name="transaction_status_notification_title">Transaction Status</string>
     <string name="transaction_status_checking_transaction">Checking transaction…</string>
     <string name="raw_transaction_data">Raw Transaction Data</string>
+    <string name="sui_raw_transaction">Sui Transaction</string>
+    <string name="sui_sender">From</string>
     <string name="solana_raw_transaction">Solana Raw Transaction</string>
     <string name="solana_instructions_summary">Transaction Instructions Summary</string>
     <string name="solana_instruction_number">Instruction %1$d</string>

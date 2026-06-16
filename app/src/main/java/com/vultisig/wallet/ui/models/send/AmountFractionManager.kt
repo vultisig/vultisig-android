@@ -3,9 +3,11 @@ package com.vultisig.wallet.ui.models.send
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import com.vultisig.wallet.data.blockchain.FeeServiceComposite
+import com.vultisig.wallet.data.blockchain.cosmos.TerraClassicTax
 import com.vultisig.wallet.data.blockchain.model.Transfer
 import com.vultisig.wallet.data.blockchain.model.VaultData
 import com.vultisig.wallet.data.models.Account
+import com.vultisig.wallet.data.models.Chain
 import com.vultisig.wallet.data.models.TokenStandard
 import com.vultisig.wallet.data.models.TokenValue
 import com.vultisig.wallet.data.models.Vault
@@ -180,14 +182,22 @@ internal class AmountFractionManager(
         val chain = token.chain
 
         // Skip the fresh-fee round-trip when it cannot change the percentage amount:
-        //   - Non-native tokens pay chain gas in the native coin (see
+        //   - Most non-native tokens pay chain gas in the native coin (see
         //     GetAvailableTokenBalanceUseCase), so the fee never reduces the
         //     selected balance and the cached estimate is already accurate.
         //   - EVM gas is amount-independent once collectGasFees has run, so the
         //     cached fee is reusable.
         // GasFeeOrchestrator still refreshes gasFee in the background when the
         // amount field updates, so the fee display reflects the new amount.
-        if (!token.isNativeToken || (gasFee.value != null && chain.standard == TokenStandard.EVM)) {
+        //
+        // Terra Classic bank denoms (USTC/uusd) are the exception: their fee is paid in their OWN
+        // denom AND includes an amount-proportional burn tax, so the fee genuinely reduces the
+        // selectable balance and must be recomputed against the candidate amount below.
+        val feeReservedInToken =
+            token.isNativeToken ||
+                (chain == Chain.TerraClassic &&
+                    TerraClassicTax.isBankDenom(token.contractAddress, token.isNativeToken))
+        if (!feeReservedInToken || (gasFee.value != null && chain.standard == TokenStandard.EVM)) {
             return amount
         }
 

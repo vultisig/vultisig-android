@@ -28,6 +28,17 @@ object SuiHelper {
     private fun getPreSignedInputData(keysignPayload: KeysignPayload): ByteArray {
         require(keysignPayload.coin.chain == Chain.Sui) { "Coin is not SUI" }
 
+        // dApp-supplied Programmable Transaction Block (Sui Wallet Standard): the base64
+        // `TransactionData` BCS bytes are already complete (coins, gas budget, recipients baked
+        // in), so we sign them verbatim via WalletCore's SignDirect path rather than rebuilding a
+        // Pay / PaySui. WalletCore hashes the bytes under the Sui transaction intent.
+        keysignPayload.signSui?.let { signSui ->
+            return buildSignDirectInputData(
+                signer = keysignPayload.coin.address,
+                unsignedTxMsg = signSui.unsignedTxMsg,
+            )
+        }
+
         val (referenceGasPrice, gasBudget, coins) =
             keysignPayload.blockChainSpecific as? BlockChainSpecific.Sui
                 ?: throw RuntimeException(
@@ -119,6 +130,21 @@ object SuiHelper {
         val tx = preSigningOutput.data.toByteArray().drop(3).toByteArray()
 
         return Base64.encode(tx)
+    }
+
+    /**
+     * Builds the WalletCore `Sui.SigningInput` bytes for a dApp-supplied PTB ([SignSui]). The
+     * `SignDirect` payload carries the base64 `TransactionData` BCS bytes verbatim — no `Pay` /
+     * `PaySui`, gas budget, or reference gas price, since those are already encoded in the bytes.
+     * Pure protobuf assembly (no JNI), so it is unit-testable.
+     */
+    internal fun buildSignDirectInputData(signer: String, unsignedTxMsg: String): ByteArray {
+        require(unsignedTxMsg.isNotEmpty()) { "SignSui unsignedTxMsg is empty" }
+        return Sui.SigningInput.newBuilder()
+            .setSignDirectMessage(Sui.SignDirect.newBuilder().setUnsignedTxMsg(unsignedTxMsg))
+            .setSigner(signer)
+            .build()
+            .toByteArray()
     }
 
     internal fun selectSuiGasCoin(coins: List<SuiCoin>, gasBudget: BigInteger): SuiCoin? =

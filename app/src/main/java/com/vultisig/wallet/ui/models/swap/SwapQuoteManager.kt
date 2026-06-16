@@ -51,7 +51,9 @@ internal data class QuoteFetchResult(
     val providerUiText: UiText,
     val srcFiatValueText: String,
     val estimatedDstTokenValue: String,
+    // Displayed destination fiat: market value clamped to the source fiat (#4878).
     val estimatedDstFiatValue: String,
+    // Unclamped market value (dstAmount × dstMarketPrice) used only for cross-provider ranking.
     val estimatedDstFiat: FiatValue,
     val feeText: String,
     val swapFeeFiat: FiatValue,
@@ -290,8 +292,16 @@ constructor(
 
         val fiatFees = convertTokenValueToFiat(feeCoin, quote.fees, currency)
         val estimatedDstTokenValue = mapTokenValueToDecimalUiString(quote.expectedDstValue)
-        val estimatedDstFiatValue =
-            convertTokenValueToFiat(dstToken, quote.expectedDstValue, currency)
+
+        // `expectedDstValue × dstMarketPrice` values the destination at an independent oracle
+        // (e.g. CoinGecko), which for illiquid tokens diverges from the DEX pool rate the quote
+        // actually executes at — inflating the destination fiat above the source (#4878). Clamp the
+        // *displayed* destination fiat to the source fiat so it reflects the quoted rate (see
+        // [clampDstFiatToSrcFiat]). The unclamped market value is still used for cross-provider
+        // ranking below, where it scales with the destination amount and stays comparable across
+        // providers.
+        val marketDstFiatValue = convertTokenValueToFiat(dstToken, quote.expectedDstValue, currency)
+        val estimatedDstFiatValue = clampDstFiatToSrcFiat(srcFiatValue, marketDstFiatValue)
 
         val rawFees =
             when (quote) {
@@ -350,7 +360,7 @@ constructor(
             srcFiatValueText = srcFiatValueText,
             estimatedDstTokenValue = estimatedDstTokenValue,
             estimatedDstFiatValue = fiatValueToString(estimatedDstFiatValue),
-            estimatedDstFiat = estimatedDstFiatValue,
+            estimatedDstFiat = marketDstFiatValue,
             feeText = resolvedFeeText,
             swapFeeFiat = resolvedSwapFeeFiat,
             outboundFeeText = outboundFeeText,

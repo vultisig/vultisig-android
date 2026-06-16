@@ -83,8 +83,6 @@
     <string name="tron_resource_energy">에너지</string>
     <string name="circle_defi_description">USDC를 Circle 계정에 예치하고 수익을 얻으세요. Vultisig 볼트 내에서 안전하게 관리됩니다.</string>
     <string name="circle_defi_control_info">자금은 완전히 볼트의 통제 하에 있습니다. Circle 계정은 자기 수탁형이며 수익은 안전한 오프체인 트레저리를 통해 생성됩니다.</string>
-    <string name="usdc_deposit_title">USDC 예치</string>
-    <string name="deposit_usdc_button">USDC 예치</string>
     <string name="open_account_button">계정 개설</string>
     <string name="app_name">Vultisig</string>
     <string name="token_logo">토큰 로고</string>
@@ -178,6 +176,7 @@
     <string name="send_error_no_gas_fee">가스 수수료 없음</string>
     <string name="send_error_no_address">주소가 유효하지 않습니다</string>
     <string name="send_error_no_amount">금액은 양수여야 합니다</string>
+    <string name="send_error_too_many_decimals">금액은 소수점 이하 최대 %1$d자리까지 입력할 수 있습니다</string>
     <string name="send_error_invalid_operator_fee">운영자 수수료는 0에서 10000 베이시스 포인트 사이의 유효한 숫자여야 합니다</string>
     <string name="send_error_max_shares">금액이 잔액을 초과할 수 없습니다</string>
     <string name="send_error_insufficient_balance">잔액 부족</string>
@@ -1021,6 +1020,8 @@
     <string name="transaction_status_notification_title">거래 상태</string>
     <string name="transaction_status_checking_transaction">거래 확인 중…</string>
     <string name="raw_transaction_data">원시 거래 데이터</string>
+    <string name="sui_raw_transaction">Sui 거래</string>
+    <string name="sui_sender">보내는 주소</string>
     <string name="solana_raw_transaction">Solana 원시 거래</string>
     <string name="solana_instructions_summary">거래 명령어 요약</string>
     <string name="solana_instruction_number">명령어 %1$d</string>

@@ -55,6 +55,14 @@ interface CosmosApi {
     suspend fun getLatestBlock(): String
 
     suspend fun getTxStatus(txHash: String): CosmosTxStatusJson?
+
+    /**
+     * Terra Classic's live proportional burn-tax rate from the `x/tax` module
+     * (`/terra/tax/v1beta1/params` → `params.burn_tax_rate`, currently 0.5%). Returns the raw
+     * decimal string, or `null` on any failure so the caller can fail closed to a conservative
+     * fallback rather than signing an under-funded tx. Only meaningful for [Chain.TerraClassic].
+     */
+    suspend fun getTerraClassicBurnTaxRate(): String?
 }
 
 interface CosmosApiFactory {
@@ -73,7 +81,7 @@ constructor(
         val defaultApiUrl =
             when (chain) {
                 Chain.GaiaChain -> "https://cosmos-rest.publicnode.com"
-                Chain.Kujira -> "https://kujira-rest.publicnode.com"
+                Chain.Kujira -> "https://kujira-api.polkachu.com"
                 Chain.Dydx -> "https://dydx-rest.publicnode.com"
                 Chain.Osmosis -> "https://osmosis-rest.publicnode.com"
                 Chain.Terra -> "https://terra-lcd.publicnode.com"
@@ -214,5 +222,25 @@ internal class CosmosApiImp(
         val response = httpClient.get("$rpcEndpoint/cosmos/tx/v1beta1/txs/$txHash")
         if (response.status.value == 404) return null
         return response.bodyOrThrow<CosmosTxStatusJson>()
+    }
+
+    override suspend fun getTerraClassicBurnTaxRate(): String? {
+        // The proportional burn tax lives in the x/tax module, not the legacy treasury module
+        // (whose tax_rate is 0). Fail closed (return null) so the caller applies its conservative
+        // fallback rate instead of signing an under-funded tx.
+        return try {
+            httpClient
+                .get("$rpcEndpoint/terra/tax/v1beta1/params")
+                .bodyOrThrow<JsonObject>()["params"]
+                ?.jsonObject
+                ?.get("burn_tax_rate")
+                ?.jsonPrimitive
+                ?.content
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to fetch Terra Classic burn_tax_rate; falling back to default")
+            null
+        }
     }
 }

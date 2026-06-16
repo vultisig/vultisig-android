@@ -170,28 +170,13 @@ internal class JoinKeysignSendGasFeeTest {
             )
 
         val result =
-            computeJoinKeysignSwapNetworkFee(
-                blockChainSpecific = specific,
-                nativeCoin = ethCoin,
-                chain = Chain.Ethereum,
-            )
+            computeJoinKeysignSwapNetworkFee(blockChainSpecific = specific, nativeCoin = ethCoin)
 
         result shouldBe
             TokenValue(
                 value = maxFeePerGasWei * EthereumFeeService.DEFAULT_SWAP_LIMIT,
                 token = ethCoin,
             )
-    }
-
-    /**
-     * defaultEvmSwapGasLimit must return DEFAULT_MANTLE_SWAP_LIMIT for Mantle and
-     * DEFAULT_SWAP_LIMIT for every other EVM chain (Mantle has a much higher per-gas limit, so this
-     * branch is the only thing keeping joiner output aligned with the initiator on Mantle swaps).
-     */
-    @Test
-    fun `defaultEvmSwapGasLimit selects Mantle limit for Mantle and default elsewhere`() {
-        defaultEvmSwapGasLimit(Chain.Mantle) shouldBe EthereumFeeService.DEFAULT_MANTLE_SWAP_LIMIT
-        defaultEvmSwapGasLimit(Chain.Ethereum) shouldBe EthereumFeeService.DEFAULT_SWAP_LIMIT
     }
 
     /** Swap helper: THORChain returns blockChainSpecific.fee. */
@@ -208,11 +193,7 @@ internal class JoinKeysignSendGasFeeTest {
             )
 
         val result =
-            computeJoinKeysignSwapNetworkFee(
-                blockChainSpecific = specific,
-                nativeCoin = runeCoin,
-                chain = Chain.ThorChain,
-            )
+            computeJoinKeysignSwapNetworkFee(blockChainSpecific = specific, nativeCoin = runeCoin)
 
         result shouldBe TokenValue(value = fee, token = runeCoin)
     }
@@ -231,11 +212,7 @@ internal class JoinKeysignSendGasFeeTest {
             )
 
         shouldThrow<IllegalStateException> {
-            computeJoinKeysignSwapNetworkFee(
-                blockChainSpecific = specific,
-                nativeCoin = solCoin,
-                chain = Chain.Solana,
-            )
+            computeJoinKeysignSwapNetworkFee(blockChainSpecific = specific, nativeCoin = solCoin)
         }
     }
 
@@ -301,7 +278,9 @@ internal class JoinKeysignSendGasFeeTest {
     @Test
     fun `dapp fee returns null when signDirect cannot be parsed`() {
         val payload = cosmosPayload(signDirect = signDirect())
-        val parse = ParseCosmosMessageUseCase { error("malformed authInfo") }
+        val parse = ParseCosmosMessageUseCase {
+            throw IllegalArgumentException("malformed authInfo")
+        }
 
         payload.dappSuppliedNativeFee(Chain.ThorChain, parse) shouldBe null
     }

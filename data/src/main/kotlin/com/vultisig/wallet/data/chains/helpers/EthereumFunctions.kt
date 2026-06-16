@@ -52,6 +52,19 @@ object EthereumFunction {
         }
     }
 
+    // ABI-encodes the OP-stack `GasPriceOracle.getL1Fee(bytes)` call where `rlpEncodedUnsignedTx`
+    // is
+    // the RLP-encoded unsigned transaction whose L1 data fee we want priced.
+    fun getL1FeeEncoder(rlpEncodedUnsignedTx: ByteArray): String {
+        try {
+            val encodedFunction =
+                EthereumAbiFunction("getL1Fee").apply { addParamBytes(rlpEncodedUnsignedTx, false) }
+            return EthereumAbi.encode(encodedFunction).toHexString().add0x()
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Failed to encode getL1Fee call: ${e.message}", e)
+        }
+    }
+
     fun balanceErc20Decoder(hexBalance: String): BigInteger {
         val fn = EthereumAbiFunction("balanceOf")
         fn.addParamUInt256(ByteArray(32), true)

@@ -77,6 +77,10 @@ internal data class TransactionDetailsUiModel(
     val signDirect: String? = null,
     val signSolana: String? = null,
     /**
+     * Base64 `TransactionData` BCS bytes of a dApp-supplied Sui PTB (SignSui), for verify display.
+     */
+    val signSui: String? = null,
+    /**
      * Per-message rows for a TonConnect signing request, each decoded from its BOC body into an
      * operation label, real recipient, forward amount, and the raw payload. Empty for non-TON or
      * undecodable requests. Built in [com.vultisig.wallet.ui.models.keysign.mapTonMessages].

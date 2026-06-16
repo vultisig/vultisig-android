@@ -77,7 +77,9 @@ constructor(
                 val baseFeeGwei = convertWeiToGwei(baseFeeWei)
 
                 baseFeeState.setTextAndPlaceCursorAtEnd(baseFeeGwei.toPlainString())
-                priorityFeeState.setTextAndPlaceCursorAtEnd(spec.priorityFeeWei.toString())
+                priorityFeeState.setTextAndPlaceCursorAtEnd(
+                    convertWeiToGwei(spec.priorityFeeWei).toPlainString()
+                )
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
                 Timber.e(e)
@@ -104,9 +106,12 @@ constructor(
                 val baseFeeWei =
                     convertGweiToWei(baseFeeState.text.toString().toBigDecimalOrZero())
                         .toBigInteger()
+                val priorityFeeWei =
+                    convertGweiToWei(priorityFeeState.text.toString().toBigDecimalOrZero())
+                        .toBigInteger()
                 GasSettings.Eth(
                     baseFee = baseFeeWei,
-                    priorityFee = priorityFeeState.text.toString().toBigInteger(),
+                    priorityFee = priorityFeeWei,
                     gasLimit = gasLimitState.text.toString().toBigInteger(),
                 )
             }

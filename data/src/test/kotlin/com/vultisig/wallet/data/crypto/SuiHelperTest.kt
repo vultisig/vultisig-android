@@ -195,6 +195,32 @@ class SuiHelperTest {
         }
     }
 
+    @Test
+    fun `buildSignDirectInputData sets SignDirect payload with the verbatim PTB and signer`() {
+        val signer = "0x9a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0123456789abcdef"
+        val ptb = "AAACAAgA4fUFAAAAAA==" // base64 TransactionData BCS, opaque to the builder
+
+        val input = Sui.SigningInput.parseFrom(SuiHelper.buildSignDirectInputData(signer, ptb))
+
+        // SignDirect path — must NOT fall into Pay / PaySui (those rebuild from RPC coins).
+        assertEquals(
+            Sui.SigningInput.TransactionPayloadCase.SIGN_DIRECT_MESSAGE,
+            input.transactionPayloadCase,
+        )
+        assertEquals(ptb, input.signDirectMessage.unsignedTxMsg)
+        assertEquals(signer, input.signer)
+        // No gas budget / reference gas price — they are baked into the signed bytes.
+        assertEquals(0L, input.gasBudget)
+        assertEquals(0L, input.referenceGasPrice)
+    }
+
+    @Test
+    fun `buildSignDirectInputData rejects an empty PTB`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            SuiHelper.buildSignDirectInputData(signer = "0xabc", unsignedTxMsg = "")
+        }
+    }
+
     private fun objectRef(
         id: String,
         version: Long = 1,
