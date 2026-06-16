@@ -143,7 +143,7 @@ constructor(
             addressBookRepository.getEntry(
                 chainId = addressBookEntryChainId,
                 address = addressBookEntryAddress,
-            )
+            ) ?: return
         state.update {
             it.copy(
                 titleRes = R.string.edit_address_title,

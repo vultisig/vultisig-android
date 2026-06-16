@@ -340,12 +340,9 @@ constructor(
                         }
                     }
                     ?.name
-            val dstInAddressBook =
-                dstVaultName == null && addressBookRepository.entryExists(chain.id, tx.dstAddress)
             val dstAddressBookTitle =
-                if (dstInAddressBook) {
-                    runCatching { addressBookRepository.getEntry(chain.id, tx.dstAddress).title }
-                        .getOrNull()
+                if (dstVaultName == null) {
+                    addressBookRepository.getEntry(chain.id, tx.dstAddress)?.title
                 } else null
 
             val memo = tx.memo
