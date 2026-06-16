@@ -12,20 +12,65 @@ import vultisig.keysign.v1.TonMessage
 
 private val NANOTON_DIVISOR: BigInteger = BigInteger.TEN.pow(9)
 
+// Self-addressed transfers up to this value (0.01 TON) accompanying a swap are gas sidecars and are
+// hidden from the per-message list when a swap is present.
+private val SWAP_SIDECAR_MAX_NANOTON: BigInteger = BigInteger.valueOf(10_000_000)
+
 /**
  * Decode each TonConnect message into a [TonMessageUiModel] for the keysign verify screen. Bodies
  * that don't decode fall back to a plain transfer view. Decoded recipient addresses (raw
  * `workchain:hex`) are converted to user-friendly form via [formatAddress]; the outer destination
  * of a plain transfer is already user-friendly and is shown as-is.
+ *
+ * When the request contains a swap, small self-addressed transfers (gas sidecars) are dropped so
+ * the list mirrors the swap hero instead of repeating its gas plumbing. [fromAddress] is the
+ * signer's TON address used to identify those sidecars.
  */
 internal fun mapTonMessages(
     signTon: SignTon?,
+    fromAddress: String?,
     formatAddress: (String) -> String,
-): List<TonMessageUiModel> =
-    signTon?.tonMessages?.filterNotNull().orEmpty().map { message ->
+): List<TonMessageUiModel> {
+    val rawDecoded =
+        signTon?.tonMessages?.filterNotNull().orEmpty().map { message ->
+            message to TonMessageBodyDecoder.decode(message.payload)
+        }
+    // Apply the same anti-spoofing gate as the swap hero (TonSwapGate): a body that decodes as a
+    // swap but targets an unknown contract is demoted to a plain transfer, so an untrusted contract
+    // can neither earn a trusted Swap label nor have its self-addressed gas sidecar hidden by
+    // `hasSwap`. The gate is built only when a swap is present so plain-transfer requests never pay
+    // the allow-list normalization (and never reformat their outer destination).
+    val gate =
+        if (rawDecoded.any { it.second is TonMessageBodyIntent.Swap }) TonSwapGate(formatAddress)
+        else null
+    val decoded =
+        rawDecoded.map { (message, intent) ->
+            val gatedIntent =
+                if (
+                    intent is TonMessageBodyIntent.Swap &&
+                        gate?.isTrusted(intent, message.to) != true
+                )
+                    null
+                else intent
+            message to gatedIntent
+        }
+    val hasSwap = decoded.any { it.second is TonMessageBodyIntent.Swap }
+    return decoded.mapNotNull { (message, intent) ->
+        if (hasSwap && isSwapGasSidecar(message, intent, fromAddress, formatAddress)) {
+            return@mapNotNull null
+        }
         val rawPayload = message.payload?.takeIf { it.isNotEmpty() }
         val hasStateInit = !message.stateInit.isNullOrEmpty()
-        when (val intent = TonMessageBodyDecoder.decode(message.payload)) {
+        when (intent) {
+            is TonMessageBodyIntent.Swap ->
+                TonMessageUiModel(
+                    operation = TonMessageOperation.Swap,
+                    recipient = message.to.takeIf { it.isNotEmpty() }?.let(formatAddress),
+                    amount = null,
+                    rawPayload = rawPayload,
+                    hasStateInit = hasStateInit,
+                )
+
             is TonMessageBodyIntent.JettonTransfer ->
                 TonMessageUiModel(
                     operation = TonMessageOperation.JettonTransfer,
@@ -67,6 +112,24 @@ internal fun mapTonMessages(
                 )
         }
     }
+}
+
+/**
+ * A self-addressed transfer of ≤ 0.01 TON that carries no decoded operation is a swap's gas
+ * sidecar: dApps top up the signer's own wallet to fund the swap message. Hidden from the
+ * per-message list when a swap is present so the breakdown isn't cluttered with gas plumbing.
+ */
+private fun isSwapGasSidecar(
+    message: TonMessage,
+    intent: TonMessageBodyIntent?,
+    fromAddress: String?,
+    formatAddress: (String) -> String,
+): Boolean {
+    if (intent != null || fromAddress == null || message.to.isEmpty()) return false
+    if (formatAddress(message.to) != formatAddress(fromAddress)) return false
+    val amount = message.amount.toBigIntegerOrNull() ?: return false
+    return amount.signum() >= 0 && amount <= SWAP_SIDECAR_MAX_NANOTON
+}
 
 /**
  * Resolve the headline jetton amount for the keysign hero. Scans [messages] for the first jetton

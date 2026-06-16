@@ -37,7 +37,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -71,6 +70,7 @@ internal class KeygenPeerDiscoveryViewModelTest {
     private lateinit var protoBuf: ProtoBuf
     private lateinit var sessionApi: SessionApi
     private lateinit var networkUtils: NetworkUtils
+    private lateinit var mediatorServiceController: MediatorServiceController
 
     @BeforeEach
     fun setUp() {
@@ -95,6 +95,7 @@ internal class KeygenPeerDiscoveryViewModelTest {
         protoBuf = ProtoBuf
         sessionApi = mockk(relaxed = true)
         networkUtils = mockk(relaxed = true)
+        mediatorServiceController = mockk(relaxed = true)
 
         mockkStatic("androidx.navigation.SavedStateHandleKt")
         mockkObject(Utils)
@@ -149,29 +150,19 @@ internal class KeygenPeerDiscoveryViewModelTest {
             protoBuf = protoBuf,
             sessionApi = sessionApi,
             networkUtils = networkUtils,
+            mediatorServiceController = mediatorServiceController,
         )
 
     /**
-     * Simulates the auto-selection logic from
-     * [KeygenPeerDiscoveryViewModel.startParticipantDiscovery]. This is the exact same algorithm
-     * used in the ViewModel when new devices are discovered.
+     * Drives the real auto-selection logic from
+     * [KeygenPeerDiscoveryViewModel.applyDiscoveredDevices] — the same code the discovery flow runs
+     * when new devices arrive — instead of re-implementing it here.
      */
     private fun simulateAutoDiscovery(
         vm: KeygenPeerDiscoveryViewModel,
         discoveredDevices: List<String>,
     ) {
-        val currentState = vm.state.value
-        val existingDevices = currentState.devices.toSet()
-        val newDevices = discoveredDevices - existingDevices
-
-        val maxOtherDevices = currentState.minimumDevices - 1
-        val remainingSlots = maxOtherDevices - currentState.selectedDevices.size
-        val devicesToAutoSelect = newDevices.take(remainingSlots.coerceAtLeast(0))
-        val selectedDevices = currentState.selectedDevices.toSet() + devicesToAutoSelect
-
-        vm.state.update {
-            it.copy(devices = discoveredDevices, selectedDevices = selectedDevices.toList())
-        }
+        vm.applyDiscoveredDevices(discoveredDevices)
     }
 
     // --- selectDevice tests ---

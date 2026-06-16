@@ -1,5 +1,6 @@
 package com.vultisig.wallet.data.api.chains.ton
 
+import com.vultisig.wallet.data.crypto.ton.TonBocParser
 import com.vultisig.wallet.data.utils.bodyOrThrow
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
@@ -9,6 +10,9 @@ import io.ktor.client.request.setBody
 import java.math.BigInteger
 import java.util.Base64
 import javax.inject.Inject
+
+/** Display metadata for a jetton, resolved from its master contract. */
+data class TonJettonMetadata(val ticker: String, val decimals: Int, val logo: String?)
 
 interface TonApi {
 
@@ -30,6 +34,21 @@ interface TonApi {
      * vault token.
      */
     suspend fun getJettonMasterAddress(jettonWalletAddress: String): String?
+
+    /**
+     * Resolve a jetton master's display metadata (ticker, decimals, logo) for rendering a swap's
+     * output token, which the user does not hold and is not in `vault.coins`. Returns `null` when
+     * the master is unknown to the indexer or carries no usable symbol.
+     */
+    suspend fun getJettonMetadata(masterAddress: String): TonJettonMetadata?
+
+    /**
+     * Resolve a DeDust pool's output token. A DeDust swap addresses the **pool**, not the output
+     * jetton wallet, so the output asset is read from the pool's `get_assets` (the non-native
+     * side). Returns the jetton master in raw `workchain:hex` form, or `null` for a TON-out pool /
+     * on failure.
+     */
+    suspend fun getDedustPoolOutputMaster(poolAddress: String): String?
 
     suspend fun estimateFee(address: String, serializedBoc: String): BigInteger
 
@@ -105,6 +124,61 @@ internal class TonApiImpl @Inject constructor(private val http: HttpClient) : To
             }
             .bodyOrThrow<JettonWalletsJson>()
             .getMasterAddress()
+
+    override suspend fun getJettonMetadata(masterAddress: String): TonJettonMetadata? {
+        val content =
+            http
+                .get("$BASE_URL/v3/jetton/masters") {
+                    parameter("address", masterAddress)
+                    parameter("limit", 1)
+                }
+                .bodyOrThrow<JettonMastersJson>()
+                .jettonMasters
+                .firstOrNull()
+                ?.jettonContent ?: return null
+        val ticker = content.symbol?.takeIf { it.isNotBlank() } ?: return null
+        // toncenter returns decimals as a string; default to 9 (TON's native scale) when absent.
+        return TonJettonMetadata(
+            ticker = ticker,
+            decimals = content.decimals?.trim()?.toIntOrNull() ?: 9,
+            logo = content.image?.takeIf { it.isNotBlank() },
+        )
+    }
+
+    override suspend fun getDedustPoolOutputMaster(poolAddress: String): String? {
+        val response =
+            http
+                .post("$BASE_URL/v3/runGetMethod") {
+                    setBody(RunGetMethodRequest(address = poolAddress, method = "get_assets"))
+                }
+                .bodyOrThrow<RunGetMethodResponse>()
+        if (response.exitCode != 0) return null
+        // get_assets returns the pool's two Asset cells; the non-native one is the output jetton.
+        return response.stack
+            .asSequence()
+            .filter { it.type == "cell" }
+            .mapNotNull { it.value?.let(::parseDedustAssetMaster) }
+            .firstOrNull()
+    }
+
+    /**
+     * Parse a DeDust `Asset` cell: `native$0000` or `jetton$0001 workchain:int8 address:uint256`.
+     * Returns the jetton master as raw `workchain:hex`, or `null` for the native asset / a
+     * malformed cell.
+     */
+    @OptIn(ExperimentalStdlibApi::class)
+    private fun parseDedustAssetMaster(cellBase64: String): String? =
+        runCatching {
+                val slice = TonBocParser.parse(cellBase64).beginParse()
+                if (slice.loadUInt(4) != 1L) {
+                    null
+                } else {
+                    val workchain = slice.loadUInt(8).toByte().toInt()
+                    val hash = slice.loadUIntBig(256)
+                    "$workchain:${hash.toString(16).padStart(64, '0')}"
+                }
+            }
+            .getOrNull()
 
     override suspend fun estimateFee(address: String, serializedBoc: String): BigInteger {
         val feeResponse =

@@ -1415,6 +1415,7 @@
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">消息</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_swap">交换</string>
     <string name="ton_op_jetton_transfer">Jetton 转账</string>
     <string name="ton_op_nft_transfer">NFT 转账</string>
     <string name="ton_op_excess_gas_refund">超额燃料退款</string>

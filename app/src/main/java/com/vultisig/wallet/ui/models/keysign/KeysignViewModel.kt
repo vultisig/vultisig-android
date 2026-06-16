@@ -359,10 +359,7 @@ constructor(
 
                 val dstAddressBookTitle =
                     if (dstVaultName == null && isSavedBefore) {
-                        runCatching {
-                                addressBookRepository.getEntry(chain.id, tx.dstAddress).title
-                            }
-                            .getOrNull()
+                        addressBookRepository.getEntry(chain.id, tx.dstAddress)?.title
                     } else null
 
                 _state.update {

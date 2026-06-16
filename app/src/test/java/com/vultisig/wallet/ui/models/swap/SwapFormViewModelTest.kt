@@ -553,8 +553,11 @@ internal class SwapFormViewModelTest {
         }
 
     @Test
-    fun `selectSrcPercentage with 50 percent sets half amount`() =
+    fun `selectSrcPercentage with 50 percent takes half of the full balance without subtracting the fee`() =
         runTest(mainDispatcher) {
+            // 2 ETH native source on its own gas chain. The 50% chip must take half of the FULL
+            // balance (1 ETH), not half of (balance - network fee): the source-chain network fee is
+            // reserved only for MAX, matching iOS and the desktop app.
             val balance = BigInteger("2000000000000000000") // 2 ETH
             val addresses = listOf(ethAddressWithBalance(balance))
             val vm = createViewModelWithAddresses(addresses)
@@ -562,8 +565,7 @@ internal class SwapFormViewModelTest {
 
             vm.selectSrcPercentage(0.5f)
 
-            val amountText = vm.srcAmountState.text.toString()
-            assertTrue(amountText.isNotEmpty(), "Expected non-empty amount")
+            assertEquals("1", vm.srcAmountState.text.toString())
         }
 
     @Test
