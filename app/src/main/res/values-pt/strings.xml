@@ -1087,6 +1087,7 @@
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">Mensagens</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_swap">Trocar</string>
     <string name="ton_op_jetton_transfer">Transferência de Jetton</string>
     <string name="ton_op_nft_transfer">Transferência de NFT</string>
     <string name="ton_op_excess_gas_refund">Reembolso de gás excedente</string>

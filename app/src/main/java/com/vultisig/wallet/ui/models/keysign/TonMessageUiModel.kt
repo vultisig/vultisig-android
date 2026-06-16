@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 
 /** Operation surfaced by decoding a TonConnect message body. */
 internal enum class TonMessageOperation {
+    Swap,
     JettonTransfer,
     NftTransfer,
     ExcessGasRefund,

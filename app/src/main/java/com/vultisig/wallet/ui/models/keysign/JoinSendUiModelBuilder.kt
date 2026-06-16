@@ -235,7 +235,7 @@ constructor(
             )
 
         val tonMessages =
-            mapTonMessages(payload.signTon) { rawAddress ->
+            mapTonMessages(payload.signTon, fromAddress = payload.coin.address) { rawAddress ->
                 TONAddressConverter.toUserFriendly(rawAddress, true, false) ?: rawAddress
             }
         val namedTransactionUiModel =
