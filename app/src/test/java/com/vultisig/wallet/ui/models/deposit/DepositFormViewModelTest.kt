@@ -34,6 +34,7 @@ import com.vultisig.wallet.data.usecases.RequestQrScanUseCase
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
+import com.vultisig.wallet.ui.models.deposit.load.CacaoMaturityLoader
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
 import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
@@ -141,6 +142,18 @@ internal class DepositFormViewModelTest {
                     selectedToken = selectedToken,
                 )
         }
+    private val cacaoMaturityLoaderFactory: CacaoMaturityLoader.Factory =
+        object : CacaoMaturityLoader.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                onResult: (isMature: Boolean, unlocksInText: UiText?) -> Unit,
+            ): CacaoMaturityLoader =
+                CacaoMaturityLoader(
+                    getMayaCacaoMaturityStatus = getMayaCacaoMaturityStatus,
+                    scope = scope,
+                    onResult = onResult,
+                )
+        }
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
     private val fieldValidator: DepositFieldValidator =
         DepositFieldValidatorImpl(chainAccountAddressRepository)
@@ -181,7 +194,6 @@ internal class DepositFormViewModelTest {
             mayachainBondRepository = mayachainBondRepository,
             balanceRepository = balanceRepository,
             validateMayaTransactionHeight = validateMayaTransactionHeight,
-            getMayaCacaoMaturityStatus = getMayaCacaoMaturityStatus,
             feeServiceComposite = feeServiceComposite,
             vaultRepository = vaultRepository,
             tokenRepository = tokenRepository,
@@ -189,6 +201,7 @@ internal class DepositFormViewModelTest {
             requestAddressBookEntry = requestAddressBookEntry,
             liquidityDataLoaderFactory = liquidityDataLoaderFactory,
             securedAssetLoaderFactory = securedAssetLoaderFactory,
+            cacaoMaturityLoaderFactory = cacaoMaturityLoaderFactory,
             thorChainLpPreflight = thorChainLpPreflight,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,
