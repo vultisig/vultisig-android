@@ -1112,6 +1112,7 @@
     <!-- TonConnect multi-message sign payload -->
     <string name="sign_ton_messages">메시지</string>
     <string name="sign_ton_state_init">State Init</string>
+    <string name="ton_op_swap">스왑</string>
     <string name="ton_op_jetton_transfer">Jetton 전송</string>
     <string name="ton_op_nft_transfer">NFT 전송</string>
     <string name="ton_op_excess_gas_refund">초과 가스 환불</string>

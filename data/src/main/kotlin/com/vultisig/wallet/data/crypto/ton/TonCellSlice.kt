@@ -95,6 +95,15 @@ internal class TonSlice(private val bits: TonBitString, refs: List<TonCell>) {
     fun loadMaybeRef(): TonCell? = if (loadBit()) loadRef() else null
 
     /**
+     * Read a `forward_payload:(Either Cell ^Cell)` and return a cursor over its contents. When the
+     * discriminator bit is set the payload lives in a ref (the right case); otherwise it is inline,
+     * being the remainder of this slice (the left case) — `this` is returned so the caller
+     * continues reading from the current position. Throws when a ref is claimed but absent, which
+     * rejects a body truncated at this field.
+     */
+    fun loadForwardPayload(): TonSlice = if (loadBit()) loadRef().beginParse() else this
+
+    /**
      * Read a TLB `MsgAddressInt`, returning the raw `workchain:hex` form. Throws on `addr_none` —
      * callers wanting optional behaviour use [loadMaybeAddress].
      */

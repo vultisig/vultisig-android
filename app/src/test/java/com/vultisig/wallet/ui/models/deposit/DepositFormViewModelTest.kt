@@ -35,6 +35,7 @@ import com.vultisig.wallet.data.usecases.ThorChainLpPreflightBlock
 import com.vultisig.wallet.data.usecases.ThorChainLpPreflightUseCase
 import com.vultisig.wallet.data.usecases.ValidateMayaTransactionHeightUseCase
 import com.vultisig.wallet.ui.models.deposit.load.LiquidityDataLoader
+import com.vultisig.wallet.ui.models.deposit.load.SecuredAssetLoader
 import com.vultisig.wallet.ui.models.mappers.TokenValueToStringWithUnitMapper
 import com.vultisig.wallet.ui.navigation.Destination
 import com.vultisig.wallet.ui.navigation.Navigator
@@ -122,6 +123,24 @@ internal class DepositFormViewModelTest {
                     resolvePairedAddress = resolvePairedAddress,
                 )
         }
+    private val securedAssetLoaderFactory: SecuredAssetLoader.Factory =
+        object : SecuredAssetLoader.Factory {
+            override fun create(
+                scope: CoroutineScope,
+                thorAddressFieldState: TextFieldState,
+                vaultId: () -> String?,
+                selectedToken: () -> Coin,
+            ): SecuredAssetLoader =
+                SecuredAssetLoader(
+                    vaultRepository = vaultRepository,
+                    chainAccountAddressRepository = chainAccountAddressRepository,
+                    thorChainApi = thorChainApi,
+                    scope = scope,
+                    thorAddressFieldState = thorAddressFieldState,
+                    vaultId = vaultId,
+                    selectedToken = selectedToken,
+                )
+        }
     private val thorChainLpPreflight: ThorChainLpPreflightUseCase = mockk(relaxed = true)
     private val fieldValidator: DepositFieldValidator =
         DepositFieldValidatorImpl(chainAccountAddressRepository)
@@ -169,6 +188,7 @@ internal class DepositFormViewModelTest {
             gasFeeToEstimate = gasFeeToEstimate,
             requestAddressBookEntry = requestAddressBookEntry,
             liquidityDataLoaderFactory = liquidityDataLoaderFactory,
+            securedAssetLoaderFactory = securedAssetLoaderFactory,
             thorChainLpPreflight = thorChainLpPreflight,
             fieldValidator = fieldValidator,
             gasFeeHelper = gasFeeHelper,

@@ -86,6 +86,7 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
     private lateinit var protoBuf: ProtoBuf
     private lateinit var sessionApi: SessionApi
     private lateinit var networkUtils: NetworkUtils
+    private lateinit var mediatorServiceController: MediatorServiceController
 
     private val vaultId = "vault-uuid"
 
@@ -125,6 +126,7 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
         protoBuf = ProtoBuf
         sessionApi = mockk(relaxed = true)
         networkUtils = mockk(relaxed = true)
+        mediatorServiceController = mockk(relaxed = true)
 
         mockkStatic("androidx.navigation.SavedStateHandleKt")
         mockkObject(Utils)
@@ -189,6 +191,7 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
             protoBuf = protoBuf,
             sessionApi = sessionApi,
             networkUtils = networkUtils,
+            mediatorServiceController = mediatorServiceController,
         )
 
     @Test
@@ -237,7 +240,9 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
                     match<JoinReshareRequestJson> { request ->
                         request.publicKeyEcdsa == existingVault.pubKeyECDSA &&
                             request.oldResharePrefix == existingVault.resharePrefix &&
-                            request.oldParties == existingVault.signers
+                            request.oldParties == existingVault.signers &&
+                            // server joins under its own generated party ID, not the device's
+                            request.localPartyId == "Server-XYZ"
                     }
                 )
             }
@@ -298,7 +303,9 @@ internal class KeygenPeerDiscoveryViewModelReshareTest {
                     match<JoinReshareRequestJson> { request ->
                         request.publicKeyEcdsa == gg20Vault.pubKeyECDSA &&
                             request.oldResharePrefix == gg20Vault.resharePrefix &&
-                            request.oldParties == gg20Vault.signers
+                            request.oldParties == gg20Vault.signers &&
+                            // server joins under its own generated party ID, not the device's
+                            request.localPartyId == "Server-XYZ"
                     }
                 )
             }
